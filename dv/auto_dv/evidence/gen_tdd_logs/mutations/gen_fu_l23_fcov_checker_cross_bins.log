@@ -1,15 +1,18 @@
 # LOG-084 evidence: ci/check_fcov_expectations.py's report parser and urg cross bins.
 #
 # PROVENANCE, so this file is reproducible rather than assertible:
-#   build            dv/auto_dv/work/tb-infra/wit/w26, sources sha256 9ff74126059016cb (the build the landing claims; the unmutated control root of the reds shares this identity)
-#   run              ecc_data_freq (the frequent data-injection entry), the last run into that build's database
+#   build identity   b48479a3bc6f1d9f   (gen_flow_util.filelist_digest over dv/auto_dv/tb/gen_rtl.f + gen_tb.f,
+#                    117 sources; the number the Orchestrator's gate recomputes and the only one claimed here)
+#   also emitted     f80e2c719e16b73c, gen_tb_local.sh's own "sources sha256"; a different function over a
+#                    different input set, labelled so neither can be mistaken for the other
+#   build dir        dv/auto_dv/work/tb-infra/wit/L25b
+#   run              the frequent data-injection entry, the last run into that build's database
 #   database         <build>/vcs_simv.vdb, the build's own; the run directories hold none
 #   urg invocation   urg -dir <build>/vcs_simv.vdb -format text -report <report dir>
 #   report           52 covergroup Group lines in grpinfo.txt
-#   checker          ci/check_fcov_expectations.py, sha256 first 16 282127c9994dd824, imported and its
-#                    parse_groups_report called on the report directory, so the keys below are the parser's own
-#                    output and not a reading of its source
-#   produced         2026-09-04T12:23:24Z
+#   checker          ci/check_fcov_expectations.py, sha256 first 16 282127c9994dd824, imported and its parse_groups_report
+#                    called on the report directory, so the keys below are the parser's own output
+#   produced         2026-09-04T13:33:51Z
 #
 # WHAT THE REPORT CONTAINS. urg names cross bins with their counts under a per-cross heading:
   grpinfo.txt:12453 | data_single_way0 483   1
@@ -40,13 +43,12 @@
   gen_ic_ecc_cg.cp_knob.tag_single_way1                    0
 # So a DECLARED coverpoint bin reads as HIT whenever a cross bin of the same name is hit in that group.
 #
-# SCOPE, narrowed by LOG-084c after this file was first written: the flow's measured path does NOT invoke the checker
-# on a raw urg report. gen_fcov derives a variable-form report in which each cross section becomes a variable section
-# named by the component tuple, which is how manifests name cross bins, and calls the checker with --report-dir on
-# that. So both defects above are confined to a DIRECT invocation on a raw report, which is what this file and the
-# landing's local reds exercise. The flow's own self-test already drove both forms on real reports.
+# SCOPE, narrowed by LOG-084c: the flow's measured path does NOT invoke the checker on a raw urg report. gen_fcov
+# derives a variable-form report in which each cross section becomes a variable section named by the component tuple,
+# which is how manifests name cross bins, and calls the checker with --report-dir on that. So both defects above are
+# confined to a DIRECT invocation on a raw report, which is what this file and the landing's local reds exercise.
 #
-# WHY IT CANNOT MASK ANYTHING THE PART-1 MANIFEST DECLARES, both measured on the traceability CSV: this group's 22
+# WHY IT CANNOT MASK ANYTHING THE NINE PER-ENTRY MANIFESTS DECLARE, measured on the traceability CSV: this group's 22
 # coverpoint bin names and its 16 cross bin names have an EMPTY intersection, and the coverpoint the mis-attribution
-# lands on is cp_knob, which declares no bin in that manifest. The name `yes` is shared by three COVERPOINTS, which is
-# not this hazard: the parser keys by coverpoint, so only a CROSS bin sharing a coverpoint bin's name can mask one.
+# lands on is cp_knob, which declares no bin in any of the nine. The name `yes` is shared by three COVERPOINTS, which
+# is not this hazard: the parser keys by coverpoint, so only a CROSS bin sharing a coverpoint bin's name can mask one.

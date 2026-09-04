@@ -1,0 +1,23 @@
+# CG-IC-006 part 1, the bins THIS entry can hit: tag-RAM injection against a program that never enables the cache.
+# Derived from the entry's own plusargs and confirmed by a run of the entry ALONE in its own output directory, so
+# no other run's coverage contributed. Robust means a structural bound or a measured count of at least 30 in that
+# run; the count is in each note. Nine such manifests, one per WP-8 icache ECC entry, and their union is the
+# part-1 reachable set of 15 minus the two bins no entry hits robustly.
+#
+# Nothing excluded: every bin this entry reaches is robust in its own run.
+test: gen_ut_lockstep_icache_ecc_tag_disabled
+owner: tb-infra
+bins:
+  - gen_ic_ecc_cg.cp_ram.tag
+  - gen_ic_ecc_cg.cp_bits.single
+  - gen_ic_ecc_cg.cp_way.way0
+  - gen_ic_ecc_cg.cp_way.way1
+  - gen_ic_ecc_cg.cp_major_nmi_quiet.yes
+  - gen_ic_ecc_cg.cp_no_alert_case.disabled_cache
+anti_vacuity:
+  gen_ic_ecc_cg.cp_ram.tag: "a tag-RAM injection the monitor closed; the kind is the announcing instance's own, so a hit proves the tag hook fired and its announcement was judged; measured 864 in this entry's own run, so declaring it cannot fail on a single seed"
+  gen_ic_ecc_cg.cp_bits.single: "the flipped-bit count is the announcement's own field, so a hit proves an injection ran with the one-bit knob in force; measured 864 in this entry's own run, so declaring it cannot fail on a single seed"
+  gen_ic_ecc_cg.cp_way.way0: "the way is the injecting instance's own parameter, so a hit proves way 0's model injected and was judged; measured 443 in this entry's own run, so declaring it cannot fail on a single seed"
+  gen_ic_ecc_cg.cp_way.way1: "as way0 for way 1; the pair proves both way instances inject, which a single-way build could not produce; measured 421 in this entry's own run, so declaring it cannot fail on a single seed"
+  gen_ic_ecc_cg.cp_major_nmi_quiet.yes: "both major alert outputs low in every cycle of the injection window AND at least one retirement inside the retirement window carrying no internal-NMI flag; a window with no retirement passes not-applicable, so a hit cannot come from an absence of retirements; measured 574 in this entry's own run, so declaring it cannot fail on a single seed"
+  gen_ic_ecc_cg.cp_no_alert_case.disabled_cache: "the enable term of the qualification false at the read, so a hit proves an injection read while the cache was genuinely disabled per the scoreboard's tracking; measured 864 in this entry's own run, so declaring it cannot fail on a single seed"

@@ -1,72 +1,67 @@
 # WP-8 part 1: the two manifest-detected reds for the never-written observation, with their ablation.
-#
-# PROVENANCE. Every root below is an out-of-tree copy of the shared tree at one state, and the unmutated control's
-# sources sha256 EQUALS the tree's own build, so the whole set is of one build and none of it is of a superseded one:
-#   tree build  dv/auto_dv/work/tb-infra/wit/w26, sources sha256 9ff74126059016cb
-#   control     GREEN root, sources sha256 9ff74126059016cb
-#   entry       the frequent data-injection lockstep entry, probe off
-#   check       urg over each root's own database, then ci/check_fcov_expectations.py --report-dir with
-#               dv/auto_dv/fcov_expectations/gen_cg_ic_ecc_part1.fcov.yaml (gen_fcov.py --validate accepts it)
-#   produced    2026-09-04T12:32:22Z
+# PROVENANCE. Every root below was built from ONE tree state, after the LAST source edit of the landing, and the
+# identity is the one the Orchestrator's gate recomputes:
+#   build identity   b48479a3bc6f1d9f   (gen_flow_util.filelist_digest over dv/auto_dv/tb/gen_rtl.f + gen_tb.f,
+#                    117 sources). This is the number the gate reads and the only one this file claims.
+#   also emitted     f80e2c719e16b73c, which is what gen_tb_local.sh writes as "sources sha256" in its own compile log.
+#                    Two different functions over two different input sets; quoting the local one as the
+#                    committed-sources identity is the defect CM200-Major-1 named. Both appear per root below,
+#                    labelled, so neither can be mistaken for the other.
+#   unmutated build  dv/auto_dv/work/tb-infra/wit/L25b
+#   produced         2026-09-04T13:24:03Z
 # Lines are read from each run's own files, ASCII-normalised per the retention convention.
 #
 # READ THE DISCRIMINATION, NOT THE EXIT CODE. All three runs pass in simulation and the checker exits 2 in all three,
-# because ONE run cannot hit all fifteen declared bins: no tag injection, no two-bit knob, no disabled-cache case and no
-# invalidating case occur in it. The evidence is the named bin's transition from HIT to UNHIT, and the statistic that
-# says WHICH half of the mechanism the mutation removed.
+# because ONE run cannot hit every declared bin of the group manifest. The evidence is the named bin's transition from
+# HIT to UNHIT, and the statistic that says WHICH half of the mechanism the mutation removed.
 
 root: GREEN   (no mutation, the control)
-  sources sha256: 9ff74126059016cb
+  gate identity: b48479a3bc6f1d9f      local compile figure: f80e2c719e16b73c
   simulation verdict: PASS
   | uninitialised data reads reported=37 sampled=35 skipped(injection 2, alert 0) dropped=0
   | FCOV-EXPECTATION: gen_ic_ecc_cg.cp_no_alert_case.uninitialised_data_ram = HIT (count=35)
   | FCOV-EXPECTATION: FAIL - 5 declared bin(s) not hit: gen_ic_ecc_cg.cp_ram.tag, gen_ic_ecc_cg.cp_bits.double, gen_ic_ecc_cg.cp_no_alert_case.disabled_cache, gen_ic_ecc_cg.cp_no_alert_case.during_invalidation, gen_ic_ecc_cg.cp_no_alert_case.masked_duplicate_copy
 
 root: UNINITALL   (the written flag set for every line at init, so no read is ever never-written)
-  sources sha256: 0aa84688db0755f5
+  gate identity: b48479a3bc6f1d9f      local compile figure: 464a9af8084b5066
   simulation verdict: PASS
   | uninitialised data reads reported=0 sampled=0 skipped(injection 0, alert 0) dropped=0
-  mutation identity, so the applied diff is in the record:
-    mutation UNINITALL
-    file dv/auto_dv/tb/gen_icache_ram.sv
-    sha256 first 16: committed cdfbbdaa096856f8, mutated ae18890a00b91292
-    applied diff 1 of 1:
-      - written[i] = 1'b0;
-      + written[i] = 1'b1;   // UNINITALL: every line starts written, so no read is ever never-written
-      anchor present in the committed file: yes
-      anchor absent from the mutated file:  yes
+  mutation identity, baseline from a pristine copy taken before any mutation:
+    mutations applied to this root, in order: UNINITALL
+    
+      UNINITALL -- file dv/auto_dv/tb/gen_icache_ram.sv
+      baseline sha256 first 16 (the file the diff was applied to): fc376b9db3ad3868
+      mutated  sha256 first 16: 8c75b4f2890e24fd
+      applied diff 1 of 1:
+        - written[i] = 1'b0;
+        + written[i] = 1'b1;   // UNINITALL: every line starts written, so no read is ever never-written
+        anchor present in the baseline file: yes
+        anchor absent from the mutated file: yes
   | FCOV-EXPECTATION: gen_ic_ecc_cg.cp_no_alert_case.uninitialised_data_ram = UNHIT (count=0)
   | FCOV-EXPECTATION: FAIL - 6 declared bin(s) not hit: gen_ic_ecc_cg.cp_ram.tag, gen_ic_ecc_cg.cp_bits.double, gen_ic_ecc_cg.cp_no_alert_case.disabled_cache, gen_ic_ecc_cg.cp_no_alert_case.during_invalidation, gen_ic_ecc_cg.cp_no_alert_case.uninitialised_data_ram, gen_ic_ecc_cg.cp_no_alert_case.masked_duplicate_copy
 
 root: UNINITDRAIN   (both drain calls removed, so events are queued and never classified)
-  sources sha256: 36e1a11829f84656
+  gate identity: b48479a3bc6f1d9f      local compile figure: 8f7f0e1e5f08a383
   simulation verdict: PASS
   | uninitialised data reads reported=37 sampled=0 skipped(injection 0, alert 0) dropped=0
-  mutation identity, so the applied diff is in the record:
-    mutation UNINITDRAIN
-    file dv/auto_dv/env/gen_checkers_pkg.sv
-    sha256 first 16: committed ceae51ad2b959198, mutated 972307eb7e5f17c8
-    applied diff 1 of 2:
-      - drain_uninit(0);
-      + ;   // UNINITDRAIN: the per-cycle drain removed
-      anchor present in the committed file: yes
-      anchor absent from the mutated file:  yes
-    applied diff 2 of 2:
-      - drain_uninit(1);
-      + ;   // UNINITDRAIN: the final drain removed
-      anchor present in the committed file: yes
-      anchor absent from the mutated file:  yes
+  mutation identity, baseline from a pristine copy taken before any mutation:
+    mutations applied to this root, in order: UNINITDRAIN
+    
+      UNINITDRAIN -- file dv/auto_dv/env/gen_checkers_pkg.sv
+      baseline sha256 first 16 (the file the diff was applied to): d4b41edaa722a2e3
+      mutated  sha256 first 16: 972307eb7e5f17c8
+      applied diff 1 of 2:
+        - drain_uninit(0);
+        + ;   // UNINITDRAIN: the per-cycle drain removed
+        anchor present in the baseline file: yes
+        anchor absent from the mutated file: yes
+      applied diff 2 of 2:
+        - drain_uninit(1);
+        + ;   // UNINITDRAIN: the final drain removed
+        anchor present in the baseline file: yes
+        anchor absent from the mutated file: yes
   | FCOV-EXPECTATION: gen_ic_ecc_cg.cp_no_alert_case.uninitialised_data_ram = UNHIT (count=0)
   | FCOV-EXPECTATION: FAIL - 6 declared bin(s) not hit: gen_ic_ecc_cg.cp_ram.tag, gen_ic_ecc_cg.cp_bits.double, gen_ic_ecc_cg.cp_no_alert_case.disabled_cache, gen_ic_ecc_cg.cp_no_alert_case.during_invalidation, gen_ic_ecc_cg.cp_no_alert_case.uninitialised_data_ram, gen_ic_ecc_cg.cp_no_alert_case.masked_duplicate_copy
 
-# ABLATION, the same two reports with the bin removed from the manifest, so the detector is gone and nothing else changes:
-UNINITALL ablation, exit 2
-  | FCOV-EXPECTATION: FAIL - 5 declared bin(s) not hit: gen_ic_ecc_cg.cp_ram.tag, gen_ic_ecc_cg.cp_bits.double, gen_ic_ecc_cg.cp_no_alert_case.disabled_cache, gen_ic_ecc_cg.cp_no_alert_case.during_invalidation, gen_ic_ecc_cg.cp_no_alert_case.masked_duplicate_copy
-  | the bin is named 0 times, so its appearance above is caused by the declaration plus the mutation
-
-UNINITDRAIN ablation, exit 2
-  | FCOV-EXPECTATION: FAIL - 5 declared bin(s) not hit: gen_ic_ecc_cg.cp_ram.tag, gen_ic_ecc_cg.cp_bits.double, gen_ic_ecc_cg.cp_no_alert_case.disabled_cache, gen_ic_ecc_cg.cp_no_alert_case.during_invalidation, gen_ic_ecc_cg.cp_no_alert_case.masked_duplicate_copy
-  | the bin is named 0 times, so its appearance above is caused by the declaration plus the mutation
-
-# The two mutations are distinguishable by the statistic, which localises the break: the flag mutation suppresses the
-# REPORT (reported=0) while the drain mutation suppresses the SAMPLE (reported=37, sampled=0).
+# The two mutations are distinguishable by the statistic, which localises the break: the flag mutation suppresses
+# the REPORT (reported=0) while the drain mutation suppresses the SAMPLE (reported=37, sampled=0).

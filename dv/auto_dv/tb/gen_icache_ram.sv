@@ -103,10 +103,12 @@ module gen_icache_ram import gen_tb_pkg::*; #(
           end
         end else begin
           rdata <= mem[addr];
-          // a never-written data line read on a lookup the DUT checks: its ECC bits are whatever gen_icram_init left, so a
-          // read that raises no alert is a real no-alert case (rtl/ibex_icache.sv:580-585 checks data ECC only on a valid
-          // hit). Reported outside the announcement queue, once per line: the monitor decides the bin, since only it can
-          // see whether an injection shared the cycle
+          // a never-written data line read on a QUALIFIED lookup: its ECC bits are whatever gen_icram_init left, and the
+          // read is quiet WITHOUT BEING CHECKED, by two exhaustive cases since tag_hit_ic1 is the OR of the mux's own
+          // per-way predicate (rtl/ibex_icache.sv:504) -- a matching way excludes this one from the mux and so from the
+          // decoder (:499-500, :507-514, :568-573), and no matching way masks the data-ECC term itself (:585). Reported
+          // outside the announcement queue, once per line: the monitor decides the bin, since only it can see whether an
+          // injection shared the cycle
           if (!IsTag && !written[addr] && !uninit_reported[addr] && gen_icram_events::qualified_at(cycle)) begin
             uninit_reported[addr] <= 1'b1;
             gen_icram_events::note_uninit_read(cycle, Way, int'(addr));

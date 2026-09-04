@@ -118,12 +118,24 @@ also the unit a manifest names, as covergroup.coverpoint.bin. Every count below 
 
 Two different totals, and they are not interchangeable. The RENDER total for the group is 24 coverpoint bins and 16
 cross bins: 18 coverpoint bins on the eight part-1 coverpoints, 6 on the four part-2 coverpoints, 14 part-1 cross bins
-and 2 part-2 cross bins. The MANIFEST total for part 1 is 29, because cp_knob's three bins (none, rare, frequent) have
+and 2 part-2 cross bins. The MANIFEST total for part 1 is 29 as a SET of namable bins, because cp_knob's three bins
+(none, rare, frequent) have
 no rows in gen_trace_tp_bin.csv and are therefore namable in no manifest, exactly as the existing operand-only
 coverpoints of other groups are. The CSV's distinct coverpoint-and-bin pairs for the group total 37, which is 29
 part 1 plus 8 part 2.
 Part 2 holds those 8: cp_inval_ways 2, cp_refetch 1, cp_lookups_blocked_next 1, cp_multiway_mismatch 2,
 cr_ram_x_inval 2.
+
+WHAT DECLARES PART 1's BINS IS NINE PER-ENTRY MANIFESTS, one per WP-8 icache ECC testlist entry, each declaring only
+the bins its own entry can hit; the expectation check is per entry and validates the manifest's test against the entry
+name, so no single manifest can serve them all. The union reachable today is 15 of 15 across nine entries; the nine
+manifests declare the robust subset of 13 bins, robust meaning a structural bound or a measured count of at least 30
+in that entry's own run; OWED are two bins, both thinly hit and closing on one route, a seed sweep at coverage
+closure: cp_no_alert_case.during_invalidation (10, 9, 22) and cp_no_alert_case.masked_duplicate_copy (4, 2, 14).
+Separately and NOT owed, two per-entry exclusions live in the manifest headers rather than here, since the bin is
+robust elsewhere and thin only on those entries: cp_no_alert_case.uninitialised_data_ram on the two far-program
+entries (9, 9) and cp_alert_pulses.one on the far probe-off entry (27). Section 7 gives the mechanism and the ninth
+entry.
 
 ## 3. How the part-1/part-2 split works in the renderer, checked rather than assumed
 
@@ -277,10 +289,18 @@ data line can never be the hit way, and the term chain says so rather than a com
 hittable is a fill, since the other two writers of tag_write_ic0 write tags INVALID
 (`tag_write_ic0 = fill_grant_ic0 | inval_write_req | ecc_write_req`, rtl/ibex_icache.sv:277), and a fill writes that
 way's data in the same cycle, since `data_write_ic0 = tag_write_ic0` (:283) and `data_req_ic0` includes
-`fill_req_ic0` (:280) so the write lands rather than being masked by the request term. The DUT's check is masked
-exactly there, because the data-ECC term needs `tag_hit_ic1`
+`fill_req_ic0` (:280) so the write lands rather than being masked by the request term. The read is then quiet WITHOUT BEING
+CHECKED, by two mechanisms that are EXHAUSTIVE rather than merely listed, because `tag_hit_ic1 = |tag_match_ic1`
+(:504) makes the gate the OR of the very per-way predicate the hit-data mux uses. When a way matches, the never-written
+way is not among them, since the match compares the valid bit as its top bit (`== {1'b1, lookup_addr_ic1[...]}`,
+:499-500, with :501 defining tag_invalid_ic1 as that same bit inverted)
+and only a fill sets it, so its data is excluded from `hit_data_ecc_ic1` by the mux (:507-514) and never reaches the
+decoder, which decodes the mux output alone (`.data_i(hit_data_ecc_ic1[...])` into `.err_o(data_err_ic1[...])`,
+:568-573). When no way matches, `tag_hit_ic1` is zero and the data-ECC term is masked outright
 (`ecc_err_ic1 = lookup_valid_ic1 & (((|data_err_ic1) & tag_hit_ic1) | (|tag_err_ic1))`, :585), whose own comment names
-the ways without a valid tag as deliberately unchecked. Two consequences for the build. The sampler needs no hit-way
+the ways without a valid tag as deliberately unchecked. Naming only the second mechanism, as an earlier version of
+this paragraph did, is wrong whenever another way hits at that index: the term at :585 is live then, and what keeps the
+never-written way out is the mux. Two consequences for the build. The sampler needs no hit-way
 input for this bin and cannot compute one, since no injection means no judge ran; the masking holds by construction.
 And the qualification above buys a VOLUME bound, at most one sample per line per way, rather than evidence that the
 read was checked: what is qualified is the LOOKUP, that the cache was enabled and no sweep was in its grace window.
@@ -292,10 +312,12 @@ invalid way, masked_duplicate_copy when the flip was masked by the OR of a dupli
 applies only to a qualified cycle with no injection. No sample carries two of these.
 
 Intent anchor: rtl/ibex_icache.sv:580-584 says no data-RAM initialisation is done on reset, so unused data, in
-particular the ways without a valid tag, may carry incorrect ECC, which is why the DUT checks data ECC only on a valid
-hit: `ecc_err_ic1 = lookup_valid_ic1 & (((|data_err_ic1) & tag_hit_ic1) | (|tag_err_ic1))` at :585. A checked lookup
-reading a never-written line and raising no alert is therefore a real no-alert case that the DUT's own comment
-predicts, and not a TB artefact.
+particular the ways without a valid tag, may carry incorrect ECC, which is why the never-written way's data is
+never decoded at all: the mux feeds the decoder only the matching ways (:507-514 into :568-573) and, with no match at
+all, the term at :585 is masked. A QUALIFIED lookup reading a never-written line and raising no alert is therefore a
+real no-alert case that the DUT's own comment predicts, and not a TB artefact. The word qualified is deliberate here
+and throughout: it names the lookup_actual_ic0 sense, that the cache was enabled and no sweep was in its grace window,
+and never the decode sense, which is what "checked" is reserved for.
 
 ## 6. Observation 2: the major-quiet windowing
 
@@ -385,23 +407,33 @@ classifier fault is a failing run and not only a failing offline check.
   the misc monitor (gen_checkers_pkg.sv:474), so the only major output that can legitimately be high inside a window
   is the bus one under an announced corruption. The gap is named here so the mutation table says what it does not
   cover.
-- fcov-expectation. A GROUP manifest, dv/auto_dv/fcov_expectations/gen_cg_ic_ecc_part1.fcov.yaml, rather than a
-  per-test one, because no single entry can hit every part-1 bin: the rate bins need both the rare and the frequent
-  regime and the RAM bins need both hooks. cp_knob's three rendered bins are in no manifest, since they have no CSV
-  rows, and the four part-2 coverpoints appear in NO manifest.
-  FIFTEEN of the 29 are declared and FOURTEEN are recorded as owed, under the interim ruling on owner item LOG-084. The
-  fourteen are the cross bins, and they are owed because of a defect in the shared expectation checker rather than
-  anything about this group: its report parser recognises only urg's per-coverpoint heading and never the per-cross
-  one, so no cross key is ever produced and a manifest declaring a cross bin can never pass. Measured on this group,
-  all fourteen read as missing from the report while four of them carry counts of 483, 459, 445 and 904 in that same
-  report. The second half of the defect is worse and is stated here because it bears on how any coverage claim in this
-  repo should be read: the cross heading only clears the parser's in-bins flag and leaves the coverpoint name set, so
-  a cross bin's count is attributed to the group's LAST coverpoint, and a declared coverpoint bin therefore reads as
-  HIT whenever a cross bin of the same name is hit in that group.
-  That hazard cannot mask any bin this manifest declares, for two independent measured reasons: this group's 22
-  coverpoint bin names and its 16 cross bin names have an empty intersection, and the coverpoint the mis-attribution
-  lands on is cp_knob, which declares no bin here. The two suppression reds therefore fail on a coverpoint bin the
-  hazard cannot reach. Evidence for the owner is retained as gen_fu_l23_fcov_checker_cross_bins.log.
+- fcov-expectation. NINE PER-ENTRY MANIFESTS, one per WP-8 icache ECC testlist entry, each stem equal to its entry
+  name, each declaring only the bins its own entry can hit with an anti-vacuity note per bin. A group manifest was
+  tried first and cannot work: the expectation check validates the manifest's test against the ENTRY NAME before it
+  reads coverage, so one manifest naming one test fails every entry with a protocol error before the covergroup is
+  read, and no merged check across entries exists. Per-entry is also the better shape, because a declared-but-unhit
+  bin then means something for the entry declaring it.
+  The union reachable today is 15 of 15 across nine entries; the nine manifests declare the robust subset of 13 bins,
+  robust meaning a structural bound or a measured count of at least 30 in that entry's own run; OWED are two bins,
+  both thinly hit and closing on one route, a seed sweep at coverage closure: cp_no_alert_case.during_invalidation
+  (10, 9, 22) and cp_no_alert_case.masked_duplicate_copy (4, 2, 14). Separately and NOT owed, two per-entry exclusions
+  live in the manifest headers rather than here, since the bin is robust elsewhere and thin only on those entries:
+  cp_no_alert_case.uninitialised_data_ram on the two far-program entries (9, 9) and cp_alert_pulses.one on the far
+  probe-off entry (27). The counts are measured per entry in its own output directory, so no run's coverage
+  contributed to another's. cp_knob's three rendered bins are in no manifest, since they have no CSV rows, and the
+  four part-2 coverpoints appear in NO manifest.
+  The ninth entry is what makes the union complete. There is no knob for the cache enable, it comes from the program
+  writing cpuctrlsts, and the ECC directed program enables it in its first instructions, so none of the other eight
+  can reach cp_no_alert_case.disabled_cache. The ninth runs the tag-injection knob against a program that never
+  writes that CSR, and the bin comes out at 864: structural, since every injection in that run lands on a cycle the
+  scoreboard sees as disabled. Its testlist entry is staged for the Runtime Manager, whose file the testlist is.
+  A defect in the shared expectation checker is recorded as owner item LOG-084 and does NOT affect these manifests.
+  Its report parser recognises only urg's per-coverpoint heading, so on a DIRECT invocation against a raw report no
+  cross-bin key is produced and a cross bin's count is attributed to the group's last coverpoint, which would let a
+  declared coverpoint bin read as HIT because a cross bin of that name was hit. LOG-084c narrowed the scope: the
+  flow's measured path derives a variable-form report whose cross sections are named by the component tuple, so cross
+  bins are keyed on the path these entries actually run through. Evidence for the owner is retained as
+  gen_fu_l23_fcov_checker_cross_bins.log.
 
 ## 8. What is announced, to whom, and what else WP-8 contains
 

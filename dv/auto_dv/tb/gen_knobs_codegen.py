@@ -58,7 +58,7 @@ WINDOW_KNOBS = {
 }
 RANGE_GROUPS = {"gnt_delay", "rvalid_delay"}      # [lo, hi] windows; the others are scalars
 DERIVATIONS = {"ibus_max_outstanding", "irq_fast_w", "irq_fast_mask", "csr_marchid_value", "csr_addr_cpuctrlsts",
-               "csr_addr_secureseed"}
+               "csr_addr_secureseed", "icram_lines_x_ways"}
 # REGIME_SET consumers a knob may name; the first four are run-time consumers in the SV dispatcher
 KNOB_CONSUMERS = {"bus", "irq", "dbg", "scrkey", "none", "program"}
 RUNTIME_CONSUMERS = {"bus", "irq", "dbg", "scrkey"}
@@ -336,6 +336,9 @@ def derive_values(src):
             if "GEN_ICACHE_NUM_FB" not in lits:
                 die("ibus_max_outstanding needs the literal GEN_ICACHE_NUM_FB")
             out[c["name"]] = lits["GEN_ICACHE_NUM_FB"] * beats
+        elif d == "icram_lines_x_ways":
+            ways = sv_int_param(IBEX_PKG, "IC_NUM_WAYS")
+            out[c["name"]] = (sv_int_param(IBEX_PKG, "IC_SIZE_BYTES") // ways // line_bytes) * ways
         elif d == "irq_fast_w":
             out[c["name"]] = fast_w
         elif d == "irq_fast_mask":
