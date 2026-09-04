@@ -7,9 +7,10 @@
 # Build provenance: when this report was taken the vdb's sources were uncommitted in the shared tree, so it
 # was of no commit at that moment; those same contents landed afterwards as tb-infra's landing 23. Read off the
 # build's own sources_sha256.txt against the commit: all 75 entries equal their f0723d6 versions, none differs and
-# none is absent, so the report is reproducible as the build of f0723d6's sources. The defect this log measures is
-# a property of the checker's parser and not of that build: three of the five live mis-attributions in section 3
-# lie in covergroups committed well before it.
+# none is absent, so the report is reproducible as the build of f0723d6's sources. One value carries that in a
+# single comparison: the build's own recorded aggregate over its source list is sources sha256 61da6da315ee239e.
+# The defect this log measures is a property of the checker's parser and not of that build: three of the five live
+# mis-attributions in section 3 lie in covergroups committed well before it.
 # run at 2026-09-04T11:37:38Z
 
 == 1. report excerpt: the three heading kinds the report actually uses ==
@@ -26,7 +27,10 @@
 == 3. count attribution observed ==
    cross bins keyed under the group's LAST-SEEN coverpoint: 3130 bins over 119 (group, cross) pairs
    of those, carrying a NON-ZERO count: 56
-   CONSEQUENCE (false pass), the live cases:
+   CONSEQUENCE (false pass), the live cases. LIVE describes THE PARSER'S ATTRIBUTION in this database and not the
+   exposure of any manifest: each key below carries a count belonging to a cross. Whether a DECLARED bin benefits
+   from that is a separate question, measured elsewhere and answered zero for the committed declarations, because a
+   false pass also needs the colliding name declared on the group's last coverpoint.
       gen_cmp_imm_edges_cg.cp_link.c_addi_one -> parser reports 1200; the count truly belongs to cross cr_ci
       gen_cmp_imm_edges_cg.cp_link.c_li_one -> parser reports 1; the count truly belongs to cross cr_ci
       gen_isa_alu_imm_cg.cp_slt_case.addi_pos_rand -> parser reports 2; the count truly belongs to cross cr_op_imm
