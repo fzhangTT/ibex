@@ -547,13 +547,15 @@ package gen_tb_pkg;
   // The interrupt-entry drain's cycle cap, COMPUTED from a run's effective bus maxima rather than frozen: the four
   // gen_{i,d}bus_{gnt,rvalid}_max plusargs overwrite the regime windows with only a lower clamp, so a constant taken
   // from the defaults would be wrong for any run that widens one. Worst legitimate per-record cost is the slower
-  // bus's grant plus response wait plus the pipeline's own stages, times the entry bound, plus the margin.
+  // bus's grant plus response wait plus the pipeline's own stages, times the DRAIN'S LENGTH, which is the
+  // entry bound plus one record because the drain runs while the count is at or below the bound. The margin
+  // is left to the finish handshake and the last write-back, so the extra record is not borrowed from it.
   function automatic int unsigned gen_irq_drain_cap_cycles(int unsigned i_gnt_max, int unsigned i_rvalid_max,
                                                            int unsigned d_gnt_max, int unsigned d_rvalid_max);
     int unsigned ibus_cost = i_gnt_max + i_rvalid_max;
     int unsigned dbus_cost = d_gnt_max + d_rvalid_max;
     int unsigned per_record = (ibus_cost > dbus_cost ? ibus_cost : dbus_cost) + GEN_IRQ_DRAIN_RECORD_OVERHEAD_CYCLES;
-    return per_record * GEN_IRQ_ENTRY_BOUND_RECORDS + GEN_IRQ_DRAIN_MARGIN_CYCLES;
+    return per_record * (GEN_IRQ_ENTRY_BOUND_RECORDS + 1) + GEN_IRQ_DRAIN_MARGIN_CYCLES;
   endfunction
 
   // Below the knobs region because the generator emits functions from its own templates and not from the yaml: this is

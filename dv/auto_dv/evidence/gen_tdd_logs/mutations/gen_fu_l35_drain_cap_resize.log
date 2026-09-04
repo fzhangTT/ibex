@@ -1,0 +1,203 @@
+# THE INTERRUPT-ENTRY DRAIN CAP, SIZED OVER THE RECORD BOUND PLUS ONE, with the unit case that discriminates it.
+# Answers CM209-Low-1, and closes CM208-Info-1, which recorded that no unit case exercised this function.
+#
+# THE FINDING, every term quoted from the sources this landing changes:
+#   gen_tb_pkg.sv:556   return per_record * GEN_IRQ_ENTRY_BOUND_RECORDS + GEN_IRQ_DRAIN_MARGIN_CYCLES;
+#     that is the line as it stands at the base commit; the change makes it :558 because the comment above it grows
+#     by two lines, and both sides are printed in full in section 1 below
+#   gen_env_pkg.sv:377  while ((vif.evt_retired_count - drain_rec0) <= GEN_IRQ_ENTRY_BOUND_RECORDS
+# The loop's comparison is AT OR BELOW the bound, so the drain's length is the bound PLUS ONE records, while the cap
+# was sized over the bound alone. The extra record was therefore funded only by GEN_IRQ_DRAIN_MARGIN_CYCLES, whose
+# own comment gives it a different job, "the finish handshake and the last record's write-back after the drain's
+# final retirement". A cap short of the drain's length cannot fail a run; it can only end the drain EARLY, and an
+# early end leaves an expectation at age exactly the bound unjudged and reported open with no error, which is the
+# silent missed detection the bound-plus-one drain length exists to remove. That is why this is worth fixing even
+# though no simulation reaches it.
+#
+# THE FIGURES, DERIVED FROM THE CONSTANTS. GEN_IRQ_ENTRY_BOUND_RECORDS 17, GEN_IRQ_DRAIN_RECORD_OVERHEAD_CYCLES 2,
+# GEN_IRQ_DRAIN_MARGIN_CYCLES 40. At the default effective maxima, which the runs themselves report as i 3/4 and
+# d 3/4, per_record is max(3+4, 3+4) + 2 = 9, so the cap moves from 9*17+40 = 193 to 9*18+40 = 202. In general the
+# resized cap is the old one plus one per_record, so it still tracks the bus maxima.
+#
+# WHERE THE OLD SIZING ACTUALLY BREAKS, which is what the unit case exercises. Borrowing the margin works only while
+# one record costs less than the margin: the old cap covers the drain's length exactly when per_record is at most
+# GEN_IRQ_DRAIN_MARGIN_CYCLES. At the default maxima per_record is 9 against a margin of 40, so the old cap DID
+# cover the extra record, which is why no simulation red exists. Push one record above the margin and the borrowing
+# fails. A unit case can set the maxima directly; a simulation that widened them that far starves its own run before
+# the drain, which landing 32 measured.
+
+== 1. THE TDD PAIR: the unit case's RED on the committed function and its GREEN after the change ==
+
+   THE FUNCTION BEFORE, printed from the base commit:
+       // The interrupt-entry drain's cycle cap, COMPUTED from a run's effective bus maxima rather than frozen: the four
+       // gen_{i,d}bus_{gnt,rvalid}_max plusargs overwrite the regime windows with only a lower clamp, so a constant taken
+       // from the defaults would be wrong for any run that widens one. Worst legitimate per-record cost is the slower
+       // bus's grant plus response wait plus the pipeline's own stages, times the entry bound, plus the margin.
+       function automatic int unsigned gen_irq_drain_cap_cycles(int unsigned i_gnt_max, int unsigned i_rvalid_max,
+                                                                int unsigned d_gnt_max, int unsigned d_rvalid_max);
+         int unsigned ibus_cost = i_gnt_max + i_rvalid_max;
+         int unsigned dbus_cost = d_gnt_max + d_rvalid_max;
+         int unsigned per_record = (ibus_cost > dbus_cost ? ibus_cost : dbus_cost) + GEN_IRQ_DRAIN_RECORD_OVERHEAD_CYCLES;
+         return per_record * GEN_IRQ_ENTRY_BOUND_RECORDS + GEN_IRQ_DRAIN_MARGIN_CYCLES;
+       endfunction
+
+   THE FUNCTION AFTER, printed from the tree as this landing hands it:
+       // The interrupt-entry drain's cycle cap, COMPUTED from a run's effective bus maxima rather than frozen: the four
+       // gen_{i,d}bus_{gnt,rvalid}_max plusargs overwrite the regime windows with only a lower clamp, so a constant taken
+       // from the defaults would be wrong for any run that widens one. Worst legitimate per-record cost is the slower
+       // bus's grant plus response wait plus the pipeline's own stages, times the DRAIN'S LENGTH, which is the
+       // entry bound plus one record because the drain runs while the count is at or below the bound. The margin
+       // is left to the finish handshake and the last write-back, so the extra record is not borrowed from it.
+       function automatic int unsigned gen_irq_drain_cap_cycles(int unsigned i_gnt_max, int unsigned i_rvalid_max,
+                                                                int unsigned d_gnt_max, int unsigned d_rvalid_max);
+         int unsigned ibus_cost = i_gnt_max + i_rvalid_max;
+         int unsigned dbus_cost = d_gnt_max + d_rvalid_max;
+         int unsigned per_record = (ibus_cost > dbus_cost ? ibus_cost : dbus_cost) + GEN_IRQ_DRAIN_RECORD_OVERHEAD_CYCLES;
+         return per_record * (GEN_IRQ_ENTRY_BOUND_RECORDS + 1) + GEN_IRQ_DRAIN_MARGIN_CYCLES;
+       endfunction
+
+   HOW TO RUN IT. The check is a pure-SV unit test and is run BY HAND today: nothing under ci or the flow
+   invokes it, so a worktree gate that runs the Python unit tests will not pick it up. Run it from the repo
+   root, after sourcing the site environment, with these four commands and read the summary line:
+     source ci/env.sh
+     vcs -full64 -sverilog -timescale=1ns/10ps -f dv/auto_dv/tb/unit/gen_ut_drain_cap.f \
+         -top gen_ut_drain_cap_top -Mdir=<outdir>/csrc -o <outdir>/simv -l <outdir>/compile.log
+     <outdir>/simv -l <outdir>/run.log
+     command grep -a "GEN_UT_DRAIN_CAP" <outdir>/run.log
+   The filelist dv/auto_dv/tb/unit/gen_ut_drain_cap.f names four sources and no RTL beyond ibex_pkg:
+     // filelist of the gen_irq_drain_cap_cycles unit test (no RTL, no UVM test); compile with -sverilog
+     +incdir+dv/auto_dv/tb
+     vendor/lowrisc_ip/ip/prim/rtl/prim_util_pkg.sv
+     rtl/ibex_pkg.sv
+     dv/auto_dv/tb/gen_tb_pkg.sv
+     dv/auto_dv/tb/unit/gen_ut_drain_cap_top.sv
+   The PASS summary line is "GEN_UT_DRAIN_CAP PASS (0 failures)" and the FAIL line is
+   "GEN_UT_DRAIN_CAP FAIL (<n> failures)", with one OK or FAIL line per check above it.
+
+   RED, the same test compiled against the function BEFORE the change:
+     gen_ut_drain_cap: bound 17 records, drain length 18 records, overhead 2, margin 40
+          default maxima i 3/4 d 3/4: per_record 9, cap 193
+     OK   cap covers the drain's length at the default maxima got 193 need at least 162
+     FAIL cap at the default maxima is the drain's length plus the margin got 193 exp 202
+          wide instruction bus i 20/25 d 3/4: per_record 47 (margin 40), cap 839
+     FAIL a record costlier than the margin is still covered got 839 need at least 846
+     FAIL cap on the wide bus is the drain's length plus the margin got 839 exp 886
+     OK   the slower bus sets the per-record cost got 47 exp 47
+     FAIL cap covers the drain's length when the data bus is the slower one got 839 need at least 846
+     OK   the cap grows with the bus maxima got 839 need at least 108
+     OK   the cap exceeds the margin alone got 108 need at least 40
+     OK   both buses at one give the overhead plus two per record got 4 exp 4
+     GEN_UT_DRAIN_CAP FAIL (4 failures)
+                V C S   S i m u l a t i o n   R e p o r t 
+
+   GREEN, the same test compiled against the function AFTER the change:
+     gen_ut_drain_cap: bound 17 records, drain length 18 records, overhead 2, margin 40
+          default maxima i 3/4 d 3/4: per_record 9, cap 202
+     OK   cap covers the drain's length at the default maxima got 202 need at least 162
+     OK   cap at the default maxima is the drain's length plus the margin got 202 exp 202
+          wide instruction bus i 20/25 d 3/4: per_record 47 (margin 40), cap 886
+     OK   a record costlier than the margin is still covered got 886 need at least 846
+     OK   cap on the wide bus is the drain's length plus the margin got 886 exp 886
+     OK   the slower bus sets the per-record cost got 47 exp 47
+     OK   cap covers the drain's length when the data bus is the slower one got 886 need at least 846
+     OK   the cap grows with the bus maxima got 886 need at least 112
+     OK   the cap exceeds the margin alone got 112 need at least 40
+     OK   both buses at one give the overhead plus two per record got 4 exp 4
+     GEN_UT_DRAIN_CAP PASS (0 failures)
+                V C S   S i m u l a t i o n   R e p o r t 
+
+   READING: four of nine checks fail before and none after. The DISCRIMINATING one is the wide-bus case,
+   where a record costs 47 cycles against a 40-cycle margin: the old cap gives 839 where the drain needs 846.
+   The four positive controls pass in BOTH runs, so the red is the property under test and not a broken test.
+   The default-maxima coverage check also passes in both, which is the measurement behind the statement that
+   the old sizing was not a reachable simulation escape.
+
+== 2. THE SOURCE CHANGE, printed from the tree rather than retyped ==
+$ git diff -- dv/auto_dv/tb/gen_tb_pkg.sv
+   @@ -547,13 +547,15 @@ package gen_tb_pkg;
+      // The interrupt-entry drain's cycle cap, COMPUTED from a run's effective bus maxima rather than frozen: the four
+      // gen_{i,d}bus_{gnt,rvalid}_max plusargs overwrite the regime windows with only a lower clamp, so a constant taken
+      // from the defaults would be wrong for any run that widens one. Worst legitimate per-record cost is the slower
+   -  // bus's grant plus response wait plus the pipeline's own stages, times the entry bound, plus the margin.
+   +  // bus's grant plus response wait plus the pipeline's own stages, times the DRAIN'S LENGTH, which is the
+   +  // entry bound plus one record because the drain runs while the count is at or below the bound. The margin
+   +  // is left to the finish handshake and the last write-back, so the extra record is not borrowed from it.
+      function automatic int unsigned gen_irq_drain_cap_cycles(int unsigned i_gnt_max, int unsigned i_rvalid_max,
+                                                               int unsigned d_gnt_max, int unsigned d_rvalid_max);
+        int unsigned ibus_cost = i_gnt_max + i_rvalid_max;
+        int unsigned dbus_cost = d_gnt_max + d_rvalid_max;
+        int unsigned per_record = (ibus_cost > dbus_cost ? ibus_cost : dbus_cost) + GEN_IRQ_DRAIN_RECORD_OVERHEAD_CYCLES;
+   -    return per_record * GEN_IRQ_ENTRY_BOUND_RECORDS + GEN_IRQ_DRAIN_MARGIN_CYCLES;
+   +    return per_record * (GEN_IRQ_ENTRY_BOUND_RECORDS + 1) + GEN_IRQ_DRAIN_MARGIN_CYCLES;
+      endfunction
+    
+      // Below the knobs region because the generator emits functions from its own templates and not from the yaml: this is
+   gen_tb_pkg.sv sha256 first16 at the base commit: 3f4919ad62777bdd
+   gen_tb_pkg.sv sha256 first16 as landed:          5251198fb5468700
+   New with this landing: dv/auto_dv/tb/unit/gen_ut_drain_cap_top.sv and its filelist, on the same pure-SV
+   harness the gen_mem_model unit test uses, which compiles gen_tb_pkg.sv directly so the function under test
+   is called by name with no RTL and no UVM test.
+
+== 3. THE SIMULATION PAIR, the drain completing on the eighteenth record inside the new cap ==
+   One out-of-tree root off a detached archive of the base, two builds, the second the first plus the one
+   change above, applied by copying the tree's own file in. Seed 7 of lockstep_irq_storm_nmi with the plusargs
+   of the landing-32 seed-7 run, so the drain lines compare directly.
+   == BASE: HEAD as committed (the cap sized over the bound)
+      base sources sha256 (dv/auto_dv env, tb, isa, gen_tb): 98629b00cb34e79e
+      verdict: PASS
+      drain: 18 records in 126 cycles (bound 17 records plus one, cap 193 cycles from the effective bus maxima i 3/4 d 3/4)
+      open after the drain=0
+      irq_entry UVM_ERROR lines: 0
+   
+   == apply the landing's exact gen_tb_pkg.sv from the tree, then show the diff that was applied
+   $ diff <(git show HEAD:dv/auto_dv/tb/gen_tb_pkg.sv) dv/auto_dv/tb/gen_tb_pkg.sv
+      @@ -547,13 +547,15 @@ package gen_tb_pkg;
+         // The interrupt-entry drain's cycle cap, COMPUTED from a run's effective bus maxima rather than frozen: the four
+         // gen_{i,d}bus_{gnt,rvalid}_max plusargs overwrite the regime windows with only a lower clamp, so a constant taken
+         // from the defaults would be wrong for any run that widens one. Worst legitimate per-record cost is the slower
+      -  // bus's grant plus response wait plus the pipeline's own stages, times the entry bound, plus the margin.
+      +  // bus's grant plus response wait plus the pipeline's own stages, times the DRAIN'S LENGTH, which is the
+      +  // entry bound plus one record because the drain runs while the count is at or below the bound. The margin
+      +  // is left to the finish handshake and the last write-back, so the extra record is not borrowed from it.
+         function automatic int unsigned gen_irq_drain_cap_cycles(int unsigned i_gnt_max, int unsigned i_rvalid_max,
+                                                                  int unsigned d_gnt_max, int unsigned d_rvalid_max);
+           int unsigned ibus_cost = i_gnt_max + i_rvalid_max;
+           int unsigned dbus_cost = d_gnt_max + d_rvalid_max;
+           int unsigned per_record = (ibus_cost > dbus_cost ? ibus_cost : dbus_cost) + GEN_IRQ_DRAIN_RECORD_OVERHEAD_CYCLES;
+      -    return per_record * GEN_IRQ_ENTRY_BOUND_RECORDS + GEN_IRQ_DRAIN_MARGIN_CYCLES;
+      +    return per_record * (GEN_IRQ_ENTRY_BOUND_RECORDS + 1) + GEN_IRQ_DRAIN_MARGIN_CYCLES;
+         endfunction
+       
+         // Below the knobs region because the generator emits functions from its own templates and not from the yaml: this is
+      applied file sha256 first16: 5251198fb5468700
+      HEAD's file sha256 first16:  3f4919ad62777bdd
+   
+   == CAPFIX: the same root with that one change (the cap sized over the bound plus one)
+      capfix sources sha256 (dv/auto_dv env, tb, isa, gen_tb): 9b6a43a73ca7774c
+      verdict: PASS
+      drain: 18 records in 126 cycles (bound 17 records plus one, cap 202 cycles from the effective bus maxima i 3/4 d 3/4)
+      open after the drain=0
+      irq_entry UVM_ERROR lines: 0
+   end 2026-09-04T18:15:52Z
+
+   READING: both builds retire 18 records in 126 cycles with nothing open and zero irq_entry errors, and only
+   the printed cap moves, 193 to 202. The pair shows the change compiles and that the drain completes on the
+   eighteenth record inside the new cap; it is NOT a discriminating red and is not offered as one. Section 1
+   is the discriminating check.
+
+   IDENTITIES. Neither build's shape is a committed one, so no gate identity (the flow's filelist_digest over
+   gen_rtl.f plus gen_tb.f) applies to either and none is claimed. The figures printed are the local runner's
+   find-digest over dv/auto_dv env, tb, isa and gen_tb. The base build's figure is the one HEAD's sources
+   produce, which is the cross-check that the base really is the base.
+
+== 4. WHAT THIS LANDING DOES NOT CLAIM ==
+   It does not claim a simulation ever hit the old cap. At the default maxima truncating an 18-record drain
+   would need more than 193/18 = 10.7 cycles per record against a modelled worst case of 9, so it cannot
+   happen there, and landing 32 already measured that widening the instruction bus starves the RUN before it
+   stretches the DRAIN (rvalid_max 12 and 200 both died before the drain). The unreachability holds for
+   records that cost no more than the MODEL allows; a record can exceed it only if something outside the bus
+   model holds retirement, which is the retirement-stall residual landing 31 left out and the plan already
+   records as owed, not a second hole. The reachable-in-principle regime is per_record above the margin, and
+   section 1 is where that regime is exercised.
+# END. The unit-test lines are redirected from each run's own log; the function text, the diff and both sha256
+# figures are printed by git, sed and sha256sum from the tree at the moment this log was built.

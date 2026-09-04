@@ -974,3 +974,45 @@ gen_fu_l33_age17_attempt.log in landing 34, each with a manifest row. The attemp
 runs as a row produced by the attempt's own summariser from that run's run_header.txt, stdout.log and verdict.txt,
 the digests of all six scratch builds with the statement that no gate identity applies to any of them, and the two
 probe builds marked as measurement aids from which no claim about the drain is read.
+
+## Landing 35: the interrupt-entry drain cap sized over the bound plus one, with the unit case that discriminates it
+
+WHAT WAS WRONG. The cap ends a drain whose core has stopped retiring, so it must never end a drain that is still
+working. The drain runs while the retired count is at or below GEN_IRQ_ENTRY_BOUND_RECORDS, which makes its length
+the bound PLUS ONE records, while the cap was sized over the bound alone. The extra record was funded only by
+GEN_IRQ_DRAIN_MARGIN_CYCLES, whose comment gives it a different job. A cap short of the drain's length cannot fail a
+run; it can only end the drain EARLY, and an early end leaves an expectation at age exactly the bound unjudged and
+reported open with no error, which is the silent missed detection the bound-plus-one drain length exists to remove.
+
+THE CHANGE is one line plus its comment: the cap is per_record times the drain's length, the bound plus one, plus
+the margin, and the comment now says the margin is left to the finish handshake and the last write-back so the
+extra record is not borrowed from it. At the default effective maxima, which the runs report as i 3/4 and d 3/4,
+per_record is 9 and the cap moves from 193 to 202; in general the new cap is the old one plus one per_record.
+
+THE RED IS A UNIT CASE, and finding where it could live is what made this landing possible. The pure-SV harness the
+gen_mem_model unit test already uses compiles gen_tb_pkg.sv directly with no RTL and no UVM test, so a sibling test
+can call the function by name. gen_ut_drain_cap_top.sv with gen_ut_drain_cap.f makes nine checks and FAILS FOUR on
+the committed function, zero after the change, with four positive controls green in both runs so a run that failed
+everything would be visible as such. The discriminating check is the wide-bus case: at i 20/25 one record costs 47
+cycles against a 40-cycle margin, and the old cap gives 839 where the drain needs 846. That is exactly the regime
+where borrowing the margin stops working, and it is also why no simulation red exists: at the default maxima a
+record costs 9 against a margin of 40, so the old cap did cover the extra record. A unit case can set the bus maxima
+directly; a simulation that widened them that far would starve its own run before the drain, which landing 32
+measured.
+
+THE SIMULATION PAIR is retained as what it is. One out-of-tree root off a detached archive of the base, two builds
+differing by this one change, seed 7 of lockstep_irq_storm_nmi with the landing-32 plusargs: both retire 18 records
+in 126 cycles with nothing open and zero irq_entry errors, and only the printed cap moves. It shows the change
+compiles and that the drain completes on the eighteenth record inside the new cap. It is not a discriminating red
+and is not offered as one.
+
+This also closes CM208-Info-1, which recorded that no unit case exercised this function rather than promising one.
+HOW THE UNIT CASE IS RUN, stated because it changes what a gate can check: it is a pure-SV test and nothing
+under ci or the flow invokes it, so it is run BY HAND and a worktree gate running the python unit tests will
+not pick it up. The retained log names the exact command, the filelist, the vcs invocation with its top
+module, the simv call and both summary lines, so a reviewer can reproduce the pair without inferring the
+harness. Wiring it into a gate is worth doing and is not done here.
+
+Retained: gen_tdd_logs/mutations/gen_fu_l35_drain_cap_resize.log, whose first section is the fail-then-pass
+pair with the function's text on both sides of the change and the command that runs it, followed by the exact
+diff with both sha256 figures and the simulation pair, with a manifest row.
