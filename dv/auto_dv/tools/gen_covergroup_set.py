@@ -43,6 +43,7 @@ def main():
     entries = [e for e in tl['tests'] if e.get('fcov_expectation_file')]
     per_cg = collections.defaultdict(lambda: {'bins': set(), 'cps': collections.defaultdict(set), 'manifests': collections.Counter()})
     per_man = {}; declarers = collections.defaultdict(set)   # bin token -> manifests declaring it
+    nh_all = set()   # distinct bins_not_hit tokens across the named manifests (a manifest named by two entries counts once)
     try: home_rel = pathlib.Path(FCOV_HOME).resolve().relative_to(R.resolve())
     except ValueError: sys.exit(f'manifest home {FCOV_HOME} is outside the clone root {R}')
     for e in sorted(entries, key=lambda e: e['name']):
@@ -50,7 +51,7 @@ def main():
         if rel.parent != home_rel: sys.exit(f'{e["name"]}: manifest {rel} is not under {home_rel}, --fcov-dir cannot stand in for it')
         p = pathlib.Path(a.fcov_dir) / rel.name   # named manifests are read from --fcov-dir too, so a rehearsal dir stands in for the tree
         if not p.exists(): sys.exit(f'{e["name"]}: manifest {p} missing')
-        txt = p.read_text(); nh = set(re.findall(r'^# not_hit (\S+):', txt, re.M)); dig.update(txt.encode())
+        txt = p.read_text(); nh = set(re.findall(r'^# not_hit (\S+):', txt, re.M)); dig.update(txt.encode()); nh_all |= nh
         bins = list((yaml.safe_load(txt) or {}).get('bins') or [])
         cgs = collections.Counter()
         for b in bins:
@@ -95,7 +96,7 @@ gen_fcov_plan.md headers (file:line). Covergroups without a plan header: {len(un
 
 Totals: {len(rows)} covergroups, {total_bins} distinct referenced bins, {len(entries)} manifests: {declared_total} declarations in total, of which
 {dup_decl} are duplicate declarations of a bin another manifest also declares ({multi} distinct bins are declared by more than one manifest); a further
-{sum(d['not_hit'] for d in per_man.values())} bins_not_hit bins are not declared by any manifest.
+{len(nh_all)} distinct bins_not_hit bins are not declared by any manifest (counted once across the named manifest files; the per-manifest table below lists each entry's own count).
 
 | Rank | Covergroup (SV) | Plan id | Ledger | Bins referenced | Coverpoints / crosses referenced (bins each) | Manifests (bins each) | Manifests completed at this rank | Plan anchor |
 |---|---|---|---|---|---|---|---|---|
