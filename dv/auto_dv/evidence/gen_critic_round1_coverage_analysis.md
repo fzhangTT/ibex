@@ -82,3 +82,71 @@ CRITIC VERDICT: APPROVE on dv/auto_dv/evidence/gen_round_0_coverage_analysis.md 
 gate is not claimed, and the gaps are classified by cause with the reachability stated honestly except for the PMP row (L-1), which names a target a
 standing rule blocks until covergroups are built. Rows CR-41 L-1..L-5, all Low, for the DV Lead's next touch; L-1 before the owner reads the ranked list
 if the schedule allows. The pause follows this verdict.
+
+## 4. Corrigendum section: the DV Lead's v6c (91360ab) against this verdict, and a corrigendum to the round verdict
+
+This verdict was written and committed (82d47b6) on b176587 (v6b); the Orchestrator then named the DV Lead's v6c (91360ab, blob 5800ee011ef768b2, 239 lines) the
+final analysis the owner reads, a records touch on b176587 folding this verdict's rows CR-41 L-1, L-2, L-3 and L-5 and the CR-40 M-1 paragraph. No figure
+of Sections 1-3 is re-derived here; every one held on b176587 and the delta below moves none. The committed diff b176587..91360ab over the file,
+re-derived by me:
+
+    -| module | states+transitions covered | missed |
+    +| module | transitions covered | transitions missed |
+    -| 2 | ibex_pmp: no PMP test in the measured set | 1815 missed objects | test-writer | yes: two PMP entries exist, unmeasured |
+    +| 2 | ibex_pmp: no PMP test can be MEASURED yet, see below | 1815 missed objects | tb-infra then test-writer | NO, blocked by P-07 |
+    -| 8 | op x register-relationship product (12+5 bins) | 17 bins | test-writer (generator) | yes: table entry and sweep are one change |
+    -| 9 | compressed-branch and successor sequencing | 55 in isa_branch, 20 in cmp_zca | test-writer (generator) | yes |
+    +| 8 | op x register-relationship product, 12 pack + 5 same-register bins | 17 bins | test-writer (generator) | yes: table entry and sweep are one change |
+    +| 9 | compressed-branch and successor sequencing | 55 in isa_branch, 17 in cmp_zca | test-writer (generator) | yes |
+    -THE REGENERATION IS MINE. Section 10 of the round-1 request makes the credit report and the promotion table
+    -regenerated at the round's commit part of acceptance, the tools are mine, and it has not been done: it is the
+    -first item I take up when the pause lifts. Cite the Critic's file by path once it is committed.
+    +THE REGENERATION IS MINE AND IT IS A GATE, not a chore. Section 10 of the round-1 request makes the credit
+    +report, the promotion table and the covergroup set regenerated at the round's commit part of acceptance; the
+    +tools are mine; and it has not been done. The Critic's round verdict,
+    +dv/auto_dv/evidence/gen_critic_round1_record.md at 8c83b3a, is REQUEST-CHANGES on 4a00702..de1ccf3 confined to
+    +exactly that acceptance (CR-40 M-1), with the DV Lead named as owner. It closes when the regeneration lands at
+    +the round's commit and a recorded re-review passes, and it is the first item I take up when the pause lifts.
+    +
+    +TWO FIGURES FROM THE CRITIC'S PROBE bound that work and are theirs rather than mine: the promotion table at 20
+    +entries, and the covergroup set at 25 covergroups, 2864 bins and 22 manifests regenerated at the round's
+    +commit. I re-derive both when I run the regeneration, and the round record carries mine at that point.
+    +ITEM 2 OF THE RANKED LIST IS BLOCKED BY THE POLICY THIS ROUND IS BUILT ON, and it would be the easiest thing
+    +in this document to misread as a quick win. Not one gen_pmp covergroup is rendered in gen_fcov_groups.svh: the
+    +count is zero. All three PMP entries, gen_test_pmp_csr_warl, gen_test_pmp_mseccfg and gen_test_pmp_lock, read
+    +measured false with a null manifest reference, because every bin their items own sits on a covergroup that
+    +does not exist. Under P-07 a measured entry on smoke or targeted must carry a manifest, a manifest may not
+    +declare a bin of a covergroup that does not exist, and an entry that can declare nothing cannot be measured at
+    +all. So ibex_pmp's 1815 missed objects are NOT reachable by simply measuring the entries that exist: a gen_pmp
+    +covergroup has to be built, or those items re-planned onto built ones, before any PMP test can be measured.
+    +That makes item 2 tb-infra's before it is the Test Writer's, and it is the same structural gap as the 182
+    +unbuilt covergroups rather than a separate one.
+    +
+
+What the delta closes, each read against this file's rows and my round verdict's figures (a row marked present is CLOSED by v6c; a row marked not found stays OPEN) (gen_critic_round1_record.md, 8c83b3a: 66 / 185, 50 / 18 / 51, PMP
+31 of 31, promotion table 20 entries, covergroup set 25 / 2864 / 22):
+
+- 4b cites my round verdict by path: present in the delta
+- CR-40 M-1 named with the DV Lead as owner: present in the delta
+- probe figures attributed (20 entries; 25 / 2864 / 22): present in the delta
+- L-1 PMP row precondition (covergroup built or items re-planned): present in the delta
+- L-2 FSM column relabelled transitions: present in the delta
+- L-3 17 in cmp_zca and the 12+5 source: present in the delta (row 9 reads 17 in cmp_zca; row 8 reads 12 pack + 5 same-register bins)
+- L-5 caveat beside the adjusted row in section 5: NOT found in the delta (still open)
+
+CR-41 L-4 (modlist.txt and modinfo.txt not retained in the record) stays open with runtime-2, who owes the two-file gzip supplement under gen_round_0;
+CR-41 L-5 (the strict-load caveat beside the adjusted row wherever it is quoted) stays open: v6c does not touch Section 5, whose sentence "the adjusted row in
+Section 1 is what the same merge reads with pass 14's file" still carries no caveat. Closed by v6c: L-1 (row 2 now reads NO, blocked by P-07, tb-infra then
+test-writer, with the paragraph on the unrendered gen_pmp covergroups), L-2 (the FSM column reads transitions covered / transitions missed), L-3 (17 in
+cmp_zca; row 8 names the 12 pack and 5 same-register bins).
+CR-40 M-2 (the form's third group quantity) is CLOSED by the DV Lead's v5f (693fb1c, blob 2f1e926f630e850d, 347 lines): Section 12 names bins excluding the
+ledger, 3477/4048 = 85.89, derived in the sentence from the report ratio minus the ledger's 220 expected and 0 covered (:341-342), with CM218-L-2's
+"source" wording in the same touch.
+
+CORRIGENDUM to gen_critic_round1_record.md (8c83b3a), Sections 3 and 5, per the owner correction relayed by the Orchestrator: CR-40 M-1's three
+regenerations (gen_round_credit.py, gen_promotion_table.py, gen_covergroup_set.py) are the DV Lead's tools and the DV Lead's row, not runtime-2's as the row
+named; the acceptance sentence in the log is the Orchestrator's (LOG-094 when the regeneration lands). The row's substance, its Medium grade and its gate
+(round-2 work built on the round's plan credit waits for it) are unchanged.
+
+CRITIC VERDICT on v6c (91360ab): APPROVE, the verdict on b176587 carried forward; the rows of Section 2 stand as closed or open exactly as listed above. The
+pause follows.
