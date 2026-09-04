@@ -1,5 +1,7 @@
 # rt38 plan: an explicit deferred fcov reference, distinct from a missing one
 
+STATUS: SHELVED, NOT FOR IMPLEMENTATION. LOG-091 took the manifest route and the Critic ruled rt38 a relaxation of P-07; this file is kept as the record of the rejected alternative, for its measurement and its consumer enumeration.
+
 Ruling LOG-089. Plan only; nothing is implemented until the cross-model plan review and the Critic verdict are
 recorded. Author: Runtime Manager. Target files named in Section 6.
 
