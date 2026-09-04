@@ -51,9 +51,12 @@ def parse_report(grpinfo: Path) -> dict:
         if re.match(r"^(Covered bins|Uncovered bins|Bins)\s*$", line):
             in_bins, cols = True, None
             continue
-        # The checker's own reset set: an Excluded/Illegal bins table after a covered one must not be read as more
-        # of that coverpoint, or its rows inflate the listing and a name shared with a declared bin reads as agreement.
-        if re.match(r"^(Excluded/Illegal bins|Variables for)", line):
+        # The checker's reset set, all four alternatives (ci/check_fcov_expectations.py): a table that follows a
+        # covered one must not be read as more of that coverpoint, or its rows inflate the listing and a name shared
+        # with a declared bin reads as agreement. The Variable and Cross section starts are consumed above, so the
+        # Summary-for alternative here catches every other form, and the long rules must reset before the short-rule
+        # skip below sees them.
+        if re.match(r"^(Excluded/Illegal bins|Summary for|Variables for|-{10,}|={10,})", line):
             in_bins, cols = False, None
             continue
         if re.match(r"^-{3,}\s*$", line) or not line.strip():
@@ -130,6 +133,33 @@ bogus  42    1
 ----------
 """
 
+# A long rule and a Summary-for line of another form both END a bin table for the checker. Rows after either one
+# belong to no coverpoint of this section; a reader that only skips them absorbs them into the previous one.
+RESET_FIXTURE = """Group : gen_pkg::gen_y_cg
+
+Summary for Variable cp_r
+
+Covered bins
+
+NAME   COUNT AT LEAST
+real   5     1
+
+--------------------
+
+NAME    COUNT AT LEAST
+after_rule 11 1
+
+====================
+
+NAME     COUNT AT LEAST
+after_eq 12    1
+
+Summary for Instance gen_tb_top.u_dut
+
+NAME       COUNT AT LEAST
+after_inst 13    1
+"""
+
 
 def _self_test() -> None:
     """Fabricate a report and three result.yaml files, so agreement, a count mismatch and a missing key are all seen."""
@@ -144,6 +174,17 @@ def _self_test() -> None:
         rep = root / "urgReport_variable_form"
         rep.mkdir()
         (rep / "grpinfo.txt").write_text(REPORT_FIXTURE, encoding="ascii")
+
+        rep2 = root / "urgReport_reset_form"
+        rep2.mkdir()
+        (rep2 / "grpinfo.txt").write_text(RESET_FIXTURE, encoding="ascii")
+        got_reset = flatten(parse_report(rep2 / "grpinfo.txt"))
+        want_reset = {"gen_y_cg.cp_r.real": 5}
+        cond_reset = got_reset == want_reset
+        ok &= cond_reset
+        print("SELF-TEST", "ok " if cond_reset else "BAD",
+              "a long dash rule, a long equals rule and a Summary-for line each END the bin table, as the checker's "
+              "reset set does, so no row after one is read as the coverpoint's: got %s" % sorted(got_reset))
 
         parsed = flatten(parse_report(rep / "grpinfo.txt"))
         want = {"gen_x_cg.cp_a.hit_a": 7, "gen_x_cg.cp_a.hit_b": 0, "gen_x_cg.cp_b.only": 3}

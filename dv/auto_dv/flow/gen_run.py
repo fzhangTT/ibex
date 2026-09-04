@@ -455,7 +455,7 @@ def main() -> int:
     sim_log = run_dir / C.SIM_LOG
     # A red fixture whose failure is an unmet fcov expectation has a PASSING sim log by construction, so grading it
     # here would call it a dead checker before the check that fails it has run. Such an entry is graded after the
-    # fcov check instead; every other red fixture is graded here exactly as before.
+    # fcov check instead; every other red fixture is graded here.
     red_fixture = bool(test.get("red_fixture"))
     defer_red = U.red_grading_deferred(test)
     res = V.decide(sim_log, pass_marker, timed_out, bool(test.get("expected_fail")), rc,

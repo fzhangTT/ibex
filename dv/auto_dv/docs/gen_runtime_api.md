@@ -762,7 +762,18 @@ In a regression `gen_regress.post_fcov_checks` runs it after every writer to the
 standalone `gen_run.py --fcov-check` runs it right away (single writer). That pass admits a PASS or XFAIL run, and
 also any run whose entry is `red_grading_deferred`, whatever verdict `gen_run` parked it with: the pass is the only
 stage that can produce such a fixture's declared failure, so a verdict-only gate would skip it and leave the entry
-failing for a reason that is not its declared one. Result: `result.yaml: fcov_check` with
+failing for a reason that is not its declared one.
+
+WHERE A VERDICT IS READ FROM, because two artefacts of the same run disagree by construction. The regression's
+driver log records each run's verdict as `gen_run` returned it, which is BEFORE this pass. The pass then rewrites
+the per-seed `result.yaml` (its `verdict`, `reason` and `fcov_check`) and mutates the same run records the
+manifest's `summary` and `runs[]` are built from. So a failure this check discovers appears in the per-seed
+`result.yaml` AND in `manifest.yaml`, while the driver log keeps the line it first wrote, typically a PASS. Read a
+verdict from `manifest.yaml` or from the per-seed `result.yaml`; the driver log is a progress record and never a
+result. A count taken from it undercounts exactly the failures this pass produces, which is how a real regression
+was read as three failures where its manifest held six.
+
+Result: `result.yaml: fcov_check` with
 status (PASS, UNHIT, PROTOCOL_ERROR, NO_MANIFEST), per-bin HIT/UNHIT/MISSING-FROM-REPORT with counts,
 `unmet_bins`, the notes, the checker log, `report_dir` and `derived_report_dir` (both retained in the run dir),
 `derived_grpinfo` (cross_sections, cross_tables, cross_rows rewritten) and `checker_mode`. A urg failure, a report

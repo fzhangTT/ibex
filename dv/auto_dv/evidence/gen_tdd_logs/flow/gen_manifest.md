@@ -223,6 +223,29 @@ run log and RED-OK in result.yaml after the pre-merge pass, which disagree by de
 the entry leaves it loadable while silently turning it into a sim-log-graded fixture that always reports a fixture
 passing unexpectedly, so the manifest is part of the entry.
 
+gen_rt35_supplement_corrigendum.log corrects two presentation defects in the rt35 supplement, both found by the
+review rather than by me, and both of the same kind: a figure printed without the method that produced it. Its PART B
+excerpts were filtered to the cases each revert targets and did not say so, so the same file hash carried two
+different failure counts in one document; the complete counts are three, one and three, taken from the full self-test
+output of the module each revert affects and of the commit the supplement describes rather than of the clone. And the
+RED 3 edit was named by intent instead of specified, so it was not reproducible; the literal three lines and the hash
+their deletion produces are now given. Two things it records beyond the corrections: the same off-by-one in a line
+count sat in a second probe, found only because fixing the first prompted a check of the other, and the first probe I
+corrected was the wrong one, because the cited figures came from a different probe over a different file. Every red in
+the supplement still discriminates and its reconstruction argument is untouched.
+
+gen_fu_guard_fcov_red_corrigendum.log corrects two statements in the guard's own log that are properties of the flow
+rather than of the guard, which is why the correction is Runtime's. The log said the parked NOT_RUN state is counted
+as neither a pass nor a failure; it is summed into the bad total with fail and timeout, so a NOT_RUN guard fails its
+regression and a round refuses to index. The case is reachable rather than theoretical, because the guard is a
+check-tier entry, so a check-tier regression with coverage off cannot run its expectation check, grades it NOT_RUN and
+exits non-zero on the guard alone; whether that is the wanted behaviour is left open as a policy question with its
+three options named. The second correction pins a build-input figure to a commit: the log's thirty changed paths and
+two non-inputs reproduce only against two early commits, while the log is committed at one where the same comparison
+gives thirty-four and three, so a reader re-running it from the log's own commit would think the log wrong. The
+unhittability argument the figure supports is unaffected, resting on two coverage sources being byte-identical across
+all of those commits.
+
 | evidence path | source | bytes | md5 |
 |---|---|---|---|
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_gate_rule_red.log | dv/auto_dv/work/runtime/gate_rule_red.log | 926 | 78b72aae6509d2776a43c9314808b01b |
@@ -254,3 +277,5 @@ passing unexpectedly, so the manifest is part of the entry.
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_rt35_red_grading.log | (runtime scratchpad) rt35/gen_rt35_red_grading.log | 31785 | acc9a35cb98beebf104e6cb77ebc05ac |
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_rt35_red_grading_supplement.log | (runtime scratchpad) rt35/gen_rt35_red_grading_supplement.log | 16792 | 217a2fd223682b7892b588357e9d9af5 |
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_fu_guard_fcov_red.log | (tb-infra) composed from runtime's scratchpad guard/g1 and guard/g2 runs | 8126 | 5c59feb272c40be64b45b271937b4472 |
+| dv/auto_dv/evidence/gen_tdd_logs/flow/gen_rt35_supplement_corrigendum.log | (runtime scratchpad) cr33/gen_rt35_supplement_corrigendum.log | 8583 | 0d79e9d5372c50174451c5109feef32b |
+| dv/auto_dv/evidence/gen_tdd_logs/flow/gen_fu_guard_fcov_red_corrigendum.log | (runtime scratchpad) rt35c/gen_fu_guard_fcov_red_corrigendum.log | 6344 | 264f58f704cf4012ac2883ec44be16cd |

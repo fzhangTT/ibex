@@ -9,7 +9,7 @@ tests in each report is read out of the report's own tests.txt, so the isolation
 not on the flow's promise.
 
 Usage:
-    gen_compare_forms.py --isolated ROOT --shared ROOT [--entries a,b,c]
+    gen_compare_forms.py --isolated ROOT --shared ROOT --entries a,b,c
     gen_compare_forms.py --self-test
 
 ROOT layouts: the isolated root holds <entry>/result.yaml; the shared root holds <entry>_<seed>/result.yaml.
@@ -28,12 +28,6 @@ from typing import Any
 
 import yaml
 
-# The nine icache-ECC entries of the isolation exercise, kept so its invocation stays reproducible from the tool.
-DEFAULT_ENTRIES = ("gen_ut_lockstep_icache_ecc", "gen_ut_lockstep_icache_ecc_data",
-                   "gen_ut_lockstep_icache_ecc_data_noprobe", "gen_ut_lockstep_icache_ecc_tag_two",
-                   "gen_ut_lockstep_icache_ecc_data_two", "gen_ut_lockstep_icache_ecc_both",
-                   "gen_ut_lockstep_icache_ecc_far_data", "gen_ut_lockstep_icache_ecc_far_data_noprobe",
-                   "gen_ut_lockstep_icache_ecc_tag_disabled")
 TESTS_IN_REPORT_RE = re.compile(r"Total tests in report:\s*(\d+)")
 
 
@@ -164,7 +158,10 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--isolated", type=Path, help="root holding <entry>/result.yaml")
     ap.add_argument("--shared", type=Path, help="root holding <entry>_<seed>/result.yaml")
-    ap.add_argument("--entries", help="comma-separated entry names (default: the nine icache-ECC entries)")
+    # Named by the caller, never defaulted from the testlist: the set of entries carrying any given covergroup's
+    # bins grows as entries land, so a default would change what a recorded invocation compared. Enforced on the
+    # compare path rather than by argparse, so --self-test still needs no entry list.
+    ap.add_argument("--entries", help="comma-separated entry names to compare (required unless --self-test)")
     ap.add_argument("--seed", type=int, default=1)
     ap.add_argument("--self-test", action="store_true")
     a = ap.parse_args()
@@ -172,7 +169,11 @@ def main() -> int:
         return self_test()
     if not (a.isolated and a.shared):
         ap.error("--isolated and --shared are both required")
-    entries = tuple(x.strip() for x in a.entries.split(",")) if a.entries else DEFAULT_ENTRIES
+    if not a.entries:
+        ap.error("--entries is required (the entry set is never defaulted from the testlist)")
+    entries = tuple(x.strip() for x in a.entries.split(",") if x.strip())
+    if not entries:
+        ap.error("--entries named no entry")
     missing = [str(a.isolated / n) for n in entries if not (a.isolated / n / "result.yaml").is_file()]
     missing += [str(a.shared / f"{n}_{a.seed}") for n in entries
                 if not (a.shared / f"{n}_{a.seed}" / "result.yaml").is_file()]

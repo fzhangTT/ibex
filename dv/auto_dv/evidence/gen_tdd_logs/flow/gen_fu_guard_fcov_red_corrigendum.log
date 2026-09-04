@@ -1,0 +1,91 @@
+# CORRIGENDUM to gen_fu_guard_fcov_red.log: one sentence in it understates a consequence, and one figure in it is
+# of a commit the log does not name. Both are the flow's properties rather than the guard's, which is why this
+# correction is Runtime's and not the log author's.
+#
+# ROWS ANSWERED HERE: CM211-Low-2 and CM211-Info-2. The coverage-off consequence in the first was also raised by the
+# Critic in tb_l33, and the position on it below was asked for by the Orchestrator.
+#
+# WHY A CORRIGENDUM. The guard log is retained with a committed manifest row, so its bytes do not move. This file
+# carries its own row in the same manifest, the convention the l25 and rt35 corrigenda set.
+#
+# date_utc  : 2026-09-04T19:27:11Z
+# host      : soc-l-11
+# corrects  : dv/auto_dv/evidence/gen_tdd_logs/flow/gen_fu_guard_fcov_red.log
+# clone HEAD: a69e285ccc68be43f70a75ade1d3fcc090251e6d
+
+================================================================================
+CM211-Low-2  NOT_RUN does not sit outside the pass and fail count; it FAILS the regression
+================================================================================
+The log's section 2 says the parked state is "not a pass and not a failure, and counted as neither". The last
+clause is wrong, and it matters because it invites a reader to treat a NOT_RUN guard as harmless.
+
+MEASURED IN THE CODE THAT DECIDES IT:
+
+  gen_regress.py:754   bad = s["fail"] + s["timeout"] + s["not_run"]
+  gen_regress.py:758   return 0 if bad == 0 else 2
+So not_run is summed into the bad total with fail and timeout, and a non-zero bad total is exit 2. A NOT_RUN guard
+therefore fails its regression, and gen_round refuses to index a round whose regression is not clean.
+
+AND THE CASE IS REACHABLE, not hypothetical. The guard is a CHECK-TIER entry:
+
+  guard tier 'check', measured False, names a manifest True
+  so --tier check selects it: True
+  and with --no-coverage there is no vdb, so no expectation check runs for it,
+  so it is graded NOT_RUN and the regression exits 2 on the guard alone.
+
+WHETHER A COVERAGE-OFF CHECK-TIER REGRESSION IS EXPECTED TO CARRY THE GUARD. RULED, not open: the Critic raised it,
+Runtime recommended the answer below, and the Orchestrator adopted it (see the ruling row in
+dv/auto_dv/work/orchestrator/TASKS.md at 19:2xZ). The reasoning is kept because a reader who meets the behaviour
+needs to know it was chosen rather than inherited.
+
+RULING: yes, carry it, and yes, let that regression exit non-zero on it.
+1. The guard exists to make the failing direction permanent. A coverage-off run cannot exercise it, so the only two
+   honest outcomes are "not judged" and "failed"; NOT_RUN counted into the bad total gives exactly that. A clean
+   pass would be the false green the guard was built to prevent.
+2. Excluding the entry from coverage-off runs is worse than failing, because a reader of that regression would not
+   learn the guard had not run. A silent absence is the failure mode this whole line of work exists to remove.
+3. Treating this NOT_RUN differently inside the bad total would key a regression's exit on a reason string, and the
+   same NOT_RUN label is produced by a failed build, which must fail. Separating them properly needs a verdict of
+   its own, which is a flow change with real blast radius and does not belong in a corrigendum.
+
+THE COST IS SMALL, measured rather than asserted: running the check tier WITH coverage took 87 runs in about five
+minutes of wall time on already-compiled builds. So the remedy for anyone wanting a clean check-tier gate is to run
+it with coverage, not to change the flow.
+
+THE ALTERNATIVE CONSIDERED AND NOT TAKEN: a distinct verdict for "a deferred red no stage could judge", excluded
+from the bad total by its own name rather than by a reason match, with its own red and a case in the regression
+module's self-test. It is rt37-shaped and is frozen behind round 1 by the same ruling.
+
+WHAT THIS MEANS FOR A MEASURED ROUND, measured rather than assumed, because the ruling only bites when coverage is
+off. A round runs ONE regression invocation over the whole tier-full plan, and the round driver passes neither
+--no-coverage nor --repro (zero occurrences of each), while the regression computes its coverage flag as
+"not --no-coverage and not --repro". So coverage is ON for every run in a round, the pre-merge pass runs the
+expectation check, and the guard grades RED-OK rather than NOT_RUN: it contributes zero to the bad total and cannot
+refuse a round's indexing. There is no per-tier coverage choice inside a round to get this wrong.
+
+What this file fixes either way is the log's claim that the parked state is counted as neither; that is wrong under
+every option above.
+
+================================================================================
+CM211-Info-2  the build-input figure is of a commit the log does not name
+================================================================================
+The log's identity section gives "30 changed paths ... two non-inputs" without naming the HEAD the comparison ran
+against, and the figure moves with HEAD. Measured now, against the build's own source commit 813994b3d483:
+
+  build source commit: 813994b3d483
+    against d8f5d99   d8f5d99eb79b  inputs 30  non-inputs 2
+    against c8821a9   c8821a96bc01  inputs 30  non-inputs 2
+    against 71c1c70   71c1c706f1be  inputs 30  non-inputs 3
+    against 962d31f   962d31f82d3b  inputs 32  non-inputs 3
+    against b105c09   b105c09655a4  inputs 34  non-inputs 3
+So the log's 30 and two reproduce ONLY against d8f5d99 or c8821a9, which give the same delta. The guard log is
+committed at b105c09, where the same comparison gives 34 inputs and three non-inputs, so a reader who re-runs it
+from the commit the log lives in gets different numbers and concludes the log is wrong. It is not wrong; it is
+unlabelled. The head-mode supplement, when the round HEAD is announced and the canonical red is produced, states
+the HEAD beside the figure, and any future build-input figure in a log of mine does the same.
+
+WHAT IS UNAFFECTED. The unhittability argument the figure supports does not depend on the count at all: it rests on
+gen_fcov_groups.svh and gen_fcov_pkg.sv being byte-identical between the build's commit and the log's, which holds
+at every commit above.
+
+assembled: 2026-09-04T19:27:14Z

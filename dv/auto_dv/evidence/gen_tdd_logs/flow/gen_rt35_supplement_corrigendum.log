@@ -1,0 +1,107 @@
+# CORRIGENDUM to gen_rt35_red_grading_supplement.log: two counts in it are filtered views, and one edit was
+# described rather than specified. Both defects are in the presentation; the reds underneath are sound and the
+# corrected figures are below.
+#
+# ROWS ANSWERED HERE: CM211-Low-1, CM211-Info-1, and the Critic's CR-33-L-1 and CR-33-L-2, which name the same two
+# defects (the unstated filter on the PART B excerpts, and the RED 3 revert's lines not being stated). One fix
+# serves all four; the ids are listed so each resolves to this file.
+#
+# WHY A CORRIGENDUM. The supplement is retained with a committed manifest row, so its bytes do not move. This file
+# carries its own row, the convention the l25 exercised-run corrigendum set and the same one the supplement itself
+# used for the log before it.
+#
+# DEFECT 1, the same file hash carrying two different counts. The supplement's PART B prints each revert's
+# self-test output through a grep that names only the cases that revert targets, so its visible BAD lines are a
+# SUBSET. Its PART E prints every BAD line. Both describe gen_regress.py at e660220bf7ba, and PART B shows two
+# while PART E shows three, with nothing in the file saying why. A reader comparing them has to conclude one is
+# wrong. Neither figure is wrong about what it ran; the file failed to say that PART B's are filtered.
+#
+# DEFECT 2, an edit described rather than specified. The supplement's RED 3 says "the pre-grading restore removed"
+# and prints the resulting hash. That is not reproducible: removing a different extent, the surrounding blank line
+# or the apply_fcov_check call with it, yields a different file and a different hash. The literal edit is given
+# below, by line number and text, with the hash it produces.
+#
+# DEFECT 2's SECOND HALF, and the more useful correction. Under that revert THREE cases go BAD, not the one the
+# supplement's RED 3 shows, and the three are more informative than the one: removing the restore breaks the two
+# gate cases as well, because the pre-merge pass then grades from the parked verdict and leaves it NOT_RUN.
+#
+# IDENTITY
+# date_utc      : 2026-09-04T19:18:50Z
+# host          : soc-l-11
+# corrects      : dv/auto_dv/evidence/gen_tdd_logs/flow/gen_rt35_red_grading_supplement.log
+# parent commit : e988ee65f2f982692895d79879ec5b378ef9938a
+# archive root  : /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/rt35c/arch2_1deec4c
+# 5c9869bbe078  e988ee6:dv/auto_dv/flow/gen_regress.py
+# 6d20a0b5dc32  e988ee6:dv/auto_dv/flow/gen_run.py
+
+================================================================================
+PART 1  the RED 3 edit, specified literally
+================================================================================
+
+  committed gen_run.py at e988ee6 : 6d20a0b5dc32  513 lines (newlines; splitlines 513; ends with a newline True)
+  the removed text occurs 1 time(s)
+  it is lines 166 to 168 of that file, exactly these three lines:
+     166|     pre = result.get("red_pre_grading")
+     167|     if pre:
+     168|         result.update(verdict=pre["verdict"], reason=pre["reason"], evidence_line=pre.get("evidence_line"))
+  with those three lines deleted and nothing else changed: b0efb4372941  510 lines (newlines; splitlines 510)
+
+So the hash the supplement printed for that revert is the hash of that exact three-line deletion. The supplement's
+fault was naming the intent instead of the text; the text is above and reproduces the hash.
+
+================================================================================
+PART 2  the complete BAD counts for all three reverts
+================================================================================
+Each revert is applied to the parent commit's own blobs inside one archive, one at a time, and the FULL self-test
+output is counted rather than a filtered view. The module counted is the one whose self-test the revert affects:
+the gate and the restore live in the regression path, so gen_regress is counted; the unchecked-fixture choice is
+graded inside gen_run, so gen_run is counted there, which is what the supplement's RED 2 already did.
+
+  revert gate      gen_regress e660220bf7ba  gen_run 6d20a0b5dc32  ->  gen_regress --self-test has 3 BAD line(s):
+      - the pre-merge pass admits a parked deferred red instead of skipping it (verdict NOT_RUN, fcov status None)
+      - the manifest summary counts the verdict the pre-merge pass left, not the parked one (not_run=1 not_run=1)
+      - a deferred red carrying a real simulation failure is regraded from it and reads undeclared, with the collected reason kept (verdict NOT_RUN, reason 'red fixture judged on an fcov expectation that no stage of this run checked (no ')
+  revert final     gen_regress 5c9869bbe078  gen_run 2fb2ebe79cdb  ->  gen_run --self-test has 1 BAD line(s):
+      - a deferred red no stage checked is NOT_RUN, not a dead-checker FAIL (got FAIL)
+  revert restore   gen_regress 5c9869bbe078  gen_run b0efb4372941  ->  gen_regress --self-test has 3 BAD line(s):
+      - the pre-merge pass admits a parked deferred red instead of skipping it (verdict NOT_RUN, fcov status PROTOCOL_ERROR)
+      - the manifest summary counts the verdict the pre-merge pass left, not the parked one (not_run=1 not_run=1)
+      - a deferred red carrying a real simulation failure is regraded from it and reads undeclared, with the collected reason kept (verdict NOT_RUN, reason 'red fixture judged on an fcov expectation that no stage of this run checked (no ')
+  archive restored to the parent's bytes: gen_regress 5c9869bbe078  gen_run 6d20a0b5dc32
+
+READ AGAINST THE SUPPLEMENT: its PART B shows 2 for the gate revert and 1 for the restore revert, both filtered;
+the complete counts are 3 and 3. Its PART E's 3 for the gate revert is complete and correct. Its RED 2 count is
+complete and correct, being a gen_run count of gen_run's own cases.
+
+================================================================================
+PART 2b  CM211-Info-1: the line counts, and the method they are counted by
+================================================================================
+The supplement's PART D says the committed gen_regress.py is "763 lines" and the reduced one "733 lines". Counted by
+newlines they are 762 and 732, and splitlines agrees. The file ends with a newline, so the newline count IS the line
+count and my figures were each larger by one: an off-by-one in my method, not two defensible conventions. Both
+probes now print the newline count, the splitlines count and whether the file ends with a newline, so every figure
+carries its method.
+
+TWO THINGS WORTH RECORDING BEYOND THE CORRECTION. First, the delta the section exists to prove is untouched: 762
+minus 732 is the same 30 lines as 763 minus 733, and the hashes it turns on are unchanged, so the reconstruction
+argument stands. Second, and this is why the row is worth more than the two digits, the SAME off-by-one sat in a
+second probe of mine reporting gen_run.py as 514 lines where the newline count is 513, and I only found it because
+fixing the first one made me check the other. I also fixed the wrong probe first: the cited 763 and 733 come from
+the delta probe over gen_regress.py, and my first correction went to the probe over gen_run.py, which produces a
+different pair of numbers entirely. So the lesson is not "count newlines" but "when a row cites a figure, find the
+command that printed THAT figure before correcting anything".
+
+================================================================================
+PART 3  what still stands
+================================================================================
+Every red in the supplement discriminates, and none of the corrected numbers weakens that: each revert turns at
+least one case BAD and every green restores the parent's own blob hashes. What changes is that the restore revert
+is shown to break three cases rather than one, which is a stronger red than the file claimed, and that a reader can
+now reproduce the edit exactly. The supplement's PART D reconstruction, its PART A loader command and its PART C
+statement about the case with no red are untouched by this correction.
+
+THE LESSON, recorded because it is a presentation rule and not a one-off: a retained log must not print a filtered
+self-test excerpt without saying what the filter was, because a filtered count and a complete count of the same
+artefact read as a contradiction. Either print the complete output or state the filter beside the excerpt.
+
+assembled: 2026-09-04T19:18:51Z
