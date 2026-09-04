@@ -2066,3 +2066,8 @@ counted-only, not eight and eight; pmc_ctrl and the two targeted-tier entries ar
 check. Consequence measured by runtime-2: detaching an entry withdraws all of its declared bins from the plan's referenced set,
 not only the unbuilt ones: 3902 -> 2066 referenced bins (735 unbuilt, 1101 on built covergroups), so plan percentages over that
 set move for a reason unrelated to coverage until the references return; the round record states it.
+
+Corrigendum (20:0xZ, units; Test Writer and runtime-2): the 758 above counts a bin once per declaring entry (a sum over the nine
+entries); the DISTINCT count of unbuilt-covergroup bins over the same nine is 735, the 23 shared bins being declared by more than
+one of the nine across seven covergroups. The same pair list-wide: 4044 by sum, 3902 distinct (142 duplicate references). After
+the detach at 18ac053 every one of the 2066 declared bins sits on a built covergroup.
