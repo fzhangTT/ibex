@@ -2199,3 +2199,9 @@ manifests (class A 758 + 127 bins with ready reasons, class B 123 with the per-r
 list dv/auto_dv/work/dv-lead/gen_bins_not_hit_worklist.md); runtime-2 then restores the ten references and sets the three measured
 false in one testlist touch; the acceptance gate before dispatch is a re-flight of all 36 measured runs at the round's seeds plus
 fcov_policy_failures at zero on the planned 53.
+
+Corrigendum to LOG-091 (21:2xZ, CR-38 L-2): corrigendum (c) above said the three measured-false entries keep their modules and manifests
+untouched; the joint landing 04a4808 removed five manifests (bit_draft, csr_reset, pmp_csr_warl, pmp_lock, pmp_mseccfg: the plan marks empty
+their declarations, the generator refuses or renders empty, and the library self-test fails on a stale file) and edited two of the three
+modules (csr_reset and pmp_lock lose stale bins_not_hit entries). The round record states which instrument removed which bins: the plan
+marks for declarations on unbuilt covergroups, bins_not_hit for built-but-unreached bins.
