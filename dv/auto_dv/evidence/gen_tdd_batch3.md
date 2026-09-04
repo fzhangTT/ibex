@@ -373,10 +373,14 @@ unchanged; gen_test_pmc_ctrl.fcov.yaml c3f77460af5d), and the docstring's plan a
 
 ## 10. Retained-log integrity: the ugrep -I hazard and the retention-completeness check
 
-The site shell's `grep` is a function wrapping ugrep with `--ignore-files`, so a recursive grep rooted at or above dv/auto_dv
-silently skips the ignored work/ tree, and `-I` drops a file it deems binary even when that file is named explicitly, returning
-rc 1 with no output, which is indistinguishable from the pattern being absent. Either would let a count read low and look clean.
-Audited over this batch's records at the Orchestrator's request; the full measurement is under
+In this session's Claude Code tool shell, and there only, `grep` is an injected function that re-execs the Claude Code binary as
+ugrep with `--ignore-files -I` (measured with `type grep` on 2026-09-04; `bash -lc` and `bash -ic` for the same account both
+resolve grep to /usr/bin/grep, no ugrep sits on PATH because it lives inside the CLI, and no tracked doc records the wrapper, so a
+reader in another shell cannot reproduce it). The flow's own commands run under `bash -lc`, so every grep inside the checked-in
+scripts is GNU grep and none of this reaches them. Under that wrapper a recursive grep rooted at or above dv/auto_dv silently
+skips the ignored work/ tree, and `-I` drops a file it deems binary even when that file is named explicitly, returning rc 1 with
+no output, which is indistinguishable from the pattern being absent. Either would let a count read low and look clean. Audited
+over this batch's records at the Orchestrator's request; the full measurement is under
 work/test-writer/gen_watch_answer_grep_I.md.
 
 No count in these records could have come from a suppressed grep, for two independent reasons. First the suppression cannot reach
@@ -392,7 +396,7 @@ than suppressed: these tests fail through a python AssertionError on the cocotb 
 and no record here claims one.
 
 Retention completeness is the gap shape the row-verify check cannot see, because a log owed a manifest row and missing one never
-appears as a bad row. Measured in both directions: 700 manifest rows against 701 files on disk, 0 files with no row, 0 rows
-pointing outside the directory, and 0 rows failing size or md5, so no retention gap exists in these records. No
+appears as a bad row. Measured in both directions: 700 manifest rows against 701 files on disk, 0 subject files with no row,
+0 rows pointing outside the directory, and 0 rows failing size or md5, so no retention gap exists in these records. No
 trace_core_*-shaped file exists anywhere under committed dv/auto_dv/evidence either; the nested-.gitignore case measured under the
 export copies reaches only the working copies under work/, which are never the retained record.

@@ -80,7 +80,7 @@ class CsrTrapSetup(GenTest):
         "gen_csr_trap_setup_warl_cg.cr_csr_wpat.menvcfgh_msb":
             "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
         "gen_csr_trap_setup_warl_cg.cr_csr_wpat.mie_msb":
-            "stimulus: the program never writes this bit pattern to this CSR",
+            "seed-dependent: the mie write operand is drawn at random and is exactly 0x80000000 in 10 of 40 generator seeds, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
         "gen_wit_cycle_clause_cg.cp_clause.w_tp_csr_029":
             "irq agent absent: the irq_pending cycle clause of TP-CSR-029 is not programmed here",
     }

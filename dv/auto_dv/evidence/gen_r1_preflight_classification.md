@@ -33,8 +33,9 @@ construction an over-declaration: the manifest asserts per run what only the see
 
 ## The systematic cause of the seed-dependent set: auto crosses
 
-The plan declares 110 crosses as `bins auto{all combinations}`, and those account for most
-declarations in the affected manifests:
+The plan declares `bins auto{all combinations}` on 146 crosses, whose names repeat across
+covergroups and so number 110 distinct, and those account for most declarations in the
+affected manifests:
 
 | manifest | declarations on an auto cross | of total |
 | --- | --- | --- |
@@ -111,3 +112,28 @@ Dominated by one auto cross: 57 of the 74 are cr_insn_rlist_spimm combinations, 
    stimulus or prune the declaration.
 
 Nothing here is a tree edit. The re-scope itself waits for the round record and the round HEAD.
+
+## Corrigenda (2026-09-04, added after the round's fcov waves; nothing above this line changed)
+
+1. The bit-8 half of item 5 needs no owner ruling. Section "gen_test_rst_boot, 2 stable" says both boundary
+   values need an owner decision on drivability. For cp_bit8_readback.zero the cause is nameable from the TB
+   and from the test's own check: bit 8 of cpuctrlsts is the registered ic_scr_key_valid_i
+   (rtl/ibex_cs_registers.sv:667-669, driven from ic_scr_key_valid_i at :1945), the TB drives that pin valid
+   out of reset by default (gen_key_reset_valid, bool, default 1, dv/auto_dv/tb/gen_tb_pkg.sv:31), this entry
+   passes no plusarg turning it off, and the test's own _cpuctrlsts_reset expectation asserts the read is
+   1 << 8. So a zero read-back would fail a check the test already makes. The committed reason names that.
+   cp_boot_addr.zero is untouched by this and still stands as written.
+
+2. A reason this document's method produced was FALSE, and the method is the point. The per-test causes here
+   were derived by READING the generators. Audited later by RUNNING them over 40 seeds
+   (scratchpad test_writer_r3/audit_six_reasons.py): five of the six reasons that a later merged report
+   showed another entry reaching are confirmed, each with a positive control, and one is false.
+   gen_csr_trap_setup_warl_cg.cr_csr_wpat.mie_msb was classed stimulus with "the program never writes this
+   bit pattern to this CSR"; the generator writes exactly 0x80000000 to mie in 10 of 40 seeds, so the bin is
+   seed-dependent and missing it at three seeds is a seed miss. The bin classifies the WRITE OPERAND, not the
+   effective value (gen_fcov_pkg.sv:938). Two of the confirmed five could not have been settled by reading at
+   all: the compressed jumps are emitted as raw .2byte encodings rather than mnemonics, and instruction
+   alignment needed offsets computed from each .balign 4 anchor.
+
+3. Any later record describing how these reason classes were derived must not say they were measured. Before
+   the audit above they were read, and one reading in six was wrong.

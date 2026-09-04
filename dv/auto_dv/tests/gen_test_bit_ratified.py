@@ -100,43 +100,43 @@ class BitRatified(GenTest):
         "gen_bit_zba_zbb_ops_cg.cr_op_rs1.zext_h_neg_rand":
             "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
         "gen_bit_zba_zbb_ops_cg.cr_op_same.andn_all_same":
-            "stimulus: the operation is emitted and the register-aliasing classes are reached, but the program never pairs this operation with this aliasing shape",
+            "stimulus: the operation is emitted and this aliasing shape is reached at some seeds only (cp_same_regs.all_same is itself no per-run guarantee), and the program never pairs the two",
         "gen_bit_zba_zbb_ops_cg.cr_op_same.andn_rs1_eq_rs2":
             "stimulus: the operation is emitted and the register-aliasing classes are reached, but the program never pairs this operation with this aliasing shape",
         "gen_bit_zba_zbb_ops_cg.cr_op_same.max_all_same":
-            "stimulus: the operation is emitted and the register-aliasing classes are reached, but the program never pairs this operation with this aliasing shape",
+            "stimulus: the operation is emitted and this aliasing shape is reached at some seeds only (cp_same_regs.all_same is itself no per-run guarantee), and the program never pairs the two",
         "gen_bit_zba_zbb_ops_cg.cr_op_same.maxu_all_same":
             "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
         "gen_bit_zba_zbb_ops_cg.cr_op_same.maxu_rs1_eq_rs2":
             "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
         "gen_bit_zba_zbb_ops_cg.cr_op_same.min_all_same":
-            "stimulus: the operation is emitted and the register-aliasing classes are reached, but the program never pairs this operation with this aliasing shape",
+            "stimulus: the operation is emitted and this aliasing shape is reached at some seeds only (cp_same_regs.all_same is itself no per-run guarantee), and the program never pairs the two",
         "gen_bit_zba_zbb_ops_cg.cr_op_same.minu_all_same":
-            "stimulus: the operation is emitted and the register-aliasing classes are reached, but the program never pairs this operation with this aliasing shape",
+            "stimulus: the operation is emitted and this aliasing shape is reached at some seeds only (cp_same_regs.all_same is itself no per-run guarantee), and the program never pairs the two",
         "gen_bit_zba_zbb_ops_cg.cr_op_same.orn_all_same":
-            "stimulus: the operation is emitted and the register-aliasing classes are reached, but the program never pairs this operation with this aliasing shape",
+            "stimulus: the operation is emitted and this aliasing shape is reached at some seeds only (cp_same_regs.all_same is itself no per-run guarantee), and the program never pairs the two",
         "gen_bit_zba_zbb_ops_cg.cr_op_same.orn_rs1_eq_rs2":
             "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
         "gen_bit_zba_zbb_ops_cg.cr_op_same.pack_all_same":
-            "stimulus: the operation is emitted and the register-aliasing classes are reached, but the program never pairs this operation with this aliasing shape",
+            "stimulus: the operation is emitted and this aliasing shape is reached at some seeds only (cp_same_regs.all_same is itself no per-run guarantee), and the program never pairs the two",
         "gen_bit_zba_zbb_ops_cg.cr_op_same.pack_rs1_eq_rs2":
             "stimulus: the operation is emitted and the register-aliasing classes are reached, but the program never pairs this operation with this aliasing shape",
         "gen_bit_zba_zbb_ops_cg.cr_op_same.packh_all_same":
-            "stimulus: the operation is emitted and the register-aliasing classes are reached, but the program never pairs this operation with this aliasing shape",
+            "stimulus: the operation is emitted and this aliasing shape is reached at some seeds only (cp_same_regs.all_same is itself no per-run guarantee), and the program never pairs the two",
         "gen_bit_zba_zbb_ops_cg.cr_op_same.packh_rs1_eq_rs2":
             "stimulus: the operation is emitted and the register-aliasing classes are reached, but the program never pairs this operation with this aliasing shape",
         "gen_bit_zba_zbb_ops_cg.cr_op_same.packu_all_same":
-            "stimulus: the operation is emitted and the register-aliasing classes are reached, but the program never pairs this operation with this aliasing shape",
+            "stimulus: the operation is emitted and this aliasing shape is reached at some seeds only (cp_same_regs.all_same is itself no per-run guarantee), and the program never pairs the two",
         "gen_bit_zba_zbb_ops_cg.cr_op_same.packu_rs1_eq_rs2":
             "stimulus: the operation is emitted and the register-aliasing classes are reached, but the program never pairs this operation with this aliasing shape",
         "gen_bit_zba_zbb_ops_cg.cr_op_same.sh1add_all_same":
-            "stimulus: the operation is emitted and the register-aliasing classes are reached, but the program never pairs this operation with this aliasing shape",
+            "stimulus: the operation is emitted and this aliasing shape is reached at some seeds only (cp_same_regs.all_same is itself no per-run guarantee), and the program never pairs the two",
         "gen_bit_zba_zbb_ops_cg.cr_op_same.sh2add_all_same":
-            "stimulus: the operation is emitted and the register-aliasing classes are reached, but the program never pairs this operation with this aliasing shape",
+            "stimulus: the operation is emitted and this aliasing shape is reached at some seeds only (cp_same_regs.all_same is itself no per-run guarantee), and the program never pairs the two",
         "gen_bit_zba_zbb_ops_cg.cr_op_same.sh3add_all_same":
-            "stimulus: the operation is emitted and the register-aliasing classes are reached, but the program never pairs this operation with this aliasing shape",
+            "stimulus: the operation is emitted and this aliasing shape is reached at some seeds only (cp_same_regs.all_same is itself no per-run guarantee), and the program never pairs the two",
         "gen_bit_zba_zbb_ops_cg.cr_op_same.xnor_all_same":
-            "stimulus: the operation is emitted and the register-aliasing classes are reached, but the program never pairs this operation with this aliasing shape",
+            "stimulus: the operation is emitted and this aliasing shape is reached at some seeds only (cp_same_regs.all_same is itself no per-run guarantee), and the program never pairs the two",
         "gen_bit_zba_zbb_ops_cg.cr_op_same.xnor_rs1_eq_rs2":
             "stimulus: the operation is emitted and the register-aliasing classes are reached, but the program never pairs this operation with this aliasing shape",
     }
