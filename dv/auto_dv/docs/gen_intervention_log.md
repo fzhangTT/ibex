@@ -2060,3 +2060,9 @@ gen_test_pmp_mseccfg 77 of 77 and gen_test_pmp_lock 50 of 50. An unmeasured entr
 check (the gen_test_pmc_ctrl precedent), so round 1's full tier would fail both. Ruling extended: nine entries are detached
 for round 1 (the seven above plus these two), 758 declared bins on unbuilt covergroups over 27 manifest-naming entries;
 manifests naming entries 27 -> 18; the measured count of the request is unchanged (eight checked, eight counted-only).
+
+Corrigendum (19:4xZ, DV Lead): gen_test_pmc_ctrl is measured false, so the measured set of 15 splits eight checked plus SEVEN
+counted-only, not eight and eight; pmc_ctrl and the two targeted-tier entries are unmeasured entries running with no expectation
+check. Consequence measured by runtime-2: detaching an entry withdraws all of its declared bins from the plan's referenced set,
+not only the unbuilt ones: 3902 -> 2066 referenced bins (735 unbuilt, 1101 on built covergroups), so plan percentages over that
+set move for a reason unrelated to coverage until the references return; the round record states it.
