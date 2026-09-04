@@ -4589,3 +4589,69 @@
       bins c_srli_rand= binsof(cp_shift_op.c_srli) && binsof(cp_shamt.\rand );
     }
   endgroup
+
+  // CG-IC-006 (gen_ic_ecc_cg), 24 coverpoint bins, 16 cross bins
+  localparam int GEN_FC_IC_ECC_CP_RAM_TAG = 0;
+  localparam int GEN_FC_IC_ECC_CP_RAM_DATA = 1;
+  localparam int GEN_FC_IC_ECC_CP_BITS_SINGLE = 0;
+  localparam int GEN_FC_IC_ECC_CP_BITS_DOUBLE = 1;
+  localparam int GEN_FC_IC_ECC_CP_WAY_WAY0 = 0;
+  localparam int GEN_FC_IC_ECC_CP_WAY_WAY1 = 1;
+  localparam int GEN_FC_IC_ECC_CP_BEAT_BEAT0 = 0;
+  localparam int GEN_FC_IC_ECC_CP_BEAT_BEAT1 = 1;
+  localparam int GEN_FC_IC_ECC_CP_ALERT_PULSES_ONE = 0;
+  localparam int GEN_FC_IC_ECC_CP_INVAL_WAYS_ALL_WAYS = 0;
+  localparam int GEN_FC_IC_ECC_CP_INVAL_WAYS_HIT_WAY_ONLY = 1;
+  localparam int GEN_FC_IC_ECC_CP_REFETCH_YES = 0;
+  localparam int GEN_FC_IC_ECC_CP_MAJOR_NMI_QUIET_YES = 0;
+  localparam int GEN_FC_IC_ECC_CP_LOOKUPS_BLOCKED_NEXT_YES = 0;
+  localparam int GEN_FC_IC_ECC_CP_NO_ALERT_CASE_UNUSED_WAY_DATA = 0;
+  localparam int GEN_FC_IC_ECC_CP_NO_ALERT_CASE_DISABLED_CACHE = 1;
+  localparam int GEN_FC_IC_ECC_CP_NO_ALERT_CASE_DURING_INVALIDATION = 2;
+  localparam int GEN_FC_IC_ECC_CP_NO_ALERT_CASE_UNINITIALISED_DATA_RAM = 3;
+  localparam int GEN_FC_IC_ECC_CP_NO_ALERT_CASE_MASKED_DUPLICATE_COPY = 4;
+  localparam int GEN_FC_IC_ECC_CP_MULTIWAY_MISMATCH_ALERT_OR_WRONG = 0;
+  localparam int GEN_FC_IC_ECC_CP_MULTIWAY_MISMATCH_MASKED = 1;
+  localparam int GEN_FC_IC_ECC_CP_KNOB_NONE = 0;
+  localparam int GEN_FC_IC_ECC_CP_KNOB_RARE = 1;
+  localparam int GEN_FC_IC_ECC_CP_KNOB_FREQUENT = 2;
+  covergroup gen_ic_ecc_cg with function sample(int v_cp_ram, int v_cp_bits, int v_cp_way, int v_cp_beat, int v_cp_alert_pulses, int v_cp_inval_ways, int v_cp_refetch, int v_cp_major_nmi_quiet, int v_cp_lookups_blocked_next, int v_cp_no_alert_case, int v_cp_multiway_mismatch, int v_cp_knob);
+    option.per_instance = 0;
+    option.cross_auto_bin_max = 0;   // a cross has exactly the CSV's named bins: no automatic bins for the plan's ignored tuples
+    cp_ram: coverpoint v_cp_ram { bins tag= {0}; bins data= {1}; ignore_bins na = {-1}; }
+    cp_bits: coverpoint v_cp_bits { bins single= {0}; bins double= {1}; ignore_bins na = {-1}; }
+    cp_way: coverpoint v_cp_way { bins way0= {0}; bins way1= {1}; ignore_bins na = {-1}; }
+    cp_beat: coverpoint v_cp_beat { bins beat0= {0}; bins beat1= {1}; ignore_bins na = {-1}; }
+    cp_alert_pulses: coverpoint v_cp_alert_pulses { bins one= {0}; ignore_bins na = {-1}; }
+    cp_inval_ways: coverpoint v_cp_inval_ways { bins all_ways= {0}; bins hit_way_only= {1}; ignore_bins na = {-1}; }
+    cp_refetch: coverpoint v_cp_refetch { bins yes= {0}; ignore_bins na = {-1}; }
+    cp_major_nmi_quiet: coverpoint v_cp_major_nmi_quiet { bins yes= {0}; ignore_bins na = {-1}; }
+    cp_lookups_blocked_next: coverpoint v_cp_lookups_blocked_next { bins yes= {0}; ignore_bins na = {-1}; }
+    cp_no_alert_case: coverpoint v_cp_no_alert_case { bins unused_way_data= {0}; bins disabled_cache= {1}; bins during_invalidation= {2}; bins uninitialised_data_ram= {3}; bins masked_duplicate_copy= {4}; ignore_bins na = {-1}; }
+    cp_multiway_mismatch: coverpoint v_cp_multiway_mismatch { bins alert_or_wrong= {0}; bins masked= {1}; ignore_bins na = {-1}; }
+    cp_knob: coverpoint v_cp_knob { bins none= {0}; bins rare= {1}; bins frequent= {2}; ignore_bins na = {-1}; }
+    cr_ram_x_bits_x_way: cross cp_ram, cp_bits, cp_way {
+      bins tag_double_way0= binsof(cp_ram.tag) && binsof(cp_bits.double) && binsof(cp_way.way0);
+      bins tag_double_way1= binsof(cp_ram.tag) && binsof(cp_bits.double) && binsof(cp_way.way1);
+      bins tag_single_way0= binsof(cp_ram.tag) && binsof(cp_bits.single) && binsof(cp_way.way0);
+      bins tag_single_way1= binsof(cp_ram.tag) && binsof(cp_bits.single) && binsof(cp_way.way1);
+      bins data_double_way0= binsof(cp_ram.data) && binsof(cp_bits.double) && binsof(cp_way.way0);
+      bins data_double_way1= binsof(cp_ram.data) && binsof(cp_bits.double) && binsof(cp_way.way1);
+      bins data_single_way0= binsof(cp_ram.data) && binsof(cp_bits.single) && binsof(cp_way.way0);
+      bins data_single_way1= binsof(cp_ram.data) && binsof(cp_bits.single) && binsof(cp_way.way1);
+    }
+    cr_ram_x_inval: cross cp_ram, cp_inval_ways {
+      bins tag_all= binsof(cp_ram.tag) && binsof(cp_inval_ways.all_ways);
+      bins data_hit= binsof(cp_ram.data) && binsof(cp_inval_ways.hit_way_only);
+    }
+    cr_data_x_beat: cross cp_ram, cp_beat {
+      bins data_beat0= binsof(cp_ram.data) && binsof(cp_beat.beat0);
+      bins data_beat1= binsof(cp_ram.data) && binsof(cp_beat.beat1);
+    }
+    cr_bits_x_rate: cross cp_bits, cp_knob {
+      bins double_frequent= binsof(cp_bits.double) && binsof(cp_knob.frequent);
+      bins single_frequent= binsof(cp_bits.single) && binsof(cp_knob.frequent);
+      bins double_rare= binsof(cp_bits.double) && binsof(cp_knob.rare);
+      bins single_rare= binsof(cp_bits.single) && binsof(cp_knob.rare);
+    }
+  endgroup

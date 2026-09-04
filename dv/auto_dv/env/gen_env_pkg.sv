@@ -239,6 +239,7 @@ package gen_env_pkg;
       // checks the emitted set (yaml export_active_sources) against the registrations in every run (T-141)
       ibus_agent.driver.sink = sink; dbus_agent.driver.sink = sink; ctrl.sink = sink; scrkey.sink = sink;
       irq.sink = sink; dbg.sink = sink; misc_mon.sink = sink; irq_chk.sink = sink;
+      misc_mon.ic_cov = isa_cov;   // CG-IC-006 samples at the injection closure and the never-written drain, both in the misc monitor
       bridge.cmd_ap.connect(dispatch.analysis_export);
       rvfi_mon.ap.connect(sb.analysis_export);
       rvfi_mon.ap.connect(isa_cov.analysis_export);

@@ -108,6 +108,8 @@ package gen_fcov_pkg;
     gen_rvfi_record_cg rec_cg;       // Slice A (T-205): every record
     gen_mul_timing_cg  mt_cg;        // the multiply's timing neighbours
     gen_rst_boot_cg    rst_cg;       // one sample per reset
+    gen_ic_ecc_cg      ic_ecc_cg;    // CG-IC-006: one sample per closed icache-RAM ECC injection, one per drained never-written read
+    int unsigned       n_ic_ecc = 0;
     gen_sec_ctrl_inputs_cg sec_cg;   // the security-input events
     gen_cmp_zcmp_hazard_cg hz_cg;    // the Zcmp neighbour patterns (CG-CMP-009)
     gen_isa_lui_auipc_cg lu_cg;      // U-type immediates, PC regions, the auipc wrap (CG-ISA-004)
@@ -183,9 +185,68 @@ package gen_fcov_pkg;
       if (!uvm_config_db#(virtual gen_irq_if)::get(this, "", "irq_vif", irq_vif)) `uvm_fatal("GEN_FCOV", "irq vif not in uvm_config_db")
       if (!uvm_config_db#(virtual gen_dbg_if)::get(this, "", "dbg_vif", dbg_vif)) `uvm_fatal("GEN_FCOV", "dbg vif not in uvm_config_db")
       hart_id_v = cfg.hart_id;
-      if (cfg.fcov_en) begin mul_cg = new(); div_cg = new(); alu_cg = new(); bit_cg = new(); imm_cg = new(); sh_cg = new(); cnt_cg = new(); zca_cg = new(); zcmp_cg = new(); mv_cg = new(); csr_cg = new(); br_cg = new(); sbit_cg = new(); zcb_cg = new(); rec_cg = new(); mt_cg = new(); rst_cg = new(); sec_cg = new(); hz_cg = new(); lu_cg = new(); hx_cg = new(); jp_cg = new(); dt_cg = new(); ie_cg = new(); end
+      if (cfg.fcov_en) begin mul_cg = new(); div_cg = new(); alu_cg = new(); bit_cg = new(); imm_cg = new(); sh_cg = new(); cnt_cg = new(); zca_cg = new(); zcmp_cg = new(); mv_cg = new(); csr_cg = new(); br_cg = new(); sbit_cg = new(); zcb_cg = new(); rec_cg = new(); mt_cg = new(); rst_cg = new(); ic_ecc_cg = new(); sec_cg = new(); hz_cg = new(); lu_cg = new(); hx_cg = new(); jp_cg = new(); dt_cg = new(); ie_cg = new(); end
     endfunction
     // ---- classifiers (plan bin order = the rendered GEN_FC_* indices)
+    // CG-IC-006 cp_no_alert_case, most-masking first, which is the fcov plan's precedence: the enable and the sweep are terms
+    // of lookup_actual_ic0 and mask the DUT's check whatever else holds, so they outrank the rest; then the two injection
+    // cases, mutually exclusive by their own conditions; then the never-written read, reachable only with no injection at all.
+    // -1 = no no-alert case applies (a hit-way injection that owed its pulse).
+    function int ic_no_alert_case(bit en_ok, bit sweep_ok, bit injected, int verdict, bit dup_masked, bit uninit);
+      if (!en_ok)    return GEN_FC_IC_ECC_CP_NO_ALERT_CASE_DISABLED_CACHE;
+      if (!sweep_ok) return GEN_FC_IC_ECC_CP_NO_ALERT_CASE_DURING_INVALIDATION;
+      if (injected) begin
+        if (dup_masked)   return GEN_FC_IC_ECC_CP_NO_ALERT_CASE_MASKED_DUPLICATE_COPY;
+        if (verdict == 0) return GEN_FC_IC_ECC_CP_NO_ALERT_CASE_UNUSED_WAY_DATA;
+        return -1;
+      end
+      if (uninit) return GEN_FC_IC_ECC_CP_NO_ALERT_CASE_UNINITIALISED_DATA_RAM;
+      return -1;
+    endfunction
+    // CG-IC-006 cp_major_nmi_quiet. The bin is a yes alone, so anything but quiet is not applicable rather than a bin. A window
+    // in which no retirement was seen cannot support the NMI half, so it claims nothing instead of claiming quiet.
+    function int ic_major_nmi_quiet(bit major_seen, bit nmi_seen, bit retirement_seen);
+      if (major_seen || nmi_seen) return -1;
+      if (!retirement_seen)       return -1;
+      return GEN_FC_IC_ECC_CP_MAJOR_NMI_QUIET_YES;
+    endfunction
+    // CG-IC-006 cp_knob: the injection-rate regime in force for the RAM kind that was injected, since the tag and the data
+    // hooks have a knob each and a data injection under a tag rate of none would otherwise sample none and lose its cross bin
+    function int ic_knob_cls(bit is_data);
+      string s = is_data ? cfg.knob_icache_data_ecc_err_rate : cfg.knob_icache_ecc_err_rate;
+      case (s)
+        "none":     return GEN_FC_IC_ECC_CP_KNOB_NONE;
+        "rare":     return GEN_FC_IC_ECC_CP_KNOB_RARE;
+        "frequent": return GEN_FC_IC_ECC_CP_KNOB_FREQUENT;
+        default:    return -1;
+      endcase
+    endfunction
+    // the four part-2 coverpoints take -1 here rather than at every call site, so a caller cannot supply one by mistake;
+    // the argument order is the plan's coverpoint order, which is what the renderer emits
+    function void sample_ic_ecc(int v_ram, int v_bits, int v_way, int v_beat, int v_alert_pulses, int v_major_nmi_quiet,
+                                int v_no_alert_case, int v_knob);
+      if (ic_ecc_cg == null) return;
+      n_ic_ecc++;
+      ic_ecc_cg.sample(v_ram, v_bits, v_way, v_beat, v_alert_pulses, -1, -1, v_major_nmi_quiet, -1, v_no_alert_case, -1, v_knob);
+    endfunction
+    // The two entry points the misc monitor calls. Every bin INDEX is mapped here, from facts the monitor states in its own
+    // terms, so the checkers package names no GEN_FC_ constant and needs no import of this package.
+    function void sample_ic_ecc_injection(bit is_data, int unsigned bits, int unsigned way, int unsigned beat, bit got_pulse,
+                                          bit en_ok, bit sweep_ok, int verdict, bit dup_masked,
+                                          bit major_seen, bit nmi_seen, bit retirement_seen);
+      sample_ic_ecc(is_data ? GEN_FC_IC_ECC_CP_RAM_DATA : GEN_FC_IC_ECC_CP_RAM_TAG,
+                    (bits == 2) ? GEN_FC_IC_ECC_CP_BITS_DOUBLE : GEN_FC_IC_ECC_CP_BITS_SINGLE,
+                    (way == 1) ? GEN_FC_IC_ECC_CP_WAY_WAY1 : GEN_FC_IC_ECC_CP_WAY_WAY0,
+                    is_data ? ((beat == 1) ? GEN_FC_IC_ECC_CP_BEAT_BEAT1 : GEN_FC_IC_ECC_CP_BEAT_BEAT0) : -1,
+                    got_pulse ? GEN_FC_IC_ECC_CP_ALERT_PULSES_ONE : -1,
+                    ic_major_nmi_quiet(major_seen, nmi_seen, retirement_seen),
+                    ic_no_alert_case(en_ok, sweep_ok, 1'b1, verdict, dup_masked, 1'b0),
+                    ic_knob_cls(is_data));
+    endfunction
+    // a never-written data line read on a checked lookup with no injection in its cycle: one bin and nothing else applies
+    function void sample_ic_ecc_uninit();
+      sample_ic_ecc(-1, -1, -1, -1, -1, -1, ic_no_alert_case(1'b1, 1'b1, 1'b0, -2, 1'b0, 1'b1), -1);
+    endfunction
     function int mul_rs_cls(logic [31:0] v);   // CG-MUL-001 cp_rs1_class / cp_rs2_class (same bin list)
       case (v)
         32'h0000_0000: return GEN_FC_MUL_OPS_CP_RS1_CLASS_ZERO;
@@ -1841,6 +1902,35 @@ package gen_fcov_pkg;
       `GEN_FCOV_UT("c.addi16sp sp, -32 from 0x10: imm rand, sp wrap yes", ut_last_ie[6] * 10 + ut_last_ie[11], GEN_FC_CMP_IMM_EDGES_CP_ADDI16SP_IMM_RAND * 10 + GEN_FC_CMP_IMM_EDGES_CP_SP_WRAP_YES)
       write(ut_rec(32'h0000_1141, 5'd2, 32'hffff_fff0, 5'd2, 32'h0000_0000, 32'h9000_0116, 1106, 32'd206));   // c.addi sp, -16
       `GEN_FCOV_UT("c.addi sp, -16: ci op c_addi, imm6 rand", ut_last_ie[3] * 10 + ut_last_ie[4], GEN_FC_CMP_IMM_EDGES_CP_CI_OP_C_ADDI * 10 + GEN_FC_CMP_IMM_EDGES_CP_CI_IMM6_RAND)
+      // CG-IC-006's two classifiers, which are what a wrongly HIT bin needs: a manifest fails only an UNHIT declared bin, so
+      // the precedence order and both window terms are pinned here rather than by any expectation file
+      `GEN_FCOV_UT("no_alert_case: the cache disabled outranks every other reason", ic_no_alert_case(1'b0, 1'b1, 1'b1, 0, 1'b1, 1'b1), GEN_FC_IC_ECC_CP_NO_ALERT_CASE_DISABLED_CACHE)
+      `GEN_FCOV_UT("no_alert_case: the sweep outranks the injection cases", ic_no_alert_case(1'b1, 1'b0, 1'b1, 0, 1'b1, 1'b1), GEN_FC_IC_ECC_CP_NO_ALERT_CASE_DURING_INVALIDATION)
+      `GEN_FCOV_UT("no_alert_case: a masked duplicate copy outranks the unused way", ic_no_alert_case(1'b1, 1'b1, 1'b1, 1, 1'b1, 1'b0), GEN_FC_IC_ECC_CP_NO_ALERT_CASE_MASKED_DUPLICATE_COPY)
+      `GEN_FCOV_UT("no_alert_case: a verdict of another or invalid way is the unused way", ic_no_alert_case(1'b1, 1'b1, 1'b1, 0, 1'b0, 1'b0), GEN_FC_IC_ECC_CP_NO_ALERT_CASE_UNUSED_WAY_DATA)
+      `GEN_FCOV_UT("no_alert_case: a hit-way injection that owed its pulse is no no-alert case", ic_no_alert_case(1'b1, 1'b1, 1'b1, 1, 1'b0, 1'b0), -1)
+      `GEN_FCOV_UT("no_alert_case: the never-written read needs a qualified cycle and no injection", ic_no_alert_case(1'b1, 1'b1, 1'b0, -2, 1'b0, 1'b1), GEN_FC_IC_ECC_CP_NO_ALERT_CASE_UNINITIALISED_DATA_RAM)
+      `GEN_FCOV_UT("no_alert_case: an injection in the cycle takes the bin from the never-written read", ic_no_alert_case(1'b1, 1'b1, 1'b1, 0, 1'b0, 1'b1), GEN_FC_IC_ECC_CP_NO_ALERT_CASE_UNUSED_WAY_DATA)
+      `GEN_FCOV_UT("quiet: both levels low and a retirement seen is quiet", ic_major_nmi_quiet(1'b0, 1'b0, 1'b1), GEN_FC_IC_ECC_CP_MAJOR_NMI_QUIET_YES)
+      `GEN_FCOV_UT("quiet: a major level anywhere in the window is not quiet", ic_major_nmi_quiet(1'b1, 1'b0, 1'b1), -1)
+      `GEN_FCOV_UT("quiet: an internal-NMI retirement in the window is not quiet", ic_major_nmi_quiet(1'b0, 1'b1, 1'b1), -1)
+      `GEN_FCOV_UT("quiet: a window with no retirement claims nothing", ic_major_nmi_quiet(1'b0, 1'b0, 1'b0), -1)
+      // the routing itself, not a classifier: a never-written report must land in the bypass queue and leave the announcement
+      // queue untouched, since q is what the pulse attribution, the deferral and the closure iterate. A wrongly ROUTED event
+      // is invisible to any expectation file, so this is where that mutation is caught.
+      begin
+        int q0 = int'(gen_icram_events::q.size()), u0 = int'(gen_icram_events::uq.size());
+        gen_icram_events::note_uninit_read(32'hdead, 0, 0);
+        `GEN_FCOV_UT("a never-written report leaves the announcement queue untouched", int'(gen_icram_events::q.size()) - q0, 0)
+        `GEN_FCOV_UT("a never-written report lands in the bypass queue", int'(gen_icram_events::uq.size()) - u0, 1)
+      `GEN_FCOV_UT("window: the reference cycle itself is outside the window", gen_ic_in_window(100, 100, 2), 0)
+      `GEN_FCOV_UT("window: the first cycle after the reference is inside", gen_ic_in_window(101, 100, 2), 1)
+      `GEN_FCOV_UT("window: the LAST cycle of the window is inside", gen_ic_in_window(102, 100, 2), 1)
+      `GEN_FCOV_UT("window: one cycle past the window is outside", gen_ic_in_window(103, 100, 2), 0)
+        // the probe leaves the queue AND the statistic as it found them, so a run's reported count stays the number of real reads
+        if (gen_icram_events::uq.size() > 0) void'(gen_icram_events::uq.pop_back());
+        if (gen_icram_events::uninit_reads > 0) gen_icram_events::uninit_reads--;
+      end
       `undef GEN_FCOV_UT
       `uvm_info("GEN_FCOV_UT", $sformatf("self-test: %0d cases, %0d failures", n, fails), UVM_LOW)
       return fails;
@@ -1868,6 +1958,7 @@ package gen_fcov_pkg;
         if (n_rec > 0 && rec_cg.get_coverage() == 0.0) `uvm_error("GEN_FCOV_REF", "gen_rvfi_record_cg sampled without coverage")
         if (n_mt > 0 && mt_cg.get_coverage() == 0.0) `uvm_error("GEN_FCOV_REF", "gen_mul_timing_cg sampled without coverage")
         if (n_rst > 0 && rst_cg.get_coverage() == 0.0) `uvm_error("GEN_FCOV_REF", "gen_rst_boot_cg sampled without coverage")
+        if (n_ic_ecc > 0 && ic_ecc_cg.get_coverage() == 0.0) `uvm_error("GEN_FCOV_REF", "gen_ic_ecc_cg sampled without coverage")
         if (n_sec > 0 && sec_cg.get_coverage() == 0.0) `uvm_error("GEN_FCOV_REF", "gen_sec_ctrl_inputs_cg sampled without coverage")
         if (n_hz > 0 && hz_cg.get_coverage() == 0.0) `uvm_error("GEN_FCOV_REF", "gen_cmp_zcmp_hazard_cg sampled without coverage")
         if (n_br > 0 && br_cg.get_coverage() == 0.0) `uvm_error("GEN_FCOV_REF", "gen_isa_branch_cg sampled without coverage")

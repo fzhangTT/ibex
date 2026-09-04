@@ -26,6 +26,11 @@ module gen_icache_ram import gen_tb_pkg::*; #(
   output logic [Width-1:0]         rdata
 );
   logic [Width-1:0] mem [Depth];
+  // per line of this way: written on any write the model sees (a fill, the invalidation sweep's data write, an ECC-correction
+  // write), never cleared, since neither the DUT's RAMs nor mem lose their contents at reset; uninit_reported bounds the
+  // never-written observation to the first checked read of each line, which is all the information there is in it
+  bit written [Depth];
+  bit uninit_reported [Depth];
   int unsigned writes = 0;
   int unsigned reads  = 0;
   int unsigned cycle  = 0;   // the same count as gen_misc_if's (posedge clk from the reset release), so announcements share its base
@@ -41,6 +46,8 @@ module gen_icache_ram import gen_tb_pkg::*; #(
         for (int b = 0; b < Width; b++) v[b] = $urandom_range(1, 0);   // bitwise: constant-width select
         mem[i] = v;
       end
+      written[i] = 1'b0;
+      uninit_reported[i] = 1'b0;
       if (IsTag) gen_icram_events::note_tag_init(Way, i, GEN_IC_TAG_ECC_W'(mem[i]));
     end
     rdata = '0;
@@ -74,6 +81,7 @@ module gen_icache_ram import gen_tb_pkg::*; #(
     if (req) begin
       if (write) begin
         mem[addr] <= wdata;
+        written[addr] <= 1'b1;
         writes++;
         if (IsTag) gen_icram_events::note_tag_write(cycle, Ways, int'(addr), Way, GEN_IC_TAG_ECC_W'(wdata));
       end else begin
@@ -95,6 +103,14 @@ module gen_icache_ram import gen_tb_pkg::*; #(
           end
         end else begin
           rdata <= mem[addr];
+          // a never-written data line read on a lookup the DUT checks: its ECC bits are whatever gen_icram_init left, so a
+          // read that raises no alert is a real no-alert case (rtl/ibex_icache.sv:580-585 checks data ECC only on a valid
+          // hit). Reported outside the announcement queue, once per line: the monitor decides the bin, since only it can
+          // see whether an injection shared the cycle
+          if (!IsTag && !written[addr] && !uninit_reported[addr] && gen_icram_events::qualified_at(cycle)) begin
+            uninit_reported[addr] <= 1'b1;
+            gen_icram_events::note_uninit_read(cycle, Way, int'(addr));
+          end
         end
         reads++;
       end

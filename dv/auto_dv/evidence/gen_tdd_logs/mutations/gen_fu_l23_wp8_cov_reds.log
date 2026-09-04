@@ -1,0 +1,44 @@
+# WP-8 part 1: the two manifest-detected reds for the never-written observation, with their ablation.
+# Each root is an out-of-tree copy of the shared tree; the injection entry runs there, urg reports that root's own
+# database, and ci/check_fcov_expectations.py reads the report with dv/auto_dv/fcov_expectations/gen_cg_ic_ecc_part1.fcov.yaml.
+# Lines below are read from those runs' own files, not retyped, and ASCII-normalised per the retention convention
+# (the em dash the checker prints becomes '-').
+#
+# READ THE DISCRIMINATION, NOT THE EXIT CODE. All three runs pass in simulation and the checker exits 2 in all three,
+# because ONE run cannot hit all fifteen declared bins: no tag injection, no two-bit knob, no disabled-cache case and
+# no invalidating case occur in it, which is why the manifest spans entries. The evidence is the named bin's
+# transition from HIT to UNHIT, and the statistic that says WHICH half of the mechanism the mutation removed.
+
+root: GREEN   (no mutation, the control)
+  sources sha256: 61da6da315ee239e
+  simulation verdict: PASS
+  | uninitialised data reads reported=37 sampled=35 skipped(injection 2, alert 0) dropped=0
+  | FCOV-EXPECTATION: gen_ic_ecc_cg.cp_no_alert_case.uninitialised_data_ram = HIT (count=35)
+  | FCOV-EXPECTATION: FAIL - 5 declared bin(s) not hit: gen_ic_ecc_cg.cp_ram.tag, gen_ic_ecc_cg.cp_bits.double, gen_ic_ecc_cg.cp_no_alert_case.disabled_cache, gen_ic_ecc_cg.cp_no_alert_case.during_invalidation, gen_ic_ecc_cg.cp_no_alert_case.masked_duplicate_copy
+
+root: UNINITALL   (the written flag set for every line at init, so no read is ever never-written)
+  sources sha256: bf78b5c353a92660
+  simulation verdict: PASS
+  | uninitialised data reads reported=0 sampled=0 skipped(injection 0, alert 0) dropped=0
+  | FCOV-EXPECTATION: gen_ic_ecc_cg.cp_no_alert_case.uninitialised_data_ram = UNHIT (count=0)
+  | FCOV-EXPECTATION: FAIL - 6 declared bin(s) not hit: gen_ic_ecc_cg.cp_ram.tag, gen_ic_ecc_cg.cp_bits.double, gen_ic_ecc_cg.cp_no_alert_case.disabled_cache, gen_ic_ecc_cg.cp_no_alert_case.during_invalidation, gen_ic_ecc_cg.cp_no_alert_case.uninitialised_data_ram, gen_ic_ecc_cg.cp_no_alert_case.masked_duplicate_copy
+
+root: UNINITDRAIN   (both drain calls removed, so events are queued and never classified)
+  sources sha256: 08e1f203a788b1f5
+  simulation verdict: PASS
+  | uninitialised data reads reported=37 sampled=0 skipped(injection 0, alert 0) dropped=0
+  | FCOV-EXPECTATION: gen_ic_ecc_cg.cp_no_alert_case.uninitialised_data_ram = UNHIT (count=0)
+  | FCOV-EXPECTATION: FAIL - 6 declared bin(s) not hit: gen_ic_ecc_cg.cp_ram.tag, gen_ic_ecc_cg.cp_bits.double, gen_ic_ecc_cg.cp_no_alert_case.disabled_cache, gen_ic_ecc_cg.cp_no_alert_case.during_invalidation, gen_ic_ecc_cg.cp_no_alert_case.uninitialised_data_ram, gen_ic_ecc_cg.cp_no_alert_case.masked_duplicate_copy
+
+# ABLATION, the same two reports with the bin removed from the manifest, so the detector is gone and nothing else changes:
+UNINITALL ablation, exit 2
+  | FCOV-EXPECTATION: FAIL - 5 declared bin(s) not hit: gen_ic_ecc_cg.cp_ram.tag, gen_ic_ecc_cg.cp_bits.double, gen_ic_ecc_cg.cp_no_alert_case.disabled_cache, gen_ic_ecc_cg.cp_no_alert_case.during_invalidation, gen_ic_ecc_cg.cp_no_alert_case.masked_duplicate_copy
+  | the bin is named 0 times, so its appearance above is caused by the declaration plus the mutation
+
+UNINITDRAIN ablation, exit 2
+  | FCOV-EXPECTATION: FAIL - 5 declared bin(s) not hit: gen_ic_ecc_cg.cp_ram.tag, gen_ic_ecc_cg.cp_bits.double, gen_ic_ecc_cg.cp_no_alert_case.disabled_cache, gen_ic_ecc_cg.cp_no_alert_case.during_invalidation, gen_ic_ecc_cg.cp_no_alert_case.masked_duplicate_copy
+  | the bin is named 0 times, so its appearance above is caused by the declaration plus the mutation
+
+# The two mutations are distinguishable from each other by the statistic, which localises the break: the flag mutation
+# suppresses the REPORT (reported=0) while the drain mutation suppresses the SAMPLE (reported=37, sampled=0). The
+# manifest bin catches both; the statistic says which.

@@ -345,7 +345,12 @@ package gen_checkers_pkg;
     int unsigned data_injections = 0, data_hit_way = 0, data_other_way = 0, data_other_valid = 0, data_unjudged = 0, data_missing = 0, data_other_pulses = 0;   // data-RAM ECC injections judged; other_valid: a valid way that lost the compare to the other valid way
     int unsigned ab_both = 0, ab_agree = 0, ab_disagree = 0, b_lat_min = 0, b_lat_max = 0, data_ambiguous = 0, data_dup_visible = 0, data_dup_masked = 0;   // duplicate copies of the line in two ways: the injection visible (a bit rose) or masked by the OR   // form (a) against form (b) where both judged; (b)'s retirement latency; (b)'s ambiguous associations
     int unsigned held [$]; int unsigned held_pulses = 0;   // alert_minor pulses waiting for the verdicts of the data injections in their window
-    int unsigned rt_cyc [$]; logic [31:0] rt_pc [$]; bit rt_disc [$];   // the retirements (cycle, pc, a control-flow discontinuity) form (b) reads the lookup tag from
+    int unsigned rt_cyc [$]; logic [31:0] rt_pc [$]; bit rt_disc [$]; bit rt_nmi [$];   // the retirements (cycle, pc, a control-flow discontinuity, the internal-NMI flag) form (b) reads the lookup tag from
+    // cycles at which a signal was HIGH, for the window terms of CG-IC-006: a level is asked about per cycle, so a level that
+    // predates the window and outlasts it counts as high inside it. Pruned to the longest window any term asks about.
+    int unsigned minor_hi [$], major_hi [$];
+    int unsigned uninit_sampled = 0, uninit_skipped_inject = 0, uninit_skipped_alert = 0;   // the never-written observation: sampled, and dropped because an injection or an alert shared the read's window
+    gen_fcov_pkg::gen_isa_cov ic_cov;   // the CG-IC-006 sampler lives with the other covergroups; gen_env assigns this handle
     int unsigned alert_minor_lat [GEN_ICACHE_ECC_WINDOW + 1];   // pulses by (pulse cycle - injection cycle): the window as measured
     gen_export_sink sink;   // E alert / misc lines: the levels at reset release, then every change
     bit ev_init = 0;
@@ -408,7 +413,8 @@ package gen_checkers_pkg;
     function void write_state(gen_model_state st);
       rt_cyc.push_back(st.cycle); rt_pc.push_back(st.pc_rdata);
       rt_disc.push_back(st.is_trap || st.is_intr || st.is_mret || st.is_dret || (st.pc_after != st.pc_rdata + (st.insn[1:0] == 2'b11 ? 32'd4 : 32'd2)));   // the sequential run of lines ends here
-      if (rt_cyc.size() > 512) begin void'(rt_cyc.pop_front()); void'(rt_pc.pop_front()); void'(rt_disc.pop_front()); end
+      rt_nmi.push_back(st.nmi_int_pend);   // a per-retirement RVFI flag, not a level: the quiet term reads it over the retirement window
+      if (rt_cyc.size() > 512) begin void'(rt_cyc.pop_front()); void'(rt_pc.pop_front()); void'(rt_disc.pop_front()); void'(rt_nmi.pop_front()); end
       // crash_dump_o.exception_pc / exception_addr mirror mepc / mtval (rtl/ibex_core.sv:1329-1330). At a record's posedge the
       // mirror shows the CSR before that edge: a trap saving at the record's own edge (load/store faults) is one record LATE, the
       // next record's CSR write (GEN_CSR_WRITE_TO_RVFI_OFFSET edges ahead of its record) can show one record EARLY; both are
@@ -468,6 +474,13 @@ package gen_checkers_pkg;
         @(posedge misc.clk);
         if (!misc.rst_n) continue;
         write_changes();
+        begin   // the level histories the CG-IC-006 window terms read: a cycle is recorded when the signal was HIGH in it, so a
+                // level that predates a window and outlasts it is still seen inside it. Pruned to the longest window asked about.
+          if (misc.alert_minor) minor_hi.push_back(misc.cycle);
+          if (misc.alert_major_internal || misc.alert_major_bus) major_hi.push_back(misc.cycle);
+          while (minor_hi.size() > 0 && misc.cycle > minor_hi[0] + GEN_ICACHE_RETIRE_WINDOW + GEN_ICACHE_ECC_WINDOW) void'(minor_hi.pop_front());
+          while (major_hi.size() > 0 && misc.cycle > major_hi[0] + GEN_ICACHE_RETIRE_WINDOW + GEN_ICACHE_ECC_WINDOW) void'(major_hi.pop_front());
+        end
         if (misc.alert_major_internal) begin
           alert_internal_hits++;
           if (gen_chk_en(cfg, cfg.chk_alert_internal, cfg.chk_alert_internal_set))
@@ -509,6 +522,7 @@ package gen_checkers_pkg;
             end
           resolve_held(0);
           close_owed(0);
+          drain_uninit(0);
         end
         begin   // fetch_enable_i: remember the cycle it left On; back On clears the window
           bit fe_on = (misc.fetch_enable == ibex_pkg::IbexMuBiOn);
@@ -670,12 +684,62 @@ package gen_checkers_pkg;
       foreach (held[k]) if (final_pass || !pending_in_window(held[k])) attribute_pulse(held[k]); else keep.push_back(held[k]);
       held = keep;
     endfunction
+    // the three queries share one arithmetic, gen_tb_pkg's gen_ic_in_window, whose boundary is pinned by unit-test cases; an
+    // off-by-one there fails those cases in any run, which repeating the comparison three times here would not
+    function bit minor_in_window(int unsigned c, int unsigned span);   // alert_minor_o high in c+1 .. c+span
+      foreach (minor_hi[k]) if (gen_ic_in_window(minor_hi[k], c, span)) return 1;
+      return 0;
+    endfunction
+    function bit major_in_window(int unsigned c, int unsigned span);   // either major alert output high in c+1 .. c+span
+      foreach (major_hi[k]) if (gen_ic_in_window(major_hi[k], c, span)) return 1;
+      return 0;
+    endfunction
+    // the internal-NMI flag is per RETIREMENT, so it is asked about over the retirement window; retirement_seen says whether the
+    // window held any retirement at all, since a window with none cannot support a quiet claim
+    function bit nmi_in_window(int unsigned c, int unsigned span, output bit retirement_seen);
+      retirement_seen = 0;
+      foreach (rt_cyc[k])
+        if (gen_ic_in_window(rt_cyc[k], c, span)) begin
+          retirement_seen = 1;
+          if (rt_nmi[k]) return 1;
+        end
+      return 0;
+    endfunction
+    // CG-IC-006, one sample per closed injection: the announced event, the verdict the judge already reached and the window terms
+    function void sample_injection(int i);
+      gen_icram_events::evt_t e = gen_icram_events::q[i];
+      bit is_data = (e.kind == "inject_data");
+      bit owed = is_data ? (e.verdict == 1 && e.qualified) : e.qualified;
+      bit dup_masked = is_data && e.verdict >= 0 && !e.rose && data_dup_of(e);
+      bit ret_seen; bit nmi_hi = nmi_in_window(e.cycle, GEN_ICACHE_RETIRE_WINDOW, ret_seen);
+      ic_cov.sample_ic_ecc_injection(is_data, e.bits, e.way, e.beat, owed && e.seen, e.en_ok, e.sweep_ok, e.verdict, dup_masked,
+                                     major_in_window(e.cycle, GEN_ICACHE_ECC_WINDOW), nmi_hi, ret_seen);
+    endfunction
+    // the never-written data-line reads, drained from their own queue: an event is classified once its window has closed, since
+    // the no-alert half is only known then, and the monitor is the only place that can see whether an injection shared the cycle
+    function void drain_uninit(bit final_pass);
+      gen_icram_events::uninit_t keep [$];
+      foreach (gen_icram_events::uq[k]) begin
+        gen_icram_events::uninit_t u = gen_icram_events::uq[k];
+        bit shared_inject = 0;
+        if (!final_pass && misc.cycle <= u.cycle + GEN_ICACHE_ECC_WINDOW) begin keep.push_back(u); continue; end
+        foreach (gen_icram_events::q[j]) if (gen_icram_events::q[j].cycle == u.cycle) shared_inject = 1;
+        if (shared_inject) uninit_skipped_inject++;                                  // that cycle's bin comes from the injection's own closure
+        else if (minor_in_window(u.cycle, GEN_ICACHE_ECC_WINDOW)) uninit_skipped_alert++;   // an alert fired: not a no-alert case
+        else begin
+          uninit_sampled++;
+          if (ic_cov != null) ic_cov.sample_ic_ecc_uninit();
+        end
+      end
+      gen_icram_events::uq = keep;
+    endfunction
     // an owed injection without a pulse is missing once no held pulse lies in its window (its pulse may be among them)
     function void close_owed(bit final_pass);
       foreach (gen_icram_events::q[i]) begin
         if (!gen_icram_events::q[i].judged || gen_icram_events::q[i].closed) continue;
         if (!final_pass && held_in_window(gen_icram_events::q[i].cycle)) continue;
         gen_icram_events::q[i].closed = 1;
+        if (ic_cov != null && !gen_icram_events::q[i].sampled) begin gen_icram_events::q[i].sampled = 1; sample_injection(i); end
         if (gen_icram_events::q[i].kind == "inject" && gen_icram_events::q[i].qualified && !gen_icram_events::q[i].seen) begin
           alert_minor_missing++;
           if (gen_chk_en(cfg, cfg.chk_alert_minor, cfg.chk_alert_minor_set))
@@ -703,10 +767,12 @@ package gen_checkers_pkg;
       end
       resolve_held(1);   // the run ends: the held pulses are attributed with the pending injections as unjudged, then the owed ones closed
       close_owed(1);
+      drain_uninit(1);
       if (dfs_pulses > dfs_expected && gen_chk_en(cfg, cfg.chk_double_fault, cfg.chk_double_fault_set))
         `uvm_error("double_fault", $sformatf("%0d double_fault_seen_o pulses for %0d expected double faults", dfs_pulses, dfs_expected))
-      `uvm_info("GEN_MISC", $sformatf("alert_bus hits=%0d mismatches=%0d; alert_minor hits=%0d mismatches=%0d (ecc injections judged=%0d qualified=%0d missing=%0d, pulse latencies %p; data injections judged=%0d hit_way=%0d other_or_invalid_way=%0d (other valid way %0d) unjudged=%0d (ambiguous %0d, pending at the end %0d) missing=%0d other_way_pulses=%0d held_pulses=%0d duplicate_copies visible=%0d masked=%0d; forms a/b both=%0d agree=%0d disagree=%0d, b latency %0d..%0d); alert_internal hits=%0d; data_tag hits=%0d; sync traps=%0d double faults expected=%0d pulses=%0d mismatches=%0d; crash_dump checked=%0d late=%0d early=%0d mismatches=%0d; fetch_en records after off=%0d late=%0d",
-                alert_bus_hits, alert_bus_mismatch, alert_minor_hits, alert_minor_mismatch, alert_minor_injections, alert_minor_qualified, alert_minor_missing, alert_minor_lat, data_injections, data_hit_way, data_other_way, data_other_valid, data_unjudged, data_ambiguous, data_pending, data_missing, data_other_pulses, held_pulses, data_dup_visible, data_dup_masked, ab_both, ab_agree, ab_disagree, b_lat_min, b_lat_max, alert_internal_hits, data_tag_hits, sync_traps, dfs_expected, dfs_pulses, dfs_mismatch, cd_checked, cd_late, cd_early, cd_mismatch, fe_records_after_off, fe_late_records), UVM_LOW)
+      `uvm_info("GEN_MISC", $sformatf("alert_bus hits=%0d mismatches=%0d; alert_minor hits=%0d mismatches=%0d (ecc injections judged=%0d qualified=%0d missing=%0d, pulse latencies %p; data injections judged=%0d hit_way=%0d other_or_invalid_way=%0d (other valid way %0d) unjudged=%0d (ambiguous %0d, pending at the end %0d) missing=%0d other_way_pulses=%0d held_pulses=%0d duplicate_copies visible=%0d masked=%0d; forms a/b both=%0d agree=%0d disagree=%0d, b latency %0d..%0d); alert_internal hits=%0d; data_tag hits=%0d; sync traps=%0d double faults expected=%0d pulses=%0d mismatches=%0d; crash_dump checked=%0d late=%0d early=%0d mismatches=%0d; fetch_en records after off=%0d late=%0d; uninitialised data reads reported=%0d sampled=%0d skipped(injection %0d, alert %0d) dropped=%0d",
+                alert_bus_hits, alert_bus_mismatch, alert_minor_hits, alert_minor_mismatch, alert_minor_injections, alert_minor_qualified, alert_minor_missing, alert_minor_lat, data_injections, data_hit_way, data_other_way, data_other_valid, data_unjudged, data_ambiguous, data_pending, data_missing, data_other_pulses, held_pulses, data_dup_visible, data_dup_masked, ab_both, ab_agree, ab_disagree, b_lat_min, b_lat_max, alert_internal_hits, data_tag_hits, sync_traps, dfs_expected, dfs_pulses, dfs_mismatch, cd_checked, cd_late, cd_early, cd_mismatch, fe_records_after_off, fe_late_records,
+                gen_icram_events::uninit_reads, uninit_sampled, uninit_skipped_inject, uninit_skipped_alert, gen_icram_events::uninit_dropped), UVM_LOW)
     endfunction
   endclass
 endpackage

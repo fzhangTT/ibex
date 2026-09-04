@@ -245,6 +245,12 @@ package gen_tb_pkg;
   parameter int unsigned GEN_RVFI_ID_EXIT_OFFSET = 2;  // cycles from ID exit (rvfi_ext_mcycle sample point, rtl/ibex_core.sv:2102) to the record, plus the WB wait for loads/stores (v3 T-051 2.2)
   parameter int unsigned GEN_ICACHE_ECC_WINDOW = 2;  // alert_minor_o within 1..2 cycles counted from the lookup request that returns corrupted data (the RAM read lands one cycle after the request, the alert one cycle after the check): 1 is the latency observed on every retained injection run (gen_tdd_step2b.md Section 14, every pulse at 1), 2 the declared bound, not observed; no run had alert_minor_o high before the injection hook existed; the misc checker and the protocol SVA use the same value
   parameter int unsigned GEN_ICACHE_ECC_GRACE_CYCLES = 16;  // cycles after a cpuctrlsts.icache_enable write record or after the last invalidation-sweep tag write during which a tag-RAM ECC injection is not owed an alert_minor_o pulse: a lookup made while the cache is disabled or invalidating reads the tag RAM but is not checked (rtl/ibex_icache.sv:266), and the TB learns both states late (the write from its record, the sweep from its all-ways tag writes)
+  // the window arithmetic every CG-IC-006 window term uses, in one place so its boundary is unit-testable: a cycle counts when
+  // it lies in ref+1 .. ref+span. The reference cycle itself is excluded, since the ECC check lands the cycle after the read.
+  function automatic bit gen_ic_in_window(int unsigned hit_cycle, int unsigned ref_cycle, int unsigned span);
+    return hit_cycle > ref_cycle && (hit_cycle - ref_cycle) <= span;
+  endfunction
+  parameter int unsigned GEN_ICRAM_UNINIT_Q_DEPTH = ibex_pkg::IC_NUM_LINES * ibex_pkg::IC_NUM_WAYS;  // every never-written data line of every way can be reported at most once, so this depth holds every event a run can produce and the queue cannot evict; a drop is a TB defect and is counted
   parameter int unsigned GEN_ICACHE_RETIRE_WINDOW = 64;  // cycles after a data-RAM ECC injection within which the misc monitor waits for the retirement that reveals the lookup tag through its pc (form b, the measured-run judge: the first retirement whose pc index equals the injected index); an injection with no such retirement is reported unjudged (a squashed speculative lookup)
   parameter int unsigned GEN_IRQ_ENTRY_BOUND_RECORDS = 17;  // records between a pin edge and the interrupt entry, worst case WB + ID + 16 Zcmp micro-ops (v3 T-051 2.6)
   parameter int unsigned GEN_DBG_ENTRY_BOUND_RECORDS = 17;  // records between debug_req_i and the debug entry, same derivation (v3 T-051 2.6)
@@ -550,7 +556,8 @@ package gen_tb_pkg;
     // tag at the read (un-tweaked), and, once judged, the hit way and the verdicts (a: the P9 probe's tag; b: the retiring pc's tag)
     typedef struct { int unsigned cycle; int unsigned way; int unsigned index; string kind; bit qualified; bit seen; bit judged;
                      int unsigned beat; int unsigned bits; bit valid_w [GEN_IC_NUM_WAYS]; logic [31:0] tag_w [GEN_IC_NUM_WAYS];
-                     int hit_way; int verdict; int verdict_b; int unsigned pulse_cycle; bit rose; bit closed; } evt_t;   // rose: a flipped bit was 0 before (visible through the OR of duplicate copies)
+                     int hit_way; int verdict; int verdict_b; int unsigned pulse_cycle; bit rose; bit closed;
+                     bit en_ok; bit sweep_ok; bit sampled; } evt_t;   // rose: a flipped bit was 0 before (visible through the OR of duplicate copies)
     static evt_t q [$];
     static int unsigned inject_rate = 0;       // per mille per tag read, from knob_icache_ecc_err_rate (gen_env sets it; 0 = off)
     static int unsigned injected = 0;
@@ -570,14 +577,34 @@ package gen_tb_pkg;
       evt_t e;
       e.cycle = cycle; e.way = way; e.index = index; e.kind = kind; e.qualified = qualified; e.seen = 1'b0; e.judged = 1'b0;
       e.beat = beat; e.bits = bits; e.hit_way = -1; e.verdict = -2; e.verdict_b = -2; e.pulse_cycle = 0; e.rose = rose; e.closed = 1'b0;
+      e.en_ok = enabled_at(cycle); e.sweep_ok = sweep_clear_at(cycle); e.sampled = 1'b0;
       for (int w = 0; w < GEN_IC_NUM_WAYS; w++) begin e.valid_w[w] = shadow_valid(w, index); e.tag_w[w] = shadow_tag(w, index); end
       q.push_back(e);
       while (q.size() > 256) void'(q.pop_front());
     endfunction
+    // Never-written data-RAM reads live in a queue of their OWN, never in q: the pulse attribution, the deferral and the
+    // closure all iterate q, and every lookup reads both ways' data lines whether the cache is enabled or not, so an
+    // unwritten-line read entering q would evict injections still waiting for their retirement verdict.
+    typedef struct { int unsigned cycle; int unsigned way; int unsigned index; bit drained; } uninit_t;
+    static uninit_t uq [$];
+    static int unsigned uninit_reads = 0, uninit_dropped = 0;
+    static function void note_uninit_read(int unsigned cycle, int unsigned way, int unsigned index);
+      uninit_t e;
+      uninit_reads++;
+      if (uq.size() >= GEN_ICRAM_UNINIT_Q_DEPTH) begin uninit_dropped++; return; end
+      e.cycle = cycle; e.way = way; e.index = index; e.drained = 1'b0;
+      uq.push_back(e);
+    endfunction
+    // the two terms of the qualification, separately: cp_no_alert_case distinguishes disabled_cache from during_invalidation,
+    // and the conjunction below is the same predicate qualified_at always applied
+    static function bit enabled_at(int unsigned cycle);
+      return icache_en && cycle >= icache_en_cycle + GEN_ICACHE_ECC_GRACE_CYCLES;
+    endfunction
+    static function bit sweep_clear_at(int unsigned cycle);
+      return !(inval_seen && cycle < last_inval_cycle + GEN_ICACHE_ECC_GRACE_CYCLES);
+    endfunction
     static function bit qualified_at(int unsigned cycle);
-      if (!icache_en || cycle < icache_en_cycle + GEN_ICACHE_ECC_GRACE_CYCLES) return 1'b0;
-      if (inval_seen && cycle < last_inval_cycle + GEN_ICACHE_ECC_GRACE_CYCLES) return 1'b0;
-      return 1'b1;
+      return enabled_at(cycle) && sweep_clear_at(cycle);
     endfunction
     static function void note_icache_en(bit en, int unsigned cycle);
       icache_en = en; icache_en_cycle = cycle;

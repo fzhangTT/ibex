@@ -1,0 +1,42 @@
+# LOG-084 evidence: ci/check_fcov_expectations.py's report parser and urg cross bins.
+# Produced by importing the committed checker and calling parse_groups_report on a real urg report, so the keys below
+# are the parser's own output and not a reading of its source.
+#
+# WHAT THE REPORT CONTAINS. urg names cross bins with their counts under a per-cross heading:
+  grpinfo.txt:12453 | data_single_way0 483   1
+  grpinfo.txt:12493 | data_beat0 459   1
+  grpinfo.txt:12521 | single_frequent 904   1
+  and the group summary reports Crosses 16 expected with 5 covered, so five cross bins ARE hit in this report.
+#
+# DEFECT 1, FALSE FAIL. The parser recognises only `Summary for Variable <cp>` and never `Summary for Cross <cr>`,
+# so it emits no gen_ic_ecc_cg.<cross>.<bin> key at all and a manifest declaring a cross bin can never pass:
+  keys the parser emitted for this group: 38
+  of them keyed under a cross name: 0
+#
+# DEFECT 2, FALSE PASS, which is the serious one. The cross heading only clears the parser's in-bins flag and leaves
+# the coverpoint name set, so every cross bin's count is attributed to the group's LAST coverpoint. cp_knob is last
+# here, and these keys are cross bins wearing its name, with the counts urg gave the crosses:
+  gen_ic_ecc_cg.cp_knob.data_double_way0                   0
+  gen_ic_ecc_cg.cp_knob.data_double_way1                   0
+  gen_ic_ecc_cg.cp_knob.data_hit                           0
+  gen_ic_ecc_cg.cp_knob.data_single_way0                   483
+  gen_ic_ecc_cg.cp_knob.data_single_way1                   421
+  gen_ic_ecc_cg.cp_knob.double_frequent                    0
+  gen_ic_ecc_cg.cp_knob.double_rare                        0
+  gen_ic_ecc_cg.cp_knob.single_frequent                    904
+  gen_ic_ecc_cg.cp_knob.single_rare                        0
+  gen_ic_ecc_cg.cp_knob.tag_all                            0
+  gen_ic_ecc_cg.cp_knob.tag_double_way0                    0
+  gen_ic_ecc_cg.cp_knob.tag_double_way1                    0
+  gen_ic_ecc_cg.cp_knob.tag_single_way0                    0
+  gen_ic_ecc_cg.cp_knob.tag_single_way1                    0
+# So a DECLARED coverpoint bin reads as HIT whenever a cross bin of the same name is hit in that group.
+#
+# WHY IT CANNOT MASK ANYTHING THIS MANIFEST DECLARES, both measured on the traceability CSV: this group's 22
+# coverpoint bin names and its 16 cross bin names have an EMPTY intersection, and the coverpoint the
+# mis-attribution lands on is cp_knob, which declares no bin in the manifest at all. The name `yes` is shared by
+# cp_lookups_blocked_next, cp_major_nmi_quiet and cp_refetch, but coverpoint-to-coverpoint sharing is not this
+# hazard: the parser keys by coverpoint, so only a CROSS bin sharing a coverpoint bin's name can mask one.
+#
+# The parser's own docstring states the structure it verified, `Summary for Variable <cp>` and the bin tables, so the
+# cross case reads as never having been in scope rather than as a regression.
