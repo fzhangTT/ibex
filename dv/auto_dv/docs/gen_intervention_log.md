@@ -2165,3 +2165,20 @@ superseded by corrected manifests, not extended). The measured-false fallback (a
 not the owner's first measurement. Open, decided by the Critic's P-07 verdict: whether round 1 may run first on runtime-2's rt38
 deferral key (LOG-089) with the corrected manifests following for round 2, or must wait for the corrected manifests. The DV Lead
 holds P-07 absolute; if the Critic agrees, rt38 is shelved and the schedule cost goes to the owner as a question.
+
+## LOG-091 - 2026-09-04 - Ruling: round 1 takes the manifest route; rt38 shelved; P-07 stays absolute
+
+Decision (Orchestrator, 20:5xZ, with runtime-2 recommending against its own plan after verifying the DV Lead's instruments:
+bins_not_hit is parsed at gen_fcov_manifest.py:302-306, dropped from the declared set at plan_bins, rendered as "# not_hit <bin>:
+<why>", asserted to name only bins the plan items own, and used by seven real test modules including gen_test_isa_alu and
+gen_test_rst_boot): round 1 runs on corrected manifests, not on a deferral. Sequence: (1) the DV Lead marks the coverpoints of the
+unbuilt covergroups "not in manifest" in the plan and hands that plan touch; (2) the Test Writer adds bins_not_hit dictionaries to
+the six pre-flight-failing tests (each of the 123 stable bins with its cause; the 123 seed-dependent bins with the per-run
+reason), re-renders all 13 affected manifests and hands test modules and manifests as one landing with the fcov validator green;
+entries left with an empty or near-empty guaranteed set (gen_test_pmp_csr_warl 0 built bins, gen_test_csr_reset 0, gen_test_bit_draft
+0, gen_test_csr_access 4 of 80) are set measured false for round 1 by the DV Lead's guard rail and named in the round record;
+(3) runtime-2 restores the 13 manifest references (superseding LOG-086 and LOG-088) in one testlist touch and pre-flights every
+measured entry at the round's seeds (45 runs) at that HEAD; (4) landing 40 (tb-infra-2) lands; (5) a new round HEAD, canary and
+dispatch. rt38's plan is committed as the record of the rejected alternative; runtime-2 implements nothing of it. The round slips
+by this work; the owner's directive (LOG-085) is served by a first measurement in which every measured run carries an enforced
+per-run claim rather than by an earlier round that checks two entries.
