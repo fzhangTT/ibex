@@ -1,0 +1,96 @@
+# THE STANDING GUARD FOR THE FCOV LEG'S FAILING DIRECTION: its first failing run, recorded.
+# ASCII-NORMALISED per the retention convention: every character above 127 in a quoted artefact line, the em
+# dash ci/check_fcov_expectations.py prints included, is written as one '-'; everything else is verbatim.
+#
+# WHAT THE GUARD IS. A committed testlist entry whose fixture manifest declares one bin the entry cannot hit, so
+# every regression that runs it exercises the flow's refusal of an unmet declared bin. Before it, nothing committed
+# made the flow FAIL when a declared bin went unhit: one retained control had exercised that once from a scratch
+# root, which is a different claim from a permanent check every regression runs.
+#   entry     gen_ut_lockstep_icache_ecc_fcov_red, tier check, red_fixture true, measured false
+#   manifest  dv/auto_dv/fcov_expectations/gen_ut_lockstep_icache_ecc_fcov_red.fcov.yaml
+#   bin       gen_ic_ecc_cg.cp_ram.data
+#   grading   red_fixture plus red_expect. expected_fail is FALSE and must stay false: the loader refuses
+#             red_fixture beside expected_fail, because a fixture is not an RTL-bug candidate.
+#   red_expect  fcov expectation unmet: [0-9]+ declared bin\(s\) not hit .*gen_ic_ecc_cg\.cp_ram\.data
+#
+# WHY THE BIN CANNOT BE HIT, and it is by construction rather than by luck. cp_ram samples the injecting RAM of an
+# announcement, tag as 0 and data as 1, and this entry's plusargs set the tag-RAM rate alone with no data-RAM knob,
+# so no announcement of the run can carry data and no seed can turn the guard green. A HIT would be a real defect
+# either way round: the tag hook announcing a data injection, or a data injection running with its knob absent. The
+# same bin is declared and MET by gen_ut_lockstep_icache_ecc_data at 904 hits in that entry's own run, so the bin is
+# reachable in general and only these plusargs cannot reach it.
+#
+# WHY THIS LOG LIVES HERE, under gen_tdd_logs/flow, and never under gen_tdd_logs/lockstep with the family's
+# gen_{group}_red1_stdout naming: at that path the loader does not warn, it REFUSES the entry, and every flow command
+# that reads the testlist then dies with a message that reads like a stale red signature rather than a path problem.
+# The reason is structural: the failure's evidence is the expectation checker's own reason line, not a line in the
+# simulation's stdout, so a replay looking for it in the stdout cannot find it. The group the naming would derive
+# from is lockstep_icache_ecc_fcov. Measured by the Runtime Manager with a real failing stdout placed at that path.
+#
+# THE BUILD, AND ITS CAVEAT STATED UP FRONT RATHER THAN IN A FOOTNOTE. The run reused the build
+# dv/auto_dv/work/runtime/out/l25_exercise_1430/build/gen_tb, identity b48479a3bc6f1d9f, which is the flow's
+# filelist_digest over gen_rtl.f plus gen_tb.f and NOT the local runner's build_sources_sha256; its sources come
+# from the mirror head tree of 813994b3d48340719bc4d5119e4f01ac177a4eda. THOSE SOURCES PREDATE THIS LANDING: the
+# flow's own build-input comparison between that commit and HEAD reports 30 changed paths and the decision
+# refused_build_inputs_changed, of which only two are non-inputs (gen_component_api_irq_checker.md and
+# gen_runtime_api.md).
+# WHY THE UNHITTABILITY ARGUMENT SURVIVES THAT, checked rather than assumed: gen_fcov_groups.svh is cd4c1f69fdfc and
+# gen_fcov_pkg.sv is d4b339e24ff3 at BOTH that build's commit and HEAD, byte-identical, so cp_ram's bins are exactly
+# the tag={0} and data={1} pair the note cites and the coverage database this run produced was built from the same
+# covergroup HEAD carries. The 30 moved paths are the drain and knob work, none of which defines or samples cp_ram.
+# THE LIMIT, PLAINLY: the entry and the manifest were UNCOMMITTED at run time and came from a scratch source root,
+# so this run is evidence about the entry AS STAGED, not as committed. The canonical head-mode run of the committed
+# entry follows as a supplement in the next touch. A build of the landing's own sources is not reachable before the
+# entry is committed, because the build refuses a bound source root that carries no head-mode mirror manifest.
+
+== 1. THE FAILING RUN, standalone with the expectation check ==
+   Seed 1, program gen_icache_ecc_directed.S, unmeasured single seed.
+$ command grep -a "GEN_RUN_VERDICT" g1/run.log
+   GEN_RUN_VERDICT RED-OK reason=red fixture failed as designed (red_expect matched): fcov expectation unmet: 1 declared bin(s) not hit ['gen_ic_ecc_cg.cp_ram.data'] wall_s=8.4 exit_code=0
+
+$ cat g1/fcov_check.log   (the last two lines, the checker's own)
+   FCOV-EXPECTATION: gen_ic_ecc_cg.cp_ram.data = UNHIT (count=0)
+   FCOV-EXPECTATION: FAIL - 1 declared bin(s) not hit: gen_ic_ecc_cg.cp_ram.data
+
+$ python3 -c "read g1/result.yaml and print the fields the verdict rests on"
+   verdict           = RED-OK
+   evidence_line     = fcov expectation unmet: 1 declared bin(s) not hit ['gen_ic_ecc_cg.cp_ram.data']
+   run exit_code     = 0  (the simulation itself passed)
+   fcov_check exit   = 2  (the expectation check failed; this is the whole mechanism)
+   fcov status       = UNHIT  declared = 1  hit = 0
+   unmet_bins        = ['gen_ic_ecc_cg.cp_ram.data']
+   manifest sha256   = 5afebcf87fa66d1e (first 16)
+   manifest owner    = tb-infra
+
+   READING: the simulation PASSED at exit 0 and the expectation check exited 2, and the red_fixture grading
+   turned that into RED-OK. So the failure this guard produces is the checking mechanism alone, with no
+   contribution from the stimulus, which is what makes it a guard on the mechanism rather than on the DUT.
+
+   The manifest the run consumed is byte-identical to the one this landing commits:
+$ cmp g1/fcov_manifest_used.yaml dv/auto_dv/fcov_expectations/gen_ut_lockstep_icache_ecc_fcov_red.fcov.yaml
+   identical (cmp silent, rc 0); md5 fac44d438611e2f97047a55eae66cd4b
+
+== 2. THE REGRESSION SHAPE, which is how the guard will actually run ==
+   In a regression gen_run is invoked WITHOUT the expectation check, so it cannot judge the entry and parks it;
+   the pre-merge pass then runs the check and grades it, rewriting result.yaml. The run log and the result file
+   therefore DISAGREE by design, and a reader who sees only the run log would read the guard as not run:
+$ command grep -a "GEN_RUN_VERDICT" g2/run.log
+   GEN_RUN_VERDICT NOT_RUN reason=red fixture judged on an fcov expectation that no stage of this run checked (no coverage vdb, or the check was not requested) wall_s=7.5 exit_code=0
+$ python3 -c "read g2/result.yaml after the pre-merge pass"
+   verdict   = RED-OK
+   reason    = red fixture failed as designed (red_expect matched): fcov expectation unmet: 1 declared bin(s) not hit ['gen_ic_ecc_cg.cp_ram.data']
+   exit_code = 0
+   READING: NOT_RUN in the run log, RED-OK in the rewritten result. The parked reason names exactly what was
+   missing, a red fixture judged on an expectation no stage of that run checked, which is the deliberate third
+   state introduced with the grading move: not a pass and not a failure, and counted as neither.
+
+== 3. WHAT WOULD MAKE THIS GUARD FAIL, so a future reader knows what it is watching ==
+   FAIL "red fixture passed unexpectedly" if the declared bin ever gets hit, which means either the injecting
+   RAM is announced wrongly or a data injection ran without its knob. FAIL on a red_expect mismatch if the
+   checker's reason wording changes, which is a signature drift to fix in the entry rather than a defect.
+   NOT_RUN if no stage checks the expectation, which is the parked state above and needs no action.
+   And if the manifest is ever dropped from the entry the loader still ACCEPTS it, silently turning the guard
+   into a sim-log-graded fixture whose simulation passes by construction, which then reports the fixture
+   passing unexpectedly on every run. The manifest is part of the entry, not an optional extra.
+# END. Every figure above is read from the run's own artefacts by the command printed above it. The run
+# directories are scratchpad paths and not durable, which is why this log is the record rather than a pointer.

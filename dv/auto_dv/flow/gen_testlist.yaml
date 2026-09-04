@@ -2414,3 +2414,29 @@ tests:
     keep_artifacts: true
     component: gen_checkers_pkg
     measured: false
+  - name: gen_ut_lockstep_icache_ecc_fcov_red
+    description: 'standing guard for the fcov leg''s failing direction: the lock-step run of gen_icache_ecc_directed.S with the tag-RAM ECC injection only, carrying a manifest that declares gen_ic_ecc_cg.cp_ram.data, a bin no data-free run can hit, so every regression exercises the flow''s refusal of an unmet declared bin; graded RED-OK by red_expect, and an unexpected PASS is FAIL'
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs:
+    - +gen_fetch_en_at_reset=0
+    - +gen_ut_boot_retire=3000
+    - +gen_knob_icache_ecc_err_rate=frequent
+    program:
+      directed:
+      - dv/auto_dv/stim/gen_directed/gen_icache_ecc_directed.S
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: dv/auto_dv/fcov_expectations/gen_ut_lockstep_icache_ecc_fcov_red.fcov.yaml
+    timeout_s: 900
+    owner: tb-infra
+    pass_marker: GEN_UT_LOCKSTEP_PASS
+    feature_groups:
+    - red
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep
+    expected_fail: false
+    red_fixture: true
+    red_expect: 'fcov expectation unmet: [0-9]+ declared bin\(s\) not hit .*gen_ic_ecc_cg\.cp_ram\.data'
+    component: gen_misc_monitor
+    measured: false

@@ -1,0 +1,20 @@
+# THE STANDING GUARD for the fcov leg's FAILING direction (tb-infra, approved by the Orchestrator).
+# What it guards: nothing in the committed tree makes the flow FAIL when a declared bin goes unhit. Runtime's rt34
+# exercised that once from a scratch root, and rt35 moved the grading to where the evidence is. This manifest plus
+# its testlist entry make the failing direction a PERMANENT check that every regression runs, which is a different
+# claim from a one-off retained control.
+# How it fails: the entry is a red_fixture with a red_expect regex, so the flow grades the designed failure RED-OK
+# and grades an unexpected PASS as FAIL. expected_fail is FALSE and must stay false: the loader refuses
+# red_fixture beside expected_fail, because a fixture is not an RTL-bug candidate.
+# The one declared bin, and why it cannot be hit, is in the anti_vacuity note below.
+# The failing log is retained under dv/auto_dv/evidence/gen_tdd_logs/flow/ and NEVER under gen_tdd_logs/lockstep
+# with the family's red1_stdout naming: at that path the loader REFUSES this entry instead of warning, because the
+# failure's evidence is the expectation checker's reason and not a line in the simulation's stdout, and then every
+# flow command that reads the testlist dies on it. The group the naming would derive from is
+# lockstep_icache_ecc_fcov.
+test: gen_ut_lockstep_icache_ecc_fcov_red
+owner: tb-infra
+bins:
+- gen_ic_ecc_cg.cp_ram.data
+anti_vacuity:
+  gen_ic_ecc_cg.cp_ram.data: 'THE ANTI-VACUITY ARGUMENT RUNS THE OTHER WAY FOR A RED FIXTURE: this bin is declared so that it goes UNHIT and the flow''s expectation check fails every time the entry runs. It is unhittable BY CONSTRUCTION, not by luck. cp_ram samples the injecting RAM of an announcement, tag as 0 and data as 1 (gen_fcov_groups.svh, covergroup gen_ic_ecc_cg), and this entry''s plusargs set the tag-RAM rate alone (+gen_knob_icache_ecc_err_rate=frequent) with no data-RAM knob, so no announcement of this run can carry data and no seed can turn the guard green. A HIT WOULD BE A REAL DEFECT in one of two ways, which is why the guard is safe in both directions: either the tag hook announced an injection as a data injection, or a data-RAM injection occurred with its rate knob absent. The same bin is declared and MET by gen_ut_lockstep_icache_ecc_data, measured 904 times in that entry''s own run, so the bin is reachable in general and this entry''s inability to hit it is a property of these plusargs rather than of the bin.'

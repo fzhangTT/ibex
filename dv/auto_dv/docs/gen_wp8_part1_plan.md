@@ -434,10 +434,23 @@ classifier fault is a failing run and not only a failing offline check.
   of six declared bins hit; against a fixture declaring one bin the entry cannot hit it is FAIL with the reason "fcov
   expectation unmet: 1 declared bin(s) not hit" and process exit 2, the simulation passing in both, so the failure is
   the expectation check alone rather than the stimulus. It is a ONE-SHOT control, not a guard: the fixture lives in a
-  scratch archive of HEAD with one manifest's bins replaced, and the committed manifest is untouched. The STANDING
-  guard, a committed fixture entry that would fail every future regression in which the mechanism stops detecting, is
-  pending a Runtime flow change, because a red fixture is graded from a collected evidence line and an
-  fcov-unmet failure produces none: its simulation passes by construction. Beside the control, the landing-23
+  scratch archive of HEAD with one manifest's bins replaced, and the committed manifest is untouched. THE STANDING GUARD NOW
+  EXISTS, and the flow change it waited on has landed: a red fixture is graded from its red_expect regex against the
+  reason the expectation checker itself produces, so an fcov-unmet failure no longer needs a line in the simulation's
+  stdout. The guard is the committed entry gen_ut_lockstep_icache_ecc_fcov_red with the fixture manifest
+  dv/auto_dv/fcov_expectations/gen_ut_lockstep_icache_ecc_fcov_red.fcov.yaml, which declares the single bin
+  gen_ic_ecc_cg.cp_ram.data. That bin is unhittable BY CONSTRUCTION rather than by luck: cp_ram records the injecting
+  RAM of an announcement, tag as 0 and data as 1, and the entry's plusargs set the tag-RAM rate alone with no
+  data-RAM knob, so no announcement of the run can carry data and no seed turns the guard green; the same bin is
+  declared and MET by gen_ut_lockstep_icache_ecc_data, so it is reachable in general and only these plusargs cannot
+  reach it. The mechanism is red_fixture plus red_expect with expected_fail FALSE, which the loader requires because
+  it refuses red_fixture beside expected_fail. A hit would be a real defect either way round, the tag hook announcing
+  a data injection or a data injection running with its knob absent, so the guard is safe in both directions, and its
+  simulation still passes by construction, which is the point: the failure it produces is the checking mechanism
+  alone. Its failing run is retained as gen_tdd_logs/flow/gen_fu_guard_fcov_red.log, under flow and never under
+  gen_tdd_logs/lockstep with the family's red1_stdout naming, because at that path the loader REFUSES the entry
+  instead of warning and every flow command that reads the testlist then dies on it: the failure's evidence is the
+  checker's reason line, not simulation stdout, so a replay cannot find it there. Beside the control, the landing-23
   mutation reds in gen_fu_l23_wp8_cov_reds.log drove a declared bin from HIT to UNHIT by mutation rather than by
   declaration, through a direct invocation of the checker.
   ALL NINE ARE EXERCISABLE unmeasured: the flow's refusal keys on the measured

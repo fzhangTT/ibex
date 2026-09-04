@@ -210,6 +210,19 @@ and the append raced the committer's final hash check. PART D proves what the tw
 the two case blocks from the commit's own blob to reproduce the logged hash byte for byte, and PART E measures RED 1
 against both files, 3 BAD against the commit and the 2 the log records, naming the base of each.
 
+gen_fu_guard_fcov_red.log is tb-infra's, retained here because the entry it records is graded by the flow rather
+than by a sim log, and this is the manifest of the logs the flow's own verdicts produce. It is the standing guard's
+red: the entry gen_ut_lockstep_icache_ecc_fcov_red declares gen_ic_ecc_cg.cp_ram.data, a bin its own plusargs cannot
+reach because they set the tag-RAM ECC rate and no data-RAM rate, so the expectation goes unmet on every run and the
+flow grades the designed failure RED-OK. What makes it a guard rather than another control is that it runs in every
+regression, where rt34's fixture ran once from a scratch root. The pair that carries the point is in the log: the
+run's own exit_code 0 beside the fcov check's exit 2, so the simulation passed and the failure is the checking
+mechanism alone. Runtime produced the run and tb-infra composed the log from it; the row is Runtime's because this
+manifest is. Two properties the log records rather than leaves to a reader: the regression shape shows NOT_RUN in the
+run log and RED-OK in result.yaml after the pre-merge pass, which disagree by design, and dropping the manifest from
+the entry leaves it loadable while silently turning it into a sim-log-graded fixture that always reports a fixture
+passing unexpectedly, so the manifest is part of the entry.
+
 | evidence path | source | bytes | md5 |
 |---|---|---|---|
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_gate_rule_red.log | dv/auto_dv/work/runtime/gate_rule_red.log | 926 | 78b72aae6509d2776a43c9314808b01b |
@@ -240,3 +253,4 @@ against both files, 3 BAD against the commit and the 2 the log records, naming t
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_read_keyed_selftest.log | (runtime scratchpad) rt34/gen_read_keyed_selftest.log | 2579 | 487794e0876c31e11941a50ffce5b146 |
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_rt35_red_grading.log | (runtime scratchpad) rt35/gen_rt35_red_grading.log | 31785 | acc9a35cb98beebf104e6cb77ebc05ac |
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_rt35_red_grading_supplement.log | (runtime scratchpad) rt35/gen_rt35_red_grading_supplement.log | 16792 | 217a2fd223682b7892b588357e9d9af5 |
+| dv/auto_dv/evidence/gen_tdd_logs/flow/gen_fu_guard_fcov_red.log | (tb-infra) composed from runtime's scratchpad guard/g1 and guard/g2 runs | 8126 | 5c59feb272c40be64b45b271937b4472 |
