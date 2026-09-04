@@ -22,7 +22,6 @@ import yaml
 REPO_ROOT = Path(__file__).resolve().parents[3]
 RESULTS_DIR = REPO_ROOT / "dv/auto_dv/work/runtime/results"
 EVIDENCE_DIR = REPO_ROOT / "dv/auto_dv/evidence"
-SELFTEST_TMP = REPO_ROOT / "dv/auto_dv/work/runtime/selftest_tmp"
 # the verdict lines a run's logs contribute: the harness verdict, the fire schedule, the bin list, the UVM totals
 KEEP = re.compile(r"GEN_TEST_FIRE fire_schedule_applied|GEN_TEST_BINS n=|GEN_TEST_PASS|GEN_TEST_FAIL|UVM_(ERROR|FATAL) :")
 LOGS = ("sim_stdout.log", "sim.log")
@@ -101,6 +100,21 @@ def excerpt_for(request: str, tag: str, results_dir: Path = RESULTS_DIR) -> str:
     return render(request, tag, manifest, rel)
 
 
+def regress_coverage(manifest: dict) -> bool | None:
+    """Whether the regression ran with coverage: its scope.coverage, else any build recording cov_metrics; None when
+    neither is present (a build record never carries a coverage key)."""
+    scope = manifest.get("scope") or {}
+    if "coverage" in scope:
+        return bool(scope["coverage"])
+    builds = manifest.get("builds")
+    if isinstance(builds, dict) and builds:
+        return any(b.get("cov_metrics") is not None for b in builds.values())
+    return None
+
+
+LABEL_RE = re.compile(r"^[A-Za-z0-9_]+$")   # a hyphen would be split off by excerpt_name (the request-name form)
+
+
 def regress_as_request(manifest: dict, label: str) -> dict:
     """A gen_regress manifest viewed through the request-manifest fields render() reads: an acceptance wave run
     directly (no request file) keeps the same excerpt shape, with the regression's tag, source and scope as the echo."""
@@ -108,8 +122,8 @@ def regress_as_request(manifest: dict, label: str) -> dict:
     return {"requester": manifest.get("requester") or "runtime", "purpose": manifest.get("purpose"),
             "scope_decision": f"direct regression {manifest.get('tag') or label}", "status": manifest.get("status"),
             "request_echo": {"tests": sorted({r.get("test") for r in manifest.get("runs") or []}), "seeds": "per entry",
-                             "coverage": bool(manifest.get("builds") and any(b.get("coverage") for b in (manifest.get("builds") or {}).values()) if isinstance(manifest.get("builds"), dict) else None)},
-            "received_utc": manifest.get("started_utc"), "finished_utc": manifest.get("finished_utc"), "regress_rc": manifest.get("status"),
+                             "coverage": regress_coverage(manifest)},
+            "received_utc": manifest.get("started_utc"), "finished_utc": manifest.get("finished_utc"), "regress_rc": manifest.get("rc"),
             "server_mirror_sync": {"pinned_sha": src.get("head_sha"), "canary_sha": manifest.get("canary_sha"), "canary_decision": f"source mode {src.get('mode')}",
                                    "batch_record": manifest.get("regress_log")},
             "regress_outdir": manifest.get("outdir"), "regress_cmd": manifest.get("regress_cmd") or f"gen_regress.py --tag {manifest.get('tag')}",
@@ -127,9 +141,10 @@ def self_test() -> int:
     """A fabricated request tree: one PASS run with lines in both logs, one RED-OK run whose sim.log has no collected line,
     one run with a missing sim.log; the excerpt names each case, is ASCII and deterministic."""
     sys.path.insert(0, str(REPO_ROOT / "dv/auto_dv/flow"))
+    import gen_flow_const as C   # the self-test scratch root (GEN_DV_SELFTEST_TMP honoured)
     import gen_flow_util as U   # the guarded removal of the scratch tree (A-002)
-    SELFTEST_TMP.mkdir(parents=True, exist_ok=True)
-    d = Path(tempfile.mkdtemp(prefix="gen_excerpt_selftest_", dir=SELFTEST_TMP))
+    tmp_root = Path(C.selftest_tmp())
+    d = Path(tempfile.mkdtemp(prefix="gen_excerpt_selftest_", dir=tmp_root))
     ok = True
     runs = []
     for name, seed, verdict, stdout_lines, sim_lines in (
@@ -166,11 +181,21 @@ def self_test() -> int:
     cond = rtext.splitlines()[0].startswith("# gen_acceptance_zz_wave1_verdict_excerpt.log: acceptance verdicts of the direct regression wave1") and "the regression manifest" in rtext and ("p" * 40) in rtext \
         and "## manifest rows" in rtext and f"sim.log: {NO_LINE}" in rtext and rtext == excerpt_for_regress(d / "manifest.yaml", "wave1", "zz")
     ok &= cond; print("SELF-TEST", "ok " if cond else "BAD", "a regression manifest renders the same excerpt shape (direct acceptance wave, no request file), deterministic")
+    reg_cov = dict(reg, scope={"coverage": True}); reg_nocov = dict(reg, scope={"coverage": False})
+    reg_noscope = {k: v for k, v in reg.items() if k != "scope"}; reg_noscope["builds"] = {"gen_tb": {"cov_metrics": "line+cond"}}
+    reg_bare = {k: v for k, v in reg.items() if k != "scope"}
+    got_cov = (regress_coverage(reg_cov), regress_coverage(reg_nocov), regress_coverage(reg_noscope), regress_coverage(reg_bare))
+    cond = got_cov == (True, False, True, None) and "regress_rc: None" in rtext and "status: done" in rtext
+    ok &= cond; print("SELF-TEST", "ok " if cond else "BAD", f"regression coverage echo from scope.coverage, else cov_metrics, else None (CM142-L-1): {got_cov}; status is not printed under the rc label (CM142-I-1)")
+    cond = bool(LABEL_RE.match("wave0122")) and not LABEL_RE.match("wave-0122") and not LABEL_RE.match("")
+    ok &= cond; print("SELF-TEST", "ok " if cond else "BAD", "a --label with a hyphen is rejected (CM142-I-2)")
+    cond = str(d).startswith(str(tmp_root))
+    ok &= cond; print("SELF-TEST", "ok " if cond else "BAD", f"the self-test scratch lives under the flow's selftest root (CM142-I-3): {tmp_root}")
     exact, crlf, missing = d / "exact.log", d / "crlf.log", d / "missing.log"
     exact.write_bytes(text.encode()); crlf.write_bytes(text.replace("\n", "\r\n").encode())
     cond = same_bytes(exact, text) and not same_bytes(crlf, text) and not same_bytes(missing, text)
     ok &= cond; print("SELF-TEST", "ok " if cond else "BAD", "--check compares bytes: an exact copy is same, a CRLF rewrite and a missing file differ (CM115-I-1)")
-    U.remove_tree_guarded(d, (SELFTEST_TMP,), "self-test dir")
+    U.remove_tree_guarded(d, (tmp_root,), "self-test dir")
     print("SELF-TEST:", "PASS" if ok else "FAIL")
     return 0 if ok else 2
 
@@ -179,7 +204,7 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--request", action="append", default=[], help="request name, e.g. test-writer-071 (repeatable)")
     ap.add_argument("--regress", type=Path, help="a gen_regress manifest.yaml (an acceptance wave run without a request file)")
-    ap.add_argument("--label", help="with --regress: the excerpt's sequence label (gen_acceptance_<tag>_<label>_...)")
+    ap.add_argument("--label", help="with --regress: the excerpt's sequence label (gen_acceptance_<tag>_<label>_...); letters, digits and underscores only")
     ap.add_argument("--tag", default="b3", help="wave tag in the excerpt file name")
     ap.add_argument("--write", action="store_true", help="write dv/auto_dv/evidence/<excerpt> (default: print the sha256 only)")
     ap.add_argument("--check", action="store_true", help="exit 1 when the committed excerpt differs from a fresh render")
@@ -191,6 +216,8 @@ def main() -> int:
         ap.error("--request or --regress is required")
     if a.regress and not a.label:
         ap.error("--regress needs --label")
+    if a.label and not LABEL_RE.match(a.label):
+        ap.error(f"--label {a.label!r}: letters, digits and underscores only (a hyphen would be split off the file name)")
     rc = 0
     sources = [(req, None) for req in a.request] + ([(f"regress-{a.label}", a.regress)] if a.regress else [])
     for req, reg in sources:
