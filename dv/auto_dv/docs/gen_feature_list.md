@@ -2,7 +2,7 @@
 
 Deliverable 1 (DV_prompt.txt Section 11). Version 2 (promoted from the T-002 draft after the Critic's
 verdict v1, dv/auto_dv/work/critic/gen_critic_feature_list_v1.md, findings C-02..C-26 addressed).
-Owner: dv-lead. Generated 2026-09-04 06:25 UTC from the area parts under dv/auto_dv/work/dv-lead/parts/.
+Owner: dv-lead. Generated 2026-09-04 06:37 UTC from the area parts under dv/auto_dv/work/dv-lead/parts/.
 
 Build configuration: `opentitan` (ibex_configs.yaml): BaseIsa=RV32IorCHERIoT (CHERIoT mode excluded
 by owner ruling), RV32E=0, RV32M=RV32MSingleCycle, RV32B=RV32BOTEarlGrey, RV32ZC=RV32ZcaZcbZcmp,
@@ -11331,7 +11331,10 @@ WAIT_RVALID_MIS, WAIT_GNT, WAIT_RVALID_MIS_GNTS_DONE, CTX_WAIT_GNT1, CTX_WAIT_GN
 
 ### F-IC-042: Multi-way hit is ORed
 - What: If both ways match (possible after F-IC-021), the hit data is the bitwise OR of both ways
-  and ECC is checked on the ORed value; identical contents are benign, differing contents produce
+  and ECC is checked on the ORed value; identical contents are benign. A difference does not always
+  raise anything: the OR restores every bit set in either copy, so a difference in which the good
+  copy holds a bit set and the other holds it clear is masked (no ECC error, no minor alert, the
+  fetched word correct), while a bit set in only the corrupted copy reaches the check and produces
   an ECC error (minor alert) or wrong data.
 - Observable at: alert_minor_o, rvfi_insn
 - Config: cpuctrlsts.icache_enable = 1
@@ -11339,10 +11342,25 @@ WAIT_RVALID_MIS, WAIT_GNT, WAIT_RVALID_MIS_GNTS_DONE, CTX_WAIT_GNT1, CTX_WAIT_GN
   rtl/ibex_icache.sv:506-514, 565-585
 - Edge: yes, of F-IC-019
 - Status: ACTIVE
-- Notes: reachable only with self-modifying code without fence.i (software constraint per doc) and
-  only after a genuine two-way copy (both ways valid at the index and an odd lookup count between
-  the two lookups of the line, F-IC-021; a cold index yields one copy); TP-IC-038 is informational
-  (own `_info` test, gen_chk_alerts on), candidate owner question 5.
+- Notes: needs a genuine two-way copy (both ways valid at the index, F-IC-021; a cold index yields
+  one copy), which arises two ways. The documented one is a branch into an address being prefetched
+  (doc/03_reference/icache.rst:73, which calls the consequence a minor performance inefficiency at
+  :74). The second is RTL-defined and undocumented (doc defect D22): after an ECC-correction refetch
+  the core allocates a second copy of a line still valid in the other way, because each fill
+  captures its allocation way in the IC1 cycle of its own lookup while the correction's invalidation
+  write lands two cycles after the erroring read, and nothing compares the captured fill addresses,
+  so two fills of one line both write. With IC_NUM_WAYS = 2 (rtl/ibex_pkg.sv:401) the two selections
+  differ exactly when the erroring copy sits in way 0, and all 13 duplicates in the retained trace
+  dv/auto_dv/evidence/gen_tdd_logs/mutations/gen_fu_l16_TRACE_index26.log are in that direction. The
+  copies then differ either from self-modifying code without fence.i (a software constraint per doc)
+  or from a corruption of one copy, which the TB injects as WP-12 stimulus with no software
+  constraint broken; in the second case a clearing flip is masked and reports nothing (S5,
+  CG-IC-006.cp_no_alert_case.masked_duplicate_copy). The duplicate is self-limiting, since a
+  duplicated line leaves no invalid way at its index so the next lookup of another line there evicts
+  one copy (rtl/ibex_icache.sv:534-535), and self-clearing, since the next data error at that index
+  invalidates both matching ways in one write (:591-592, observed 13 times in that trace). No RTL
+  assertion forbids multiple tag matches. TP-IC-038 is informational (own `_info` test,
+  gen_chk_alerts on), candidate owner question 5.
 
 ### F-IC-043: Fill buffer release and reuse
 - What: A fill buffer frees when its RAM write (or non-allocation/hit/error) is done, its output is
