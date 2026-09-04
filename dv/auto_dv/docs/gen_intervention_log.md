@@ -2097,3 +2097,30 @@ gen_test_cmp_zcb, gen_test_cmp_zcmp_basic, gen_test_mul_div, gen_test_mul_mul, g
 gen_test_isa_alu (2074 declared bins, 6222 bin checks over 24 runs); the "seven plus gen_test_pmc_ctrl" wording above and in the
 18ac053 subject is wrong in composition though right in count. The 23 red fixtures, the standing guard and the four check-tier
 entries fixed today (landings 36 to 39) are exercised by check-tier regressions, not by round 1; the fixes stand on their own.
+
+## LOG-088 - 2026-09-04 - Orchestrator ruling under LOG-085: six more measured entries detached for round 1 after the fcov pre-flight (18 of 24 checked runs unmet)
+
+Finding (runtime-2 pre-flight, 24 runs of the eight manifest-checked entries at the round's own seeds, base 20260904, head
+mode at 726682a, coverage on, tag r1_fcov_preflight, manifest at
+/proj_soc/user_dev/fzhang/ibex_dv_out/regress_r1_fcov_preflight/manifest.yaml, complete 20:25Z): fcov checked 24, pass 6,
+unmet 18. Six entries fail every one of their three seeds with bins UNHIT (keys present, count zero; not missing from the
+report): gen_test_cmp_zcb 8/8/10 of 110, gen_test_cmp_zcmp_basic 112/119/116 of 472, gen_test_isa_alu 19/22/24 of 602,
+gen_test_isa_cti 16/16/16 of 200, gen_test_mul_div 22/23/24 of 224, gen_test_rst_boot 2/2/2 of 8. gen_test_isa_shift and
+gen_test_mul_mul pass all three seeds. Many unmet bins are seed-dependent by construction (names such as cp_alu_operand.rand,
+cr_div0.div_zero_pos_rand) while others are stable across seeds (gen_isa_branch_cg.cp_op.c_beqz/c_bnez in every isa_cti run;
+gen_rst_boot_cg.cp_boot_addr.zero and gen_sec_ctrl_inputs_cg.cp_bit8_readback.zero in every rst_boot run), so the declared
+sets mix bins the test guarantees per run with bins only a cumulative round can be expected to hit. The flow's expectation
+check is per run: one unmet bin fails the run, and one failing run refuses the round's index (no record is written).
+
+Ruling: for round 1 the six failing entries are detached from their manifests exactly as LOG-086's nine (fcov_expectation_file
+null, the reason in the description, manifests untouched, coverage still collected and credited); round 1 checks
+gen_test_isa_shift and gen_test_mul_mul (6 runs) against their manifests and counts the other 13 measured entries. The
+pre-flight regression directory is retained as round-1 evidence and the 18 unmet sets are recorded per entry and seed in the
+round record as findings about the declarations, not about the DUT. Rejected for round 1: trimming the six manifests to the
+bins hit at these seeds (fitting the declaration to the sample); dispatching as-is (a refused round with no record); changing
+the check to a cumulative one (a flow change, frozen). First items after the round record is reviewed, before round 2: the DV
+Lead rules with Runtime whether a manifest declares per-run guarantees or cumulative round expectations (and whether the flow
+gains a cumulative check); the Test Writer re-scopes the six declarations to what each test guarantees per run, bin by bin,
+with the stable unmet bins (c_beqz/c_bnez, boot_addr.zero, bit8_readback.zero) triaged as stimulus or declaration defects.
+Execution: runtime-2 edits the six fields (HOLD; manifests 18 -> 12; the standing guard still the only deferred-shape entry; the
+other 97 entries yaml-equal); the DV Lead's form counts 2 checked and 13 counted-only measured entries and cites the pre-flight.
