@@ -1,0 +1,166 @@
+Command: /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/head_export18/dv/auto_dv/work/test-writer/out_head18/vcs_simv +vcs+lic+wait +ntb_random_seed=1 +UVM_TESTNAME=gen_base_test +UVM_VERBOSITY=UVM_LOW +UVM_NO_RELNOTES +gen_build_config=opentitan +gen_mem_image=/tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/test_writer_r3/pmc18/r022_prog_s1/prog.vmem +gen_mem_image_crc32=dc08c1e8 +gen_mem_image_words=6581 +gen_boot_addr=80000000 +gen_tohost_addr=80006730 +gen_fetch_en_at_reset=0 -l /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/head_export18/dv/auto_dv/work/test-writer/out_head18/pmc18_red022_s1/sim.log
+Chronologic VCS simulator copyright 1991-2025
+Contains Synopsys proprietary information.
+Compiler version X-2025.06-SP2_Full64; Runtime version X-2025.06-SP2_Full64;  Sep  3 21:07 2026
+GEN_CONFIG_BANNER build_config=opentitan
+GEN_CONFIG_BANNER BaseIsa=BaseIsaRV32IorCHERIoT RV32M=RV32MSingleCycle RV32B=RV32BOTEarlGrey RV32ZC=RV32ZcaZcbZcmp RegFile=RegFileFF
+GEN_CONFIG_BANNER RV32E=0 BranchTargetALU=1 WritebackStage=1 ICache=1 ICacheECC=1 ICacheScramble=1
+GEN_CONFIG_BANNER BranchPredictor=0 DbgTriggerEn=1 DbgHwBreakNum=1 SecureIbex=1
+GEN_CONFIG_BANNER PMPEnable=1 PMPGranularity=0 PMPNumRegions=16 MHPMCounterNum=10 MHPMCounterWidth=32
+GEN_CONFIG_BANNER RegFileECC=0 ResetAll=1 DummyInstructions=1 MemECC=1 ICacheTweakInfection=1
+GEN_CONFIG_BANNER MemDataWidth=39 RegFileDataWidth=32 RegFileCapEccWidth=35 BusSizeECC=39 TagSizeECC=28 LineSizeECC=78
+GEN_CONFIG_BANNER DmBaseAddr=0x1a110000 DmAddrMask=0x00000fff DmHaltAddr=0x1a110800 DmExceptionAddr=0x1a110808
+GEN_CONFIG_BANNER CsrMvendorId=0x00000000 CsrMimpId=0x00000000 cheriot_enable=Off rf_test_en=0
+GEN_CONFIG_BANNER RndCnstLfsrSeed=0xac533bf4 RndCnstLfsrPerm=0x1e35ecba467fd1b12e958152c04fa43878a8daed
+GEN_CONFIG_BANNER PMPRstCfg/PMPRstAddr/PMPRstMsecCfg=ibex_pkg::PmpCfgRst/PmpAddrRst/PmpMseccfgRst (ibex_core defaults, all regions OFF)
+GEN_CONFIG_BANNER RVFI=1
+GEN_CONFIG_BANNER GEN_DUT_SPLIT_INTG=0
+UVM_INFO @ 0: reporter [RNTST] Running test gen_base_test...
+GEN_CONFIG_BANNER tb=gen_tb_top uvm_test=gen_base_test seed=1 build_config=opentitan pinned_knobs=0 regime_sched=derived
+GEN_CONFIG_BANNER define SIMULATION=0 (F-DIT-025)
+GEN_CONFIG_BANNER define COCOTB_SIM=1 (cocotb-master run)
+GEN_CONFIG_BANNER boot_addr=0x80000000 hart_id=0x00000000 alive_timeout=100000 finish_timeout=20000 mem_image=/tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/test_writer_r3/pmc18/r022_prog_s1/prog.vmem tohost=0x80006730
+GEN_CONFIG_BANNER knobs imem gnt=short rvalid=short err=none intg=none cap=cap8 dmem gnt=short rvalid=short err=none intg=none key=immediate icram_init=random
+GEN_CONFIG_BANNER knobs irq regime=quiet line_mix=single hold=until_taken debug_req=none fetch_enable=always_on icache_ecc=none
+UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(189) @ 0: uvm_test_top.env [MEM_LOAD] image /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/test_writer_r3/pmc18/r022_prog_s1/prog.vmem: 6581 words, crc32 0xdc08c1e8 verified
+UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(221) @ 0: uvm_test_top.env [GEN_ENV] ibus: ibus gnt=1..3(short) rvalid=2..4(short) cap=8(cap8) err=0/1000(none) intg=0/1000(none)x1
+UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(222) @ 0: uvm_test_top.env [GEN_ENV] dbus: dbus gnt=1..3(short) rvalid=2..4(short) cap=2(cap2) err=0/1000(none) intg=0/1000(none)x1
+UVM_INFO dv/auto_dv/env/gen_agents_pkg.sv(379) @ 0: uvm_test_top.env.dbus_agent [gen_bus_agent] uvm_test_top.env.dbus_agent: sva_rvalid_legal armed
+UVM_INFO dv/auto_dv/env/gen_agents_pkg.sv(379) @ 0: uvm_test_top.env.ibus_agent [gen_bus_agent] uvm_test_top.env.ibus_agent: sva_rvalid_legal armed
+UVM_INFO dv/auto_dv/env/gen_rvfi_pkg.sv(252) @ 0: uvm_test_top.env.sb [GEN_SB] ISA model ready: pc=80000080 mtvec=80000001
+UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(116) @ 64500: uvm_test_top.env.dispatch [GEN_PHASE] phase 1 knob=knob_imem_gnt_delay value=same_cycle cycle=59
+UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(116) @ 65500: uvm_test_top.env.dispatch [GEN_PHASE] phase 2 knob=knob_imem_rvalid_delay value=long cycle=60
+UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(116) @ 66500: uvm_test_top.env.dispatch [GEN_PHASE] phase 3 knob=knob_imem_outstanding_cap value=cap4 cycle=61
+UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(116) @ 67500: uvm_test_top.env.dispatch [GEN_PHASE] phase 4 knob=knob_dmem_gnt_delay value=random cycle=62
+UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(116) @ 68500: uvm_test_top.env.dispatch [GEN_PHASE] phase 5 knob=knob_dmem_rvalid_delay value=min1 cycle=63
+UVM_INFO dv/auto_dv/env/gen_agents_pkg.sv(435) @ 69500: uvm_test_top.env.scrkey [GEN_SCRKEY] key regime <= withheld_then_valid
+UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(116) @ 69500: uvm_test_top.env.dispatch [GEN_PHASE] phase 6 knob=knob_scr_key_delay value=withheld_then_valid cycle=64
+UVM_INFO dv/auto_dv/env/gen_agents_pkg.sv(775) @ 71000: uvm_test_top.env.ctrl [GEN_CTRL] fetch_enable_i <= On (FETCH_EN arg 1)
+UVM_INFO @ 583000: reporter [GEN_EOT] end-of-test store 0x00000000 at 0x8ffff104 (store 1)
+             1933000: Illegal instruction (hart 0) at PC 0x800013d0: 0xc8ebf373
+             2100000: Illegal instruction (hart 0) at PC 0x800013d4: 0xc00e9373
+             2276000: Illegal instruction (hart 0) at PC 0x800013d8: 0xc1b6e373
+             2429000: Illegal instruction (hart 0) at PC 0x800013dc: 0xc80e9373
+             2589000: Illegal instruction (hart 0) at PC 0x800013e0: 0xc9ef1373
+             2766000: Illegal instruction (hart 0) at PC 0x800013e4: 0xc03eb373
+             2950000: Illegal instruction (hart 0) at PC 0x800013e8: 0xc02f2373
+             3116000: Illegal instruction (hart 0) at PC 0x800013ec: 0xc0485373
+             3306000: Illegal instruction (hart 0) at PC 0x800013f0: 0xc18f1373
+             3572000: Illegal instruction (hart 0) at PC 0x80005000: 0xc0ef3373
+             3743000: Illegal instruction (hart 0) at PC 0x80005004: 0xc1ee9373
+             3917000: Illegal instruction (hart 0) at PC 0x80005008: 0xc0fe5373
+             4098000: Illegal instruction (hart 0) at PC 0x8000500c: 0xc1f67373
+             4271000: Illegal instruction (hart 0) at PC 0x80005010: 0xc00e9373
+             4438000: Illegal instruction (hart 0) at PC 0x80005014: 0xc17f2373
+             4635000: Illegal instruction (hart 0) at PC 0x80005018: 0xc19ee373
+             5183000: Illegal instruction (hart 0) at PC 0x80005020: 0xc0002373
+             5703000: Illegal instruction (hart 0) at PC 0x80005030: 0xc0c02373
+             6552000: Illegal instruction (hart 0) at PC 0x80005044: 0xc0002373
+             7040000: Illegal instruction (hart 0) at PC 0x80005050: 0xc0002373
+             7563000: Illegal instruction (hart 0) at PC 0x8000505c: 0x3063e373
+             7754000: Illegal instruction (hart 0) at PC 0x80005060: 0x306f7373
+             7922000: Illegal instruction (hart 0) at PC 0x80005064: 0x320d5373
+             8106000: Illegal instruction (hart 0) at PC 0x80005068: 0x33ef2373
+             8264000: Illegal instruction (hart 0) at PC 0x8000506c: 0xb0227373
+             8441000: Illegal instruction (hart 0) at PC 0x80005070: 0xb0002373
+             8620000: Illegal instruction (hart 0) at PC 0x80005074: 0x32002373
+             8798000: Illegal instruction (hart 0) at PC 0x80005078: 0x33e02373
+             8968000: Illegal instruction (hart 0) at PC 0x8000507c: 0xb89f2373
+             9163000: Illegal instruction (hart 0) at PC 0x80005080: 0xb80ea373
+             9317000: Illegal instruction (hart 0) at PC 0x80005084: 0xb8002373
+             9486000: Illegal instruction (hart 0) at PC 0x80005088: 0xb00fd373
+             9673000: Illegal instruction (hart 0) at PC 0x8000508c: 0xb05e9373
+             9861000: Illegal instruction (hart 0) at PC 0x80005090: 0xb8202373
+            10054000: Illegal instruction (hart 0) at PC 0x80005094: 0x30602373
+            10202000: Illegal instruction (hart 0) at PC 0x80005098: 0xb0502373
+            10396000: Illegal instruction (hart 0) at PC 0x8000509c: 0xb82f3373
+            10558000: Illegal instruction (hart 0) at PC 0x800050a0: 0xb8902373
+            10733000: Illegal instruction (hart 0) at PC 0x800050a4: 0xb0202373
+            10882000: Illegal instruction (hart 0) at PC 0x800050a8: 0xb0502373
+            11324000: Illegal instruction (hart 0) at PC 0x800015d0: 0xc81eb373
+            11489000: Illegal instruction (hart 0) at PC 0x800015d8: 0xc0102373
+            11660000: Illegal instruction (hart 0) at PC 0x800015dc: 0xc8102373
+            11828000: Illegal instruction (hart 0) at PC 0x800015e0: 0xc0137373
+            12090000: Illegal instruction (hart 0) at PC 0x800050b0: 0xc8102373
+            12272000: Illegal instruction (hart 0) at PC 0x800050b4: 0xc0102373
+            12456000: Illegal instruction (hart 0) at PC 0x800050b8: 0xc01d5373
+            14440000: Illegal instruction (hart 0) at PC 0x800050c0: 0xc9002373
+            14640000: Illegal instruction (hart 0) at PC 0x800050c4: 0xc9e02373
+            14818000: Illegal instruction (hart 0) at PC 0x800050c8: 0xc1a02373
+            14982000: Illegal instruction (hart 0) at PC 0x800050cc: 0xc9b02373
+            15127000: Illegal instruction (hart 0) at PC 0x800050d0: 0xc1302373
+            15301000: Illegal instruction (hart 0) at PC 0x800050d4: 0xc9702373
+            15479000: Illegal instruction (hart 0) at PC 0x800050d8: 0xc1e02373
+            15666000: Illegal instruction (hart 0) at PC 0x800050dc: 0xc9a02373
+            15822000: Illegal instruction (hart 0) at PC 0x800050e0: 0xc1b02373
+            16005000: Illegal instruction (hart 0) at PC 0x800050e4: 0xc9302373
+            16185000: Illegal instruction (hart 0) at PC 0x800050e8: 0xc1702373
+            16373000: Illegal instruction (hart 0) at PC 0x800050ec: 0xc1002373
+            17838000: Illegal instruction (hart 0) at PC 0x80005158: 0xc8702373
+            17999000: Illegal instruction (hart 0) at PC 0x8000515c: 0xc0b02373
+            18174000: Illegal instruction (hart 0) at PC 0x80005160: 0xc0c02373
+            18342000: Illegal instruction (hart 0) at PC 0x80005164: 0xc8502373
+            18524000: Illegal instruction (hart 0) at PC 0x80005168: 0xc0202373
+            18694000: Illegal instruction (hart 0) at PC 0x8000516c: 0xc0502373
+            18846000: Illegal instruction (hart 0) at PC 0x80005170: 0xc8002373
+            19042000: Illegal instruction (hart 0) at PC 0x80005174: 0xc0902373
+            19228000: Illegal instruction (hart 0) at PC 0x80005178: 0xc8c02373
+            19417000: Illegal instruction (hart 0) at PC 0x8000517c: 0xc8802373
+            19597000: Illegal instruction (hart 0) at PC 0x80005180: 0xc0002373
+            19751000: Illegal instruction (hart 0) at PC 0x80005184: 0xc0402373
+            19939000: Illegal instruction (hart 0) at PC 0x80005188: 0xc8b02373
+            20115000: Illegal instruction (hart 0) at PC 0x8000518c: 0xc8a02373
+            20302000: Illegal instruction (hart 0) at PC 0x80005190: 0xc8602373
+            20483000: Illegal instruction (hart 0) at PC 0x80005194: 0xc8902373
+            20659000: Illegal instruction (hart 0) at PC 0x80005198: 0xc8302373
+            20839000: Illegal instruction (hart 0) at PC 0x8000519c: 0xc8402373
+            21008000: Illegal instruction (hart 0) at PC 0x800051a0: 0xc0a02373
+            21185000: Illegal instruction (hart 0) at PC 0x800051a4: 0xc0802373
+            21344000: Illegal instruction (hart 0) at PC 0x800051a8: 0xc0602373
+            21507000: Illegal instruction (hart 0) at PC 0x800051ac: 0xc8202373
+            21667000: Illegal instruction (hart 0) at PC 0x800051b0: 0xc0702373
+            21845000: Illegal instruction (hart 0) at PC 0x800051b4: 0xc0302373
+            22461000: Illegal instruction (hart 0) at PC 0x800051bc: 0xc0802373
+            22650000: Illegal instruction (hart 0) at PC 0x800051c4: 0xc8802373
+            22798000: Illegal instruction (hart 0) at PC 0x800051c8: 0xc8c02373
+            22973000: Illegal instruction (hart 0) at PC 0x800051cc: 0xc0702373
+            23165000: Illegal instruction (hart 0) at PC 0x800051d0: 0xc8a02373
+            23337000: Illegal instruction (hart 0) at PC 0x800051d8: 0xc0502373
+            23496000: Illegal instruction (hart 0) at PC 0x800051dc: 0xc8902373
+            23674000: Illegal instruction (hart 0) at PC 0x800051e4: 0xc0202373
+            23848000: Illegal instruction (hart 0) at PC 0x800051e8: 0xc0902373
+            24041000: Illegal instruction (hart 0) at PC 0x800051ec: 0xc0602373
+            24206000: Illegal instruction (hart 0) at PC 0x800051f4: 0xc0c02373
+            24380000: Illegal instruction (hart 0) at PC 0x800051fc: 0xc8202373
+            24569000: Illegal instruction (hart 0) at PC 0x80005200: 0xc0a02373
+            24756000: Illegal instruction (hart 0) at PC 0x80005208: 0xc8602373
+            24931000: Illegal instruction (hart 0) at PC 0x8000520c: 0xc8502373
+            25123000: Illegal instruction (hart 0) at PC 0x80005218: 0xc8702373
+            28960000: Illegal instruction (hart 0) at PC 0x80005298: 0xc0202af3
+$finish at simulation time             55344001
+"dv/auto_dv/tb/gen_protocol_props.sv", 186: gen_tb_top.u_dut.gen_protocol_props_i.sva_ibus_depth_max_seen, 55344 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 187: gen_tb_top.u_dut.gen_protocol_props_i.sva_ibus_gnt_same_cycle, 55344 attempts, 1769 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 189: gen_tb_top.u_dut.gen_protocol_props_i.sva_ibus_err_beat, 55344 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 212: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_split_second_addr, 55344 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 213: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_split_second_be, 55344 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 222: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_split_seen, 55344 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 223: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_depth_two_seen, 55344 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 225: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_store_err_resp, 55344 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 244: gen_tb_top.u_dut.gen_protocol_props_i.sva_icram_alloc_write, 55344 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 245: gen_tb_top.u_dut.gen_protocol_props_i.sva_icram_inval_write, 55344 attempts, 256 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 254: gen_tb_top.u_dut.gen_protocol_props_i.sva_scrkey_req_seen, 55344 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 255: gen_tb_top.u_dut.gen_protocol_props_i.sva_scrkey_req_while_valid, 55344 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 261: gen_tb_top.u_dut.gen_protocol_props_i.sva_irq_pending_seen, 55344 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 262: gen_tb_top.u_dut.gen_protocol_props_i.sva_irq_nmi_seen, 55344 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 277: gen_tb_top.u_dut.gen_protocol_props_i.sva_alert_bus_seen, 55344 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 278: gen_tb_top.u_dut.gen_protocol_props_i.sva_alert_minor_seen, 55344 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 300: gen_tb_top.u_dut.gen_protocol_props_i.sva_rvfi_trap_seen, 55344 attempts, 115 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 301: gen_tb_top.u_dut.gen_protocol_props_i.sva_rvfi_irq_valid_seen, 55344 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 188: gen_tb_top.u_dut.gen_protocol_props_i.sva_ibus_gnt_delayed, 55344 attempts, 2988 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 224: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_gnt_delayed, 55344 attempts, 1065 match
+"dv/auto_dv/tb/gen_bus_if.sv", 51: gen_tb_top.u_dbus_if.cov_rvalid_legal, 55344 attempts, 1097 match
+"dv/auto_dv/tb/gen_bus_if.sv", 51: gen_tb_top.u_ibus_if.cov_rvalid_legal, 55344 attempts, 8033 match
+           V C S   S i m u l a t i o n   R e p o r t 
+Time: 553440010 ps
+CPU Time:      1.660 seconds;       Data structure size:   8.9Mb
+Thu Sep  3 21:07:09 2026

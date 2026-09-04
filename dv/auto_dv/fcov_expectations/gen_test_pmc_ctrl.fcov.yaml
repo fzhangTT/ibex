@@ -1,0 +1,431 @@
+# not_built TP-PMC-057: mcounteren_writable_i is a static plusarg knob (regime_set_consumer none); no mid-run pin driver exists (TB ask filed)
+# not_hit gen_pmc_alias_cg.cp_mode.dbg: no debug window in this group
+# not_hit gen_pmc_alias_cg.cr_alias_gate.cyc_dbg_ok: no debug window in this group
+# not_hit gen_pmc_alias_cg.cr_alias_gate.hf_dbg_ok: no debug window in this group
+# not_hit gen_pmc_alias_cg.cr_alias_gate.ir_dbg_ok: no debug window in this group
+# not_hit gen_pmc_ctrl_csr_cg.cp_mode.dbg: no debug window in this group
+# not_hit gen_pmc_ctrl_csr_cg.cp_pin.invalid: the pin is a static per-run knob; the default entry runs on (no invalid entry staged)
+# not_hit gen_pmc_ctrl_csr_cg.cp_pin.off: the pin is a static per-run knob; the default entry runs on (pin_off entry: off)
+# not_hit gen_pmc_ctrl_csr_cg.cr_en_pin_effect.en_inv_drop: the pin is a static per-run knob; the default entry runs on
+# not_hit gen_pmc_ctrl_csr_cg.cr_en_pin_effect.en_off_drop: the pin is a static per-run knob; the default entry runs on (pin_off entry: off)
+# not_hit gen_pmc_ctrl_csr_cg.cr_en_pin_effect.inh_inv_app: the pin is a static per-run knob; the default entry runs on
+# not_hit gen_pmc_ctrl_csr_cg.cr_en_pin_effect.inh_off_app: the pin is a static per-run knob; the default entry runs on
+# not_hit gen_pmc_ctrl_csr_cg.cr_reg_mode_result.en_dbg_ok: no debug window in this group
+# not_hit gen_pmc_ctrl_csr_cg.cr_reg_mode_result.inh_dbg_ok: no debug window in this group
+# not_hit gen_pmc_minstret_cg.cp_coherence.wb_retiring: the WB coincidence is 024's export-row clause, not observable through the report channel
+# not_hit gen_pmc_minstret_cg.cr_inhibit_coh.off_retiring: the csrr-in-the-load's-retire-cycle coincidence is 024's export-row clause (dbus rvalid), not observable through the report channel
+# not_hit gen_pmc_minstret_cg.cr_inhibit_coh.on_retiring: the csrr-in-the-load's-retire-cycle coincidence is 024's export-row clause (dbus rvalid), not observable through the report channel
+# not_hit gen_wit_cycle_clause_cg.cp_clause.w_tp_pmc_024: the export-row clause is checked through the template's witness only when the export lands; this test proves the RVFI-only fallback
+# not_hit gen_wit_cycle_clause_cg.cp_clause.w_tp_pmc_028: the pin monitor clause is checked through the template's witness only when the export lands; this test proves the read-back fallback
+test: gen_test_pmc_ctrl
+owner: test-writer
+bins:
+  - gen_pmc_ctrl_csr_cg.cp_bit.cy
+  - gen_pmc_ctrl_csr_cg.cp_bit.hpm_first
+  - gen_pmc_ctrl_csr_cg.cp_bit.hpm_last
+  - gen_pmc_ctrl_csr_cg.cp_bit.hpm_mid
+  - gen_pmc_ctrl_csr_cg.cp_bit.ir
+  - gen_pmc_ctrl_csr_cg.cp_bit.none
+  - gen_pmc_ctrl_csr_cg.cp_bit.tm
+  - gen_pmc_ctrl_csr_cg.cp_bit.upper
+  - gen_pmc_ctrl_csr_cg.cp_effect.applied
+  - gen_pmc_ctrl_csr_cg.cp_mode.m
+  - gen_pmc_ctrl_csr_cg.cp_op.clear
+  - gen_pmc_ctrl_csr_cg.cp_op.read
+  - gen_pmc_ctrl_csr_cg.cp_op.set
+  - gen_pmc_ctrl_csr_cg.cp_op.write
+  - gen_pmc_ctrl_csr_cg.cp_pattern.ones
+  - gen_pmc_ctrl_csr_cg.cp_pattern.random
+  - gen_pmc_ctrl_csr_cg.cp_pattern.walk1
+  - gen_pmc_ctrl_csr_cg.cp_pattern.zeros
+  - gen_pmc_ctrl_csr_cg.cp_pin.on
+  - gen_pmc_ctrl_csr_cg.cp_reg.inhibit
+  - gen_pmc_ctrl_csr_cg.cp_result.ok
+  - gen_pmc_ctrl_csr_cg.cr_en_pin_effect.inh_on_app
+  - gen_pmc_ctrl_csr_cg.cr_reg_bit_rb.inh_cy_w
+  - gen_pmc_ctrl_csr_cg.cr_reg_bit_rb.inh_hf_w
+  - gen_pmc_ctrl_csr_cg.cr_reg_bit_rb.inh_hl_w
+  - gen_pmc_ctrl_csr_cg.cr_reg_bit_rb.inh_hm_w
+  - gen_pmc_ctrl_csr_cg.cr_reg_bit_rb.inh_ir_w
+  - gen_pmc_ctrl_csr_cg.cr_reg_bit_rb.inh_tm_0
+  - gen_pmc_ctrl_csr_cg.cr_reg_bit_rb.inh_up_0
+  - gen_pmc_ctrl_csr_cg.cr_reg_mode_result.inh_m_ok
+  - gen_pmc_ctrl_csr_cg.cr_reg_pattern_op.inh_1_clr
+  - gen_pmc_ctrl_csr_cg.cr_reg_pattern_op.inh_1_set
+  - gen_pmc_ctrl_csr_cg.cr_reg_pattern_op.inh_1_wr
+  - gen_pmc_ctrl_csr_cg.cr_reg_pattern_op.inh_r_clr
+  - gen_pmc_ctrl_csr_cg.cr_reg_pattern_op.inh_r_set
+  - gen_pmc_ctrl_csr_cg.cr_reg_pattern_op.inh_r_wr
+  - gen_pmc_ctrl_csr_cg.cr_reg_pattern_op.inh_w_clr
+  - gen_pmc_ctrl_csr_cg.cr_reg_pattern_op.inh_w_set
+  - gen_pmc_ctrl_csr_cg.cr_reg_pattern_op.inh_w_wr
+  - gen_pmc_ctrl_csr_cg.cr_reg_pattern_op.inh_z_wr
+  - gen_pmc_mcycle_cg.cp_ctx.inhibited
+  - gen_pmc_mcycle_cg.cp_delta.zero
+  - gen_pmc_mcycle_cg.cr_ctx_delta.inh_zero
+  - gen_pmc_minstret_cg.cp_inhibit_ir.on
+  - gen_pmc_hpm_event_cg.cp_delta_rel.zero
+  - gen_pmc_hpm_event_cg.cp_idx.branches
+  - gen_pmc_hpm_event_cg.cp_idx.div_wait
+  - gen_pmc_hpm_event_cg.cp_idx.if_wait
+  - gen_pmc_hpm_event_cg.cp_idx.jumps
+  - gen_pmc_hpm_event_cg.cp_idx.loads
+  - gen_pmc_hpm_event_cg.cp_idx.lsu_wait
+  - gen_pmc_hpm_event_cg.cp_idx.mul_wait
+  - gen_pmc_hpm_event_cg.cp_idx.ret_c
+  - gen_pmc_hpm_event_cg.cp_idx.stores
+  - gen_pmc_hpm_event_cg.cp_idx.taken
+  - gen_pmc_hpm_event_cg.cp_inhibit.on
+  - gen_pmc_hpm_event_cg.cr_idx_inhibit.br_inh
+  - gen_pmc_hpm_event_cg.cr_idx_inhibit.div_inh
+  - gen_pmc_hpm_event_cg.cr_idx_inhibit.if_inh
+  - gen_pmc_hpm_event_cg.cr_idx_inhibit.jmp_inh
+  - gen_pmc_hpm_event_cg.cr_idx_inhibit.ld_inh
+  - gen_pmc_hpm_event_cg.cr_idx_inhibit.lsu_inh
+  - gen_pmc_hpm_event_cg.cr_idx_inhibit.mul_inh
+  - gen_pmc_hpm_event_cg.cr_idx_inhibit.rc_inh
+  - gen_pmc_hpm_event_cg.cr_idx_inhibit.st_inh
+  - gen_pmc_hpm_event_cg.cr_idx_inhibit.tk_inh
+  - gen_pmc_rvfi_ext_cg.cp_debug.no
+  - gen_pmc_rvfi_ext_cg.cp_mcycle_rel.eq_inhibited
+  - gen_pmc_rvfi_ext_cg.cr_rel_debug.inh_run
+  - gen_pmc_minstret_cg.cp_inhibit_ir.off
+  - gen_pmc_hpm_event_cg.cp_delta_rel.eq
+  - gen_pmc_hpm_event_cg.cp_inhibit.off
+  - gen_pmc_hpm_event_cg.cr_idx_inhibit.ld_eq
+  - gen_pmc_write_timing_cg.cp_inhibited.no
+  - gen_pmc_write_timing_cg.cp_inhibited.yes
+  - gen_pmc_write_timing_cg.cp_target.hpm_lo
+  - gen_pmc_write_timing_cg.cp_target.mcycle
+  - gen_pmc_write_timing_cg.cp_target.minstret
+  - gen_pmc_write_timing_cg.cp_then.stay
+  - gen_pmc_write_timing_cg.cp_then.uninhibit_after
+  - gen_pmc_write_timing_cg.cr_target_inh_then.hpm_inh_resume
+  - gen_pmc_write_timing_cg.cr_target_inh_then.hpm_noinh
+  - gen_pmc_write_timing_cg.cr_target_inh_then.mcycle_inh_resume
+  - gen_pmc_write_timing_cg.cr_target_inh_then.minstret_inh_resume
+  - gen_pmc_hpm_csr_cg.cp_mode.m
+  - gen_pmc_hpm_csr_cg.cp_mode.u
+  - gen_pmc_hpm_csr_cg.cp_result.illegal
+  - gen_pmc_hpm_csr_cg.cp_result.ok
+  - gen_pmc_hpm_csr_cg.cr_mode_result.m_ok
+  - gen_pmc_hpm_csr_cg.cr_mode_result.u_ill
+  - gen_pmc_ctrl_csr_cg.cp_mode.u
+  - gen_pmc_ctrl_csr_cg.cp_reg.en
+  - gen_pmc_ctrl_csr_cg.cp_result.illegal
+  - gen_pmc_ctrl_csr_cg.cr_reg_mode_result.en_u_ill
+  - gen_pmc_ctrl_csr_cg.cr_reg_mode_result.inh_u_ill
+  - gen_pmc_ctrl_csr_cg.cp_pin_tr.stable
+  - gen_pmc_ctrl_csr_cg.cr_en_pin_effect.en_on_app
+  - gen_pmc_ctrl_csr_cg.cr_reg_bit_rb.en_cy_w
+  - gen_pmc_ctrl_csr_cg.cr_reg_bit_rb.en_hf_w
+  - gen_pmc_ctrl_csr_cg.cr_reg_bit_rb.en_hl_w
+  - gen_pmc_ctrl_csr_cg.cr_reg_bit_rb.en_hm_w
+  - gen_pmc_ctrl_csr_cg.cr_reg_bit_rb.en_ir_w
+  - gen_pmc_ctrl_csr_cg.cr_reg_bit_rb.en_tm_0
+  - gen_pmc_ctrl_csr_cg.cr_reg_bit_rb.en_up_0
+  - gen_pmc_ctrl_csr_cg.cr_reg_mode_result.en_m_ok
+  - gen_pmc_ctrl_csr_cg.cr_reg_pattern_op.en_1_clr
+  - gen_pmc_ctrl_csr_cg.cr_reg_pattern_op.en_1_set
+  - gen_pmc_ctrl_csr_cg.cr_reg_pattern_op.en_1_wr
+  - gen_pmc_ctrl_csr_cg.cr_reg_pattern_op.en_r_clr
+  - gen_pmc_ctrl_csr_cg.cr_reg_pattern_op.en_r_set
+  - gen_pmc_ctrl_csr_cg.cr_reg_pattern_op.en_r_wr
+  - gen_pmc_ctrl_csr_cg.cr_reg_pattern_op.en_w_clr
+  - gen_pmc_ctrl_csr_cg.cr_reg_pattern_op.en_w_set
+  - gen_pmc_ctrl_csr_cg.cr_reg_pattern_op.en_w_wr
+  - gen_pmc_ctrl_csr_cg.cr_reg_pattern_op.en_z_wr
+  - gen_pmc_ctrl_csr_cg.cp_effect.dropped
+  - gen_pmc_alias_cg.cp_alias.cycle
+  - gen_pmc_alias_cg.cp_alias.cycleh
+  - gen_pmc_alias_cg.cp_alias.hpm_first
+  - gen_pmc_alias_cg.cp_alias.hpm_last
+  - gen_pmc_alias_cg.cp_alias.hpm_mid
+  - gen_pmc_alias_cg.cp_alias.hpmh_first
+  - gen_pmc_alias_cg.cp_alias.hpmh_last
+  - gen_pmc_alias_cg.cp_alias.hpmh_mid
+  - gen_pmc_alias_cg.cp_alias.instret
+  - gen_pmc_alias_cg.cp_alias.instreth
+  - gen_pmc_alias_cg.cp_en_bit.clr
+  - gen_pmc_alias_cg.cp_en_bit.set
+  - gen_pmc_alias_cg.cp_mode.m
+  - gen_pmc_alias_cg.cp_mode.u
+  - gen_pmc_alias_cg.cp_op.read
+  - gen_pmc_alias_cg.cp_result.illegal
+  - gen_pmc_alias_cg.cp_result.ok
+  - gen_pmc_alias_cg.cr_alias_gate.cyc_m_clr_ok
+  - gen_pmc_alias_cg.cr_alias_gate.cyc_u_clr_ill
+  - gen_pmc_alias_cg.cr_alias_gate.cyc_u_set_ok
+  - gen_pmc_alias_cg.cr_alias_gate.cych_m_clr_ok
+  - gen_pmc_alias_cg.cr_alias_gate.cych_u_clr_ill
+  - gen_pmc_alias_cg.cr_alias_gate.cych_u_set_ok
+  - gen_pmc_alias_cg.cr_alias_gate.hf_m_clr_ok
+  - gen_pmc_alias_cg.cr_alias_gate.hf_u_clr_ill
+  - gen_pmc_alias_cg.cr_alias_gate.hf_u_set_ok
+  - gen_pmc_alias_cg.cr_alias_gate.hhf_m_clr_ok
+  - gen_pmc_alias_cg.cr_alias_gate.hhf_u_clr_ill
+  - gen_pmc_alias_cg.cr_alias_gate.hhf_u_set_ok
+  - gen_pmc_alias_cg.cr_alias_gate.hhl_m_clr_ok
+  - gen_pmc_alias_cg.cr_alias_gate.hhl_u_clr_ill
+  - gen_pmc_alias_cg.cr_alias_gate.hhl_u_set_ok
+  - gen_pmc_alias_cg.cr_alias_gate.hhm_m_clr_ok
+  - gen_pmc_alias_cg.cr_alias_gate.hhm_u_clr_ill
+  - gen_pmc_alias_cg.cr_alias_gate.hhm_u_set_ok
+  - gen_pmc_alias_cg.cr_alias_gate.hl_m_clr_ok
+  - gen_pmc_alias_cg.cr_alias_gate.hl_u_clr_ill
+  - gen_pmc_alias_cg.cr_alias_gate.hl_u_set_ok
+  - gen_pmc_alias_cg.cr_alias_gate.hm_m_clr_ok
+  - gen_pmc_alias_cg.cr_alias_gate.hm_u_clr_ill
+  - gen_pmc_alias_cg.cr_alias_gate.hm_u_set_ok
+  - gen_pmc_alias_cg.cr_alias_gate.ir_m_clr_ok
+  - gen_pmc_alias_cg.cr_alias_gate.ir_u_clr_ill
+  - gen_pmc_alias_cg.cr_alias_gate.ir_u_set_ok
+  - gen_pmc_alias_cg.cr_alias_gate.irh_m_clr_ok
+  - gen_pmc_alias_cg.cr_alias_gate.irh_u_clr_ill
+  - gen_pmc_alias_cg.cr_alias_gate.irh_u_set_ok
+  - gen_pmc_alias_cg.cr_op_result.rd_ill
+  - gen_pmc_alias_cg.cr_op_result.rd_ok
+  - gen_pmc_alias_cg.cp_alias.hpm_unimpl
+  - gen_pmc_alias_cg.cp_alias.hpmh_unimpl
+  - gen_pmc_alias_cg.cr_alias_gate.hhu_m_ok
+  - gen_pmc_alias_cg.cr_alias_gate.hhu_u_ill
+  - gen_pmc_alias_cg.cr_alias_gate.hu_m_ok
+  - gen_pmc_alias_cg.cr_alias_gate.hu_u_ill
+  - gen_pmc_alias_cg.cp_op.clr_nz
+  - gen_pmc_alias_cg.cp_op.set_nz
+  - gen_pmc_alias_cg.cp_op.write
+  - gen_pmc_alias_cg.cr_op_result.clr_ill
+  - gen_pmc_alias_cg.cr_op_result.set_ill
+  - gen_pmc_alias_cg.cr_op_result.wr_ill
+  - gen_pmc_alias_cg.cr_write_alias.cyc_wr_m
+  - gen_pmc_alias_cg.cr_write_alias.cyc_wr_u
+  - gen_pmc_alias_cg.cr_write_alias.cych_wr_m
+  - gen_pmc_alias_cg.cr_write_alias.hf_clr_m
+  - gen_pmc_alias_cg.cr_write_alias.hhu_wr_m
+  - gen_pmc_alias_cg.cr_write_alias.hu_wr_u
+  - gen_pmc_alias_cg.cr_write_alias.ir_set_m
+  - gen_pmc_alias_cg.cp_alias.time
+  - gen_pmc_alias_cg.cp_alias.timeh
+  - gen_pmc_alias_cg.cr_alias_gate.time_m_ill
+  - gen_pmc_alias_cg.cr_alias_gate.time_u_ill
+  - gen_pmc_alias_cg.cr_alias_gate.timeh_m_ill
+  - gen_pmc_alias_cg.cr_alias_gate.timeh_u_ill
+  - gen_pmc_alias_cg.cp_inhibited.no
+  - gen_pmc_alias_cg.cp_inhibited.yes
+  - gen_pmc_alias_cg.cr_inhibit_gate.inh_set_u_ok
+  - gen_pmc_alias_cg.cr_inhibit_gate.noinh_set_u_ok
+  - gen_pmc_mcycle_cg.cp_ctx.inhibit_mid
+  - gen_pmc_mcycle_cg.cp_delta.partial
+  - gen_pmc_mcycle_cg.cr_ctx_delta.inhmid_partial
+  - gen_pmc_hpm_event_cg.cp_delta_rel.partial
+  - gen_pmc_hpm_event_cg.cp_inhibit.cleared_mid
+  - gen_pmc_hpm_event_cg.cp_inhibit.set_mid
+  - gen_pmc_hpm_event_cg.cr_idx_inhibit.br_clrmid
+  - gen_pmc_hpm_event_cg.cr_idx_inhibit.ld_setmid
+  - gen_pmc_hpm_event_cg.cr_idx_inhibit.rc_setmid
+  - gen_pmc_hpm_event_cg.cr_idx_inhibit.st_setmid
+anti_vacuity:
+  gen_pmc_ctrl_csr_cg.cp_bit.cy: "CG-PMC-005: RVFI retirement of a CSR access to CSR_MCOUNTINHIBIT or CSR_MCOUNTEREN; a read samples"
+  gen_pmc_ctrl_csr_cg.cp_bit.hpm_first: "CG-PMC-005: RVFI retirement of a CSR access to CSR_MCOUNTINHIBIT or CSR_MCOUNTEREN; a read samples"
+  gen_pmc_ctrl_csr_cg.cp_bit.hpm_last: "CG-PMC-005: RVFI retirement of a CSR access to CSR_MCOUNTINHIBIT or CSR_MCOUNTEREN; a read samples"
+  gen_pmc_ctrl_csr_cg.cp_bit.hpm_mid: "CG-PMC-005: RVFI retirement of a CSR access to CSR_MCOUNTINHIBIT or CSR_MCOUNTEREN; a read samples"
+  gen_pmc_ctrl_csr_cg.cp_bit.ir: "CG-PMC-005: RVFI retirement of a CSR access to CSR_MCOUNTINHIBIT or CSR_MCOUNTEREN; a read samples"
+  gen_pmc_ctrl_csr_cg.cp_bit.none: "CG-PMC-005: RVFI retirement of a CSR access to CSR_MCOUNTINHIBIT or CSR_MCOUNTEREN; a read samples"
+  gen_pmc_ctrl_csr_cg.cp_bit.tm: "CG-PMC-005: RVFI retirement of a CSR access to CSR_MCOUNTINHIBIT or CSR_MCOUNTEREN; a read samples"
+  gen_pmc_ctrl_csr_cg.cp_bit.upper: "CG-PMC-005: RVFI retirement of a CSR access to CSR_MCOUNTINHIBIT or CSR_MCOUNTEREN; a read samples"
+  gen_pmc_ctrl_csr_cg.cp_effect.applied: "CG-PMC-005: RVFI retirement of a CSR access to CSR_MCOUNTINHIBIT or CSR_MCOUNTEREN; a read samples"
+  gen_pmc_ctrl_csr_cg.cp_mode.m: "CG-PMC-005: RVFI retirement of a CSR access to CSR_MCOUNTINHIBIT or CSR_MCOUNTEREN; a read samples"
+  gen_pmc_ctrl_csr_cg.cp_op.clear: "CG-PMC-005: RVFI retirement of a CSR access to CSR_MCOUNTINHIBIT or CSR_MCOUNTEREN; a read samples"
+  gen_pmc_ctrl_csr_cg.cp_op.read: "CG-PMC-005: RVFI retirement of a CSR access to CSR_MCOUNTINHIBIT or CSR_MCOUNTEREN; a read samples"
+  gen_pmc_ctrl_csr_cg.cp_op.set: "CG-PMC-005: RVFI retirement of a CSR access to CSR_MCOUNTINHIBIT or CSR_MCOUNTEREN; a read samples"
+  gen_pmc_ctrl_csr_cg.cp_op.write: "CG-PMC-005: RVFI retirement of a CSR access to CSR_MCOUNTINHIBIT or CSR_MCOUNTEREN; a read samples"
+  gen_pmc_ctrl_csr_cg.cp_pattern.ones: "CG-PMC-005: RVFI retirement of a CSR access to CSR_MCOUNTINHIBIT or CSR_MCOUNTEREN; a read samples"
+  gen_pmc_ctrl_csr_cg.cp_pattern.random: "CG-PMC-005: RVFI retirement of a CSR access to CSR_MCOUNTINHIBIT or CSR_MCOUNTEREN; a read samples"
+  gen_pmc_ctrl_csr_cg.cp_pattern.walk1: "CG-PMC-005: RVFI retirement of a CSR access to CSR_MCOUNTINHIBIT or CSR_MCOUNTEREN; a read samples"
+  gen_pmc_ctrl_csr_cg.cp_pattern.zeros: "CG-PMC-005: RVFI retirement of a CSR access to CSR_MCOUNTINHIBIT or CSR_MCOUNTEREN; a read samples"
+  gen_pmc_ctrl_csr_cg.cp_pin.on: "CG-PMC-005: RVFI retirement of a CSR access to CSR_MCOUNTINHIBIT or CSR_MCOUNTEREN; a read samples"
+  gen_pmc_ctrl_csr_cg.cp_reg.inhibit: "CG-PMC-005: RVFI retirement of a CSR access to CSR_MCOUNTINHIBIT or CSR_MCOUNTEREN; a read samples"
+  gen_pmc_ctrl_csr_cg.cp_result.ok: "CG-PMC-005: RVFI retirement of a CSR access to CSR_MCOUNTINHIBIT or CSR_MCOUNTEREN; a read samples"
+  gen_pmc_ctrl_csr_cg.cr_en_pin_effect.inh_on_app: "CG-PMC-005: RVFI retirement of a CSR access to CSR_MCOUNTINHIBIT or CSR_MCOUNTEREN; a read samples"
+  gen_pmc_ctrl_csr_cg.cr_reg_bit_rb.inh_cy_w: "CG-PMC-005: RVFI retirement of a CSR access to CSR_MCOUNTINHIBIT or CSR_MCOUNTEREN; a read samples"
+  gen_pmc_ctrl_csr_cg.cr_reg_bit_rb.inh_hf_w: "CG-PMC-005: RVFI retirement of a CSR access to CSR_MCOUNTINHIBIT or CSR_MCOUNTEREN; a read samples"
+  gen_pmc_ctrl_csr_cg.cr_reg_bit_rb.inh_hl_w: "CG-PMC-005: RVFI retirement of a CSR access to CSR_MCOUNTINHIBIT or CSR_MCOUNTEREN; a read samples"
+  gen_pmc_ctrl_csr_cg.cr_reg_bit_rb.inh_hm_w: "CG-PMC-005: RVFI retirement of a CSR access to CSR_MCOUNTINHIBIT or CSR_MCOUNTEREN; a read samples"
+  gen_pmc_ctrl_csr_cg.cr_reg_bit_rb.inh_ir_w: "CG-PMC-005: RVFI retirement of a CSR access to CSR_MCOUNTINHIBIT or CSR_MCOUNTEREN; a read samples"
+  gen_pmc_ctrl_csr_cg.cr_reg_bit_rb.inh_tm_0: "CG-PMC-005: RVFI retirement of a CSR access to CSR_MCOUNTINHIBIT or CSR_MCOUNTEREN; a read samples"
+  gen_pmc_ctrl_csr_cg.cr_reg_bit_rb.inh_up_0: "CG-PMC-005: RVFI retirement of a CSR access to CSR_MCOUNTINHIBIT or CSR_MCOUNTEREN; a read samples"
+  gen_pmc_ctrl_csr_cg.cr_reg_mode_result.inh_m_ok: "CG-PMC-005: RVFI retirement of a CSR access to CSR_MCOUNTINHIBIT or CSR_MCOUNTEREN; a read samples"
+  gen_pmc_ctrl_csr_cg.cr_reg_pattern_op.inh_1_clr: "CG-PMC-005: RVFI retirement of a CSR access to CSR_MCOUNTINHIBIT or CSR_MCOUNTEREN; a read samples"
+  gen_pmc_ctrl_csr_cg.cr_reg_pattern_op.inh_1_set: "CG-PMC-005: RVFI retirement of a CSR access to CSR_MCOUNTINHIBIT or CSR_MCOUNTEREN; a read samples"
+  gen_pmc_ctrl_csr_cg.cr_reg_pattern_op.inh_1_wr: "CG-PMC-005: RVFI retirement of a CSR access to CSR_MCOUNTINHIBIT or CSR_MCOUNTEREN; a read samples"
+  gen_pmc_ctrl_csr_cg.cr_reg_pattern_op.inh_r_clr: "CG-PMC-005: RVFI retirement of a CSR access to CSR_MCOUNTINHIBIT or CSR_MCOUNTEREN; a read samples"
+  gen_pmc_ctrl_csr_cg.cr_reg_pattern_op.inh_r_set: "CG-PMC-005: RVFI retirement of a CSR access to CSR_MCOUNTINHIBIT or CSR_MCOUNTEREN; a read samples"
+  gen_pmc_ctrl_csr_cg.cr_reg_pattern_op.inh_r_wr: "CG-PMC-005: RVFI retirement of a CSR access to CSR_MCOUNTINHIBIT or CSR_MCOUNTEREN; a read samples"
+  gen_pmc_ctrl_csr_cg.cr_reg_pattern_op.inh_w_clr: "CG-PMC-005: RVFI retirement of a CSR access to CSR_MCOUNTINHIBIT or CSR_MCOUNTEREN; a read samples"
+  gen_pmc_ctrl_csr_cg.cr_reg_pattern_op.inh_w_set: "CG-PMC-005: RVFI retirement of a CSR access to CSR_MCOUNTINHIBIT or CSR_MCOUNTEREN; a read samples"
+  gen_pmc_ctrl_csr_cg.cr_reg_pattern_op.inh_w_wr: "CG-PMC-005: RVFI retirement of a CSR access to CSR_MCOUNTINHIBIT or CSR_MCOUNTEREN; a read samples"
+  gen_pmc_ctrl_csr_cg.cr_reg_pattern_op.inh_z_wr: "CG-PMC-005: RVFI retirement of a CSR access to CSR_MCOUNTINHIBIT or CSR_MCOUNTEREN; a read samples"
+  gen_pmc_mcycle_cg.cp_ctx.inhibited: "CG-PMC-001: two events, each guarded per coverpoint with `iff` (S-3c): (a) RVFI retirement of a CSR"
+  gen_pmc_mcycle_cg.cp_delta.zero: "CG-PMC-001: two events, each guarded per coverpoint with `iff` (S-3c): (a) RVFI retirement of a CSR"
+  gen_pmc_mcycle_cg.cr_ctx_delta.inh_zero: "CG-PMC-001: two events, each guarded per coverpoint with `iff` (S-3c): (a) RVFI retirement of a CSR"
+  gen_pmc_minstret_cg.cp_inhibit_ir.on: "CG-PMC-002: RVFI retirement of a CSR access to CSR_MINSTRET / CSR_MINSTRETH (or instret/instreth"
+  gen_pmc_hpm_event_cg.cp_delta_rel.zero: "CG-PMC-003: end of each TB event window: a code window bounded by two CSR reads of the same"
+  gen_pmc_hpm_event_cg.cp_idx.branches: "CG-PMC-003: end of each TB event window: a code window bounded by two CSR reads of the same"
+  gen_pmc_hpm_event_cg.cp_idx.div_wait: "CG-PMC-003: end of each TB event window: a code window bounded by two CSR reads of the same"
+  gen_pmc_hpm_event_cg.cp_idx.if_wait: "CG-PMC-003: end of each TB event window: a code window bounded by two CSR reads of the same"
+  gen_pmc_hpm_event_cg.cp_idx.jumps: "CG-PMC-003: end of each TB event window: a code window bounded by two CSR reads of the same"
+  gen_pmc_hpm_event_cg.cp_idx.loads: "CG-PMC-003: end of each TB event window: a code window bounded by two CSR reads of the same"
+  gen_pmc_hpm_event_cg.cp_idx.lsu_wait: "CG-PMC-003: end of each TB event window: a code window bounded by two CSR reads of the same"
+  gen_pmc_hpm_event_cg.cp_idx.mul_wait: "CG-PMC-003: end of each TB event window: a code window bounded by two CSR reads of the same"
+  gen_pmc_hpm_event_cg.cp_idx.ret_c: "CG-PMC-003: end of each TB event window: a code window bounded by two CSR reads of the same"
+  gen_pmc_hpm_event_cg.cp_idx.stores: "CG-PMC-003: end of each TB event window: a code window bounded by two CSR reads of the same"
+  gen_pmc_hpm_event_cg.cp_idx.taken: "CG-PMC-003: end of each TB event window: a code window bounded by two CSR reads of the same"
+  gen_pmc_hpm_event_cg.cp_inhibit.on: "CG-PMC-003: end of each TB event window: a code window bounded by two CSR reads of the same"
+  gen_pmc_hpm_event_cg.cr_idx_inhibit.br_inh: "CG-PMC-003: end of each TB event window: a code window bounded by two CSR reads of the same"
+  gen_pmc_hpm_event_cg.cr_idx_inhibit.div_inh: "CG-PMC-003: end of each TB event window: a code window bounded by two CSR reads of the same"
+  gen_pmc_hpm_event_cg.cr_idx_inhibit.if_inh: "CG-PMC-003: end of each TB event window: a code window bounded by two CSR reads of the same"
+  gen_pmc_hpm_event_cg.cr_idx_inhibit.jmp_inh: "CG-PMC-003: end of each TB event window: a code window bounded by two CSR reads of the same"
+  gen_pmc_hpm_event_cg.cr_idx_inhibit.ld_inh: "CG-PMC-003: end of each TB event window: a code window bounded by two CSR reads of the same"
+  gen_pmc_hpm_event_cg.cr_idx_inhibit.lsu_inh: "CG-PMC-003: end of each TB event window: a code window bounded by two CSR reads of the same"
+  gen_pmc_hpm_event_cg.cr_idx_inhibit.mul_inh: "CG-PMC-003: end of each TB event window: a code window bounded by two CSR reads of the same"
+  gen_pmc_hpm_event_cg.cr_idx_inhibit.rc_inh: "CG-PMC-003: end of each TB event window: a code window bounded by two CSR reads of the same"
+  gen_pmc_hpm_event_cg.cr_idx_inhibit.st_inh: "CG-PMC-003: end of each TB event window: a code window bounded by two CSR reads of the same"
+  gen_pmc_hpm_event_cg.cr_idx_inhibit.tk_inh: "CG-PMC-003: end of each TB event window: a code window bounded by two CSR reads of the same"
+  gen_pmc_rvfi_ext_cg.cp_debug.no: "CG-PMC-008: three events, each guarded per coverpoint with `iff` (S-3c): (a) the first RVFI record"
+  gen_pmc_rvfi_ext_cg.cp_mcycle_rel.eq_inhibited: "CG-PMC-008: three events, each guarded per coverpoint with `iff` (S-3c): (a) the first RVFI record"
+  gen_pmc_rvfi_ext_cg.cr_rel_debug.inh_run: "CG-PMC-008: three events, each guarded per coverpoint with `iff` (S-3c): (a) the first RVFI record"
+  gen_pmc_minstret_cg.cp_inhibit_ir.off: "CG-PMC-002: RVFI retirement of a CSR access to CSR_MINSTRET / CSR_MINSTRETH (or instret/instreth"
+  gen_pmc_hpm_event_cg.cp_delta_rel.eq: "CG-PMC-003: end of each TB event window: a code window bounded by two CSR reads of the same"
+  gen_pmc_hpm_event_cg.cp_inhibit.off: "CG-PMC-003: end of each TB event window: a code window bounded by two CSR reads of the same"
+  gen_pmc_hpm_event_cg.cr_idx_inhibit.ld_eq: "CG-PMC-003: end of each TB event window: a code window bounded by two CSR reads of the same"
+  gen_pmc_write_timing_cg.cp_inhibited.no: "CG-PMC-007: each retired CSR write op to a counter CSR (mcycle(h), minstret(h), mhpmcounterN(h) for"
+  gen_pmc_write_timing_cg.cp_inhibited.yes: "CG-PMC-007: each retired CSR write op to a counter CSR (mcycle(h), minstret(h), mhpmcounterN(h) for"
+  gen_pmc_write_timing_cg.cp_target.hpm_lo: "CG-PMC-007: each retired CSR write op to a counter CSR (mcycle(h), minstret(h), mhpmcounterN(h) for"
+  gen_pmc_write_timing_cg.cp_target.mcycle: "CG-PMC-007: each retired CSR write op to a counter CSR (mcycle(h), minstret(h), mhpmcounterN(h) for"
+  gen_pmc_write_timing_cg.cp_target.minstret: "CG-PMC-007: each retired CSR write op to a counter CSR (mcycle(h), minstret(h), mhpmcounterN(h) for"
+  gen_pmc_write_timing_cg.cp_then.stay: "CG-PMC-007: each retired CSR write op to a counter CSR (mcycle(h), minstret(h), mhpmcounterN(h) for"
+  gen_pmc_write_timing_cg.cp_then.uninhibit_after: "CG-PMC-007: each retired CSR write op to a counter CSR (mcycle(h), minstret(h), mhpmcounterN(h) for"
+  gen_pmc_write_timing_cg.cr_target_inh_then.hpm_inh_resume: "CG-PMC-007: each retired CSR write op to a counter CSR (mcycle(h), minstret(h), mhpmcounterN(h) for"
+  gen_pmc_write_timing_cg.cr_target_inh_then.hpm_noinh: "CG-PMC-007: each retired CSR write op to a counter CSR (mcycle(h), minstret(h), mhpmcounterN(h) for"
+  gen_pmc_write_timing_cg.cr_target_inh_then.mcycle_inh_resume: "CG-PMC-007: each retired CSR write op to a counter CSR (mcycle(h), minstret(h), mhpmcounterN(h) for"
+  gen_pmc_write_timing_cg.cr_target_inh_then.minstret_inh_resume: "CG-PMC-007: each retired CSR write op to a counter CSR (mcycle(h), minstret(h), mhpmcounterN(h) for"
+  gen_pmc_hpm_csr_cg.cp_mode.m: "CG-PMC-004: RVFI retirement of any CSR access in [CSR_MHPMCOUNTER3 : CSR_MHPMCOUNTER31],"
+  gen_pmc_hpm_csr_cg.cp_mode.u: "CG-PMC-004: RVFI retirement of any CSR access in [CSR_MHPMCOUNTER3 : CSR_MHPMCOUNTER31],"
+  gen_pmc_hpm_csr_cg.cp_result.illegal: "CG-PMC-004: RVFI retirement of any CSR access in [CSR_MHPMCOUNTER3 : CSR_MHPMCOUNTER31],"
+  gen_pmc_hpm_csr_cg.cp_result.ok: "CG-PMC-004: RVFI retirement of any CSR access in [CSR_MHPMCOUNTER3 : CSR_MHPMCOUNTER31],"
+  gen_pmc_hpm_csr_cg.cr_mode_result.m_ok: "CG-PMC-004: RVFI retirement of any CSR access in [CSR_MHPMCOUNTER3 : CSR_MHPMCOUNTER31],"
+  gen_pmc_hpm_csr_cg.cr_mode_result.u_ill: "CG-PMC-004: RVFI retirement of any CSR access in [CSR_MHPMCOUNTER3 : CSR_MHPMCOUNTER31],"
+  gen_pmc_ctrl_csr_cg.cp_mode.u: "CG-PMC-005: RVFI retirement of a CSR access to CSR_MCOUNTINHIBIT or CSR_MCOUNTEREN; a read samples"
+  gen_pmc_ctrl_csr_cg.cp_reg.en: "CG-PMC-005: RVFI retirement of a CSR access to CSR_MCOUNTINHIBIT or CSR_MCOUNTEREN; a read samples"
+  gen_pmc_ctrl_csr_cg.cp_result.illegal: "CG-PMC-005: RVFI retirement of a CSR access to CSR_MCOUNTINHIBIT or CSR_MCOUNTEREN; a read samples"
+  gen_pmc_ctrl_csr_cg.cr_reg_mode_result.en_u_ill: "CG-PMC-005: RVFI retirement of a CSR access to CSR_MCOUNTINHIBIT or CSR_MCOUNTEREN; a read samples"
+  gen_pmc_ctrl_csr_cg.cr_reg_mode_result.inh_u_ill: "CG-PMC-005: RVFI retirement of a CSR access to CSR_MCOUNTINHIBIT or CSR_MCOUNTEREN; a read samples"
+  gen_pmc_ctrl_csr_cg.cp_pin_tr.stable: "CG-PMC-005: RVFI retirement of a CSR access to CSR_MCOUNTINHIBIT or CSR_MCOUNTEREN; a read samples"
+  gen_pmc_ctrl_csr_cg.cr_en_pin_effect.en_on_app: "CG-PMC-005: RVFI retirement of a CSR access to CSR_MCOUNTINHIBIT or CSR_MCOUNTEREN; a read samples"
+  gen_pmc_ctrl_csr_cg.cr_reg_bit_rb.en_cy_w: "CG-PMC-005: RVFI retirement of a CSR access to CSR_MCOUNTINHIBIT or CSR_MCOUNTEREN; a read samples"
+  gen_pmc_ctrl_csr_cg.cr_reg_bit_rb.en_hf_w: "CG-PMC-005: RVFI retirement of a CSR access to CSR_MCOUNTINHIBIT or CSR_MCOUNTEREN; a read samples"
+  gen_pmc_ctrl_csr_cg.cr_reg_bit_rb.en_hl_w: "CG-PMC-005: RVFI retirement of a CSR access to CSR_MCOUNTINHIBIT or CSR_MCOUNTEREN; a read samples"
+  gen_pmc_ctrl_csr_cg.cr_reg_bit_rb.en_hm_w: "CG-PMC-005: RVFI retirement of a CSR access to CSR_MCOUNTINHIBIT or CSR_MCOUNTEREN; a read samples"
+  gen_pmc_ctrl_csr_cg.cr_reg_bit_rb.en_ir_w: "CG-PMC-005: RVFI retirement of a CSR access to CSR_MCOUNTINHIBIT or CSR_MCOUNTEREN; a read samples"
+  gen_pmc_ctrl_csr_cg.cr_reg_bit_rb.en_tm_0: "CG-PMC-005: RVFI retirement of a CSR access to CSR_MCOUNTINHIBIT or CSR_MCOUNTEREN; a read samples"
+  gen_pmc_ctrl_csr_cg.cr_reg_bit_rb.en_up_0: "CG-PMC-005: RVFI retirement of a CSR access to CSR_MCOUNTINHIBIT or CSR_MCOUNTEREN; a read samples"
+  gen_pmc_ctrl_csr_cg.cr_reg_mode_result.en_m_ok: "CG-PMC-005: RVFI retirement of a CSR access to CSR_MCOUNTINHIBIT or CSR_MCOUNTEREN; a read samples"
+  gen_pmc_ctrl_csr_cg.cr_reg_pattern_op.en_1_clr: "CG-PMC-005: RVFI retirement of a CSR access to CSR_MCOUNTINHIBIT or CSR_MCOUNTEREN; a read samples"
+  gen_pmc_ctrl_csr_cg.cr_reg_pattern_op.en_1_set: "CG-PMC-005: RVFI retirement of a CSR access to CSR_MCOUNTINHIBIT or CSR_MCOUNTEREN; a read samples"
+  gen_pmc_ctrl_csr_cg.cr_reg_pattern_op.en_1_wr: "CG-PMC-005: RVFI retirement of a CSR access to CSR_MCOUNTINHIBIT or CSR_MCOUNTEREN; a read samples"
+  gen_pmc_ctrl_csr_cg.cr_reg_pattern_op.en_r_clr: "CG-PMC-005: RVFI retirement of a CSR access to CSR_MCOUNTINHIBIT or CSR_MCOUNTEREN; a read samples"
+  gen_pmc_ctrl_csr_cg.cr_reg_pattern_op.en_r_set: "CG-PMC-005: RVFI retirement of a CSR access to CSR_MCOUNTINHIBIT or CSR_MCOUNTEREN; a read samples"
+  gen_pmc_ctrl_csr_cg.cr_reg_pattern_op.en_r_wr: "CG-PMC-005: RVFI retirement of a CSR access to CSR_MCOUNTINHIBIT or CSR_MCOUNTEREN; a read samples"
+  gen_pmc_ctrl_csr_cg.cr_reg_pattern_op.en_w_clr: "CG-PMC-005: RVFI retirement of a CSR access to CSR_MCOUNTINHIBIT or CSR_MCOUNTEREN; a read samples"
+  gen_pmc_ctrl_csr_cg.cr_reg_pattern_op.en_w_set: "CG-PMC-005: RVFI retirement of a CSR access to CSR_MCOUNTINHIBIT or CSR_MCOUNTEREN; a read samples"
+  gen_pmc_ctrl_csr_cg.cr_reg_pattern_op.en_w_wr: "CG-PMC-005: RVFI retirement of a CSR access to CSR_MCOUNTINHIBIT or CSR_MCOUNTEREN; a read samples"
+  gen_pmc_ctrl_csr_cg.cr_reg_pattern_op.en_z_wr: "CG-PMC-005: RVFI retirement of a CSR access to CSR_MCOUNTINHIBIT or CSR_MCOUNTEREN; a read samples"
+  gen_pmc_ctrl_csr_cg.cp_effect.dropped: "CG-PMC-005: RVFI retirement of a CSR access to CSR_MCOUNTINHIBIT or CSR_MCOUNTEREN; a read samples"
+  gen_pmc_alias_cg.cp_alias.cycle: "CG-PMC-006: RVFI item whose rvfi_insn is a CSR access in [12'hC00 : 12'hC1F] or [12'hC80 : 12'hC9F];"
+  gen_pmc_alias_cg.cp_alias.cycleh: "CG-PMC-006: RVFI item whose rvfi_insn is a CSR access in [12'hC00 : 12'hC1F] or [12'hC80 : 12'hC9F];"
+  gen_pmc_alias_cg.cp_alias.hpm_first: "CG-PMC-006: RVFI item whose rvfi_insn is a CSR access in [12'hC00 : 12'hC1F] or [12'hC80 : 12'hC9F];"
+  gen_pmc_alias_cg.cp_alias.hpm_last: "CG-PMC-006: RVFI item whose rvfi_insn is a CSR access in [12'hC00 : 12'hC1F] or [12'hC80 : 12'hC9F];"
+  gen_pmc_alias_cg.cp_alias.hpm_mid: "CG-PMC-006: RVFI item whose rvfi_insn is a CSR access in [12'hC00 : 12'hC1F] or [12'hC80 : 12'hC9F];"
+  gen_pmc_alias_cg.cp_alias.hpmh_first: "CG-PMC-006: RVFI item whose rvfi_insn is a CSR access in [12'hC00 : 12'hC1F] or [12'hC80 : 12'hC9F];"
+  gen_pmc_alias_cg.cp_alias.hpmh_last: "CG-PMC-006: RVFI item whose rvfi_insn is a CSR access in [12'hC00 : 12'hC1F] or [12'hC80 : 12'hC9F];"
+  gen_pmc_alias_cg.cp_alias.hpmh_mid: "CG-PMC-006: RVFI item whose rvfi_insn is a CSR access in [12'hC00 : 12'hC1F] or [12'hC80 : 12'hC9F];"
+  gen_pmc_alias_cg.cp_alias.instret: "CG-PMC-006: RVFI item whose rvfi_insn is a CSR access in [12'hC00 : 12'hC1F] or [12'hC80 : 12'hC9F];"
+  gen_pmc_alias_cg.cp_alias.instreth: "CG-PMC-006: RVFI item whose rvfi_insn is a CSR access in [12'hC00 : 12'hC1F] or [12'hC80 : 12'hC9F];"
+  gen_pmc_alias_cg.cp_en_bit.clr: "CG-PMC-006: RVFI item whose rvfi_insn is a CSR access in [12'hC00 : 12'hC1F] or [12'hC80 : 12'hC9F];"
+  gen_pmc_alias_cg.cp_en_bit.set: "CG-PMC-006: RVFI item whose rvfi_insn is a CSR access in [12'hC00 : 12'hC1F] or [12'hC80 : 12'hC9F];"
+  gen_pmc_alias_cg.cp_mode.m: "CG-PMC-006: RVFI item whose rvfi_insn is a CSR access in [12'hC00 : 12'hC1F] or [12'hC80 : 12'hC9F];"
+  gen_pmc_alias_cg.cp_mode.u: "CG-PMC-006: RVFI item whose rvfi_insn is a CSR access in [12'hC00 : 12'hC1F] or [12'hC80 : 12'hC9F];"
+  gen_pmc_alias_cg.cp_op.read: "CG-PMC-006: RVFI item whose rvfi_insn is a CSR access in [12'hC00 : 12'hC1F] or [12'hC80 : 12'hC9F];"
+  gen_pmc_alias_cg.cp_result.illegal: "CG-PMC-006: RVFI item whose rvfi_insn is a CSR access in [12'hC00 : 12'hC1F] or [12'hC80 : 12'hC9F];"
+  gen_pmc_alias_cg.cp_result.ok: "CG-PMC-006: RVFI item whose rvfi_insn is a CSR access in [12'hC00 : 12'hC1F] or [12'hC80 : 12'hC9F];"
+  gen_pmc_alias_cg.cr_alias_gate.cyc_m_clr_ok: "CG-PMC-006: RVFI item whose rvfi_insn is a CSR access in [12'hC00 : 12'hC1F] or [12'hC80 : 12'hC9F];"
+  gen_pmc_alias_cg.cr_alias_gate.cyc_u_clr_ill: "CG-PMC-006: RVFI item whose rvfi_insn is a CSR access in [12'hC00 : 12'hC1F] or [12'hC80 : 12'hC9F];"
+  gen_pmc_alias_cg.cr_alias_gate.cyc_u_set_ok: "CG-PMC-006: RVFI item whose rvfi_insn is a CSR access in [12'hC00 : 12'hC1F] or [12'hC80 : 12'hC9F];"
+  gen_pmc_alias_cg.cr_alias_gate.cych_m_clr_ok: "CG-PMC-006: RVFI item whose rvfi_insn is a CSR access in [12'hC00 : 12'hC1F] or [12'hC80 : 12'hC9F];"
+  gen_pmc_alias_cg.cr_alias_gate.cych_u_clr_ill: "CG-PMC-006: RVFI item whose rvfi_insn is a CSR access in [12'hC00 : 12'hC1F] or [12'hC80 : 12'hC9F];"
+  gen_pmc_alias_cg.cr_alias_gate.cych_u_set_ok: "CG-PMC-006: RVFI item whose rvfi_insn is a CSR access in [12'hC00 : 12'hC1F] or [12'hC80 : 12'hC9F];"
+  gen_pmc_alias_cg.cr_alias_gate.hf_m_clr_ok: "CG-PMC-006: RVFI item whose rvfi_insn is a CSR access in [12'hC00 : 12'hC1F] or [12'hC80 : 12'hC9F];"
+  gen_pmc_alias_cg.cr_alias_gate.hf_u_clr_ill: "CG-PMC-006: RVFI item whose rvfi_insn is a CSR access in [12'hC00 : 12'hC1F] or [12'hC80 : 12'hC9F];"
+  gen_pmc_alias_cg.cr_alias_gate.hf_u_set_ok: "CG-PMC-006: RVFI item whose rvfi_insn is a CSR access in [12'hC00 : 12'hC1F] or [12'hC80 : 12'hC9F];"
+  gen_pmc_alias_cg.cr_alias_gate.hhf_m_clr_ok: "CG-PMC-006: RVFI item whose rvfi_insn is a CSR access in [12'hC00 : 12'hC1F] or [12'hC80 : 12'hC9F];"
+  gen_pmc_alias_cg.cr_alias_gate.hhf_u_clr_ill: "CG-PMC-006: RVFI item whose rvfi_insn is a CSR access in [12'hC00 : 12'hC1F] or [12'hC80 : 12'hC9F];"
+  gen_pmc_alias_cg.cr_alias_gate.hhf_u_set_ok: "CG-PMC-006: RVFI item whose rvfi_insn is a CSR access in [12'hC00 : 12'hC1F] or [12'hC80 : 12'hC9F];"
+  gen_pmc_alias_cg.cr_alias_gate.hhl_m_clr_ok: "CG-PMC-006: RVFI item whose rvfi_insn is a CSR access in [12'hC00 : 12'hC1F] or [12'hC80 : 12'hC9F];"
+  gen_pmc_alias_cg.cr_alias_gate.hhl_u_clr_ill: "CG-PMC-006: RVFI item whose rvfi_insn is a CSR access in [12'hC00 : 12'hC1F] or [12'hC80 : 12'hC9F];"
+  gen_pmc_alias_cg.cr_alias_gate.hhl_u_set_ok: "CG-PMC-006: RVFI item whose rvfi_insn is a CSR access in [12'hC00 : 12'hC1F] or [12'hC80 : 12'hC9F];"
+  gen_pmc_alias_cg.cr_alias_gate.hhm_m_clr_ok: "CG-PMC-006: RVFI item whose rvfi_insn is a CSR access in [12'hC00 : 12'hC1F] or [12'hC80 : 12'hC9F];"
+  gen_pmc_alias_cg.cr_alias_gate.hhm_u_clr_ill: "CG-PMC-006: RVFI item whose rvfi_insn is a CSR access in [12'hC00 : 12'hC1F] or [12'hC80 : 12'hC9F];"
+  gen_pmc_alias_cg.cr_alias_gate.hhm_u_set_ok: "CG-PMC-006: RVFI item whose rvfi_insn is a CSR access in [12'hC00 : 12'hC1F] or [12'hC80 : 12'hC9F];"
+  gen_pmc_alias_cg.cr_alias_gate.hl_m_clr_ok: "CG-PMC-006: RVFI item whose rvfi_insn is a CSR access in [12'hC00 : 12'hC1F] or [12'hC80 : 12'hC9F];"
+  gen_pmc_alias_cg.cr_alias_gate.hl_u_clr_ill: "CG-PMC-006: RVFI item whose rvfi_insn is a CSR access in [12'hC00 : 12'hC1F] or [12'hC80 : 12'hC9F];"
+  gen_pmc_alias_cg.cr_alias_gate.hl_u_set_ok: "CG-PMC-006: RVFI item whose rvfi_insn is a CSR access in [12'hC00 : 12'hC1F] or [12'hC80 : 12'hC9F];"
+  gen_pmc_alias_cg.cr_alias_gate.hm_m_clr_ok: "CG-PMC-006: RVFI item whose rvfi_insn is a CSR access in [12'hC00 : 12'hC1F] or [12'hC80 : 12'hC9F];"
+  gen_pmc_alias_cg.cr_alias_gate.hm_u_clr_ill: "CG-PMC-006: RVFI item whose rvfi_insn is a CSR access in [12'hC00 : 12'hC1F] or [12'hC80 : 12'hC9F];"
+  gen_pmc_alias_cg.cr_alias_gate.hm_u_set_ok: "CG-PMC-006: RVFI item whose rvfi_insn is a CSR access in [12'hC00 : 12'hC1F] or [12'hC80 : 12'hC9F];"
+  gen_pmc_alias_cg.cr_alias_gate.ir_m_clr_ok: "CG-PMC-006: RVFI item whose rvfi_insn is a CSR access in [12'hC00 : 12'hC1F] or [12'hC80 : 12'hC9F];"
+  gen_pmc_alias_cg.cr_alias_gate.ir_u_clr_ill: "CG-PMC-006: RVFI item whose rvfi_insn is a CSR access in [12'hC00 : 12'hC1F] or [12'hC80 : 12'hC9F];"
+  gen_pmc_alias_cg.cr_alias_gate.ir_u_set_ok: "CG-PMC-006: RVFI item whose rvfi_insn is a CSR access in [12'hC00 : 12'hC1F] or [12'hC80 : 12'hC9F];"
+  gen_pmc_alias_cg.cr_alias_gate.irh_m_clr_ok: "CG-PMC-006: RVFI item whose rvfi_insn is a CSR access in [12'hC00 : 12'hC1F] or [12'hC80 : 12'hC9F];"
+  gen_pmc_alias_cg.cr_alias_gate.irh_u_clr_ill: "CG-PMC-006: RVFI item whose rvfi_insn is a CSR access in [12'hC00 : 12'hC1F] or [12'hC80 : 12'hC9F];"
+  gen_pmc_alias_cg.cr_alias_gate.irh_u_set_ok: "CG-PMC-006: RVFI item whose rvfi_insn is a CSR access in [12'hC00 : 12'hC1F] or [12'hC80 : 12'hC9F];"
+  gen_pmc_alias_cg.cr_op_result.rd_ill: "CG-PMC-006: RVFI item whose rvfi_insn is a CSR access in [12'hC00 : 12'hC1F] or [12'hC80 : 12'hC9F];"
+  gen_pmc_alias_cg.cr_op_result.rd_ok: "CG-PMC-006: RVFI item whose rvfi_insn is a CSR access in [12'hC00 : 12'hC1F] or [12'hC80 : 12'hC9F];"
+  gen_pmc_alias_cg.cp_alias.hpm_unimpl: "CG-PMC-006: RVFI item whose rvfi_insn is a CSR access in [12'hC00 : 12'hC1F] or [12'hC80 : 12'hC9F];"
+  gen_pmc_alias_cg.cp_alias.hpmh_unimpl: "CG-PMC-006: RVFI item whose rvfi_insn is a CSR access in [12'hC00 : 12'hC1F] or [12'hC80 : 12'hC9F];"
+  gen_pmc_alias_cg.cr_alias_gate.hhu_m_ok: "CG-PMC-006: RVFI item whose rvfi_insn is a CSR access in [12'hC00 : 12'hC1F] or [12'hC80 : 12'hC9F];"
+  gen_pmc_alias_cg.cr_alias_gate.hhu_u_ill: "CG-PMC-006: RVFI item whose rvfi_insn is a CSR access in [12'hC00 : 12'hC1F] or [12'hC80 : 12'hC9F];"
+  gen_pmc_alias_cg.cr_alias_gate.hu_m_ok: "CG-PMC-006: RVFI item whose rvfi_insn is a CSR access in [12'hC00 : 12'hC1F] or [12'hC80 : 12'hC9F];"
+  gen_pmc_alias_cg.cr_alias_gate.hu_u_ill: "CG-PMC-006: RVFI item whose rvfi_insn is a CSR access in [12'hC00 : 12'hC1F] or [12'hC80 : 12'hC9F];"
+  gen_pmc_alias_cg.cp_op.clr_nz: "CG-PMC-006: RVFI item whose rvfi_insn is a CSR access in [12'hC00 : 12'hC1F] or [12'hC80 : 12'hC9F];"
+  gen_pmc_alias_cg.cp_op.set_nz: "CG-PMC-006: RVFI item whose rvfi_insn is a CSR access in [12'hC00 : 12'hC1F] or [12'hC80 : 12'hC9F];"
+  gen_pmc_alias_cg.cp_op.write: "CG-PMC-006: RVFI item whose rvfi_insn is a CSR access in [12'hC00 : 12'hC1F] or [12'hC80 : 12'hC9F];"
+  gen_pmc_alias_cg.cr_op_result.clr_ill: "CG-PMC-006: RVFI item whose rvfi_insn is a CSR access in [12'hC00 : 12'hC1F] or [12'hC80 : 12'hC9F];"
+  gen_pmc_alias_cg.cr_op_result.set_ill: "CG-PMC-006: RVFI item whose rvfi_insn is a CSR access in [12'hC00 : 12'hC1F] or [12'hC80 : 12'hC9F];"
+  gen_pmc_alias_cg.cr_op_result.wr_ill: "CG-PMC-006: RVFI item whose rvfi_insn is a CSR access in [12'hC00 : 12'hC1F] or [12'hC80 : 12'hC9F];"
+  gen_pmc_alias_cg.cr_write_alias.cyc_wr_m: "CG-PMC-006: RVFI item whose rvfi_insn is a CSR access in [12'hC00 : 12'hC1F] or [12'hC80 : 12'hC9F];"
+  gen_pmc_alias_cg.cr_write_alias.cyc_wr_u: "CG-PMC-006: RVFI item whose rvfi_insn is a CSR access in [12'hC00 : 12'hC1F] or [12'hC80 : 12'hC9F];"
+  gen_pmc_alias_cg.cr_write_alias.cych_wr_m: "CG-PMC-006: RVFI item whose rvfi_insn is a CSR access in [12'hC00 : 12'hC1F] or [12'hC80 : 12'hC9F];"
+  gen_pmc_alias_cg.cr_write_alias.hf_clr_m: "CG-PMC-006: RVFI item whose rvfi_insn is a CSR access in [12'hC00 : 12'hC1F] or [12'hC80 : 12'hC9F];"
+  gen_pmc_alias_cg.cr_write_alias.hhu_wr_m: "CG-PMC-006: RVFI item whose rvfi_insn is a CSR access in [12'hC00 : 12'hC1F] or [12'hC80 : 12'hC9F];"
+  gen_pmc_alias_cg.cr_write_alias.hu_wr_u: "CG-PMC-006: RVFI item whose rvfi_insn is a CSR access in [12'hC00 : 12'hC1F] or [12'hC80 : 12'hC9F];"
+  gen_pmc_alias_cg.cr_write_alias.ir_set_m: "CG-PMC-006: RVFI item whose rvfi_insn is a CSR access in [12'hC00 : 12'hC1F] or [12'hC80 : 12'hC9F];"
+  gen_pmc_alias_cg.cp_alias.time: "CG-PMC-006: RVFI item whose rvfi_insn is a CSR access in [12'hC00 : 12'hC1F] or [12'hC80 : 12'hC9F];"
+  gen_pmc_alias_cg.cp_alias.timeh: "CG-PMC-006: RVFI item whose rvfi_insn is a CSR access in [12'hC00 : 12'hC1F] or [12'hC80 : 12'hC9F];"
+  gen_pmc_alias_cg.cr_alias_gate.time_m_ill: "CG-PMC-006: RVFI item whose rvfi_insn is a CSR access in [12'hC00 : 12'hC1F] or [12'hC80 : 12'hC9F];"
+  gen_pmc_alias_cg.cr_alias_gate.time_u_ill: "CG-PMC-006: RVFI item whose rvfi_insn is a CSR access in [12'hC00 : 12'hC1F] or [12'hC80 : 12'hC9F];"
+  gen_pmc_alias_cg.cr_alias_gate.timeh_m_ill: "CG-PMC-006: RVFI item whose rvfi_insn is a CSR access in [12'hC00 : 12'hC1F] or [12'hC80 : 12'hC9F];"
+  gen_pmc_alias_cg.cr_alias_gate.timeh_u_ill: "CG-PMC-006: RVFI item whose rvfi_insn is a CSR access in [12'hC00 : 12'hC1F] or [12'hC80 : 12'hC9F];"
+  gen_pmc_alias_cg.cp_inhibited.no: "CG-PMC-006: RVFI item whose rvfi_insn is a CSR access in [12'hC00 : 12'hC1F] or [12'hC80 : 12'hC9F];"
+  gen_pmc_alias_cg.cp_inhibited.yes: "CG-PMC-006: RVFI item whose rvfi_insn is a CSR access in [12'hC00 : 12'hC1F] or [12'hC80 : 12'hC9F];"
+  gen_pmc_alias_cg.cr_inhibit_gate.inh_set_u_ok: "CG-PMC-006: RVFI item whose rvfi_insn is a CSR access in [12'hC00 : 12'hC1F] or [12'hC80 : 12'hC9F];"
+  gen_pmc_alias_cg.cr_inhibit_gate.noinh_set_u_ok: "CG-PMC-006: RVFI item whose rvfi_insn is a CSR access in [12'hC00 : 12'hC1F] or [12'hC80 : 12'hC9F];"
+  gen_pmc_mcycle_cg.cp_ctx.inhibit_mid: "CG-PMC-001: two events, each guarded per coverpoint with `iff` (S-3c): (a) RVFI retirement of a CSR"
+  gen_pmc_mcycle_cg.cp_delta.partial: "CG-PMC-001: two events, each guarded per coverpoint with `iff` (S-3c): (a) RVFI retirement of a CSR"
+  gen_pmc_mcycle_cg.cr_ctx_delta.inhmid_partial: "CG-PMC-001: two events, each guarded per coverpoint with `iff` (S-3c): (a) RVFI retirement of a CSR"
+  gen_pmc_hpm_event_cg.cp_delta_rel.partial: "CG-PMC-003: end of each TB event window: a code window bounded by two CSR reads of the same"
+  gen_pmc_hpm_event_cg.cp_inhibit.cleared_mid: "CG-PMC-003: end of each TB event window: a code window bounded by two CSR reads of the same"
+  gen_pmc_hpm_event_cg.cp_inhibit.set_mid: "CG-PMC-003: end of each TB event window: a code window bounded by two CSR reads of the same"
+  gen_pmc_hpm_event_cg.cr_idx_inhibit.br_clrmid: "CG-PMC-003: end of each TB event window: a code window bounded by two CSR reads of the same"
+  gen_pmc_hpm_event_cg.cr_idx_inhibit.ld_setmid: "CG-PMC-003: end of each TB event window: a code window bounded by two CSR reads of the same"
+  gen_pmc_hpm_event_cg.cr_idx_inhibit.rc_setmid: "CG-PMC-003: end of each TB event window: a code window bounded by two CSR reads of the same"
+  gen_pmc_hpm_event_cg.cr_idx_inhibit.st_setmid: "CG-PMC-003: end of each TB event window: a code window bounded by two CSR reads of the same"

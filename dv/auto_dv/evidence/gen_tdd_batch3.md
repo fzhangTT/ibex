@@ -214,6 +214,9 @@ lock_then_* bins already make; a predicate on consecutive rvfi_order would miss 
 
 ## 6. Group gen_pmc_ctrl: a complete draft held out of the tree, blocked on the ISA model's counter set
 
+Status: the dependency below is met by tb-infra's T-235 landing (158f5be); the group is re-verified on that shim and staged in Section 9. The
+text of this section stays as the record of the held state and of the ask.
+
 One unnamed subagent (dispatched by the previous Test Writer instance at 18:1x Z against 56e37d7, brief
 dv/auto_dv/work/test-writer/batch3/gen_pmc_ctrl/BRIEF.md) wrote gen_test_pmc_ctrl.py, gen_programs/gen_pmc_ctrl_prog.py and the rendered
 manifest into its export (last edit 18:54Z; the instance was stopped at 18:46Z, LOG-056, and the subagent's report never arrived). The
@@ -315,3 +318,42 @@ mechanical: rebuilt from a detached archive, the 7fead94e text reproduces the im
 (words 589 / 557 / 557, crc32 0x66b42d50 / 0x90aa26f5 / 0x420b00bd, equal to probe_greens/g<N>/build.log), and the 429fa989 text reproduces
 the second-pass build's seeds 1..6 (equal to build_all_prefix2.log); the final generator's images of the same seeds differ, so the checksums
 discriminate.
+
+## 9. Group gen_pmc_ctrl re-verified on the T-235 shim and staged
+
+The ISA shim landed with the counter model this group waited for (158f5be, tb-infra's T-235; the shim's API doc names it: a step under
+mcountinhibit.IR = 1 retires instead of being synthesised as a trap, minstret is served as Spike's count minus what Ibex did not count with
+the inhibit rule an instruction leaves behind, mcountinhibit is masked, mhpmcounter13..31 and mhpmevent13..31 read as zero). Its own
+measurement of this group's seed-1 image is tb-infra's (gen_fu_l9_lockstep_pmc_s1_on_* under evidence/gen_tdd_logs/lockstep: 8000 records,
+0 mismatches). This section is the Test Writer's re-verification: export head_export18 of bf61843 (T-235 in, with the 73ff075
+write-corner fixes of its review, CM123), build out_head18, the held
+draft's test and generator copied in, the docstring's dependency paragraph replaced by the statement of what the shim models and what it
+leaves unmodelled (the hazard variant of the high-word write corner, dummy instructions under the counters knob, neither relied on here),
+the manifest re-rendered on HEAD's plan (204 declared bins, one not_built header for TP-PMC-057, eighteen not_hit; gen_test_pmc_ctrl.fcov.yaml
+193caa85e484); test 388b15850e47, generator e7893d97218c. Images built
+from that export with gen_program.py --directed --gcc-opts=-Idv/auto_dv/tests/gen_programs: seed 1 words 6581 crc32 0xe4448e4a, seed 2
+6517 / 0x9ee34d68, seed 3 6533 / 0xbe52ad89 (the pin-off program is the same text, the pin changes only the expectations).
+Runs: seeds 1, 2, 3 PASS with UVM_ERROR 0 and GEN_TEST_BINS n=204, all 13 fire checks ok (gen_pmc_ctrl_t235_s1_stdout.log md5
+f031fdced720278dcb2b717cd5b85723 and _sim.log 08dcdc3ccbe5881f27ac89eb72b9e944 in full; s2 / s3 excerpts); the pin-off variant (generator --pin off,
++gen_knob_mcounteren_writable=off) PASS with UVM_ERROR 0, fire_tp_pmc_028 on its dropped branch, the banner naming the pin
+(gen_pmc_ctrl_t235_pin_off_s1_stdout_excerpt.log md5 d3101bd2828b0905ed25551e224dadfc); the pinned red --red-item TP-PMC-022 fails exactly
+fire_tp_pmc_022 (gen_pmc_ctrl_red1_stdout.log md5 713ec7eb8805e0069a73b20c79b0315c, _sim.log d9f10e92885a26460c1f1c4bf35cd4be, the entry's pinned red, in full) and the
+seed-drawn red (seed 1 draws TP-PMC-023) fails exactly fire_tp_pmc_023 (gen_pmc_ctrl_t235_red_drawn_s1_stdout_excerpt.log md5
+06dffdcdfec0565e0588f07fca89f7d3). So the three asks of Section 6 are answered on the shim's side: the 501 trap rows (retirement under IR = 1), the 62
+mcountinhibit read-backs (the mask) and the 31 minstret rows all compare clean in these runs. The reds of the other eleven items were
+verified in Section 6 on out_head14 and are not re-run here; the fire checks are unchanged.
+Staged entries (dv/auto_dv/work/test-writer/gen_testlist_entries.yaml, sha256 9c8aed00c141): gen_test_pmc_ctrl (tier check, 3 seeds,
+measured false until the PMC covergroups are built), gen_test_pmc_ctrl_pin_off (tier check, 1 seed, --pin off with the pin plusarg) and
+gen_test_pmc_ctrl_red (pinned to TP-PMC-022, red_expect on fire_tp_pmc_022, matched against the retained pinned red's harness line); the
+library self-test passes in the staged form. Verified from a detached archive of HEAD with the group overlaid
+(dv/auto_dv/work/test-writer/head_final_selftest_pmc.log names the HEAD).
+Write corners (the T-235 landing review, CM123): every program here carries the review's corner (1), a minstreth write that leaves the high
+word unchanged (`csrrc t1, minstreth, t5` with the high word 0: seed 1 pc 0x8000509c, seed 2 0x800052b0, seed 3 0x80005008), and none carries
+corner (2), a minstret write followed at gap 1 by a minstreth write (other counters do pair up back to back). The runs above are on the shim
+with those two corners fixed (73ff075); the same programs on the pre-fix shim (out_head17, an export of 5cf028e) also passed with 0
+comparator mismatches, and why the misclassified write produced no visible difference there is tb-infra's to state in its record. Of the
+five CM123 minors owed to landing 11: no program has a counter write right after a Zcmp or Zcb op; every program has two minstret low-word
+writes after ended inhibit episodes (seed 1 at 0x80001c48 with IR = 1 and 0x8000506c with IR = 0, seed 2 at 0x80001e40 and 0x80005288,
+seed 3 at 0x800022ac and 0x80005018), none within reach of a wrap into the high word (the largest low word written is 0x51f6abb0 with under
+8000 retirements to follow), so the writes-after-inhibit path is exercised and the low-word carry corner is not; no program has a TB-side
+counter write (the test issues no bridge CSR write). Scan: dv/auto_dv/work/test-writer/pmc_t235/counter_write_scan.log.
