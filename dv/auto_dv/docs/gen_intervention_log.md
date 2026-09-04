@@ -1836,3 +1836,17 @@ ruling (the plain-store record immediately before the pop) and re-proved the bin
 (gen_critic_tb_l14.md, 442d484) is APPROVE, verifying build sb3's identity first-hand and closing tb_l13 M-1 and the
 tb_l12, tb_l13, CM148, CM149 and CM150 items. Ruling: the landing-12 gate is lifted at 442d484; tb_l14's six lows ride
 tb-infra's WP-12 landing as rows CR-14.
+
+## LOG-082 - 2026-09-04 - Six-minute team outage: the shared /tmp filled from the team's own scratch
+
+Between 05:04Z and 05:10Z every tool call of every teammate and the Orchestrator failed with ENOSPC: the harness
+creates each Bash output file under /tmp/claude-1211405897/.../tasks, and the shared 200 GB /tmp had reached 100%. The
+team scratchpad held 144 GB, of which the A-002 trash directory held 101 GB (944 discarded mutant and build work
+directories moved there instead of being removed by variable-path rm) and tb-infra's superseded WP-12 and landing-13
+builds several more. No hand-off was mid-commit; nothing in the tree was affected; tb-infra's LSF chains kept running.
+The Orchestrator's first diagnosis named /home (the transcript filesystem, which had filled at 03:22Z) and was
+corrected at 05:09Z. Once a file could be created again, the Orchestrator emptied the trash directory of entries older
+than ten minutes by a literal find path (944 to 10 entries; /tmp from 99% to 47%), and each teammate deletes its own
+superseded outputs by literal path. Rule from here: the trash directory is purged of settled entries at every watchdog
+tick while /tmp is above 90%, and every teammate deletes a superseded build output when its successor is proven, not
+at landing time.
