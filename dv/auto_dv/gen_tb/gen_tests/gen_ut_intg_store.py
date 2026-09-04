@@ -59,13 +59,17 @@ async def gen_ut_intg_store(dut):
     entries = [r for r in e.records if r.intr]
     log.info("GEN_UT_INTG_STORE records %d interrupt entries %d (orders %s)", len(e.records), len(entries), [r.order for r in entries])
     assert entries, "GEN_UT_INTG_STORE: no interrupt-entry record (the corrupted store response should raise the internal NMI)"
-    # The two counts are written by different mechanisms: the comparator writes evt_isa_records while it processes a
-    # record, the interface increments evt_retired_count on the clock edge, so the pair is offset by one whenever a
-    # record is in flight. Read them only once nothing is in flight. The bound decides how long to wait, never
-    # whether to report: a record the comparator never consumed never converges, so the assertion below still fails.
+    # Two writers, one pair: the comparator writes evt_isa_records mid-record, the interface increments
+    # evt_retired_count on the edge, so equality at a single instant can be a skipped record cancelling one in
+    # flight; require it across a whole cycle. The bound waits, it never decides: an unconsumed record never converges.
+    settled = 0
     for _ in range(QUIESCE_CYCLES):
         if int(h.b.evt_retired_count.value) == int(h.b.evt_isa_records.value):
-            break
+            settled += 1
+            if settled == 2:
+                break
+        else:
+            settled = 0
         await b.wait_cycles_until(int(h.b.cycle_count.value) + 1)
     retired = int(h.b.evt_retired_count.value)
     consumed = int(h.b.evt_isa_records.value)

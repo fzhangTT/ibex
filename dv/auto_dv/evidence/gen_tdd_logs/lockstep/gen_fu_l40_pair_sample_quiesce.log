@@ -1,0 +1,202 @@
+# gen_fu_l40_pair_sample_quiesce.log -- landing 40 (TB Infra, 2026-09-04)
+#
+# WHAT THIS IS. The end-of-run read race of landing 38 has two more instances of the identical shape, and one of
+# them fails on the committed code at a measurable seed rate. This log carries the red, the green, the mutation
+# proof and the controls for the three tests that compare the retired and consumed counters at the end of a run:
+#   dv/auto_dv/gen_tb/gen_tests/gen_ut_intg_store.py   (landing 38's single-instant break, replaced here)
+#   dv/auto_dv/gen_tb/gen_tests/gen_ut_lockstep.py     (4-cycle settle then read, replaced here)
+#   dv/auto_dv/gen_tb/gen_tests/gen_ut_intg_span.py    (4-cycle settle kept for the export flush, loop added)
+# BUILD IDENTITY: every figure below comes from a local out-of-tree root built by dv/auto_dv/tb/gen_tb_local.sh,
+# whose "sources sha256" is that runner's find-digest over dv/auto_dv env, tb, isa and gen_tb. It is NOT the
+# committer's gate digest and no committed gate identity is claimed for these roots.
+# PATHS: $S below is this session's scratchpad, $S/l33 holding the roots (l40_root, l40_mut_root), the scripts
+# (l40_setup.sh, l40_sweep.sh, patch_l40.py, l40_mutroot.sh) and the run logs. Scratch is NOT durable, which is
+# why each figure block below embeds the lines rather than pointing at them.
+#
+# ================ THE MECHANISM, quoted from the two writers ================
+# $ sed -n '61p' dv/auto_dv/tb/gen_bridge_if.sv
+#         if (rvfi_valid) evt_retired_count <= evt_retired_count + 32'd1;
+# $ sed -n '513p' dv/auto_dv/env/gen_rvfi_pkg.sv
+#         bvif.evt_isa_records = compared + folded;   // records consumed: compared once each, Zcmp micro-ops through their fold
+# $ command grep -n 'bvif.evt_isa_records =' dv/auto_dv/env/gen_rvfi_pkg.sv
+#   389:        bvif.evt_isa_records = compared + folded;
+#   414:        bvif.evt_isa_records = compared + folded;
+#   513:      bvif.evt_isa_records = compared + folded;   // records consumed: compared once each, Zcmp micro-ops through their fold
+# One retirement, two observers: the interface's counter moves on the clock edge with a non-blocking assignment,
+# the comparator's counter is written with a blocking assignment while it processes the record. A sample taken
+# between the two reads a pair that differs by one. Equality at a SINGLE INSTANT is therefore not evidence that
+# nothing is in flight, which is what CM214-Low-4 said about landing 38's break.
+#
+# ================ THE RED, natural, on the COMMITTED tests ================
+# One root off a detached archive, the committed test files, one build. The sweep is bounded and its size is
+# stated: 36 seeds on lockstep, 23 on intg_span.
+# $ command grep -h 'sources sha256' $S/l33/l40_root/outA/config_opts.txt   [root A, committed sources]
+#   sources sha256 (dv/auto_dv env, tb, isa, gen_tb): 18c7a44b8edfefc4
+# $ command grep 'base HEAD' $S/l33/l40_setup.log
+#   base HEAD: 8cc5026
+# $ command grep -A3 'committed-test md5s' $S/l33/l40_setup.log | tail -3   [the archive's copies, equal to the clone's]
+#   3d9f13902a75159d64efbfaebdeda8bb  dv/auto_dv/gen_tb/gen_tests/gen_ut_lockstep.py
+#   2cf87b20f951528eb27c35ea4a996571  dv/auto_dv/gen_tb/gen_tests/gen_ut_intg_span.py
+#   bfe22e3e054ce3a93eae354d38d1d1f2  dv/auto_dv/gen_tb/gen_tests/gen_ut_intg_store.py
+# $ cat $S/l33/l40_sweepA.log $S/l33/l40_natsweep.log | command grep -c 'verdict=PASS' (then FAIL)
+#   PASS 55   FAIL 4   (59 runs: lockstep 36 seeds, intg_span 23)
+# $ command grep -h 'verdict=FAIL' $S/l33/l40_sweepA.log $S/l33/l40_natsweep.log
+#   seed 2062654708   verdict=FAIL     GEN_UT_INTG_SPAN retired 30 consumed 31 mismatches 0 tohost 0x00000001 AssertionError: GEN_UT_INTG_SPAN: comparator consumed 31 records, 30 retired (must be equal)
+#   seed 3            verdict=FAIL     GEN_UT_INTG_SPAN retired 30 consumed 31 mismatches 0 tohost 0x00000001 AssertionError: GEN_UT_INTG_SPAN: comparator consumed 31 records, 30 retired (must be equal)
+#   seed 13           verdict=FAIL     GEN_UT_INTG_SPAN retired 30 consumed 31 mismatches 0 tohost 0x00000001 AssertionError: GEN_UT_INTG_SPAN: comparator consumed 31 records, 30 retired (must be equal)
+#   seed 101          verdict=FAIL     GEN_UT_INTG_SPAN retired 30 consumed 31 mismatches 0 tohost 0x00000001 AssertionError: GEN_UT_INTG_SPAN: comparator consumed 31 records, 30 retired (must be equal)
+# FOUR OF 23 intg_span SEEDS FAIL ON THE COMMITTED TEST, every one with the landing-38 signature, the comparator
+# exactly one ahead: consumed 31, retired 30. That is a 4-in-23 rate on a check-tier entry, measured, not inferred.
+# THE LOCKSTEP SWEEP FOUND NOTHING: 36 seeds, no failure. Its shape is the same and its fix here is PREVENTIVE,
+# with the rate unobserved at 36 seeds rather than shown to be zero. The l38 seed 2062654708 remains the first
+# recorded instance of the class, on intg_store, and this sweep is the second, on a different test.
+#
+# ================ THE GREEN, the same seeds on the fixed tests ================
+# The patch is applied by one tool to the root and to the tree, so the proven bytes and the landed bytes are the
+# same file: scratchpad l33/patch_l40.py <root>.
+# $ ( cd $S/l33/l40_root && md5sum <the three fixed tests> ) ; then md5sum the same three in the clone
+#   root A  6a2ec81d4516511eb82b112c3b0ae028  dv/auto_dv/gen_tb/gen_tests/gen_ut_intg_span.py
+#   root A  77054230b55541e0cf144195c4d6aeda  dv/auto_dv/gen_tb/gen_tests/gen_ut_lockstep.py
+#   root A  46b80c7aa20e15621d16bcedaabb0787  dv/auto_dv/gen_tb/gen_tests/gen_ut_intg_store.py
+#   clone   6a2ec81d4516511eb82b112c3b0ae028  dv/auto_dv/gen_tb/gen_tests/gen_ut_intg_span.py
+#   clone   77054230b55541e0cf144195c4d6aeda  dv/auto_dv/gen_tb/gen_tests/gen_ut_lockstep.py
+#   clone   46b80c7aa20e15621d16bcedaabb0787  dv/auto_dv/gen_tb/gen_tests/gen_ut_intg_store.py
+# $ cat $S/l33/l40_green.log   [one build: only Python differs between the red and the green]
+#   == GREEN: the fixed intg_span over the SAME 23 seeds (4 of them failed on the committed test)
+#   seed 1            verdict=PASS     GEN_UT_INTG_SPAN retired 30 consumed 30 mismatches 0 tohost 0x00000001 
+#   seed 3            verdict=PASS     GEN_UT_INTG_SPAN retired 31 consumed 31 mismatches 0 tohost 0x00000001 
+#   seed 1397140876   verdict=PASS     GEN_UT_INTG_SPAN retired 31 consumed 31 mismatches 0 tohost 0x00000001 
+#   seed 2062654708   verdict=PASS     GEN_UT_INTG_SPAN retired 31 consumed 31 mismatches 0 tohost 0x00000001 
+#   seed 2            verdict=PASS     GEN_UT_INTG_SPAN retired 31 consumed 31 mismatches 0 tohost 0x00000001 
+#   seed 391581543    verdict=PASS     GEN_UT_INTG_SPAN retired 31 consumed 31 mismatches 0 tohost 0x00000001 
+#   seed 7            verdict=PASS     GEN_UT_INTG_SPAN retired 31 consumed 31 mismatches 0 tohost 0x00000001 
+#   seed 17           verdict=PASS     GEN_UT_INTG_SPAN retired 31 consumed 31 mismatches 0 tohost 0x00000001 
+#   seed 11           verdict=PASS     GEN_UT_INTG_SPAN retired 31 consumed 31 mismatches 0 tohost 0x00000001 
+#   seed 13           verdict=PASS     GEN_UT_INTG_SPAN retired 31 consumed 31 mismatches 0 tohost 0x00000001 
+#   seed 99           verdict=PASS     GEN_UT_INTG_SPAN retired 31 consumed 31 mismatches 0 tohost 0x00000001 
+#   seed 42           verdict=PASS     GEN_UT_INTG_SPAN retired 31 consumed 31 mismatches 0 tohost 0x00000001 
+#   seed 12345        verdict=PASS     GEN_UT_INTG_SPAN retired 31 consumed 31 mismatches 0 tohost 0x00000001 
+#   seed 404          verdict=PASS     GEN_UT_INTG_SPAN retired 31 consumed 31 mismatches 0 tohost 0x00000001 
+#   seed 303          verdict=PASS     GEN_UT_INTG_SPAN retired 31 consumed 31 mismatches 0 tohost 0x00000001 
+#   seed 505          verdict=PASS     GEN_UT_INTG_SPAN retired 31 consumed 31 mismatches 0 tohost 0x00000001 
+#   seed 202          verdict=PASS     GEN_UT_INTG_SPAN retired 31 consumed 31 mismatches 0 tohost 0x00000001 
+#   seed 101          verdict=PASS     GEN_UT_INTG_SPAN retired 31 consumed 31 mismatches 0 tohost 0x00000001 
+#   seed 606          verdict=PASS     GEN_UT_INTG_SPAN retired 31 consumed 31 mismatches 0 tohost 0x00000001 
+#   seed 808          verdict=PASS     GEN_UT_INTG_SPAN retired 31 consumed 31 mismatches 0 tohost 0x00000001 
+#   seed 1111         verdict=PASS     GEN_UT_INTG_SPAN retired 30 consumed 30 mismatches 0 tohost 0x00000001 
+#   seed 909          verdict=PASS     GEN_UT_INTG_SPAN retired 31 consumed 31 mismatches 0 tohost 0x00000001 
+#   seed 707          verdict=PASS     GEN_UT_INTG_SPAN retired 31 consumed 31 mismatches 0 tohost 0x00000001 
+#   SWEEP DONE intg_span prefix=spB_ seeds=23 2026-09-04T20:54:59Z
+#   == GREEN: the fixed lockstep, eight control seeds
+#   seed 1            verdict=PASS     GEN_UT_LOCKSTEP retired 169 consumed 169 mismatches 0 tohost 0x00000001 
+#   seed 13           verdict=PASS     GEN_UT_LOCKSTEP retired 169 consumed 169 mismatches 0 tohost 0x00000001 
+#   seed 391581543    verdict=PASS     GEN_UT_LOCKSTEP retired 169 consumed 169 mismatches 0 tohost 0x00000001 
+#   seed 7            verdict=PASS     GEN_UT_LOCKSTEP retired 169 consumed 169 mismatches 0 tohost 0x00000001 
+#   seed 2            verdict=PASS     GEN_UT_LOCKSTEP retired 169 consumed 169 mismatches 0 tohost 0x00000001 
+#   seed 3            verdict=PASS     GEN_UT_LOCKSTEP retired 169 consumed 169 mismatches 0 tohost 0x00000001 
+#   seed 101          verdict=PASS     GEN_UT_LOCKSTEP retired 169 consumed 169 mismatches 0 tohost 0x00000001 
+#   seed 12345        verdict=PASS     GEN_UT_LOCKSTEP retired 169 consumed 169 mismatches 0 tohost 0x00000001 
+#   SWEEP DONE lockstep prefix=lkB_ seeds=8 2026-09-04T20:55:10Z
+#   == GREEN: the fixed intg_store at the landing-38 seed and one control
+#   seed 1            verdict=PASS     GEN_UT_INTG_STORE retired 31 consumed 31 mismatches 0 tohost 0x00000001 
+#   seed 2062654708   verdict=PASS     GEN_UT_INTG_STORE retired 31 consumed 31 mismatches 0 tohost 0x00000001 
+#   SWEEP DONE intg_store prefix=stB_ seeds=2 2026-09-04T20:55:15Z
+# The four failing seeds pass, each now reading 31 and 31: the loop waited one cycle and the interface's counter
+# reached the comparator's. 33 runs, no failure.
+# ONE HONEST OBSERVATION: the fixed lockstep reports 169 retired in all eight control runs where the committed
+# test reported 169 to 171. Removing the settle moves the sample earlier; no assertion in that test depends on the
+# exact count (it asserts retired > 0, the pair equal, no mismatches, and the tohost code).
+#
+# ================ THE MUTATION: the loop must REPORT a real gap, never invent equality ================
+# MUT-RETSKEW1, one line of dv/auto_dv/tb/gen_bridge_if.sv in a second root: the retired counter takes one extra
+# step once, so from then on one retirement exists that the comparator never consumes. A loop that waited for
+# equality would spin to its bound and then have to fail; that is the behaviour under test.
+# $ command grep -n 'MUT-RETSKEW1' $S/l33/l40_mut_root/dv/auto_dv/tb/gen_bridge_if.sv
+#   61:      if (rvfi_valid) evt_retired_count <= evt_retired_count + ((evt_retired_count == 32'd10) ? 32'd2 : 32'd1);   // MUT-RETSKEW1
+# $ command grep -h 'sources sha256' $S/l33/l40_mut_root/outC/config_opts.txt   [root C, its own build]
+#   sources sha256 (dv/auto_dv env, tb, isa, gen_tb): 7ef155c3ddcab7fd
+# $ cat $S/l33/l40_mutrun.log
+#   == MUT-RETSKEW1 build, FIXED intg_span at two seeds that pass on the clean build: expect FAIL
+#   seed 3            verdict=FAIL      
+#   seed 13           verdict=FAIL      
+#   SWEEP DONE intg_span prefix=mspA_ seeds=2 2026-09-04T20:55:54Z
+#   == MUT-RETSKEW1 build, FIXED lockstep at two seeds: expect FAIL
+#   seed 1            verdict=FAIL     GEN_UT_LOCKSTEP retired 176 consumed 175 mismatches 0 tohost 0x00000001 AssertionError: GEN_UT_LOCKSTEP: comparator consumed 175 records, 176 retired (must be equal)
+#   seed 391581543    verdict=FAIL     GEN_UT_LOCKSTEP retired 177 consumed 176 mismatches 0 tohost 0x00000001 AssertionError: GEN_UT_LOCKSTEP: comparator consumed 176 records, 177 retired (must be equal)
+#   SWEEP DONE lockstep prefix=mlkA_ seeds=2 2026-09-04T20:56:06Z
+#   == MUT-RETSKEW1 build, FIXED intg_store: expect FAIL
+#   seed 2062654708   verdict=FAIL      
+#   SWEEP DONE intg_store prefix=mstA_ seeds=1 2026-09-04T20:56:30Z
+# $ command grep -a 'AssertionError' $S/l33/l40_mut_root/outC/mspA_3/stdout.log | tail -1   [the intg_span mutant run]
+#   AssertionError: GEN_EXPORT: marker records 30 != retired 31 (the sink and the bridge disagree)
+# READ IT AS IT IS. On the fixed LOCKSTEP the pair assertion itself reports the gap at both seeds, consumed one
+# short of retired (175 against 176, 176 against 177): the bounded loop ran out and the test failed, which is the
+# claim. On the fixed intg_span and intg_store the same mutation is caught EARLIER, by the export sink's own
+# cross-check of marker records against the bridge's retired count, so those two runs never reach the pair
+# assertion and are NOT evidence about the loop. They are reported here rather than omitted.
+# The predicate is BYTE-IDENTICAL in the three files (one tool inserts one block), so the behaviour proven on
+# lockstep is the behaviour of all three call sites. Deliberate repetition, not a shared helper: the ruling scoped
+# this landing to the three tests, and a helper on the bridge object would touch every test that imports it. That
+# helper is the follow-up if a fourth site ever needs the same predicate.
+#
+# ================ THE CONTROL ================
+# The two lockstep seeds that fail on the mutated build pass on the clean build with the same fixed test: seeds
+# 391581543 and 1 in the green block above (lkB_). So the mutation, not the fix, is what those failures show.
+#
+# ================ THE RED FIXTURE ON THE CHANGED MODULE STILL FIRES ================
+# Forty testlist entries name dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep, one of them the red fixture
+# gen_ut_lockstep_forced_red, whose designed failure is the scoreboard's ISA error and whose red_expect is
+# 'UVM_ERROR .*\[isa_[a-z_]+\]'. Sampling earlier must not weaken that, so the fixture was run on the fixed test.
+# $ SEED=1 gen_tb_local.sh run ... gen_ut_lockstep +gen_isa_string=rv32imc_zicsr_zifencei   [run name fred1]
+#   verdict: FAIL
+#   reason: uvm_error at sim.log:32
+#   GEN_UT_LOCKSTEP retired 169 consumed 169 mismatches 676 tohost 0x00000001
+# $ command grep -a -c 'UVM_ERROR .*\[isa_' $S/l33/l40_root/outA/fred1/sim.log
+#   676
+# $ command grep -a -m1 -o 'UVM_ERROR .*\[isa_[a-z_]*\]' $S/l33/l40_root/outA/fred1/sim.log
+#   UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(260) @ 142500: uvm_test_top.env.sb [isa_trap]
+# $ command grep -a 'GEN_UT_LOCKSTEP retired' <the flow's own run of that entry>/sim_stdout.log
+#   GEN_UT_LOCKSTEP retired 171 consumed 171 mismatches 685 tohost 0x00000001
+# The fixture fails as designed, with 676 error lines of the class its red_expect names, and its pair reads equal
+# (169 and 169), so the failure is the ISA mismatch and not the sample. The flow's own run of that entry, quoted
+# just above, reports a MISMATCH COUNT of 685 at 171 retired against my 676 at 169: the earlier sample sees two
+# fewer records and nine fewer mismatches, and the entry grades on the line class rather than on any count, which
+# is why the difference is harmless. It is stated because a reader comparing the two figures would have to guess.
+#
+# ================ THE SOURCE-SET DIGESTS, both sides, and the CR-37-L-2 correction ================
+# CR-37-L-2 asked for the two tree figures behind landing 38, because that log names one digest and a reader
+# recomputing the recipe over the landing's own commit gets another. Both are measured here, and the landing-38
+# log stays closed at its committed bytes. The recipe is the local runner's own (gen_tb_local.sh compile): a
+# sha256 per file over dv/auto_dv env, tb, isa and gen_tb (sv svh f cc h py yaml sh, no __pycache__), then a
+# sha256 over that list, first 16 characters. Tool: $S/l33/l40_digest.sh <root>.
+# $ for sha in df1d8c5 9baf3f9 8cc5026 ; do git archive $sha | tar -x -C $S/l33/dig/$sha ; bash $S/l33/l40_digest.sh $S/l33/dig/$sha ; done
+#   50981c82f49d7574  files=77  root=archive of df1d8c5
+#   034f4e4f2905cb72  files=77  root=archive of 9baf3f9
+#   18c7a44b8edfefc4  files=77  root=archive of 8cc5026
+# $ bash $S/l33/l40_digest.sh /localdev/fzhang/ws/ibex-challenge
+#   a2b799c2a12c9c06  files=77  root=the clone, landing 40 applied
+# $ bash $S/l33/l40_digest.sh $S/l33/l40_root
+#   a2b799c2a12c9c06  files=77  root=root A after the patch, the set the green ran
+# READ THESE AS FOUR DIFFERENT THINGS. 50981c82f49d7574 is the source set at df1d8c5, the tree landing 38 was
+# developed on and the one figure that log names. 034f4e4f2905cb72 is the source set at landing 38's own commit
+# 9baf3f9, which is what a reader recomputing over that commit gets; neither figure is wrong and the difference is
+# the class CR-37-L-2 named. For THIS landing: 18c7a44b8edfefc4 is the source set of root A's base 8cc5026 and so
+# the COMPILE-TIME figure of the one simv that served the red and the green; a2b799c2a12c9c06 is the source set
+# with the fix applied, and it reads the same in the clone and in root A, so the green ran the bytes this landing
+# lands. The simv is shared because only Python changed, the same argument landing 38 made, now with both figures
+# named rather than one.
+# The pre-fix state of root A is no longer on disk, since the patch tool rewrote it in place, and it does not need
+# to be: the red's test bytes are the clone's committed bytes, md5s named above, and the archive of 8cc5026 under
+# $S/l33/dig reproduces that source set exactly.
+#
+# ================ WHAT THIS CLOSES ================
+# CR-37-L-1, which is CM214-Low-4 under the Critic's own mapping (gen_critic_tb_l37.md section 2): the
+# single-instant break is gone from gen_ut_intg_store.py, the two-consecutive-samples predicate is in all three
+# tests, and the red above is a natural failure of the committed code rather than an argument. The Critic offered
+# two fixes and this is the second of them, equality on two consecutive samples.
+# CR-37-L-2: answered by the digest section above, both figures measured here.
+# STILL OPEN, post-round: CR-36 L-1, the report-phase boundary off by one, and CR-36 L-2, which is CM214-Low-3,
+# the discriminating red for the tag-half rule. Nothing here touches the icache-ECC allowance.
+# THE FCOV LEG of the trust triad does not apply: no checker and no coverage is added, only the instant at which
+# an existing test reads two counters. The red and the mutation legs are above.
+# END. Every figure above is produced by the command printed above its block.

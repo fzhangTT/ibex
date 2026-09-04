@@ -20,6 +20,7 @@ PASS_MARKER = "GEN_UT_INTG_SPAN_PASS"
 ARM_INTG = CONSTANTS["GEN_MEM_ERR_ARM_KIND_INTG"]   # MEM_ERR_ARM arg3[7:0]
 SPAN_WORDS = 2          # the misaligned lw touches two bus words: both corrupted
 SETTLE_CYCLES = 4
+QUIESCE_CYCLES = 20   # bound on the wait for the retired and consumed counters to hold equal across a cycle
 
 
 def plus(name, default=None):
@@ -58,6 +59,18 @@ async def gen_ut_intg_span(dut):
     assert sup, "GEN_UT_INTG_SPAN: no record with rf_wr_suppress (the spanning load's corrupted halves should suppress its write)"
     assert sup[0].mem_addr == buf + 2, f"GEN_UT_INTG_SPAN: the first suppressed record's address {sup[0].mem_addr:08x} is not the spanning load's {buf + 2:08x}"
     # any further suppressed record is judged by the scoreboard's gate (a lying flag is its isa_rd miss), not here
+    # Two writers, one pair: the comparator writes evt_isa_records mid-record, the interface increments
+    # evt_retired_count on the edge, so equality at a single instant can be a skipped record cancelling one in
+    # flight; require it across a whole cycle. The bound waits, it never decides: an unconsumed record never converges.
+    settled = 0
+    for _ in range(QUIESCE_CYCLES):
+        if int(h.b.evt_retired_count.value) == int(h.b.evt_isa_records.value):
+            settled += 1
+            if settled == 2:
+                break
+        else:
+            settled = 0
+        await b.wait_cycles_until(int(h.b.cycle_count.value) + 1)
     retired = int(h.b.evt_retired_count.value)
     consumed = int(h.b.evt_isa_records.value)
     mism = int(h.b.evt_isa_mismatch.value)

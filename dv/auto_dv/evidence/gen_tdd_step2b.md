@@ -1184,3 +1184,29 @@ two CM214 rows written for that supplement after its commit are retained instead
 gen_fu_l39_tag_eor_supplement2.log, Low-1 scoping the landing-39 log's closing every-figure claim and Low-3 stating
 the discriminating red as OWED with the stimulus it needs, with the first supplement restored to its committed bytes
 and a manifest row for the new log.
+
+## Landing 40: the end-of-run pair sample, all three tests
+
+THE CLASS, not one test. Three tests end by asserting that the comparator consumed every retired record, and the
+pair they read is written by two mechanisms: gen_bridge_if.sv:61 increments evt_retired_count on the clock edge
+with a non-blocking assignment, gen_rvfi_pkg.sv:513 writes evt_isa_records with a blocking assignment while the
+comparator processes the record. A sample between the two reads a pair off by one. Landing 38 fixed the instance it
+found, gen_ut_intg_store, with a loop that broke on a single instant of equality; CR-37-L-1 (= CM214-Low-4) showed
+that a skipped record coinciding with one in flight reads as equality, and a read-only sweep then found the same
+shape in gen_ut_lockstep.py:54 and gen_ut_intg_span.py:65, both sampling four cycles after the tohost condition.
+
+THE RED IS NATURAL, not constructed: the COMMITTED gen_ut_intg_span fails at 4 of 23 swept seeds (2062654708, 3,
+13, 101), every one reading consumed 31 against retired 30, the landing-38 signature on a different test. The
+committed gen_ut_lockstep passed all 36 of its swept seeds, so its fix is preventive and the record says so rather
+than claiming a rate of zero.
+
+THE PREDICATE, the second of the two the Critic offered: equality on two consecutive samples a cycle apart,
+byte-identical in the three files, with the bound deciding how long to wait and never whether to report. The fixed
+tests pass 33 runs including the four red seeds, now equal, on the same simv as the red since only Python changed.
+MUT-RETSKEW1, one line of gen_bridge_if.sv leaving a retirement the comparator never consumes, makes the fixed
+lockstep fail at both seeds with the comparator one short: the loop reports a real gap instead of waiting for an
+equality that cannot come. On intg_span and intg_store the same mutation is caught earlier by the export sink's own
+cross-check, so those two runs are not evidence about the loop, and the log says that instead of counting them.
+
+Retained: gen_tdd_logs/lockstep/gen_fu_l40_pair_sample_quiesce.log, which also answers CR-37-L-2 by measuring the
+four source-set digests behind landings 38 and 40 with the local runner's own recipe. One manifest row.

@@ -14,7 +14,7 @@ from dv.auto_dv.gen_tb.gen_image import GenImage
 from dv.auto_dv.gen_tb.gen_knobs import CONSTANTS, PLUSARGS
 
 PASS_MARKER = "GEN_UT_LOCKSTEP_PASS"
-SETTLE_CYCLES = 4   # the scoreboard consumes a record in the cycle it retires; a few cycles keep the sample race-free
+QUIESCE_CYCLES = 20   # bound on the wait for the retired and consumed counters to hold equal across a cycle
 
 
 def plus(name, default=None):
@@ -44,7 +44,18 @@ async def gen_ut_lockstep(dut):
             await with_timeout(Edge(h.b.evt_eot_seen), 20000 * CONSTANTS["GEN_CLK_PERIOD_NS"], "ns")
         except Exception as exc:
             raise AssertionError(f"GEN_UT_LOCKSTEP: no tohost store ({type(exc).__name__})") from None
-    await b.wait_cycles_until(int(h.b.cycle_count.value) + SETTLE_CYCLES)
+    # Two writers, one pair: the comparator writes evt_isa_records mid-record, the interface increments
+    # evt_retired_count on the edge, so equality at a single instant can be a skipped record cancelling one in
+    # flight; require it across a whole cycle. The bound waits, it never decides: an unconsumed record never converges.
+    settled = 0
+    for _ in range(QUIESCE_CYCLES):
+        if int(h.b.evt_retired_count.value) == int(h.b.evt_isa_records.value):
+            settled += 1
+            if settled == 2:
+                break
+        else:
+            settled = 0
+        await b.wait_cycles_until(int(h.b.cycle_count.value) + 1)
     retired = int(h.b.evt_retired_count.value)
     consumed = int(h.b.evt_isa_records.value)
     mism = int(h.b.evt_isa_mismatch.value)
