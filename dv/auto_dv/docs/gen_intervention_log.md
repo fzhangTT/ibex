@@ -1908,3 +1908,49 @@ Owner decision requested: (a) fix ci/check_fcov_expectations.py to recognise the
 the cross (a small scoped change, tb-infra's recommendation), or (b) authorise a DV-side gen_ wrapper in dv/auto_dv/
 that parses crosses and is called by the flow in place of the ci checker, or (c) keep manifests coverpoint-only and
 retire cross bins from every manifest. Until then no manifest may claim a cross bin.
+
+## LOG-084a - 2026-09-04 - Supplement: the checker defect measured by three roles; the exposure figures for the owner decision
+
+Measurements retained or recorded by 11:44Z, each by a different role with the checker's own code, none of them an edit
+of ci/check_fcov_expectations.py.
+
+Runtime (retained: dv/auto_dv/evidence/gen_tdd_logs/flow/gen_log084_cross_parse.log, committed 17bb791): on a report
+generated with the checker's own invocation against tb-infra's part-1 database, the parser emitted 3959 keys; the report
+carries 96 cross headings; zero keys carry a cross name (the false fail is absolute); 3130 cross bins are keyed under the
+group's last-seen coverpoint over 119 group-and-cross pairs, 56 of them with non-zero counts, one key reporting about
+twelve hundred hits that belong to a cross (the false pass is live); the single same-name collision in that database has
+zero on both sides, so the summing mechanism is proven and an inflation for that key is not demonstrated.
+
+DV Lead (over the 18 committed manifests, plan order from the codegen's own loader): 4169 declarations, of which 3001
+(72 percent) are cross-bin declarations that can never be keyed, 1168 coverpoint-bin declarations. False-pass exposure
+of committed declarations: zero. The mechanism keys a cross bin under the group's LAST coverpoint, so a false pass needs
+a colliding bin declared on that last coverpoint; eight declared bins share a name with a cross bin in their covergroup
+but none sits on its group's last coverpoint (CG-CSR-002's last is cp_mcen_w, CG-PMP-001's is cp_word_lockmix). Two
+covergroups have a last coverpoint with colliding names (CG-CSR-002 cp_mcen_w.all1; CG-PRV-007 cp_exc_kind, six names)
+and neither is declared in any committed manifest; both are unbuilt, so the report ordering that the mechanism depends on
+is inferred from one observation (tb-infra's mis-attributed keys landed under CG-IC-006's last coverpoint), not measured
+for them: candidate, not proven event. Corrects the earlier eight-exposed figure.
+
+Test Writer (the checker's own parse_manifest, parse_groups_report and classify): its five manifests declare 669 cross
+entries of 1001 (csr_reset 13 of 68, isa_alu 459 of 602, pmc_ctrl 116 of 204, pmp_lock 26 of 50, pmp_mseccfg 55 of 77);
+the real checker on the real isa_alu manifest against a retained report exits 2 with all 459 cross entries
+MISSING-FROM-REPORT; across 93 retained reports 7484 cross headings, zero cross names keyed, 2786 cross bin rows keyed
+under the preceding coverpoint. No retained log of the Test Writer's carries an FCOV-EXPECTATION line: its acceptance
+form read the test's own declaration line from stdout, intent rather than a verdict, an evidence gap it reports itself.
+One candidate exposure in gen_test_pmp_lock (cp_wr_mode.off collides with cr_suppress_mode's bin names), unproven as an
+event. Also: the checker's self-test builds its fixture with keys joined by "::" while the parser emits dot-joined keys,
+so the fixture never exercises the real key format and the defect class is invisible to that self-test by construction.
+
+The committed testlist arms the check for gen_test_csr_reset and gen_test_isa_alu (measured true): a measured regression
+reaching them fails isa_alu on its 459 cross entries and csr_reset wider (none of its six covergroups is in
+gen_fcov_groups.svh, which defines 25 at 36bc3a4).
+
+Two corrections to LOG-084's text: the false-pass hazard is a cross bin sharing a coverpoint bin's NAME on the group's
+last coverpoint, so three CG-IC-006 coverpoints sharing the bin name "yes" is not by itself the hazard (the parser keys
+by coverpoint); and there is one coverage database per build, at build level, whose testbench XML files are
+Zstandard-compressed (a plain grep reads zero tokens), which is what produced two readers' false absence claims.
+
+Standing: no manifest claims a cross bin (tb-infra's part-1 manifest declares 15 coverpoint bins, 14 cross bins owed);
+the expectation mechanism has never verified a bin against real functional coverage in the retained record. The owner
+decision of LOG-084 stands open; the false-fail path alone justifies the fix, and option (c) would retire 72 percent of
+what the manifests claim.
