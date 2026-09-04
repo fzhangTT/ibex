@@ -27,6 +27,11 @@ BAD while the positive cases and the const check pass, a discriminating red; the
 gen_log077_red2.log is the TDD red of the CM152-M-1 fix: the required checker row was judged without the TB's master enable
 (gen_chk_en: chk_all ? val : (set && val)), so the three chk_all cases print BAD before the fix while the isolation-mode case
 (chk_all off, the row set on) and the operator-restores case pass; then checker_row_on mirrors the precedence and all pass.
+gen_cm153_fcov_home_red.log is the TDD red of the CM153-L-1 loader rule on fcov_expectation_file, run on a detached archive of
+daf27d0 with the handed CM152 flow files and the three l12 fields null: the cases in place and no rule, the three refuse cases
+(a manifest outside dv/auto_dv/fcov_expectations, a missing file, a measured entry with another test's stem) print BAD while the
+two positive cases (an unmeasured group manifest in the home, null) pass; the build-input gate case 13 BAD is the archive's
+missing .git, not part of this red. Then the rule was written and all pass.
 
 | evidence path | source | bytes | md5 |
 |---|---|---|---|
@@ -37,3 +42,4 @@ gen_log077_red2.log is the TDD red of the CM152-M-1 fix: the required checker ro
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_b8_probe_refusal_red2.log | dv/auto_dv/work/runtime/b8_probe_refusal_red2.log | 2231 | d9c707ba179d81930b8edb06f3440db0 |
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_log077_red.log | dv/auto_dv/work/runtime/log077_red.log | 2027 | f6a061ae1b4f3a7f9ff24004975ecafb |
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_log077_red2.log | dv/auto_dv/work/runtime/log077_red2.log | 1239 | cc6584b37c1fe68356a5aeefeeb98ec9 |
+| dv/auto_dv/evidence/gen_tdd_logs/flow/gen_cm153_fcov_home_red.log | (runtime scratchpad) cm153/red_l1.log | 1142 | d9b3f5d436f98fdeea13fb7342227d6c |

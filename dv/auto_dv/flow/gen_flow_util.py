@@ -428,6 +428,15 @@ def self_test() -> int:
                 ("a measured entry turning on the B8 probe knob (LOG-067)",
                  lambda d: d["tests"][0].update(measured=True, tier="smoke", plusargs=d["tests"][0]["plusargs"] + [f"+{C.PLUSARG_CHK_SVA_B8}=1"]),
                  "LOG-067"),
+                ("an fcov_expectation_file outside dv/auto_dv/fcov_expectations (CM153-L-1: the evidence directory is outside the mirrored set)",
+                 lambda d: d["tests"][0].update(measured=False, tier=C.CHECK_TIER, fcov_expectation_file="dv/auto_dv/evidence/gen_fcov_proof_slice5e.fcov.yaml"),
+                 "fcov_expectation_file"),
+                ("an fcov_expectation_file naming a missing file (CM153-L-1)",
+                 lambda d: d["tests"][0].update(measured=False, tier=C.CHECK_TIER, fcov_expectation_file="dv/auto_dv/fcov_expectations/gen_no_such_test.fcov.yaml"),
+                 "fcov_expectation_file"),
+                ("a measured entry whose fcov_expectation_file stem is another test's (CM153-L-1, validate_manifest needs test == stem == entry)",
+                 lambda d: d["tests"][0].update(measured=True, tier="smoke", fcov_expectation_file="dv/auto_dv/fcov_expectations/gen_test_pmc_ctrl.fcov.yaml"),
+                 "fcov_expectation_file"),
                 ("a measured entry with icache ECC injection on and the alert_minor row off (LOG-077)",
                  lambda d: d["tests"][0].update(measured=True, tier="smoke", plusargs=d["tests"][0]["plusargs"] + [f"+{C.PLUSARG_KNOB_ICACHE_ECC_ERR_RATE}=rare", f"+{C.PLUSARG_CHK_ALERT_MINOR}=0"]),
                  "LOG-077")):
@@ -456,6 +465,22 @@ def self_test() -> int:
             cond = False
         ok &= cond
         print("SELF-TEST", "ok " if cond else "BAD", "load_testlist accepts an unmeasured entry that turns the B8 probe knob on (B8 evidence runs stay possible)")
+        # CM153-L-1, the positive side: an unmeasured entry may name a group manifest in the manifest home (the committed
+        # gen_test_pmc_ctrl_pin_off form), and null is always fine.
+        for label, upd in (("an unmeasured entry naming a group manifest in dv/auto_dv/fcov_expectations loads",
+                            dict(measured=False, tier=C.CHECK_TIER, fcov_expectation_file="dv/auto_dv/fcov_expectations/gen_test_pmc_ctrl.fcov.yaml")),
+                           ("a null fcov_expectation_file loads", dict(fcov_expectation_file=None))):
+            t5 = load_yaml(C.TESTLIST_YAML)
+            t5["tests"][0].update(upd)
+            f5 = Path(td) / "testlist_fcov_ok.yaml"
+            f5.write_text(_y.safe_dump(t5, sort_keys=False), encoding="utf-8")
+            try:
+                load_testlist(f5)
+                cond = True
+            except SystemExit:
+                cond = False
+            ok &= cond
+            print("SELF-TEST", "ok " if cond else "BAD", f"load_testlist: {label}")
         # LOG-077, the positive side: the row at its table default, or the run unmeasured, loads.
         for label, upd in (("a measured entry with the ECC rate rare and the alert_minor row at its default loads",
                             dict(measured=True, tier="smoke", plusargs=t3["tests"][0]["plusargs"][:1] + [f"+{C.PLUSARG_KNOB_ICACHE_ECC_ERR_RATE}=rare"])),
@@ -1318,6 +1343,16 @@ def load_testlist(path: Path = C.TESTLIST_YAML) -> dict[str, Any]:
             why = measured_knob_condition_refusal(t.get("plusargs") or [])
             if why:
                 die(f"{path}: test {t['name']} is measured and carries {why}")
+        fcov = t.get("fcov_expectation_file")
+        if fcov is not None:
+            home = C.FCOV_EXPECT_DIR.relative_to(C.SOURCE_ROOT).as_posix()
+            fp = Path(str(fcov))
+            if fp.parent.as_posix() != home:
+                die(f"{path}: test {t['name']} fcov_expectation_file {fcov} is outside {home}/ (the manifest home, the only mirrored place a head-mode run reads; a check-tier entry with a proof manifest uses null)")
+            if not (C.SOURCE_ROOT / fp).is_file():
+                die(f"{path}: test {t['name']} fcov_expectation_file {fcov} does not exist under the source root")
+            if t.get("measured", True) and fp.name != f"{t['name']}{C.FCOV_MANIFEST_SUFFIX}":
+                die(f"{path}: test {t['name']} fcov_expectation_file {fcov} must be {home}/{t['name']}{C.FCOV_MANIFEST_SUFFIX} for a measured entry (validate_manifest needs the manifest's test, the file stem and the entry name equal)")
         if t.get("red_fixture"):
             if t.get("expected_fail"):
                 die(f"{path}: test {t['name']}: red_fixture and expected_fail are exclusive (a fixture is not an RTL-bug candidate)")

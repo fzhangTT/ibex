@@ -510,7 +510,10 @@ optional `pass_marker`, `feature_groups`, `cocotb_module`, `expected_fail`, `com
 owners, a tier-check test that is not `measured: false`, a measured test whose plusargs turn on the B8 probe knob
 `+gen_chk_sva_b8` (LOG-067, knob name per LOG-076: the knob is for unmeasured B8 evidence runs only), a measured test that violates a
 `MEASURED_KNOB_CONDITIONS` row (LOG-077: icache ECC injection at rare or frequent with `+gen_chk_alert_minor` off, the table default
-counting as on), and any plusarg whose name is neither a
+counting as on), an `fcov_expectation_file` that is not null and not an existing file directly under `dv/auto_dv/fcov_expectations/`
+(the manifest home, the only mirrored place a head-mode run reads; a check-tier entry with a proof manifest under evidence uses null)
+or, for a measured entry, not named `<entry>.fcov.yaml` (validate_manifest needs the manifest's test, the file stem and the entry name
+equal; an unmeasured entry may name a group manifest), and any plusarg whose name is neither a
 `PLUSARG_*` constant of `dv/auto_dv/tb/gen_tb_pkg.sv` nor a simulator/UVM plusarg (Critic P-06).
 `gen_build.py`, `gen_run.py` and `gen_regress.py` each call `gen_flow_util.require_sv_constants()` first thing in `main()` (the SV/Python constants check); `gen_serve_requests.py` and `gen_dashboard.py` do not compile or run anything and rely on those three. The Test Writer adds test entries; TB Infra adds build entries; both through the runtime
 owner (one owner per file).

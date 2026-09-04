@@ -1,0 +1,9 @@
+# TDD red for CM153-L-1: the fcov_expectation_file cases in place, no loader rule; the refuse cases print BAD, the positives pass (archive of daf27d0 with the handed CM152 flow files and the three l12 fields null)
+Fri Sep  4 03:25:09 UTC 2026
+SELF-TEST BAD load_testlist refuses an fcov_expectation_file outside dv/auto_dv/fcov_expectations (CM153-L-1: the evidence directory is outside the mirrored set) (message names 'fcov_expecta
+SELF-TEST BAD load_testlist refuses an fcov_expectation_file naming a missing file (CM153-L-1) (message names 'fcov_expectation_file')
+SELF-TEST BAD load_testlist refuses a measured entry whose fcov_expectation_file stem is another test's (CM153-L-1, validate_manifest needs test == stem == entry) (message names 'fcov_expect
+SELF-TEST ok  load_testlist: an unmeasured entry naming a group manifest in dv/auto_dv/fcov_expectations loads
+SELF-TEST ok  load_testlist: a null fcov_expectation_file loads
+SELF-TEST BAD build-input gate case 13: every listed non-input is tracked and each glob class matches a tracked file (['git ls-files failed: fatal: not a git repository (or any parent up to 
+SELF-TEST: FAIL

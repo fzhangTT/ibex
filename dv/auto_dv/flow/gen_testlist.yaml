@@ -2023,7 +2023,7 @@ tests:
     plusargs: [+gen_fetch_en_at_reset=0, +gen_ut_boot_retire=200]
     program: {directed: [dv/auto_dv/stim/gen_directed/gen_zcmp_hazard_directed.S], seed: 1}
     seeds: 1
-    fcov_expectation_file: dv/auto_dv/evidence/gen_fcov_proof_slice5e.fcov.yaml
+    fcov_expectation_file: null
     timeout_s: 600
     owner: tb-infra
     pass_marker: GEN_UT_LOCKSTEP_PASS
@@ -2041,7 +2041,7 @@ tests:
     plusargs: [+gen_fetch_en_at_reset=0, +gen_ut_boot_retire=200, +gen_knob_dmem_rvalid_delay=long, +gen_knob_dmem_gnt_delay=long]
     program: {directed: [dv/auto_dv/stim/gen_directed/gen_zcmp_hazard_directed.S], seed: 1}
     seeds: 1
-    fcov_expectation_file: dv/auto_dv/evidence/gen_fcov_proof_slice5e2.fcov.yaml
+    fcov_expectation_file: null
     timeout_s: 600
     owner: tb-infra
     pass_marker: GEN_UT_LOCKSTEP_PASS
@@ -2059,7 +2059,7 @@ tests:
     plusargs: [+gen_fetch_en_at_reset=0, +gen_ut_boot_retire=200, +gen_knob_dmem_rvalid_delay=min1, +gen_knob_dmem_gnt_delay=same_cycle, +gen_knob_imem_rvalid_delay=min1, +gen_knob_imem_gnt_delay=same_cycle]
     program: {directed: [dv/auto_dv/stim/gen_directed/gen_zcmp_hazard_directed.S], seed: 1}
     seeds: 1
-    fcov_expectation_file: dv/auto_dv/evidence/gen_fcov_proof_slice5e3.fcov.yaml
+    fcov_expectation_file: null
     timeout_s: 600
     owner: tb-infra
     pass_marker: GEN_UT_LOCKSTEP_PASS

@@ -93,6 +93,7 @@ TB_PKG_SV = TB_DIR / "gen_tb_pkg.sv"
 # TB Infra's rendered knob table (one origin of the debug_only property and of every plusarg name).
 KNOBS_MODULE = "dv.auto_dv.gen_tb.gen_knobs"
 FCOV_EXPECT_DIR = SOURCE_ROOT / "dv" / "auto_dv" / "fcov_expectations"
+FCOV_MANIFEST_SUFFIX = ".fcov.yaml"   # <test name> + suffix: the manifest a measured entry names in fcov_expectation_file
 DOCS_DIR = REPO_ROOT / "dv" / "auto_dv" / "docs"
 DASHBOARD_MD = DOCS_DIR / "gen_dashboard.md"
 DASHBOARD_METRICS_MD = DOCS_DIR / "dashboard_metrics.md"
