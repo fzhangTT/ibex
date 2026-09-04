@@ -1094,7 +1094,6 @@ Retained: gen_tdd_logs/mutations/gen_fu_l37_tag_eor_unconsumed.log, with a manif
 same records touch, each with its own row and each leaving its retained log closed: CM211-Low-4 and CR-33-L-3
 are answered by gen_fu_l33_age17_attempt_corrigendum.log, which states the definition the Critic verified; and
 OR-36-1 and CM212 Low-1, Low-2 and Info-3 by gen_fu_l36_dbg_driver_livelock_corrigendum.log, which names the
-three local roots and
 three local runs with their roots' heads and the three changed files hashed on both sides, shows those files
 byte-identical to the blobs at 1deec4c, corrects the retained log's blank severity lines by measurement (the
 failing runs have no report summary at all, since the cocotb assertion aborts before the report phase), scopes
@@ -1133,3 +1132,37 @@ skipped. The occurrence counts of the bound's name in each root are the control 
 claims.
 
 Retained: gen_tdd_logs/lockstep/gen_fu_l38_intg_store_read_race.log, with a manifest row.
+
+## Landing 39: the tag-half allowance re-keyed on observability, and what landing 37 got wrong
+
+WHAT LANDING 37 GOT WRONG. Its log stated "the DUT checks a lookup it consumes" and its allowance excused a
+qualified tag injection when no record retired at or after the injection's cycle. Neither survives the RTL, which I
+read at first hand rather than from the finding: ibex_icache.sv:585 gates the tag ECC term on lookup_valid_ic1
+ALONE, the comment above it says the tag check needs no qualification by hit or tag valid, and the chain through
+:470, :266, :262, :644 and ibex_core.sv:1337 carries no consumption or retirement term. A tag error on any valid
+lookup alerts one cycle later, a squashed speculative lookup included.
+
+THE OLD PREDICATE FAILED IN BOTH DIRECTIONS. It would excuse an injection any number of observed cycles after the
+last retirement, so a real missing alert while a stalled core keeps fetching would be counted rather than failed;
+and it would still fail an injection at the last observed cycle when a record retired in that same cycle, which is
+the false failure the landing set out to remove. It agreed with the truth on the one seed it was tested against only
+because that run's last retirement sat just below the last observed cycle.
+
+THE RE-KEY. At the report phase a qualified tag injection with no pulse is UNOBSERVABLE when its cycle plus
+GEN_ICACHE_ECC_WINDOW exceeds misc.cycle, the interface's own posedge counter and so the last observed cycle;
+otherwise it is judged and fails. Landing 37's in-run deferral is REMOVED rather than kept beside the new test,
+because in-run the condition is false by construction: an injection is judged only once misc.cycle has passed its
+window. The counter is renamed from unconsumed to unobservable, since the old word named a mechanism the RTL does
+not have.
+
+THE TWO-SIDED RED, RE-RUN: the failing seed passes with missing 0 and unobservable 1; a control seed reports
+unobservable 0; MUT-ALERTSUP still fails with 875 in-run misses while unobservable stays at 1, so the allowance
+absorbs none of them; the ablation on the same mutated build is clean.
+
+THE LESSON, recorded because it cost a landing: landing 37's OUTCOME was right and its REASONING was wrong, and a
+two-sided red cannot catch that. Both sides passed because the proxy happened to agree with the truth on its only
+sample. A red proves a rule fires and stays silent where it should; only tracing the gating terms proves it is keyed
+on the right quantity, and I stated a DUT behaviour without tracing them.
+
+Retained: gen_tdd_logs/mutations/gen_fu_l39_tag_eor_observability.log, with a manifest row, and
+gen_fu_l37_tag_eor_corrigendum.log, which also answers CM213 Low-1 and Low-2 and leaves both corrected logs closed.

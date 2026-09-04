@@ -343,7 +343,7 @@ package gen_checkers_pkg;
     int unsigned alert_bus_hits = 0, alert_bus_mismatch = 0, alert_internal_hits = 0, data_tag_hits = 0;
     int unsigned alert_minor_hits = 0, alert_minor_mismatch = 0;
     int unsigned alert_minor_injections = 0, alert_minor_qualified = 0, alert_minor_missing = 0;   // tag-RAM ECC injections judged
-    int unsigned alert_minor_unconsumed = 0;   // qualified tag injections the core never consumed: no retirement at or after the read
+    int unsigned alert_minor_unobservable = 0;   // qualified tag injections whose alert window reached past the last observed cycle
     int unsigned data_injections = 0, data_hit_way = 0, data_other_way = 0, data_other_valid = 0, data_unjudged = 0, data_missing = 0, data_other_pulses = 0;   // data-RAM ECC injections judged; other_valid: a valid way that lost the compare to the other valid way
     int unsigned ab_both = 0, ab_agree = 0, ab_disagree = 0, b_lat_min = 0, b_lat_max = 0, data_ambiguous = 0, data_dup_visible = 0, data_dup_masked = 0;   // duplicate copies of the line in two ways: the injection visible (a bit rose) or masked by the OR   // form (a) against form (b) where both judged; (b)'s retirement latency; (b)'s ambiguous associations
     int unsigned held [$]; int unsigned held_pulses = 0;   // alert_minor pulses waiting for the verdicts of the data injections in their window
@@ -739,16 +739,16 @@ package gen_checkers_pkg;
       foreach (gen_icram_events::q[i]) begin
         if (!gen_icram_events::q[i].judged || gen_icram_events::q[i].closed) continue;
         if (!final_pass && held_in_window(gen_icram_events::q[i].cycle)) continue;
-        // a lookup the core never consumed cannot alert, since the DUT checks only a lookup it consumes. While no
-        // retirement has been seen at or after the read the answer is not yet known, so hold the closure: the same
-        // shape the data half uses when its revealing retirement has not arrived.
-        if (!final_pass && gen_icram_events::q[i].kind == "inject" && gen_icram_events::q[i].qualified
-            && !gen_icram_events::q[i].seen && (rt_cyc.size() == 0 || rt_cyc[$] < gen_icram_events::q[i].cycle)) continue;
         gen_icram_events::q[i].closed = 1;
         if (ic_cov != null && !gen_icram_events::q[i].sampled) begin gen_icram_events::q[i].sampled = 1; sample_injection(i); end
+        // The DUT alerts one cycle after a valid lookup whose tag ECC fails, with no term for the fetch being
+        // consumed or retired (rtl/ibex_icache.sv:585 gates the tag term on lookup_valid_ic1 alone). So the only
+        // reason a qualified injection can lack a pulse without the DUT being at fault is that its window reached
+        // past the last cycle anyone observed. In-run this is false by construction, since an injection is judged
+        // only once misc.cycle has passed its window.
         if (gen_icram_events::q[i].kind == "inject" && gen_icram_events::q[i].qualified && !gen_icram_events::q[i].seen
-            && (rt_cyc.size() == 0 || rt_cyc[$] < gen_icram_events::q[i].cycle)) begin
-          alert_minor_unconsumed++;   // reported, never failed: the run ended with the lookup unconsumed
+            && (gen_icram_events::q[i].cycle + GEN_ICACHE_ECC_WINDOW > misc.cycle)) begin
+          alert_minor_unobservable++;   // reported, never failed: the window outlived the last observed cycle
         end else if (gen_icram_events::q[i].kind == "inject" && gen_icram_events::q[i].qualified && !gen_icram_events::q[i].seen) begin
           alert_minor_missing++;
           if (gen_chk_en(cfg, cfg.chk_alert_minor, cfg.chk_alert_minor_set))
@@ -779,8 +779,8 @@ package gen_checkers_pkg;
       drain_uninit(1);
       if (dfs_pulses > dfs_expected && gen_chk_en(cfg, cfg.chk_double_fault, cfg.chk_double_fault_set))
         `uvm_error("double_fault", $sformatf("%0d double_fault_seen_o pulses for %0d expected double faults", dfs_pulses, dfs_expected))
-      `uvm_info("GEN_MISC", $sformatf("alert_bus hits=%0d mismatches=%0d; alert_minor hits=%0d mismatches=%0d (ecc injections judged=%0d qualified=%0d missing=%0d unconsumed=%0d, pulse latencies %p; data injections judged=%0d hit_way=%0d other_or_invalid_way=%0d (other valid way %0d) unjudged=%0d (ambiguous %0d, pending at the end %0d) missing=%0d other_way_pulses=%0d held_pulses=%0d duplicate_copies visible=%0d masked=%0d; forms a/b both=%0d agree=%0d disagree=%0d, b latency %0d..%0d); alert_internal hits=%0d; data_tag hits=%0d; sync traps=%0d double faults expected=%0d pulses=%0d mismatches=%0d; crash_dump checked=%0d late=%0d early=%0d mismatches=%0d; fetch_en records after off=%0d late=%0d; uninitialised data reads reported=%0d sampled=%0d skipped(injection %0d, alert %0d) dropped=%0d",
-                alert_bus_hits, alert_bus_mismatch, alert_minor_hits, alert_minor_mismatch, alert_minor_injections, alert_minor_qualified, alert_minor_missing, alert_minor_unconsumed, alert_minor_lat, data_injections, data_hit_way, data_other_way, data_other_valid, data_unjudged, data_ambiguous, data_pending, data_missing, data_other_pulses, held_pulses, data_dup_visible, data_dup_masked, ab_both, ab_agree, ab_disagree, b_lat_min, b_lat_max, alert_internal_hits, data_tag_hits, sync_traps, dfs_expected, dfs_pulses, dfs_mismatch, cd_checked, cd_late, cd_early, cd_mismatch, fe_records_after_off, fe_late_records,
+      `uvm_info("GEN_MISC", $sformatf("alert_bus hits=%0d mismatches=%0d; alert_minor hits=%0d mismatches=%0d (ecc injections judged=%0d qualified=%0d missing=%0d unobservable=%0d, pulse latencies %p; data injections judged=%0d hit_way=%0d other_or_invalid_way=%0d (other valid way %0d) unjudged=%0d (ambiguous %0d, pending at the end %0d) missing=%0d other_way_pulses=%0d held_pulses=%0d duplicate_copies visible=%0d masked=%0d; forms a/b both=%0d agree=%0d disagree=%0d, b latency %0d..%0d); alert_internal hits=%0d; data_tag hits=%0d; sync traps=%0d double faults expected=%0d pulses=%0d mismatches=%0d; crash_dump checked=%0d late=%0d early=%0d mismatches=%0d; fetch_en records after off=%0d late=%0d; uninitialised data reads reported=%0d sampled=%0d skipped(injection %0d, alert %0d) dropped=%0d",
+                alert_bus_hits, alert_bus_mismatch, alert_minor_hits, alert_minor_mismatch, alert_minor_injections, alert_minor_qualified, alert_minor_missing, alert_minor_unobservable, alert_minor_lat, data_injections, data_hit_way, data_other_way, data_other_valid, data_unjudged, data_ambiguous, data_pending, data_missing, data_other_pulses, held_pulses, data_dup_visible, data_dup_masked, ab_both, ab_agree, ab_disagree, b_lat_min, b_lat_max, alert_internal_hits, data_tag_hits, sync_traps, dfs_expected, dfs_pulses, dfs_mismatch, cd_checked, cd_late, cd_early, cd_mismatch, fe_records_after_off, fe_late_records,
                 gen_icram_events::uninit_reads, uninit_sampled, uninit_skipped_inject, uninit_skipped_alert, gen_icram_events::uninit_dropped), UVM_LOW)
     endfunction
   endclass

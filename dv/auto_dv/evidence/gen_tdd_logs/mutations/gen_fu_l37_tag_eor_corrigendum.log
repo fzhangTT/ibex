@@ -1,0 +1,74 @@
+# CORRIGENDUM to two retained logs, both of which stay closed:
+#   gen_fu_l37_tag_eor_unconsumed.log            (landing 37, committed bc4eba8)
+#   gen_fu_l36_dbg_driver_livelock_supplement.log (landing 37b, committed df1d8c5)
+# It answers the Critic's landing-37 FINDING, CM213-Low-2 and CM213-Low-1.
+#
+# ================ PART 1: the landing-37 log's JUSTIFICATION AND PREDICATE were wrong ================
+# The log says "the DUT checks a lookup it consumes" (its lines 11 and 24-27) and its allowance excused a qualified
+# tag injection when no record retired at or after the injection's cycle. Neither survives the RTL.
+# THE RTL, QUOTED AT FIRST HAND:
+#   rtl/ibex_icache.sv:585  assign ecc_err_ic1 = lookup_valid_ic1 & (((|data_err_ic1) & tag_hit_ic1) | (|tag_err_ic1));
+#   rtl/ibex_icache.sv:578-582 "Tag ECC across all ways is always expected to be correct so the check does not need to
+#     be qualified by hit or tag valid."
+#   :470 lookup_valid_ic1 <= lookup_actual_ic0;  :266 lookup_actual_ic0 = lookup_grant_ic0 & icache_enable_i &
+#   ~inval_block_cache;  :262 lookup_grant_ic0 = lookup_req_ic0;  :644 ecc_error_o = ecc_err_ic1;
+#   rtl/ibex_core.sv:1337 alert_minor_o = icache_ecc_error.
+# The tag term is gated by lookup validity ALONE. No term depends on the fetch being consumed or retired, so a tag
+# error on any valid lookup alerts one cycle later, a squashed speculative lookup included.
+# WHY THE PREDICATE WAS ONLY A PROXY, failing in both directions: it excuses an injection any number of observed
+# cycles after the last retirement, so a real missing alert while a stalled core keeps fetching would be counted and
+# not failed; and it still fails an injection at the last observed cycle when a record retired in that same cycle,
+# which is the false failure landing 37 set out to remove.
+# WHAT WAS ACTUALLY TRUE OF THE FAILURE: the injection was announced at the run's last clock edge and would have been
+# checked on the next one, which never came. The condition is OBSERVABILITY, not consumption.
+# THE LESSON, and it is the part worth keeping: landing 37's OUTCOME was right and its REASONING was wrong, which a
+# two-sided red cannot catch. Both sides passed because the proxy happened to agree with the truth on the one seed it
+# was tested against (the last retirement at 21478 sat just below the last observed cycle). A red proves the rule
+# fires and stays silent where it should; it cannot prove the rule is keyed on the right quantity. Only tracing the
+# gating terms does that, and I stated a DUT behaviour without tracing them.
+# FIXED IN LANDING 39: the allowance is re-keyed on the alert window against the last observed cycle, the in-run
+# deferral is removed as unnecessary, and the counter is renamed from unconsumed to unobservable.
+#
+# ================ PART 2 (CM213-Low-2): the landing-37 log's own provenance and closing claim ================
+# Its section 2, side A of the red, pastes its run summaries and names NO root and NO compile digest, while its
+# sections 1 and 3 name theirs. And its closing line claims every figure is read "by the command printed above it",
+# which holds for section 1 only: sections 2 and 3 paste a script's output with no command beside each figure.
+# THE MISSING PROVENANCE, supplied here: side A ran in the root below at the digest below, and side B, the mutation
+# and its ablation, in its own root. Both figures are the LOCAL runner's find-digest over dv/auto_dv env, tb, isa and
+# gen_tb, not the committer's gate digest, and no committed gate identity applies to either root.
+# This is CM212-Low-2 repeated in the next log I wrote, after being told once. Recorded as such.
+
+== PART 2's measurements: the landing-37 roots and digests ==
+$ command grep -h "sources sha256" <each landing-37 root>/out/config_opts.txt
+   side-A-the-failing-seed-and-control
+     root   /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/l33/tagfix_root
+     sources sha256 (dv/auto_dv env, tb, isa, gen_tb): 50981c82f49d7574
+   side-B-the-mutation-and-its-ablation
+     root   /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/l33/tagmut_root
+     sources sha256 (dv/auto_dv env, tb, isa, gen_tb): 46f6e1dfdddebb10
+   The mutant identity, from the landing-37 log's own section 3: gen_tb_top.sv 736a8d8099339024 before the
+   fault and 85b50e1343c65af1 after.
+
+# ================ PART 3 (CM213-Low-1): the l36 supplement's counts are pinned to the commit ================
+# The supplement prints "all matching files : 25" and "prose files that quote it : 3", listing gen_manifest.md among
+# the prose. Neither reproduces at its own commit. Measured on a detached archive of df1d8c5 below: 24 matching
+# files, 2 of them the landing's own artefacts, 20 retained logs and 2 prose files, and the prose files are
+# gen_critic_tb_l34.md and gen_tdd_step2b.md, NOT gen_manifest.md.
+# WHY: I generated the supplement in my WORKING TREE, where the next landing's manifest row was already present and
+# quoted the literal figure; the row as committed paraphrases it instead. So those two numbers were artefacts of an
+# uncommitted tree state rather than facts about a commit.
+# WHAT STANDS: the citation itself, 20 retained logs, which reproduces exactly, and which the supplement had already
+# made self-stable by excluding the landing's own artefacts by name.
+# THE RULE THIS EARNS: a count taken in a dirty tree is not a fact about a commit. Any figure a record states about
+# the repository is measured on a detached archive of the commit it names, not on the working tree.
+
+== PART 3's measurement, on a detached archive of df1d8c5 ==
+$ git archive df1d8c5 | tar -x -C <tmp>; grep -rl "requests=39 releases=38" dv/auto_dv/evidence, split by kind
+   all matching files at df1d8c5 : 24   (the supplement says 25)
+   the landing's own artefacts   : 2
+   RETAINED LOGS, the citation   : 20   (the supplement says 20: reproduces)
+   prose files that quote it     : 2   (the supplement says 3)
+       dv/auto_dv/evidence/gen_critic_tb_l34.md
+       dv/auto_dv/evidence/gen_tdd_step2b.md
+# END. Parts 2 and 3 print the command above each figure; part 1 quotes RTL lines by number, each read from the
+# file at the commit named. This scoping is itself the CM213-Low-2 correction.

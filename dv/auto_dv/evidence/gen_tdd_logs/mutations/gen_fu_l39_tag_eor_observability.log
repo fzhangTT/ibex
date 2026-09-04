@@ -1,0 +1,56 @@
+# THE TAG-HALF ALLOWANCE RE-KEYED ON OBSERVABILITY. Landing 37 removed a false failure with the right outcome and the
+# WRONG PREDICATE and a justification that was not an RTL fact; the Critic found both. This corrects them.
+#
+# WHAT LANDING 37 GOT WRONG, in its own words. Its log says "the DUT checks a lookup it consumes", and its predicate
+# excused a qualified injection when no record retired at or after the injection's cycle. Neither survives the RTL.
+# THE RTL, QUOTED AT FIRST HAND rather than taken from the finding:
+#   rtl/ibex_icache.sv:585  assign ecc_err_ic1 = lookup_valid_ic1 & (((|data_err_ic1) & tag_hit_ic1) | (|tag_err_ic1));
+#   rtl/ibex_icache.sv:578-582 (the comment above it) "Tag ECC across all ways is always expected to be correct so the
+#     check does not need to be qualified by hit or tag valid."
+#   rtl/ibex_icache.sv:470  lookup_valid_ic1 <= lookup_actual_ic0;
+#   rtl/ibex_icache.sv:266  assign lookup_actual_ic0 = lookup_grant_ic0 & icache_enable_i & ~inval_block_cache;
+#   rtl/ibex_icache.sv:262  assign lookup_grant_ic0  = lookup_req_ic0;
+#   rtl/ibex_icache.sv:644  assign ecc_error_o = ecc_err_ic1;
+#   rtl/ibex_core.sv:1337   assign alert_minor_o = icache_ecc_error;
+# The TAG term is gated by lookup validity ALONE. No term anywhere in that chain depends on the fetch being consumed
+# or retired, so a tag error on any valid lookup alerts one cycle later, a squashed speculative lookup included.
+# WHY THE OLD PREDICATE WAS ONLY A PROXY, and it fails in both directions: it excuses an injection any number of
+# observed cycles after the last retirement, so a real missing alert while a stalled core keeps fetching would be
+# counted and not failed; and it still fails an injection at the last observed cycle when a record retired in that
+# same cycle, which is the false failure the landing set out to remove. It coincided with the truth on this one seed
+# because the last retirement, 21478, happened to sit just below the last observed cycle.
+#
+# THE CONDITION THE FAILURE ACTUALLY HAS is OBSERVABILITY: the injection's alert window reached past the last cycle
+# anyone observed. The check is now exactly that, at the report phase, against misc.cycle, which is the interface's
+# own posedge counter (gen_misc_if.sv) and therefore the last observed cycle. IN-RUN THE CONDITION IS FALSE BY
+# CONSTRUCTION, because an injection is judged only once misc.cycle has passed its window, so landing 37's in-run
+# deferral is REMOVED rather than kept beside the new test: fewer moving parts, and no special case.
+# THE COUNTER IS RENAMED from unconsumed to unobservable, because the old word named a mechanism the RTL does not
+# have and would mislead the next reader of the summary line.
+
+== SIDE A: the false failure is gone, and the allowance does not fire where it should not ==
+   the-failing-seed-508609593
+     verdict PASS   UVM_ERROR : 0
+     ecc injections judged=906 qualified=894 missing=0 unobservable=1
+   a-control-seed-1
+     verdict PASS   UVM_ERROR : 0
+     ecc injections judged=944 qualified=935 missing=0 unobservable=0
+
+== SIDE B: an in-run missing alert STILL fails, and the allowance does not absorb it ==
+   MUT-ALERTSUP-armed-from-record-500
+     verdict FAIL   UVM_ERROR : 875
+     ecc injections judged=906 qualified=894 missing=875 unobservable=1
+     first error: alert_minor_o missing within 2 cycles of the tag-RAM ECC injection at cycle 862 (way 1 index 25)
+   the-ablation-same-build-never-armed
+     verdict PASS   UVM_ERROR : 0
+     ecc injections judged=906 qualified=894 missing=0 unobservable=1
+
+   READING: the failing seed passes with missing=0 and unobservable=1; the control reports unobservable=0, so
+   the allowance is not firing on ordinary runs; the mutation still raises 875 in-run misses with unobservable
+   UNCHANGED at 1, so the allowance absorbs none of them; and the ablation on the same mutated build is clean.
+   The mutation's first error is at cycle 862, deep in-run, which is where the allowance must never apply.
+   The mutant identity is gen_tb_top.sv 736a8d8099339024 before the fault and 85b50e1343c65af1 after.
+   THE BUILDS: side A local find-digest 18c7a44b8edfefc4, side B 0ff5f8f3545f6de9, both the LOCAL runner's
+   find-digest over dv/auto_dv env, tb, isa and gen_tb, not the committer's gate digest; the two differ because
+   side B carries the mutation, and no committed gate identity applies to either root.
+# END. Every figure is read from a run's own artefacts by the command printed above it.
