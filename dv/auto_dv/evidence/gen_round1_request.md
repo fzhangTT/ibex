@@ -5,12 +5,17 @@ LOG-086 (a69e285) and its addendum. Queue file: dv/auto_dv/work/runtime/requests
 
 Every figure below is measured at a named commit and re-derived by me, not relayed. No blank remains: the
 LOG-086 detach is 18ac053, landing 38 is 9baf3f9, landing 39 is 726682a. LOG-088 (7f61cd1) detaches six more
-measured entries after runtime-2's fcov pre-flight, so the round checks two entries and counts thirteen; that
-ruling's testlist edit is not committed yet and section 5 says what waits on it. The scope figures were WRONG in this form's
+measured entries after runtime-2's fcov pre-flight. Its testlist edit committed as f60bee5, and both detaches
+are now SUPERSEDED: the manifests were re-scoped instead (LOG-090, LOG-091), landed at 3142adc, and their
+references restored at 1b65f86, so the round checks 12 measured entries and counts none.
+The scope figures were WRONG in this form's
 first version, which said 103 entries and 141 runs; that is the whole testlist, not the round's selection.
 runtime-2 caught it with the flow's own selector, the LOG-086 corrigendum at 7e3ecc8 records it, and every
-scope figure below is re-derived by me the same way at e641b24. The testlist has not moved since the detach
-at 18ac053, so the selection holds from there to the round's HEAD.
+scope figure below is re-derived the same way at 802cae5, the commit the figures belong to. The testlist moved
+after 18ac053, at f60bee5 and at 1b65f86, and the manifests moved with the re-scope landings, so nothing here
+holds by inheritance from an earlier reading. The tool that wrote this section derives every figure it states,
+refuses when an input differs from the commit in content it reads, and re-checks that between the derivation
+and the write.
 
 ## 1. Scope, and what the round refuses
 
@@ -24,15 +29,19 @@ targeted entries and no check-tier entry. Derived at e641b24 with that selector,
 |---|---|---|---|
 | smoke | 16 | 44 | 42 |
 | targeted | 3 | 9 | 3 |
-| THE ROUND | 19 | 53 | 45 |
+| THE ROUND | 19 | 53 | 36 |
 | check, NOT selected | 84 | 88 | 0 |
 
-The other way to say it: 45 measured runs (15 entries at 3 seeds) plus 8 unmeasured runs, the 8 being 2 in
-smoke at one seed each and 6 in targeted.
+The other way to say it: 36 measured runs (12 entries at 3 seeds)
+plus 17 unmeasured runs over 7 entries. The measured set is three
+entries smaller than this form's first version stated, because gen_test_bit_draft, gen_test_csr_reset and
+gen_test_pmp_csr_warl went measured false: every bin their items own sits on a covergroup that does not
+exist, so they can make no per-run claim at all (section 5).
 
 THE ROUND'S GATING CONDITION IS NOT THE MEASURED SET. gen_round indexes a round only when the regression is
 clean, where clean means zero failing runs and failing counts fail plus timeout plus not_run, over all 53.
-So any one of the 8 unmeasured runs can refuse the round while contributing nothing to the coverage merge.
+So any one of the 17 unmeasured runs can refuse the round while contributing nothing to
+the coverage merge.
 This request therefore states an expected outcome for all 53 runs, and for nothing outside them: an entry the
 round does not select cannot pass or fail it, whatever its state in the tree.
 
@@ -46,14 +55,15 @@ load-bearing. (runtime-2's equivalent figures were 141 and 141 because they cove
 
 ## 3. Seed counts, and why three
 
-Every measured entry carries `seeds: 3` in the testlist, which gives the 45 measured runs. Three is the
+Every measured entry carries `seeds: 3` in the testlist, which gives the 36 measured runs. Three is the
 round-1 baseline I am asking for: it is what the entries already declare, it gives every measured entry a
 program-image spread (see section 4), and it keeps the LSF bill at 53 runs.
 
 DO NOT pass `--seeds N`. It is not a measured-only knob: `seeds_for_test` (gen_flow_util.py:1625-1629) takes
 the override ahead of the entry's own count, for every selected entry. Derived over this selection, `--seeds
-3` makes the plan 57 runs with the same 45 measured, the four extra runs being the two one-seed smoke entries
-going to three; `--seeds 5` makes it 95 runs with 75 measured. If round 2 wants more measured seeds, the lever
+3` makes the plan 57 runs with the same 36 measured, the extra runs being the two
+one-seed smoke entries going to three; `--seeds 5` makes it 95 runs with 60 measured.
+If round 2 wants more measured seeds, the lever
 is the per-entry `seeds` field, not the round flag.
 
 ## 4. Randomization sources, per entry
@@ -67,7 +77,7 @@ the testlist:
 2. The seed draws every regime knob the entry has not pinned. The banner reads `regime_sched=derived`; the
    same entry drew imem_gnt_delay random against same_cycle, imem_rvalid_delay random against long,
    irq_regime quiet against sparse, and its grant count moved from 174 to 250.
-3. An entry's pinned knobs NARROW the draw rather than randomize it. The 15 measured entries pin none: every
+3. An entry's pinned knobs NARROW the draw rather than randomize it. The 12 measured entries pin none: every
    one carries only `+gen_fetch_en_at_reset=0` and the banner reads `pinned=-`. So no stress axis is off for
    the measured set, and none is pinned on either.
 
@@ -80,94 +90,79 @@ round's concern, since the round does not select it.
 
 ## 5. The measured entries and their expected outcomes
 
-All 15 measured entries run and all 15 contribute coverage. What moved twice today is how many of them can be
-CHECKED against their manifest, and the second move is measured rather than structural.
+All 12 measured entries run, all 12 contribute coverage, and ALL OF THEM ARE CHECKED against their manifest.
+There is no counted-only measured entry in this round. That is the result of the re-scope, and it is worth
+stating against what this form first promised: two checked entries and thirteen counted-only.
 
-LOG-086 detached nine entries on a structural ground: a manifest declaring a covergroup that does not exist
-FAILS the run at every seed. Seven of the nine are measured and became counted-only; the other two are the
-unmeasured targeted entries of section 6.
+HOW IT GOT HERE, in one paragraph. LOG-086 and LOG-088 detached thirteen measured entries from their
+manifests, seven whose declarations sat on covergroups that do not exist and six the pre-flight measured
+unmet. That traded thirteen expectation failures for thirteen POLICY failures:
+gen_regress.fcov_policy_failures fails a measured entry on smoke or targeted with a null reference, which I
+measured as 39 of the round's 53 runs. LOG-090 adopted the reading that a manifest declares what a test
+guarantees PER RUN, so an over-declared manifest is a plan defect rather than a policy problem, and LOG-091
+took the manifest route: the plan marks the coverpoints of the unbuilt covergroups out of manifests, the tests
+carry bins_not_hit exclusions with a reason per bin, and the references come back. That landed jointly as
+3142adc, with the references restored at 1b65f86.
 
-LOG-088 then detached six more, on evidence. runtime-2 flew the eight surviving checked entries as a
-pre-flight before dispatch, and 18 of those 24 runs came back with declared bins unhit. Re-derived by me from
-the pre-flight's own manifest rather than from the relay
-(/proj_soc/user_dev/fzhang/ibex_dv_out/regress_r1_fcov_preflight/manifest.yaml, tag r1_fcov_preflight, status
-done, head-mode source root .../ibex_dv_mirror_head/726682a, coverage on, base seed 20260904): fcov totals
-checked 24, pass 6, unmet 18, unverifiable 0. THE PRE-FLIGHT RAN THE ROUND'S OWN SEEDS. I derived each
-entry's three seeds from the testlist at base 20260904 and compared them entry by entry with the manifest's:
-all eight match. So this is a prediction of the round, not an analogy to it, and dispatching the eight
-unchanged would have produced a refused round with no record.
+CHECKED against their manifests (12 entries, 36 runs, 2895 declared bins, 8685 bin checks):
 
-| entry | declared | unmet per seed | unmet, union | unmet at EVERY seed | round 1 |
-|---|---|---|---|---|---|
-| gen_test_isa_shift | 120 | 0/0/0 | 0 | 0 | CHECKED |
-| gen_test_mul_mul | 338 | 0/0/0 | 0 | 0 | CHECKED |
-| gen_test_cmp_zcb | 110 | 8/8/10 | 14 | 6 | counted-only |
-| gen_test_cmp_zcmp_basic | 472 | 112/119/116 | 147 | 74 | counted-only |
-| gen_test_isa_alu | 602 | 19/22/24 | 39 | 6 | counted-only |
-| gen_test_isa_cti | 200 | 16/16/16 | 16 | 16 | counted-only |
-| gen_test_mul_div | 224 | 22/23/24 | 28 | 19 | counted-only |
-| gen_test_rst_boot | 8 | 2/2/2 | 2 | 2 | counted-only |
+| entry | seeds | declared bins | expected |
+|---|---|---|---|
+| gen_test_bit_ratified | 3 | 617 | PASS, expectation met |
+| gen_test_isa_alu | 3 | 563 | PASS, expectation met |
+| gen_test_mul_mul | 3 | 338 | PASS, expectation met |
+| gen_test_cmp_zcmp_basic | 3 | 325 | PASS, expectation met |
+| gen_test_cmp_zca | 3 | 300 | PASS, expectation met |
+| gen_test_mul_div | 3 | 196 | PASS, expectation met |
+| gen_test_isa_cti | 3 | 184 | PASS, expectation met |
+| gen_test_csr_trap_setup | 3 | 146 | PASS, expectation met |
+| gen_test_isa_shift | 3 | 120 | PASS, expectation met |
+| gen_test_cmp_zcb | 3 | 96 | PASS, expectation met |
+| gen_test_rst_boot | 3 | 6 | PASS, expectation met |
+| gen_test_csr_access | 3 | 4 | PASS, expectation met |
 
-The union and every-seed columns are mine, computed over the three per-run unmet sets, and they carry the
-finding LOG-088 hands me for after the round. Over the six failing entries there are 246 distinct unmet bins
-and the split is exactly even: 123 are unmet at EVERY seed and 123 at some seeds only. The even half that is
-stable cannot be seed luck. It is a declaration or a stimulus defect, and the examples read that way:
-gen_isa_branch_cg.cp_op.c_beqz and c_bnez unmet in every isa_cti run (the compressed branch forms never
-appear), gen_div_timing_cg.cp_dit.on in every mul_div run (data-independent timing is never turned on),
-gen_rst_boot_cg.cp_boot_addr.zero and gen_sec_ctrl_inputs_cg.cp_bit8_readback.zero in every rst_boot run. The
-seed-dependent half is the other question, whether a manifest states what a run guarantees or what a round
-accumulates; the flow's check is per run today, so under the current rule those bins do not belong in a
-per-run declaration at all. Both questions are first items after the round record is reviewed, not round-1
-work.
+THE EXPECTATION IS MEASURED, NOT ARGUED. runtime-2 re-flew every measured run at the round's own seeds at
+3142adc, tag r1_fcov_reflight2, and that manifest reports fcov checked 36, pass 36, unmet 0, unverifiable 0.
+It is the same 36-run shape the round will run, with the re-scoped manifests as the only difference from the
+earlier pre-flight, so the expectations in the table above are observed rather than predicted.
 
-CHECKED against their manifests (2 entries, 6 runs): gen_test_isa_shift and gen_test_mul_mul, 458
-declarations between them, all distinct, over 4 covergroups (gen_isa_shift_cg, gen_mul_ops_cg,
-gen_mul_timing_cg, gen_cmp_zcb_cg), every one rendered in dv/auto_dv/env/gen_fcov_groups.svh. Expected: PASS
-with the expectation MET, on all three of each entry's round seeds. That expectation is measured, not argued:
-those are the six passing runs of the pre-flight, at the seeds the round will use.
+THREE ENTRIES ARE NOT MEASURED THIS ROUND, and the reason is a rule rather than a convenience.
+gen_test_bit_draft, gen_test_csr_reset and gen_test_pmp_csr_warl declare 15 of 15, 68 of 68 and 266 of 266
+bins on covergroups that do not exist, so after the marks they have nothing left to guarantee. A measured
+entry with an empty declared set is not a pass: the checker returns unverifiable (gen_fcov.py:330) and the
+manifest generator refuses to render such a manifest at all. Crediting coverage no entry has claimed is what
+the trust-triad policy refuses, so those three run unmeasured, their manifest files are gone until their
+covergroups are built, and the round record names them.
 
-COUNTED-ONLY (13 measured entries, 39 runs): the seven of LOG-086 (gen_test_bit_draft, gen_test_bit_ratified,
-gen_test_cmp_zca, gen_test_csr_access, gen_test_csr_reset, gen_test_csr_trap_setup, gen_test_pmp_csr_warl)
-plus the six of LOG-088 in the table above. Expected: PASS with NO expectation check. For the LOG-086 seven
-that holds at 18ac053 already; for the LOG-088 six it holds once runtime-2's field edit is committed, and
-until then the round must not be dispatched, because each of those six fails all three of its seeds.
+ONE CHECKED ENTRY IS FOUR BINS WIDE. gen_test_csr_access keeps 4 of its 80 declarations
+(gen_csr_trap_setup_warl_cg.cp_csr.mie, cp_wpat.all0, cr_csr_wpat.mie_all0 and cp_rd.x0), the other 76 being
+on unbuilt covergroups. It stays a checked measured entry because the re-flight decides that on evidence
+rather than anticipation, and the round record must not list it as checked without saying how narrow its claim
+is.
 
-One correction to the relay, and one to my own first version. gen_test_pmc_ctrl reads `tier: check`,
-`measured: false`, `fcov_expectation_file: null` at e641b24, so it is not in the round at ALL: the tier keeps
-it out before the measured flag is read. The measured set is 15 and now splits 2 checked plus 13
-counted-only, and the "seven plus gen_test_pmc_ctrl" wording of the relay and of the 18ac053 subject is right
-in count and wrong in composition.
+WHAT THE RE-SCOPE COST AND DID NOT COST. It removed 758 declarations on covergroups that do not exist, 631
+over the seven measured entries and 127 over the two unmeasured targeted ones, and 246 declarations on built
+covergroups the tests do not guarantee per run. Of those 246, exactly 123 were unmet at every one of the three
+pre-flight seeds and 123 at some seeds only, with no bin counted twice: the two halves are disjoint. The first
+half is a defect record, each bin carrying a stimulus or declaration cause, and the second is a semantics
+record, each bin stating that the test does not guarantee it per run. Neither half removes coverage: those
+bins stay PLANNED in the traceability and are credited from the merged report whenever a run hits them. The
+round record states the two halves separately because their futures differ, and it must not read as though
+excluding a check closed a bin.
 
-WHAT THE DETACHES COST AND DO NOT COST: they remove the per-entry expectation CHECK for thirteen entries, and
-they remove no coverage. Those runs still sample every covergroup they hit, and round-1 credit reads the
-merged coverage report and the plan rather than the manifests, which I verified for the pmc case: the eight
-CG-PMC groups sit in my traceability CSV as 1019 PLANNED bin rows, none of them rendered, and my credit
-report names neither them nor their 204 declarations.
+## 6. The unmeasured runs (17), and what the round does not select
 
-WHAT THE DETACHES MOVE, re-derived by me and not taken from the relay. Before LOG-086, at ede678c, 27 entries
-named a manifest and the declared set was 3902 distinct bins, 3167 of them on built covergroups. After it, at
-18ac053, 18 entries name a manifest and the declared set is 2066 bins, ALL on built covergroups. LOG-088's
-six move it again, and that figure is a PROJECTION until runtime-2 commits: with the six fields nulled inside
-an archive of 7f61cd1, exactly the edit the ruling directs, gen_covergroup_set.py reports 5 covergroups, 471
-distinct referenced bins and 12 manifests, every group rendered. So 1595 further distinct bins leave the
-declared set, all of them on covergroups that DO exist. I will re-derive it on the committed testlist and the
-round record will carry that figure, not this one.
+The round's 7 unmeasured entries, 17 runs, every one of them able to refuse the round:
 
-Two consequences the round record must state plainly. First, any percentage taken over the DECLARED set moves
-for bookkeeping and not because coverage fell: the withdrawn bins are still sampled by the runs that hit them
-and still credited, since credit reads the merged report and the plan. A reader comparing declared-set
-percentages across rounds will otherwise read a bookkeeping change as a regression. Second, the round's
-expectation evidence is now six runs over two entries, and 246 unmet declarations over six others are a
-round-1 finding about the declarations rather than about the DUT.
-
-## 6. The unmeasured runs (8), and what the round does not select
-
-The round's four unmeasured entries, 8 runs, every one of them able to refuse the round:
-
-- gen_boot_zc (smoke, 1 seed) and gen_ut_lockstep (smoke, 1 seed): PASS. No manifest, no expectation check.
-- gen_test_pmp_mseccfg and gen_test_pmp_lock (targeted, 3 seeds each): PASS with no expectation check, their
-  manifest fields nulled at 18ac053; their manifests declare 77 of 77 and 50 of 50 bins on unbuilt
-  covergroups, which is why they are in LOG-086's nine.
+- gen_boot_zc and gen_ut_lockstep, both smoke at 1 seed: PASS. Neither declares anything, so neither carries
+  an expectation check.
+- gen_test_pmp_mseccfg and gen_test_pmp_lock, targeted at 3 seeds each: PASS with no expectation check. Every
+  bin their items owned sat on a covergroup that does not exist, so the marks emptied their declaration and
+  their manifest files are gone until those covergroups are built.
+- gen_test_bit_draft, gen_test_csr_reset and gen_test_pmp_csr_warl at 3 seeds each: PASS with no expectation
+  check. These three were MEASURED until the re-scope and are the round's only loss of credited coverage. For
+  the same reason as the two above they can make no per-run claim, and crediting coverage nothing has claimed
+  is what the trust-triad policy refuses. Section 5 names them and so must the round record.
 
 Coverage is on for all of them, which matters for one entry that is NOT in the round and would otherwise be
 read as a round-1 risk. gen_regress.py:615 sets `coverage = not a.no_coverage and not a.repro`, and
@@ -203,8 +198,8 @@ All three are one function, so I put all 19 round entries through it rather than
 e641b24, `measured_refusal(entry, [], testlist, entry's measured flag, coverage=True)` returns None for every
 one, 0 refusals over 19. Two controls prove the call is live rather than vacuous: the same call on
 gen_test_rst_boot with `+gen_dbg_csr_probe=1` returns the P6 refusal and returns None when the run is
-unmeasured, and with `+gen_chk_sva_b8` it returns the LOG-067 refusal. The 15 measured entries carry exactly
-one plusarg each, `+gen_fetch_en_at_reset=0`, which is how they pin nothing (section 4).
+unmeasured, and with `+gen_chk_sva_b8` it returns the LOG-067 refusal. The 12 measured
+entries carry exactly one plusarg each, `+gen_fetch_en_at_reset=0`, which is how they pin nothing (section 4).
 
 ## 8. The canary requirement
 
@@ -230,8 +225,9 @@ counted-only for round 1 by LOG-085.
 
 ## 10. Acceptance
 
-The round is accepted when all 53 runs are clean, the merge and the fcov checks complete, the two checked
-entries meet their expectations on all six of their runs, and the credit report and promotion table are regenerated at the round's
+The round is accepted when all 53 runs are clean, the merge and the fcov checks complete, the
+12 checked entries meet their expectations on all 36 of their runs, and the
+credit report and promotion table are regenerated at the round's
 commit. A failing run of either SELECTED tier refuses the index, so one of the 8 unmeasured runs is a round-1
 blocker and not a footnote. A check-tier failure is not: the round does not select that tier, and a
 check-tier regression is graded on its own.
@@ -245,8 +241,12 @@ the live HEAD at dispatch and the regression runs from it, recorded as head_sha 
 
 ROUND_HEAD is therefore two facts, not one commit:
 
-1. The last SOURCE landing is landing 39, 726682a. It is what sets the build identity the canary must
-   report, and nothing committed after it changes a file the build reads.
+1. The last landing that changes a file the SV build reads is landing 39, 726682a, and the
+   identity it sets, bc0cd7778e382b13, still holds. Checked two ways at the round's commit: a diff of 726682a
+   against HEAD over dv/auto_dv/tb, dv/auto_dv/env, dv/auto_dv/isa and rtl is empty, and
+   gen_build_identity.py --expect exits 0. Two later landings change sources the build does NOT read and so
+   cannot move the identity: 04a4808, the plan marks and the first manifest re-scope, and 3142adc, the
+   second re-scope of the manifests and the test modules.
 2. The round is pinned to whatever HEAD is at dispatch, which will be this form's commit or a later
    records-only one. The load-bearing property is not which commit that is but that its build identity still
    equals landing 39's.
