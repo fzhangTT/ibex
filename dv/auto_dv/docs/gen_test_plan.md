@@ -1,7 +1,7 @@
 # Test plan - Ibex core, opentitan configuration
 
 Deliverable 2 (DV_prompt.txt Section 11): feature -> test-plan items -> tests -> bins. Owner: dv-lead.
-Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in: checker direction per gen_bug_log.md, rvfi_trap-on-ebreak-into-debug rule, vacuity fixes, impossible bins pruned, layer-1 weight tables, timing qualifiers), generated 2026-09-04 03:14 UTC from dv/auto_dv/work/dv-lead/parts6/tp_*.md. Companion documents:
+Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in: checker direction per gen_bug_log.md, rvfi_trap-on-ebreak-into-debug rule, vacuity fixes, impossible bins pruned, layer-1 weight tables, timing qualifiers), generated 2026-09-04 03:21 UTC from dv/auto_dv/work/dv-lead/parts6/tp_*.md. Companion documents:
 dv/auto_dv/docs/gen_feature_list.md (features), gen_fcov_plan.md (bins), gen_bug_log.md (B/D lists),
 gen_trace_feature_tp.csv and gen_trace_tp_bin.csv (machine-readable traceability), checked by
 dv/auto_dv/tools/gen_trace_check.py.
@@ -346,7 +346,7 @@ Section 1.6 was the T-181 measurement hold, lifted under LOG-042e; its number is
 
 ## 1.7 Round-0 PROBE crediting (probe of 37c7ecb refused as a round, LOG-046; 0 credited, every hosted item NOT-RUN-CLEAN) (generated from the regression manifest and sim logs; 162 items in 15 hosted groups)
 
-Invocation, byte for byte (copy the whole line; a quoted heading may contain semicolons): python3 dv/auto_dv/tools/gen_round_credit.py --regress-manifest /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0/manifest.yaml --plan-sha v3p-on-3320214 --round 0 --heading-id round0-probe --csv dv/auto_dv/evidence/gen_round0_credit/gen_round0_credit.csv --md dv/auto_dv/evidence/gen_round0_credit/gen_round0_credit.md; regression manifest sha256 4c9a21df00d6adf6ea092d1dda930c952836737b57c9e0e39d20e2737c8bf587; plan inputs read (item headers with group / tier / expected, hold sections, carve-out sections and rows with item / tag / until / reason, gen_trace_tp_bin.csv, gen_trace_witness_ids.csv) digest 7bffaf9590c0; carve-out rows read 2 (0 hosted in this round; the UNCREDITED / COUNTED-ONLY columns count carved items that would otherwise have credited, a carved item that is UNHIT or NOT-RUN-CLEAN keeps that state and shows its tag in the Carve-out column); landing label v3p-on-3320214 (the --plan-sha argument, a label only, not the commit whose plan was read). Regression /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0: status done, source {'mode': 'head', 'source_root': '/proj_soc/user_dev/fzhang/ibex_dv_mirror_head/37c7ecb6dbe0', 'head_sha': '37c7ecb6dbe023e6f6b098e932367e339a24735a', 'worktree_dirty': None}, git 37c7ecb6dbe023e6f6b098e932367e339a24735a; 47 runs: pass 2, fail 45, xfail 0, red_ok 0, timeout 0, not_run 0; fcov checks {'checked': 44, 'pass': 0, 'unmet': 0, 'unverifiable': 44}; covergroups_exist False; clean regression (gen_round.py hard rule): NO.
+Invocation, byte for byte (copy the whole line; a quoted heading may contain semicolons): python3 dv/auto_dv/tools/gen_round_credit.py --regress-manifest /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0/manifest.yaml --plan-sha v3q-on-daf27d0 --round 0 --heading-id round0-probe --csv dv/auto_dv/evidence/gen_round0_credit/gen_round0_credit.csv --md dv/auto_dv/evidence/gen_round0_credit/gen_round0_credit.md; regression manifest sha256 4c9a21df00d6adf6ea092d1dda930c952836737b57c9e0e39d20e2737c8bf587; plan inputs read (item headers with group / tier / expected, hold sections, carve-out sections and rows with item / tag / until / reason, gen_trace_tp_bin.csv, gen_trace_witness_ids.csv) digest 7bffaf9590c0; carve-out rows read 2 (0 hosted in this round; the UNCREDITED / COUNTED-ONLY columns count carved items that would otherwise have credited, a carved item that is UNHIT or NOT-RUN-CLEAN keeps that state and shows its tag in the Carve-out column); landing label v3q-on-daf27d0 (the --plan-sha argument, a label only, not the commit whose plan was read). Regression /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0: status done, source {'mode': 'head', 'source_root': '/proj_soc/user_dev/fzhang/ibex_dv_mirror_head/37c7ecb6dbe0', 'head_sha': '37c7ecb6dbe023e6f6b098e932367e339a24735a', 'worktree_dirty': None}, git 37c7ecb6dbe023e6f6b098e932367e339a24735a; 47 runs: pass 2, fail 45, xfail 0, red_ok 0, timeout 0, not_run 0; fcov checks {'checked': 44, 'pass': 0, 'unmet': 0, 'unverifiable': 44}; covergroups_exist False; clean regression (gen_round.py hard rule): NO.
 
 | Area | Items hosted | CREDITED | UNCREDITED | COUNTED-ONLY | HELD | UNHIT | FIRE-FAIL | NOT-FIRED | NOT-RUN-CLEAN | UNVERIFIED |
 |---|---|---|---|---|---|---|---|---|---|---|
@@ -19368,7 +19368,9 @@ Stimulus line override the table for that item.
   owed pulse), and the item runs on tag injections meanwhile. Q-018 ruling, 2026-09-04: the knob is
   legitimate measured stimulus (boundary stimulus on the tag-RAM read data, announced to the
   checkers, a stricter checker running with it), not debug_only; a measured run with it at rare or
-  frequent counts only with +gen_chk_alert_minor on (the rendered table's default counts; LOG-077). The
+  frequent counts only with the alert_minor row's effective value on: an explicit +gen_chk_alert_minor setting
+  wins, otherwise +gen_chk_all must be on for the table default to apply (gen_chk_en's chk_all ? val : set && val;
+  LOG-077, CM152-M-1). The
   landing's review, the landing-9 and landing-10 re-review, is APPROVE-WITH-CHANGES (artifact
   dv/auto_dv/reviews/2026-09-03-claude-diff-f1bc4d9b-f28d09b9.md at a1fd8ee; LOG-078 lifted the gates).
 - Expected: pass
