@@ -1,0 +1,484 @@
+build: gen_tb
+description: gen_tb_top around gen_dut_top (opentitan configuration), UVM env + cocotb bridge, bus agents,
+  icache RAM models, scramble-key responder (TB Infra entry, dv/auto_dv/work/tb-infra/gen_runtime_build_entry_gen_tb.yaml)
+tb_top: gen_tb_top
+dut_instance: u_dut
+build_config: opentitan
+outdir: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_1/build/gen_tb
+simv: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_1/build/gen_tb/vcs_simv
+compile_log: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_1/build/gen_tb/compile.log
+coverage: true
+cov_metrics: line+cond+tgl+assert+fsm+branch
+cov_scope: gen_tb_top.u_dut.u_ibex_core
+cov_scopes:
+- gen_tb_top.u_dut.u_ibex_core
+- gen_tb_top.u_dut.u_register_file
+info_scopes:
+- gen_tb_top.u_dut
+glitch_filter: true
+rtl_root_override: null
+mutation_id: null
+rtl_substitutions: []
+build_vdb: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_1/build/gen_tb/build.vdb
+cocotb: true
+waves: false
+mirror:
+  root: /proj_soc/user_dev/fzhang/ibex_dv_mirror_head/4a0070285557
+  tree_sha256: a50dc62988fc1d9940973289425513846942b04163259359e308b720879a5e35
+  git_head: 4a0070285557a2a7dfb50cea9390597143b984b0
+  synced_utc: '2026-09-04T21:54:22Z'
+  venv:
+    venv: /proj_soc/user_dev/fzhang/ibex_dv_mirror_head/4a0070285557/.venv
+    cocotb_config: /proj_soc/user_dev/fzhang/ibex_dv_mirror_head/4a0070285557/.venv/bin/cocotb-config
+    cocotb_vpi_lib: /proj_soc/user_dev/fzhang/ibex_dv_mirror/.venv/lib/python3.12/site-packages/cocotb/libs/libcocotbvpi_vcs.so
+    libpython: /tools_soc/opensrc/python/python-3.12.10/lib/libpython3.12.so.1.0
+    python: Python 3.12.10
+    requirements_sha256: 5b202d58a3c089c925bfd09858351c618bf39ec46a7ec187fc0973ed613f75b3
+  env_sh: /proj_soc/user_dev/fzhang/ibex_dv_mirror_head/4a0070285557/ci/env.sh
+  state_at_build: fresh
+  tools_home: /proj_soc/user_dev/fzhang/ibex_dv_mirror
+  tools_digest: 2a4896f8d15c61de9d3f873c795727d0ed2b2e6a764bfc568fdf66c859c4f066
+  tools_digest_synced: 2a4896f8d15c61de9d3f873c795727d0ed2b2e6a764bfc568fdf66c859c4f066
+pre_build:
+- command: bash dv/auto_dv/isa/gen_isa_shim_build.sh lib /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_1/build/gen_tb/lib
+  rc: 0
+  wall_s: 2.0
+  timed_out: false
+  log: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_1/build/gen_tb/pre_build_0.log
+  products:
+    libgen_isa_shim.so: 3fabcfcf64d8bdaff64a9b161001abdb6ff1b069b37ed087b766ee157f0afd76
+ldflags: -Wl,--no-as-needed -L/proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_1/build/gen_tb/lib -lgen_isa_shim
+  -Wl,-rpath,/proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_1/build/gen_tb/lib -Wl,-rpath-link,/proj_soc/user_dev/fzhang/ibex_dv_mirror_head/4a0070285557/tools/spike/lib
+runtime_lib_dirs:
+- /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_1/build/gen_tb/lib
+- /proj_soc/user_dev/fzhang/ibex_dv_mirror_head/4a0070285557/tools/spike/lib
+dropped_cm_args_no_coverage: []
+defines: &id001
+- +define+RVFI
+constfile: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_1/build/gen_tb/constfile.txt
+command: vcs -full64 -sverilog -f /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_1/build/gen_tb/gen_rtl.f
+  -f /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_1/build/gen_tb/gen_tb.f -top gen_tb_top -ntb_opts
+  uvm-1.2 +define+UVM +define+UVM_REGEX_NO_DPI +define+RVFI +define+BaseIsa=ibex_pkg::BaseIsaRV32IorCHERIoT
+  -pvalue+RV32E=0 +define+RV32M=ibex_pkg::RV32MSingleCycle +define+RV32B=ibex_pkg::RV32BOTEarlGrey +define+RV32ZC=ibex_pkg::RV32ZcaZcbZcmp
+  +define+RegFile=ibex_pkg::RegFileFF -pvalue+BranchTargetALU=1 -pvalue+WritebackStage=1 -pvalue+ICache=1
+  -pvalue+ICacheECC=1 -pvalue+ICacheScramble=1 -pvalue+BranchPredictor=0 -pvalue+DbgTriggerEn=1 -pvalue+SecureIbex=1
+  -pvalue+PMPEnable=1 -pvalue+PMPGranularity=0 -pvalue+PMPNumRegions=16 -pvalue+MHPMCounterNum=10 -pvalue+MHPMCounterWidth=32
+  -timescale=1ns/10ps -licqueue -CFLAGS '--std=c99 -fno-extended-identifiers' -xlrm uniq_prior_final -lca
+  -kdb -LDFLAGS '-Wl,--no-as-needed -L/proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_1/build/gen_tb/lib
+  -lgen_isa_shim -Wl,-rpath,/proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_1/build/gen_tb/lib -Wl,-rpath-link,/proj_soc/user_dev/fzhang/ibex_dv_mirror_head/4a0070285557/tools/spike/lib'
+  -Mdir=/proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_1/build/gen_tb/vcs_simv.csrc -o /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_1/build/gen_tb/vcs_simv
+  -debug_access+pp -cm line+cond+tgl+assert+fsm+branch -cm_tgl portsonly -cm_tgl structarr -cm_report
+  noinitial -cm_seqnoconst -cm_dir /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_1/build/gen_tb/build.vdb
+  -cm_hier /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_1/build/gen_tb/cm_hier.cfg -diag noconst
+  +define+COCOTB_SIM +vpi -P /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_1/build/gen_tb/gen_pli.tab
+  -load /proj_soc/user_dev/fzhang/ibex_dv_mirror/.venv/lib/python3.12/site-packages/cocotb/libs/libcocotbvpi_vcs.so
+  -cm_glitch 0 -l /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_1/build/gen_tb/compile.log
+flag_groups:
+  base:
+  - -full64
+  - -sverilog
+  filelists:
+  - -f
+  - /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_1/build/gen_tb/gen_rtl.f
+  - -f
+  - /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_1/build/gen_tb/gen_tb.f
+  top:
+  - -top
+  - gen_tb_top
+  uvm:
+  - -ntb_opts
+  - uvm-1.2
+  - +define+UVM
+  - +define+UVM_REGEX_NO_DPI
+  defines: *id001
+  config:
+  - +define+BaseIsa=ibex_pkg::BaseIsaRV32IorCHERIoT
+  - -pvalue+RV32E=0
+  - +define+RV32M=ibex_pkg::RV32MSingleCycle
+  - +define+RV32B=ibex_pkg::RV32BOTEarlGrey
+  - +define+RV32ZC=ibex_pkg::RV32ZcaZcbZcmp
+  - +define+RegFile=ibex_pkg::RegFileFF
+  - -pvalue+BranchTargetALU=1
+  - -pvalue+WritebackStage=1
+  - -pvalue+ICache=1
+  - -pvalue+ICacheECC=1
+  - -pvalue+ICacheScramble=1
+  - -pvalue+BranchPredictor=0
+  - -pvalue+DbgTriggerEn=1
+  - -pvalue+SecureIbex=1
+  - -pvalue+PMPEnable=1
+  - -pvalue+PMPGranularity=0
+  - -pvalue+PMPNumRegions=16
+  - -pvalue+MHPMCounterNum=10
+  - -pvalue+MHPMCounterWidth=32
+  common:
+  - -timescale=1ns/10ps
+  - -licqueue
+  - -CFLAGS
+  - --std=c99 -fno-extended-identifiers
+  - -xlrm
+  - uniq_prior_final
+  - -lca
+  - -kdb
+  ldflags:
+  - -LDFLAGS
+  - -Wl,--no-as-needed -L/proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_1/build/gen_tb/lib -lgen_isa_shim
+    -Wl,-rpath,/proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_1/build/gen_tb/lib -Wl,-rpath-link,/proj_soc/user_dev/fzhang/ibex_dv_mirror_head/4a0070285557/tools/spike/lib
+  output:
+  - -Mdir=/proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_1/build/gen_tb/vcs_simv.csrc
+  - -o
+  - /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_1/build/gen_tb/vcs_simv
+  debug:
+  - -debug_access+pp
+  coverage:
+  - -cm
+  - line+cond+tgl+assert+fsm+branch
+  - -cm_tgl
+  - portsonly
+  - -cm_tgl
+  - structarr
+  - -cm_report
+  - noinitial
+  - -cm_seqnoconst
+  - -cm_dir
+  - /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_1/build/gen_tb/build.vdb
+  - -cm_hier
+  - /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_1/build/gen_tb/cm_hier.cfg
+  - -diag
+  - noconst
+  cocotb:
+  - +define+COCOTB_SIM
+  - +vpi
+  - -P
+  - /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_1/build/gen_tb/gen_pli.tab
+  - -load
+  - /proj_soc/user_dev/fzhang/ibex_dv_mirror/.venv/lib/python3.12/site-packages/cocotb/libs/libcocotbvpi_vcs.so
+  extra:
+  - -cm_glitch
+  - '0'
+  log:
+  - -l
+  - /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_1/build/gen_tb/compile.log
+inputs:
+  filelists:
+    dv/auto_dv/tb/gen_rtl.f: c6381fc0c3163d7b58891c26876ae8e7ebf1728c301b0fe298f3dae5f509b1f3
+    dv/auto_dv/tb/gen_tb.f: 68b35bc483a4c4e2364d7763679a85c68bfc8e9d100048300efd87e8cbb15b54
+  sources_sha256: bc0cd7778e382b13991bbae9060a710b39537375e3f1fd9ea67e7f9d6fc674d3
+  source_count: 117
+covergroup_files:
+- dv/auto_dv/env/gen_fcov_pkg.sv
+covergroups_declared: true
+b8_probe_knob_default_on: false
+b8_probe_sv_default_on: false
+source_root: /proj_soc/user_dev/fzhang/ibex_dv_mirror_head/4a0070285557
+source_mode: head
+head_sha: 4a0070285557a2a7dfb50cea9390597143b984b0
+export_sources:
+- &id002
+  source: ibus
+  event: req
+  fields:
+  - addr
+  - we
+  - be
+- &id003
+  source: ibus
+  event: gnt
+  fields:
+  - addr
+  - we
+  - be
+  - req_cycle
+  - outstanding_after
+- &id004
+  source: ibus
+  event: rvalid
+  fields:
+  - addr
+  - we
+  - err
+  - intg_injected
+  - outstanding_after
+- &id005
+  source: dbus
+  event: req
+  fields:
+  - addr
+  - we
+  - be
+- &id006
+  source: dbus
+  event: gnt
+  fields:
+  - addr
+  - we
+  - be
+  - req_cycle
+  - outstanding_after
+- &id007
+  source: dbus
+  event: rvalid
+  fields:
+  - addr
+  - we
+  - err
+  - intg_injected
+  - outstanding_after
+- &id008
+  source: pin
+  event: irq_software
+  fields:
+  - value
+- &id009
+  source: pin
+  event: irq_timer
+  fields:
+  - value
+- &id010
+  source: pin
+  event: irq_external
+  fields:
+  - value
+- &id011
+  source: pin
+  event: irq_fast
+  fields:
+  - idx
+  - value
+- &id012
+  source: pin
+  event: irq_nm
+  fields:
+  - value
+- &id013
+  source: pin
+  event: debug_req
+  fields:
+  - value
+- &id014
+  source: pin
+  event: fetch_enable
+  fields:
+  - value
+- &id015
+  source: pin
+  event: mcounteren_writable
+  fields:
+  - value
+- &id016
+  source: alert
+  event: alert_minor
+  fields:
+  - value
+- &id017
+  source: alert
+  event: alert_major_bus
+  fields:
+  - value
+- &id018
+  source: alert
+  event: alert_major_internal
+  fields:
+  - value
+- &id019
+  source: alert
+  event: double_fault_seen
+  fields:
+  - value
+- &id020
+  source: misc
+  event: irq_pending
+  fields:
+  - value
+- &id021
+  source: misc
+  event: irq_entry
+  fields:
+  - order
+  - cause
+  - decidable
+- &id022
+  source: misc
+  event: core_busy
+  fields:
+  - value
+- &id023
+  source: misc
+  event: crash_dump_current_pc
+  fields:
+  - value
+- &id024
+  source: misc
+  event: crash_dump_next_pc
+  fields:
+  - value
+- &id025
+  source: misc
+  event: crash_dump_last_data_addr
+  fields:
+  - value
+- &id026
+  source: misc
+  event: crash_dump_exception_pc
+  fields:
+  - value
+- &id027
+  source: misc
+  event: crash_dump_exception_addr
+  fields:
+  - value
+- source: icram
+  event: inject
+  fields:
+  - way
+  - index
+- source: icram
+  event: lookup
+  fields:
+  - index
+- source: icram
+  event: tag_write
+  fields:
+  - way
+  - index
+  - valid
+- source: icram
+  event: fill_write
+  fields:
+  - way
+  - index
+- &id028
+  source: scrkey
+  event: req
+  fields:
+  - value
+- &id029
+  source: scrkey
+  event: valid
+  fields:
+  - value
+- &id030
+  source: regime
+  event: phase
+  fields:
+  - knob_id
+  - value_idx
+  - phase_idx
+export_source_names:
+- alert
+- dbus
+- ibus
+- icram
+- misc
+- pin
+- regime
+- scrkey
+export_sources_declared:
+- *id002
+- *id003
+- *id004
+- *id005
+- *id006
+- *id007
+- *id008
+- *id009
+- *id010
+- *id011
+- *id012
+- *id013
+- *id014
+- *id015
+- *id016
+- *id017
+- *id018
+- *id019
+- *id020
+- *id021
+- *id022
+- *id023
+- *id024
+- *id025
+- *id026
+- *id027
+- *id028
+- *id029
+- *id030
+export_sources_declared_origin: rows of EXPORT_EVENTS whose source is in EXPORT_ACTIVE_SOURCES
+export_sources_emitted: []
+export_sources_emitted_origin: 'no export file observed yet: a run of this build that writes an export
+  file fills it (LOG-028a)'
+export_rows_observed: []
+export_knobs:
+  gen_export_file: null
+  gen_export_counters: 0
+  gen_export_sources: all
+  gen_export_flush_every: 0
+export_record_fields:
+- order
+- pc_rdata
+- pc_wdata
+- insn
+- trap
+- halt
+- intr
+- mode
+- ixl
+- rs1_addr
+- rs1_rdata
+- rs2_addr
+- rs2_rdata
+- rs3_addr
+- rs3_rdata
+- rd_addr
+- rd_wdata
+- mem_addr
+- mem_rmask
+- mem_wmask
+- mem_rdata
+- mem_wdata
+- ext_pre_mip
+- ext_post_mip
+- ext_nmi
+- ext_nmi_int
+- ext_debug_req
+- ext_debug_mode
+- ext_rf_wr_suppress
+- ext_ic_scr_key_valid
+- ext_irq_valid
+- ext_exp_valid
+- ext_exp_insn
+- ext_exp_last
+- ext_mcycle
+- cycle
+staged_env_sh:
+  path: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_1/build/gen_tb/env.sh
+  sha256: bf1452b462e62f24735791e70c7086ecdcc59251051fdc9d330fe0cc9692ccfc
+git:
+  head: 4a0070285557a2a7dfb50cea9390597143b984b0
+  branch: cleanroom/run-a
+  dirty_tracked_files: true
+tools:
+  vcs: VCS X-2025.06-SP2_Full64
+  urg: X-2025.06-SP2
+  python: 3.12.10
+  cocotb: 1.9.2
+  vcs_home: /tools_vendor/synopsys/vcs/X-2025.06-SP2
+started_utc: '2026-09-04T21:54:34Z'
+vcs_rc: 0
+wall_s: 27.4
+timed_out: false
+compile_summary:
+  error_count: 0
+  error_classes: []
+  warning_classes:
+    DCTL: 2
+    LCA_FEATURES_ENABLED: 1
+    OSVF-NPVIUFPI: 11
+    SIOB: 32
+    VCM-OPTIGN: 1
+    VPI-CT-NS: 4
+  elab_ok: true
+  compiler_version: X-2025.06-SP2_Full64
+  cm_hier_note: true
+status: ok
+finished_utc: '2026-09-04T21:55:02Z'

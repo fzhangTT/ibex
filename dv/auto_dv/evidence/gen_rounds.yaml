@@ -1,7 +1,149 @@
 G: 0.5
 N: 5
 gate_pct: 80.0
-rounds: []
+rounds:
+- round: 0
+  dry_run: false
+  label: null
+  date_utc: '2026-09-04T22:06:02Z'
+  evidence_dir: /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/evidence/gen_round_0
+  regress_outdir: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_1
+  regress_tag: round_1
+  git_head: 4a0070285557a2a7dfb50cea9390597143b984b0
+  canary_build:
+    path: dv/auto_dv/work/runtime/out/canary_4a0070285557/build/gen_tb
+    manifest: dv/auto_dv/work/runtime/out/canary_4a0070285557/build/gen_tb/build_manifest.yaml
+    manifest_present: true
+    build: gen_tb
+    source_mode: head
+    head_sha: 4a0070285557a2a7dfb50cea9390597143b984b0
+    covergroups_declared: true
+    covergroup_files:
+    - dv/auto_dv/env/gen_fcov_pkg.sv
+    b8_probe_knob_default_on: false
+    b8_probe_sv_default_on: false
+  git_dirty_tracked_files: true
+  flow_git_status_now: []
+  regression_verdict:
+    verdict: clean
+    status: done
+    bad_runs: 0
+    coverage_status: ok
+    exclusion_violations: []
+  build_config: opentitan
+  source: measured merge
+  tests_in_report: 36
+  runs:
+    planned: 53
+    pass: 53
+    fail: 0
+    xfail: 0
+    timeout: 0
+    not_run: 0
+    red_ok: 0
+    pass_rate_pct: 100.0
+    runs_without_fcov_manifest: 17
+    tests_without_fcov_manifest:
+    - gen_boot_zc
+    - gen_test_bit_draft
+    - gen_test_csr_reset
+    - gen_test_pmp_csr_warl
+    - gen_test_pmp_lock
+    - gen_test_pmp_mseccfg
+    - gen_ut_lockstep
+  metrics:
+    scope: gen_tb_top.u_dut.u_ibex_core + gen_tb_top.u_dut.u_register_file
+    combining_rule: sum of covered and of total objects per metric over the gated scopes (disjoint subtrees,
+      never nested); percent = 100 * covered / total
+    line: 83.83
+    cond: 67.17
+    toggle: 67.39
+    fsm: 44.19
+    branch: 75.41
+    assert: 92.74
+    group: 81.47
+    ratios:
+      line: 3654/4359
+      cond: 6464/9624
+      toggle: 16877/25044
+      fsm: 38/86
+      branch: 1831/2428
+      assert: 166/179
+      group: 3477/4268
+    info_scopes:
+      gen_tb_top.u_dut:
+        line: 83.91
+        cond: 67.18
+        toggle: 67.15
+        fsm: 44.19
+        branch: 75.49
+        assert: 89.6
+        group: n/a
+        ratios:
+          line: 3688/4395
+          cond: 6471/9633
+          toggle: 19231/28640
+          fsm: 38/86
+          branch: 1848/2448
+          assert: 224/250
+  gate:
+    line: PASS
+    cond: below gate
+    toggle: below gate
+    fsm: below gate
+    branch: below gate
+    assert: PASS
+    group: bins >= 80 (traceability not checked here)
+  gain:
+    deltas:
+      line: n/a
+      cond: n/a
+      toggle: n/a
+      fsm: n/a
+      branch: n/a
+      assert: n/a
+      group: n/a
+    max_gain: null
+    shows_gain: null
+    G: 0.5
+  no_gain_streak: 0
+  stopping_rule_fired: false
+  glitch_filter:
+    gen_tb: true
+  rulings:
+    scope: 'gen_tb_architecture.md Section 5: the gate numbers are the gated cov_trees [''gen_tb_top.u_dut.u_ibex_core'',
+      ''gen_tb_top.u_dut.u_register_file''] combined per metric (sum of covered and of total objects,
+      percent = 100 x covered / total; the gated trees must not nest); the info_trees [''gen_tb_top.u_dut'']
+      are reported informationally, never gated'
+    glitch: 'gen_tb_architecture.md Section 5 (LOG-007/008): every measured build uses -cm_glitch 0 (builds.<name>.extra_vcs_args);
+      FSM coverage is not glitch-filtered (VCS Warning-[VCM-OPTIGN])'
+  exclusion_files: []
+  excl_strict: false
+  exclusion_violations: []
+  merge_warnings:
+    Note-[URG-RATIO]: 1
+    Note-[URG-RDG]: 1
+  testlist:
+    path: /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/flow/gen_testlist.yaml
+    sha256: 702be271937dcc0d17c83432d0d25b1f52e40de79b60def8dabe44d2291368e4
+  testlist_sha256: 702be271937dcc0d17c83432d0d25b1f52e40de79b60def8dabe44d2291368e4
+  copied:
+  - gen_dashboard.txt
+  - gen_hierarchy.txt
+  - gen_tests.txt
+  - gen_groups.txt
+  - gen_grpinfo.txt
+  - gen_asserts.txt
+  full_exclusions_files:
+  - gen_fullexclude.assert.gz
+  - gen_fullexclude.branch.gz
+  - gen_fullexclude.cond.gz
+  - gen_fullexclude.fsm.gz
+  - gen_fullexclude.line.gz
+  - gen_fullexclude.tb_def.gz
+  - gen_fullexclude.tb_inst.gz
+  - gen_fullexclude.tgl.gz
+  full_exclusions_note: gzip copies in the evidence directory
 dry_runs:
 - round: 0
   dry_run: true

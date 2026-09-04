@@ -1,0 +1,2434 @@
+# Team regression testlist (owner: runtime; test entries are added by the Test Writer, build
+# entries by TB Infra through the runtime owner). Schema: dv/auto_dv/docs/gen_runtime_api.md.
+#
+# builds.<name>: one VCS compile.
+#   tb_top         compile top module (-top)
+#   dut_instance   instance name of gen_dut_top inside tb_top (coverage scope: tb_top.dut_instance)
+#   filelists      VCS -f files, clone-root relative, in order
+#   defines        +define+ names added to the SIM_RECIPE Section 2 set
+#   cocotb         true = add the Section 4 cocotb triple at compile time
+#   extra_vcs_args optional extra compile arguments
+#
+# tests[]: one entry per test; the flow runs it as <build>/vcs_simv with the plusargs below.
+#   name                   gen_ prefixed, unique; also the fcov manifest and cm_name key
+#   description            one line
+#   tier                   smoke | targeted | full (a test is in its tier and every higher tier), or
+#                          check: build/elaboration checks outside the measured tiers (--tier check
+#                          or by name only; must be measured: false; Critic R-01)
+#   build                  key into builds
+#   uvm_test               value of +UVM_TESTNAME (null = the TB top has no UVM test class)
+#   plusargs               list of "+name=value" strings from the testlist entry
+#   seeds                  count (seeds derived from --base-seed per test) or explicit list
+#   program                optional program step before the run (gen_runtime_api.md 7e): exactly one of
+#                          riscv_dv_test | directed: [<clone-relative .S>...] | generator: <clone-relative
+#                          per-seed script> (+ generator_args), with seed: run | <int>, extra_args, spike_check
+#   fcov_expectation_file  dv/auto_dv/fcov_expectations/<name>.fcov.yaml (a measured entry), a manifest in that directory
+#                          (an unmeasured entry may name its group's), or null; the loader refuses any other value
+#   timeout_s              per-run wall-clock budget of the simulation process
+#   owner                  role slug
+#   pass_marker            log line that proves the end of test was reached (null = "$finish")
+#   feature_groups         tags for the targeted tier (--group)
+#   cocotb_module          dotted Python module for cocotb-driven tests (null = pure SV)
+#   expected_fail          true = an RTL-vs-intent bug candidate; FAIL is reported as XFAIL
+#   red_fixture            true = a TDD red fixture that fails by design; a FAIL whose collected evidence
+#                          line matches red_expect is reported as RED-OK, any other FAIL stays FAIL
+#                          (undeclared reason), an unexpected PASS is FAIL; kept out of the pass rate
+#                          and of coverage (must be measured: false; exclusive with expected_fail)
+#   red_expect             regex of the designed failure's evidence line (required with red_fixture)
+#   keep_artifacts         true = a purpose-4 regression keeps this test's export file on PASS / RED-OK
+#                          runs (default: pruned after the manifest, paths recorded in result.yaml)
+#   component              TB component this test exercises (purpose-2 selection)
+#   measured               default true; false = mutation-evidence or forced-error test that never
+#                          enters a measured coverage merge (separate vdb tree, Critic ruling R-5.5)
+schema_version: 1
+
+# Policies (flow-enforced):
+#   fcov_manifest_required_tiers: tiers whose MEASURED tests must carry an fcov_expectation_file (a null
+#     manifest there FAILs the run at merge time; Critic P-07); an entry with measured: false contributes no
+#     coverage and is exempt, as is tier check.
+#   debug_only_plusargs: knob names that never run in a measured run, coverage on or off (tb-arch
+#     P6: probe P6, the CSR debug compare, the P9 icache lookup probe); a measured run enabling one
+#     is refused in writing (NOT_RUN).
+#     The one origin of the property and of the names is TB Infra's rendered knob table
+#     dv/auto_dv/gen_tb/gen_knobs.py (PLUSARGS[...]['debug_only']); load_testlist refuses this
+#     list unless it equals that set.
+#   red_expect_policy: [fire_id] = a red_expect that matches the GEN_TEST_FAIL harness line (the prefix
+#     anywhere in the regex) must name the designed fire_ id (the harness prints it on that line; a
+#     generic signature would accept any fixture failure); the loader refuses the file otherwise.
+#     Non-harness signatures (the UVM_ERROR class of gen_ut_lockstep_forced_red) are outside it.
+fcov_manifest_required_tiers: [smoke, targeted]
+debug_only_plusargs: [gen_dbg_csr_probe, gen_rvfi_trace, gen_isa_string, gen_isa_log, gen_sb_trace, gen_export_flush_every,
+  gen_probe_ic_lookup]
+red_expect_policy: [fire_id]
+
+builds:
+  gen_smoke:
+    description: gen_smoke_tb_top around gen_dut_top, pure SV, opentitan configuration
+    tb_top: gen_smoke_tb_top
+    dut_instance: u_dut
+    # DV Lead ruling (gen_tb_architecture.md Section 5): the gate numbers are the two inner instances
+    # combined; the wrapper is instrumented and reported informationally, never gated.
+    cov_trees: [u_dut.u_ibex_core, u_dut.u_register_file]
+    info_trees: [u_dut]
+    filelists:
+      - dv/auto_dv/tb/gen_rtl.f
+      - dv/auto_dv/tb/gen_smoke_tb.f
+    defines:
+      - RVFI
+    cocotb: false
+    # DV Lead ruling LOG-007/008: every measured build filters zero-time glitch hits (FSM excepted by VCS).
+    extra_vcs_args: ["-cm_glitch", "0"]
+  gen_smoke_cocotb:
+    description: gen_smoke_tb_top with the SIM_RECIPE Section 4 cocotb triple (VPI library from the shared mirror venv)
+    tb_top: gen_smoke_tb_top
+    dut_instance: u_dut
+    cov_trees: [u_dut.u_ibex_core, u_dut.u_register_file]
+    info_trees: [u_dut]
+    filelists:
+      - dv/auto_dv/tb/gen_rtl.f
+      - dv/auto_dv/tb/gen_smoke_tb.f
+    defines:
+      - RVFI
+    cocotb: true
+    extra_vcs_args: ["-cm_glitch", "0"]
+
+  gen_tb:
+    description: gen_tb_top around gen_dut_top (opentitan configuration), UVM env + cocotb bridge, bus agents, icache RAM models, scramble-key responder (TB Infra entry, dv/auto_dv/work/tb-infra/gen_runtime_build_entry_gen_tb.yaml)
+    tb_top: gen_tb_top
+    dut_instance: u_dut
+    cov_trees: [u_dut.u_ibex_core, u_dut.u_register_file]
+    info_trees: [u_dut]
+    filelists:
+      - dv/auto_dv/tb/gen_rtl.f
+      - dv/auto_dv/tb/gen_tb.f
+    defines:
+      - RVFI
+    cocotb: true
+    extra_vcs_args: ["-cm_glitch", "0"]
+    # ISA shim (Spike behind DPI) as a shared library next to the simv (TB Infra, dv/auto_dv/isa).
+    pre_build:
+      - bash dv/auto_dv/isa/gen_isa_shim_build.sh lib {outdir}/lib
+    extra_ldflags: ["-L{outdir}/lib", "-lgen_isa_shim", "-Wl,-rpath,{outdir}/lib", "-Wl,-rpath-link,{mirror}/tools/spike/lib"]
+    # Run-time library search path of every run: the shim beside the simv and the mirror's spike
+    # (-rpath-link above serves the link step only; LSF hosts see the mirror, never the clone).
+    runtime_lib_dirs: ["{outdir}/lib", "{mirror}/tools/spike/lib"]
+
+tests:
+  - name: gen_smoke
+    description: build/elaboration check (not a regression test); NOP program, checks retirement and no alert
+    tier: check
+    build: gen_smoke
+    uvm_test: null
+    plusargs:
+      - +gen_smoke_cycles=3000
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 600
+    owner: tb-infra
+    pass_marker: GEN_SMOKE_PASS
+    feature_groups: [bringup]
+    cocotb_module: null
+    expected_fail: false
+    component: gen_dut_top
+    measured: false
+
+  - name: gen_cocotb_probe
+    description: flow probe; cocotb loads on the LSF host from the shared mirror, observes RVFI retirements from Python
+    tier: check
+    build: gen_smoke_cocotb
+    uvm_test: null
+    plusargs:
+      - +gen_smoke_cycles=3000
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 600
+    owner: runtime
+    pass_marker: GEN_COCOTB_PROBE_PASS
+    feature_groups: [flow, cocotb]
+    cocotb_module: dv.auto_dv.flow.gen_cocotb_probe
+    expected_fail: false
+    component: flow
+    measured: false
+
+  - name: gen_ut_bridge
+    description: TB self-test of the cocotb bridge (commands, thresholds, finish handshake); no program (TB Infra)
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: []
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 600
+    owner: tb-infra
+    pass_marker: GEN_UT_BRIDGE_PASS
+    feature_groups: [bringup, tb]
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_bridge
+    expected_fail: false
+    component: gen_bridge
+    measured: false
+
+  - name: gen_boot_zc
+    description: boots-and-retires milestone on the directed Zc program (image digest, MEM_PEEK read-back, retirement threshold, tohost pass code); TB mechanics only (TB Infra)
+    tier: smoke
+    build: gen_tb
+    uvm_test: gen_base_test
+    # The image plusargs (+gen_mem_image, +gen_mem_image_crc32, +gen_mem_image_words, +gen_boot_addr,
+    # +gen_tohost_addr) are added by the flow from gen_image.GenImage(<vmem>).plusargs() of the program.
+    plusargs:
+      - +gen_fetch_en_at_reset=0
+      - +gen_ut_boot_retire=100
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_zc_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 900
+    owner: tb-infra
+    pass_marker: GEN_UT_BOOT_PASS
+    feature_groups: [bringup]
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_boot
+    expected_fail: false
+    component: gen_tb_top
+    measured: false   # canary of the flow, no plan items: its coverage is never counted
+
+  - name: gen_ut_lockstep
+    description: lock-step comparator (Spike ISA shim vs RVFI retirement) on the directed Zc program; checks the DUT against the model (TB Infra)
+    tier: smoke
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs:
+      - +gen_fetch_en_at_reset=0
+      - +gen_ut_boot_retire=100
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_zc_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 900
+    owner: tb-infra
+    pass_marker: GEN_UT_LOCKSTEP_PASS
+    feature_groups: [bringup, isa_model]
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep
+    expected_fail: false
+    component: gen_isa_shim
+    measured: false   # TB lock-step check without an fcov manifest (LOG-039): unmeasured by kind
+
+  - name: gen_ut_lockstep_forced_red
+    description: forced red of the lock-step comparator (TB Infra T-068) with the model ISA string overridden to plain rv32imc, so every Zc retirement mismatches; a red fixture, recorded RED-OK (an unexpected PASS is FAIL); never in a measured tier
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs:
+      - +gen_fetch_en_at_reset=0
+      - +gen_ut_boot_retire=100
+      - +gen_isa_string=rv32imc_zicsr_zifencei
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_zc_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 900
+    owner: tb-infra
+    pass_marker: GEN_UT_LOCKSTEP_PASS
+    feature_groups: [bringup, isa_model, red]
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep
+    expected_fail: false
+    red_fixture: true
+    red_expect: 'UVM_ERROR .*\[isa_[a-z_]+\]'
+    component: gen_isa_shim
+    measured: false
+
+  - name: gen_ut_export
+    description: Record export unit test (TB Infra T-080) with two EXPORT_FLUSH commands, read(seq) bound to the second, header/count/order/cycle rules, first-record pc, tohost stores, pc continuity (trap, mret, dret excluded per C-1)
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs:
+      - +gen_fetch_en_at_reset=0
+      - +gen_ut_boot_retire=100
+      - +gen_export_file=gen_export.txt
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_zc_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 300
+    owner: tb-infra
+    pass_marker: GEN_UT_EXPORT_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_export
+    expected_fail: false
+    component: gen_export_sink
+    measured: false
+
+  - name: gen_ut_export_counters
+    description: Record export unit test with counters (TB Infra T-080, +gen_export_counters=1) with two EXPORT_FLUSH commands, read(seq) bound to the second, header/count/order/cycle rules, first-record pc, tohost stores, pc continuity (trap, mret, dret excluded per C-1)
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs:
+      - +gen_fetch_en_at_reset=0
+      - +gen_ut_boot_retire=100
+      - +gen_export_file=gen_export.txt
+      - +gen_export_counters=1
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_zc_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 300
+    owner: tb-infra
+    pass_marker: GEN_UT_EXPORT_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_export
+    expected_fail: false
+    component: gen_export_sink
+    measured: false
+
+  # Test Writer entries (copied verbatim from dv/auto_dv/work/test-writer/gen_testlist_entries.yaml)
+  - name: gen_test_boot_retire
+    description: template proof; riscv-dv gen_rand_smoke at the run seed boots, retires past the entry's instr_cnt floor and ends with tohost 1; the timing-only regime knobs are drawn and scheduled from the
+      seed only when the build has a REGIME_SET consumer (none at HEAD, logged GEN_TEST_LAYERS not_applied) (Test Writer)
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0]
+    program: {riscv_dv_test: gen_rand_smoke, seed: run}
+    seeds: 3
+    fcov_expectation_file: null
+    timeout_s: 900
+    owner: test-writer
+    pass_marker: GEN_TEST_PASS
+    feature_groups: [bringup, template]
+    cocotb_module: dv.auto_dv.tests.gen_test_boot_retire
+    expected_fail: false
+    component: gen_tb_top
+    measured: false
+
+  - name: gen_test_boot_retire_red
+    description: TDD red fixture of gen_test_boot_retire; the directed program ends with tohost 3 and declares an unreachable retirement floor, so the fire-check must FAIL (verdict RED-OK; evidence dv/auto_dv/evidence/gen_tdd_test_template.md);
+      never a regression test; the red program ends with tohost 3, so fire_eot_pass_code is the designed first failure (fire_retired_floor follows)
+    red_fixture: true
+    red_expect: 'GEN_TEST_FAIL gen_test_boot_retire: [0-9]+ fire-check failure\(s\):.*\bfire_eot_pass_code(?!\d)'
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0]
+    program:
+      directed: [dv/auto_dv/tests/gen_programs/gen_boot_retire_red.S]
+      seed: run
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 300
+    owner: test-writer
+    pass_marker: GEN_TEST_PASS
+    feature_groups: [bringup, template, red]
+    cocotb_module: dv.auto_dv.tests.gen_test_boot_retire
+    expected_fail: false
+    component: gen_tb_top
+    measured: false
+
+  - name: gen_test_rst_boot
+    description: TP-RST-003/006/007 reset and boot state read by software; per-seed program gen_rst_boot_prog.py stores 38 RAW observations (mtvec, mstatus, mie, 30 shuffled reset CSRs, U-mode trap mcause/mstatus/mepc
+      after mret, pad result, unexpected-trap count) to the EOT register; fire_tp_rst_003/006/007 compare them with the plan and the TB facts
+    tier: smoke
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0]
+    program:
+      generator: dv/auto_dv/tests/gen_programs/gen_rst_boot_prog.py
+      generator_args: []
+      seed: run
+      extra_args: [--gcc-opts=-Idv/auto_dv/tests/gen_programs]
+    seeds: 3
+    fcov_expectation_file: dv/auto_dv/fcov_expectations/gen_test_rst_boot.fcov.yaml
+    timeout_s: 900
+    owner: test-writer
+    pass_marker: GEN_TEST_PASS
+    feature_groups: [rst, gen_rst_boot]
+    cocotb_module: dv.auto_dv.tests.gen_test_rst_boot
+    expected_fail: false
+    component: gen_tb_top
+    measured: true
+
+  - name: gen_test_rst_boot_red
+    description: 'TDD red fixture of gen_test_rst_boot, pinned to TP-RST-006 (generator --red --red-item TP-RST-006): the stored mstatus reset read-back carries MPIE toggled, so exactly fire_tp_rst_006 FAILs
+      by design (RED-OK); every other item''s red is retained locally (gen_tdd_batch1.md Section 8)'
+    red_fixture: true
+    red_expect: 'GEN_TEST_FAIL gen_test_rst_boot: [0-9]+ fire-check failure\(s\):.*\bfire_tp_rst_006(?!\d)'
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0]
+    program:
+      generator: dv/auto_dv/tests/gen_programs/gen_rst_boot_prog.py
+      generator_args: [--red, --red-item, TP-RST-006]
+      seed: run
+      extra_args: [--gcc-opts=-Idv/auto_dv/tests/gen_programs]
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 300
+    owner: test-writer
+    pass_marker: GEN_TEST_PASS
+    feature_groups: [rst, gen_rst_boot, red]
+    cocotb_module: dv.auto_dv.tests.gen_test_rst_boot
+    expected_fail: false
+    component: gen_tb_top
+    measured: false
+
+  - name: gen_test_csr_reset
+    description: 'CSR reset values at boot (TP-CSR-037, 105, 106, 107, 108, 109); per-seed program gen_csr_reset_prog.py reads every reset CSR in random order and reports raw read-backs; fire_tp_csr_037/105/106/107/108/109 compare them with spec/doc values (D4, D20 follow RTL); Round 1: fcov_expectation_file detached (null) because 68 of the 68 bins this test''s manifest declares are on covergroups that are not built at this commit (gen_csr_cpuctrlsts_cg, gen_csr_pmp_warl_cg, gen_csr_reset_read_cg, gen_csr_secureseed_cg, gen_csr_trigger_csr_cg, gen_prv_trap_vector_cg), so the expectation check fails the run at every seed; the manifest stays committed and unchanged, and the reference returns with the covergroup landing.; Round 1 (LOG-091): measured false because every bin this test''s manifest declares is on a covergroup not built at this commit, so the entry cannot carry a per-run expectation and its coverage is not credited to the measured merge; the reference stays null and both return with the covergroup landing.'
+    tier: smoke
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0]
+    program:
+      generator: dv/auto_dv/tests/gen_programs/gen_csr_reset_prog.py
+      generator_args: []
+      seed: run
+      extra_args: [--gcc-opts=-Idv/auto_dv/tests/gen_programs]
+    seeds: 3
+    fcov_expectation_file: null
+    timeout_s: 900
+    owner: test-writer
+    pass_marker: GEN_TEST_PASS
+    feature_groups: [csr, gen_csr_reset]
+    cocotb_module: dv.auto_dv.tests.gen_test_csr_reset
+    expected_fail: false
+    component: gen_tb_top
+    measured: false
+
+  - name: gen_test_csr_reset_red
+    description: 'TDD red fixture of gen_test_csr_reset, pinned to TP-CSR-106 (generator --red --red-item TP-CSR-106): one TP-CSR-106 read is re-targeted to a CSR whose reset value differs, so exactly fire_tp_csr_106
+      FAILs by design (RED-OK); every other item''s red is retained locally (gen_tdd_batch1.md Section 8)'
+    red_fixture: true
+    red_expect: 'GEN_TEST_FAIL gen_test_csr_reset: [0-9]+ fire-check failure\(s\):.*\bfire_tp_csr_106(?!\d)'
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0]
+    program:
+      generator: dv/auto_dv/tests/gen_programs/gen_csr_reset_prog.py
+      generator_args: [--red, --red-item, TP-CSR-106]
+      seed: run
+      extra_args: [--gcc-opts=-Idv/auto_dv/tests/gen_programs]
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 300
+    owner: test-writer
+    pass_marker: GEN_TEST_PASS
+    feature_groups: [csr, gen_csr_reset, red]
+    cocotb_module: dv.auto_dv.tests.gen_test_csr_reset
+    expected_fail: false
+    component: gen_tb_top
+    measured: false
+
+  - name: gen_test_csr_access
+    description: group gen_csr_access TP-CSR-001/002/003/004/012 (TP-CSR-005 parked on the comparator's mret isa_pc_next row); per-seed generated program stores every CSR op's rd value and csrr read-back
+      to the EOT register; fire_tp_csr_001/002/003/004/012 compare 926 report words with the Zicsr/WARL plan
+    tier: smoke
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0]
+    program:
+      generator: dv/auto_dv/tests/gen_programs/gen_csr_access_prog.py
+      generator_args: []
+      seed: run
+      extra_args: [--gcc-opts=-Idv/auto_dv/tests/gen_programs]
+    seeds: 3
+    fcov_expectation_file: dv/auto_dv/fcov_expectations/gen_test_csr_access.fcov.yaml
+    timeout_s: 900
+    owner: test-writer
+    pass_marker: GEN_TEST_PASS
+    feature_groups: [csr, gen_csr_access]
+    cocotb_module: dv.auto_dv.tests.gen_test_csr_access
+    expected_fail: false
+    component: gen_tb_top
+    measured: true
+
+  - name: gen_test_csr_access_red
+    description: 'TDD red fixture of gen_test_csr_access, pinned to TP-CSR-001 (generator --red --red-item TP-CSR-001): one writable operand bit of a TP-CSR-001 sequence is flipped in the program only, so
+      exactly fire_tp_csr_001 FAILs by design (RED-OK); every other item''s red is retained locally (gen_tdd_batch1.md Section 8)'
+    red_fixture: true
+    red_expect: 'GEN_TEST_FAIL gen_test_csr_access: [0-9]+ fire-check failure\(s\):.*\bfire_tp_csr_001(?!\d)'
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0]
+    program:
+      generator: dv/auto_dv/tests/gen_programs/gen_csr_access_prog.py
+      generator_args: [--red, --red-item, TP-CSR-001]
+      seed: run
+      extra_args: [--gcc-opts=-Idv/auto_dv/tests/gen_programs]
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 300
+    owner: test-writer
+    pass_marker: GEN_TEST_PASS
+    feature_groups: [csr, gen_csr_access, red]
+    cocotb_module: dv.auto_dv.tests.gen_test_csr_access
+    expected_fail: false
+    component: gen_tb_top
+    measured: false
+
+  - name: gen_test_csr_trap_setup
+    description: group gen_csr_trap_setup items TP-CSR-023/024/025/027/028/029/030/035/036 (026, 031 blocked on the irq agent); per-seed generated program of randomized mstatus/mie/mtvec/mstatush/menvcfg
+      writes with read-back report words, PMP-prologue U-mode mret/ecall rounds and aligned handler copies; fire_tp_csr_023..036 plus fire_program_integrity
+    tier: smoke
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0]
+    program:
+      generator: dv/auto_dv/tests/gen_programs/gen_csr_trap_setup_prog.py
+      generator_args: []
+      seed: run
+      extra_args: [--gcc-opts=-Idv/auto_dv/tests/gen_programs]
+    seeds: 3
+    fcov_expectation_file: dv/auto_dv/fcov_expectations/gen_test_csr_trap_setup.fcov.yaml
+    timeout_s: 900
+    owner: test-writer
+    pass_marker: GEN_TEST_PASS
+    feature_groups: [csr, gen_csr_trap_setup]
+    cocotb_module: dv.auto_dv.tests.gen_test_csr_trap_setup
+    expected_fail: false
+    component: gen_tb_top
+    measured: true
+
+  - name: gen_test_csr_trap_setup_red
+    description: 'TDD red fixture of gen_test_csr_trap_setup, pinned to TP-CSR-036 (generator --red --red-item TP-CSR-036): one TP-CSR-036 mtvec operand is written with bit 8 flipped, so exactly fire_tp_csr_036
+      FAILs by design (RED-OK); every other item''s red is retained locally (gen_tdd_batch1.md Section 8)'
+    red_fixture: true
+    red_expect: 'GEN_TEST_FAIL gen_test_csr_trap_setup: [0-9]+ fire-check failure\(s\):.*\bfire_tp_csr_036(?!\d)'
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0]
+    program:
+      generator: dv/auto_dv/tests/gen_programs/gen_csr_trap_setup_prog.py
+      generator_args: [--red, --red-item, TP-CSR-036]
+      seed: run
+      extra_args: [--gcc-opts=-Idv/auto_dv/tests/gen_programs]
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 300
+    owner: test-writer
+    pass_marker: GEN_TEST_PASS
+    feature_groups: [csr, gen_csr_trap_setup, red]
+    cocotb_module: dv.auto_dv.tests.gen_test_csr_trap_setup
+    expected_fail: false
+    component: gen_tb_top
+    measured: false
+
+  - name: gen_test_cmp_zcb
+    description: gen_cmp_zcb TP-CMP-034/036/038; per-seed Zcb program from gen_cmp_zcb_prog.py reporting RAW rd'/memory words; fire_tp_cmp_034 (Zcb loads/stores at every alignment and uimm), fire_tp_cmp_036
+      (five ALU forms over the operand mix), fire_tp_cmp_038 (c.mul low products over the rsd'/rs2' sweep)
+    tier: smoke
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0]
+    program:
+      generator: dv/auto_dv/tests/gen_programs/gen_cmp_zcb_prog.py
+      generator_args: []
+      seed: run
+      extra_args: [--gcc-opts=-Idv/auto_dv/tests/gen_programs]
+    seeds: 3
+    fcov_expectation_file: dv/auto_dv/fcov_expectations/gen_test_cmp_zcb.fcov.yaml
+    timeout_s: 900
+    owner: test-writer
+    pass_marker: GEN_TEST_PASS
+    feature_groups: [cmp, gen_cmp_zcb]
+    cocotb_module: dv.auto_dv.tests.gen_test_cmp_zcb
+    expected_fail: false
+    component: gen_tb_top
+    measured: true
+
+  - name: gen_test_cmp_zcb_red
+    description: 'TDD red fixture of gen_test_cmp_zcb, pinned to TP-CMP-036 (generator --red --red-item TP-CMP-036): one Zcb ALU form is emitted as a different form, so exactly fire_tp_cmp_036 FAILs by design
+      (RED-OK); every other item''s red is retained locally (gen_tdd_batch1.md Section 8)'
+    red_fixture: true
+    red_expect: 'GEN_TEST_FAIL gen_test_cmp_zcb: [0-9]+ fire-check failure\(s\):.*\bfire_tp_cmp_036(?!\d)'
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0]
+    program:
+      generator: dv/auto_dv/tests/gen_programs/gen_cmp_zcb_prog.py
+      generator_args: [--red, --red-item, TP-CMP-036]
+      seed: run
+      extra_args: [--gcc-opts=-Idv/auto_dv/tests/gen_programs]
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 300
+    owner: test-writer
+    pass_marker: GEN_TEST_PASS
+    feature_groups: [cmp, gen_cmp_zcb, red]
+    cocotb_module: dv.auto_dv.tests.gen_test_cmp_zcb
+    expected_fail: false
+    component: gen_tb_top
+    measured: false
+
+  - name: gen_test_cmp_zcmp_basic
+    description: Zcmp cm.push/pop/popret/popretz/mvsa01/mva01s architectural effects (TP-CMP-039..043, 045..050, 052, 053, 055, 066, 069, 073; TP-CMP-068 blocked); per-seed program gen_cmp_zcmp_basic_prog.py
+      (all 48 rlist/spimm push and pop, all sreg pairs, hazards, back-to-back, fall-through cm.*), report-channel words vs the Zcmp-spec model; fire_tp_cmp_039..073
+    tier: smoke
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0]
+    program:
+      generator: dv/auto_dv/tests/gen_programs/gen_cmp_zcmp_basic_prog.py
+      generator_args: []
+      seed: run
+      extra_args: [--gcc-opts=-Idv/auto_dv/tests/gen_programs]
+    seeds: 3
+    fcov_expectation_file: dv/auto_dv/fcov_expectations/gen_test_cmp_zcmp_basic.fcov.yaml
+    timeout_s: 900
+    owner: test-writer
+    pass_marker: GEN_TEST_PASS
+    feature_groups: [cmp, gen_cmp_zcmp_basic]
+    cocotb_module: dv.auto_dv.tests.gen_test_cmp_zcmp_basic
+    expected_fail: false
+    component: gen_tb_top
+    measured: true
+
+  - name: gen_test_cmp_zcmp_basic_red
+    description: 'TDD red fixture of gen_test_cmp_zcmp_basic, pinned to TP-CMP-039 (generator --red --red-item TP-CMP-039): one plain cm.push is emitted with the other spimm bit (sp_new off by 16; the frame
+      checks 042/043 also trip), so exactly fire_tp_cmp_039 FAILs by design (RED-OK); every other item''s red is retained locally (gen_tdd_batch1.md Section 8)'
+    red_fixture: true
+    red_expect: 'GEN_TEST_FAIL gen_test_cmp_zcmp_basic: [0-9]+ fire-check failure\(s\):.*\bfire_tp_cmp_039(?!\d)'
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0]
+    program:
+      generator: dv/auto_dv/tests/gen_programs/gen_cmp_zcmp_basic_prog.py
+      generator_args: [--red, --red-item, TP-CMP-039]
+      seed: run
+      extra_args: [--gcc-opts=-Idv/auto_dv/tests/gen_programs]
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 300
+    owner: test-writer
+    pass_marker: GEN_TEST_PASS
+    feature_groups: [cmp, gen_cmp_zcmp_basic, red]
+    cocotb_module: dv.auto_dv.tests.gen_test_cmp_zcmp_basic
+    expected_fail: false
+    component: gen_tb_top
+    measured: false
+
+  - name: gen_test_bit_draft
+    description: 'TP-BIT-016 grevi/gorci/grev/gorc (W9 controls, W1 operands, W3 upper bits) plus rev8/orc.b/brev8 from gen_bit_draft_prog.py; fire-checks every replayed rd against the Python grev32/gorc32 reference per op class, report count, retirement floor, pass code (TP-BIT-011/022..033 blocked on the shim''s C5.5 references); Round 1: fcov_expectation_file detached (null) because 15 of the 15 bins this test''s manifest declares are on covergroups that are not built at this commit (gen_bit_perm_cg), so the expectation check fails the run at every seed; the manifest stays committed and unchanged, and the reference returns with the covergroup landing.; Round 1 (LOG-091): measured false because every bin this test''s manifest declares is on a covergroup not built at this commit, so the entry cannot carry a per-run expectation and its coverage is not credited to the measured merge; the reference stays null and both return with the covergroup landing.'
+    tier: targeted
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0]
+    program:
+      generator: dv/auto_dv/tests/gen_programs/gen_bit_draft_prog.py
+      generator_args: []
+      seed: run
+      extra_args: [--gcc-opts=-Idv/auto_dv/tests/gen_programs]
+    seeds: 3
+    fcov_expectation_file: null
+    timeout_s: 900
+    owner: test-writer
+    pass_marker: GEN_TEST_PASS
+    feature_groups: [bit, gen_bit_draft]
+    cocotb_module: dv.auto_dv.tests.gen_test_bit_draft
+    expected_fail: false
+    component: gen_tb_top
+    measured: false
+
+  - name: gen_test_bit_draft_red
+    description: 'TDD red fixture of gen_test_bit_draft, pinned to TP-BIT-016 (generator --red --red-item TP-BIT-016): one gorci immediate deviates while the plan keeps the true expectation, so exactly fire_tp_bit_016
+      FAILs by design (RED-OK); every other item''s red is retained locally (gen_tdd_batch1.md Section 8)'
+    red_fixture: true
+    red_expect: 'GEN_TEST_FAIL gen_test_bit_draft: [0-9]+ fire-check failure\(s\):.*\bfire_tp_bit_016(?!\d)'
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0]
+    program:
+      generator: dv/auto_dv/tests/gen_programs/gen_bit_draft_prog.py
+      generator_args: [--red, --red-item, TP-BIT-016]
+      seed: run
+      extra_args: [--gcc-opts=-Idv/auto_dv/tests/gen_programs]
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 300
+    owner: test-writer
+    pass_marker: GEN_TEST_PASS
+    feature_groups: [bit, gen_bit_draft, red]
+    cocotb_module: dv.auto_dv.tests.gen_test_bit_draft
+    expected_fail: false
+    component: gen_tb_top
+    measured: false
+
+  - name: gen_test_pmp_csr_warl
+    description: 'TP-PMP-001..008 PMP CSR WARL rules (pmpcfg packing, 32-bit pmpaddr, bits 6:5, RW=01 under MML=0/1, A modes with U-mode probes, RMW forms, U-mode access illegal); per-seed generated program; fire_tp_pmp_001..008 on the report channel; Round 1: fcov_expectation_file detached (null) because 266 of the 266 bins this test''s manifest declares are on covergroups that are not built at this commit (gen_pmp_access_verdict_cg, gen_pmp_addr_write_cg, gen_pmp_cfg_write_cg, gen_pmp_csr_access_cg, gen_pmp_mseccfg_cg), so the expectation check fails the run at every seed; the manifest stays committed and unchanged, and the reference returns with the covergroup landing.; Round 1 (LOG-091): measured false because every bin this test''s manifest declares is on a covergroup not built at this commit, so the entry cannot carry a per-run expectation and its coverage is not credited to the measured merge; the reference stays null and both return with the covergroup landing.'
+    tier: smoke
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0]
+    program:
+      generator: dv/auto_dv/tests/gen_programs/gen_pmp_csr_warl_prog.py
+      generator_args: []
+      seed: run
+      extra_args: [--gcc-opts=-Idv/auto_dv/tests/gen_programs]
+    seeds: 3
+    fcov_expectation_file: null
+    timeout_s: 900
+    owner: test-writer
+    pass_marker: GEN_TEST_PASS
+    feature_groups: [pmp, gen_pmp_csr_warl]
+    cocotb_module: dv.auto_dv.tests.gen_test_pmp_csr_warl
+    expected_fail: false
+    component: gen_tb_top
+    measured: false
+
+  - name: gen_test_pmp_csr_warl_red
+    description: 'TDD red fixture of gen_test_pmp_csr_warl, pinned to TP-PMP-001 (generator --red --red-item TP-PMP-001): one TP-PMP-001 pmpcfg byte is written with a flipped A field, so exactly fire_tp_pmp_001
+      FAILs by design (RED-OK); every other item''s red is retained locally (gen_tdd_batch1.md Section 8)'
+    red_fixture: true
+    red_expect: 'GEN_TEST_FAIL gen_test_pmp_csr_warl: [0-9]+ fire-check failure\(s\):.*\bfire_tp_pmp_001(?!\d)'
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0]
+    program:
+      generator: dv/auto_dv/tests/gen_programs/gen_pmp_csr_warl_prog.py
+      generator_args: [--red, --red-item, TP-PMP-001]
+      seed: run
+      extra_args: [--gcc-opts=-Idv/auto_dv/tests/gen_programs]
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 300
+    owner: test-writer
+    pass_marker: GEN_TEST_PASS
+    feature_groups: [pmp, gen_pmp_csr_warl, red]
+    cocotb_module: dv.auto_dv.tests.gen_test_pmp_csr_warl
+    expected_fail: false
+    component: gen_tb_top
+    measured: false
+
+  - name: gen_test_mul_div_red
+    description: 'TDD red fixture of gen_test_mul_div, pinned to TP-MUL-014 (generator --red --red-item TP-MUL-014): one div/rem pair''s dividend bit 0 is flipped in the program only, so fire_tp_mul_014 FAILs
+      by design (RED-OK); every other item''s red is retained locally (gen_tdd_batch2.md)'
+    red_fixture: true
+    red_expect: 'GEN_TEST_FAIL gen_test_mul_div: [0-9]+ fire-check failure\(s\):.*\bfire_tp_mul_014(?!\d)'
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0]
+    program:
+      generator: dv/auto_dv/tests/gen_programs/gen_mul_div_prog.py
+      generator_args: [--red, --red-item, TP-MUL-014]
+      seed: run
+      extra_args: [--gcc-opts=-Idv/auto_dv/tests/gen_programs]
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 300
+    owner: test-writer
+    pass_marker: GEN_TEST_PASS
+    feature_groups: [mul, gen_mul_div, red]
+    cocotb_module: dv.auto_dv.tests.gen_test_mul_div
+    expected_fail: false
+    component: gen_tb_top
+    measured: false
+
+  - name: gen_test_mul_div
+    description: 'Phase 1 batch 2: RV32M divide (TP-MUL-013..021, 026 built; 012, 022 not built: latency clauses): div/divu/rem/remu, explicit divide-by-zero and INT_MIN/-1 checks in signed and unsigned forms,
+      decode forms; per-seed program gen_mul_div_prog.py; fire_tp_mul_013..026'
+    tier: smoke
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0]
+    program:
+      generator: dv/auto_dv/tests/gen_programs/gen_mul_div_prog.py
+      generator_args: []
+      seed: run
+      extra_args: [--gcc-opts=-Idv/auto_dv/tests/gen_programs]
+    seeds: 3
+    fcov_expectation_file: dv/auto_dv/fcov_expectations/gen_test_mul_div.fcov.yaml
+    timeout_s: 900
+    owner: test-writer
+    pass_marker: GEN_TEST_PASS
+    feature_groups: [mul, gen_mul_div]
+    cocotb_module: dv.auto_dv.tests.gen_test_mul_div
+    expected_fail: false
+    component: gen_tb_top
+    measured: true
+
+  - name: gen_test_mul_mul_red
+    description: 'TDD red fixture of gen_test_mul_mul, pinned to TP-MUL-002 (generator --red --red-item TP-MUL-002): one mul is emitted as mulhsu, so fire_tp_mul_002 FAILs by design (RED-OK); every other
+      item''s red is retained locally (gen_tdd_batch2.md)'
+    red_fixture: true
+    red_expect: 'GEN_TEST_FAIL gen_test_mul_mul: [0-9]+ fire-check failure\(s\):.*\bfire_tp_mul_002(?!\d)'
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0]
+    program:
+      generator: dv/auto_dv/tests/gen_programs/gen_mul_mul_prog.py
+      generator_args: [--red, --red-item, TP-MUL-002]
+      seed: run
+      extra_args: [--gcc-opts=-Idv/auto_dv/tests/gen_programs]
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 300
+    owner: test-writer
+    pass_marker: GEN_TEST_PASS
+    feature_groups: [mul, gen_mul_mul, red]
+    cocotb_module: dv.auto_dv.tests.gen_test_mul_mul
+    expected_fail: false
+    component: gen_tb_top
+    measured: false
+
+  - name: gen_test_mul_mul
+    description: 'Phase 1 batch 2: RV32M multiply (TP-MUL-001, 002, 004..008, 027 built; 003 not built: latency clause): mul/mulh/mulhu/mulhsu products over sign and extreme classes, c.mul; per-seed program
+      gen_mul_mul_prog.py; fire_tp_mul_001..027'
+    tier: smoke
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0]
+    program:
+      generator: dv/auto_dv/tests/gen_programs/gen_mul_mul_prog.py
+      generator_args: []
+      seed: run
+      extra_args: [--gcc-opts=-Idv/auto_dv/tests/gen_programs]
+    seeds: 3
+    fcov_expectation_file: dv/auto_dv/fcov_expectations/gen_test_mul_mul.fcov.yaml
+    timeout_s: 900
+    owner: test-writer
+    pass_marker: GEN_TEST_PASS
+    feature_groups: [mul, gen_mul_mul]
+    cocotb_module: dv.auto_dv.tests.gen_test_mul_mul
+    expected_fail: false
+    component: gen_tb_top
+    measured: true
+
+  - name: gen_test_isa_cti_red
+    description: 'TDD red fixture of gen_test_isa_cti, pinned to TP-ISA-017 (generator --red --red-item TP-ISA-017): one jal reports a stale link value, so fire_tp_isa_017 FAILs by design (RED-OK; UVM_ERROR-free since TB Infra''s comparator rows R10/R11); every other item''s red is retained locally (gen_tdd_batch2.md)'
+    red_fixture: true
+    red_expect: 'GEN_TEST_FAIL gen_test_isa_cti: [0-9]+ fire-check failure\(s\):.*\bfire_tp_isa_017(?!\d)'
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0]
+    program:
+      generator: dv/auto_dv/tests/gen_programs/gen_isa_cti_prog.py
+      generator_args: [--red, --red-item, TP-ISA-017]
+      seed: run
+      extra_args: [--gcc-opts=-Idv/auto_dv/tests/gen_programs]
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 300
+    owner: test-writer
+    pass_marker: GEN_TEST_PASS
+    feature_groups: [isa, gen_isa_cti, red]
+    cocotb_module: dv.auto_dv.tests.gen_test_isa_cti
+    expected_fail: false
+    component: gen_tb_top
+    measured: false
+
+  - name: gen_test_isa_cti
+    description: 'Phase 1 batch 2: RV32I control transfer (TP-ISA-015, 017, 018, 019, 020, 023, 027, 053 built; 016, 022, 026 not built: memory map; 024 not built: timing): landing markers, link values, branch
+      outcome vectors, misaligned-address exception never raised; per-seed program gen_isa_cti_prog.py; fire_tp_isa_015..053'
+    tier: smoke
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0]
+    program:
+      generator: dv/auto_dv/tests/gen_programs/gen_isa_cti_prog.py
+      generator_args: []
+      seed: run
+      extra_args: [--gcc-opts=-Idv/auto_dv/tests/gen_programs]
+    seeds: 3
+    fcov_expectation_file: dv/auto_dv/fcov_expectations/gen_test_isa_cti.fcov.yaml
+    timeout_s: 900
+    owner: test-writer
+    pass_marker: GEN_TEST_PASS
+    feature_groups: [isa, gen_isa_cti]
+    cocotb_module: dv.auto_dv.tests.gen_test_isa_cti
+    expected_fail: false
+    component: gen_tb_top
+    measured: true
+
+  - name: gen_test_isa_shift_red
+    description: 'TDD red fixture of gen_test_isa_shift, pinned to TP-ISA-010 (generator --red --red-item TP-ISA-010): one shift-immediate op is emitted as another op of its form, so fire_tp_isa_010 FAILs
+      by design (RED-OK); every other item''s red is retained locally (gen_tdd_batch2.md)'
+    red_fixture: true
+    red_expect: 'GEN_TEST_FAIL gen_test_isa_shift: [0-9]+ fire-check failure\(s\):.*\bfire_tp_isa_010(?!\d)'
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0]
+    program:
+      generator: dv/auto_dv/tests/gen_programs/gen_isa_shift_prog.py
+      generator_args: [--red, --red-item, TP-ISA-010]
+      seed: run
+      extra_args: [--gcc-opts=-Idv/auto_dv/tests/gen_programs]
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 300
+    owner: test-writer
+    pass_marker: GEN_TEST_PASS
+    feature_groups: [isa, gen_isa_shift, red]
+    cocotb_module: dv.auto_dv.tests.gen_test_isa_shift
+    expected_fail: false
+    component: gen_tb_top
+    measured: false
+
+  - name: gen_test_isa_shift
+    description: 'Phase 1 batch 2: RV32I shifts (TP-ISA-010, 011, 013, 014, all built): every op x every amount, sign propagation, rs2 upper bits ignored; per-seed program gen_isa_shift_prog.py; fire_tp_isa_010..014'
+    tier: smoke
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0]
+    program:
+      generator: dv/auto_dv/tests/gen_programs/gen_isa_shift_prog.py
+      generator_args: []
+      seed: run
+      extra_args: [--gcc-opts=-Idv/auto_dv/tests/gen_programs]
+    seeds: 3
+    fcov_expectation_file: dv/auto_dv/fcov_expectations/gen_test_isa_shift.fcov.yaml
+    timeout_s: 900
+    owner: test-writer
+    pass_marker: GEN_TEST_PASS
+    feature_groups: [isa, gen_isa_shift]
+    cocotb_module: dv.auto_dv.tests.gen_test_isa_shift
+    expected_fail: false
+    component: gen_tb_top
+    measured: true
+
+  - name: gen_test_isa_alu_red
+    description: 'TDD red fixture of gen_test_isa_alu, pinned to TP-ISA-002 (generator --red --red-item TP-ISA-002): the wrap addi is emitted with immediate 0 (no wrap), so fire_tp_isa_002 FAILs by design
+      (RED-OK); every other item''s red is retained locally (gen_tdd_batch2.md)'
+    red_fixture: true
+    red_expect: 'GEN_TEST_FAIL gen_test_isa_alu: [0-9]+ fire-check failure\(s\):.*\bfire_tp_isa_002(?!\d)'
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0]
+    program:
+      generator: dv/auto_dv/tests/gen_programs/gen_isa_alu_prog.py
+      generator_args: [--red, --red-item, TP-ISA-002]
+      seed: run
+      extra_args: [--gcc-opts=-Idv/auto_dv/tests/gen_programs]
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 300
+    owner: test-writer
+    pass_marker: GEN_TEST_PASS
+    feature_groups: [isa, gen_isa_alu, red]
+    cocotb_module: dv.auto_dv.tests.gen_test_isa_alu
+    expected_fail: false
+    component: gen_tb_top
+    measured: false
+
+  - name: gen_test_isa_alu
+    description: 'Phase 1 batch 2: RV32I ALU (TP-ISA-001..009, 052, all 10 built): I-type and R-type ops over operand classes, overflow wrap, comparison boundaries, lui/auipc extremes, HINT no-ops, writes
+      to x0 discarded; per-seed program gen_isa_alu_prog.py; fire_tp_isa_001..052'
+    tier: smoke
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0]
+    program:
+      generator: dv/auto_dv/tests/gen_programs/gen_isa_alu_prog.py
+      generator_args: []
+      seed: run
+      extra_args: [--gcc-opts=-Idv/auto_dv/tests/gen_programs]
+    seeds: 3
+    fcov_expectation_file: dv/auto_dv/fcov_expectations/gen_test_isa_alu.fcov.yaml
+    timeout_s: 900
+    owner: test-writer
+    pass_marker: GEN_TEST_PASS
+    feature_groups: [isa, gen_isa_alu]
+    cocotb_module: dv.auto_dv.tests.gen_test_isa_alu
+    expected_fail: false
+    component: gen_tb_top
+    measured: true
+
+  - name: gen_test_bit_ratified_red
+    description: 'TDD red fixture of gen_test_bit_ratified, pinned to TP-BIT-014 (generator --red --red-item TP-BIT-014): one orc.b source value is loaded so its reference differs, so fire_tp_bit_014 FAILs
+      by design (RED-OK); every other item''s red is retained locally (gen_tdd_batch2.md)'
+    red_fixture: true
+    red_expect: 'GEN_TEST_FAIL gen_test_bit_ratified: [0-9]+ fire-check failure\(s\):.*\bfire_tp_bit_014(?!\d)'
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0]
+    program:
+      generator: dv/auto_dv/tests/gen_programs/gen_bit_ratified_prog.py
+      generator_args: [--red, --red-item, TP-BIT-014]
+      seed: run
+      extra_args: [--gcc-opts=-Idv/auto_dv/tests/gen_programs]
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 300
+    owner: test-writer
+    pass_marker: GEN_TEST_PASS
+    feature_groups: [bit, gen_bit_ratified, red]
+    cocotb_module: dv.auto_dv.tests.gen_test_bit_ratified
+    expected_fail: false
+    component: gen_tb_top
+    measured: false
+
+  - name: gen_test_bit_ratified
+    description: 'Phase 1 batch 2: ratified bitmanip Zba/Zbb/Zbs/Zbc (TP-BIT-002..021, 038, 040 built; TP-BIT-001 not built: RVFI record fact): Python references from zb.adoc, exhaustive control floors, vacuous
+      compares counted apart; per-seed program gen_bit_ratified_prog.py; fire_tp_bit_002..040'
+    tier: smoke
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0]
+    program:
+      generator: dv/auto_dv/tests/gen_programs/gen_bit_ratified_prog.py
+      generator_args: []
+      seed: run
+      extra_args: [--gcc-opts=-Idv/auto_dv/tests/gen_programs]
+    seeds: 3
+    fcov_expectation_file: dv/auto_dv/fcov_expectations/gen_test_bit_ratified.fcov.yaml
+    timeout_s: 900
+    owner: test-writer
+    pass_marker: GEN_TEST_PASS
+    feature_groups: [bit, gen_bit_ratified]
+    cocotb_module: dv.auto_dv.tests.gen_test_bit_ratified
+    expected_fail: false
+    component: gen_tb_top
+    measured: true
+
+  - name: gen_test_cmp_zca_red
+    description: 'TDD red fixture of gen_test_cmp_zca, pinned to TP-CMP-005 (generator --red --red-item TP-CMP-005): one c.swsp immediate is moved so the read-back sees stale data, so fire_tp_cmp_005 FAILs
+      by design (RED-OK; UVM_ERROR-free since TB Infra''s comparator rows R10/R11); every other item''s red is retained
+      locally (gen_tdd_batch2.md)'
+    red_fixture: true
+    red_expect: 'GEN_TEST_FAIL gen_test_cmp_zca: [0-9]+ fire-check failure\(s\):.*\bfire_tp_cmp_005(?!\d)'
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0]
+    program:
+      generator: dv/auto_dv/tests/gen_programs/gen_cmp_zca_prog.py
+      generator_args: [--red, --red-item, TP-CMP-005]
+      seed: run
+      extra_args: [--gcc-opts=-Idv/auto_dv/tests/gen_programs]
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 300
+    owner: test-writer
+    pass_marker: GEN_TEST_PASS
+    feature_groups: [cmp, gen_cmp_zca, red]
+    cocotb_module: dv.auto_dv.tests.gen_test_cmp_zca
+    expected_fail: false
+    component: gen_tb_top
+    measured: false
+
+  - name: gen_test_cmp_zca
+    description: 'Phase 1 batch 2: Zca compressed forms versus their 32-bit forms (TP-CMP-001..033, all 21 items built): register and memory results, sp handling, jump and branch outcomes, link values, c.ebreak
+      and illegal c.addi16sp through a returning handler; per-seed program gen_cmp_zca_prog.py; fire_tp_cmp_001..033'
+    tier: smoke
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0]
+    program:
+      generator: dv/auto_dv/tests/gen_programs/gen_cmp_zca_prog.py
+      generator_args: []
+      seed: run
+      extra_args: [--gcc-opts=-Idv/auto_dv/tests/gen_programs]
+    seeds: 3
+    fcov_expectation_file: dv/auto_dv/fcov_expectations/gen_test_cmp_zca.fcov.yaml
+    timeout_s: 900
+    owner: test-writer
+    pass_marker: GEN_TEST_PASS
+    feature_groups: [cmp, gen_cmp_zca]
+    cocotb_module: dv.auto_dv.tests.gen_test_cmp_zca
+    expected_fail: false
+    component: gen_tb_top
+    measured: true
+
+  - name: gen_ut_export_irq_storm
+    description: export under an interrupt storm (multi-line, UNTIL_TAKEN) on the vectored-mret interrupt program; observes pin irq_software / irq_timer / irq_external / irq_fast, misc irq_pending and the I markers (TB Infra T-150)
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs:
+      - +gen_fetch_en_at_reset=0
+      - +gen_ut_boot_retire=2500
+      - +gen_export_file=gen_export.txt
+      - +gen_knob_irq_regime=storm
+      - +gen_knob_irq_line_mix=multi
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_irq_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 600
+    owner: tb-infra
+    pass_marker: GEN_UT_EXPORT_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_export
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_export_sink
+    measured: false
+
+  - name: gen_ut_export_dbg_storm
+    description: export under a debug-request storm on the riscv-dv seed-7 program; observes pin debug_req assert and release and scrkey req / valid (TB Infra T-150)
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs:
+      - +gen_fetch_en_at_reset=0
+      - +gen_ut_boot_retire=2000
+      - +gen_export_file=gen_export.txt
+      - +gen_knob_debug_req_regime=storm
+    program: {riscv_dv_test: gen_rand_smoke, seed: 7}
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 600
+    owner: tb-infra
+    pass_marker: GEN_UT_EXPORT_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_export
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_export_sink
+    measured: false
+
+  - name: gen_ut_export_scrkey_delayed
+    description: export with the scramble-key responder in the delayed regime on the riscv-dv seed-7 program; observes scrkey req and valid with the delayed valid (TB Infra T-150)
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs:
+      - +gen_fetch_en_at_reset=0
+      - +gen_ut_boot_retire=2000
+      - +gen_export_file=gen_export.txt
+      - +gen_knob_scr_key_delay=delayed
+    program: {riscv_dv_test: gen_rand_smoke, seed: 7}
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 600
+    owner: tb-infra
+    pass_marker: GEN_UT_EXPORT_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_export
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_export_sink
+    measured: false
+
+  - name: gen_ut_export_rows_nmi
+    description: two REGIME_SET phases and one NMI_PULSE through the bridge, export read back with every checker on; observes regime phase and pin irq_nm 1 then 0 (TB Infra T-150 / CM8-M-3)
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs:
+      - +gen_fetch_en_at_reset=0
+      - +gen_export_file=gen_export.txt
+      - +gen_ut_rows_set=regime_nmi
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_irq_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 600
+    owner: tb-infra
+    pass_marker: GEN_UT_EXPORT_ROWS_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_export_rows
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_export_sink
+    measured: false
+
+  - name: gen_ut_export_rows_dbg
+    description: two REGIME_SET phases and one DBG_REQ assert-and-release through the bridge, export read back with every checker on; observes regime phase and pin debug_req 1 then 0 (TB Infra T-150 / CM8-M-3)
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs:
+      - +gen_fetch_en_at_reset=0
+      - +gen_export_file=gen_export.txt
+      - +gen_ut_rows_set=regime_dbg
+    program: {riscv_dv_test: gen_rand_smoke, seed: 7}
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 600
+    owner: tb-infra
+    pass_marker: GEN_UT_EXPORT_ROWS_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_export_rows
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_export_sink
+    measured: false
+
+  # TDD red fixture for the dispatcher's REGIME_SET refusal: the test sends REGIME_SET for a knob whose yaml
+  # regime_set_consumer is none and finishes; the run FAILS by design through the collected GEN_CMD_DISPATCH uvm_error.
+  - name: gen_ut_regime_refuse
+    description: REGIME_SET for the first knob in name order whose regime_set_consumer is none (gen_tb_knobs.yaml, read at run time) must be refused by the dispatcher; a red fixture whose designed failure is the collected refusal (TB Infra T-108)
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs:
+      - +gen_fetch_en_at_reset=0
+      - +gen_ut_boot_retire=100
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_zc_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 300
+    owner: tb-infra
+    pass_marker: GEN_UT_REGIME_REFUSE_PASS
+    feature_groups: [red]
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_regime_refuse
+    expected_fail: false
+    red_fixture: true
+    red_expect: 'UVM_ERROR .*\[GEN_CMD_DISPATCH\] REGIME_SET: no run-time consumer for '
+    component: gen_cmd_dispatch
+    measured: false
+
+  - name: gen_ut_witness
+    description: COV_WITNESS (CG-WIT-001) through the bridge; two items of one test group witnessed with their own group, the first twice; the peek word counts the distinct bins the covergroup holds (TB Infra T-179)
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs:
+      - +gen_fetch_en_at_reset=0
+      - +gen_ut_boot_retire=100
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_zc_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 300
+    owner: tb-infra
+    pass_marker: GEN_UT_WITNESS_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_witness
+    expected_fail: false
+    component: gen_fcov_pkg
+    measured: false
+
+  - name: gen_ut_witness_foreign
+    description: COV_WITNESS for an item of another test's group must be refused by the dispatcher; a red fixture whose designed failure is the collected GEN_WITNESS_FOREIGN error (TB Infra T-179, rule C-2)
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs:
+      - +gen_fetch_en_at_reset=0
+      - +gen_ut_boot_retire=100
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_zc_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 300
+    owner: tb-infra
+    pass_marker: GEN_UT_WITNESS_FOREIGN_PASS
+    feature_groups: [red]
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_witness_foreign
+    expected_fail: false
+    red_fixture: true
+    red_expect: 'UVM_ERROR .*\[GEN_WITNESS_FOREIGN\] COV_WITNESS '
+    component: gen_fcov_pkg
+    measured: false
+
+  - name: gen_ut_fetch_en
+    description: fetch_enable_i Off after boot, the drain window and an idle wait, then On to the tohost store; the misc monitor's fetch_en rule judges that no record retires later than GEN_FETCH_EN_DRAIN_CYCLES after the Off edge (TB Infra, landing 2b)
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs:
+      - +gen_fetch_en_at_reset=0
+      - +gen_ut_boot_retire=60
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_zc_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 300
+    owner: tb-infra
+    pass_marker: GEN_UT_FETCH_EN_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_fetch_en
+    expected_fail: false
+    component: gen_misc_monitor
+    measured: false
+
+
+  - name: gen_ut_lockstep_muldiv
+    description: lock-step run of gen_muldiv_directed.S (every M-extension and base R-type ALU operation over the operand-class table, every ordered pair, the plan's register relations, c.mul from its 16-bit encoding); exercises gen_mul_ops_cg, gen_div_ops_cg, gen_isa_alu_reg_cg (TB Infra T-205)
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs:
+      - +gen_fetch_en_at_reset=0
+      - +gen_ut_boot_retire=9000
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_muldiv_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 900
+    owner: tb-infra
+    pass_marker: GEN_UT_LOCKSTEP_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_fcov_pkg
+    measured: false
+
+  - name: gen_ut_lockstep_alu
+    description: lock-step run of gen_alu_directed.S (Zba / Zbb / pack, the base shifts in both forms, the OP-IMM ALU operations over the operand-class table and the immediate classes); exercises gen_bit_zba_zbb_ops_cg, gen_isa_alu_imm_cg, gen_isa_shift_cg (TB Infra T-205)
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs:
+      - +gen_fetch_en_at_reset=0
+      - +gen_ut_boot_retire=22000
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_alu_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 900
+    owner: tb-infra
+    pass_marker: GEN_UT_LOCKSTEP_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_fcov_pkg
+    measured: false
+
+  - name: gen_ut_lockstep_bitcnt
+    description: lock-step run of gen_bitcnt_directed.S (clz / ctz / cpop over the operand-class table and every single-bit operand); exercises gen_bit_count_cg (TB Infra T-205 slice 2)
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs:
+      - +gen_fetch_en_at_reset=0
+      - +gen_ut_boot_retire=100
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_bitcnt_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 900
+    owner: tb-infra
+    pass_marker: GEN_UT_LOCKSTEP_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_fcov_pkg
+    measured: false
+
+  - name: gen_ut_lockstep_zca
+    description: lock-step run of gen_zca_directed.S (every Zca compressed instruction, both PC alignments, 32-bit instructions straddling a word, the 16/32 next-length pairs, register reads by the rd field); exercises gen_cmp_zca_cg (TB Infra T-205 slice 2)
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs:
+      - +gen_fetch_en_at_reset=0
+      - +gen_ut_boot_retire=100
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_zca_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 900
+    owner: tb-infra
+    pass_marker: GEN_UT_LOCKSTEP_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_fcov_pkg
+    measured: false
+
+  - name: gen_ut_lockstep_zcmp
+    description: lock-step run of gen_zcmp_directed.S (cm.push / cm.pop / cm.popret / cm.popretz over every rlist 4..15 and spimm 0..3, word- and half-aligned return addresses); exercises gen_cmp_zcmp_pushpop_cg with the default dmem regime (TB Infra T-205 slice 2; the min1 / long / random dmem regimes are the same program with +gen_knob_dmem_rvalid_delay)
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs:
+      - +gen_fetch_en_at_reset=0
+      - +gen_ut_boot_retire=100
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_zcmp_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 900
+    owner: tb-infra
+    pass_marker: GEN_UT_LOCKSTEP_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_fcov_pkg
+    measured: false
+
+  - name: gen_ut_lockstep_zcmp_misaligned
+    description: lock-step run of gen_zcmp_misaligned_directed.S (cm.push / cm.pop pairs with sp misaligned by 1, 2 and 3 bytes; every stack access splits into two bus transactions); exercises gen_cmp_zcmp_pushpop_cg cp_ret_align / cr_insn_delay under split accesses (TB Infra T-205 slice 2)
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs:
+      - +gen_fetch_en_at_reset=0
+      - +gen_ut_boot_retire=10
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_zcmp_misaligned_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 900
+    owner: tb-infra
+    pass_marker: GEN_UT_LOCKSTEP_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_fcov_pkg
+    measured: false
+
+  - name: gen_ut_lockstep_zcmp_dummy
+    description: B8 reproducer for TP-CMP-065, cm.push / cm.pop pairs with cpuctrlsts.dummy_instr_en set; the lock-step comparator raises isa_mem / isa_rd rows because a dummy instruction inserted inside a Zcmp expansion discards the micro-op the decoder had on instr_o (dv/auto_dv/evidence/gen_b8_rtl_facts.md). Expected to fail until the RTL is fixed or the owner rules otherwise; an unexpected PASS means the behaviour changed and the finding must be re-examined (TB Infra T-205 slice 2)
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs:
+      - +gen_fetch_en_at_reset=0
+      - +gen_ut_boot_retire=10
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_zcmp_dummy_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 900
+    owner: tb-infra
+    pass_marker: GEN_UT_LOCKSTEP_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep
+    expected_fail: true
+    keep_artifacts: true
+    component: gen_fcov_pkg
+    measured: false
+    notes: 'RTL finding B8 (dv/auto_dv/evidence/gen_b8_rtl_facts.md, section 6: the RTL-level signature the reproducer should observe); the retained red is dv/auto_dv/evidence/gen_tdd_logs/fcov/gen_fu_l4_lockstep_zcmp_dummy_*; its designed failure is the scoreboard UVM_ERROR from gen_rvfi_pkg.sv: [isa_mem] rows tagged "Zcmp stores:" or "Zcmp loads:" with a model / dut count mismatch, and [isa_rd] "Zcmp union:" register mismatches; a FAIL through any other mechanism is not the B8 red and needs triage; the row mapping is dv/auto_dv/evidence/gen_b8_row_mapping.md'
+
+  - name: gen_test_pmp_mseccfg
+    description: 'Phase 1 batch 3: mseccfg (Smepmp MML, MMWP, RLB) WARL and sticky rules, RLB against locked entries, MML executable-lock suppression with RLB 0/1, and the interpretation change under MML with U-mode probes through a returning handler (TP-PMP-011, 012, 022..031 built; TP-PMP-108 not built: the walk needs a wrapper reset the bridge lacks); per-seed program gen_pmp_mseccfg_prog.py; fire_tp_pmp_011..031 on the report channel; Round 1: fcov_expectation_file detached (null) because 77 of the 77 bins this test''s manifest declares are on covergroups that are not built at this commit (gen_pmp_access_verdict_cg, gen_pmp_cfg_write_cg, gen_pmp_csr_access_cg, gen_pmp_mseccfg_cg, gen_pmp_recfg_cg), so the expectation check fails the run at every seed; the manifest stays committed and unchanged, and the reference returns with the covergroup landing.'
+    tier: targeted
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0]
+    program:
+      generator: dv/auto_dv/tests/gen_programs/gen_pmp_mseccfg_prog.py
+      generator_args: []
+      seed: run
+      extra_args: [--gcc-opts=-Idv/auto_dv/tests/gen_programs]
+    seeds: 3
+    fcov_expectation_file: null
+    timeout_s: 900
+    owner: test-writer
+    pass_marker: GEN_TEST_PASS
+    feature_groups: [pmp, gen_pmp_mseccfg]
+    cocotb_module: dv.auto_dv.tests.gen_test_pmp_mseccfg
+    expected_fail: false
+    component: gen_tb_top
+    measured: false
+    notes: measured false until the PMP covergroups are built; round-0 refusal class
+
+  - name: gen_test_pmp_mseccfg_red
+    description: 'TDD red fixture of gen_test_pmp_mseccfg, pinned to TP-PMP-011 (generator --red --red-item TP-PMP-011): one lock-free mseccfg write carries the RLB bit flipped and the planned state is restored
+      after the reported read-back, so exactly fire_tp_pmp_011 FAILs by design (RED-OK); every other item''s red is retained as an excerpt (gen_tdd_batch3.md)'
+    red_fixture: true
+    red_expect: 'GEN_TEST_FAIL gen_test_pmp_mseccfg: [0-9]+ fire-check failure\(s\):.*\bfire_tp_pmp_011(?!\d)'
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0]
+    program:
+      generator: dv/auto_dv/tests/gen_programs/gen_pmp_mseccfg_prog.py
+      generator_args: [--red, --red-item, TP-PMP-011]
+      seed: run
+      extra_args: [--gcc-opts=-Idv/auto_dv/tests/gen_programs]
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 300
+    owner: test-writer
+    pass_marker: GEN_TEST_PASS
+    feature_groups: [pmp, gen_pmp_mseccfg, red]
+    cocotb_module: dv.auto_dv.tests.gen_test_pmp_mseccfg
+    expected_fail: false
+    component: gen_tb_top
+    measured: false
+
+  - name: gen_test_pmp_lock
+    description: 'Phase 1 batch 3: PMP lock, TOR-lock and RLB rules (locked pmpcfg bytes and pmpaddr ignore writes, TOR i+1 lock protects pmpaddr(i), the last entry depends on its own lock, L=1 with A=OFF locks and blocks RLB, pre-write lock evaluation on back-to-back writes, RLB=1 bypass, RLB cleared with locks present; TP-PMP-013..021 and TP-PMP-112, all 10 built); per-seed program gen_pmp_lock_prog.py; fire_tp_pmp_013..021 and fire_tp_pmp_112 on the report channel; Round 1: fcov_expectation_file detached (null) because 50 of the 50 bins this test''s manifest declares are on covergroups that are not built at this commit (gen_pmp_addr_write_cg, gen_pmp_cfg_write_cg, gen_pmp_mseccfg_cg, gen_pmp_recfg_cg), so the expectation check fails the run at every seed; the manifest stays committed and unchanged, and the reference returns with the covergroup landing.'
+    tier: targeted
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0]
+    program:
+      generator: dv/auto_dv/tests/gen_programs/gen_pmp_lock_prog.py
+      generator_args: []
+      seed: run
+      extra_args: [--gcc-opts=-Idv/auto_dv/tests/gen_programs]
+    seeds: 3
+    fcov_expectation_file: null
+    timeout_s: 900
+    owner: test-writer
+    pass_marker: GEN_TEST_PASS
+    feature_groups: [pmp, gen_pmp_lock]
+    cocotb_module: dv.auto_dv.tests.gen_test_pmp_lock
+    expected_fail: false
+    component: gen_tb_top
+    measured: false
+    notes: measured false until the PMP covergroups are built; round-0 refusal class
+
+  - name: gen_test_pmp_lock_red
+    description: 'TDD red fixture of gen_test_pmp_lock, pinned to TP-PMP-013 (generator --red --red-item TP-PMP-013): a lock-mix pmpcfg word write that changes an unlocked lane is replaced by a read, so
+      the read-back keeps the pre-write word instead of the model''s prediction and exactly fire_tp_pmp_013 FAILs by design (RED-OK); every other item''s red is retained as an excerpt (gen_tdd_batch3.md)'
+    red_fixture: true
+    red_expect: 'GEN_TEST_FAIL gen_test_pmp_lock: [0-9]+ fire-check failure\(s\):.*\bfire_tp_pmp_013(?!\d)'
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0]
+    program:
+      generator: dv/auto_dv/tests/gen_programs/gen_pmp_lock_prog.py
+      generator_args: [--red, --red-item, TP-PMP-013]
+      seed: run
+      extra_args: [--gcc-opts=-Idv/auto_dv/tests/gen_programs]
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 300
+    owner: test-writer
+    pass_marker: GEN_TEST_PASS
+    feature_groups: [pmp, gen_pmp_lock, red]
+    cocotb_module: dv.auto_dv.tests.gen_test_pmp_lock
+    expected_fail: false
+    component: gen_tb_top
+    measured: false
+
+  - name: gen_ut_lockstep_branch
+    description: lock-step run of gen_branch_directed.S (beq / bne / blt / bge / bltu / bgeu / c.beqz / c.bnez over the operand classes in both outcomes, forward and backward, the maximal offsets, word- and half-aligned targets); exercises gen_isa_branch_cg (TB Infra T-205 slice 3)
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs:
+      - +gen_fetch_en_at_reset=0
+      - +gen_ut_boot_retire=8000
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_branch_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 900
+    owner: tb-infra
+    pass_marker: GEN_UT_LOCKSTEP_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_fcov_pkg
+    measured: false
+
+  - name: gen_ut_lockstep_zcmp_mv
+    description: lock-step run of gen_zcmp_mv_directed.S (cm.mva01s over every register pair, cm.mvsa01 over every legal pair, the two forms back to back, load and ALU writers before a move); exercises gen_cmp_zcmp_mv_cg (TB Infra T-205 slice 3)
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs:
+      - +gen_fetch_en_at_reset=0
+      - +gen_ut_boot_retire=1000
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_zcmp_mv_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 900
+    owner: tb-infra
+    pass_marker: GEN_UT_LOCKSTEP_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_fcov_pkg
+    measured: false
+
+  - name: gen_ut_lockstep_csr_warl
+    description: lock-step run of gen_csr_warl_directed.S (write / read-back pairs on the eight trap-setup CSRs with every CSR form, rd x0 and non-x0, the plan's patterns and field values; the model legalises like Ibex); exercises gen_csr_trap_setup_warl_cg with mcounteren_writable_i On (TB Infra T-205 slice 3; +gen_knob_mcounteren_writable=off / invalid are the same program under the closed gate)
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs:
+      - +gen_fetch_en_at_reset=0
+      - +gen_ut_boot_retire=3000
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_csr_warl_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 900
+    owner: tb-infra
+    pass_marker: GEN_UT_LOCKSTEP_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_fcov_pkg
+    measured: false
+
+  - name: gen_ut_lockstep_zcmp_mv_reserved
+    description: B4 divergence (zcmp.adoc norm:cm-mvsa01_res), one cm.mvsa01 with r1s' == r2s'. Ibex executes two moves into the same register, the Spike model raises an illegal instruction, and the lock-step comparator flags the record; expected to fail until the owner rules on the reserved encoding (TB Infra T-205 slice 3)
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs:
+      - +gen_fetch_en_at_reset=0
+      - +gen_ut_boot_retire=10
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_zcmp_mv_reserved_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 900
+    owner: tb-infra
+    pass_marker: GEN_UT_LOCKSTEP_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep
+    expected_fail: true
+    keep_artifacts: true
+    component: gen_fcov_pkg
+    measured: false
+    notes: 'RTL finding B4 (dv/auto_dv/evidence/gen_b4_rtl_facts.md; DV Lead ruling B4-R1 in dv/auto_dv/docs/gen_bug_log.md: the TB does not adopt the RTL behaviour as its reference before the owner rules); the retained red is dv/auto_dv/evidence/gen_tdd_logs/fcov/gen_fu_l5_lockstep_zcmp_mv_res_*; its designed failure is the scoreboard UVM_ERROR from gen_rvfi_pkg.sv tagged [isa_trap] "dut retired, model retired 0 trap=1 cause=00000002 tval=0000ac22" at the cm.mvsa01 record, followed by [isa_rd] "Zcmp union:" register mismatches; a FAIL through any other mechanism is not the B4 red and needs triage'
+
+  - name: gen_ut_lockstep_sbit
+    description: lock-step run of gen_sbit_directed.S (bclr / bset / binv / bext and the immediate forms over the index classes, prior bit states, operand and rs2 upper-bit classes, rd x0, binv twice); exercises gen_bit_sbit_cg (TB Infra T-205 slice 4a)
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs:
+      - +gen_fetch_en_at_reset=0
+      - +gen_ut_boot_retire=1000
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_sbit_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 900
+    owner: tb-infra
+    pass_marker: GEN_UT_LOCKSTEP_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_fcov_pkg
+    measured: false
+
+  - name: gen_ut_lockstep_zcb
+    description: lock-step run of gen_zcb_directed.S (every Zcb form, both data signs, aligned / off-by-one / word-crossing half-word accesses, the ALU operand classes, c.mul); exercises gen_cmp_zcb_cg (TB Infra T-205 slice 4a)
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs:
+      - +gen_fetch_en_at_reset=0
+      - +gen_ut_boot_retire=300
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_zcb_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 900
+    owner: tb-infra
+    pass_marker: GEN_UT_LOCKSTEP_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_fcov_pkg
+    measured: false
+
+  - name: gen_ut_isa_cov_vectors
+    description: sampler unit test (LOG-058), the classifier vector table of gen_isa_cov through FCOV_SELFTEST after the boot program; 0 failures required (TB Infra landing 6)
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs:
+      - +gen_fetch_en_at_reset=0
+      - +gen_ut_boot_retire=100
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_zc_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 900
+    owner: tb-infra
+    pass_marker: GEN_UT_ISA_COV_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_isa_cov
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_fcov_pkg
+    measured: false
+
+  - name: gen_ut_isa_cov_alu_eq
+    description: sampler unit test with gen_alu_directed.S, then FCOV_QUERY 0 (slt eq count) must be 84, then the vector table (TB Infra landing 6)
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs:
+      - +gen_fetch_en_at_reset=0
+      - +gen_ut_boot_retire=22000
+      - +gen_ut_fcov_query=0
+      - +gen_ut_fcov_expect=84
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_alu_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 900
+    owner: tb-infra
+    pass_marker: GEN_UT_ISA_COV_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_isa_cov
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_fcov_pkg
+    measured: false
+
+  - name: gen_ut_isa_cov_zcmp_count
+    description: sampler unit test with gen_zcmp_directed.S, then FCOV_QUERY 1 (Zcmp sequences) must be 290, then the vector table (TB Infra landing 6)
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs:
+      - +gen_fetch_en_at_reset=0
+      - +gen_ut_boot_retire=4000
+      - +gen_ut_fcov_query=1
+      - +gen_ut_fcov_expect=290
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_zcmp_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 900
+    owner: tb-infra
+    pass_marker: GEN_UT_ISA_COV_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_isa_cov
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_fcov_pkg
+    measured: false
+
+  - name: gen_ut_isa_cov_zcmp_minstret
+    description: sampler unit test with gen_zcmp_directed.S, then FCOV_QUERY 2 (minstret_once misses) must be 0, then the vector table (TB Infra landing 6)
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs:
+      - +gen_fetch_en_at_reset=0
+      - +gen_ut_boot_retire=4000
+      - +gen_ut_fcov_query=2
+      - +gen_ut_fcov_expect=0
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_zcmp_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 900
+    owner: tb-infra
+    pass_marker: GEN_UT_ISA_COV_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_isa_cov
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_fcov_pkg
+    measured: false
+
+  - name: gen_ut_isa_cov_bitcnt_x0
+    description: sampler unit test with gen_bitcnt_directed.S, then FCOV_QUERY 4 (rd = x0 bit-count records) must be 91, then the vector table (TB Infra landing 6)
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs:
+      - +gen_fetch_en_at_reset=0
+      - +gen_ut_boot_retire=1000
+      - +gen_ut_fcov_query=4
+      - +gen_ut_fcov_expect=91
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_bitcnt_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 900
+    owner: tb-infra
+    pass_marker: GEN_UT_ISA_COV_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_isa_cov
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_fcov_pkg
+    measured: false
+
+  - name: gen_test_pmc_ctrl
+    description: 'Phase 1 batch 3: performance-counter control CSRs (mcountinhibit / mcounteren / mhpmevent write and read-back rules, minstret and mcycle under inhibit, the U-mode counter aliases gated by mcounteren, the mcounteren_writable pin on; TP-PMC-022..029, 033, 034, 056, 058, 059, 13 built, TP-PMC-057 not built); per-seed program gen_pmc_ctrl_prog.py (pin on); fire_tp_pmc_022..059 on the report channel Round 1: fcov_expectation_file detached (null) because none of the eight covergroups this test''s manifest declares is built, so all 204 declarations report zero hits and the expectation check fails the run at every seed; the manifest stays committed and unchanged, and the reference returns with the covergroup landing.'
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs:
+    - +gen_fetch_en_at_reset=0
+    program:
+      generator: dv/auto_dv/tests/gen_programs/gen_pmc_ctrl_prog.py
+      generator_args: []
+      seed: run
+      extra_args:
+      - --gcc-opts=-Idv/auto_dv/tests/gen_programs
+    seeds: 3
+    fcov_expectation_file: null
+    timeout_s: 900
+    owner: test-writer
+    pass_marker: GEN_TEST_PASS
+    feature_groups:
+    - pmc
+    - gen_pmc_ctrl
+    cocotb_module: dv.auto_dv.tests.gen_test_pmc_ctrl
+    expected_fail: false
+    component: gen_tb_top
+    measured: false
+    notes: measured false until the PMC covergroups are built; the pin-off variant is gen_test_pmc_ctrl_pin_off
+  - name: gen_test_pmc_ctrl_pin_off
+    description: 'gen_test_pmc_ctrl with the mcounteren_writable pin off (+gen_knob_mcounteren_writable=off, generator --pin off): the same items with the dropped-branch expectations (mcounteren writes dropped without a trap, TP-PMC-028); the manifest is the group''s, keyed by test name, and declares the pin-on bins; the dropped-branch bins are declared by no manifest until this entry gets its own at the group''s promotion to measured'
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs:
+    - +gen_fetch_en_at_reset=0
+    - +gen_knob_mcounteren_writable=off
+    program:
+      generator: dv/auto_dv/tests/gen_programs/gen_pmc_ctrl_prog.py
+      generator_args:
+      - --pin
+      - 'off'
+      seed: run
+      extra_args:
+      - --gcc-opts=-Idv/auto_dv/tests/gen_programs
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 900
+    owner: test-writer
+    pass_marker: GEN_TEST_PASS
+    feature_groups:
+    - pmc
+    - gen_pmc_ctrl
+    - pin_off
+    cocotb_module: dv.auto_dv.tests.gen_test_pmc_ctrl
+    expected_fail: false
+    component: gen_tb_top
+    measured: false
+
+  - name: gen_test_pmc_ctrl_red
+    description: 'TDD red fixture of gen_test_pmc_ctrl, pinned to TP-PMC-022 (generator --red --red-item TP-PMC-022): one mcountinhibit / mcounteren control write carries a flipped writable bit, so the read-back word differs from the model''s prediction and exactly fire_tp_pmc_022 FAILs by design (RED-OK); every other item''s red is retained as an excerpt (gen_tdd_batch3.md Section 6)'
+    red_fixture: true
+    red_expect: 'GEN_TEST_FAIL gen_test_pmc_ctrl: [0-9]+ fire-check failure\(s\):.*\bfire_tp_pmc_022(?!\d)'
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs:
+    - +gen_fetch_en_at_reset=0
+    program:
+      generator: dv/auto_dv/tests/gen_programs/gen_pmc_ctrl_prog.py
+      generator_args:
+      - --red
+      - --red-item
+      - TP-PMC-022
+      seed: run
+      extra_args:
+      - --gcc-opts=-Idv/auto_dv/tests/gen_programs
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 300
+    owner: test-writer
+    pass_marker: GEN_TEST_PASS
+    feature_groups:
+    - pmc
+    - gen_pmc_ctrl
+    - red
+    cocotb_module: dv.auto_dv.tests.gen_test_pmc_ctrl
+    expected_fail: false
+    component: gen_tb_top
+    measured: false
+
+  - name: gen_ut_lockstep_cpuctrl
+    description: "lock-step run of gen_cpuctrl_directed.S (cpuctrlsts read-backs around a nested exception; the misc double_fault rule off for the deliberate double fault)"
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0, +gen_ut_boot_retire=40, +gen_chk_double_fault=0]
+    program: {directed: [dv/auto_dv/stim/gen_directed/gen_cpuctrl_directed.S], seed: 1}
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 600
+    owner: tb-infra
+    pass_marker: GEN_UT_LOCKSTEP_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_fcov_pkg
+    measured: false
+  - name: gen_ut_lockstep_icache_en
+    description: "lock-step run of gen_icache_en_directed.S (the instruction cache enabled and exercised, the scramble key immediate)"
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0, +gen_ut_boot_retire=300]
+    program: {directed: [dv/auto_dv/stim/gen_directed/gen_icache_en_directed.S], seed: 1}
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 600
+    owner: tb-infra
+    pass_marker: GEN_UT_LOCKSTEP_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_fcov_pkg
+    measured: false
+  - name: gen_ut_lockstep_icache_ecc
+    description: "lock-step run of gen_icache_ecc_directed.S with the tag-RAM ECC injection at rate frequent (alert_minor_o expected within GEN_ICACHE_ECC_WINDOW of every qualified injection; the window SVA and the misc monitor's two halves)"
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0, +gen_ut_boot_retire=3000, +gen_knob_icache_ecc_err_rate=frequent]
+    program: {directed: [dv/auto_dv/stim/gen_directed/gen_icache_ecc_directed.S], seed: 1}
+    seeds: 1
+    fcov_expectation_file: dv/auto_dv/fcov_expectations/gen_ut_lockstep_icache_ecc.fcov.yaml
+    timeout_s: 900
+    owner: tb-infra
+    pass_marker: GEN_UT_LOCKSTEP_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_misc_monitor
+    measured: false
+  - name: gen_ut_intg_span
+    description: "gen_intg_span_directed.S with two integrity corruptions armed on the spanning load's buffer (both words consumed by the T-183 gate; the internal-NMI mtval of a misaligned load)"
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0, +gen_ut_boot_retire=30, +gen_export_file=gen_export.txt]
+    program: {directed: [dv/auto_dv/stim/gen_directed/gen_intg_span_directed.S], seed: 1}
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 600
+    owner: tb-infra
+    pass_marker: GEN_UT_INTG_SPAN_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_intg_span
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_scoreboard
+    measured: false
+  - name: gen_ut_irq_nmi_long
+    description: "gen_nmi_long_directed.S with the NMI raised through the bridge and the external line raised inside its 41-record handler (the irq checker keeps the expectation through NMI mode and judges it after the mret)"
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0, +gen_export_file=gen_export.txt]
+    program: {directed: [dv/auto_dv/stim/gen_directed/gen_nmi_long_directed.S], seed: 1}
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 600
+    owner: tb-infra
+    pass_marker: GEN_UT_IRQ_NMI_LONG_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_irq_nmi_long
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_irq_checker
+    measured: false
+  - name: gen_ut_lockstep_minstret_draftb
+    description: "lock-step run of gen_minstret_draftb_directed.S (a minstreth write right after a draft-B op, then minstret reads: the model counts the draft-B retirement and takes the write corner)"
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0, +gen_ut_boot_retire=20]
+    program: {directed: [dv/auto_dv/stim/gen_directed/gen_minstret_draftb_directed.S], seed: 1}
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 600
+    owner: tb-infra
+    pass_marker: GEN_UT_LOCKSTEP_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_isa_shim
+    measured: false
+  - name: gen_ut_lockstep_minstret_zcmp
+    description: "lock-step run of gen_minstret_zcmp_directed.S (a minstreth write right after a Zcmp sequence, then minstret reads)"
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0, +gen_ut_boot_retire=40]
+    program: {directed: [dv/auto_dv/stim/gen_directed/gen_minstret_zcmp_directed.S], seed: 1}
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 600
+    owner: tb-infra
+    pass_marker: GEN_UT_LOCKSTEP_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_isa_shim
+    measured: false
+  - name: gen_ut_boot_fe1
+    description: "the Zc image booted with fetch enabled at the reset release (one plusarg value; the gen_rst_boot_cg boot_to_req two proof, gen_fcov_proof_slice5c2)"
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=1, +gen_ut_boot_retire=200]
+    program: {directed: [dv/auto_dv/stim/gen_directed/gen_zc_directed.S], seed: 1}
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 600
+    owner: tb-infra
+    pass_marker: GEN_UT_BOOT_FE1_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_boot_fe1
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_fcov_pkg
+    measured: false
+
+  - name: gen_ut_lockstep_zcmp_hz
+    description: "lock-step run of gen_zcmp_hazard_directed.S under the default (short) data-bus regime: the Zcmp hazard covergroup's base bins (gen_fcov_proof_slice5e)"
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0, +gen_ut_boot_retire=200]
+    program: {directed: [dv/auto_dv/stim/gen_directed/gen_zcmp_hazard_directed.S], seed: 1}
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 600
+    owner: tb-infra
+    pass_marker: GEN_UT_LOCKSTEP_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_fcov_pkg
+    measured: false
+  - name: gen_ut_lockstep_zcmp_hz_long
+    description: "the same program under the long data-bus regime: the ra-load deferral and the long delay class (gen_fcov_proof_slice5e2)"
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0, +gen_ut_boot_retire=200, +gen_knob_dmem_rvalid_delay=long, +gen_knob_dmem_gnt_delay=long]
+    program: {directed: [dv/auto_dv/stim/gen_directed/gen_zcmp_hazard_directed.S], seed: 1}
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 600
+    owner: tb-infra
+    pass_marker: GEN_UT_LOCKSTEP_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_fcov_pkg
+    measured: false
+  - name: gen_ut_lockstep_zcmp_hz_fast
+    description: "the same program under the same-cycle / min1 bus regimes on both buses: the min1 delay class (gen_fcov_proof_slice5e3)"
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0, +gen_ut_boot_retire=200, +gen_knob_dmem_rvalid_delay=min1, +gen_knob_dmem_gnt_delay=same_cycle, +gen_knob_imem_rvalid_delay=min1, +gen_knob_imem_gnt_delay=same_cycle]
+    program: {directed: [dv/auto_dv/stim/gen_directed/gen_zcmp_hazard_directed.S], seed: 1}
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 600
+    owner: tb-infra
+    pass_marker: GEN_UT_LOCKSTEP_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_fcov_pkg
+    measured: false
+  - name: gen_ut_lockstep_lui_auipc
+    description: 'lock-step run of gen_lui_auipc_directed.S: the U-type immediate extremes at both pc alignments (gen_fcov_proof_slice6a)'
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0, +gen_ut_boot_retire=40]
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_lui_auipc_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 600
+    owner: tb-infra
+    pass_marker: GEN_UT_LOCKSTEP_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_fcov_pkg
+    measured: false
+  - name: gen_ut_lockstep_hint_x0
+    description: 'lock-step run of gen_hint_x0_directed.S: every x0-destination writer class followed by a reader of x0 (gen_fcov_proof_slice6b)'
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0, +gen_ut_boot_retire=150]
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_hint_x0_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 600
+    owner: tb-infra
+    pass_marker: GEN_UT_LOCKSTEP_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_fcov_pkg
+    measured: false
+  - name: gen_ut_lockstep_isa_jump
+    description: 'lock-step run of gen_isa_jump_directed.S: jal / jalr / c.j / c.jal / c.jr / c.jalr with the immediate classes and word, half, even and odd targets (gen_fcov_proof_slice6c)'
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0, +gen_ut_boot_retire=150]
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_isa_jump_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 600
+    owner: tb-infra
+    pass_marker: GEN_UT_LOCKSTEP_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_fcov_pkg
+    measured: false
+  - name: gen_ut_lockstep_cmp_imm_edges
+    description: 'lock-step run of gen_cmp_imm_edges_directed.S: the Zca immediate extremes and the stack pointer crossing zero (gen_fcov_proof_slice6d)'
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0, +gen_ut_boot_retire=120]
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_cmp_imm_edges_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 600
+    owner: tb-infra
+    pass_marker: GEN_UT_LOCKSTEP_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_fcov_pkg
+    measured: false
+  - name: gen_ut_lockstep_div_timing
+    description: 'lock-step run of gen_div_timing_directed.S under the default regimes: the divider''s neighbour matrix and the clean deltas (gen_fcov_proof_slice6e)'
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0, +gen_ut_boot_retire=800]
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_div_timing_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 600
+    owner: tb-infra
+    pass_marker: GEN_UT_LOCKSTEP_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_fcov_pkg
+    measured: false
+  - name: gen_ut_lockstep_div_timing_long
+    description: 'the same program under the long bus regimes: the fetch-stall class (gen_fcov_proof_slice6e2)'
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0, +gen_ut_boot_retire=800, +gen_knob_dmem_rvalid_delay=long, +gen_knob_dmem_gnt_delay=long, +gen_knob_imem_rvalid_delay=long]
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_div_timing_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 600
+    owner: tb-infra
+    pass_marker: GEN_UT_LOCKSTEP_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_fcov_pkg
+    measured: false
+  - name: gen_ut_lockstep_div_timing_irq
+    description: 'the same program under the irq storm with NMIs: the mid-divide irq and NMI events and the irq latency (gen_fcov_proof_slice6e3)'
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0, +gen_ut_boot_retire=800, +gen_knob_irq_regime=storm, +gen_knob_irq_line_mix=with_nmi, +gen_export_file=gen_export.txt]
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_div_timing_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 600
+    owner: tb-infra
+    pass_marker: GEN_UT_LOCKSTEP_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_fcov_pkg
+    measured: false
+  - name: gen_ut_lockstep_div_timing_dbg
+    description: 'the same program under the sparse debug-request regime: the mid-divide debug_req event (gen_fcov_proof_slice6e4; the storm does not let the program finish inside the test''s wait)'
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0, +gen_ut_boot_retire=800, +gen_knob_debug_req_regime=sparse]
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_div_timing_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 600
+    owner: tb-infra
+    pass_marker: GEN_UT_LOCKSTEP_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_fcov_pkg
+    measured: false
+  - name: gen_ut_intg_store
+    description: 'gen_ut_intg_store on gen_intg_store_directed.S: one integrity corruption on the first half of a misaligned store; the internal NMI''s mtval is the store''s own address (the handler reads
+      it)'
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0, +gen_ut_boot_retire=30, +gen_export_file=gen_export.txt]
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_intg_store_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 600
+    owner: tb-infra
+    pass_marker: GEN_UT_INTG_STORE_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_intg_store
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_rvfi_pkg
+    measured: false
+  - name: gen_ut_lockstep_icache_ecc_data
+    description: 'lock-step run of gen_icache_ecc_directed.S with data-RAM ECC injection at rate frequent, the P9 lookup probe on (evidence run: form (a) judges every injection; the probe knob is debug_only,
+      so the entry stays unmeasured)'
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0, +gen_ut_boot_retire=3000, +gen_knob_icache_data_ecc_err_rate=frequent, +gen_probe_ic_lookup=1]
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_icache_ecc_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: dv/auto_dv/fcov_expectations/gen_ut_lockstep_icache_ecc_data.fcov.yaml
+    timeout_s: 900
+    owner: tb-infra
+    pass_marker: GEN_UT_LOCKSTEP_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_checkers_pkg
+    measured: false
+  - name: gen_ut_lockstep_icache_ecc_data_noprobe
+    description: 'the same injection with the probe off: form (b) judges from the retirement stream (the measured-run form; a candidate for measured once the alert rows are on)'
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0, +gen_ut_boot_retire=3000, +gen_knob_icache_data_ecc_err_rate=frequent]
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_icache_ecc_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: dv/auto_dv/fcov_expectations/gen_ut_lockstep_icache_ecc_data_noprobe.fcov.yaml
+    timeout_s: 900
+    owner: tb-infra
+    pass_marker: GEN_UT_LOCKSTEP_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_checkers_pkg
+    measured: false
+  - name: gen_ut_lockstep_icache_ecc_tag_two
+    description: tag-RAM ECC injection at rate frequent with two bits per flip
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0, +gen_ut_boot_retire=3000, +gen_knob_icache_ecc_err_rate=frequent, +gen_knob_icache_ecc_bits=two]
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_icache_ecc_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: dv/auto_dv/fcov_expectations/gen_ut_lockstep_icache_ecc_tag_two.fcov.yaml
+    timeout_s: 900
+    owner: tb-infra
+    pass_marker: GEN_UT_LOCKSTEP_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_checkers_pkg
+    measured: false
+  - name: gen_ut_lockstep_icache_ecc_data_two
+    description: data-RAM ECC injection at rate frequent with two bits per flip inside one beat, the probe on
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0, +gen_ut_boot_retire=3000, +gen_knob_icache_data_ecc_err_rate=frequent, +gen_knob_icache_ecc_bits=two, +gen_probe_ic_lookup=1]
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_icache_ecc_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: dv/auto_dv/fcov_expectations/gen_ut_lockstep_icache_ecc_data_two.fcov.yaml
+    timeout_s: 900
+    owner: tb-infra
+    pass_marker: GEN_UT_LOCKSTEP_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_checkers_pkg
+    measured: false
+  - name: gen_ut_lockstep_icache_ecc_both
+    description: 'tag and data injection at rate frequent, the probe on: a tag and a data injection in one lookup cycle share one pulse'
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0, +gen_ut_boot_retire=3000, +gen_knob_icache_ecc_err_rate=frequent, +gen_knob_icache_data_ecc_err_rate=frequent, +gen_probe_ic_lookup=1]
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_icache_ecc_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: dv/auto_dv/fcov_expectations/gen_ut_lockstep_icache_ecc_both.fcov.yaml
+    timeout_s: 900
+    owner: tb-infra
+    pass_marker: GEN_UT_LOCKSTEP_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_checkers_pkg
+    measured: false
+  - name: gen_ut_lockstep_icache_ecc_far_data
+    description: 'lock-step run of gen_icache_ecc_far_directed.S (two bodies 2 KB apart: aliased indices under two tags, the tag changes at every jump) with data-RAM ECC injection at rate frequent,
+      the P9 lookup probe on (evidence run: the hit-way decision between two valid ways; the entry stays unmeasured)'
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0, +gen_ut_boot_retire=3000, +gen_knob_icache_data_ecc_err_rate=frequent, +gen_probe_ic_lookup=1]
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_icache_ecc_far_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: dv/auto_dv/fcov_expectations/gen_ut_lockstep_icache_ecc_far_data.fcov.yaml
+    timeout_s: 900
+    owner: tb-infra
+    pass_marker: GEN_UT_LOCKSTEP_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_checkers_pkg
+    measured: false
+  - name: gen_ut_lockstep_icache_ecc_far_data_noprobe
+    description: 'the far program with the probe off: form (b) judges the two-tag hit decision from the retirement stream (the measured-run form; most associations are ambiguous there and
+      stay unjudged)'
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0, +gen_ut_boot_retire=3000, +gen_knob_icache_data_ecc_err_rate=frequent]
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_icache_ecc_far_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: dv/auto_dv/fcov_expectations/gen_ut_lockstep_icache_ecc_far_data_noprobe.fcov.yaml
+    timeout_s: 900
+    owner: tb-infra
+    pass_marker: GEN_UT_LOCKSTEP_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_checkers_pkg
+    measured: false
+  - name: gen_ut_lockstep_icache_ecc_tag_disabled
+    description: "lock-step run of gen_zc_directed.S, which never writes cpuctrlsts.icache_enable, with the tag-RAM ECC injection at rate frequent: every injection lands on a cycle the scoreboard sees as disabled, so CG-IC-006 cp_no_alert_case.disabled_cache is reached structurally rather than incidentally and no injection owes a pulse"
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0, +gen_ut_boot_retire=3000, +gen_knob_icache_ecc_err_rate=frequent]
+    program: {directed: [dv/auto_dv/stim/gen_directed/gen_zc_directed.S], seed: 1}
+    seeds: 1
+    fcov_expectation_file: dv/auto_dv/fcov_expectations/gen_ut_lockstep_icache_ecc_tag_disabled.fcov.yaml
+    timeout_s: 900
+    owner: tb-infra
+    pass_marker: GEN_UT_LOCKSTEP_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_checkers_pkg
+    measured: false
+  - name: gen_ut_lockstep_icache_ecc_fcov_red
+    description: 'standing guard for the fcov leg''s failing direction: the lock-step run of gen_icache_ecc_directed.S with the tag-RAM ECC injection only, carrying a manifest that declares gen_ic_ecc_cg.cp_ram.data, a bin no data-free run can hit, so every regression exercises the flow''s refusal of an unmet declared bin; graded RED-OK by red_expect, and an unexpected PASS is FAIL'
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs:
+    - +gen_fetch_en_at_reset=0
+    - +gen_ut_boot_retire=3000
+    - +gen_knob_icache_ecc_err_rate=frequent
+    program:
+      directed:
+      - dv/auto_dv/stim/gen_directed/gen_icache_ecc_directed.S
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: dv/auto_dv/fcov_expectations/gen_ut_lockstep_icache_ecc_fcov_red.fcov.yaml
+    timeout_s: 900
+    owner: tb-infra
+    pass_marker: GEN_UT_LOCKSTEP_PASS
+    feature_groups:
+    - red
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep
+    expected_fail: false
+    red_fixture: true
+    red_expect: 'fcov expectation unmet: [0-9]+ declared bin\(s\) not hit .*gen_ic_ecc_cg\.cp_ram\.data'
+    component: gen_misc_monitor
+    measured: false

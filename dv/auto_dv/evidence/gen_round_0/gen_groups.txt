@@ -1,0 +1,37 @@
+Testbench Group List
+
+Total Groups Coverage Summary 
+COVERED EXPECTED SCORE  WEIGHT 
+3477    4268      81.47 1      
+
+
+Total groups in report: 26
+-------------------------------------------------------------------------------
+COVERED EXPECTED SCORE  WEIGHT GOAL   AT LEAST PER INSTANCE AUTO BIN MAX PRINT MISSING COMMENT NAME                                     
+0       220        0.00 1      100    1        0            64           64                    gen_fcov_pkg::gen_wit_cycle_clause_cg    
+1       40         2.50 1      100    1        0            64           64                    gen_fcov_pkg::gen_ic_ecc_cg              
+11      44        25.00 1      100    1        0            64           64                    gen_fcov_pkg::gen_rst_boot_cg            
+17      51        33.33 1      100    1        0            64           64                    gen_fcov_pkg::gen_sec_ctrl_inputs_cg     
+44      122       36.07 1      100    1        0            64           64                    gen_fcov_pkg::gen_div_timing_cg          
+33      80        41.25 1      100    1        0            64           64                    gen_fcov_pkg::gen_mul_timing_cg          
+204     291       70.10 1      100    1        0            64           64                    gen_fcov_pkg::gen_cmp_zcmp_pushpop_cg    
+75      103       72.82 1      100    1        0            64           64                    gen_fcov_pkg::gen_isa_jump_cg            
+153     208       73.56 1      100    1        0            64           64                    gen_fcov_pkg::gen_isa_branch_cg          
+79      102       77.45 1      100    1        0            64           64                    gen_fcov_pkg::gen_cmp_zcmp_hazard_cg     
+357     424       84.20 1      100    1        0            64           64                    gen_fcov_pkg::gen_bit_zba_zbb_ops_cg     
+60      70        85.71 1      100    1        0            64           64                    gen_fcov_pkg::gen_rvfi_record_cg         
+184     208       88.46 1      100    1        0            64           64                    gen_fcov_pkg::gen_csr_trap_setup_warl_cg 
+88      95        92.63 1      100    1        0            64           64                    gen_fcov_pkg::gen_cmp_zcb_cg             
+32      34        94.12 1      100    1        0            64           64                    gen_fcov_pkg::gen_isa_lui_auipc_cg       
+279     296       94.26 1      100    1        0            64           64                    gen_fcov_pkg::gen_cmp_zca_cg             
+115     122       94.26 1      100    1        0            64           64                    gen_fcov_pkg::gen_bit_sbit_cg            
+168     176       95.45 1      100    1        0            64           64                    gen_fcov_pkg::gen_div_ops_cg             
+82      84        97.62 1      100    1        0            64           64                    gen_fcov_pkg::gen_isa_hint_x0_cg         
+161     163       98.77 1      100    1        0            64           64                    gen_fcov_pkg::gen_cmp_zcmp_mv_cg         
+435     436       99.77 1      100    1        0            64           64                    gen_fcov_pkg::gen_mul_ops_cg             
+340     340      100.00 1      100    1        0            64           64                    gen_fcov_pkg::gen_isa_alu_reg_cg         
+83      83       100.00 1      100    1        0            64           64                    gen_fcov_pkg::gen_cmp_imm_edges_cg       
+145     145      100.00 1      100    1        0            64           64                    gen_fcov_pkg::gen_isa_alu_imm_cg         
+132     132      100.00 1      100    1        0            64           64                    gen_fcov_pkg::gen_isa_shift_cg           
+199     199      100.00 1      100    1        0            64           64                    gen_fcov_pkg::gen_bit_count_cg           
+

@@ -1,0 +1,321 @@
+Assertions
+
+
+Assertions by Category
+           ASSERT PROPERTIES SEQUENCES
+Total         235         22         0
+Category 0    235         22         0
+
+-------------------------------------------------------------------------------
+
+Assertions by Severity
+           ASSERT PROPERTIES SEQUENCES
+Total         235         22         0
+Severity 0    235         22         0
+
+-------------------------------------------------------------------------------
+
+Summary for Assertions
+                 NUMBER PERCENT
+Total Number        235  100.00
+Uncovered            20    8.51
+Success             215   91.49
+Failure               0    0.00
+Incomplete            1    0.43
+Without Attempts      2    0.85
+
+-------------------------------------------------------------------------------
+
+Summary for Cover Properties
+             NUMBER PERCENT
+Total Number     22  100.00
+Uncovered         8   36.36
+Matches          14   63.64
+
+-------------------------------------------------------------------------------
+
+Detail Report for Assertions
+
+Assertions Uncovered:
+                                                       ASSERTIONS                                                       CATEGORY SEVERITY ATTEMPTS REAL SUCCESSES FAILURES INCOMPLETE
+gen_tb_top.u_dut.gen_protocol_props_i.sva_alert_minor_window                                                                   0        0  5408327              0        0          0
+gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_err_with_rvalid                                                                 0        0  5408327              0        0          0
+gen_tb_top.u_dut.gen_protocol_props_i.sva_ibus_err_with_rvalid                                                                 0        0  5408327              0        0          0
+gen_tb_top.u_dut.gen_protocol_props_i.sva_rvfi_irq_valid_exclusive                                                             0        0  5408327              0        0          0
+gen_tb_top.u_dut.gen_protocol_props_i.sva_scrkey_no_req_pending                                                                0        0  5408327              0        0          0
+gen_tb_top.u_dut.u_ibex_core.id_stage_i.controller_i.AlwaysInstrClearOnMispredict                                              0        0  5408327              0        0          0
+gen_tb_top.u_dut.u_ibex_core.id_stage_i.controller_i.IbexPipelineFlushOnChangingDebugMode                                      0        0  5408327              0        0          0
+gen_tb_top.u_dut.u_ibex_core.id_stage_i.controller_i.PipeEmptyOnIrq                                                            0        0  5408327              0        0          0
+gen_tb_top.u_dut.u_ibex_core.if_stage_i.NoMispredBranch                                                                        0        0  5408327              0        0          0
+gen_tb_top.u_dut.u_ibex_core.if_stage_i.gen_b8_probe_i.sva_b8_dummy_in_expansion                                               0        0  5408327              0        0          0
+gen_tb_top.u_dut.u_ibex_core.if_stage_i.gen_dummy_instr.dummy_instr_i.lfsr_i.NextStateCheck_A                                  0        0  5408327              0        0         36
+gen_tb_top.u_dut.u_ibex_core.if_stage_i.gen_dummy_instr.dummy_instr_i.lfsr_i.NoLockups_A                                       0        0  5408327              0        0          0
+gen_tb_top.u_dut.u_ibex_core.if_stage_i.gen_dummy_instr.dummy_instr_i.lfsr_i.gen_lockup_mechanism_sva.LfsrLockupCheck_A        0        0  5408327              0        0          0
+gen_tb_top.u_dut.u_ibex_core.if_stage_i.gen_dummy_instr.dummy_instr_i.lfsr_i.gen_max_len_sva.MaximalLengthCheck1_A             0        0  5408327              0        0          0
+gen_tb_top.u_dut.u_register_file.g_cheriot_rf.CheriotRaddrAMSBClear                                                            0        0  5408327              0        0          0
+gen_tb_top.u_dut.u_register_file.g_cheriot_rf.CheriotRaddrBMSBClear                                                            0        0  5408327              0        0          0
+gen_tb_top.u_dut.u_register_file.g_cheriot_rf.CheriotWaddrMSBClear                                                             0        0  5408327              0        0          0
+gen_tb_top.u_dut.u_register_file.g_cheriot_rf.g_dummy_r0.DummyWriteTargetsX0                                                   0        0  5408327              0        0          0
+uvm_pkg.\uvm_reg_map::do_read .unnamed$$_0.unnamed$$_1                                                                         0        0        0              0        0          0
+uvm_pkg.\uvm_reg_map::do_write .unnamed$$_0.unnamed$$_1                                                                        0        0        0              0        0          0
+
+Assertions Success:
+                                                         ASSERTIONS                                                         CATEGORY SEVERITY ATTEMPTS REAL SUCCESSES FAILURES INCOMPLETE
+gen_tb_top.u_dbus_if.sva_rvalid_legal                                                                                              0        0  5408327          97518        0          0
+gen_tb_top.u_dut.gen_protocol_props_i.sva_alert_bus_iff_intg                                                                       0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.gen_protocol_props_i.sva_alert_internal_never                                                                     0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.gen_protocol_props_i.sva_alerts_known                                                                             0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.gen_protocol_props_i.sva_dbg_req_known                                                                            0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_addr_aligned                                                                        0        0  5408327        1385289        0          0
+gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_be_legal                                                                            0        0  5408327        1385289        0          0
+gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_fields_hold                                                                         0        0  5408327        1287771        0          0
+gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_gnt_only_with_req                                                                   0        0  5408327          97518        0          0
+gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_no_third_request                                                                    0        0  5408327        1385289        0          0
+gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_outstanding_max                                                                     0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_rdata_intg                                                                          0        0  5408327          97518        0          0
+gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_rdata_known                                                                         0        0  5408327          97518        0          0
+gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_req_hold                                                                            0        0  5408327        1287771        0          0
+gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_req_known                                                                           0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_rvalid_outstanding                                                                  0        0  5408327          97518        0          0
+gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_store_intg                                                                          0        0  5408327        1028340        0          0
+gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_tag_quiet                                                                           0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.gen_protocol_props_i.sva_ibus_addr_aligned                                                                        0        0  5408327        4109239        0          0
+gen_tb_top.u_dut.gen_protocol_props_i.sva_ibus_addr_hold                                                                           0        0  5408327        3640804        0          0
+gen_tb_top.u_dut.gen_protocol_props_i.sva_ibus_gnt_only_with_req                                                                   0        0  5408327         468410        0          0
+gen_tb_top.u_dut.gen_protocol_props_i.sva_ibus_outstanding_max                                                                     0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.gen_protocol_props_i.sva_ibus_rdata_intg                                                                          0        0  5408327         468337        0          0
+gen_tb_top.u_dut.gen_protocol_props_i.sva_ibus_rdata_known                                                                         0        0  5408327         468337        0          0
+gen_tb_top.u_dut.gen_protocol_props_i.sva_ibus_req_hold                                                                            0        0  5408327        3640804        0          0
+gen_tb_top.u_dut.gen_protocol_props_i.sva_ibus_req_known                                                                           0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.gen_protocol_props_i.sva_ibus_rvalid_outstanding                                                                  0        0  5408327         468337        0          0
+gen_tb_top.u_dut.gen_protocol_props_i.sva_icram_addr_known                                                                         0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.gen_protocol_props_i.sva_icram_data_rdata_after_read                                                              0        0  5408327         266871        0          0
+gen_tb_top.u_dut.gen_protocol_props_i.sva_icram_lookup_all_ways                                                                    0        0  5408327         266886        0          0
+gen_tb_top.u_dut.gen_protocol_props_i.sva_icram_lookup_both_rams                                                                   0        0  5408327         266886        0          0
+gen_tb_top.u_dut.gen_protocol_props_i.sva_icram_tag_rdata_after_read                                                               0        0  5408327         266871        0          0
+gen_tb_top.u_dut.gen_protocol_props_i.sva_icram_tag_write_implies_req                                                              0        0  5408327          20586        0          0
+gen_tb_top.u_dut.gen_protocol_props_i.sva_icram_widths.unnamed$$_0                                                                 0        0       36             36        0          0
+gen_tb_top.u_dut.gen_protocol_props_i.sva_icram_write_data_known                                                                   0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.gen_protocol_props_i.sva_irq_pins_known                                                                           0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.gen_protocol_props_i.sva_rvfi_halt_zero                                                                           0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.gen_protocol_props_i.sva_rvfi_mode_legal                                                                          0        0  5408327         361769        0          0
+gen_tb_top.u_dut.gen_protocol_props_i.sva_rvfi_order_incr                                                                          0        0  5408327         361733        0          0
+gen_tb_top.u_dut.gen_protocol_props_i.sva_rvfi_valid_known                                                                         0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.gen_protocol_props_i.sva_scrkey_req_pulse                                                                         0        0  5408327             51        0          0
+gen_tb_top.u_dut.gen_protocol_props_i.sva_scrkey_valid_drops                                                                       0        0  5408327             51        0          0
+gen_tb_top.u_dut.gen_protocol_props_i.sva_scrkey_valid_known                                                                       0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.gen_protocol_props_i.sva_st_boot_addr_low_zero                                                                    0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.gen_protocol_props_i.sva_st_core_busy_mubi                                                                        0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.gen_protocol_props_i.sva_st_fetch_enable_mubi                                                                     0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.gen_protocol_props_i.sva_st_hart_id_stable                                                                        0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.IbexCsrOpValid                                                                                        0        0  5408327        2342685        0          0
+gen_tb_top.u_dut.u_ibex_core.IbexCsrWdataIntKnown                                                                                  0        0  5408327           9483        0          0
+gen_tb_top.u_dut.u_ibex_core.IbexCsrWdataIntKnownKnownEnable                                                                       0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.IbexMuBiSecureOffBottomBitClear                                                                       0        0       36             36        0          0
+gen_tb_top.u_dut.u_ibex_core.IbexMuBiSecureOnBottomBitSet                                                                          0        0       36             36        0          0
+gen_tb_top.u_dut.u_ibex_core.IllegalParamSecure                                                                                    0        0       36             36        0          0
+gen_tb_top.u_dut.u_ibex_core.NoExecWhenFetchEnableNotOn                                                                            0        0  5408327           2367        0          0
+gen_tb_top.u_dut.u_ibex_core.NoMemResponseWithoutPendingAccess                                                                     0        0  5408327          97518        0          0
+gen_tb_top.u_dut.u_ibex_core.cs_registers_i.IbexCheriotClrMieDisabled                                                              0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.cs_registers_i.IbexCheriotSetMieDisabled                                                              0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.cs_registers_i.IbexCsrOpEnRequiresAccess                                                              0        0  5408327           9483        0          0
+gen_tb_top.u_dut.u_ibex_core.cs_registers_i.g_mshwm.u_cdbg_ctrl_csr.IbexCSREnValid                                                 0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.cs_registers_i.g_mshwm.u_mshwm_csr.IbexCSREnValid                                                     0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.cs_registers_i.g_mshwm.u_mshwmb_csr.IbexCSREnValid                                                    0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.cs_registers_i.g_pmp_registers.g_pmp_csrs[0].PMPAddrRstLowBitsZero_A                                  0        0       36             36        0          0
+gen_tb_top.u_dut.u_ibex_core.cs_registers_i.g_pmp_registers.g_pmp_csrs[0].u_pmp_addr_csr.IbexCSREnValid                            0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.cs_registers_i.g_pmp_registers.g_pmp_csrs[0].u_pmp_cfg_csr.IbexCSREnValid                             0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.cs_registers_i.g_pmp_registers.g_pmp_csrs[10].PMPAddrRstLowBitsZero_A                                 0        0       36             36        0          0
+gen_tb_top.u_dut.u_ibex_core.cs_registers_i.g_pmp_registers.g_pmp_csrs[10].u_pmp_addr_csr.IbexCSREnValid                           0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.cs_registers_i.g_pmp_registers.g_pmp_csrs[10].u_pmp_cfg_csr.IbexCSREnValid                            0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.cs_registers_i.g_pmp_registers.g_pmp_csrs[11].PMPAddrRstLowBitsZero_A                                 0        0       36             36        0          0
+gen_tb_top.u_dut.u_ibex_core.cs_registers_i.g_pmp_registers.g_pmp_csrs[11].u_pmp_addr_csr.IbexCSREnValid                           0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.cs_registers_i.g_pmp_registers.g_pmp_csrs[11].u_pmp_cfg_csr.IbexCSREnValid                            0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.cs_registers_i.g_pmp_registers.g_pmp_csrs[12].PMPAddrRstLowBitsZero_A                                 0        0       36             36        0          0
+gen_tb_top.u_dut.u_ibex_core.cs_registers_i.g_pmp_registers.g_pmp_csrs[12].u_pmp_addr_csr.IbexCSREnValid                           0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.cs_registers_i.g_pmp_registers.g_pmp_csrs[12].u_pmp_cfg_csr.IbexCSREnValid                            0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.cs_registers_i.g_pmp_registers.g_pmp_csrs[13].PMPAddrRstLowBitsZero_A                                 0        0       36             36        0          0
+gen_tb_top.u_dut.u_ibex_core.cs_registers_i.g_pmp_registers.g_pmp_csrs[13].u_pmp_addr_csr.IbexCSREnValid                           0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.cs_registers_i.g_pmp_registers.g_pmp_csrs[13].u_pmp_cfg_csr.IbexCSREnValid                            0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.cs_registers_i.g_pmp_registers.g_pmp_csrs[14].PMPAddrRstLowBitsZero_A                                 0        0       36             36        0          0
+gen_tb_top.u_dut.u_ibex_core.cs_registers_i.g_pmp_registers.g_pmp_csrs[14].u_pmp_addr_csr.IbexCSREnValid                           0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.cs_registers_i.g_pmp_registers.g_pmp_csrs[14].u_pmp_cfg_csr.IbexCSREnValid                            0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.cs_registers_i.g_pmp_registers.g_pmp_csrs[15].PMPAddrRstLowBitsZero_A                                 0        0       36             36        0          0
+gen_tb_top.u_dut.u_ibex_core.cs_registers_i.g_pmp_registers.g_pmp_csrs[15].u_pmp_addr_csr.IbexCSREnValid                           0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.cs_registers_i.g_pmp_registers.g_pmp_csrs[15].u_pmp_cfg_csr.IbexCSREnValid                            0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.cs_registers_i.g_pmp_registers.g_pmp_csrs[1].PMPAddrRstLowBitsZero_A                                  0        0       36             36        0          0
+gen_tb_top.u_dut.u_ibex_core.cs_registers_i.g_pmp_registers.g_pmp_csrs[1].u_pmp_addr_csr.IbexCSREnValid                            0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.cs_registers_i.g_pmp_registers.g_pmp_csrs[1].u_pmp_cfg_csr.IbexCSREnValid                             0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.cs_registers_i.g_pmp_registers.g_pmp_csrs[2].PMPAddrRstLowBitsZero_A                                  0        0       36             36        0          0
+gen_tb_top.u_dut.u_ibex_core.cs_registers_i.g_pmp_registers.g_pmp_csrs[2].u_pmp_addr_csr.IbexCSREnValid                            0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.cs_registers_i.g_pmp_registers.g_pmp_csrs[2].u_pmp_cfg_csr.IbexCSREnValid                             0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.cs_registers_i.g_pmp_registers.g_pmp_csrs[3].PMPAddrRstLowBitsZero_A                                  0        0       36             36        0          0
+gen_tb_top.u_dut.u_ibex_core.cs_registers_i.g_pmp_registers.g_pmp_csrs[3].u_pmp_addr_csr.IbexCSREnValid                            0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.cs_registers_i.g_pmp_registers.g_pmp_csrs[3].u_pmp_cfg_csr.IbexCSREnValid                             0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.cs_registers_i.g_pmp_registers.g_pmp_csrs[4].PMPAddrRstLowBitsZero_A                                  0        0       36             36        0          0
+gen_tb_top.u_dut.u_ibex_core.cs_registers_i.g_pmp_registers.g_pmp_csrs[4].u_pmp_addr_csr.IbexCSREnValid                            0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.cs_registers_i.g_pmp_registers.g_pmp_csrs[4].u_pmp_cfg_csr.IbexCSREnValid                             0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.cs_registers_i.g_pmp_registers.g_pmp_csrs[5].PMPAddrRstLowBitsZero_A                                  0        0       36             36        0          0
+gen_tb_top.u_dut.u_ibex_core.cs_registers_i.g_pmp_registers.g_pmp_csrs[5].u_pmp_addr_csr.IbexCSREnValid                            0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.cs_registers_i.g_pmp_registers.g_pmp_csrs[5].u_pmp_cfg_csr.IbexCSREnValid                             0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.cs_registers_i.g_pmp_registers.g_pmp_csrs[6].PMPAddrRstLowBitsZero_A                                  0        0       36             36        0          0
+gen_tb_top.u_dut.u_ibex_core.cs_registers_i.g_pmp_registers.g_pmp_csrs[6].u_pmp_addr_csr.IbexCSREnValid                            0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.cs_registers_i.g_pmp_registers.g_pmp_csrs[6].u_pmp_cfg_csr.IbexCSREnValid                             0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.cs_registers_i.g_pmp_registers.g_pmp_csrs[7].PMPAddrRstLowBitsZero_A                                  0        0       36             36        0          0
+gen_tb_top.u_dut.u_ibex_core.cs_registers_i.g_pmp_registers.g_pmp_csrs[7].u_pmp_addr_csr.IbexCSREnValid                            0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.cs_registers_i.g_pmp_registers.g_pmp_csrs[7].u_pmp_cfg_csr.IbexCSREnValid                             0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.cs_registers_i.g_pmp_registers.g_pmp_csrs[8].PMPAddrRstLowBitsZero_A                                  0        0       36             36        0          0
+gen_tb_top.u_dut.u_ibex_core.cs_registers_i.g_pmp_registers.g_pmp_csrs[8].u_pmp_addr_csr.IbexCSREnValid                            0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.cs_registers_i.g_pmp_registers.g_pmp_csrs[8].u_pmp_cfg_csr.IbexCSREnValid                             0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.cs_registers_i.g_pmp_registers.g_pmp_csrs[9].PMPAddrRstLowBitsZero_A                                  0        0       36             36        0          0
+gen_tb_top.u_dut.u_ibex_core.cs_registers_i.g_pmp_registers.g_pmp_csrs[9].u_pmp_addr_csr.IbexCSREnValid                            0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.cs_registers_i.g_pmp_registers.g_pmp_csrs[9].u_pmp_cfg_csr.IbexCSREnValid                             0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.cs_registers_i.g_pmp_registers.u_pmp_mseccfg.IbexCSREnValid                                           0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.cs_registers_i.gen_icache_enable.u_cpuctrlsts_ic_scr_key_valid_q_csr.IbexCSREnValid                   0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.cs_registers_i.gen_trigger_regs.g_dbg_tmatch_reg[0].u_tmatch_control_csr.IbexCSREnValid               0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.cs_registers_i.gen_trigger_regs.g_dbg_tmatch_reg[0].u_tmatch_value_csr.IbexCSREnValid                 0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.cs_registers_i.gen_trigger_regs.u_tselect_csr.IbexCSREnValid                                          0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.cs_registers_i.u_cpuctrlsts_part_csr.IbexCSREnValid                                                   0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.cs_registers_i.u_dcsr_csr.IbexCSREnValid                                                              0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.cs_registers_i.u_depc_csr.IbexCSREnValid                                                              0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.cs_registers_i.u_dscratch0_csr.IbexCSREnValid                                                         0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.cs_registers_i.u_dscratch1_csr.IbexCSREnValid                                                         0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.cs_registers_i.u_mcause_csr.IbexCSREnValid                                                            0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.cs_registers_i.u_mcounteren_csr.IbexCSREnValid                                                        0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.cs_registers_i.u_mepc_csr.IbexCSREnValid                                                              0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.cs_registers_i.u_mie_csr.IbexCSREnValid                                                               0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.cs_registers_i.u_mscratch_csr.IbexCSREnValid                                                          0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.cs_registers_i.u_mstack_cause_csr.IbexCSREnValid                                                      0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.cs_registers_i.u_mstack_csr.IbexCSREnValid                                                            0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.cs_registers_i.u_mstack_epc_csr.IbexCSREnValid                                                        0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.cs_registers_i.u_mstatus_csr.IbexCSREnValid                                                           0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.cs_registers_i.u_mtval_csr.IbexCSREnValid                                                             0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.cs_registers_i.u_mtvec_csr.IbexCSREnValid                                                             0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.ex_block_i.gen_multdiv_fast.multdiv_i.DivEnKnown                                                      0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.ex_block_i.gen_multdiv_fast.multdiv_i.IbexMultDivStateValid                                           0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.ex_block_i.gen_multdiv_fast.multdiv_i.MultDivEnKnown                                                  0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.ex_block_i.gen_multdiv_fast.multdiv_i.MultEnKnown                                                     0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.ex_block_i.gen_multdiv_fast.multdiv_i.gen_mult_single_cycle.IbexMultStateKnown                        0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.gen_wb_stage.NoMemRFWriteWithoutPendingLoad                                                           0        0  5408327          20979        0          0
+gen_tb_top.u_dut.u_ibex_core.id_stage_i.IbexAluAOpMuxSelValid                                                                      0        0  5408327        2342685        0          0
+gen_tb_top.u_dut.u_ibex_core.id_stage_i.IbexAluOpMuxSelKnown                                                                       0        0  5408327        2342685        0          0
+gen_tb_top.u_dut.u_ibex_core.id_stage_i.IbexAluOpMuxSelKnownKnownEnable                                                            0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.id_stage_i.IbexBTAluAOpMuxSelKnown                                                                    0        0  5408327        2342685        0          0
+gen_tb_top.u_dut.u_ibex_core.id_stage_i.IbexBTAluAOpMuxSelKnownKnownEnable                                                         0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.id_stage_i.IbexBTAluAOpMuxSelValid                                                                    0        0  5408327        2342685        0          0
+gen_tb_top.u_dut.u_ibex_core.id_stage_i.IbexBTAluBOpMuxSelKnown                                                                    0        0  5408327        2342685        0          0
+gen_tb_top.u_dut.u_ibex_core.id_stage_i.IbexBTAluBOpMuxSelKnownKnownEnable                                                         0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.id_stage_i.IbexBTAluBOpMuxSelValid                                                                    0        0  5408327        2342685        0          0
+gen_tb_top.u_dut.u_ibex_core.id_stage_i.IbexBranchDecisionValid                                                                    0        0  5408327        2342679        0          0
+gen_tb_top.u_dut.u_ibex_core.id_stage_i.IbexBranchDecisionValidKnownEnable                                                         0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.id_stage_i.IbexCheriotExecDisabled                                                                    0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.id_stage_i.IbexCheriotLoadDisabled                                                                    0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.id_stage_i.IbexCheriotStoreDisabled                                                                   0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.id_stage_i.IbexDuplicateInstrMatch                                                                    0        0  5408327        2342685        0          0
+gen_tb_top.u_dut.u_ibex_core.id_stage_i.IbexIdInstrALUKnown                                                                        0        0  5408327        2342672        0          0
+gen_tb_top.u_dut.u_ibex_core.id_stage_i.IbexIdInstrALUKnownKnownEnable                                                             0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.id_stage_i.IbexIdInstrKnown                                                                           0        0  5408327        2342672        0          0
+gen_tb_top.u_dut.u_ibex_core.id_stage_i.IbexIdInstrKnownKnownEnable                                                                0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.id_stage_i.IbexInstrNotCheriot                                                                        0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.id_stage_i.IbexMoveToFirstCycleWhenIdReady                                                            0        0  5408327        3420411        0          0
+gen_tb_top.u_dut.u_ibex_core.id_stage_i.IbexMulticycleEnableUnique                                                                 0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.id_stage_i.IbexRegfileWdataSelValid                                                                   0        0  5408327        2342685        0          0
+gen_tb_top.u_dut.u_ibex_core.id_stage_i.IbexWbStateKnown                                                                           0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.id_stage_i.IllegalInsnStallMustBeMemStall                                                             0        0  5408327              1        0          0
+gen_tb_top.u_dut.u_ibex_core.id_stage_i.NeverDoubleBranch                                                                          0        0  5408327          17586        0          0
+gen_tb_top.u_dut.u_ibex_core.id_stage_i.NeverDoubleJump                                                                            0        0  5408327          22620        0          0
+gen_tb_top.u_dut.u_ibex_core.id_stage_i.StallIDIfMulticycle                                                                        0        0  5408327         189358        0          0
+gen_tb_top.u_dut.u_ibex_core.id_stage_i.controller_i.IbexCtrlStateValid                                                            0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.id_stage_i.controller_i.IbexExceptionPrioOnehot                                                       0        0  5408327            240        0          0
+gen_tb_top.u_dut.u_ibex_core.id_stage_i.controller_i.IllegalInsnOnlyIfInsnValid                                                    0        0  5408327             43        0          0
+gen_tb_top.u_dut.u_ibex_core.id_stage_i.decoder_i.IbexRegImmAluOpKnown                                                             0        0  5408327        1309459        0          0
+gen_tb_top.u_dut.u_ibex_core.id_stage_i.g_btalu_muxes.IbexImmBMuxSelValid                                                          0        0  5408327        2342685        0          0
+gen_tb_top.u_dut.u_ibex_core.id_stage_i.gen_stall_mem.IbexCannotRetireWithPendingExceptions                                        0        0  5408327         361530        0          0
+gen_tb_top.u_dut.u_ibex_core.id_stage_i.gen_stall_mem.IbexExecutingSpecIfExecuting                                                 0        0  5408327        1667521        0          0
+gen_tb_top.u_dut.u_ibex_core.id_stage_i.gen_stall_mem.IbexStallIfValidInstrNotExecuting                                            0        0  5408327         670361        0          0
+gen_tb_top.u_dut.u_ibex_core.id_stage_i.gen_stall_mem.IbexStallMemNoRequest                                                        0        0  5408327        1506027        0          0
+gen_tb_top.u_dut.u_ibex_core.if_stage_i.IbexBootAddrUnaligned                                                                      0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.if_stage_i.IbexExcPcMuxKnown                                                                          0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.if_stage_i.IbexInstrAddrUnaligned                                                                     0        0  5408327        4109239        0          0
+gen_tb_top.u_dut.u_ibex_core.if_stage_i.IbexInstrAddrUnknown                                                                       0        0  5408327        4109239        0          0
+gen_tb_top.u_dut.u_ibex_core.if_stage_i.compressed_decoder_i.IbexC0Known1                                                          0        0  5408327            632        0          0
+gen_tb_top.u_dut.u_ibex_core.if_stage_i.compressed_decoder_i.IbexC1Known1                                                          0        0  5408327         441494        0          0
+gen_tb_top.u_dut.u_ibex_core.if_stage_i.compressed_decoder_i.IbexC1Known2                                                          0        0  5408327           1825        0          0
+gen_tb_top.u_dut.u_ibex_core.if_stage_i.compressed_decoder_i.IbexC1Known3                                                          0        0  5408327           1642        0          0
+gen_tb_top.u_dut.u_ibex_core.if_stage_i.compressed_decoder_i.IbexC2Known1                                                          0        0  5408327         117339        0          0
+gen_tb_top.u_dut.u_ibex_core.if_stage_i.compressed_decoder_i.IbexInstrLSBsKnown                                                    0        0  5408327        1984560        0          0
+gen_tb_top.u_dut.u_ibex_core.if_stage_i.compressed_decoder_i.IbexInstrValidKnown                                                   0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.if_stage_i.compressed_decoder_i.IbexPushPopFSMStable                                                  0        0  5408327        3423623        0          0
+gen_tb_top.u_dut.u_ibex_core.if_stage_i.g_no_branch_predictor_asserts.IbexPcMuxValid                                               0        0  5408327          40923        0          0
+gen_tb_top.u_dut.u_ibex_core.if_stage_i.gen_dummy_instr.dummy_instr_i.lfsr_i.CoeffCheck_A                                          0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.if_stage_i.gen_dummy_instr.dummy_instr_i.lfsr_i.DataKnownO_A                                          0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.if_stage_i.gen_dummy_instr.dummy_instr_i.lfsr_i.InputWidth_A                                          0        0       36             36        0          0
+gen_tb_top.u_dut.u_ibex_core.if_stage_i.gen_dummy_instr.dummy_instr_i.lfsr_i.OutputKnown_A                                         0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.if_stage_i.gen_dummy_instr.dummy_instr_i.lfsr_i.OutputWidth_A                                         0        0       36             36        0          0
+gen_tb_top.u_dut.u_ibex_core.if_stage_i.gen_dummy_instr.dummy_instr_i.lfsr_i.gen_ext_seed_sva.ExtDefaultSeedInputCheck_A           0        0  5408327             65        0          0
+gen_tb_top.u_dut.u_ibex_core.if_stage_i.gen_dummy_instr.dummy_instr_i.lfsr_i.gen_gal_xor.DefaultSeedNzCheck_A                      0        0       36             36        0          0
+gen_tb_top.u_dut.u_ibex_core.if_stage_i.gen_dummy_instr.dummy_instr_i.lfsr_i.gen_gal_xor.gen_lut.MaxLfsrWidth_A                    0        0       36             36        0          0
+gen_tb_top.u_dut.u_ibex_core.if_stage_i.gen_dummy_instr.dummy_instr_i.lfsr_i.gen_gal_xor.gen_lut.MinLfsrWidth_A                    0        0       36             36        0          0
+gen_tb_top.u_dut.u_ibex_core.if_stage_i.gen_dummy_instr.dummy_instr_i.lfsr_i.gen_max_len_sva.MaximalLengthCheck0_A                 0        0  5408327        5350408        0          0
+gen_tb_top.u_dut.u_ibex_core.if_stage_i.gen_dummy_instr.dummy_instr_i.lfsr_i.gen_perm_check.p_perm_check.PermutationCheck_A        0        0       36             36        0          0
+gen_tb_top.u_dut.u_ibex_core.if_stage_i.gen_icache.icache_i.TagHitKnown                                                            0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.if_stage_i.gen_icache.icache_i.TagInvalidKnown                                                        0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.if_stage_i.gen_icache.icache_i.ecc_data_param_legal                                                   0        0       36             36        0          0
+gen_tb_top.u_dut.u_ibex_core.if_stage_i.gen_icache.icache_i.ecc_tag_param_legal                                                    0        0       36             36        0          0
+gen_tb_top.u_dut.u_ibex_core.if_stage_i.gen_icache.icache_i.size_param_legal                                                       0        0       36             36        0          0
+gen_tb_top.u_dut.u_ibex_core.load_store_unit_i.IbexDataAddrUnaligned                                                               0        0  5408327        1385289        0          0
+gen_tb_top.u_dut.u_ibex_core.load_store_unit_i.IbexDataAddrUnknown                                                                 0        0  5408327        1385289        0          0
+gen_tb_top.u_dut.u_ibex_core.load_store_unit_i.IbexDataOffsetKnown                                                                 0        0  5408327        1385465        0          0
+gen_tb_top.u_dut.u_ibex_core.load_store_unit_i.IbexDataTypeKnown                                                                   0        0  5408327        1385465        0          0
+gen_tb_top.u_dut.u_ibex_core.load_store_unit_i.IbexDataTypeQKnown                                                                  0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.load_store_unit_i.IbexLsuCheriotErrDisabled                                                           0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.load_store_unit_i.IbexLsuIsCapDisabled                                                                0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.load_store_unit_i.IbexLsuStateValid                                                                   0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.load_store_unit_i.IbexRDataOffsetQKnown                                                               0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_ibex_core.wb_stage_i.RFWriteFromOneSourceOnly                                                                   0        0  5408327        5408183        0          0
+gen_tb_top.u_dut.u_register_file.g_cheriot_rf.CapWidthGTEDataWidth                                                                 0        0       36             36        0          0
+gen_tb_top.u_ibus_if.sva_rvalid_legal                                                                                              0        0  5408327         468337        0          0
+uvm_pkg.\uvm_component_name_check_visitor::visit .unnamed$$_0                                                                      0        0     1656           1656        0          0
+
+Assertions Incomplete:
+                                          ASSERTIONS                                          CATEGORY SEVERITY ATTEMPTS REAL SUCCESSES FAILURES INCOMPLETE
+gen_tb_top.u_dut.u_ibex_core.if_stage_i.gen_dummy_instr.dummy_instr_i.lfsr_i.NextStateCheck_A        0        0  5408327              0        0         36
+
+Assertions Without Attempts:
+                       ASSERTIONS                       CATEGORY SEVERITY ATTEMPTS REAL SUCCESSES FAILURES INCOMPLETE
+uvm_pkg.\uvm_reg_map::do_read .unnamed$$_0.unnamed$$_1         0        0        0              0        0          0
+uvm_pkg.\uvm_reg_map::do_write .unnamed$$_0.unnamed$$_1        0        0        0              0        0          0
+
+-------------------------------------------------------------------------------
+
+Detail Report for Cover Properties
+
+Cover Properties Uncovered:
+                        COVER PROPERTIES                         CATEGORY SEVERITY ATTEMPTS MATCHES INCOMPLETE
+gen_tb_top.u_dut.gen_protocol_props_i.sva_alert_bus_seen                0        0  5408327       0          0
+gen_tb_top.u_dut.gen_protocol_props_i.sva_alert_minor_seen              0        0  5408327       0          0
+gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_store_err_resp           0        0  5408327       0          0
+gen_tb_top.u_dut.gen_protocol_props_i.sva_ibus_err_beat                 0        0  5408327       0          0
+gen_tb_top.u_dut.gen_protocol_props_i.sva_irq_nmi_seen                  0        0  5408327       0          0
+gen_tb_top.u_dut.gen_protocol_props_i.sva_irq_pending_seen              0        0  5408327       0          0
+gen_tb_top.u_dut.gen_protocol_props_i.sva_rvfi_irq_valid_seen           0        0  5408327       0          0
+gen_tb_top.u_dut.gen_protocol_props_i.sva_scrkey_req_while_valid        0        0  5408327       0          0
+
+Cover Properties Matches:
+                        COVER PROPERTIES                         CATEGORY SEVERITY ATTEMPTS MATCHES INCOMPLETE
+gen_tb_top.u_dbus_if.cov_rvalid_legal                                   0        0  5408327   97518          0
+gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_depth_two_seen           0        0  5408327     176          0
+gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_gnt_delayed              0        0  5408327   91430          0
+gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_split_second_addr        0        0  5408327      24          0
+gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_split_second_be          0        0  5408327      24          0
+gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_split_seen               0        0  5408327      24          0
+gen_tb_top.u_dut.gen_protocol_props_i.sva_ibus_depth_max_seen           0        0  5408327    1878          0
+gen_tb_top.u_dut.gen_protocol_props_i.sva_ibus_gnt_delayed              0        0  5408327  295554         25
+gen_tb_top.u_dut.gen_protocol_props_i.sva_ibus_gnt_same_cycle           0        0  5408327   42845          0
+gen_tb_top.u_dut.gen_protocol_props_i.sva_icram_alloc_write             0        0  5408327    2139          0
+gen_tb_top.u_dut.gen_protocol_props_i.sva_icram_inval_write             0        0  5408327   18447          0
+gen_tb_top.u_dut.gen_protocol_props_i.sva_rvfi_trap_seen                0        0  5408327     240          0
+gen_tb_top.u_dut.gen_protocol_props_i.sva_scrkey_req_seen               0        0  5408327      51          0
+gen_tb_top.u_ibus_if.cov_rvalid_legal                                   0        0  5408327  468337          0
+
+

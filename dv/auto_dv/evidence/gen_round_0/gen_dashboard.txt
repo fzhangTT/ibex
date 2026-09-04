@@ -1,0 +1,34 @@
+Dashboard
+
+Date: Fri Sep  4 18:00:24 2026
+
+User: fzhang
+
+Version: X-2025.06-SP2
+Command line: urg -full64 -format both -dbname /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_1/cov/merged.vdb -report /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_1/cov/report -log /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_1/cov/merge.log -show ratios -dir /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_1/build/gen_tb/build.vdb -dump full_exclusions
+Number of tests: 36
+
+-------------------------------------------------------------------------------
+Total Coverage Summary 
+SCORE   LINE              COND              TOGGLE              FSM           BRANCH            ASSERT          GROUP            
+ 72.64   83.91 3688/4395   67.18 6471/9633   67.15 19231/28640   44.19 38/86   75.49 1848/2448   89.11 229/257   81.47 3477/4268 
+
+
+-------------------------------------------------------------------------------
+Hierarchical coverage data for top-level instances 
+SCORE   LINE              COND              TOGGLE              FSM            BRANCH            ASSERT          NAME       
+ 71.28   83.91 3688/4395   67.18 6471/9633   67.15 19231/28640   44.19 38/86    75.49 1848/2448   89.76 228/254  gen_tb_top 
+ 33.33  --     --         --     --         --     --           --     --      --     --          33.33 1/3      uvm_pkg    
+
+
+-------------------------------------------------------------------------------
+Total Module Definition Coverage Summary 
+SCORE   LINE              COND              TOGGLE              FSM           BRANCH            ASSERT         
+ 69.91   82.74 3187/3852   68.10 6047/8880   64.16 14018/21848   44.19 38/86   74.28 1640/2208   86.00 172/200 
+
+
+-------------------------------------------------------------------------------
+Total Groups Coverage Summary 
+COVERED EXPECTED SCORE  WEIGHT 
+3477    4268      81.47 1      
+

@@ -1,0 +1,47 @@
+Tests
+
+Total Coverage Summary 
+SCORE   LINE              COND              TOGGLE              FSM           BRANCH            ASSERT          GROUP            
+ 72.64   83.91 3688/4395   67.18 6471/9633   67.15 19231/28640   44.19 38/86   75.49 1848/2448   89.11 229/257   81.47 3477/4268 
+
+
+Total tests in report: 36
+-------------------------------------------------------------------------------
+Data from the following tests was used to generate this report
+/proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_1/build/gen_tb/build/test_gen_test_rst_boot_1238152686       
+/proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_1/build/gen_tb/build/test_gen_test_rst_boot_1873547890       
+/proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_1/build/gen_tb/build/test_gen_test_isa_shift_639030393       
+/proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_1/build/gen_tb/build/test_gen_test_csr_access_1083800386     
+/proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_1/build/gen_tb/build/test_gen_test_cmp_zca_1585395259        
+/proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_1/build/gen_tb/build/test_gen_test_mul_mul_212116882         
+/proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_1/build/gen_tb/build/test_gen_test_csr_access_1157496830     
+/proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_1/build/gen_tb/build/test_gen_test_isa_alu_790849397         
+/proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_1/build/gen_tb/build/test_gen_test_isa_cti_1722507662        
+/proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_1/build/gen_tb/build/test_gen_test_mul_div_50212798          
+/proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_1/build/gen_tb/build/test_gen_test_cmp_zcmp_basic_979420815  
+/proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_1/build/gen_tb/build/test_gen_test_cmp_zcb_2076577225        
+/proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_1/build/gen_tb/build/test_gen_test_isa_shift_62503422        
+/proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_1/build/gen_tb/build/test_gen_test_isa_alu_548997994         
+/proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_1/build/gen_tb/build/test_gen_test_isa_cti_292097225         
+/proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_1/build/gen_tb/build/test_gen_test_isa_alu_353815277         
+/proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_1/build/gen_tb/build/test_gen_test_mul_div_77428537          
+/proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_1/build/gen_tb/build/test_gen_test_bit_ratified_1909560559   
+/proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_1/build/gen_tb/build/test_gen_test_bit_ratified_1967334960   
+/proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_1/build/gen_tb/build/test_gen_test_bit_ratified_475658892    
+/proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_1/build/gen_tb/build/test_gen_test_csr_trap_setup_1700471251 
+/proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_1/build/gen_tb/build/test_gen_test_isa_cti_1477822385        
+/proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_1/build/gen_tb/build/test_gen_test_csr_access_50199671       
+/proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_1/build/gen_tb/build/test_gen_test_cmp_zca_255088443         
+/proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_1/build/gen_tb/build/test_gen_test_rst_boot_1358026205       
+/proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_1/build/gen_tb/build/test_gen_test_cmp_zcb_1591761896        
+/proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_1/build/gen_tb/build/test_gen_test_csr_trap_setup_472766666  
+/proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_1/build/gen_tb/build/test_gen_test_cmp_zcb_1056434660        
+/proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_1/build/gen_tb/build/test_gen_test_cmp_zcmp_basic_395280870  
+/proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_1/build/gen_tb/build/test_gen_test_cmp_zcmp_basic_961426687  
+/proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_1/build/gen_tb/build/test_gen_test_mul_div_503515370         
+/proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_1/build/gen_tb/build/test_gen_test_isa_shift_990604705       
+/proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_1/build/gen_tb/build/test_gen_test_csr_trap_setup_676186355  
+/proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_1/build/gen_tb/build/test_gen_test_cmp_zca_1838704264        
+/proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_1/build/gen_tb/build/test_gen_test_mul_mul_1314667133        
+/proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_1/build/gen_tb/build/test_gen_test_mul_mul_2030903694        
+

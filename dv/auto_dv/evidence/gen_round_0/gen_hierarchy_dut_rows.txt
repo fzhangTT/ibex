@@ -1,0 +1,4 @@
+    SCORE   LINE              COND              TOGGLE              FSM            BRANCH            ASSERT                               
+     71.79   83.35 3525/4229   66.67 6310/9465   67.29 16650/24742   44.19 38/86    74.40 1726/2320   94.83 165/174  u_ibex_core          
+    SCORE   LINE            COND            TOGGLE          FSM            BRANCH          ASSERT                      
+     77.69   99.23 129/130   96.86 154/159   75.17 227/302  --     --       97.22 105/108   20.00 1/5  u_register_file 
