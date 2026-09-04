@@ -272,6 +272,19 @@ qualifications below are what the sampler implements, and the first two are now 
   which is what separates the bin from unused_way_data and masked_duplicate_copy, and alert_minor_o must stay low
   across 1..GEN_ICACHE_ECC_WINDOW after the read, which is the "no alert" the coverpoint is about.
 
+WHAT THE BIN WITNESSES, corrected: the UNHIT-WAY MASKING, not a checked read that came back clean. A never-written
+data line can never be the hit way, and the term chain says so rather than a comment: the only thing that makes a way
+hittable is a fill, since the other two writers of tag_write_ic0 write tags INVALID
+(`tag_write_ic0 = fill_grant_ic0 | inval_write_req | ecc_write_req`, rtl/ibex_icache.sv:277), and a fill writes that
+way's data in the same cycle, since `data_write_ic0 = tag_write_ic0` (:283) and `data_req_ic0` includes
+`fill_req_ic0` (:280) so the write lands rather than being masked by the request term. The DUT's check is masked
+exactly there, because the data-ECC term needs `tag_hit_ic1`
+(`ecc_err_ic1 = lookup_valid_ic1 & (((|data_err_ic1) & tag_hit_ic1) | (|tag_err_ic1))`, :585), whose own comment names
+the ways without a valid tag as deliberately unchecked. Two consequences for the build. The sampler needs no hit-way
+input for this bin and cannot compute one, since no injection means no judge ran; the masking holds by construction.
+And the qualification above buys a VOLUME bound, at most one sample per line per way, rather than evidence that the
+read was checked: what is qualified is the LOOKUP, that the cache was enabled and no sweep was in its grace window.
+
 Bin precedence, stated once so the classifier is a total function. An unqualified cycle classifies as disabled_cache
 when the enable term failed and during_invalidation when the sweep term failed, and those win over everything else. On
 a qualified cycle with an injection, the injection cases win: unused_way_data when the verdict says another or an
@@ -317,6 +330,13 @@ The classification is a pure function of the recorded values, which is what make
 
 ## 7. Trust triad, per new observation, with the detector named for each red and each mutation
 
+THE ORDER WAS NOT FOLLOWED: I BUILT BEFORE THE RED. This section's TDD line says each new observation gets a red
+first, and that is not what happened. The mechanism was built, then the seventeen unit-test cases were written and
+passed on working code, and only then were the reds obtained by ablating the mechanism each case tests. A case that
+passes on a working build proves the classifier agrees with this plan; it does not prove the case would fail without
+the mechanism. That is why every red below is a real failing run from an ablated build with its own identity, and why
+none of them is narrated from a passing run.
+
 The general rule for a coverage observation: a manifest fails an UNHIT declared bin, so a manifest is the detector for
 a red that suppresses a bin and cannot be the detector for a mutation that makes a bin hit WRONGLY. The latter needs a
 classifier check. This build uses `GEN_FCOV_UT` (gen_fcov_pkg.sv:1667) for the second kind: it compares a
@@ -349,11 +369,14 @@ classifier fault is a failing run and not only a failing offline check.
   deterministic instead, a GEN_FCOV_UT case asserting that `gen_icram_events::q.size()` is unchanged across an
   uninitialised event and that the bypass queue's size rose by one, which fails on the mutation in any run that
   reaches one uninitialised read.
-- Mutation-proof, quiet windowing, and this one is split because only half of it has a detector. The window
-  arithmetic is one function, gen_ic_in_window in gen_tb_pkg, shared by all three window queries, with GEN_FCOV_UT
-  cases on all four boundary positions: the reference cycle itself outside, the first cycle inside, the last cycle
-  inside, one past the window outside. A mutation of that arithmetic fails those cases in any run that reaches the
-  self-test, through GEN_CMD_FCOV_SELFTEST, with its ablation control.
+- Mutation-proof, quiet windowing, and the detector is NARROWER than an earlier draft of this section implied. What
+  the built cases pin is two pure functions and nothing else: gen_ic_in_window, with cases on all four boundary
+  positions (the reference cycle outside, the first cycle inside, the last cycle inside, one past outside), and
+  ic_major_nmi_quiet, with cases on a quiet window, a major level in the window, an internal-NMI retirement in the
+  window and a window holding no retirement. No case drives a MULTI-CYCLE level history, so the accumulation of
+  minor_hi and major_hi over successive cycles is exercised by the evidence runs and pinned by no unit-test case. A
+  mutation of the arithmetic fails those cases in any run that reaches the self-test through GEN_CMD_FCOV_SELFTEST,
+  with its ablation control; a mutation of the history accumulation would not.
   THE RESIDUAL, stated rather than covered: a mutation of the SPAN ARGUMENT at a call site, passing the window
   constant less one, is caught by NOTHING this build carries. The boundary cases test the arithmetic, not the
   constant handed to it, and a wrongly hit bin is invisible to a manifest, which fails only an unhit declared bin. The

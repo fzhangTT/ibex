@@ -1,24 +1,32 @@
-# CG-IC-006 part 1. Derived from gen_trace_tp_bin.csv, not typed: every distinct coverpoint-and-bin pair of the group
-# except the four part-2 coverpoints and cr_ram_x_inval. cp_knob's three rendered bins are namable in no manifest,
-# since they have no rows in the traceability CSV. The four part-2 coverpoints are owned by the plan and the render,
-# declared here by nothing, hidden by no ignore_bins.
+# CG-IC-006 part 1. Bins derived from gen_trace_tp_bin.csv, not typed: the coverpoint-and-bin pairs of the group's
+# eight part-1 coverpoints. cp_knob's three rendered bins have no CSV rows and are namable in no manifest; the four
+# part-2 coverpoints are owned by the plan and the render, declared here by nothing and hidden by no ignore_bins.
 #
-# FOURTEEN CROSS BINS ARE OWED, NOT ABSENT, and the reason is a defect in the shared expectation checker, not in this
-# group. ci/check_fcov_expectations.py's report parser recognises only urg's per-coverpoint heading and never the
-# per-cross one, so no cg.cross.bin key is ever produced and a manifest declaring a cross bin can never pass: measured
-# on this group, all 14 read as MISSING-FROM-REPORT while four of them carry counts of 483, 459, 445 and 904 in that
-# same report. Worse, the cross heading only clears the parser's in-bins flag and leaves the coverpoint name set, so a
-# cross bin's count is attributed to the group's LAST coverpoint: the parser emits gen_ic_ecc_cg.cp_knob.data_single_way0
-# = 483 and cp_knob.single_frequent = 904, both cross bins. A declared coverpoint bin therefore reads as HIT whenever a
-# cross bin of the same name is hit in that group. Owner item LOG-084; the interim ruling declares the 15 coverpoint
-# bins and records these 14 as owed until the owner rules.
+# The `test` key is the file stem rather than a testlist entry, because this manifest serves a GROUP: no single entry
+# can hit every bin below, since the RAM bins need both hooks and the bit bins both knob settings. The loader permits
+# an unmeasured entry to name it. NOTE FOR PROMOTION: the loader requires a MEASURED entry's manifest stem to equal
+# the entry name, so at promotion each entry needs its own manifest or this one becomes the union of them.
 #
-# THAT HAZARD CANNOT MASK ANY BIN DECLARED BELOW, for two independent reasons, both measured: no coverpoint bin name in
-# this group equals any cross bin name (22 coverpoint names against 16 cross names, intersection empty), and the
-# coverpoint the mis-attribution lands on is cp_knob, the last one, which declares no bin here at all. The bin name
-# `yes` is shared by cp_lookups_blocked_next, cp_major_nmi_quiet and cp_refetch, but coverpoint-to-coverpoint sharing
-# is not the hazard: the parser keys by coverpoint, so only a CROSS bin sharing a coverpoint bin's name can mask one.
-group: CG-IC-006
+# The group's fourteen part-1 CROSS bins are not declared here yet (LOG-084 and its revision LOG-084c). They are
+# checkable on the flow's measured path, where gen_fcov derives a variable-form report whose cross sections are named
+# by the component tuple, and NOT on a direct invocation of the checker against a raw urg report, whose parser keys no
+# cross bin and mis-attributes cross counts to a group's last coverpoint. The local reds of this landing used the raw
+# path, so the fourteen are left for the touch that verifies them through the derived path:
+#   gen_ic_ecc_cg.cr_bits_x_rate.double_frequent
+#   gen_ic_ecc_cg.cr_bits_x_rate.double_rare
+#   gen_ic_ecc_cg.cr_bits_x_rate.single_frequent
+#   gen_ic_ecc_cg.cr_bits_x_rate.single_rare
+#   gen_ic_ecc_cg.cr_data_x_beat.data_beat0
+#   gen_ic_ecc_cg.cr_data_x_beat.data_beat1
+#   gen_ic_ecc_cg.cr_ram_x_bits_x_way.data_double_way0
+#   gen_ic_ecc_cg.cr_ram_x_bits_x_way.data_double_way1
+#   gen_ic_ecc_cg.cr_ram_x_bits_x_way.data_single_way0
+#   gen_ic_ecc_cg.cr_ram_x_bits_x_way.data_single_way1
+#   gen_ic_ecc_cg.cr_ram_x_bits_x_way.tag_double_way0
+#   gen_ic_ecc_cg.cr_ram_x_bits_x_way.tag_double_way1
+#   gen_ic_ecc_cg.cr_ram_x_bits_x_way.tag_single_way0
+#   gen_ic_ecc_cg.cr_ram_x_bits_x_way.tag_single_way1
+test: gen_cg_ic_ecc_part1
 owner: tb-infra
 bins:
   - gen_ic_ecc_cg.cp_ram.tag
@@ -36,18 +44,19 @@ bins:
   - gen_ic_ecc_cg.cp_no_alert_case.uninitialised_data_ram
   - gen_ic_ecc_cg.cp_no_alert_case.unused_way_data
   - gen_ic_ecc_cg.cp_no_alert_case.masked_duplicate_copy
-bins_owed_checker_defect:   # LOG-084: declare these once the checker parses cross bins
-  - gen_ic_ecc_cg.cr_ram_x_bits_x_way.tag_double_way0
-  - gen_ic_ecc_cg.cr_ram_x_bits_x_way.tag_double_way1
-  - gen_ic_ecc_cg.cr_ram_x_bits_x_way.tag_single_way0
-  - gen_ic_ecc_cg.cr_ram_x_bits_x_way.tag_single_way1
-  - gen_ic_ecc_cg.cr_ram_x_bits_x_way.data_double_way0
-  - gen_ic_ecc_cg.cr_ram_x_bits_x_way.data_double_way1
-  - gen_ic_ecc_cg.cr_ram_x_bits_x_way.data_single_way0
-  - gen_ic_ecc_cg.cr_ram_x_bits_x_way.data_single_way1
-  - gen_ic_ecc_cg.cr_data_x_beat.data_beat0
-  - gen_ic_ecc_cg.cr_data_x_beat.data_beat1
-  - gen_ic_ecc_cg.cr_bits_x_rate.double_frequent
-  - gen_ic_ecc_cg.cr_bits_x_rate.single_frequent
-  - gen_ic_ecc_cg.cr_bits_x_rate.double_rare
-  - gen_ic_ecc_cg.cr_bits_x_rate.single_rare
+anti_vacuity:
+  gen_ic_ecc_cg.cp_ram.tag: "a tag-RAM injection the monitor closed: the kind comes from the announcing RAM instance, so a hit proves the tag hook fired and its announcement was judged, not that a tag RAM exists"
+  gen_ic_ecc_cg.cp_ram.data: "a data-RAM injection the monitor closed, same route as the tag bin; unreachable under a data rate of none, so a hit proves the data hook fired under a rate that injects"
+  gen_ic_ecc_cg.cp_bits.double: "as single, with the two-bit knob; both flips land inside one 39-bit beat, so a hit also proves the two-bit path produced a detectable single-beat error"
+  gen_ic_ecc_cg.cp_bits.single: "the flipped-bit count is the announcement's own field, so a hit proves an injection ran with the one-bit knob in force rather than that the knob was set"
+  gen_ic_ecc_cg.cp_way.way0: "the way is the injecting instance's own parameter, so a hit proves way 0's model injected and the monitor judged that injection"
+  gen_ic_ecc_cg.cp_way.way1: "as way0 for way 1; the two bins together prove both way instances inject, which a single-way build could not produce"
+  gen_ic_ecc_cg.cp_beat.beat0: "the beat is the flipped position divided by the beat width and is sampled only for a data injection, so a hit proves a data-RAM flip in the low beat"
+  gen_ic_ecc_cg.cp_beat.beat1: "as beat0 for the high beat; a tag injection passes not-applicable here, so neither bin can be reached by the tag hook"
+  gen_ic_ecc_cg.cp_alert_pulses.one: "sampled only when the injection OWED a pulse and exactly one was credited to it, so a hit proves the judge decided the injected way was the hit way and the monitor credited one pulse inside the window; an unjudged injection passes not-applicable and cannot reach it"
+  gen_ic_ecc_cg.cp_major_nmi_quiet.yes: "requires both major alert outputs low in every cycle of the injection window AND at least one retirement inside the retirement window carrying no internal-NMI flag; a window with no retirement in it passes not-applicable, so a hit cannot come from an absence of retirements"
+  gen_ic_ecc_cg.cp_no_alert_case.disabled_cache: "requires the enable term of the qualification to be false at the read, so a hit proves an injection was read while the cache was genuinely disabled per the scoreboard's tracking"
+  gen_ic_ecc_cg.cp_no_alert_case.during_invalidation: "requires the sweep term to be false at the read, so a hit proves an injection inside the invalidation sweep's grace window and not merely a quiet run"
+  gen_ic_ecc_cg.cp_no_alert_case.uninitialised_data_ram: "witnesses the UNHIT-WAY masking, not a checked read that came back clean: a never-written line can never be the hit way, since the only writer that makes a way hittable is a fill and a fill writes that way data in the same cycle (rtl/ibex_icache.sv:277, :283, :280), and the data-ECC term is masked without tag_hit_ic1 (:585). A hit therefore requires a qualified LOOKUP (cache enabled, no sweep in its grace window), a never-written line of that way, no injection in that read cycle and alert_minor_o low across the window; it is the FIRST such read of that line, which bounds a run to at most 512 samples so a hit cannot come from repeated reads of one line"
+  gen_ic_ecc_cg.cp_no_alert_case.unused_way_data: "requires an injection whose verdict says another or an invalid way, so a hit proves the hit judge ran and decided against the injected way rather than that no alert happened to fire"
+  gen_ic_ecc_cg.cp_no_alert_case.masked_duplicate_copy: "requires two ways valid with the same tag and a flip that cleared a bit the hit-data mux OR restores, so a hit proves the duplicate-copy mechanism was exercised and the fetched word stayed correct"

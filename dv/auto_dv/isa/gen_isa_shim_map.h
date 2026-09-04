@@ -37,6 +37,7 @@
 #define GEN_RVFI_ID_EXIT_OFFSET            2u
 #define GEN_ICACHE_ECC_WINDOW              2u
 #define GEN_ICACHE_ECC_GRACE_CYCLES        16u
+#define GEN_ICRAM_UNINIT_Q_DEPTH           512u
 #define GEN_ICACHE_RETIRE_WINDOW           64u
 #define GEN_IRQ_ENTRY_BOUND_RECORDS        17u
 #define GEN_DBG_ENTRY_BOUND_RECORDS        17u

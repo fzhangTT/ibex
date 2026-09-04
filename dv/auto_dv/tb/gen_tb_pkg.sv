@@ -245,12 +245,7 @@ package gen_tb_pkg;
   parameter int unsigned GEN_RVFI_ID_EXIT_OFFSET = 2;  // cycles from ID exit (rvfi_ext_mcycle sample point, rtl/ibex_core.sv:2102) to the record, plus the WB wait for loads/stores (v3 T-051 2.2)
   parameter int unsigned GEN_ICACHE_ECC_WINDOW = 2;  // alert_minor_o within 1..2 cycles counted from the lookup request that returns corrupted data (the RAM read lands one cycle after the request, the alert one cycle after the check): 1 is the latency observed on every retained injection run (gen_tdd_step2b.md Section 14, every pulse at 1), 2 the declared bound, not observed; no run had alert_minor_o high before the injection hook existed; the misc checker and the protocol SVA use the same value
   parameter int unsigned GEN_ICACHE_ECC_GRACE_CYCLES = 16;  // cycles after a cpuctrlsts.icache_enable write record or after the last invalidation-sweep tag write during which a tag-RAM ECC injection is not owed an alert_minor_o pulse: a lookup made while the cache is disabled or invalidating reads the tag RAM but is not checked (rtl/ibex_icache.sv:266), and the TB learns both states late (the write from its record, the sweep from its all-ways tag writes)
-  // the window arithmetic every CG-IC-006 window term uses, in one place so its boundary is unit-testable: a cycle counts when
-  // it lies in ref+1 .. ref+span. The reference cycle itself is excluded, since the ECC check lands the cycle after the read.
-  function automatic bit gen_ic_in_window(int unsigned hit_cycle, int unsigned ref_cycle, int unsigned span);
-    return hit_cycle > ref_cycle && (hit_cycle - ref_cycle) <= span;
-  endfunction
-  parameter int unsigned GEN_ICRAM_UNINIT_Q_DEPTH = ibex_pkg::IC_NUM_LINES * ibex_pkg::IC_NUM_WAYS;  // every never-written data line of every way can be reported at most once, so this depth holds every event a run can produce and the queue cannot evict; a drop is a TB defect and is counted
+  parameter int unsigned GEN_ICRAM_UNINIT_Q_DEPTH = ibex_pkg::IC_NUM_LINES * ibex_pkg::IC_NUM_WAYS;  // bound of the never-written data-line report queue: every data line of every way is reported at most once, so this depth holds every event a run can produce and the queue cannot evict; a drop is a TB defect and the misc monitor counts it
   parameter int unsigned GEN_ICACHE_RETIRE_WINDOW = 64;  // cycles after a data-RAM ECC injection within which the misc monitor waits for the retirement that reveals the lookup tag through its pc (form b, the measured-run judge: the first retirement whose pc index equals the injected index); an injection with no such retirement is reported unjudged (a squashed speculative lookup)
   parameter int unsigned GEN_IRQ_ENTRY_BOUND_RECORDS = 17;  // records between a pin edge and the interrupt entry, worst case WB + ID + 16 Zcmp micro-ops (v3 T-051 2.6)
   parameter int unsigned GEN_DBG_ENTRY_BOUND_RECORDS = 17;  // records between debug_req_i and the debug entry, same derivation (v3 T-051 2.6)
@@ -545,6 +540,14 @@ package gen_tb_pkg;
   endfunction
   parameter logic [31:0] GEN_BOOT_ADDR_DEFAULT = 32'h8000_0000;  // literal twin of GEN_MM_BOOT_ADDR_DEFAULT (regex readers: gen_program.py, gen_smoke_run.sh)
   // GEN_KNOBS_END
+
+  // Below the knobs region because the generator emits functions from its own templates and not from the yaml: this is
+  // the window arithmetic all three CG-IC-006 window queries share, in one place so its boundary is unit-testable. A
+  // cycle counts when it lies in ref+1 .. ref+span, the reference cycle itself excluded since the ECC check lands the
+  // cycle after the read. (The queue bound that used to sit here is a yaml constant, rendered inside the region.)
+  function automatic bit gen_ic_in_window(int unsigned hit_cycle, int unsigned ref_cycle, int unsigned span);
+    return hit_cycle > ref_cycle && (hit_cycle - ref_cycle) <= span;
+  endfunction
   // ICache RAM model announcements (C3.4): the tag RAM models push their ECC injections here (one flipped bit of a lookup read,
   // at knob_icache_ecc_err_rate's rate) and gen_misc_monitor consumes them as the alert_minor_o expectation: a pulse needs an
   // injection within GEN_ICACHE_ECC_WINDOW, and a QUALIFIED injection owes a pulse. Qualified = the cache is enabled per the

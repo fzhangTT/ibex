@@ -474,8 +474,7 @@ package gen_checkers_pkg;
         @(posedge misc.clk);
         if (!misc.rst_n) continue;
         write_changes();
-        begin   // the level histories the CG-IC-006 window terms read: a cycle is recorded when the signal was HIGH in it, so a
-                // level that predates a window and outlasts it is still seen inside it. Pruned to the longest window asked about.
+        begin   // record the level histories declared above (their semantics are stated at the declaration)
           if (misc.alert_minor) minor_hi.push_back(misc.cycle);
           if (misc.alert_major_internal || misc.alert_major_bus) major_hi.push_back(misc.cycle);
           while (minor_hi.size() > 0 && misc.cycle > minor_hi[0] + GEN_ICACHE_RETIRE_WINDOW + GEN_ICACHE_ECC_WINDOW) void'(minor_hi.pop_front());

@@ -1,0 +1,81 @@
+# WP-8 part 1: the two mutations caught by GEN_FCOV_UT cases, with their ablation controls.
+#
+# PROVENANCE: same tree state as the coverage reds, whose unmutated control's sources sha256 equals the tree build
+# 9ff74126059016cb (dv/auto_dv/work/tb-infra/wit/w26). Each catch runs with +gen_chk_all=0, so every Zone A
+# check is OFF and the named unit-test cases are the only thing that can fail the run. Produced 2026-09-04T12:32:22Z.
+#
+# These two faults are invisible to any expectation file: a wrongly ROUTED event and a wrongly SIZED window produce a
+# wrong value or a wrongly hit bin, and a manifest fails only an UNHIT declared bin. That is why the detector is a
+# unit-test case reached in a real run through GEN_CMD_FCOV_SELFTEST rather than a coverage expectation.
+
+root: UNINITQ   (the never-written report routed into gen_icram_events::q instead of its own queue)
+  sources sha256: b5868216a6730a17
+  simulation verdict: FAIL
+  unit-test failures: 2
+  mutation identity, so the applied diff is in the record:
+    mutation UNINITQ
+    file dv/auto_dv/tb/gen_tb_pkg.sv
+    sha256 first 16: committed 1e9c6220b81b298f, mutated 02962cf7be552a0c
+    applied diff 1 of 1:
+      - e.cycle = cycle; e.way = way; e.index = index; e.drained = 1'b0;
+      - uq.push_back(e);
+      + e.cycle = cycle; e.way = way; e.index = index; e.drained = 1'b0;
+      + announce(cycle, way, index, "uninit");   // UNINITQ: the report routed into the announcement queue
+      anchor present in the committed file: yes
+      anchor absent from the mutated file:  yes
+  | 0 1 expected 0
+  | 0 0 expected 1
+
+root: UNINITQ_ABL   (the same fault with the two routing cases removed)
+  sources sha256: 98dafe128b90841c
+  simulation verdict: PASS
+  unit-test failures: 0
+  mutation identity, so the applied diff is in the record:
+    mutation UNINITQ_ABL
+    file dv/auto_dv/env/gen_fcov_pkg.sv
+    sha256 first 16: committed d4b339e24ff36ba8, mutated 888be574c95d16cc
+    applied diff 1 of 1:
+      - `GEN_FCOV_UT("a never-written report leaves the announcement queue untouched", int'(gen_icram_events::q.size()) - q0, 0)
+      - `GEN_FCOV_UT("a never-written report lands in the bypass queue", int'(gen_icram_events::uq.size()) - u0, 1)
+      + ;   // UNINITQ_ABL: the two routing cases removed
+      anchor present in the committed file: yes
+      anchor absent from the mutated file:  yes
+
+root: WINSHORT   (the window arithmetic one cycle short)
+  sources sha256: dbbd171156c363b3
+  simulation verdict: FAIL
+  unit-test failures: 1
+  mutation identity, so the applied diff is in the record:
+    mutation WINSHORT
+    file dv/auto_dv/tb/gen_tb_pkg.sv
+    sha256 first 16: committed 1e9c6220b81b298f, mutated 5c6c1ebece483f82
+    applied diff 1 of 1:
+      - return hit_cycle > ref_cycle && (hit_cycle - ref_cycle) <= span;
+      + return hit_cycle > ref_cycle && (hit_cycle - ref_cycle) < span;   // WINSHORT: the window one cycle short
+      anchor present in the committed file: yes
+      anchor absent from the mutated file:  yes
+  | 102, 100, 2) 0 expected 1
+
+root: WINSHORT_ABL   (the same fault with the four boundary cases removed)
+  sources sha256: 9117eb311006c8c9
+  simulation verdict: PASS
+  unit-test failures: 0
+  mutation identity, so the applied diff is in the record:
+    mutation WINSHORT_ABL
+    file dv/auto_dv/env/gen_fcov_pkg.sv
+    sha256 first 16: committed d4b339e24ff36ba8, mutated cff18c9758c19583
+    applied diff 1 of 1:
+      - `GEN_FCOV_UT("window: the reference cycle itself is outside the window", gen_ic_in_window(100, 100, 2), 0)
+      - `GEN_FCOV_UT("window: the first cycle after the reference is inside", gen_ic_in_window(101, 100, 2), 1)
+      - `GEN_FCOV_UT("window: the LAST cycle of the window is inside", gen_ic_in_window(102, 100, 2), 1)
+      - `GEN_FCOV_UT("window: one cycle past the window is outside", gen_ic_in_window(103, 100, 2), 0)
+      + ;   // WINSHORT_ABL: the four boundary cases removed
+      anchor present in the committed file: yes
+      anchor absent from the mutated file:  yes
+
+# The window pair is the sharper evidence: the mutation fails EXACTLY ONE of the four boundary cases, the one asserting
+# that the last cycle of the window is inside, while the other three still pass.
+#
+# RESIDUAL, so the mutation table says what it does not cover: a mutation of the SPAN ARGUMENT at a call site is caught
+# by nothing this build carries, and neither is a mutation of the multi-cycle history accumulation, which no unit-test
+# case drives. The boundary cases test the arithmetic, not the constant handed to it nor the history feeding it.
