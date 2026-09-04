@@ -1883,3 +1883,28 @@ needed. LOG-083a is guidance on where fan-out pays, not a mandate to delegate ev
 task whether a sonnet or haiku subagent saves more than the hand-over and verification cost. The limits of LOG-083a
 (unnamed subagents owning no files, dispatcher verification, LSF only from the Runtime Manager, verdicts and hash
 gates never delegated) are unchanged.
+
+## LOG-084 - 2026-09-04 - Owner item: the shared fcov expectation checker (ci/check_fcov_expectations.py) does not parse cross bins, with a false-pass path
+
+Found by tb-infra at 11:27Z while producing the WP-8 part-1 TDD reds against its local coverage database (the first
+database in this project to hold functional coverage; the build directory's database carries CG-IC-006 and urg reports
+it). Running the checker's own parser on that report: the parser recognises the per-coverpoint heading and never the
+per-cross heading. Two consequences. (1) False fail: no cross-bin key is ever produced, so a manifest that declares cross
+bins can never pass; tb-infra's fourteen cross bins read as missing while four of them carry counts of 483, 459, 445 and
+904 in the same report. (2) False pass: the cross heading only clears the in-bins flag and leaves the last coverpoint's
+name set, so every cross bin's count is attributed to the group's last coverpoint; the parser emitted keys under the
+knob coverpoint holding 483 and 904, both cross-bin counts. A declared coverpoint bin therefore reads as hit whenever a
+cross bin of the same name is hit anywhere in that group; three CG-IC-006 coverpoints share the bin name "yes".
+
+The file is under ci/, the owner's directory, and no DV role edits it. Interim ruling (Orchestrator, 11:30Z): tb-infra's
+part-1 manifest declares the fifteen coverpoint bins now and records the fourteen cross bins as owed until the checker
+parses crosses; the landing record states the false-pass hazard for any coverpoint bin sharing a name with a cross bin;
+the parser evidence (the urg report and the parser's emitted keys) is retained as a log the owner can open. The Test
+Writer is asked to check whether any committed manifest declares cross bins and whether the checker ever keyed them.
+Runtime's flow calls this checker (gen_flow_const.py FCOV_CHECKER), so its expectation-check path inherits the defect
+until the owner rules.
+
+Owner decision requested: (a) fix ci/check_fcov_expectations.py to recognise the cross heading and key cross bins under
+the cross (a small scoped change, tb-infra's recommendation), or (b) authorise a DV-side gen_ wrapper in dv/auto_dv/
+that parses crosses and is called by the flow in place of the ci checker, or (c) keep manifests coverpoint-only and
+retire cross bins from every manifest. Until then no manifest may claim a cross bin.
