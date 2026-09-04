@@ -898,3 +898,54 @@ record; it is OWED.
 
 Retained: gen_tdd_logs/mutations/gen_fu_l31b_drain_corrections.log, with the mutation-proof's corrected identities,
 the cap-move demonstration for CM208-Info-1 and the two wider plusarg values that starved the run instead.
+
+## Landing 33: the two figure corrigenda, the drain cap's derivation, and the age-17 attempt
+
+Nothing in this landing reopens a retained log. Both figure corrections live in a corrigendum beside the log they
+correct, each with its own manifest row, because a retained log is never reopened once it is committed.
+
+THE WAVE-RUN CORRIGENDUM (CR-31b-L-2, CM209-Low-2). The retained wave log's prose quoted two figures, d71984c246000108
+as the compile log's "sources sha256" and 2bae046d70476d78 as the root's filelist_digest. Neither is reported by any
+artefact of that build, and the log's own quoted run header always carried the true one. Three artefacts print
+96697a6fee7025b4 under three keys, and that value is gen_tb_local.sh's find-digest over env, tb, isa and gen_tb, not
+the gate's filelist_digest over gen_rtl.f plus gen_tb.f; the committed tool gen_build_identity.py states both keys.
+The withdrawal is measured, not asserted: both figures return zero files over the whole root against a three-file
+positive control, and because the second was labelled with a real key the root's gate digest is MEASURED at
+32ee156a5dd888e8, with the tool exiting 1 against the withdrawn figure and 0 against the measured one. The build's
+debug flags are corrected in the same file: the compile command carries +pp and then +all, so the build had full
+debug access and whether the cheaper flag alone can dump is UNMEASURED.
+
+THE DRAIN-CORRECTIONS CORRIGENDUM (CR-31b-L-1, CM209-Low-3). One clause named wit/l31a, local figure
+64f9aee6f60d7c84, as landing 31's build. Landing 31 built in wit/l31c, local figure d34daf56c8871437, and the
+attribution is matched rather than asserted: the five drain lines the committed landing-31 log quotes by run name and
+cycle count are all in l31c, and its seed-7 line is in exactly one root of the work directory. wit/l31a is an earlier
+build of the same work whose seed-7 run passes with no drain line at all and ends "open at the end but younger than
+the bound=1". The pre-fix red is wit/nmi1, f80e2c719e16b73c. The corrected build's local figure, promised in the
+retained log and never printed, is 98629b00cb34e79e. The root cause generalises and is the part worth keeping: a
+local figure digests source content, so it can never name a root, and four roots in this work directory print
+f80e2c719e16b73c because their sources were one committed state.
+
+THE DRAIN CAP'S DERIVATION (CM209-Low-1). The cap is sized over the record bound while the drain loop needs bound
+plus one, so the eighteenth record rests on a margin whose comment claims the finish handshake and the last
+write-back instead. Sized over bound plus one the default cap is 202 rather than 193, derived from the constants
+themselves (17, 2, 40) and from the maxima the runs report. Measured on one out-of-tree root with two builds: both
+retire 18 records in 126 cycles with nothing open, and only the printed cap moves. It is a derivation correction with
+no reachable sim escape, and that is stated plainly rather than dressed as a red: at the default maxima truncation
+would need more than 10.7 cycles per record against a modelled worst case of 9. THE SOURCE EDIT IS OWED, because
+gen_tb_pkg.sv in the shared tree carries the uncommitted NMI knob whose hand-off is gated on a REQUEST-CHANGES
+re-review, so the file cannot be handed without landing the gated knob with it. Its red is a unit case on the
+function, which also closes the omission CM208-Info-1 recorded.
+
+THE AGE-17 FIXTURE: ONE ATTEMPT, MEASURED, STILL OWED (CM209-Info-1). MUT-BND2 withholds every maskable line once a
+record count is reached, so a raise in the last stimulus records cannot be satisfied. Three builds and 53 runs (48
+thresholds at seed 3, four seeds at one threshold) produced 111 probe survivor lines with ages 8 to 15, stepping by
+two within a run, and never 16 or 17. At single-record granularity across the crossing the surviving age stays 15
+while the bound-failure count rises, so the case goes straight from a surviving age-15 expectation to a judged one.
+The reason the axis cannot reach the bound is that the threshold moves the finish request with it, preserving the
+phase between the last withheld raise and the finish record, and three of four seeds at one threshold left no
+survivor at all. The route for the next attempt is a directed program raising a line on the finish-request record.
+The fix therefore still rests on the comparison operators with the seed-7 run as its non-discriminating check, and
+the retirement-stall residual stays open behind the fixture.
+
+Retained: gen_tdd_logs/mutations/gen_fu_l31b_nmi_wave_run_corrigendum.log,
+gen_fu_l31b_drain_corrections_corrigendum.log and gen_fu_l33_drain_cap_resize.log, each with a manifest row.

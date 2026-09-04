@@ -1,0 +1,89 @@
+# CORRIGENDUM to the retained log gen_fu_l31b_nmi_wave_run.log (landing 32, committed a759752).
+# The retained log is NOT edited. A retained log is never reopened, so every correction to it lives here, and this
+# file carries its own row in gen_manifest.md. It answers CR-31b-L-2 and CM209-Low-2.
+#
+# WHAT IS WITHDRAWN. The retained log's "THE BUILD" block quotes two figures for the wave build:
+#   d71984c246000108   quoted as the compile log's "sources sha256"
+#   2bae046d70476d78   quoted as "the root's own filelist_digest"
+# Neither is reported by any artefact of that build. Both were typed rather than copied. The error is transcription,
+# not a stale build: the retained log's own quoted run header, at its line 19, always carried the true figure, and
+# none of the wave readings the log records rests on either withdrawn number.
+#
+# WHAT EACH SOURCE ACTUALLY REPORTS. Three artefacts of the build print ONE value, 96697a6fee7025b4, under three
+# different keys, and the run header the retained log quotes verbatim is one of the three:
+#   out8/compile.log line 1154               key "sources sha256:"
+#   out8/config_opts.txt line 2              key "sources sha256 (dv/auto_dv env, tb, isa, gen_tb):"
+#   out8/irq_nmi_window/run_header.txt       key "build_sources_sha256="
+# That value is the LOCAL RUNNER'S find-digest over dv/auto_dv env, tb, isa and gen_tb, written by gen_tb_local.sh.
+# It is NOT the committer's gate digest, which is gen_flow_util.filelist_digest over gen_rtl.f plus gen_tb.f. The two
+# are different functions over different input sets; the committed tool dv/auto_dv/tools/gen_build_identity.py names
+# both keys in its own docstring. So 96697a6fee7025b4 must not be compared against any landing's identity.
+#
+# THE ROOT'S OWN FILELIST DIGEST IS MEASURED HERE, NOT ONLY WITHDRAWN. The second withdrawn figure was labelled
+# filelist_digest, which is a real key with a committed tool that prints it, so the honest correction is the measured
+# value rather than a bare withdrawal: the tool reads this root as 32ee156a5dd888e8.
+#
+# NO GATE IDENTITY OF A COMMITTED BUILD APPLIES TO THIS ROOT. It is an out-of-tree copy carrying the take-trigger
+# diff and the uncommitted NMI knob, a shape that was NEVER COMMITTED, so no landing's identity is claimed for it and
+# 32ee156a5dd888e8 is that root's own number, for reproduction only.
+#
+# THE DEBUG FLAGS, CORRECTED. The retained log says the build compiled "-debug_access+all". The compile command, line
+# 3 of the compile log, carries BOTH: -debug_access+pp as its third token from the flow's base flags and
+# -debug_access+all as its fifth, appended by the scratch copy of gen_tb_local.sh. So the build had FULL debug access
+# and this run does not measure whether the cheaper flag alone can dump. config_opts.txt echoes only the base flags,
+# which is why it shows +pp alone; treat "can +pp dump" as UNMEASURED. The committed runner compiles +pp and has no
+# dump option, which is what made the scratch copy necessary.
+#
+# WHAT STANDS IN THE RETAINED LOG, unchanged and not re-litigated here: the sweep width 1..8 with the 1..17 and
+# 28-firing note (stated in all three of its headers, so no edit is owed); the eleven firings and the first at
+# 3655000 ps, cycle 361; the eleven UVM errors; the dump route (-ucli -do against the flow's own gen_dump.tcl
+# rendered for gen_tb_top and u_dut, fsdbDumpvars 0 +all plus fsdbDumpSVA on the DUT scope); and the FSDB named by
+# path, size and md5 as non-durable scratch.
+#
+# WHERE ELSE THE WITHDRAWN FIGURES APPEARED. dv/auto_dv/work/tb-infra/STATUS.md carried the same two figures in its
+# wave paragraph; they are corrected in the same landing as this file. No other committed file quotes either figure.
+
+== MEASUREMENTS ==
+# The working directory is the repo root and $W below is this root:
+#   W=/tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/wave_root        (out8 is the build; out8/irq_nmi_window is the run)
+
+$ command grep -n "sources sha256" $W/out8/compile.log
+1154:sources sha256: 96697a6fee7025b4
+
+$ command grep -n "sha256" $W/out8/config_opts.txt
+2:sources sha256 (dv/auto_dv env, tb, isa, gen_tb): 96697a6fee7025b4
+
+$ command grep -o "build_sources_sha256=[0-9a-f]*" $W/out8/irq_nmi_window/run_header.txt
+build_sources_sha256=96697a6fee7025b4
+
+$ sed -n "3p" $W/out8/compile.log | cut -d" " -f1-8
+-lca -kdb -debug_access+pp +define+COCOTB_SIM -debug_access+all -f dv/auto_dv/tb/gen_rtl.f \
+
+$ command grep -o "debug_access[^ ]*" $W/out8/config_opts.txt
+debug_access+pp
+
+# NEGATIVE CONTROL: the two withdrawn figures over the whole root, all file types.
+$ for dg in d71984c246000108 2bae046d70476d78 96697a6fee7025b4; do echo "$dg $(command grep -rl "$dg" $W | wc -l) files"; done
+d71984c246000108 0 files
+2bae046d70476d78 0 files
+96697a6fee7025b4 3 files
+# The third line is the POSITIVE CONTROL: the same search over the same root finds the true figure three
+# times, so the two zeros are the absence of those figures and not a search that cannot find anything.
+$ command grep -rl "96697a6fee7025b4" $W
+/tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/wave_root/out8/config_opts.txt
+/tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/wave_root/out8/compile.log
+/tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/wave_root/out8/irq_nmi_window/run_header.txt
+
+# The root's own gate digest, measured with the committed tool rather than typed.
+$ python3 dv/auto_dv/tools/gen_build_identity.py --root $W
+build identity   32ee156a5dd888e8   (filelist_digest over gen_rtl.f + gen_tb.f, 117 sources)
+rc=0
+$ python3 dv/auto_dv/tools/gen_build_identity.py --root $W --expect 2bae046d70476d78
+build identity   32ee156a5dd888e8   (filelist_digest over gen_rtl.f + gen_tb.f, 117 sources)
+MISMATCH: expected 2bae046d70476d78
+rc=1
+# The second call is the withdrawal measured as a gate would measure it: the tool exits 1 against the figure
+# the retained log claimed, and 0 against the figure printed above it.
+$ python3 dv/auto_dv/tools/gen_build_identity.py --root $W --expect 32ee156a5dd888e8
+build identity   32ee156a5dd888e8   (filelist_digest over gen_rtl.f + gen_tb.f, 117 sources)
+rc=0

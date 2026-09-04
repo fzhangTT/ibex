@@ -1,0 +1,63 @@
+# Landing 33, CM209-Low-1: the interrupt-entry drain cap sized over the record bound PLUS ONE.
+# THE FINDING, confirmed at the sources this pair was built from and quoted term by term:
+#   gen_tb_pkg.sv:556   return per_record * GEN_IRQ_ENTRY_BOUND_RECORDS + GEN_IRQ_DRAIN_MARGIN_CYCLES;
+#   gen_env_pkg.sv:377  while ((vif.evt_retired_count - drain_rec0) <= GEN_IRQ_ENTRY_BOUND_RECORDS
+# The loop's comparison is "at or below the bound", so the drain needs GEN_IRQ_ENTRY_BOUND_RECORDS PLUS ONE records,
+# while the cap is sized over the bound alone. The eighteenth record is therefore covered only by
+# GEN_IRQ_DRAIN_MARGIN_CYCLES, whose own comment (gen_tb_pkg.sv:253) claims a different role: "the finish handshake
+# and the last record's write-back after the drain's final retirement".
+#
+# THE FIGURES, DERIVED FROM THE CONSTANTS RATHER THAN COPIED. GEN_IRQ_ENTRY_BOUND_RECORDS 17 (:251),
+# GEN_IRQ_DRAIN_RECORD_OVERHEAD_CYCLES 2 (:252), GEN_IRQ_DRAIN_MARGIN_CYCLES 40 (:253). At the default effective
+# maxima the runs themselves report i 3/4 and d 3/4, so per_record = max(3+4, 3+4) + 2 = 9, and:
+#   over the bound          9 * 17 + 40 = 193   the value every retained drain line prints
+#   over the bound plus one 9 * 18 + 40 = 202   the value this pair's fixed build prints
+# In general the resized cap is the committed cap plus one per_record, so it moves with the bus maxima as before.
+#
+# WHAT THIS PAIR MEASURES AND WHAT IT DOES NOT. It measures that the one-line change compiles and that the drain
+# still completes on the eighteenth record inside the new cap: both builds retire 18 records in 126 cycles and report
+# "open after the drain=0", and only the printed cap moves, 193 to 202. It is a DERIVATION correction, so the two
+# verdicts are deliberately the same; this pair is NOT a discriminating red and is not offered as one.
+#
+# WHY NO SIM RED DISCRIMINATES, stated rather than implied. The cap truncates the drain only when 18 records cost
+# more cycles than the cap allows. At the default maxima that needs more than 193/18 = 10.7 cycles per record while
+# the model's own worst case per record is 9, so it cannot happen; the retained evidence agrees, 18 records in 126
+# cycles at cap 193 and 147 cycles at cap 227 under +gen_ibus_rvalid_max=6. The defect becomes reachable only where
+# per_record exceeds the margin, which needs a bus cost above 38, and landing 32 already measured that widening the
+# instruction bus starves the RUN before it stretches the DRAIN (rvalid_max 12 and 200 both died before the drain).
+# The check that does discriminate is a unit case on gen_irq_drain_cap_cycles itself, which is also the omission
+# CM208-Info-1 recorded; it rides the source change.
+#
+# THE BUILDS. One out-of-tree root from a detached archive of HEAD e988ee6, tools symlinked, gen_tb_pkg.sv verified a
+# real copy before patching. Two builds in it, the second the first plus the one-line change and its comment:
+#   base    local compile figure 98629b00cb34e79e   HEAD as committed
+#   capfix  local compile figure 7661f6b6b3a65a3e   the cap sized over the bound plus one
+# The local figure is gen_tb_local.sh's find-digest over dv/auto_dv env, tb, isa and gen_tb, NOT the committer's gate
+# digest, and no gate identity is claimed for either build: neither shape is a committed one. Worth recording on its
+# own: base's figure 98629b00cb34e79e equals the figure of the landing-32 root wit/fix, an independent corroboration
+# that HEAD's env, tb, isa and gen_tb are the sources landing 32 measured.
+#
+# Below is the pair script's own output, redirected, not retyped. Seed 7 of lockstep_irq_storm_nmi with the plusargs
+# of the landing-32 seed-7 run, so the two drain lines are comparable.
+
+base sha: e988ee6
+== the committed cap: the function's own line and the loop it caps
+556:    return per_record * GEN_IRQ_ENTRY_BOUND_RECORDS + GEN_IRQ_DRAIN_MARGIN_CYCLES;
+377:      while ((vif.evt_retired_count - drain_rec0) <= GEN_IRQ_ENTRY_BOUND_RECORDS
+
+== BASE build: HEAD as committed
+   base local figure: sources sha256 (dv/auto_dv env, tb, isa, gen_tb): 98629b00cb34e79e
+   verdict: PASS
+   drain: 18 records in 126 cycles (bound 17 records plus one, cap 193 cycles from the effective bus maxima i 3/4 d 3/4)
+   open after the drain=0
+
+   gen_tb_pkg.sv cap sized over the bound plus one
+== the changed line
+557:    return per_record * (GEN_IRQ_ENTRY_BOUND_RECORDS + 1) + GEN_IRQ_DRAIN_MARGIN_CYCLES;
+
+== CAPFIX build: the one-line change
+   capfix local figure: sources sha256 (dv/auto_dv env, tb, isa, gen_tb): 7661f6b6b3a65a3e
+   verdict: PASS
+   drain: 18 records in 126 cycles (bound 17 records plus one, cap 202 cycles from the effective bus maxima i 3/4 d 3/4)
+   open after the drain=0
+end 2026-09-04T17:48:19Z

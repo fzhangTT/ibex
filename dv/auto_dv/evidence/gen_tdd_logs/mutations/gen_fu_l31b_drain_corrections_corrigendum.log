@@ -1,0 +1,104 @@
+# CORRIGENDUM to the retained log gen_fu_l31b_drain_corrections.log (landing 32, committed a759752).
+# The retained log is NOT edited. A retained log is never reopened, so the correction lives here with its own row in
+# gen_manifest.md. It answers CR-31b-L-1 and CM209-Low-3.
+#
+# WHAT IS WITHDRAWN. One clause of the retained log's PROVENANCE block reads, of landing 31's build:
+#   "its local compile figure is 64f9aee6f60d7c84 from wit/l31a/compile.log"
+# The clause is wrong twice over. Landing 31's evidence was not built in wit/l31a and its local figure is not
+# 64f9aee6f60d7c84. Both halves are corrected below from the runs' own files.
+#
+# WHICH ROOT LANDING 31 ACTUALLY BUILT IN: dv/auto_dv/work/tb-infra/wit/l31c, whose local compile figure is
+#   d34daf56c8871437.
+# The attribution is not asserted, it is matched. The committed landing-31 log (gen_fu_l31_irq_drain.log) quotes five
+# drain lines by run name and cycle count: seed 7 lockstep_irq_storm_nmi at 120 cycles, then the blast-radius rows
+# lockstep_zc 110, ut_witness 32, boot_zc 115 and lockstep_zcmp 117. All five pairs are in wit/l31c, whose seed-7
+# header reads seed=7, and the seed-7 line "17 records in 120 cycles" is in exactly ONE root of this work directory,
+# measured below over all of them. wit/l31a cannot be their source: it prints no drain line at all.
+#
+# WHAT wit/l31a IS, since the figure is real and belongs to something. It is an earlier build of the same landing-31
+# work, not a phantom: its seed-7 lockstep_irq_storm_nmi PASSES, it prints ZERO drain lines, and its own checker
+# summary ends "open at the end but younger than the bound=1". So at l31a the end-of-run records-only rule had
+# already been retired and the drain did not yet exist, which is why the run passes with an expectation left open and
+# why it carries none of the drain lines the landing quotes. 64f9aee6f60d7c84 is l31a's figure and only l31a's.
+#
+# THE PRE-FIX RED IS dv/auto_dv/work/tb-infra/wit/nmi1, local compile figure f80e2c719e16b73c, seed 7. Its
+# lockstep_irq_storm_nmi verdict is FAIL and it carries, verbatim, the error line the committed landing-31 log quotes
+# as the false failure the landing removes. Its gate identity is the one the landing already records for the pre-fix
+# build, b48479a3bc6f1d9f, which no row here changes.
+#
+# THE CORRECTED BUILD'S LOCAL COMPILE FIGURE, which the retained log promised and did not print: the landing-32
+# sources were built out of tree in the root the MEASUREMENTS block names in full as FIX, which is
+# l31fix_root/dv/auto_dv/work/tb-infra/wit/fix under the team scratchpad, local compile figure 98629b00cb34e79e.
+# That is the root whose seed-7 run prints "drain: 18 records in 126 cycles (bound 17 records plus one, cap 193 ...)"
+# and whose capmove3 run prints the 147-cycle drain at cap 227 under +gen_ibus_rvalid_max=6, the two lines the
+# retained log quotes for the fix. Its mutant sibling is wit/mut, local figure e395bce5f2ec662b.
+#
+# THE ROOT CAUSE, AND IT IS GENERAL. A local compile figure is a digest of source CONTENT, so it never identifies a
+# root: any two roots whose env, tb, isa and gen_tb match print the same figure. Measured below: f80e2c719e16b73c is
+# printed by FOUR roots in this work directory (L25b, nmi1, peb_ecc_tag_freq_noprobe, peb2_ecc_tag_freq_noprobe),
+# whose sources were the same committed state. A record that means to name a root therefore names its PATH, and the
+# figure beside it is a statement about the sources, not about the directory. The withdrawn clause did the opposite:
+# it read a figure off one root's compile log and attached it to another root's name.
+#
+# NO GATE IDENTITY CHANGES. The gate digests the landing records stand as recorded and were reproduced independently
+# by the Critic in tb_l31b: landing 31 c1189fdc15a85844, landing 32 e674e6339b5bea85, the MUT-NT2 mutant root
+# d02bca6ca353117f, the pre-fix build b48479a3bc6f1d9f. The gate function (gen_flow_util.filelist_digest over
+# gen_rtl.f plus gen_tb.f) and the local find-digest are different functions over different input sets; only the
+# local figures are corrected here.
+
+== MEASUREMENTS ==
+# Working directory is the repo root. WIT = dv/auto_dv/work/tb-infra/wit.
+# FIX = /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/l31fix_root/dv/auto_dv/work/tb-infra/wit/fix
+
+# The three local figures, each read from its own root.
+$ for r in nmi1 l31a l31c; do command grep -H "sources sha256" $WIT/$r/compile.log; done
+dv/auto_dv/work/tb-infra/wit/nmi1/compile.log:sources sha256: f80e2c719e16b73c
+dv/auto_dv/work/tb-infra/wit/l31a/compile.log:sources sha256: 64f9aee6f60d7c84
+dv/auto_dv/work/tb-infra/wit/l31c/compile.log:sources sha256: d34daf56c8871437
+$ command grep -H "sources sha256" $FIX/compile.log
+/tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/l31fix_root/dv/auto_dv/work/tb-infra/wit/fix/compile.log:sources sha256: 98629b00cb34e79e
+
+# The match that fixes the attribution: the five drain lines the committed landing-31 log quotes.
+$ for r in l31a l31c; do echo "-- $r"; for d in $WIT/$r/*/; do echo "   $(basename $d) $(command grep -ao "drain: [0-9]* records in [0-9]* cycles" $d/stdout.log | head -1)"; done; done
+-- l31a
+   lockstep_irq_storm_nmi 
+-- l31c
+   boot_zc drain: 17 records in 115 cycles
+   lockstep_irq_storm drain: 17 records in 157 cycles
+   lockstep_irq_storm_nmi drain: 17 records in 120 cycles
+   lockstep_zc drain: 17 records in 110 cycles
+   lockstep_zcmp drain: 17 records in 117 cycles
+   ut_isa_cov_zc drain: 17 records in 34 cycles
+   ut_witness drain: 17 records in 32 cycles
+
+# Uniqueness of the seed-7 line across every root of this work directory.
+$ command grep -rl "17 records in 120 cycles" $WIT --include=stdout.log
+dv/auto_dv/work/tb-infra/wit/l31c/lockstep_irq_storm_nmi/stdout.log
+
+# l31a prints no drain line at all, and says why in its own summary.
+$ command grep -ac "drain:" $WIT/l31a/lockstep_irq_storm_nmi/stdout.log
+0
+$ command grep -ao "open at the end but younger than the bound=[0-9]*" $WIT/l31a/lockstep_irq_storm_nmi/stdout.log | tail -1
+open at the end but younger than the bound=1
+
+# The pre-fix red, verdict and the error line the landing quotes.
+$ head -1 $WIT/nmi1/lockstep_irq_storm_nmi/verdict.txt
+verdict: FAIL
+$ command grep -ao "irq_entry\] lines .* never taken (last order [0-9]*)" $WIT/nmi1/lockstep_irq_storm_nmi/stdout.log | head -1
+irq_entry] lines 10000 raised at cycle 17359 (order 3184) still held and enabled at the end of the run, never taken (last order 3186)
+
+# The corrected build, the two lines the retained log quotes for the fix.
+$ command grep -ao "drain: 18 records in [0-9]* cycles[^)]*)" $FIX/lockstep_irq_storm_nmi/stdout.log $FIX/capmove3/stdout.log
+/tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/l31fix_root/dv/auto_dv/work/tb-infra/wit/fix/lockstep_irq_storm_nmi/stdout.log:drain: 18 records in 126 cycles (bound 17 records plus one, cap 193 cycles from the effective bus maxima i 3/4 d 3/4)
+/tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/l31fix_root/dv/auto_dv/work/tb-infra/wit/fix/capmove3/stdout.log:drain: 18 records in 147 cycles (bound 17 records plus one, cap 227 cycles from the effective bus maxima i 3/6 d 3/4)
+
+# A local figure names sources, not a root: four roots print f80e2c719e16b73c.
+$ for d in $WIT/*/; do f=$(command grep -h "sources sha256" $d/compile.log | command grep -o "[0-9a-f]\{16\}"); [ "$f" = f80e2c719e16b73c ] && basename $d; done
+L25b
+nmi1
+peb2_ecc_tag_freq_noprobe
+peb_ecc_tag_freq_noprobe
+# Control for the same loop: the count of roots carrying each of the two corrected figures.
+$ for g in d34daf56c8871437 64f9aee6f60d7c84; do n=0; for d in $WIT/*/; do ... done; echo "$g $n roots"; done
+d34daf56c8871437 1 roots
+64f9aee6f60d7c84 1 roots
