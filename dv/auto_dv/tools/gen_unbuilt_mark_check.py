@@ -3,16 +3,21 @@
 invariant behind them.
 
 A per-run fcov manifest may not declare a bin of a covergroup that does not exist: the checker cannot judge it,
-so every seed fails. The coverpoints of an unbuilt covergroup therefore carry `[covergroup not built, not in
-manifest]` on their plan line, which gen_fcov_manifest.py honours. That mark is TEMPORARY, and a temporary plan
-state rots silently: once the covergroup is built the mark would keep its bins out of every manifest with nobody
+so every seed fails. The coverpoints THE REFERENCED MANIFESTS WOULD OTHERWISE DECLARE on such a covergroup
+therefore carry `[covergroup not built, not in manifest]` on their plan line, which gen_fcov_manifest.py
+honours. That is a subset of the unbuilt covergroups' coverpoints, not all of them: the mark exists to correct
+a declaration, so a coverpoint no referenced manifest reaches is left alone (the population line below prints
+both numbers, so this text cannot drift from the tree again). The mark is TEMPORARY, and a temporary plan state
+rots silently: once the covergroup is built the mark would keep its bins out of every manifest with nobody
 noticing. This tool makes the state self-clearing.
 
 Two checks, both against the tree rather than against a list kept here:
 
   MARK  every coverpoint carrying the mark sits in a plan block whose implementation covergroup is absent from
         dv/auto_dv/env/gen_fcov_groups.svh. A built covergroup with a marked coverpoint FAILS: remove the mark
-        and re-render the manifests that then gain its bins.
+        and re-render the manifests that then gain its bins. This leg checks the mark's PRECONDITION, never its
+        completeness: a MISSING mark is invisible here and is caught by DECL instead, one step later, when the
+        manifest that would declare the bin is rendered and read.
   DECL  no manifest the testlist REFERENCES declares a bin whose covergroup is absent from that file. This is
         the property the marks exist to produce, checked independently of them. A manifest file no entry names
         cannot fail a run, so it is counted and reported but not judged: an entry whose whole declared set sits
@@ -66,12 +71,33 @@ def marked_coverpoints(root: pathlib.Path) -> list[tuple[str, str, str, int]]:
     return out
 
 
+def unbuilt_population(root: pathlib.Path, built: set[str]) -> tuple[int, int]:
+    """(coverpoint lines, covergroups) inside plan blocks whose covergroup is not rendered: the mark set's
+    denominator, printed so no document has to carry the number in prose."""
+    plan = (root / "dv/auto_dv/docs/gen_fcov_plan.md").read_text(encoding="ascii").split("\n")
+    cps, cgs, cur = 0, set(), None
+    for line in plan:
+        m = re.match(r"^### (CG-[A-Z]+-\d{3}): gen_cg_(\S+)", line)
+        if m:
+            cur = f"gen_{m.group(2)}_cg"
+        elif re.match(r"^### |^## |^# ", line):
+            cur = None
+        if cur and cur not in built and re.match(r"^\s*- c[pr]_", line):
+            cps += 1
+            cgs.add(cur)
+    return cps, len(cgs)
+
+
 def check(root: pathlib.Path) -> int:
     built = rendered_covergroups(root)
     bad = 0
     marks = marked_coverpoints(root)
     wrong = [(cid, cg, cp, ln) for cid, cg, cp, ln in marks if cg in built]
-    print(f"MARK {len(marks)} marked coverpoint(s); {len(built)} covergroup(s) rendered")
+    pop_cps, pop_cgs = unbuilt_population(root, built)
+    print(f"MARK {len(marks)} marked coverpoint(s) of {pop_cps} on {pop_cgs} unbuilt covergroup(s); "
+          f"{len(built)} covergroup(s) rendered")
+    print("MARK the marked set is what the referenced manifests would declare, not the whole population; "
+          "a MISSING mark is caught by DECL, not here")
     for cid, cg, cp, ln in wrong:
         print(f"MARK FAIL gen_fcov_plan.md:{ln} {cid} {cp}: {cg} IS rendered; remove the mark and re-render")
     bad += len(wrong)
