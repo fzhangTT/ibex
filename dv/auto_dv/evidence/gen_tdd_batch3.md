@@ -334,14 +334,17 @@ the manifest re-rendered on HEAD's plan (204 declared bins, one not_built header
 from that export with gen_program.py --directed --gcc-opts=-Idv/auto_dv/tests/gen_programs: seed 1 words 6581 crc32 0xe4448e4a, seed 2
 6517 / 0x9ee34d68, seed 3 6533 / 0xbe52ad89 (the pin-off program is the same text, the pin changes only the expectations).
 Runs: seeds 1, 2, 3 PASS with UVM_ERROR 0 and GEN_TEST_BINS n=204, all 13 fire checks ok (gen_pmc_ctrl_t235_s1_stdout.log md5
-f031fdced720278dcb2b717cd5b85723 and _sim.log 08dcdc3ccbe5881f27ac89eb72b9e944 in full; s2 / s3 excerpts); the pin-off variant (generator --pin off,
+217aab71155a4760c7f6c5985c683c48 and _sim.log c19578b386bdefde37a51fb1b96f4b8f in full; s2 / s3 excerpts); the pin-off variant (generator --pin off,
 +gen_knob_mcounteren_writable=off) PASS with UVM_ERROR 0, fire_tp_pmc_028 on its dropped branch, the banner naming the pin
-(gen_pmc_ctrl_t235_pin_off_s1_stdout_excerpt.log md5 d3101bd2828b0905ed25551e224dadfc); the pinned red --red-item TP-PMC-022 fails exactly
-fire_tp_pmc_022 (gen_pmc_ctrl_red1_stdout.log md5 713ec7eb8805e0069a73b20c79b0315c, _sim.log d9f10e92885a26460c1f1c4bf35cd4be, the entry's pinned red, in full) and the
+(gen_pmc_ctrl_t235_pin_off_s1_stdout_excerpt.log md5 b0a3a0f4d011b43b341bef9f3265d7db); the pinned red --red-item TP-PMC-022 fails exactly
+fire_tp_pmc_022 (gen_pmc_ctrl_red1_stdout.log md5 499328cc3bc15065f644524bb2ccc786, _sim.log 9275e94424ea376335f1d2381a89c3aa, the entry's pinned red, in full) and the
 seed-drawn red (seed 1 draws TP-PMC-023) fails exactly fire_tp_pmc_023 (gen_pmc_ctrl_t235_red_drawn_s1_stdout_excerpt.log md5
-06dffdcdfec0565e0588f07fca89f7d3). So the three asks of Section 6 are answered on the shim's side: the 501 trap rows (retirement under IR = 1), the 62
+a171385f78f4d4ffe5e812fcf51cbf59). So the three asks of Section 6 are answered on the shim's side: the 501 trap rows (retirement under IR = 1), the 62
 mcountinhibit read-backs (the mask) and the 31 minstret rows all compare clean in these runs. The reds of the other eleven items were
-verified in Section 6 on out_head14 and are not re-run here; the fire checks are unchanged.
+verified in Section 6 on out_head14 and are not re-run here; the fire checks are unchanged: the held draft's test (sha256 29d9b8c79e2b, the file
+under work/test-writer/batch3/gen_pmc_ctrl/verified_h14/) and the committed test differ only in the docstring (the dependency paragraph replaced
+here, the pin-off manifest statement and the plan anchor's commit id corrected under CM141), no code line differs; the committed test is
+0383702cd933 and its runs above were re-done on out_head18 with that text, so their headers name it.
 Staged entries (dv/auto_dv/work/test-writer/gen_testlist_entries.yaml, sha256 9c8aed00c141): gen_test_pmc_ctrl (tier check, 3 seeds,
 measured false until the PMC covergroups are built), gen_test_pmc_ctrl_pin_off (tier check, 1 seed, --pin off with the pin plusarg) and
 gen_test_pmc_ctrl_red (pinned to TP-PMC-022, red_expect on fire_tp_pmc_022, matched against the retained pinned red's harness line); the
@@ -357,3 +360,9 @@ writes after ended inhibit episodes (seed 1 at 0x80001c48 with IR = 1 and 0x8000
 seed 3 at 0x800022ac and 0x80005018), none within reach of a wrap into the high word (the largest low word written is 0x51f6abb0 with under
 8000 retirements to follow), so the writes-after-inhibit path is exercised and the low-word carry corner is not; no program has a TB-side
 counter write (the test issues no bridge CSR write). Scan: dv/auto_dv/work/test-writer/pmc_t235/counter_write_scan.log.
+Review of the landing (CM141): the pin-off entry names the group manifest, which is keyed by test name and declares the pin-on bins, so the
+dropped-branch bins (cp_pin.off, cr_en_pin_effect.en_off_drop and their kin) are declared by no manifest; under measured false that is latent,
+and the docstring, the two not_hit reasons and the staged entry's description now say so instead of claiming the pin-off entry carries them.
+The own pin-off manifest (a pin-aware declare_bins() and a second manifest under fcov_expectations, a joint landing since the covergroup set
+reads every manifest) comes with the group's promotion to measured. The manifest is re-rendered for the reason text (header lines only, 204 bins
+unchanged; gen_test_pmc_ctrl.fcov.yaml c3f77460af5d), and the docstring's plan anchor drops its commit id.

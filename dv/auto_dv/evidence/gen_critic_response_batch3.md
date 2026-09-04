@@ -110,3 +110,11 @@ Retained logs named below are under dv/auto_dv/evidence/gen_tdd_logs/test_writer
 | # | Severity | Finding | Disposition | Change and evidence |
 |---|---|---|---|---|
 | CM114-M-1 | medium | Section 8 said the old single seed 255808012 is not among the 200 re-sweep seeds; Random(2026)'s first draw is that value, so it is the first of the 200 | FIXED (this touch) | The sentence now says Random(2026)'s first draw is the old single value, the first of the 200; the 200 stay distinct and the sweep result stands. |
+
+## Cross-model review of a7f178c..aa43c5b (the gen_pmc_ctrl joint landing, APPROVE-WITH-CHANGES, `dv/auto_dv/reviews/2026-09-03-claude-diff-a7f178ca-aa43c5b8.md`; relay ids CM141-*)
+
+| # | Severity | Finding | Disposition | Change and evidence |
+|---|---|---|---|---|
+| CM141-M-1 | medium | the not_hit reasons for cp_pin.off and cr_en_pin_effect.en_off_drop and the docstring said the pin-off entry covers the dropped-branch bins, but declare_bins() is the template default and the manifest is keyed by test name, so the pin-off entry names the group manifest (pin-on bins it cannot hit) and the dropped-branch bins have no declaring manifest | FIXED (this touch), the second option | The docstring, the two reasons and the staged entry's description state the fact: under measured false the pin-off entry's declared set is the group manifest's and the dropped-branch bins are declared by no manifest; a pin-aware declare_bins() and the pin-off entry's own manifest (a joint landing) come with the group's promotion to measured. The manifest is re-rendered for the reason text (header lines only, 204 bins unchanged, c3f77460af5d); the six runs were re-done on out_head18 with the corrected test so the headers carry 0383702cd933. |
+| CM141-L-1 | low | the docstring's plan anchor carried a commit sha (HEAD 56e37d7), already stale | FIXED (this touch) | The anchor is the group name in gen_test_plan.md; the sha is gone. |
+| CM141-L-2 | low | Section 9's "the fire checks are unchanged" rested on the test being the Section 6 draft's text without naming the draft's sha | FIXED (this touch) | Section 9 names the held draft's test (29d9b8c79e2b, the file under work/test-writer/batch3/gen_pmc_ctrl/verified_h14/) and states that it and the committed test differ only in the docstring, no code line. |

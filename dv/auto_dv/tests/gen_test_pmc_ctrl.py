@@ -1,6 +1,6 @@
 """gen_test_pmc_ctrl: mcountinhibit / mcounteren control of the counters (opentitan configuration, MHPMCounterNum 10).
 
-Group gen_pmc_ctrl (dv/auto_dv/docs/gen_test_plan.md, AREA PMC, HEAD 56e37d7). Items built, one fire-check method each:
+Group gen_pmc_ctrl (dv/auto_dv/docs/gen_test_plan.md, AREA PMC). Items built, one fire-check method each:
   TP-PMC-022 mcountinhibit WARL (fire_tp_pmc_022)                                          F-PMC-020
   TP-PMC-023 each inhibit bit freezes exactly its counter (fire_tp_pmc_023)                F-PMC-021
   TP-PMC-024 IR=1 removes the speculative +1 of minstret / mhpmcounter10 (fire_tp_pmc_024) F-PMC-022
@@ -26,8 +26,11 @@ gated by mcounteren (applied when on, dropped without a trap when off or invalid
 default entry (on) and the check-tier entry gen_test_pmc_ctrl_pin_off (+gen_knob_mcounteren_writable=off) run the same
 image. Under off / invalid the per-seed floors of 027, 029 and 033 change to their dropped-branch form (the writes read
 back unchanged, every gated U-mode read traps, the frozen-value clause is not exercised): the fire-checks state which
-branch they proved; the pin-on entry carries the applied-branch bins, the pin-off entry the dropped-branch ones (see
-bins_not_hit).
+branch they proved. The manifest is keyed by test name, so both entries name this one manifest, which declares the pin-on
+bins (the pin-off run cannot hit cp_pin.on, cp_effect.applied, the *_on_app crosses, the *_u_set_ok alias bins); the
+dropped-branch bins (cp_pin.off, cr_en_pin_effect.en_off_drop and their kin) are declared by no manifest, so under measured
+false the pin-off entry's declared set is this manifest's, and before the group is promoted to measured declare_bins()
+becomes pin-aware and the pin-off entry gets its own manifest (a joint landing, the covergroup set reads every manifest).
 
 Every expectation is a report word compared with the generator's model: csrr read-backs of mcountinhibit / mcounteren,
 counter deltas the program computes (after minus before) per window, the handler's trap records (mcause << 16 | MPP << 8 |
@@ -120,7 +123,7 @@ class PmcCtrl(GenTest):
         "TP-PMC-057": "mcounteren_writable_i is a static plusarg knob (regime_set_consumer none); no mid-run pin driver exists (TB ask filed)",
     }
     # bins of built items one run cannot hit: no debug window in this group; the pin is static per run (the default entry
-    # runs on: the off / invalid bins belong to the pin_off entry); 024's WB coincidence and 028's pin monitor are export
+    # runs on: the off / invalid bins are declared by no manifest until the pin-off entry gets its own); 024's WB coincidence and 028's pin monitor are export
     # clauses witnessed through the template only (this test never issues a witness)
     bins_not_hit = {
         "gen_pmc_ctrl_csr_cg.cr_reg_mode_result.inh_dbg_ok": "no debug window in this group",
@@ -130,11 +133,11 @@ class PmcCtrl(GenTest):
         "gen_pmc_alias_cg.cr_alias_gate.cyc_dbg_ok": "no debug window in this group",
         "gen_pmc_alias_cg.cr_alias_gate.ir_dbg_ok": "no debug window in this group",
         "gen_pmc_alias_cg.cr_alias_gate.hf_dbg_ok": "no debug window in this group",
-        "gen_pmc_ctrl_csr_cg.cp_pin.off": "the pin is a static per-run knob; the default entry runs on (pin_off entry: off)",
+        "gen_pmc_ctrl_csr_cg.cp_pin.off": "the pin is a static per-run knob; the default entry runs on (the pin-off entry hits it but no manifest declares it until that entry has its own)",
         "gen_pmc_ctrl_csr_cg.cp_pin.invalid": "the pin is a static per-run knob; the default entry runs on (no invalid entry staged)",
         "gen_pmc_ctrl_csr_cg.cr_en_pin_effect.inh_off_app": "the pin is a static per-run knob; the default entry runs on",
         "gen_pmc_ctrl_csr_cg.cr_en_pin_effect.inh_inv_app": "the pin is a static per-run knob; the default entry runs on",
-        "gen_pmc_ctrl_csr_cg.cr_en_pin_effect.en_off_drop": "the pin is a static per-run knob; the default entry runs on (pin_off entry: off)",
+        "gen_pmc_ctrl_csr_cg.cr_en_pin_effect.en_off_drop": "the pin is a static per-run knob; the default entry runs on (the pin-off entry hits it but no manifest declares it until that entry has its own)",
         "gen_pmc_ctrl_csr_cg.cr_en_pin_effect.en_inv_drop": "the pin is a static per-run knob; the default entry runs on",
         "gen_pmc_minstret_cg.cr_inhibit_coh.on_retiring": "the csrr-in-the-load's-retire-cycle coincidence is 024's export-row clause (dbus rvalid), not observable through the report channel",
         "gen_pmc_minstret_cg.cr_inhibit_coh.off_retiring": "the csrr-in-the-load's-retire-cycle coincidence is 024's export-row clause (dbus rvalid), not observable through the report channel",

@@ -1,7 +1,7 @@
-Command: /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/head_export18/dv/auto_dv/work/test-writer/out_head18/vcs_simv +vcs+lic+wait +ntb_random_seed=1 +UVM_TESTNAME=gen_base_test +UVM_VERBOSITY=UVM_LOW +UVM_NO_RELNOTES +gen_build_config=opentitan +gen_mem_image=/tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/test_writer_r3/pmc18/r022_prog_s1/prog.vmem +gen_mem_image_crc32=dc08c1e8 +gen_mem_image_words=6581 +gen_boot_addr=80000000 +gen_tohost_addr=80006730 +gen_fetch_en_at_reset=0 -l /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/head_export18/dv/auto_dv/work/test-writer/out_head18/pmc18_red022_s1/sim.log
+Command: /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/head_export18/dv/auto_dv/work/test-writer/out_head18/vcs_simv +vcs+lic+wait +ntb_random_seed=1 +UVM_TESTNAME=gen_base_test +UVM_VERBOSITY=UVM_LOW +UVM_NO_RELNOTES +gen_build_config=opentitan +gen_mem_image=/tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/test_writer_r3/pmc18/r022_prog_s1/prog.vmem +gen_mem_image_crc32=dc08c1e8 +gen_mem_image_words=6581 +gen_boot_addr=80000000 +gen_tohost_addr=80006730 +gen_fetch_en_at_reset=0 -l /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/head_export18/dv/auto_dv/work/test-writer/out_head18/pmc18b_red022_s1/sim.log
 Chronologic VCS simulator copyright 1991-2025
 Contains Synopsys proprietary information.
-Compiler version X-2025.06-SP2_Full64; Runtime version X-2025.06-SP2_Full64;  Sep  3 21:07 2026
+Compiler version X-2025.06-SP2_Full64; Runtime version X-2025.06-SP2_Full64;  Sep  3 21:28 2026
 GEN_CONFIG_BANNER build_config=opentitan
 GEN_CONFIG_BANNER BaseIsa=BaseIsaRV32IorCHERIoT RV32M=RV32MSingleCycle RV32B=RV32BOTEarlGrey RV32ZC=RV32ZcaZcbZcmp RegFile=RegFileFF
 GEN_CONFIG_BANNER RV32E=0 BranchTargetALU=1 WritebackStage=1 ICache=1 ICacheECC=1 ICacheScramble=1
@@ -162,5 +162,5 @@ $finish at simulation time             55344001
 "dv/auto_dv/tb/gen_bus_if.sv", 51: gen_tb_top.u_ibus_if.cov_rvalid_legal, 55344 attempts, 8033 match
            V C S   S i m u l a t i o n   R e p o r t 
 Time: 553440010 ps
-CPU Time:      1.660 seconds;       Data structure size:   8.9Mb
-Thu Sep  3 21:07:09 2026
+CPU Time:      1.600 seconds;       Data structure size:   8.9Mb
+Thu Sep  3 21:28:34 2026

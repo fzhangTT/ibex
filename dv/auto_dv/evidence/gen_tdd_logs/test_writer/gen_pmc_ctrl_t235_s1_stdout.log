@@ -1,9 +1,9 @@
-# run pmc18_s1: 2026-09-04T01:06:52Z host=soc-l-11 seed=1 module=dv.auto_dv.tests.gen_test_pmc_ctrl build=/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/head_export18/dv/auto_dv/work/test-writer/out_head18 sources_sha=b9adcdeb1cd01799 template_sha=1de267fb45eb06c2 test_sha=388b15850e4795fe pyroot=/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/head_export18 vmem=/tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/test_writer_r3/pmc18/g_prog_s1/prog.vmem plusargs=[]
+# run pmc18b_s1: 2026-09-04T01:28:18Z host=soc-l-11 seed=1 module=dv.auto_dv.tests.gen_test_pmc_ctrl build=/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/head_export18/dv/auto_dv/work/test-writer/out_head18 sources_sha=b9adcdeb1cd01799 template_sha=1de267fb45eb06c2 test_sha=0383702cd93384bb pyroot=/tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/test_writer_r3/final_cm141 vmem=/tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/test_writer_r3/pmc18/g_prog_s1/prog.vmem plusargs=[]
 Info: [VCS_SAVE_RESTORE_INFO] ASLR (Address Space Layout Randomization) is detected on the machine. To enable $save functionality, ASLR will be switched off and simv re-executed.
 Please use '-no_save' simv switch to avoid re-execution or '-suppress=ASLR_DETECTED_INFO' to suppress this message.
 Chronologic VCS simulator copyright 1991-2025
 Contains Synopsys proprietary information.
-Compiler version X-2025.06-SP2_Full64; Runtime version X-2025.06-SP2_Full64;  Sep  3 21:06 2026
+Compiler version X-2025.06-SP2_Full64; Runtime version X-2025.06-SP2_Full64;  Sep  3 21:28 2026
      -.--ns INFO     gpi                                ..mbed/gpi_embed.cpp:108  in set_program_name_in_venv        Using Python virtual environment interpreter at /localdev/fzhang/ws/ibex-challenge/.venv/bin/python
      -.--ns INFO     gpi                                ../gpi/GpiCommon.cpp:101  in gpi_print_registered_impl       VPI registered
      0.00ns INFO     cocotb                             Running on Chronologic Simulation VCS Release version X-2025.06-SP2_Full64
@@ -717,9 +717,9 @@ UVM_FATAL :    0
 556310.01ns INFO     cocotb.regression                  **************************************************************************************************************
                                                         ** TEST                                                  STATUS  SIM TIME (ns)  REAL TIME (s)  RATIO (ns/s) **
                                                         **************************************************************************************************************
-                                                        ** dv.auto_dv.tests.gen_test_pmc_ctrl.gen_test_pmc_ctrl   PASS      556310.01           1.39     400739.97  **
+                                                        ** dv.auto_dv.tests.gen_test_pmc_ctrl.gen_test_pmc_ctrl   PASS      556310.01           1.35     411004.05  **
                                                         **************************************************************************************************************
-                                                        ** TESTS=1 PASS=1 FAIL=0 SKIP=0                                     556310.01           1.45     384207.13  **
+                                                        ** TESTS=1 PASS=1 FAIL=0 SKIP=0                                     556310.01           1.43     389967.79  **
                                                         **************************************************************************************************************
                                                         
 $finish at simulation time             55631001
@@ -747,5 +747,5 @@ $finish at simulation time             55631001
 "dv/auto_dv/tb/gen_bus_if.sv", 51: gen_tb_top.u_ibus_if.cov_rvalid_legal, 55631 attempts, 8026 match
            V C S   S i m u l a t i o n   R e p o r t 
 Time: 556310010 ps
-CPU Time:      1.670 seconds;       Data structure size:   8.9Mb
-Thu Sep  3 21:06:55 2026
+CPU Time:      1.640 seconds;       Data structure size:   8.9Mb
+Thu Sep  3 21:28:21 2026

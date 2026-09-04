@@ -5,9 +5,9 @@
 # not_hit gen_pmc_alias_cg.cr_alias_gate.ir_dbg_ok: no debug window in this group
 # not_hit gen_pmc_ctrl_csr_cg.cp_mode.dbg: no debug window in this group
 # not_hit gen_pmc_ctrl_csr_cg.cp_pin.invalid: the pin is a static per-run knob; the default entry runs on (no invalid entry staged)
-# not_hit gen_pmc_ctrl_csr_cg.cp_pin.off: the pin is a static per-run knob; the default entry runs on (pin_off entry: off)
+# not_hit gen_pmc_ctrl_csr_cg.cp_pin.off: the pin is a static per-run knob; the default entry runs on (the pin-off entry hits it but no manifest declares it until that entry has its own)
 # not_hit gen_pmc_ctrl_csr_cg.cr_en_pin_effect.en_inv_drop: the pin is a static per-run knob; the default entry runs on
-# not_hit gen_pmc_ctrl_csr_cg.cr_en_pin_effect.en_off_drop: the pin is a static per-run knob; the default entry runs on (pin_off entry: off)
+# not_hit gen_pmc_ctrl_csr_cg.cr_en_pin_effect.en_off_drop: the pin is a static per-run knob; the default entry runs on (the pin-off entry hits it but no manifest declares it until that entry has its own)
 # not_hit gen_pmc_ctrl_csr_cg.cr_en_pin_effect.inh_inv_app: the pin is a static per-run knob; the default entry runs on
 # not_hit gen_pmc_ctrl_csr_cg.cr_en_pin_effect.inh_off_app: the pin is a static per-run knob; the default entry runs on
 # not_hit gen_pmc_ctrl_csr_cg.cr_reg_mode_result.en_dbg_ok: no debug window in this group
