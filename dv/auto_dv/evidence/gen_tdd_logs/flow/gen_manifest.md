@@ -132,6 +132,16 @@ gen_test_pmc_ctrl_pin_off by name, which is the wiring that existed in the tree.
 already nulled, so the red is the new case alone; without that the eight reverted entries would have refused too and
 the red would not have isolated anything.
 
+gen_cm202_manifest_test_field_red.log is the red for the loader's third equality, the named manifest's own declared
+test against the entry name. Four sections: the cases against a stub helper that returns None, the same cases with
+the helper implemented, a control on a REAL committed manifest because the first two use fabricated files, and the
+committed testlist still loading with the rule in place. Two scope statements the log makes rather than leaves
+implied: the helper reads one field and the manifest's full schema stays the directory sweep's business, and the red
+sits on the helper rather than the loader because the loader refuses a manifest outside the manifest home before it
+could read the field, so a loader-level fixture would mean writing a bad manifest into a committed directory during
+a self-test. The rule is defense in depth against drift, not a hole being closed: a mismatch it catches needs the
+sweep's equality and the stem rule both already satisfied.
+
 | evidence path | source | bytes | md5 |
 |---|---|---|---|
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_gate_rule_red.log | dv/auto_dv/work/runtime/gate_rule_red.log | 926 | 78b72aae6509d2776a43c9314808b01b |
@@ -154,3 +164,4 @@ the red would not have isolated anything.
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_l14_merge_verify.log | (runtime scratchpad) l14b/gen_l14_merge_verify.log | 4440 | 5e428524195514ac8d949a2565940955 |
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_log084_cross_parse.log | (runtime scratchpad) log084/gen_log084_cross_parse.log | 3728 | 4aeb2ea5928a7b87a1d5db89343374e9 |
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_cr23_manifest_stem_red.log | (runtime scratchpad) rt30/gen_cr23_manifest_stem_red.log | 2885 | 65b16eef885b324b9b9997c5ebe6c891 |
+| dv/auto_dv/evidence/gen_tdd_logs/flow/gen_cm202_manifest_test_field_red.log | (runtime scratchpad) rt32/gen_cm202_manifest_test_field_red.log | 2838 | 383168720e28c1bacb84072cd346e9d8 |

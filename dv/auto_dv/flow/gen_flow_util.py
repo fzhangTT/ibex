@@ -43,6 +43,19 @@ def log(msg: str) -> None:
     print(f"[{now_utc()}] {msg}", flush=True)
 
 
+def manifest_test_mismatch(manifest_path: Path, entry_name: str) -> str | None:
+    """The reason an entry must not name this manifest, or None. gen_fcov.check_test compares the manifest's own
+    declared test against the entry name before it reads coverage, so a mismatch can only end unverifiable; caught
+    here at load time instead. Scoped to that one field: the manifest's full schema is the sweep's business."""
+    data = load_yaml(manifest_path)
+    if not isinstance(data, dict):
+        return "is not a mapping, so it declares no test"
+    declared = data.get("test")
+    if declared != entry_name:
+        return f"declares test {declared!r}, not the entry name {entry_name!r}"
+    return None
+
+
 def load_yaml(path: Path) -> Any:
     with path.open("r", encoding="utf-8") as f:
         return yaml.safe_load(f)
@@ -475,6 +488,20 @@ def self_test() -> int:
                 cond = not want or want[0] in err.getvalue()   # the refusal names the rule, not just any exit
             ok &= cond
             print("SELF-TEST", "ok " if cond else "BAD", f"load_testlist refuses {label}" + (f" (message names {want[0]!r})" if want else ""))
+        # The manifest's own declared test against the entry name (the loader's third equality). Exercised on the
+        # helper with fabricated files, because the loader refuses a manifest outside the manifest home and a
+        # loader-level fixture would mean writing into a committed directory during a self-test.
+        for label, doc, want in (
+                ("a manifest declaring the entry's own name passes", {"test": "gen_probe_entry", "owner": "runtime"}, None),
+                ("a manifest declaring another test is refused", {"test": "gen_other_entry", "owner": "runtime"}, "gen_other_entry"),
+                ("a manifest with no test key is refused", {"owner": "runtime"}, "None"),
+                ("a manifest that is not a mapping is refused", ["not", "a", "mapping"], "not a mapping")):
+            fx = Path(td) / "gen_probe_entry.fcov.yaml"
+            fx.write_text(_y.safe_dump(doc, sort_keys=False), encoding="utf-8")
+            why = manifest_test_mismatch(fx, "gen_probe_entry")
+            cond = (why is None) if want is None else (why is not None and want in why)
+            ok &= cond
+            print("SELF-TEST", "ok " if cond else "BAD", f"manifest_test_mismatch: {label} (got {why!r})")
         # LOG-067, the positive side: an unmeasured entry may turn the B8 probe knob on (a B8 evidence run).
         t3 = load_yaml(C.TESTLIST_YAML)
         t3["tests"][0].update(measured=False, tier=C.CHECK_TIER, plusargs=t3["tests"][0]["plusargs"] + [f"+{C.PLUSARG_CHK_SVA_B8}=1"])
@@ -487,8 +514,8 @@ def self_test() -> int:
             cond = False
         ok &= cond
         print("SELF-TEST", "ok " if cond else "BAD", "load_testlist accepts an unmeasured entry that turns the B8 probe knob on (B8 evidence runs stay possible)")
-        # The unmeasured exemption of CM153-L-1's positive side is withdrawn (CR-23-L-1): gen_fcov validates the manifest
-        # against the entry name on every entry, so null is the only alternative to the entry's own manifest.
+        # No unmeasured exemption: gen_fcov validates the manifest against the entry name on every entry, so null
+        # is the only alternative to the entry naming its own manifest.
         for label, upd in (("a null fcov_expectation_file loads", dict(fcov_expectation_file=None)),):
             t5 = load_yaml(C.TESTLIST_YAML)
             t5["tests"][0].update(upd)
@@ -1434,6 +1461,9 @@ def load_testlist(path: Path = C.TESTLIST_YAML) -> dict[str, Any]:
             # reads coverage, so a differing stem can only end as an unverifiable protocol error.
             if fp.name != f"{t['name']}{C.FCOV_MANIFEST_SUFFIX}":
                 die(f"{path}: test {t['name']} fcov_expectation_file {fcov} must be {home}/{t['name']}{C.FCOV_MANIFEST_SUFFIX} or null (validate_manifest needs the manifest's test, the file stem and the entry name equal on every entry; a shared or group manifest fails the per-entry check as unverifiable)")
+            why = manifest_test_mismatch(C.SOURCE_ROOT / fp, t["name"])
+            if why:
+                die(f"{path}: test {t['name']} fcov_expectation_file {fcov} {why} (the third equality: the sweep checks the manifest's test against its file stem, this checks it against the entry, so drift is caught at load rather than as an unverifiable run)")
         if t.get("red_fixture"):
             if t.get("expected_fail"):
                 die(f"{path}: test {t['name']}: red_fixture and expected_fail are exclusive (a fixture is not an RTL-bug candidate)")

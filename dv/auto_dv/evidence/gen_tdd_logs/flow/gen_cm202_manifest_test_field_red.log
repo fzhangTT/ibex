@@ -1,0 +1,33 @@
+# The loader's THIRD equality: the named manifest's own declared test against the entry name
+# The sweep (gen_fcov.py --validate) checks a manifest's declared test against its FILE STEM; the loader's
+# CR-23-L-1 rule checks the stem against the ENTRY NAME. Neither reads the field against the entry, so a manifest
+# whose own test field drifted from its stem would load and fail only at run time, unverifiable. This rule closes
+# that at load. Defense in depth, not a hole: a mismatch needs both the sweep and the stem rule already satisfied.
+# Scope, stated rather than implied: the helper reads ONE field. The manifest's full schema stays the sweep's.
+# WHERE THE RED LIVES, and why it is not at the loader: the loader refuses a manifest outside the manifest home
+# before it could read the field, so a loader-level fixture would mean writing a bad manifest into a committed
+# directory during a self-test. The red is therefore on the helper, with fabricated files in the self-test's own
+# temp dir, plus a control on a REAL committed manifest in section 3.
+# Taken on a detached archive of 40bd5ef.
+== 1. RED: the four cases against a stub helper that returns None ==
+   command: python3 dv/auto_dv/flow/gen_flow_util.py --self-test   (rc 2)
+   SELF-TEST ok  manifest_test_mismatch: a manifest declaring the entry's own name passes (got None)
+   SELF-TEST BAD manifest_test_mismatch: a manifest declaring another test is refused (got None)
+   SELF-TEST BAD manifest_test_mismatch: a manifest with no test key is refused (got None)
+   SELF-TEST BAD manifest_test_mismatch: a manifest that is not a mapping is refused (got None)
+
+== 2. GREEN: the same cases with the helper implemented and called from the loader ==
+   command: python3 dv/auto_dv/flow/gen_flow_util.py --self-test   (rc 2, case 13 only: an archive has no .git)
+   SELF-TEST ok  manifest_test_mismatch: a manifest declaring the entry's own name passes (got None)
+   SELF-TEST ok  manifest_test_mismatch: a manifest declaring another test is refused (got "declares test 'gen_other_entry', not the entry name 'gen_probe_entry'")
+   SELF-TEST ok  manifest_test_mismatch: a manifest with no test key is refused (got "declares test None, not the entry name 'gen_probe_entry'")
+   SELF-TEST ok  manifest_test_mismatch: a manifest that is not a mapping is refused (got 'is not a mapping, so it declares no test')
+   ok cases in this run: 154
+
+== 3. CONTROL on a REAL committed manifest, since sections 1 and 2 use fabricated files ==
+   command: manifest_test_mismatch on gen_test_csr_reset.fcov.yaml against two entry names
+   its own entry     -> None
+   another entry     -> declares test 'gen_test_csr_reset', not the entry name 'gen_test_isa_alu'
+
+== 4. the committed testlist still loads with the rule in place ==
+   LOADED 102 entries, 27 naming a manifest, none refused
