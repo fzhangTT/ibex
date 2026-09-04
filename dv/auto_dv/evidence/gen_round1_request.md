@@ -11,7 +11,7 @@ references restored at 1b65f86, so the round checks 12 measured entries and coun
 The scope figures were WRONG in this form's
 first version, which said 103 entries and 141 runs; that is the whole testlist, not the round's selection.
 runtime-2 caught it with the flow's own selector, the LOG-086 corrigendum at 7e3ecc8 records it, and every
-scope figure below is re-derived the same way at ac9b55c, the commit the figures belong to. The testlist moved
+scope figure below is re-derived the same way at b176587, the commit the figures belong to. The testlist moved
 after 18ac053, at f60bee5 and at 1b65f86, and the manifests moved with the re-scope landings, so nothing here
 holds by inheritance from an earlier reading. The tool that wrote this section derives every figure it states,
 refuses when an input differs from the commit in content it reads, and re-checks that between the derivation
@@ -35,7 +35,7 @@ this measurement.
 (gen_flow_util.py:1609-1622) keeps an entry when `C.TIER_RANK[t["tier"]] <= rank`, over TIER_RANK
 `{smoke: 0, targeted: 1, full: 2}`; the check tier is absent from that map and has its own branch at :1616,
 `if tier == C.CHECK_TIER`, which only a tier of exactly `check` reaches. So tier full selects the smoke and
-targeted entries and no check-tier entry. Derived at ac9b55c with that selector, at base seed 20260904:
+targeted entries and no check-tier entry. Derived at b176587 with that selector, at base seed 20260904:
 
 | tier | entries | runs | of which measured |
 |---|---|---|---|
@@ -296,16 +296,22 @@ ROUND_HEAD is therefore two facts, not one commit:
    equals landing 39's.
 
 THE IDENTITY IS THE CHECK AND THE PATH DIFF IS ONLY ADVISORY, which the range since landing 39 shows rather
-than argues. gen_build_identity.py --expect exits 0 on bc0cd7778e382b13 at ac9b55c, and that is what the
-canary is gated on. The diff of 726682a against ac9b55c over dv/auto_dv/tb, dv/auto_dv/env, dv/auto_dv/isa and
-rtl is NOT empty across those 36 commits: it lists dv/auto_dv/tb/unit/gen_ut_pair_quiesce_model.py, from
+than argues. gen_build_identity.py --expect exits 0 on bc0cd7778e382b13 at b176587, and that is what the
+canary is gated on. The diff of 726682a against b176587 over dv/auto_dv/tb, dv/auto_dv/env, dv/auto_dv/isa and
+rtl is NOT empty across those 48 commits: it lists dv/auto_dv/tb/unit/gen_ut_pair_quiesce_model.py, from
 landing 40c, which is a Python unit model of the quiesce loop that the SV build does not compile, so the
 identity is unmoved. A file under those paths is therefore a reason to RE-CHECK the identity, not evidence
-that the canary is stale. Of the 36 commits in this range, 4 change a source at all and every one of those is
-a source the build does not read: 04a4808, 3142adc, ae6e73e, 802cae5. The other 32 are records, rulings and
-reviews, landing 40d at 01e515a among them, which adds a retained mutant diff file and touches nothing the
-build or the round reads. The Orchestrator should re-run the identity check rather than the path diff at
-dispatch.
+that the canary is stale. THE COUNTS BELOW ARE OVER A NAMED SET, because an earlier version of this sentence
+counted "sources" without saying which: the six input groups are the four identity paths taken together
+(dv/auto_dv/tb, dv/auto_dv/env, dv/auto_dv/isa, rtl), the test modules, the fcov manifests, the fcov plan, the
+testlist and the tools. Of the 48 commits in this range, 8 touch any of them and 40 are records, rulings or
+reviews. By group: the identity paths 1 (ae6e73e); test modules 4 (04a4808, 3142adc, 802cae5, 9ed9e08); fcov
+manifests 4 (04a4808, 3142adc, 802cae5, 9ed9e08); the fcov plan 1 (04a4808); the testlist 2 (f60bee5,
+1b65f86); tools 2 (04a4808, 6f360ba). Only the identity paths can move the build identity, and the single
+commit that touches them changes a Python unit model the build does not compile. The testlist and tool commits
+change what the round CHECKS or what checks it, never the identity, which is why they belong in their own line
+rather than in a count of "sources". The Orchestrator should re-run the identity check rather than the path
+diff at dispatch.
 
 ## 12. The round as run
 
@@ -331,8 +337,10 @@ own gate row pairs two of them. 78.29 is the WEIGHT-AVERAGED covergroup score ov
 with the witness ledger covergroup gen_wit_cycle_clause_cg excluded by its SV name, which is what
 gen_cov_report.py:230-239 computes and :137-140 puts in the gate row. 81.47 is URG's report-wide group total,
 which is the bin ratio 3477/4268 and includes the ledger. The gate row copies that ratio beside the averaged
-percent, so "78.29 from 3477/4268" is a false pairing and no record should write it. The ledger itself
-witnessed 0 of 220 clauses under CG-WIT-001.
+percent, so "78.29 from 3477/4268" is a false pairing and no record should write it. THE THIRD QUANTITY is the
+one the criterion's words name and no artifact reports: bins EXCLUDING the ledger, which is 3477/4048 over the
+same covered count, 85.89 per cent, since the ledger contributes 220 expected bins and 0 covered. The ledger
+itself witnessed 0 of 220 clauses under CG-WIT-001.
 
 Two figures that are NOT gates: URG's report-wide score 72.64 covers the whole report including the testbench,
 and the informational scope gen_tb_top.u_dut at 71.25 is reported and never gated. Quote either only with its
