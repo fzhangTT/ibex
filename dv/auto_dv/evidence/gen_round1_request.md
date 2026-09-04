@@ -11,11 +11,17 @@ references restored at 1b65f86, so the round checks 12 measured entries and coun
 The scope figures were WRONG in this form's
 first version, which said 103 entries and 141 runs; that is the whole testlist, not the round's selection.
 runtime-2 caught it with the flow's own selector, the LOG-086 corrigendum at 7e3ecc8 records it, and every
-scope figure below is re-derived the same way at 802cae5, the commit the figures belong to. The testlist moved
+scope figure below is re-derived the same way at 4a00702, the commit the figures belong to. The testlist moved
 after 18ac053, at f60bee5 and at 1b65f86, and the manifests moved with the re-scope landings, so nothing here
 holds by inheritance from an earlier reading. The tool that wrote this section derives every figure it states,
 refuses when an input differs from the commit in content it reads, and re-checks that between the derivation
 and the write.
+
+THIS VERSION SUPERSEDES THE ONE COMMITTED AT d1f6019, under LOG-091. Sections 5 and 10 are the ones that
+changed in substance: the round now checks 12 measured entries rather than two, because the manifests were
+re-scoped instead of detached, and acceptance is stated against that. Sections 1, 3, 4, 6 and 11 carry the
+figures forward from the same derivation. Anything the d1f6019 version says about counted-only measured
+entries is void.
 
 ## 1. Scope, and what the round refuses
 
@@ -140,6 +146,25 @@ on unbuilt covergroups. It stays a checked measured entry because the re-flight 
 rather than anticipation, and the round record must not list it as checked without saying how narrow its claim
 is.
 
+WHAT THE RE-SCOPE DID NOT DO, measured rather than assumed, because a clean result invites exactly the wrong
+inference. Re-scoping changed what each test CLAIMS per run; it changed nothing about what the round COVERS.
+Read from this wave's own merged report with the checker-independent parser (4268 bins), all 66 removed bins
+are still present, 25 of them are hit somewhere in the run and 41 are not. So the round leaves 41 of them
+uncovered, not 66, and no sentence here may say the re-scope closed a bin. 6 of those hits are worth naming,
+and they are the ones unmet at EVERY seed of their own entry rather than the most-hit:
+gen_cmp_imm_edges_cg.cp_cj_off.self at 398 merged hits; gen_cmp_zca_cg.cr_insn_next.c_lui_n16 at 139 merged
+hits; gen_cmp_zca_cg.cr_insn_align.c_jalr_half at 83 merged hits; gen_cmp_zca_cg.cr_insn_next.c_add_n16 at 35
+merged hits; gen_csr_trap_setup_warl_cg.cr_csr_wpat.mie_msb at 6 merged hits;
+gen_cmp_zca_cg.cr_insn_next.c_mv_n16 at 5 merged hits. Each was unmet at all three seeds of its OWN entry and
+is reached by another entry in the same run, which is a fact from the report and holds whatever the cause
+turns out to be. WHY each went unmet is under audit BY MEASUREMENT and the round record must not lean on those
+causes yet: the Test Writer instrumented the csr_trap_setup generator over 40 seeds and found that its mie MSB
+write operand occurs in 10 of them, so gen_csr_trap_setup_warl_cg.cr_csr_wpat.mie_msb is seed-dependent at
+roughly one run in four rather than a stimulus gap, and the reason it carries today is wrong. The other five
+are being audited the same way. That one correction moves the reason classes to 46 stimulus and 20
+seed-dependent without moving any measured figure above, since 47 bins were still unmet at every seed and 19
+at some.
+
 WHAT THE RE-SCOPE COST AND DID NOT COST. It removed 758 declarations on covergroups that do not exist, 631
 over the seven measured entries and 127 over the two unmeasured targeted ones, and 246 declarations on built
 covergroups the tests do not guarantee per run. Of those 246, exactly 123 were unmet at every one of the three
@@ -225,10 +250,10 @@ counted-only for round 1 by LOG-085.
 
 ## 10. Acceptance
 
-The round is accepted when all 53 runs are clean, the merge and the fcov checks complete, the
-12 checked entries meet their expectations on all 36 of their runs, and the
-credit report and promotion table are regenerated at the round's
-commit. A failing run of either SELECTED tier refuses the index, so one of the 8 unmeasured runs is a round-1
+The round is accepted when all 53 runs are clean, the merge and the fcov checks complete, the 12 checked
+entries meet their expectations on all 36 of their runs, and the credit report and promotion table are
+regenerated at the round's
+commit. A failing run of either SELECTED tier refuses the index, so one of the 17 unmeasured runs is a round-1
 blocker and not a footnote. A check-tier failure is not: the round does not select that tier, and a
 check-tier regression is graded on its own.
 
@@ -251,11 +276,9 @@ ROUND_HEAD is therefore two facts, not one commit:
    records-only one. The load-bearing property is not which commit that is but that its build identity still
    equals landing 39's.
 
-Both facts are checked with commands rather than asserted. For the first,
-`git diff --name-only 726682a HEAD -- dv/auto_dv/tb dv/auto_dv/env dv/auto_dv/isa rtl` is empty at 7f61cd1,
-over five commits that are all records, rulings and reviews. For the second, gen_build_identity.py reads
-bc0cd7778e382b13 at 726682a and 6a1d73dfb815cfc7 at both 9baf3f9 and landing 39's parent, so landing 38 left
-the identity where it was and landing 39 moved it once (section 8). The Orchestrator should re-run that first
-command at dispatch, because the ruling of LOG-088 still owes a testlist edit and more records commits may
-land before the canary: a testlist edit changes the round's selection but not the build identity, while
-anything under those four paths changes the identity and makes the canary stale.
+Both facts are checked with commands rather than asserted, at 4a00702: a diff of 726682a against it over the
+four build paths is empty across 31 commits, every one of them records, rulings, reviews, manifests or tests,
+and gen_build_identity.py --expect exits 0 on bc0cd7778e382b13. The Orchestrator should re-run that diff at
+dispatch, because more records commits may land before the canary: a manifest or testlist edit changes what
+the round checks but not the build identity, while anything under those four paths changes the identity and
+makes the canary stale.
