@@ -18,6 +18,14 @@ PAIRS = [
      "no entry of the nine has yet been exercised by a flow run",
      "Both owed counts are now CONFIRMED THROUGH THE FLOW",
      "CM205-Medium-1: the promotion clause's unmeasured sense against the leg's first exercise"),
+    ("dv/auto_dv/docs/gen_test_plan.md",
+     "the counted-only rows below point at the entry carrying it",
+     "nothing\n  in those rows points at one",
+     "CR-30b-M-1: a correction added while the clause it corrects still stood, in the touch that shipped this tool"),
+    ("dv/auto_dv/docs/gen_test_plan.md",
+     "so that case stays OWED",
+     "so that case is CLOSED by the cap rule",
+     "landing 31 left the retirement-stall rule out: the record must not say both owed and closed when the rule lands"),
 ]
 
 
