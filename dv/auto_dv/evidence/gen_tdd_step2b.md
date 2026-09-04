@@ -426,8 +426,10 @@ build w is gen_fu_l7_sources_sha256_w.txt, its sha256 being the build id). Every
   model=800003b0 dut=800003d0` at order 38 (gen_fu_l7_lockstep_zcmp_dummy_popret_*): the DUT's popret sequence under
   `dummy_instr_en` diverges from the fold; the dummy-in-expansion assertion waits for the C10 ruling (probe bind with a knob, or text
   only) and is NOT built; the program is retained as its vehicle.
-- Provenance: the mutants were built from the wit_root copy between builds v and w; the edits between them (the shim's stack push,
-  unit test 12b, documents) enter none of the mutated rules. Regressions on w: gen_fu_l7_lockstep_muldiv_nofcov_*,
+- Provenance: the mutants were built from the wit_root copy beside build u (MS-ICRAM, MS-IRQ, MS-DBG, MUT-SUP, MUT-SUPB, MUT-SUP2,
+  MUT-NT, WM2, MUT-NIB: their headers carry b7b1b3fe53bc65ec or the mutated TB's own sha, 21:29-21:53Z) or v (MS-ALERT, MUT-NT2:
+  cf73fd8a625e89a8), all before w (e287c87e3fdf8a97); the edits between those builds (the per-line release, the shim's stack push,
+  unit test 12b, documents) enter none of the mutated rules, and each row carries its own build sha. Regressions on w: gen_fu_l7_lockstep_muldiv_nofcov_*,
   _ut_isa_cov_zc_*, _ut_fetch_en_*, all PASS; codegen `--check` up to date for the knobs and the fcov renderer.
 - Not built: the NMI-pre-empt red (above), the B8 assertion (ruling), an icram ECC injection (CM43-M-1's red impossible without it),
   the in-run mcounteren_writable command (WP-10, dv-lead).
@@ -456,3 +458,25 @@ scoreboard, unit-test section 15 (28 rows), gen_component_api_isa_shim.md's coun
 - Not modelled, stated in the shim document: the hazard variant of the high-word corner; the DUT's dummy instructions (counters knob).
 - Consequence for the Test Writer: gen_pmc_ctrl's dependency sentence ("gen_isa_compare cannot follow this program yet") no longer holds
   on this shim; the group can be re-verified and its testlist entry staged.
+
+## 13. Landing 9: the cross-model rows of landings 2c and 7, and the B8 probe (LOG-067)
+
+Build aa 4bc32b82a3b03340 (wit_root; sources list gen_fu_l10_sources_sha256_aa.txt). Greens: boot_zc, lockstep_zc, lockstep_s7,
+intg_s7_allchk, the two storms, the debug storm, ut_isa_cov_zc, ut_witness, lockstep_zcmp_mv (gen_fu_l10_*); codegen --check up to date.
+- The B8 probe (T-225; rtl-arch's gen_b8_rtl_facts.md section 6; the C10 ruling LOG-067 = a probe bind behind a knob): tb/gen_b8_probe.sv
+  bound into ibex_if_stage by gen_binds.sv, assertion `sva_b8_dummy_in_expansion` ((if_id_pipe_reg_we && insert_dummy_instr) |-> the
+  Zcmp FSM's state, rlist and sp_offset unchanged), knob `+gen_chk_sva_b8` default 0. Red: the two dummy programs with the knob on,
+  gen_zcmp_dummy_directed.S 70 firings (gen_fu_l10_b8_zcmp_dummy_on_*) and gen_zcmp_dummy_popret_directed.S 118 firings
+  (gen_fu_l10_b8_zcmp_dummy_popret_on_*), beside their comparator rows (27 and 9408); with the knob off the same programs show 0
+  firings (gen_fu_l10_lockstep_zcmp_dummy_*, _popret_*), and no other run changes. No green with a true antecedent exists: a dummy-enabled
+  program without Zcmp is not in the stimulus set, so the assertion's silence there is vacuous and stated as such. The knob stays off by
+  default because the assertion fails on the DUT's B8 defect itself, not on a TB fault.
+- The landing-2c review rows (gen_critic_response_fu2a.md, the table "cross-model review of landing 2c"): the gate looks up both words
+  of a load spanning two bus words (the second announcement sits at +4), announcements enter the gate's list for loads only, the irq
+  checker's two never-taken rules are silent in NMI mode and the summary prints `never taken=`, the dbg_dret message uses the dcsr
+  constants, the alert_minor window is a range over a lookup shift register with the parameter default 2, and the record corrections
+  (MUT-NT2's build sha, per-mutant provenance, the export-rows excerpt header, the CM43-L-3 file name). Greens: the runs above, the
+  integrity run with 83 suppressed loads through the widened gate. No red for the spanning second-half case: the retained programs
+  have no corrupted second half of a spanning load (the integrity run's 83 are whole-word), stated rather than staged.
+- The landing-7 review rows (gen_critic_response_fcov.md): see gen_tdd_fcov.md Section 7 (the exclusion counts only the self-test's
+  own miss, every counted group refereed, the unit test's own red on the FM4 build, the record corrections).

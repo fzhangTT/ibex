@@ -73,8 +73,11 @@ ablation with `+gen_fcov_en=0` (no covergroup, so the referee has nothing to jud
 | mutant | what is broken | run | build | catch | ablation |
 |---|---|---|---|---|---|
 | FM10 | gen_fcov_pkg.sv (gen_isa_cov): `br_cg.sample(...)` removed while `n_br++` stays, so the branch group is counted and never sampled | gen_ut_lockstep on gen_branch_directed.S, 8000 retirements | 1094004eeaa5f94b | FAIL (UVM_ERROR 1): `GEN_FCOV_REF gen_isa_branch_cg sampled without coverage` (tb_l6 M-4) | PASS (0) |
+| FM4UT | the FM4 text (the slt eq compare on the 1-bit cast) run under the sampler unit test gen_ut_isa_cov, zc image, every knob default | b3d31097833751a4 | FAIL: `GEN_FCOV_UT slti rs1 == imm is eq: ... 6 expected 0`, self-test 27 cases 1 failure (the unit test's own red for FM4, tb_l6 M-3 as widened) | `+gen_fcov_en=0`: FAILS identically (the vector table judges the classifier, not the covergroup), retained as such |
 | FM11 | gen_fcov_pkg.sv (gen_isa_cov): the cm.mva01s expansion expected with its registers swapped (`want_rd = sreg; want_rs1 = areg`), so every legal pair mismatches | gen_ut_lockstep on gen_zcmp_mv_directed.S, 1000 retirements | 1def4880d2bdaa6c | FAIL (UVM_ERROR 1): `GEN_FCOV_REF gen_cmp_zcmp_mv_cg: 68 legal move pairs whose micro-ops did not match the expansion`; report line `move pairs: 130 sampled, 68 with mismatching micro-ops` (tb_l6 M-2) | PASS (0) |
 
-The unmutated build x reports `move pairs: 130 sampled, 0 with mismatching micro-ops` on the same program, and the unit-test run
+FM10's first compile FAILED (the mutant text put its comment on the argument line of the multi-line `br_cg.sample(` call and
+commented the arguments out, `Too few arguments`; batch log gen_fu_l8_oot_mutation_batch_fm.log) and was re-run with the comment
+moved (gen_fu_l8_oot_mutation_batch_fm10.log). The unmutated build x reports `move pairs: 130 sampled, 0 with mismatching micro-ops` on the same program, and the unit-test run
 `5 sampled, 1 with mismatching micro-ops (1 of them the self-test's)`: the self-test's own miss vector is excluded from the referee
 by `ut_mv_miss_expected`, which the vector case sets after asserting the count.

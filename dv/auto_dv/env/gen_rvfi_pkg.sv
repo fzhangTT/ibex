@@ -479,7 +479,9 @@ package gen_rvfi_pkg;
       // no write (rtl/ibex_core.sv:2379-2385 clears them with rf_we); a flag without either is an isa_rd miss, never an undo
       sup_ok = 0;
       if (t.ext_rf_wr_suppress && !is_seq) begin
-        bit announced = gen_bus_err_log::take_intg_word(t.mem_addr);
+        bit announced, ld_st; int unsigned ld_bytes;
+        bit spans = gen_insn_mem_access(t.insn, ld_st, ld_bytes) && ((t.mem_addr[1:0] + ld_bytes) > 4);   // a load over two bus words: the driver announces each word at its own address
+        announced = gen_bus_err_log::take_intg_word(t.mem_addr) || (spans && gen_bus_err_log::take_intg_word(t.mem_addr + 32'd4));
         sup_ok = announced && (t.rd_addr == 0);
         if (!announced) miss("isa_rd", $sformatf("rf_wr_suppress asserted without an announced integrity corruption for %08h", t.mem_addr), t, fld(cfg.chk_isa_rd, cfg.chk_isa_rd_set));
         else if (t.rd_addr != 0) miss("isa_rd", $sformatf("rf_wr_suppress asserted but the record reports a write to x%0d", t.rd_addr), t, fld(cfg.chk_isa_rd, cfg.chk_isa_rd_set));

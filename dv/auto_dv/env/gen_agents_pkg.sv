@@ -318,7 +318,7 @@ package gen_agents_pkg;
               int b1 = $urandom_range(data_w - 1, 0);
               logic [38:0] flipped = {p.intg, p.word};
               flipped[b1] = ~flipped[b1];
-              if (cfg.is_data) gen_bus_err_log::note_intg(p.addr);
+              if (cfg.is_data) gen_bus_err_log::note_intg(p.addr, p.we);
               if (cfg.intg_bits > 1) begin
                 int b2 = (b1 + 1 + $urandom_range(data_w - 2, 0)) % data_w;
                 flipped[b2] = ~flipped[b2];

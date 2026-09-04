@@ -97,3 +97,14 @@ Assertion coverage of the SVAs; `gen_*_cov` modules bound here sample signal-lev
 ## 8. At build
 
 Add probe binds only with a probe-register row marked approved.
+
+AS BUILT (landing 9, the B8 probe, LOG-067): `dv/auto_dv/tb/gen_b8_probe.sv` is bound into `ibex_if_stage` as `gen_b8_probe_i`, the
+one bind that reads DUT internals (a probe, approved by the C10 ruling LOG-067): `if_id_pipe_reg_we`, the dummy insertion
+`gen_dummy_instr.insert_dummy_instr` and the compressed decoder's Zcmp expansion FSM (`compressed_decoder_i.cm_state_d/q`,
+`cm_rlist_d/q`, `cm_sp_offset_d/q`), driving nothing. Its one assertion `sva_b8_dummy_in_expansion` is rtl-arch's section-6 signature
+(gen_b8_rtl_facts.md): a dummy instruction entering IF-ID must not coincide with the FSM moving. The knob `+gen_chk_sva_b8` (yaml
+`chk_sva_b8`, default 0; `+gen_chk_all=0` also silences it) is OFF by default because the DUT fails it on every dummy insertion inside
+an expansion (the B8 defect), which would turn every dummy-enabled Zcmp run red twice; the reproducer runs enable it
+(gen_tdd_step2b.md Section 13: the two dummy programs with the knob on fire it, with the knob off they stay silent, and the plain
+regression is unaffected). The `sva_alert_minor_window` window is now a range over a `lookup_hist` shift register (1..ICACHE_ECC_WINDOW
+cycles), and the parameter default equals the yaml constant (2).

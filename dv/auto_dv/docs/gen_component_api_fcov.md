@@ -150,7 +150,7 @@ is recomputed from rs1 and the immediate; `cp_divisor`'s magnitude compare negat
 unit-test cases 0x9ABCDEF0 against INT_MAX and 0x12345678 against -2 separate it from the zero-extended form). The binv-twice
 tracker (`sb_prev_binv`) is reset by every record that is not an sbit instruction, trap records included. A legal move pair whose
 micro-ops do not match the expansion (`cp_uop_count_ok` na) is counted (`n_mv_miss`, FCOV_QUERY 12, the `move pairs:` report line)
-and is a `GEN_FCOV_REF` error at report unless it is the self-test's own vector case (`ut_mv_miss_expected`).
+and is a `GEN_FCOV_REF` error at report unless it is the self-test's own vector case (`ut_mv_miss_expected`, which the case advances by exactly its own miss, so a real miss of the program is never absorbed). The `GEN_FCOV_REF` referee covers every counted group: a group whose sampler counter is non-zero must show coverage (mul, div, alu_reg, zba_zbb, alu_imm, shift, bit_count, zca, zcmp, zcmp_mv, csr, branch, sbit, zcb); its reds are FM10 (branch) and FM11 (the move-pair line).
 Micro-op records (rvfi_ext_expanded_insn_valid) belong to the Zcmp collector alone: the base groups never see the synthesized
 `addi sp` / `li a0, 0` words. `cp_rvfi_tags_ok` is a reduced check: pc_wdata == pc_rdata on the intermediate micro-ops and a 32-bit
 synthesized word on every micro-op (the plan's per-position word compare is not implemented). The GEN_FCOV summary line prints the

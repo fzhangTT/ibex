@@ -1,0 +1,25 @@
+Running new bashrc
+Unloading: soc_tools version 1.0
+Unloading: git version 2.26.2
+Unloading: Bender version 0.28.1-tenstorrent8-mr_fixes
+Unloading: Python version 3.9
+Unloading: Perl version perl-5.36.0
+Loading:   soc_tools version 1.0
+Loading:   git version 2.26.2
+Loading:   Bender version 0.28.1-tenstorrent8-mr_fixes
+Loading:   Python version 3.9
+Loading:   Perl version perl-5.36.0
+start 23:01:33Z sources sha256: 4bc32b82a3b03340
+ut_witness: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+lockstep_zcmp_dummy: verdict: FAIL reason: uvm_error at sim.log:33  uvm_err=27
+lockstep_zcmp_dummy_popret: verdict: FAIL reason: uvm_error at sim.log:33  uvm_err=9408
+lockstep_zcmp_mv: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+ut_isa_cov_zc: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+boot_zc: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+lockstep_zc: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+lockstep_s7: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+lockstep_irq_storm: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+lockstep_irq_storm_nmi: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+lockstep_s7_dbg_storm: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+intg_s7_allchk: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+end 23:02:03Z

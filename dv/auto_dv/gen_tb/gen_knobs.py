@@ -97,6 +97,7 @@ PLUSARGS = {
     "chk_sva_dbg": {"plusarg": "gen_chk_sva_dbg", "kind": "bool", "default": 1, "values": None, "debug_only": False, "desc": 'protocol SVA group enable, gen_binds.sv (gen_protocol_props ids sva_dbg_*)'},
     "chk_sva_alert": {"plusarg": "gen_chk_sva_alert", "kind": "bool", "default": 1, "values": None, "debug_only": False, "desc": 'protocol SVA group enable, gen_binds.sv (gen_protocol_props ids sva_alert_*)'},
     "chk_sva_rvfi": {"plusarg": "gen_chk_sva_rvfi", "kind": "bool", "default": 1, "values": None, "debug_only": False, "desc": 'protocol SVA group enable, gen_binds.sv (gen_protocol_props ids sva_rvfi_*)'},
+    "chk_sva_b8": {"plusarg": "gen_chk_sva_b8", "kind": "bool", "default": 0, "values": None, "debug_only": False, "desc": 'the B8 probe assertion sva_b8_dummy_in_expansion (gen_b8_probe.sv bound into ibex_if_stage, LOG-067): off by default because the DUT fails it on every dummy insertion inside a Zcmp expansion; the reproducer runs enable it'},
     "chk_sva_rvalid_legal": {"plusarg": "gen_chk_sva_rvalid_legal", "kind": "bool", "default": 1, "values": None, "debug_only": False, "desc": 'TB self-check enable (stimulus legality)'},
     "chk_dbus_proto": {"plusarg": "gen_chk_dbus_proto", "kind": "bool", "default": 1, "values": None, "debug_only": False, "desc": 'checker enable'},
     "chk_dbus_outstanding": {"plusarg": "gen_chk_dbus_outstanding", "kind": "bool", "default": 1, "values": None, "debug_only": False, "desc": 'checker enable'},

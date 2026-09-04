@@ -1,0 +1,4 @@
+FM4UT applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/FM4UT/dv/auto_dv/env/gen_fcov_pkg.sv; original sha256 885cf17679e50d67
+FM4UT_catch_ut_isa_cov_zc: verdict: FAIL reason: uvm_error at sim.log:32   first: UVM_ERROR dv/auto_dv/env/gen_fcov_pkg.sv(971) @ 310500: uvm_test_top.env.isa_cov [GEN_FCOV_UT] slti rs1 == imm is eq: slt_case(GEN_FC_ISA_ALU_IMM_CP_OP_SLTI, 32'd5, 5) 6 expected 0
+FM4UT_ablate_ut_isa_cov_zc: verdict: FAIL reason: uvm_error at sim.log:32   first: UVM_ERROR dv/auto_dv/env/gen_fcov_pkg.sv(971) @ 310500: uvm_test_top.env.isa_cov [GEN_FCOV_UT] slti rs1 == imm is eq: slt_case(GEN_FC_ISA_ALU_IMM_CP_OP_SLTI, 32'd5, 5) 6 expected 0
+FM4UT: build sources sha256: b3d31097833751a4; source tree untouched: 1d9e2f8d9e5927dd

@@ -12,3 +12,13 @@ bind gen_dut_top gen_protocol_props #(
   .ibus_intg_corrupt_i (gen_tb_top.u_ibus_if.intg_corrupt),
   .dbus_intg_corrupt_i (gen_tb_top.u_dbus_if.intg_corrupt)
 );
+// The B8 probe (LOG-067: a probe bind behind a knob, off by default): the only bind that reads DUT internals, the dummy insertion
+// and the Zcmp expansion FSM of ibex_if_stage; it drives nothing.
+bind ibex_if_stage gen_b8_probe gen_b8_probe_i (
+  .clk_i        (clk_i),
+  .rst_ni       (rst_ni),
+  .pipe_we_i    (if_id_pipe_reg_we),
+  .dummy_i      (gen_dummy_instr.insert_dummy_instr),
+  .fsm_stable_i (compressed_decoder_i.cm_state_d == compressed_decoder_i.cm_state_q && compressed_decoder_i.cm_rlist_d == compressed_decoder_i.cm_rlist_q &&
+                 compressed_decoder_i.cm_sp_offset_d == compressed_decoder_i.cm_sp_offset_q)
+);

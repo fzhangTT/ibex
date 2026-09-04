@@ -51,7 +51,7 @@ the red it carries; the one OWED red is named). Evidence: gen_tdd_step2b.md Sect
 | CM43-M-1 | sva_alert_minor_window hand-codes a two-cycle window while ICACHE_ECC_WINDOW (bound to GEN_ICACHE_ECC_WINDOW = 1) is never referenced | DONE in 2c | `sva_alert_minor_window` uses the parameter, bound to GEN_ICACHE_ECC_WINDOW = 2 with the reason in gen_tb_knobs.yaml; no red: no icram ECC injection exists in this TB, so no run can show the tighter window biting (stated in gen_component_api_binds.md). |
 | CM43-L-1 | sva_icram_widths pins 28 / 78 as literals | DONE in 2c | the widths are the parameters `TagSizeECC` / `LineSizeECC` the bind passes from gen_dut_top. |
 | CM43-L-2 | the group knobs retyped as string literals; the rendered cfg.chk_sva_* fields have no consumer | DONE in 2c | `chk_en(name)` reads `gen_tb_pkg::PLUSARG_CHK_SVA_*` and `PLUSARG_CHK_ALL`. |
-| CM43-L-3 | dcsr_q[1:0] hand-sliced as prv | DONE in 2c | `GEN_DCSR_PRV_BIT_LOW` / `GEN_DCSR_PRV_BIT_HIGH` (yaml constants) slice dcsr in gen_protocol_props.sv. |
+| CM43-L-3 | dcsr_q[1:0] hand-sliced as prv | DONE in 2c | `GEN_DCSR_PRV_BIT_LOW` / `GEN_DCSR_PRV_BIT_HIGH` (yaml constants) slice dcsr in gen_checkers_pkg.sv (the dbg_dret rule; its error message now uses them too). |
 | CM43-L-4 | wit_referee has no mutation evidence of its own (WM1 was caught by the Python assert) | DONE in 2c | WM2: the witness bookkeeping records index 0 whatever index was sampled; the referee is the only catcher (the unit test's own count asserts PASS, `GEN_UT_WITNESS_PASS`); the fcov-off run fails on the unit test's bookkeeping-path assert instead, stated as such (gen_mut_step2b.md). |
 | CM43-L-5 | RM1..RM3 share the build sha because the RTL copy is outside the sources hash | DONE in 2c | the mutated file's sha256 per RM row in gen_mut_step2b.md (RM1 / RM2 rtl/ibex_core.sv 88b8bf3907472f1d, RM3 rtl/ibex_load_store_unit.sv 86e156efaf7ac46a, RM4 rtl/ibex_if_stage.sv 8b99f212f06aa942). |
 | CM43-L-6 | gen_protocol_props.sv header cites untracked draft paths and a landing tag | DONE in 2c | the gen_protocol_props.sv header cites rtl-arch's tracked anchor file; no draft path, no landing tag. |
@@ -59,3 +59,20 @@ the red it carries; the one OWED red is named). Evidence: gen_tdd_step2b.md Sect
 
 | CR-2B-L-16 | gen_component_api_scoreboard.md:86-87 kept a dangling ", no longer consistency-only" after the corrected clause | FIXED (landing 6) | the tail is deleted; the sentence ends at "(T-183, landing 2c)". |
 | CR-2B-L-17 | GEN_BUS_ERR_DRAIN_CYCLES = 64 derived as 2 x 32 while the announcement is stamped at the first transaction's grant, so a split fault in flight in the last ~65 cycles could raise a false bus_err_leftover red | FIXED (landing 6) | the constant is 96 = grant window max (32) + rvalid window max (32) + response-to-record lag with margin (32), derived in the yaml desc and in the scoreboard doc; the ann_t comment already names the grant stamp. |
+
+## The cross-model review of landing 2c (dv/auto_dv/reviews/2026-09-03-claude-diff-bd75f161-cbadb7f8.md, APPROVE-WITH-CHANGES; rows CM117): rows answered by landing 9
+
+Row ids CM117-<severity>-<n> follow the artifact's finding order (one medium, nine lows).
+
+| id | finding (short) | status | as built |
+|---|---|---|---|
+| CM117-M-1 | the gate looks up `{mem_addr[31:2], 00}` only; a spanning load's corrupted second half is announced at +4 | DONE in landing 9 | gen_rvfi_pkg.sv: `spans` from gen_insn_mem_access (address low bits plus size beyond the word), `announced = take_intg_word(mem_addr) || (spans && take_intg_word(mem_addr + 4))`; no retained program has a corrupted second half (the integrity run's 83 are whole-word), so no red is staged: stated in gen_tdd_step2b.md Section 13. |
+| CM117-L-1 | note_intg pushes stores and second halves into intg_words | DONE in landing 9 | `note_intg(addr, we)` pushes loads only (gen_tb_pkg.sv; the bus driver passes `p.we`); the NMI announcement queue is unchanged. |
+| CM117-L-2 | MUT-NT2 row cites 2643308399b05e33 where the retained catch carries 4e4a02897de732d3 | DONE in landing 9 | gen_mut_step2b.md row corrected; the tb7 / tb8 forms named as discarded attempts. |
+| CM117-L-3 | the SVA mutants' provenance sentence imprecise (MS-ICRAM beside u, MS-ALERT beside v) | DONE in landing 9 | gen_mut_step2b.md and gen_tdd_step2b.md Section 11 state per mutant which build the copy was taken beside. |
+| CM117-L-4 | the export-rows file header says 574 rows, the file holds 199 | DONE in landing 9 | the header says EXCERPT, the first 199 of 574 rows. |
+| CM117-L-5 | the CM43-L-3 row names gen_protocol_props.sv as the dcsr consumer | DONE in landing 9 | the row names gen_checkers_pkg.sv. |
+| CM117-L-6 | the dbg_dret message prints `dcsr_q[1:0]` | DONE in landing 9 | the message slices with the constants. |
+| CM117-L-7 | `never_taken` not in the GEN_IRQ_CHK summary | DONE in landing 9 | `never taken=%0d` appended. |
+| CM117-L-8 | the never-taken rules do not exclude NMI mode | DONE in landing 9 | `&& !nmi_mode` on the per-entry bound and the end-of-run rule (gen_checkers_pkg.sv); the storms and the with-NMI storm stay green. |
+| CM117-L-9 | ICACHE_ECC_WINDOW default 1; the window two points, not a range | DONE in landing 9 | default 2; `lookup_hist` shift register, `alert_minor_o |-> |lookup_hist[ICACHE_ECC_WINDOW:1]` (gen_protocol_props.sv). |

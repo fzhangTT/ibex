@@ -4,6 +4,7 @@
 dv/auto_dv/tb/gen_tb_pkg.sv
 dv/auto_dv/tb/gen_dut_top.sv
 dv/auto_dv/tb/gen_protocol_props.sv
+dv/auto_dv/tb/gen_b8_probe.sv
 dv/auto_dv/tb/gen_binds.sv
 dv/auto_dv/tb/gen_bridge_if.sv
 dv/auto_dv/tb/gen_bus_if.sv

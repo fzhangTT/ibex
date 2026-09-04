@@ -216,9 +216,11 @@ option-line case in gen_ut_fcov_codegen.py; the anti_vacuity notes of all 20 man
 - Reds: FM10 (the branch group counted, never sampled: `gen_isa_branch_cg sampled without coverage`, ablation PASS) and FM11 (the
   cm.mva01s expansion expected with swapped registers: 68 counted misses, the referee's error, ablation PASS), gen_mut_fcov.md; the
   vector case "cm.mva01s with a wrong second micro-op" (uop_count_ok na, one counted miss) inside the self-test.
-- Greens on x: gen_fu_l8_ut_isa_cov_* (five runs, 27 cases, 0 failures; the unit-test run's report line `move pairs: 5 sampled, 1 with
-  mismatching micro-ops (1 of them the self-test's)`), boot_zc, lockstep_zc, ut_witness, lockstep_muldiv_nofcov; the codegen unit test 19
+- Greens on x: gen_fu_l8_ut_isa_cov_* (five runs, 27 cases, 0 failures; the zc run's report line `move pairs: 5 sampled, 1 with
+  mismatching micro-ops (1 of them the self-test's)`, the other four `3 sampled`: the program's own pairs plus the self-test's three), boot_zc, lockstep_zc, ut_witness, lockstep_muldiv_nofcov; the codegen unit test 19
   OK (gen_fu_l8_ut_fcov_codegen.log).
+- lockstep_zcmp_dummy_popret also ran on x and FAILED as designed (9408 errors, the B8 red of gen_tdd_step2b.md Section 11;
+  gen_fu_l8_x_driver.log).
 - Proofs re-run on x, fresh vdb each, the manifests with the derived notes: 128 / 122 / 52 / 46 / 38 / 26 / 29 / 65 / 65 / 65 / 22 / 29,
   every one PASS (gen_fu_l8_<slice>_check.log, urg reports gen_fu_l8_urg_<run>_grpinfo.txt with their commands); lockstep_zcmp_mv on x
   reports `move pairs: 130 sampled, 0 with mismatching micro-ops`.
@@ -227,3 +229,16 @@ option-line case in gen_ut_fcov_codegen.py; the anti_vacuity notes of all 20 man
   neither is compiled and the rendered include is identical, so the landing-6 proofs stand; the lists are retained from now on.
 - Record corrections (L-1) are in Sections 4 and 5 above and in gen_mut_fcov.md; the response rows are the CR-6 table in
   gen_critic_response_fcov.md, with the CR-5 rows the tb_l5 lows lacked (L-5).
+
+## 7. Landing 9: the cross-model review of landing 7 (ab67c6c) answered
+
+Build aa 4bc32b82a3b03340. gen_fcov_pkg.sv: `ut_mv_miss_expected` advances by exactly the vector case's own miss (`+= n_mv_miss - miss0`),
+so a real miss during a unit-test run's program is not absorbed and the referee can fire in that run too; the `GEN_FCOV_REF` referee now
+covers every counted group (mul, div, alu_reg, zba_zbb, alu_imm, shift, bit_count, zca, zcmp, zcmp_mv, csr, branch, sbit, zcb: a non-zero
+sampler counter with zero coverage is an error). The unit test's own red on the FM4 build (the Critic's widened M-3): gen_ut_isa_cov on
+the FM4 mutant (the 1-bit slt cast re-introduced) FAILS its vector table, `slti rs1 == imm is eq ... 6 expected 0`, 27 cases 1 failure
+(gen_fu_l10_FM4UT_catch_ut_isa_cov_zc_*); the same with `+gen_fcov_en=0` FAILS identically, because the vector table judges the classifier
+function, not the covergroup (gen_fu_l10_FM4UT_ablate_ut_isa_cov_zc_*: the "ablation" of a unit test is not a PASS, and is retained to
+show that). Record corrections: 1059 notes, the five excerpt headers say 27 cases, the "5 sampled" quote is the zc run's with the other
+four qualified, FM10's first compile failure is explained, the by-design popret red on x is stated. Greens on aa: ut_isa_cov_zc, ut_witness,
+lockstep_zcmp_mv, boot_zc, lockstep_zc (gen_fu_l10_*).

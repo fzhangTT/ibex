@@ -1022,7 +1022,7 @@ package gen_fcov_pkg;
       write(ut_rec(32'h0000_0013, 5'd0, 32'h0, 5'd0, 32'h0, 32'h9000_0052, 1054, 32'd101));
       `GEN_FCOV_UT("cm.mva01s with a wrong second micro-op: uop_count_ok na", ut_last_mv[7], -1)
       `GEN_FCOV_UT("cm.mva01s with a wrong second micro-op: one counted miss", n_mv_miss, miss0 + 1)
-      ut_mv_miss_expected = n_mv_miss;   // the self-test's own miss is not the run's
+      ut_mv_miss_expected += n_mv_miss - miss0;   // only the self-test's own miss is excluded from the referee
       `undef GEN_FCOV_UT
       `uvm_info("GEN_FCOV_UT", $sformatf("self-test: %0d cases, %0d failures", n, fails), UVM_LOW)
       return fails;
@@ -1035,6 +1035,14 @@ package gen_fcov_pkg;
       if (mul_cg != null) begin   // referee: a group the sampler fed must show coverage, a dropped sample is a collected failure
         if (n_mv_miss > ut_mv_miss_expected) `uvm_error("GEN_FCOV_REF", $sformatf("gen_cmp_zcmp_mv_cg: %0d legal move pairs whose micro-ops did not match the expansion", n_mv_miss - ut_mv_miss_expected))
         if (n_mul > 0 && mul_cg.get_coverage() == 0.0) `uvm_error("GEN_FCOV_REF", "gen_mul_ops_cg sampled without coverage")
+        if (n_div > 0 && div_cg.get_coverage() == 0.0) `uvm_error("GEN_FCOV_REF", "gen_div_ops_cg sampled without coverage")
+        if (n_alu > 0 && alu_cg.get_coverage() == 0.0) `uvm_error("GEN_FCOV_REF", "gen_isa_alu_reg_cg sampled without coverage")
+        if (n_bit > 0 && bit_cg.get_coverage() == 0.0) `uvm_error("GEN_FCOV_REF", "gen_bit_zba_zbb_ops_cg sampled without coverage")
+        if (n_imm > 0 && imm_cg.get_coverage() == 0.0) `uvm_error("GEN_FCOV_REF", "gen_isa_alu_imm_cg sampled without coverage")
+        if (n_sh > 0 && sh_cg.get_coverage() == 0.0) `uvm_error("GEN_FCOV_REF", "gen_isa_shift_cg sampled without coverage")
+        if (n_cnt > 0 && cnt_cg.get_coverage() == 0.0) `uvm_error("GEN_FCOV_REF", "gen_bit_count_cg sampled without coverage")
+        if (n_zca + n_zca32 > 0 && zca_cg.get_coverage() == 0.0) `uvm_error("GEN_FCOV_REF", "gen_cmp_zca_cg sampled without coverage")
+        if (n_mv > 0 && mv_cg.get_coverage() == 0.0) `uvm_error("GEN_FCOV_REF", "gen_cmp_zcmp_mv_cg sampled without coverage")
         if (n_br > 0 && br_cg.get_coverage() == 0.0) `uvm_error("GEN_FCOV_REF", "gen_isa_branch_cg sampled without coverage")
         if (n_zcmp > 0 && zcmp_cg.get_coverage() == 0.0) `uvm_error("GEN_FCOV_REF", "gen_cmp_zcmp_pushpop_cg sampled without coverage")
         if (n_csr_pairs > 0 && csr_cg.get_coverage() == 0.0) `uvm_error("GEN_FCOV_REF", "gen_csr_trap_setup_warl_cg sampled without coverage")
