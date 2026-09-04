@@ -1,0 +1,34 @@
+# Cross-model review - committed diff 8c5cc42e..f43ef57d
+
+**Reviewer:** claude CLI 2.1.260 (Claude Code); run-reported model: claude-fable-5-1,claude-haiku-4-5-20251001; requested effort: high (the CLI does not report the effective setting); fresh session f7265fd7-ceb3-4807-ae37-3722e82ffe70; sandbox: bubblewrap, working directory = detached read-only checkout of commit f43ef57d606284a8215aa9fd36d2da905a6a3d41 (the live working tree is not read), filesystem read-only except this run's own output directory, scratch HOME (no access to the executing model's settings, instructions or memory), private PID namespace; network open for the model API, web tools disallowed by policy (fallback reviewer per owner ruling A-001)
+**Codex unavailable because:** ERROR: You hit your spend cap set by the owner of your workspace. Ask an owner to increase your spend cap to continue.
+**Wrapper:** dv/auto_dv/tools/gen_cross_review.sh blob 713e8c09 (the copy executed; equals the wrapper committed at the reviewed commit); reviewed commit f43ef57d606284a8215aa9fd36d2da905a6a3d41
+**Date:** 2026-09-03
+**Target:** committed diff 8c5cc42e..f43ef57d (echo at raw line 1)
+
+---
+
+TARGET: 8c5cc42eff9eca03b5717b7758c9b50092ef5fc0..f43ef57d606284a8215aa9fd36d2da905a6a3d41
+
+Reviewer identity: Claude Fable 5.1 (claude-fable-5-1), fresh session, detached read-only checkout of f43ef57. Scope: the two commits bb3a0a6 and f43ef57 (4 files, +53/-10).
+
+**What I verified against the repository (not the hand-off):**
+
+- **bb3a0a6 testlist half.** A yaml load of the file at 8c5cc42 and at bb3a0a6 shows identical top-level keys, an equal `builds` section, 74 entries each, and exactly one differing field: the `description` of `gen_test_pmc_ctrl_pin_off`. sha256 of the file at bb3a0a6 and at f43ef57 is `65e82419181a...` (matches the TL-PMC-b row); 8c5cc42's is `55316151aa0a...` (matches the TL-PMC row). Loader `--dump-testlist` yields 74 entries; `--check-red-signatures` PASS with `gen_test_pmc_ctrl_red` RED-OK against `gen_pmc_ctrl_red1_stdout.log`. The new description text is consistent with the committed manifest `dv/auto_dv/fcov_expectations/gen_test_pmc_ctrl.fcov.yaml` (keyed `test: gen_test_pmc_ctrl`, declares `cp_pin.on`/`cp_effect.applied`, and its `not_hit` header says `cp_pin.off` and `en_off_drop` are "declared by no manifest until that entry has its own") and with the test docstring at dc9d72b. The staging file (sha 32fd0a2d0b3f under work/) is not in the tree, so equality of the entry to the staging text is unverifiable here; I verified only that the committed entry matches the manifest/docstring semantics.
+- **(1) regress_coverage vs the gen_regress schema.** `gen_regress.py:572-575` always writes `scope.coverage` (a bool) into the manifest; `compile_build()` (`gen_regress.py:82-84`) writes `cov_metrics` (from the build manifest, `gen_build.py:337`) and never a `coverage` key, so the old `builds[*].coverage` read was indeed dead. The real manifest `/proj_soc/.../regress_pmc_accept_0122/manifest.yaml` has `scope.coverage: False`, no top-level `rc`, and `builds.gen_tb = {rc: 0, cov_metrics: None}`. The tool's first branch is the one every gen_regress manifest takes; the `cov_metrics` fallback and `None` are reachable only for hand-made manifests (self-test), which is harmless. `None` when neither key exists is the honest echo.
+- **(2) Label regex and error path.** `LABEL_RE = ^[A-Za-z0-9_]+$`; `--label wave-0122` exits 2 via `ap.error` with the stated message (reproduced). `excerpt_name()` does `rsplit('-', 1)`, so the constraint is exactly the one needed.
+- **(3) rc label for request manifests.** `render()` reads `manifest.get('regress_rc')` directly from a request manifest; `regress_as_request()` is only on the `--regress` path, so request-mode output is unchanged by construction. For regression manifests the field now prints `None` (no top-level `rc` exists), which is factual.
+- **Reproduction.** `--self-test` PASS with 10 ok lines under `GEN_DV_SELFTEST_TMP` pointed at a scratch dir (the I-3 fix works in this read-only checkout; the scratch tree was removed through the guarded path). `--check --regress <manifest> --label wave0122 --tag pmc` reports `same`, fresh render sha `813b76a3f5cf` (matches the CM142-L-1 row). Source parses (py_compile itself can't write `__pycache__` on this read-only FS; `ast.parse` ok). The excerpt diff is the single `regress_rc: done -> None` line.
+- **(4) TL-PMC rewording / TL-PMC-b.** `gen_flow_util.py:1220` gates `+gen_chk_sva_b8` only when `t.get("measured", True)`; all three pmc entries are `measured: false`, so the I-4 correction is right. A direct scan of the three entries' plusargs (`+gen_fetch_en_at_reset=0`, plus `+gen_knob_mcounteren_writable=off` for pin_off) confirms none turns the B8 knob on. TL-PMC-b's "only the description differs from dc9d72b" holds (testlist at dc9d72b == 8c5cc42, and 8c5cc42 -> bb3a0a6 differs in one field). The "void HOLD" timing claim is a messaging fact not verifiable from the repo.
+- **(5) Rows vs artifact.** `dv/auto_dv/reviews/2026-09-03-claude-diff-e2a6a0e7-c0d12f46.md` has exactly 1 Low + 4 Info at lines 36-44; rows CM142-L-1, I-1, I-2, I-3, I-4 map one-to-one with matching severities and responses.
+- **Rubrics.** ai-slop-comments PASS (added comments state why: the hyphen split, the env override); magic-numbers PASS; forces-and-hier-access PASS (no signal drives); rtl-purity PASS (no `rtl/` files); assertion-integrity PASS (no assertion removed or weakened; self-test conditions added). All added lines ASCII; all touched files carry the `gen_` prefix.
+
+**Findings:**
+
+[Info][dv/auto_dv/tools/gen_acceptance_excerpt.py:126] For every gen_regress manifest the `regress_rc` field is now always `None`, because gen_regress records rc only per build (`builds[*].rc`), never at the top level; a reader may read `None` as "unknown" rather than "not a field of this manifest" - consider echoing the build rcs (e.g. `{gen_tb: 0}`) or writing `n/a (per-build rc)` when `rc` is absent from a regression manifest.
+
+[Info][dv/auto_dv/tools/gen_acceptance_excerpt.py:115] `LABEL_RE.match` with `$` accepts a label with a trailing newline (`"wave0122\n"` matches) - use `re.fullmatch` or `\Z` for an exact whole-string check; unreachable from a normal shell invocation, so cosmetic.
+
+[Info][dv/auto_dv/evidence/gen_critic_response_flow.md:789] The TL-PMC row's Where column still cites the excerpt at `800ccad586f9` and the tool at `1491994d4952`, which no longer match HEAD after this touch re-rendered the excerpt (`813b76a3f5cf`) and changed the tool; the new hash is recorded only in the CM142-L-1 row - a reader following TL-PMC alone hits a hash mismatch. A short "(re-rendered at CM142-L-1)" marker in the TL-PMC Where column would close the trail.
+
+Final verdict: APPROVE-WITH-CHANGES
