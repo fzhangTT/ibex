@@ -428,9 +428,19 @@ classifier fault is a failing run and not only a failing offline check.
   counts that record reports as NUMBERS are the six owed-bin figures, and those agree with the local ones exactly, so
   the comparison of all 78 counts waits for the per-bin figures rather than being claimed here. WHAT THE RUN DOES NOT
   ESTABLISH, in that record's own words: that a declared-but-unhit bin fails a run, since no entry missed a bin it
-  declared. The failing direction is evidenced elsewhere, by the landing-23 mutation reds in
-  gen_fu_l23_wp8_cov_reds.log, where a mutation drove a declared bin from HIT to UNHIT and the checker named it; that
-  was a direct invocation, so what remains unexercised is a FLOW run failing on an unhit declared bin. ALL NINE ARE EXERCISABLE unmeasured: the flow's refusal keys on the measured
+  declared. The failing direction now HAS flow-level evidence: the detector control
+  gen_tdd_logs/flow/gen_l25_fcov_detector_control_red.log, committed at 3691c49, runs the same entry, build and seed
+  twice through gen_run and differs only in the declared bin set. Against the committed manifest it is PASS with six
+  of six declared bins hit; against a fixture declaring one bin the entry cannot hit it is FAIL with the reason "fcov
+  expectation unmet: 1 declared bin(s) not hit" and process exit 2, the simulation passing in both, so the failure is
+  the expectation check alone rather than the stimulus. It is a ONE-SHOT control, not a guard: the fixture lives in a
+  scratch archive of HEAD with one manifest's bins replaced, and the committed manifest is untouched. The STANDING
+  guard, a committed fixture entry that would fail every future regression in which the mechanism stops detecting, is
+  pending a Runtime flow change, because a red fixture is graded from a collected evidence line and an
+  fcov-unmet failure produces none: its simulation passes by construction. Beside the control, the landing-23
+  mutation reds in gen_fu_l23_wp8_cov_reds.log drove a declared bin from HIT to UNHIT by mutation rather than by
+  declaration, through a direct invocation of the checker.
+  ALL NINE ARE EXERCISABLE unmeasured: the flow's refusal keys on the measured
   flag alone and never on coverage (dv/auto_dv/flow/gen_run.py:193 takes a coverage argument, the clause at :204 reads
   "if measured and debug_only", and its docstring records the widening, since a measured run feeds the credit report
   whether coverage is on or not), which the Runtime Manager and I each evaluated on all nine entries: zero refusals
