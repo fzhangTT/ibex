@@ -1,0 +1,9 @@
+# TDD red for CM155-L-1 / L-2: the checker-row cases with the SV value semantics in place, no fix; the four refuse cases print BAD, the non-numeric master case passes (archive of 7f74ac1 with the handed CM153 files)
+Fri Sep  4 03:32:16 UTC 2026
+SELF-TEST BAD measured_knob_condition_refusal (LOG-077) a bare +row with the master enable off refuses: the SV parses =%d only, so the bare form leaves the row unset (CM155-L-1): None
+SELF-TEST BAD measured_knob_condition_refusal (LOG-077) +gen_chk_all=00 reads 0 as the SV's %d does, master off, row unmentioned refuses (CM155-L-2): None
+SELF-TEST BAD measured_knob_condition_refusal (LOG-077) +row=00 reads 0 as the SV's %d does, the row set off refuses (CM155-L-2): None
+SELF-TEST BAD measured_knob_condition_refusal (LOG-077) a non-numeric row value is no match for =%d, the row stays unset and off under the master enable off (CM155-L-2): None
+SELF-TEST ok  measured_knob_condition_refusal (LOG-077) a non-numeric master value is no match, its default 1 applies, the row at its default runs (CM155-L-2): None
+SELF-TEST BAD build-input gate case 13: every listed non-input is tracked and each glob class matches a tracked file (['git ls-files failed: fatal: not a git repository (or any parent up to 
+SELF-TEST: FAIL

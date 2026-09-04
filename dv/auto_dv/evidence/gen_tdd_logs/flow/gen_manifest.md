@@ -32,6 +32,10 @@ daf27d0 with the handed CM152 flow files and the three l12 fields null: the case
 (a manifest outside dv/auto_dv/fcov_expectations, a missing file, a measured entry with another test's stem) print BAD while the
 two positive cases (an unmeasured group manifest in the home, null) pass; the build-input gate case 13 BAD is the archive's
 missing .git, not part of this red. Then the rule was written and all pass.
+gen_cm155_checker_value_red.log is the TDD red of the CM155 value-parsing fix (the review of the CM152 gate fix): the cases in
+place and the old parsing (a bare +row counted as set, =00 counted as on): the four refuse cases print BAD (a bare row under
+the master enable off, +gen_chk_all=00, +row=00, a non-numeric row value under the master enable off) while the non-numeric
+master case passes; then checker_knob_state reads the knobs as the SV's =%d parse does and all pass.
 
 | evidence path | source | bytes | md5 |
 |---|---|---|---|
@@ -43,3 +47,4 @@ missing .git, not part of this red. Then the rule was written and all pass.
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_log077_red.log | dv/auto_dv/work/runtime/log077_red.log | 2027 | f6a061ae1b4f3a7f9ff24004975ecafb |
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_log077_red2.log | dv/auto_dv/work/runtime/log077_red2.log | 1239 | cc6584b37c1fe68356a5aeefeeb98ec9 |
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_cm153_fcov_home_red.log | (runtime scratchpad) cm153/red_l1.log | 1142 | d9b3f5d436f98fdeea13fb7342227d6c |
+| dv/auto_dv/evidence/gen_tdd_logs/flow/gen_cm155_checker_value_red.log | (runtime scratchpad) cm155/red.log | 1266 | 492bf8cda8363303c4dda4a34fd93821 |

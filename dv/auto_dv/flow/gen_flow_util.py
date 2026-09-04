@@ -789,7 +789,12 @@ def self_test() -> int:
             ([f"+{rate}=frequent", f"+{C.PLUSARG_CHK_ALL}=0"], None, True, "the master enable off with the row unmentioned refuses (the TB reads the row as off: chk_all ? val : (set && val); CM152-M-1)"),
             ([f"+{rate}=frequent", f"+{C.PLUSARG_CHK_ALL}=0", f"+{row}=1"], None, False, "the master enable off with the row set on runs (isolation mode, the explicit row wins)"),
             ([f"+{rate}=frequent", f"+{C.PLUSARG_CHK_ALL}=1", f"+{row}=0"], None, True, "the master enable on with the row set off refuses"),
-            ([f"+{rate}=frequent"], {C.PLUSARG_CHK_ALL: 0}, True, "a table default of 0 for the master enable (fabricated) with the row unmentioned refuses")):
+            ([f"+{rate}=frequent"], {C.PLUSARG_CHK_ALL: 0}, True, "a table default of 0 for the master enable (fabricated) with the row unmentioned refuses"),
+            ([f"+{rate}=frequent", f"+{C.PLUSARG_CHK_ALL}=0", f"+{row}"], None, True, "a bare +row with the master enable off refuses: the SV parses =%d only, so the bare form leaves the row unset (CM155-L-1)"),
+            ([f"+{rate}=frequent", f"+{C.PLUSARG_CHK_ALL}=00"], None, True, "+gen_chk_all=00 reads 0 as the SV's %d does, master off, row unmentioned refuses (CM155-L-2)"),
+            ([f"+{rate}=frequent", f"+{row}=00"], None, True, "+row=00 reads 0 as the SV's %d does, the row set off refuses (CM155-L-2)"),
+            ([f"+{rate}=frequent", f"+{C.PLUSARG_CHK_ALL}=0", f"+{row}=yes"], None, True, "a non-numeric row value is no match for =%d, the row stays unset and off under the master enable off (CM155-L-2)"),
+            ([f"+{rate}=frequent", f"+{C.PLUSARG_CHK_ALL}=x"], None, False, "a non-numeric master value is no match, its default 1 applies, the row at its default runs (CM155-L-2)")):
         got = measured_knob_condition_refusal(pas, defaults)
         cond = (got is not None and "LOG-077" in got) if want_refuse else got is None
         ok &= cond
@@ -1230,16 +1235,29 @@ def effective_knob_value(plusargs: list[str], plusarg: str, defaults: dict[str, 
     return None if d is None else str(d)
 
 
+def checker_knob_state(plusargs: list[str], name: str, defaults: dict[str, Any] | None = None) -> tuple[bool, bool]:
+    """(set, on) of a bool checker knob as the TB's `$value$plusargs({PLUSARG, "=%d"}, u)` reads it: set only when the
+    plusarg carries "=" followed by a decimal integer (a bare +name or a non-numeric value is no match and leaves the
+    table default in force), on when that integer is non-zero (so =00 is off); unset, on follows the table default."""
+    for pa in plusargs:
+        if plusarg_name(pa) != name:
+            continue
+        if "=" in pa:
+            try:
+                return True, int(pa.split("=", 1)[1].strip(), 10) != 0
+            except ValueError:
+                pass
+        break
+    d = defaults[name] if defaults and name in defaults else knob_default_by_plusarg(name)
+    return False, str(d).strip() not in ("0", "", "None", "False")
+
+
 def checker_row_on(plusargs: list[str], row: str, defaults: dict[str, Any] | None = None) -> bool:
     """Whether the TB runs checker row `row` on: gen_chk_en(cfg, val, set) = chk_all ? val : (set && val)
-    (gen_checkers_pkg.sv:19), so a row named by a plusarg follows that value, and an unnamed row follows its table
-    default only while the master enable +gen_chk_all (plusarg, else table default) is on."""
-    on = lambda v: v is not None and v.strip() not in ("0", "")
-    row_set = any(plusarg_name(pa) == row for pa in plusargs)
-    row_val = on(effective_knob_value(plusargs, row, defaults))
-    if row_set:
-        return row_val
-    return on(effective_knob_value(plusargs, C.PLUSARG_CHK_ALL, defaults)) and row_val
+    (gen_checkers_pkg.sv:19), with set and val read as checker_knob_state reads them."""
+    row_set, row_on = checker_knob_state(plusargs, row, defaults)
+    _, master_on = checker_knob_state(plusargs, C.PLUSARG_CHK_ALL, defaults)
+    return row_on if master_on else (row_set and row_on)
 
 
 def measured_knob_condition_refusal(plusargs: list[str], defaults: dict[str, Any] | None = None) -> str | None:

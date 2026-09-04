@@ -193,8 +193,10 @@ def effective_plusargs(test: dict[str, Any], extra_plusargs: list[str]) -> list[
 def measured_refusal(test: dict[str, Any], extra_plusargs: list[str], testlist: dict[str, Any], measured: bool, coverage: bool) -> str | None:
     """The reason a run must not start, or None: a debug-only knob in a measured coverage run (tb-arch P6), the B8
     probe knob on in any measured run (LOG-067), or a MEASURED_KNOB_CONDITIONS row violated in a measured run (LOG-077),
-    all judged on the effective plusargs (operator values included, so the operator path is guarded like the entry;
-    plusarg_enabled counts the bare form and =00 as on, stricter than the probe's =%d parse)."""
+    all judged on the effective plusargs (operator values included, so the operator path is guarded like the entry). The
+    forbidden knobs (P6, LOG-067) count a bare +name and =00 as on, over-refusing on the safe side; the required checker
+    row of a LOG-077 condition is read as the TB reads it (checker_knob_state: =%d only, =00 off, bare or non-numeric
+    unset), so a run the sim treats as row-off cannot pass the gate."""
     eff = effective_plusargs(test, extra_plusargs)
     debug_only = [n for n in (testlist.get("debug_only_plusargs") or []) if U.plusarg_enabled(eff, n)]
     if measured and coverage and debug_only:
