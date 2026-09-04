@@ -2293,3 +2293,20 @@ under-described field (gen_build.py:117 builds it from the testlist's per-build 
 that reads as the compile's define set) = rt40, owner runtime-2, folded with rt39 into one plan for pre-execution review after the pause lifts:
 record the full define set and the parameters under a name that says what it is. Readers of round-0 evidence take the configuration from the
 command: line or the banner, never from defines:.
+
+### LOG-092/LOG-093 corrigendum (2026-09-04 22:33Z, Orchestrator; from the cross-model review of 4a007028..de1ccf32, eae6f03, APPROVE-WITH-CHANGES)
+
+- CM218-M-1: LOG-092 says the form's Section 12 names "the three group quantities"; the form at e00b3ee names two (78.29 and 81.47 = 3477/4268)
+  and not 85.89 = 3477/4048. LOG-092 and the record commit message name all three; the form gains the third in the DV Lead's next corrigendum (v5f).
+- CM218-M-2: the round record d29d5db cites the form v5e (e00b3ee) while the Critic's tb_l39 gate required the superseding form to be committed
+  and re-reviewed. The cross-model re-review of v5e is eae6f03 (this review; the four CR-39 M-1..M-4 cells verified fixed), which post-dates
+  the record by eleven minutes; the Critic records the CR-39 closure in its round verdict. The record therefore landed on the gated citation
+  before the recorded re-review; the re-review found the cells fixed, so the record's citation stands and no record file changes.
+- CM218-L-1: gen_rounds.yaml's git_dirty_tracked_files is copied by gen_round.py:257 from the regression manifest's git.dirty_tracked_files,
+  stamped at regression start (21:54:27Z), and the summary line says "tracked files dirty at regression time". The eight files LOG-092 and
+  LOG-093 name were dirty at collect time (22:06:02Z); the set dirty at 21:54:27Z is not recorded by the flow unless the manifest's git section
+  lists it (runtime-2 states which). Either way the run was built from the head-mode mirror of 4a00702, so no clone-tree file could reach it.
+- CM218-L-3: the regression's completion is 22:00:28Z (the manifest's finished_utc, the figure LOG-092 uses). The d29d5db commit message says
+  22:00:31Z, which was the Runtime Manager's report stamp and appears in no committed artifact; the manifest's value governs.
+- CM218-Info: the regenerated dashboard's round table carries "Gain vs prev (max pp) +26.27" against the probe_round0_fix2 regression and an
+  unscoped Group column at 81.47; tool output, not a verdict; the ruled group definition reaches the dashboard with rt39.
