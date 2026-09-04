@@ -2,7 +2,7 @@
 
 Deliverable 3 (DV_prompt.txt Section 11): the definition of every functional-coverage bin (not the
 implementation; TB Infra implements covergroups in the gen_ namespace from this plan). Owner: dv-lead.
-Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in), generated 2026-09-04 12:30 UTC from dv/auto_dv/work/dv-lead/parts6/fcov_*.md. Part-file names in this document (tp_<area>.md, fcov_<area>.md, gen_part_<area>.md, trace_*_<area>.csv and the README_*_BRIEF.md briefs) are this plan set's own gitignored sources, named as provenance: the content they hold is in the corresponding area of gen_test_plan.md, gen_fcov_plan.md or gen_feature_list.md, and the bug and doc-defect number series they define are in gen_bug_log.md. No claim in this document rests on opening one. Three rtl-arch notes this plan set cites are committed references, not work files: dv/auto_dv/evidence/gen_multdiv_bound_props.md (the MD-n bound properties and covers), dv/auto_dv/evidence/gen_bug_reproducer_specs.md (the reproducer recipes behind the bug log) and dv/auto_dv/evidence/gen_interface_inventory.md (the numbered driver and protocol rules); citations name them by basename and resolve there.
+Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in), generated 2026-09-04 13:14 UTC from dv/auto_dv/work/dv-lead/parts6/fcov_*.md. Part-file names in this document (tp_<area>.md, fcov_<area>.md, gen_part_<area>.md, trace_*_<area>.csv and the README_*_BRIEF.md briefs) are this plan set's own gitignored sources, named as provenance: the content they hold is in the corresponding area of gen_test_plan.md, gen_fcov_plan.md or gen_feature_list.md, and the bug and doc-defect number series they define are in gen_bug_log.md. No claim in this document rests on opening one. Three rtl-arch notes this plan set cites are committed references, not work files: dv/auto_dv/evidence/gen_multdiv_bound_props.md (the MD-n bound properties and covers), dv/auto_dv/evidence/gen_bug_reproducer_specs.md (the reproducer recipes behind the bug log) and dv/auto_dv/evidence/gen_interface_inventory.md (the numbered driver and protocol rules); citations name them by basename and resolve there.
 
 Build configuration: `opentitan` (ibex_configs.yaml): BaseIsa=RV32IorCHERIoT (CHERIoT mode excluded
 by owner ruling), RV32E=0, RV32M=RV32MSingleCycle, RV32B=RV32BOTEarlGrey, RV32ZC=RV32ZcaZcbZcmp,
@@ -4794,14 +4794,13 @@ bug-candidate behaviour carry the bug tie (B16 in CG-DMEM-007).
 - TP items: TP-FE-022, TP-IC-029, TP-IC-030, TP-IC-031, TP-IC-032, TP-IC-033, TP-IC-048, TP-IC-057, TP-IMEM-038
 ### CG-IC-006: gen_cg_ic_ecc
 - Features: F-IC-030, F-IC-031, F-IC-032, F-IC-033, F-IC-034, F-IC-035, F-IC-042
-- Sample: each injected RAM read corruption (gen_icache_ram_model record), or each CHECKED lookup
-  that read a never-written (uninitialised) data RAM line, closed by the DUT's reaction
-  (alert_minor_o pulse and the following tag write) or by its absence; condition: injected, or an
-  uninitialised read on a lookup the DUT checks. Checked is lookup_actual_ic0 = lookup_grant_ic0 and
+- Sample: each injected RAM read corruption (gen_icache_ram_model record), or each QUALIFIED lookup
+  (lookup_actual_ic0, the sense used throughout for this) that read a never-written (uninitialised)
+  data RAM line, closed by the DUT's reaction
+  (alert_minor_o pulse and the following tag write) or by its absence; condition: injected, or an uninitialised read on a QUALIFIED lookup. Qualified is lookup_actual_ic0 = lookup_grant_ic0 and
   icache_enable_i and not inval_block_cache (rtl/ibex_icache.sv:266, lookup_grant_ic0 = lookup_req_ic0
-  at :262), while the READ itself is data_req_ic0 = lookup_req_ic0 or fill_req_ic0 (:280), so every
-  lookup reads both ways whether or not the access is checked and an unchecked read is not a no-alert
-  case. Never-written is a written flag the TB keeps per data-RAM LINE of a way, not per word: the model's
+  at :262), while the READ itself is data_req_ic0 = lookup_req_ic0 or fill_req_ic0 (:280), so every lookup reads both ways whether or not the access is qualified, and an unqualified read is not a
+  no-alert case. Never-written is a written flag the TB keeps per data-RAM LINE of a way, not per word: the model's
   data instance is Width(LineSizeECC) by Depth(IC_NUM_LINES) per way (gen_tb_top.sv:156) and its write
   port carries one whole entry, so no sub-line write exists to distinguish, which makes it 256 lines a
   way and 512 in this build (IC_SIZE_BYTES 4096 / IC_NUM_WAYS 2 / IC_LINE_BYTES 8, rtl/ibex_pkg.sv:400-405).
@@ -4813,8 +4812,12 @@ bug-candidate behaviour carry the bug tie (B16 in CG-DMEM-007).
   artefact. The sample is the first read of a never-written line of a way on a qualified lookup, which bounds
   the VOLUME at one per line per way, at most 512 in a run, and says the DUT was doing a real lookup
   (cache enabled, no sweep inside its grace window) rather than that it checked this way's read;
-  anti-vacuity: only injections and checked uninitialised reads sample; a hit proves gen_chk_icache /
-  gen_chk_alerts verified alert, invalidation and refetch. The quiet-major/NMI bin is qualified per
+  anti-vacuity: only injections and reads of a never-written line on a qualified lookup sample, the
+  word CHECKED being reserved for the negation above, since this bin cannot claim the DUT checked the
+  read it witnesses; a hit on an alerting bin proves
+  gen_chk_icache / gen_chk_alerts verified alert, invalidation and refetch, and a hit on a no-alert
+  bin proves the ABSENCE of an alert over the window with the injection or qualified read announced,
+  which is the opposite claim and needs saying separately. The quiet-major/NMI bin is qualified per
   injection (the stimulus that could have raised them), per signal: the two major-alert outputs are
   levels judged over the injection window, while rvfi_ext_nmi_int is a per-retirement RVFI flag
   (rtl/ibex_core.sv:1830, staged to RVFI_STAGES) and is judged over the retirement window
@@ -4844,8 +4847,15 @@ bug-candidate behaviour carry the bug tie (B16 in CG-DMEM-007).
   - cp_no_alert_case iff the corruption or read must not alert: bins unused_way_data{data of the
     non-hitting way}, disabled_cache{icache_enable == 0}, during_invalidation{sweep running},
     uninitialised_data_ram{a lookup whose read of a never-written data line lies on a way that is NOT
-    the hit way, so the data-ECC term is masked by tag_hit_ic1 (rtl/ibex_icache.sv:585) rather than
-    checked and quiet; no injection. A never-written line CANNOT be the hit way: a way becomes
+    the hit way, so its data is never checked, and the two cases are EXHAUSTIVE because tag_hit_ic1 is
+    the OR of tag_match_ic1, the same per-way predicate the mux gates on (tag_hit_ic1 =
+    |tag_match_ic1, rtl/ibex_icache.sv:504). When a way matches,
+    the never-written way is not among them, since the match compares the valid bit as the comparison's
+    top bit (== {1'b1, lookup_addr_ic1[...]}, :499, with tag_invalid_ic1 its inverse at :501) and only a
+    fill sets it; its data is therefore excluded from hit_data_ecc_ic1 by the mux (:507-514) and never
+    reaches the decoder, which decodes the mux output alone (:568-573). When no way matches, tag_hit_ic1
+    is zero and the data-ECC term at :585 is masked outright. Either way the read is quiet without being
+    checked; no injection. A never-written line CANNOT be the hit way: a way becomes
     hittable only through a fill, since the other two tag writers write tags INVALID
     (tag_write_ic0 = fill_grant_ic0 | inval_write_req | ecc_write_req, :277), and a fill writes the
     line's data in the same cycle (data_write_ic0 = tag_write_ic0 at :283 with data_req_ic0
@@ -4902,16 +4912,24 @@ bug-candidate behaviour carry the bug tie (B16 in CG-DMEM-007).
   before stimulus can hit it and 0 per cent marks intent, while only genuinely unhittable bins are
   pruned; these become hittable when part 2 lands, so the dilution is correct and temporary). Part 1 covers 29 bins and part 2 the
   remaining 8 (cp_inval_ways 2, cp_refetch 1, cp_lookups_blocked_next 1, cp_multiway_mismatch 2,
-  cr_ram_x_inval 2). WHAT DECLARES PART 1's BINS IS EIGHT PER-ENTRY MANIFESTS, one
-  per WP-8 icache ECC testlist entry, each declaring only the bins its own entry can hit and their UNION
-  being the part-1 set: the 15 coverpoint bins now, the 14 part-1 cross bins (cr_ram_x_bits_x_way 8,
-  cr_data_x_beat 2, cr_bits_x_rate 4) once checked through the derived path. A single group manifest
-  cannot serve them, since the flow checks a manifest per entry, validates its test against the entry
-  name before reading coverage and fails a partial hit, with no merged mode; the group manifest retires
-  when the eight land. So 29 is the plan's part-1 bin count and not any one manifest's declaration. Until
+  cr_ram_x_inval 2). WHAT DECLARES PART 1's BINS IS NINE PER-ENTRY MANIFESTS, one per
+  WP-8 icache ECC testlist entry, each declaring only the bins its own entry can hit. The union
+  reachable today is 15 of 15 across nine entries; the nine manifests declare the robust subset of 13
+  bins, robust meaning a structural bound or a measured count of at least 30 in that entry's own run;
+  OWED are two bins, both thinly hit and closing on one route, a seed sweep at
+  coverage closure: cp_no_alert_case.during_invalidation (10, 9, 22) and
+  cp_no_alert_case.masked_duplicate_copy (4, 2, 14). Separately and NOT owed, two per-entry exclusions
+  live in tb-infra's manifest headers rather than here, since the bin is robust elsewhere and thin only
+  on those entries: cp_no_alert_case.uninitialised_data_ram on the two far-program entries (9, 9) and
+  cp_alert_pulses.one on the far probe-off entry (27). The counts are tb-infra's, measured per entry in its own output directory so no run's
+  coverage overwrote another's, and disabled_cache is reached only by the ninth entry, which runs the
+  tag-injection knob against a program that never enables the cache and hits it 864 times, so that bin
+  closes structurally rather than marginally. A single group manifest cannot serve these, since the flow
+  checks a manifest per entry, validates its test against the entry name before reading coverage and
+  fails a partial hit, with no merged mode; the group manifest retires when the nine land. So 29 is the plan's part-1 bin count and not any one manifest's declaration. Until
   then tb-infra's group manifest is committed and unreferenced, so it appears in the covergroup set's list
   of committed manifests not named by the committed testlist; its route out of that list is RETIREMENT when
-  the eight per-entry manifests land, not the arrival of testlist entries of its own. Per
+  the nine per-entry manifests land, not the arrival of testlist entries of its own. Per
   LOG-084c the owed key is not a ban but a pending check: manifests may claim cross bins, and such a claim
   is evidence once it is checked through the flow's derived report, so the owed key retires when the part-1
   cross bins are checked that way. Both figures count coverpoint-bin
