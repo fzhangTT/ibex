@@ -89,7 +89,9 @@ it by longest match with backtracking or takes the plan's explicit tuple). Bin n
 `or`, `and`, ...) render as escaped identifiers; urg prints them plainly, so the manifests keep the plan's names. Refusals:
 plan bins differing from the CSV bins of a coverpoint, a cross bin that does not split into its components, a cross without a
 plan line, a group without a plan header (unit test `dv/auto_dv/tb/unit/gen_ut_fcov_codegen.py`); `--check` fails on a stale
-include. `IMPLEMENTED` in the renderer lists the groups whose samplers exist; a group renders only when it is sampled.
+include. A `; ignore_bins x: reason` or `; ignore ...` clause at the end of a coverpoint line is not part of its bins, so a bin
+named only there needs no CSV row; a bin the line also lists before the clause is compared like any other (Slice-A-1 row in
+gen_critic_response_fcov.md). `IMPLEMENTED` in the renderer lists the groups whose samplers exist; a group renders only when it is sampled.
 
 Sampler: `gen_isa_cov` (this package), a subscriber of the RVFI monitor beside the scoreboard, samples on every record with
 `rvfi_trap == 0` whose encoding the plan's condition names; RVFI reports a compressed instruction in its 16-bit form, so
@@ -142,8 +144,10 @@ observed class of the data-bus responses whose rvalid fell after the record befo
 (the sampler subscribes to the dbus agent's completed transactions; min1 = every response 1 cycle after grant, short = all in 2..4,
 long = all >= 5, mixed otherwise, na when none fell in the window), not the regime knob. Its sources and bases (tb_l6 L-2): the
 class is the dbus driver's DRAWN rvalid delay carried on its completed transaction (not a latency measured at the pins), and the
-window compares the transaction's cycle stamp (the driver's negedge counter) with the RVFI interface's posedge record counter; the
-in-order rule can hold an actual response beyond the drawn delay when two transactions are outstanding. Neither moved a class in
+window compared the transaction's cycle stamp (the driver's negedge counter) with the RVFI interface's posedge record counter until
+Slice A, since which the bus agents stamp every completed transaction with the bridge interface's cycle counter (`stamp_gnt`,
+`stamp_rvalid`: the same posedge counter, cleared by reset, that the RVFI record carries), so the window and the record share one base;
+the in-order rule can hold an actual response beyond the drawn delay when two transactions are outstanding. Neither moved a class in
 the retained runs (the fixed regimes score 290 each); a pin-measured latency is not built. Every result-class coverpoint (mul, div,
 alu_reg, zba_zbb, alu_imm, shift, bit_count) samples na on an rd = x0 record, where the RTL forces rvfi_rd_wdata to 0; `cp_addi_wrap`
 is recomputed from rs1 and the immediate; `cp_divisor`'s magnitude compare negates the sign-extended operand (|INT_MIN| = 2^31, the value the 33-bit expression yields;
@@ -195,8 +199,8 @@ record's own rd_wdata when rd != x0, else the shadow if no write intervened sinc
 coverpoints sample na); a second write before any read-back replaces the pair (counted as replaced). `cp_wpat` classifies the operand
 against the CSR's Ibex-writable mask (mstatus 0x00221888, mie 0x7FFF0888, mtvec 0xFFFFFF00, mcounteren bit 0 and bits 2..GEN_MHPM_COUNTER_NUM+2,
 the others 0): all0, all1, msb_only, legal_only (only writable bits), illegal_only (no writable bit, and the CSR has some), rand; a CSR
-without writable bits has no illegal-only class, so its mixed patterns are rand (misa_legal / misa_illegal in the trace CSV are
-unreachable by construction). The field coverpoints use the effective value: MPP and the four mstatus bits; mtvec mode = [1:0], lo = [7:2]
+without writable bits has no illegal-only class, so its mixed patterns are rand (the CSV's misa_legal / misa_illegal cross bins were
+retired to CG-CSR-002's cr_csr_wpat ignore clause at plan commit 252ec36 and are no longer rendered). The field coverpoints use the effective value: MPP and the four mstatus bits; mtvec mode = [1:0], lo = [7:2]
 zero / nonzero, base = boot_page when [31:8] equals boot_addr[31:8] (before low / high: the boot page has bit 31 set), low when the
 value < 0x1000, i.e. mtvec[31:12] == 0 (ruling L5R-2), high on bit 31, rand otherwise; mie: all_fast when every fast bit 16..30 is set, else std_fast / std_only / fast_only by
 the standard (3, 7, 11) and fast groups, ro_only when only read-only bits are set, na for 0; mcounteren: all1, a single bit in the
@@ -234,3 +238,53 @@ bin the promoted manifests reference for these six groups (1500) exists by name 
 component's: the checker parses only `Summary for Variable` sections of urg's text report and never a `Summary for Cross`
 section, whose covered rows are component tuples (LOG-054: Runtime derives the variable form); until then the proof manifests
 declare coverpoint bins and the cross coverage is read from urg's per-cross `User Defined Cross Bins` summary.
+
+## Slice A (T-205): gen_rvfi_record_cg, gen_mul_timing_cg, gen_rst_boot_cg, gen_sec_ctrl_inputs_cg
+
+Four groups of the round-0 order (gen_round0_covergroup_set.md ranks 37, 43, 44, 47; gen_cmp_zcmp_hazard_cg, rank 21, waits on the
+plan / CSV mismatch of its cp_hazard bins). Rendered by the renderer with its widened plan grammar (wrapped bullets, `iff` clauses before
+the expression, expression-less coverpoints, `; ignore_bins` clauses, names-only bins and crosses, the prose form of the operand-only
+marker; unit-test cases for each; the 14 earlier renders are byte-identical). Sampled by gen_isa_cov:
+- gen_rvfi_record_cg (CG-RVFI-001), every record, from the record and its predecessor: cp_pc_delta on non-trap records (a trap's pc_wdata
+  is the vector, so the delta is na and cp_trap carries it; mret / dret / fence.i are `redirect_other`), cp_pc_continuity against the
+  previous record's pc_wdata (any discontinuity outside the five named causes is na: the rvfi protocol checker's error, not a bin),
+  cp_valid_gap from the record cycles, cp_intr_kind from the intr flag with the NMI flags before the pending bits, cp_rd_source from the
+  load decode, cp_order_step.first on order 1; the first record has no predecessor (continuity and gap na).
+- gen_mul_timing_cg (CG-MUL-002), on mul / mulh / mulhsu / mulhu (not c.mul: the plan's condition names the OP forms) after a previous
+  record, sampled on the record after the multiply so its successor decides cp_next_dep (rs1 or rs2 == the multiply's rd != 0; a multiply
+  at the very end samples na). cp_prev classifies the previous record's encoding (compressed forms by the memory decoder and quadrant).
+  cp_wb_busy / cp_dmem_delay use the data-bus agent's completed transactions with an APPROXIMATION stated here: the multiply's ID-entry
+  cycle is taken as the previous record's retirement cycle (WritebackStage = 1, back to back), so a transaction granted before and
+  answered after that cycle is "outstanding at ID entry"; cp_fetch_stall uses the ibus agent's completed fetches: the fetch of this
+  instruction's word answered at or after that same cycle. Both use the agents' bridge-base stamps, the RVFI record's own cycle base
+  (the driver-base comparison of the first build classed every multiply of the fetch-throttled program as unstalled: gen_tdd_fcov.md
+  Section 8). cp_delta (d1 / d2 / d3plus)
+  is sampled only when neither stall is seen (the plan's gap_clean).
+- gen_rst_boot_cg (CG-RST-001), one sample per reset, closed by the first record (or at report with `none_fetch_disabled` when no record
+  retired and fetch_enable was not On at the release): cp_boot_addr / cp_boot_low_byte from cfg.boot_addr, cp_hart_id from the hart-id
+  plusarg, cp_fetch_en_at_release and cp_pending from the ctrl / irq / dbg interfaces at the rst_n rise (run_phase), cp_first_event from
+  the first record (an NMI entry, a debug entry, or a plain retirement; a maskable first entry is the plan's ignore), cp_boot_to_req_cycles
+  from the ibus driver's first request after the release (`since_release`: the driver's cycle count from the release edge, +1 for its
+  first post-release negedge, which reproduces the RTL's two cycles on a fetch-enabled boot; runs that hold fetch_enable Off at reset and
+  enable it through the bridge see `more`, a stimulus fact, not the RTL's latency). cp_reset_kind is `power_on` always: the TB has no mid-run reset regime, so `mid_run` and
+  the `*_mid_run` cross bins are unreachable by construction (manifest statement).
+- gen_sec_ctrl_inputs_cg (CG-SEC-005), one sample per event with the other coverpoints na: cpuctrl_read (a CSR read of cpuctrlsts with
+  rd != 0: bit 8, bits 7:6, bit 0 in debug mode, the record's rvfi_ext_ic_scr_key_valid), fetch_en_change / mcounteren_w_change (the ctrl
+  interface watched each clock in run_phase, the new value's MuBi class), key_req / key_valid_change (the scramble-key responder's new
+  analysis port; the request's context: before any record = reset_inval, right after a retired fence.i, while the previous record was in
+  debug mode, while cpuctrlsts.icache_enable is tracked 0), mcounteren_write (a retired write to mcounteren with the writable pin's class at
+  the write; its effect from the program's read-back: the next mcounteren read differing from the write's old value = applied, equal =
+  dropped, na without a read-back or when the written value equals the old one). cp_key_delay is the run's knob_scr_key_delay class on
+  the key and cpuctrl_read events (a cross operand). boot_addr_change never happens (the TB does not change boot_addr_i), so that event and
+  cp_boot_addr_change_ctx are unreachable by construction (manifest statement).
+Stimulus added for the slice: gen_cpuctrl_directed.S (cpuctrlsts read-backs around a synchronous exception and a nested one, so bits 7:6
+take all four values; mstatus.MPP is re-armed before each mret that follows a nested return, since an mret leaves MPP at U; the run
+disables the misc never-high rule of double_fault_seen, `+gen_chk_double_fault=0`, because the double fault is the program's intent) and
+its key-withheld variant; the multiply program under the same-cycle / min1 bus regimes (the clean deltas); the boot run with fetch
+enabled at the release (boot_to_req two). Not reached by any retained program and stated in the manifests: cp_next_dep.yes and
+cp_wb_busy.yes with their crosses (no program consumes a multiply's result on the next record or keeps a data access outstanding when a
+multiply enters ID), cp_boot_to_req_cycles.three, cp_hart_id.max / random (the hart id is 0 in every run), cp_pending other than none,
+cp_first_event other than first_instr_retire, cp_key_req_context other than reset_inval, cp_icache_en_readback_in_debug, the
+key_delay `delayed` class, and the unreachable-by-construction bins named above.
+Counters: FCOV_QUERY 13 (records), 14 (multiplies), 15 (reset samples), 16 (security events); referee lines for the four groups; the
+vector table gains 47 classifier rows (74 cases in all).

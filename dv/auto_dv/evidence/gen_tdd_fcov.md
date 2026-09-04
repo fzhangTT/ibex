@@ -220,7 +220,8 @@ option-line case in gen_ut_fcov_codegen.py; the anti_vacuity notes of all 20 man
   mismatching micro-ops (1 of them the self-test's)`, the other four `3 sampled`: the program's own pairs plus the self-test's three), boot_zc, lockstep_zc, ut_witness, lockstep_muldiv_nofcov; the codegen unit test 19
   OK (gen_fu_l8_ut_fcov_codegen.log).
 - lockstep_zcmp_dummy_popret also ran on x and FAILED as designed (9408 errors, the B8 red of gen_tdd_step2b.md Section 11;
-  gen_fu_l8_x_driver.log).
+  gen_fu_l8_x_driver.log); lockstep_zcmp_mv_res also ran on x and FAILED as designed (32 errors: the B4 reserved-encoding divergence of
+  Section 4, the same driver log; tb_l10 L-3).
 - Proofs re-run on x, fresh vdb each, the manifests with the derived notes: 128 / 122 / 52 / 46 / 38 / 26 / 29 / 65 / 65 / 65 / 22 / 29,
   every one PASS (gen_fu_l8_<slice>_check.log, urg reports gen_fu_l8_urg_<run>_grpinfo.txt with their commands); lockstep_zcmp_mv on x
   reports `move pairs: 130 sampled, 0 with mismatching micro-ops`.
@@ -237,8 +238,48 @@ so a real miss during a unit-test run's program is not absorbed and the referee 
 covers every counted group (mul, div, alu_reg, zba_zbb, alu_imm, shift, bit_count, zca, zcmp, zcmp_mv, csr, branch, sbit, zcb: a non-zero
 sampler counter with zero coverage is an error). The unit test's own red on the FM4 build (the Critic's widened M-3): gen_ut_isa_cov on
 the FM4 mutant (the 1-bit slt cast re-introduced) FAILS its vector table, `slti rs1 == imm is eq ... 6 expected 0`, 27 cases 1 failure
-(gen_fu_l10_FM4UT_catch_ut_isa_cov_zc_*); the same with `+gen_fcov_en=0` FAILS identically, because the vector table judges the classifier
-function, not the covergroup (gen_fu_l10_FM4UT_ablate_ut_isa_cov_zc_*: the "ablation" of a unit test is not a PASS, and is retained to
+(gen_fu_l10_FM4UT_catch_ut_isa_cov_zc_*); the same with `+gen_fcov_en=0` FAILS the FM4 case and ten further cases that need the covergroups on (27 cases, 11 failures:
+`clz rd = x0`, `cm.mva01s ... one counted miss` and the like), because the vector table judges the classifier function and the
+covergroup-dependent cases cannot pass with the groups off (gen_fu_l10_FM4UT_ablate_ut_isa_cov_zc_*: the "ablation" of a unit test is not a PASS, and is retained to
 show that). Record corrections: 1059 notes, the five excerpt headers say 27 cases, the "5 sampled" quote is the zc run's with the other
 four qualified, FM10's first compile failure is explained, the by-design popret red on x is stated. Greens on aa: ut_isa_cov_zc, ut_witness,
 lockstep_zcmp_mv, boot_zc, lockstep_zc (gen_fu_l10_*).
+
+## 8. Slice A (T-205): gen_rvfi_record_cg, gen_mul_timing_cg, gen_rst_boot_cg, gen_sec_ctrl_inputs_cg
+
+Build ai (wit_root, out of tree; the per-file list gen_fu_l12_sources_sha256_ai.txt; the proofs and the regression were re-run on it after
+the tb_l9 shim fixes and the plan v3f re-render, which drops CG-CSR-002's two misa cross bins and changes no other group). Retention
+correction: the first retention script took the 17 run headers, verdicts and excerpts from build ag (4a670252697ee80e) while labelling them
+build ai; they were re-retained from the ai run directories before the hand-off (every proof and regression run header among gen_fu_l12_*
+carries b9adcdeb1cd01799). The renderer reports the include up to date against plan v3i (ec1d8ea) as well: the v3g..v3i touches change
+no rendered bin (gen_fu_l12_codegen_check.log). gen_cmp_zcmp_hazard_cg, the slice's first group, is
+held: the plan's cp_hazard lists popret_ra_fwd, the CSV does not, and the renderer refuses the group until they agree (reported to the
+Orchestrator 23:10Z). The other four render after the renderer's grammar was widened (wrapped bullets, `iff` before the expression,
+expression-less coverpoints, `; ignore_bins` clauses, names-only bins and crosses, the prose operand-only marker): the 14 earlier renders
+are byte-identical (--check up to date), five unit-test cases hold the forms (gen_fu_l12_ut_fcov_codegen.log, 24 OK), 18 covergroups,
+694 coverpoint bins, 2788 cross bins.
+- Samplers (gen_component_api_fcov.md "Slice A"): 47 classifier rows in the vector table (74 cases, 0 failures in gen_fu_l12_ut_isa_cov_zc_*);
+  the key responder publishes its req / valid changes (gen_key_evt); the bus agents stamp completed transactions on the bridge cycle
+  counter (`stamp_gnt`, `stamp_rvalid`) and the first request after a release with its distance (`since_release`).
+- Two sampler defects the proofs surfaced, both fixed before the manifests were cut: (1) the multiply's stall classes compared the drivers'
+  negedge counters with the RVFI cycle (the two bases of tb_l6 L-2), so every multiply of the fetch-throttled program read "no stall";
+  the bridge-base stamps replaced the driver counters, and the Zcmp cp_dmem_delay window moved to the same base (slice2c re-checked:
+  PASS 38, gen_fu_l12_slice2c_check.log); (2) the multiply's neighbour read the CURRENT record as its predecessor (prev_t is advanced
+  early in write()), so every multiply was d3plus with cp_prev mul / mulh_class only (gen_fu_l12_urg_lockstep_muldiv_prefix_grpinfo.txt);
+  `last_t` now carries the record before, and the same program reads d1 318 / d2 1080 / d3plus 298 with fetch_stall yes 361 under the
+  default regimes and the four clean cr_op_delta_clean tuples under the same-cycle / min1 regimes.
+- Stimulus added: gen_cpuctrl_directed.S (cpuctrlsts read-backs around a synchronous exception and a nested one; two program defects
+  fixed on the way, the outer mepc lost across the nested return and mstatus.MPP left at U by the nested mret, each seen as a trap loop
+  in the RVFI trace; the run disables the misc double_fault never-high rule for the deliberate double fault) and its key-withheld
+  variant; the boot run with fetch enabled at the release (boot_to_req two, against 62 when the bridge enables fetch later).
+- Proofs, fresh vdb each, notes derived from the plan (gen_fu_l12_<slice>_check.log): slice5a rvfi_record on the debug storm 30 bins,
+  slice5a2 on the interrupt storm 30, slice5b mul_timing 14, slice5b2 (fast bus) 13 with cr_op_delta_clean 4 / 4, slice5c rst_boot 8,
+  slice5c2 (fetch enabled at release) 8, slice5d sec_ctrl_inputs on the cpuctrl program 10, slice5d2 (key withheld) 10, slice5d3
+  (mcounteren writes, csrwarl) 6, slice5d4 (fetch_enable changes) 3; every one PASS.
+- Mutants (gen_mut_fcov.md): FM12 (plus4 classed as plus2), FM13 (a load before the multiply classed as ALU), FM14 (a high boot page
+  classed as mid), FM15 (the read-back drops double_fault_seen) each caught by its slice's checker with the ablation manifest PASS; they
+  were built beside build ag, whose sampler is the landing's (the ai edits are the shim, the render's two misa bins and anchors).
+- Not reached and stated: cp_next_dep.yes, cp_wb_busy.yes and their crosses, cp_boot_to_req_cycles.three, cp_hart_id.max / random,
+  cp_pending beyond none, cp_first_event beyond first_instr_retire, cp_key_req_context beyond reset_inval, the key_delay `delayed`
+  class, cp_icache_en_readback_in_debug; unreachable by construction: cp_reset_kind.mid_run, boot_addr_change and its context.
+- Regression on ai: boot_zc, lockstep_zc, ut_witness, lockstep_s7, intg_s7_allchk, lockstep_zcmp_mv, the two gen_pmc_ctrl runs PASS (gen_fu_l12_*).

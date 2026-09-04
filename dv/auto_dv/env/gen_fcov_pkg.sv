@@ -84,6 +84,8 @@ package gen_fcov_pkg;
   // names; the sample condition is the plan's (decoded encoding, rvfi_trap == 0). RVFI reports a compressed instruction in its
   // 16-bit form, so c.mul is decoded from it (rtl/ibex_core.sv:2263-2267); rd_wdata is forced to 0 on an rd = x0 record.
   `uvm_analysis_imp_decl(_dbus)
+  `uvm_analysis_imp_decl(_ibus)
+  `uvm_analysis_imp_decl(_key)
   class gen_isa_cov extends uvm_subscriber #(gen_rvfi_txn);
     `uvm_component_utils(gen_isa_cov)
     gen_env_cfg cfg;
@@ -101,6 +103,10 @@ package gen_fcov_pkg;
     gen_isa_branch_cg  br_cg;
     gen_bit_sbit_cg    sbit_cg;
     gen_cmp_zcb_cg     zcb_cg;
+    gen_rvfi_record_cg rec_cg;       // Slice A (T-205): every record
+    gen_mul_timing_cg  mt_cg;        // the multiply's timing neighbours
+    gen_rst_boot_cg    rst_cg;       // one sample per reset
+    gen_sec_ctrl_inputs_cg sec_cg;   // the security-input events
     // CG-BIT-006 binv_twice: the record before was binv / binvi, with its rd and index
     bit sb_prev_binv = 0; logic [4:0] sb_prev_rd, sb_prev_idx; int unsigned n_sbit = 0, n_zcb = 0;
     // CG-CMP-007 move pair: form, register fields, the two source values, the neighbour facts; sampled once the next record is known
@@ -110,6 +116,7 @@ package gen_fcov_pkg;
     // CG-CSR-002 pairs per tracked CSR: the open write (op, operand, rd, effective value) and the standing value of the last read-back
     bit csr_pend [8], csr_eff_ok [8], csr_shadow_ok [8]; int csr_op [8], csr_rd [8], csr_gate [8]; logic [31:0] csr_wval [8], csr_eff [8], csr_shadow [8];
     virtual gen_ctrl_if ctrl_vif;   // mcounteren_writable_i as driven when a CSR write record arrives (cp_mcen_gate)
+    virtual gen_irq_if irq_vif; virtual gen_dbg_if dbg_vif;   // the pins pending at the reset release
     int unsigned n_br = 0, n_mv = 0, n_csr_pairs = 0, n_csr_wr = 0, n_csr_replaced = 0;
     int unsigned n_mv_miss = 0, ut_mv_miss_expected = 0;   // legal move pairs whose micro-ops did not match the expansion (the self-test's own excluded)
     // counters and last-sample copies the unit test reads (FCOV_QUERY / FCOV_SELFTEST, LOG-058)
@@ -121,21 +128,33 @@ package gen_fcov_pkg;
     // landing-4 review), the first micro-op's counts through the instruction before the sequence, so their difference is the cm.*'s own count
     bit zcmp_pend = 0; int zcmp_v [13]; int unsigned n_zcmp_uop_no = 0, n_zcmp_order_no = 0, n_zcmp_tags_no = 0, n_zcmp_minstret_no = 0;
     // data-bus responses seen (cycle of rvalid, latency after grant): cp_dmem_delay classifies the responses inside the sequence's window
-    int unsigned dlat_cyc [$], dlat_lat [$]; int unsigned prev_rec_cycle = 0, cur_rec_cycle = 0, zp_win_start;
+    int unsigned dlat_cyc [$], dlat_lat [$], dlat_gnt [$]; int unsigned prev_rec_cycle = 0, cur_rec_cycle = 0, zp_win_start;
+    // Slice A state: the previous record (continuity, gap, the multiply's neighbour), the pending multiply (its successor decides
+    // cp_next_dep), the recent fetches (fetch-stall), the reset-release facts and the security-input trackers
+    gen_rvfi_txn prev_t, last_t; bit have_prev = 0, have_last = 0; int unsigned n_rec = 0, n_mt = 0, n_rst = 0, n_sec = 0;   // last_t: the record before the one write() is handling
+    bit mt_pend = 0; int mt_v [7]; logic [4:0] mt_rd; int ut_last_rec [14], ut_last_mt [7], ut_last_rst [8], ut_last_sec [11];
+    logic [31:0] ib_addr [$]; int unsigned ib_rv [$]; int unsigned boot_to_req = 0; bit boot_to_req_seen = 0;
+    int rst_fetch_en = -1, rst_pending = -1; bit rst_release_seen = 0, rst_sampled = 0; logic [31:0] hart_id_v = 0;
+    bit icache_en_tracked = 1; bit fencei_pending = 0; bit mcen_pend = 0; logic [31:0] mcen_old, mcen_new; int mcen_pin_cls = -1;
     uvm_analysis_imp_dbus #(gen_bus_txn, gen_isa_cov) dbus_imp;
+    uvm_analysis_imp_ibus #(gen_bus_txn, gen_isa_cov) ibus_imp;
+    uvm_analysis_imp_key #(gen_key_evt, gen_isa_cov) key_imp;
     int unsigned n_mul = 0, n_div = 0, n_alu = 0, n_bit = 0, n_imm = 0, n_sh = 0, n_cnt = 0, n_zca = 0, n_zca32 = 0;
     // the pending 16-bit record of CG-CMP-001: sampled when the next record tells the next instruction's length
     bit zca_pend = 0; int zca_v [7];
-    function new(string name, uvm_component parent); super.new(name, parent); dbus_imp = new("dbus_imp", this); endfunction
+    function new(string name, uvm_component parent); super.new(name, parent); dbus_imp = new("dbus_imp", this); ibus_imp = new("ibus_imp", this); key_imp = new("key_imp", this); endfunction
     function void write_dbus(gen_bus_txn b);   // every completed data-bus transaction, in completion order
-      dlat_cyc.push_back(b.cycle_rvalid); dlat_lat.push_back(b.rvalid_delay);
-      if (dlat_cyc.size() > 256) begin void'(dlat_cyc.pop_front()); void'(dlat_lat.pop_front()); end
+      dlat_cyc.push_back(b.stamp_rvalid); dlat_lat.push_back(b.rvalid_delay); dlat_gnt.push_back(b.stamp_gnt);   // the RVFI record's cycle base (bridge counter)
+      if (dlat_cyc.size() > 256) begin void'(dlat_cyc.pop_front()); void'(dlat_lat.pop_front()); void'(dlat_gnt.pop_front()); end
     endfunction
     function void build_phase(uvm_phase phase);
       super.build_phase(phase);
       if (!uvm_config_db#(gen_env_cfg)::get(this, "", "cfg", cfg)) `uvm_fatal("GEN_FCOV", "cfg not in uvm_config_db")
       if (!uvm_config_db#(virtual gen_ctrl_if)::get(this, "", "vif", ctrl_vif)) `uvm_fatal("GEN_FCOV", "ctrl vif not in uvm_config_db")
-      if (cfg.fcov_en) begin mul_cg = new(); div_cg = new(); alu_cg = new(); bit_cg = new(); imm_cg = new(); sh_cg = new(); cnt_cg = new(); zca_cg = new(); zcmp_cg = new(); mv_cg = new(); csr_cg = new(); br_cg = new(); sbit_cg = new(); zcb_cg = new(); end
+      if (!uvm_config_db#(virtual gen_irq_if)::get(this, "", "irq_vif", irq_vif)) `uvm_fatal("GEN_FCOV", "irq vif not in uvm_config_db")
+      if (!uvm_config_db#(virtual gen_dbg_if)::get(this, "", "dbg_vif", dbg_vif)) `uvm_fatal("GEN_FCOV", "dbg vif not in uvm_config_db")
+      begin logic [31:0] h; if ($value$plusargs({PLUSARG_HART_ID, "=%h"}, h)) hart_id_v = h; end
+      if (cfg.fcov_en) begin mul_cg = new(); div_cg = new(); alu_cg = new(); bit_cg = new(); imm_cg = new(); sh_cg = new(); cnt_cg = new(); zca_cg = new(); zcmp_cg = new(); mv_cg = new(); csr_cg = new(); br_cg = new(); sbit_cg = new(); zcb_cg = new(); rec_cg = new(); mt_cg = new(); rst_cg = new(); sec_cg = new(); end
     endfunction
     // ---- classifiers (plan bin order = the rendered GEN_FC_* indices)
     function int mul_rs_cls(logic [31:0] v);   // CG-MUL-001 cp_rs1_class / cp_rs2_class (same bin list)
@@ -854,12 +873,229 @@ package gen_fcov_pkg;
       zcb_cg.sample(k, ub, uh, sign, alu, align, regs);
       return 1;
     endfunction
+
+    // ---- Slice A: the record group (CG-RVFI-001), the multiply's timing (CG-MUL-002), the reset release (CG-RST-001) and the
+    //      security inputs (CG-SEC-005). Classifiers are partitions of record fields, the neighbour facts come from the previous
+    //      record and the bus agents' completed transactions, stamped on the bridge interface's cycle counter (the RVFI record's base).
+    function bit is_redirect_insn(logic [31:0] insn);   // a trap-side record is classified by rvfi_trap; mret, dret and fence.i redirect
+      return insn == 32'h3020_0073 || insn == 32'h7b20_0073 || (insn[6:0] == 7'b0001111 && insn[14:12] == 3'b001);
+    endfunction
+    function int rec_pc_delta_cls(logic [31:0] pc_r, logic [31:0] pc_w, bit redirect);
+      logic [31:0] d = pc_w - pc_r;
+      if (redirect) return GEN_FC_RVFI_RECORD_CP_PC_DELTA_REDIRECT_OTHER;
+      if (d == 32'd2) return GEN_FC_RVFI_RECORD_CP_PC_DELTA_PLUS2;
+      if (d == 32'd4) return GEN_FC_RVFI_RECORD_CP_PC_DELTA_PLUS4;
+      return d[31] ? GEN_FC_RVFI_RECORD_CP_PC_DELTA_JUMP_BACK : GEN_FC_RVFI_RECORD_CP_PC_DELTA_JUMP_FWD;
+    endfunction
+    function int rec_cont_cls(logic [31:0] prev_pc_w, logic [31:0] pc_r, bit intr, bit prev_trap, bit prev_redirect, bit debug_changed);
+      if (pc_r == prev_pc_w) return GEN_FC_RVFI_RECORD_CP_PC_CONTINUITY_CONTINUOUS;
+      if (intr) return GEN_FC_RVFI_RECORD_CP_PC_CONTINUITY_DISCONTINUOUS_INTR;
+      if (prev_trap) return GEN_FC_RVFI_RECORD_CP_PC_CONTINUITY_DISCONTINUOUS_AFTER_TRAP;
+      if (prev_redirect) return GEN_FC_RVFI_RECORD_CP_PC_CONTINUITY_DISCONTINUOUS_AFTER_FLUSH_REDIRECT;
+      if (debug_changed) return GEN_FC_RVFI_RECORD_CP_PC_CONTINUITY_DISCONTINUOUS_DEBUG;
+      return -1;   // any other discontinuity is the rvfi protocol checker's error, not a bin
+    endfunction
+    function int rec_intr_kind_cls(bit intr, logic [31:0] pre_mip, bit nmi, bit nmi_int);
+      if (!intr) return GEN_FC_RVFI_RECORD_CP_INTR_KIND_NONE;
+      if (nmi) return GEN_FC_RVFI_RECORD_CP_INTR_KIND_NMI;
+      if (nmi_int) return GEN_FC_RVFI_RECORD_CP_INTR_KIND_NMI_INT;
+      return (pre_mip != 0) ? GEN_FC_RVFI_RECORD_CP_INTR_KIND_IRQ : -1;
+    endfunction
+    function int rec_rd_source_cls(logic [4:0] rd, logic [31:0] insn);
+      bit st; int unsigned nb;
+      if (rd == 0) return GEN_FC_RVFI_RECORD_CP_RD_SOURCE_NONE;
+      return (gen_insn_mem_access(insn, st, nb) && !st) ? GEN_FC_RVFI_RECORD_CP_RD_SOURCE_LOAD_LSU : GEN_FC_RVFI_RECORD_CP_RD_SOURCE_ALU_WB;
+    endfunction
+    function int rec_gap_cls(int unsigned gap);
+      return (gap == 1) ? GEN_FC_RVFI_RECORD_CP_VALID_GAP_G1 : (gap == 2) ? GEN_FC_RVFI_RECORD_CP_VALID_GAP_G2 : GEN_FC_RVFI_RECORD_CP_VALID_GAP_G3_PLUS;
+    endfunction
+    function void rec_sample(gen_rvfi_txn t);
+      int v [14]; bit st; int unsigned nb;
+      v[0] = t.trap ? GEN_FC_RVFI_RECORD_CP_TRAP_YES : GEN_FC_RVFI_RECORD_CP_TRAP_NO;
+      v[1] = t.intr ? GEN_FC_RVFI_RECORD_CP_INTR_YES : GEN_FC_RVFI_RECORD_CP_INTR_NO;
+      v[2] = (t.mode == ibex_pkg::PRIV_LVL_U) ? GEN_FC_RVFI_RECORD_CP_MODE_U : (t.mode == ibex_pkg::PRIV_LVL_M) ? GEN_FC_RVFI_RECORD_CP_MODE_M : -1;
+      v[3] = t.ext_exp_valid ? GEN_FC_RVFI_RECORD_CP_INSN_KIND_ZCMP_UOP : (t.insn[1:0] != 2'b11) ? GEN_FC_RVFI_RECORD_CP_INSN_KIND_C16 : GEN_FC_RVFI_RECORD_CP_INSN_KIND_I32;
+      v[4] = (t.rd_addr == 0) ? GEN_FC_RVFI_RECORD_CP_RD_X0 : GEN_FC_RVFI_RECORD_CP_RD_NONZERO;
+      v[5] = (t.rs1_addr == 0) ? GEN_FC_RVFI_RECORD_CP_RS1_X0 : GEN_FC_RVFI_RECORD_CP_RS1_NONZERO;
+      v[6] = (t.rs2_addr == 0) ? GEN_FC_RVFI_RECORD_CP_RS2_X0 : GEN_FC_RVFI_RECORD_CP_RS2_NONZERO;
+      v[7] = (t.rs3_addr == 0) ? GEN_FC_RVFI_RECORD_CP_RS3_ZERO : GEN_FC_RVFI_RECORD_CP_RS3_NONZERO;
+      v[8] = t.trap ? -1 : rec_pc_delta_cls(t.pc_rdata, t.pc_wdata, is_redirect_insn(t.insn));   // a trapping record's pc_wdata is the vector: cp_trap owns it
+      v[9] = (t.order == 64'd1) ? GEN_FC_RVFI_RECORD_CP_ORDER_STEP_FIRST : -1;
+      v[10] = have_prev ? rec_cont_cls(prev_t.pc_wdata, t.pc_rdata, t.intr, prev_t.trap, is_redirect_insn(prev_t.insn), prev_t.ext_debug_mode != t.ext_debug_mode) : -1;
+      v[11] = have_prev ? rec_gap_cls(t.cycle - prev_t.cycle) : -1;
+      v[12] = rec_intr_kind_cls(t.intr, t.ext_pre_mip, t.ext_nmi, t.ext_nmi_int);
+      v[13] = rec_rd_source_cls(t.rd_addr, t.insn);
+      n_rec++;
+      rec_cg.sample(v[0], v[1], v[2], v[3], v[4], v[5], v[6], v[7], v[8], v[9], v[10], v[11], v[12], v[13]);
+      ut_last_rec = v;
+    endfunction
+    // the multiply's timing: sampled on the record after the multiply (its successor decides cp_next_dep)
+    function int mt_prev_cls(logic [31:0] insn);
+      bit st; int unsigned nb; logic [6:0] op = insn[6:0]; logic [2:0] f3 = insn[14:12];
+      if (insn[1:0] != 2'b11) begin   // compressed: loads / stores by the decoder, branches and jumps by quadrant, the rest ALU
+        if (gen_insn_mem_access(insn, st, nb)) return st ? GEN_FC_MUL_TIMING_CP_PREV_STORE : GEN_FC_MUL_TIMING_CP_PREV_LOAD;
+        if (insn[1:0] == 2'b01 && (insn[15:13] inside {3'b001, 3'b101, 3'b110, 3'b111})) return GEN_FC_MUL_TIMING_CP_PREV_BRANCH;   // c.jal, c.j, c.beqz, c.bnez
+        if (insn[1:0] == 2'b10 && insn[15:13] == 3'b100 && insn[6:2] == 5'd0 && insn[11:7] != 5'd0) return GEN_FC_MUL_TIMING_CP_PREV_BRANCH;   // c.jr / c.jalr
+        if (insn[1:0] == 2'b10 && insn[15:13] == 3'b100 && insn[12] && insn[6:2] == 5'd0 && insn[11:7] == 5'd0) return GEN_FC_MUL_TIMING_CP_PREV_OTHER;   // c.ebreak
+        if (insn[1:0] == 2'b01 && insn[15:10] == 6'b100111 && insn[6:5] == 2'b10) return GEN_FC_MUL_TIMING_CP_PREV_MUL;   // c.mul
+        return GEN_FC_MUL_TIMING_CP_PREV_ALU;
+      end
+      case (op)
+        ibex_pkg::OPCODE_OP: begin
+          if (insn[31:25] == 7'b0000001) return f3[2] ? GEN_FC_MUL_TIMING_CP_PREV_DIV : (f3 == 3'b000) ? GEN_FC_MUL_TIMING_CP_PREV_MUL : GEN_FC_MUL_TIMING_CP_PREV_MULH_CLASS;
+          return GEN_FC_MUL_TIMING_CP_PREV_ALU;
+        end
+        ibex_pkg::OPCODE_OP_IMM, ibex_pkg::OPCODE_LUI, ibex_pkg::OPCODE_AUIPC: return GEN_FC_MUL_TIMING_CP_PREV_ALU;
+        ibex_pkg::OPCODE_LOAD: return GEN_FC_MUL_TIMING_CP_PREV_LOAD;
+        ibex_pkg::OPCODE_STORE: return GEN_FC_MUL_TIMING_CP_PREV_STORE;
+        ibex_pkg::OPCODE_BRANCH, ibex_pkg::OPCODE_JAL, ibex_pkg::OPCODE_JALR: return GEN_FC_MUL_TIMING_CP_PREV_BRANCH;
+        default: return GEN_FC_MUL_TIMING_CP_PREV_OTHER;
+      endcase
+    endfunction
+    function int mt_delta_cls(int unsigned gap);
+      return (gap == 1) ? GEN_FC_MUL_TIMING_CP_DELTA_D1 : (gap == 2) ? GEN_FC_MUL_TIMING_CP_DELTA_D2 : GEN_FC_MUL_TIMING_CP_DELTA_D3PLUS;
+    endfunction
+    function int lat_cls(int unsigned lat);
+      return (lat == 1) ? GEN_FC_MUL_TIMING_CP_DMEM_DELAY_MIN1 : (lat <= 4) ? GEN_FC_MUL_TIMING_CP_DMEM_DELAY_SHORT : GEN_FC_MUL_TIMING_CP_DMEM_DELAY_LONG;
+    endfunction
+    function void mt_flush(gen_rvfi_txn nxt);
+      if (!mt_pend) return;
+      mt_v[3] = (nxt == null) ? -1 : ((mt_rd != 0 && (nxt.rs1_addr == mt_rd || nxt.rs2_addr == mt_rd)) ? GEN_FC_MUL_TIMING_CP_NEXT_DEP_YES : GEN_FC_MUL_TIMING_CP_NEXT_DEP_NO);
+      mt_cg.sample(mt_v[0], mt_v[1], mt_v[2], mt_v[3], mt_v[4], mt_v[5], mt_v[6]);
+      ut_last_mt = mt_v;
+      mt_pend = 0;
+    endfunction
+    function void mt_sample(gen_rvfi_txn t, int f3);
+      int unsigned id_cyc = have_last ? last_t.cycle : 0; bit busy = 0, stall = 0; int unsigned busy_lat = 0;
+      if (!have_last) return;   // the first retirement after reset has no previous one: not sampled (plan)
+      // a data access outstanding when the multiply entered ID (approximated by the previous retirement's cycle) whose response came later
+      foreach (dlat_cyc[i]) if (dlat_gnt[i] < id_cyc && dlat_cyc[i] > id_cyc) begin busy = 1; busy_lat = dlat_lat[i]; end
+      // the fetch of this instruction's word answered after the previous retirement: the fetch data was not available in time
+      foreach (ib_addr[i]) if (ib_addr[i][31:2] == t.pc_rdata[31:2] && ib_rv[i] >= id_cyc) stall = 1;
+      mt_v[0] = f3; mt_v[1] = (!busy && !stall) ? mt_delta_cls(t.cycle - last_t.cycle) : -1; mt_v[2] = mt_prev_cls(last_t.insn);
+      mt_v[4] = busy ? GEN_FC_MUL_TIMING_CP_WB_BUSY_YES : GEN_FC_MUL_TIMING_CP_WB_BUSY_NO; mt_v[5] = stall ? GEN_FC_MUL_TIMING_CP_FETCH_STALL_YES : GEN_FC_MUL_TIMING_CP_FETCH_STALL_NO;
+      mt_v[6] = busy ? lat_cls(busy_lat) : -1; mt_rd = t.rd_addr; mt_pend = 1; n_mt++;
+    endfunction
+    function void write_ibus(gen_bus_txn b);   // every completed fetch: its word and response cycle for the fetch-stall class; the first request's distance
+      ib_addr.push_back(b.addr); ib_rv.push_back(b.stamp_rvalid);   // the RVFI record's cycle base
+      if (ib_addr.size() > 64) begin void'(ib_addr.pop_front()); void'(ib_rv.pop_front()); end
+      if (b.first_after_release && !boot_to_req_seen) begin boot_to_req = b.since_release; boot_to_req_seen = 1; end
+    endfunction
+    // the reset release (CG-RST-001): the pins at the release, then the first event
+    function int mubi_cls_rst(ibex_pkg::ibex_mubi_t v);
+      return (v == ibex_pkg::IbexMuBiOn) ? GEN_FC_RST_BOOT_CP_FETCH_EN_AT_RELEASE_ON : (v == ibex_pkg::IbexMuBiOff) ? GEN_FC_RST_BOOT_CP_FETCH_EN_AT_RELEASE_OFF : GEN_FC_RST_BOOT_CP_FETCH_EN_AT_RELEASE_INVALID;
+    endfunction
+    function int rst_boot_cls(logic [31:0] a);
+      if (a[31:8] == 24'd0) return GEN_FC_RST_BOOT_CP_BOOT_ADDR_ZERO;
+      if (a[31:8] <= 24'h0FFFFF) return GEN_FC_RST_BOOT_CP_BOOT_ADDR_LOW;
+      if (a[31:8] <= 24'h7FFFFF) return GEN_FC_RST_BOOT_CP_BOOT_ADDR_MID;
+      return GEN_FC_RST_BOOT_CP_BOOT_ADDR_HIGH;
+    endfunction
+    function int rst_hart_cls(logic [31:0] h);
+      return (h == 0) ? GEN_FC_RST_BOOT_CP_HART_ID_ZERO : (h == 32'hFFFF_FFFF) ? GEN_FC_RST_BOOT_CP_HART_ID_MAX : GEN_FC_RST_BOOT_CP_HART_ID_RANDOM;
+    endfunction
+    function int rst_pending_cls(logic [17:0] lines, bit nm, bit dbg);
+      bit irq = |lines;
+      if (nm && dbg) return GEN_FC_RST_BOOT_CP_PENDING_NMI_AND_DEBUG;
+      if (irq && dbg) return GEN_FC_RST_BOOT_CP_PENDING_IRQ_AND_DEBUG;
+      if (dbg) return GEN_FC_RST_BOOT_CP_PENDING_DEBUG_REQ;
+      if (nm) return GEN_FC_RST_BOOT_CP_PENDING_NMI;
+      if (irq) return GEN_FC_RST_BOOT_CP_PENDING_IRQ_ENABLED_LATER;   // mie is 0 at reset: a line can only be enabled later
+      return GEN_FC_RST_BOOT_CP_PENDING_NONE;
+    endfunction
+    function int rst_first_event_cls(bit intr, bit nmi, bit debug_mode);
+      if (debug_mode) return GEN_FC_RST_BOOT_CP_FIRST_EVENT_DEBUG_ENTRY;
+      if (intr) return nmi ? GEN_FC_RST_BOOT_CP_FIRST_EVENT_NMI_TAKEN : -1;   // a maskable first entry is the plan's ignore
+      return GEN_FC_RST_BOOT_CP_FIRST_EVENT_FIRST_INSTR_RETIRE;
+    endfunction
+    function int rst_req_cls(int unsigned c);
+      return (c == 2) ? GEN_FC_RST_BOOT_CP_BOOT_TO_REQ_CYCLES_TWO : (c == 3) ? GEN_FC_RST_BOOT_CP_BOOT_TO_REQ_CYCLES_THREE : (c >= 4) ? GEN_FC_RST_BOOT_CP_BOOT_TO_REQ_CYCLES_MORE : -1;
+    endfunction
+    function void rst_sample(int first_event);
+      int v [8];
+      if (rst_sampled || rst_cg == null) return;
+      v[0] = rst_boot_cls(cfg.boot_addr); v[1] = (cfg.boot_addr[7:0] == 8'd0) ? GEN_FC_RST_BOOT_CP_BOOT_LOW_BYTE_ZERO : -1;
+      v[2] = rst_fetch_en; v[3] = rst_pending; v[4] = first_event; v[5] = rst_hart_cls(hart_id_v);
+      v[6] = GEN_FC_RST_BOOT_CP_RESET_KIND_POWER_ON;   // the TB has no mid-run reset regime: mid_run stays unreachable (stated)
+      v[7] = boot_to_req_seen ? rst_req_cls(boot_to_req) : -1;
+      rst_cg.sample(v[0], v[1], v[2], v[3], v[4], v[5], v[6], v[7]);
+      ut_last_rst = v; rst_sampled = 1; n_rst++;
+    endfunction
+    // the security inputs (CG-SEC-005): one sample per event, the other coverpoints na
+    function int mubi_cls_sec(ibex_pkg::ibex_mubi_t v);
+      return (v == ibex_pkg::IbexMuBiOn) ? GEN_FC_SEC_CTRL_INPUTS_CP_FETCH_EN_VAL_ON : (v == ibex_pkg::IbexMuBiOff) ? GEN_FC_SEC_CTRL_INPUTS_CP_FETCH_EN_VAL_OFF : GEN_FC_SEC_CTRL_INPUTS_CP_FETCH_EN_VAL_INVALID;
+    endfunction
+    function int key_delay_cls();
+      case (cfg.knob_scr_key_delay)
+        "immediate": return GEN_FC_SEC_CTRL_INPUTS_CP_KEY_DELAY_IMMEDIATE;
+        "delayed": return GEN_FC_SEC_CTRL_INPUTS_CP_KEY_DELAY_DELAYED;
+        "withheld_then_valid": return GEN_FC_SEC_CTRL_INPUTS_CP_KEY_DELAY_WITHHELD_THEN_VALID;
+        default: return -1;
+      endcase
+    endfunction
+    function void sec_sample(int ev, int bits67 = -1, int bit8 = -1, int ic_dbg = -1, int fe = -1, int mw = -1, int eff = -1, int kctx = -1, int kv = -1);
+      int v [11];
+      if (sec_cg == null) return;
+      v[0] = ev; v[1] = -1; v[2] = bit8; v[3] = bits67; v[4] = ic_dbg; v[5] = fe; v[6] = mw; v[7] = eff; v[8] = (ev == GEN_FC_SEC_CTRL_INPUTS_CP_EVENT_KEY_REQ || ev == GEN_FC_SEC_CTRL_INPUTS_CP_EVENT_KEY_VALID_CHANGE || ev == GEN_FC_SEC_CTRL_INPUTS_CP_EVENT_CPUCTRL_READ) ? key_delay_cls() : -1; v[9] = kctx; v[10] = kv;
+      sec_cg.sample(v[0], v[1], v[2], v[3], v[4], v[5], v[6], v[7], v[8], v[9], v[10]);
+      ut_last_sec = v; n_sec++;
+    endfunction
+    function void write_key(gen_key_evt e);   // the scramble-key responder's req / valid changes
+      if (e.req_changed && e.req) begin
+        int ctx = !have_prev ? GEN_FC_SEC_CTRL_INPUTS_CP_KEY_REQ_CONTEXT_RESET_INVAL : fencei_pending ? GEN_FC_SEC_CTRL_INPUTS_CP_KEY_REQ_CONTEXT_FENCE_I :
+                  prev_t.ext_debug_mode ? GEN_FC_SEC_CTRL_INPUTS_CP_KEY_REQ_CONTEXT_DEBUG_MODE : !icache_en_tracked ? GEN_FC_SEC_CTRL_INPUTS_CP_KEY_REQ_CONTEXT_ICACHE_DISABLED : -1;
+        sec_sample(GEN_FC_SEC_CTRL_INPUTS_CP_EVENT_KEY_REQ, .kctx(ctx));
+      end
+      if (e.valid_changed) sec_sample(GEN_FC_SEC_CTRL_INPUTS_CP_EVENT_KEY_VALID_CHANGE);
+    endfunction
+    function void sec_record(gen_rvfi_txn t);   // the record-side events: cpuctrlsts reads, mcounteren writes and their read-back, the trackers
+      bit is_csr = (t.insn[6:0] == ibex_pkg::OPCODE_SYSTEM) && (t.insn[14:12] != 3'b000) && !t.trap;
+      logic [11:0] csr = t.insn[31:20]; logic [2:0] f3 = t.insn[14:12];
+      bit is_write = is_csr && (f3[1:0] == 2'b01 || (f3[2] ? t.insn[19:15] != 5'd0 : t.insn[19:15] != 5'd0));   // csrrw always writes; csrrs / csrrc with rs1 / uimm 0 read only
+      fencei_pending = (t.insn[6:0] == 7'b0001111 && t.insn[14:12] == 3'b001);
+      if (is_csr && csr == 12'h7C0 && is_write) icache_en_tracked = t.rs1_rdata[0];   // cpuctrlsts.icache_enable as written (csrrw form); a set / clear form keeps the tracked value
+      if (mcen_pend && is_csr && csr == ibex_pkg::CSR_MCOUNTEREN && t.rd_addr != 0) begin   // the read-back after a mcounteren write decides its effect
+        int eff = (t.rd_wdata == mcen_old && mcen_new != mcen_old) ? GEN_FC_SEC_CTRL_INPUTS_CP_MCOUNTEREN_WRITE_EFFECT_DROPPED : (t.rd_wdata != mcen_old) ? GEN_FC_SEC_CTRL_INPUTS_CP_MCOUNTEREN_WRITE_EFFECT_APPLIED : -1;
+        sec_sample(GEN_FC_SEC_CTRL_INPUTS_CP_EVENT_MCOUNTEREN_WRITE, .mw(mcen_pin_cls), .eff(eff)); mcen_pend = 0;
+      end
+      if (is_csr && csr == 12'h7C0 && t.rd_addr != 0)
+        sec_sample(GEN_FC_SEC_CTRL_INPUTS_CP_EVENT_CPUCTRL_READ, .bits67(int'(t.rd_wdata[7:6])), .bit8(t.rd_wdata[8] ? GEN_FC_SEC_CTRL_INPUTS_CP_BIT8_READBACK_ONE : GEN_FC_SEC_CTRL_INPUTS_CP_BIT8_READBACK_ZERO),
+                   .ic_dbg(t.ext_debug_mode ? (t.rd_wdata[0] ? GEN_FC_SEC_CTRL_INPUTS_CP_ICACHE_EN_READBACK_IN_DEBUG_ONE : GEN_FC_SEC_CTRL_INPUTS_CP_ICACHE_EN_READBACK_IN_DEBUG_ZERO) : -1),
+                   .kv(t.ext_ic_scr_key_valid ? GEN_FC_SEC_CTRL_INPUTS_CP_RVFI_EXT_KEY_VALID_ONE : GEN_FC_SEC_CTRL_INPUTS_CP_RVFI_EXT_KEY_VALID_ZERO));
+      if (is_csr && csr == ibex_pkg::CSR_MCOUNTEREN && is_write) begin   // the effect waits for the program's read-back
+        mcen_old = t.rd_wdata; mcen_new = (f3[1:0] == 2'b01) ? (f3[2] ? 32'(t.insn[19:15]) : t.rs1_rdata) : t.rd_wdata; mcen_pend = (t.rd_addr != 0);
+        mcen_pin_cls = (ctrl_vif.mcounteren_writable == ibex_pkg::IbexMuBiOn) ? GEN_FC_SEC_CTRL_INPUTS_CP_MCOUNTEREN_W_VAL_ON : (ctrl_vif.mcounteren_writable == ibex_pkg::IbexMuBiOff) ? GEN_FC_SEC_CTRL_INPUTS_CP_MCOUNTEREN_W_VAL_OFF : GEN_FC_SEC_CTRL_INPUTS_CP_MCOUNTEREN_W_VAL_INVALID;
+        if (!mcen_pend) sec_sample(GEN_FC_SEC_CTRL_INPUTS_CP_EVENT_MCOUNTEREN_WRITE, .mw(mcen_pin_cls));   // no old value to compare: effect na
+      end
+    endfunction
+    task run_phase(uvm_phase phase);
+      ibex_pkg::ibex_mubi_t fe_q, mw_q;
+      @(posedge ctrl_vif.rst_n);
+      rst_fetch_en = mubi_cls_rst(ctrl_vif.fetch_enable);
+      rst_pending = rst_pending_cls(irq_vif.lines()[17:0], irq_vif.nm, dbg_vif.req);
+      rst_release_seen = 1;
+      fe_q = ctrl_vif.fetch_enable; mw_q = ctrl_vif.mcounteren_writable;
+      forever begin
+        @(posedge ctrl_vif.clk);
+        if (ctrl_vif.fetch_enable != fe_q) begin fe_q = ctrl_vif.fetch_enable; sec_sample(GEN_FC_SEC_CTRL_INPUTS_CP_EVENT_FETCH_EN_CHANGE, .fe(mubi_cls_sec(fe_q))); end
+        if (ctrl_vif.mcounteren_writable != mw_q) begin
+          mw_q = ctrl_vif.mcounteren_writable;
+          sec_sample(GEN_FC_SEC_CTRL_INPUTS_CP_EVENT_MCOUNTEREN_W_CHANGE, .mw((mw_q == ibex_pkg::IbexMuBiOn) ? GEN_FC_SEC_CTRL_INPUTS_CP_MCOUNTEREN_W_VAL_ON : (mw_q == ibex_pkg::IbexMuBiOff) ? GEN_FC_SEC_CTRL_INPUTS_CP_MCOUNTEREN_W_VAL_OFF : GEN_FC_SEC_CTRL_INPUTS_CP_MCOUNTEREN_W_VAL_INVALID));
+        end
+      end
+    endtask
     function void write(gen_rvfi_txn t);
       logic [6:0] f7 = t.insn[31:25]; logic [2:0] f3 = t.insn[14:12];
       bit is_op = (t.insn[6:0] == ibex_pkg::OPCODE_OP), is_opimm = (t.insn[6:0] == ibex_pkg::OPCODE_OP_IMM);
       bit is_cmul = (t.insn[1:0] == 2'b01 && t.insn[15:10] == 6'b100111 && t.insn[6:5] == 2'b10);   // c.mul (Zcb)
       if (mul_cg == null) return;
       prev_rec_cycle = cur_rec_cycle; cur_rec_cycle = t.cycle;
+      mt_flush(t);
+      rec_sample(t);
+      if (!rst_sampled) rst_sample(rst_first_event_cls(t.intr, t.ext_nmi, t.ext_debug_mode));
+      sec_record(t);
+      last_t = prev_t; have_last = have_prev;   // the neighbour facts of the rest of write() (the multiply's cp_prev / cp_delta) read the record before this one
+      prev_t = t; have_prev = 1;
       mv_flush(t);
       zcmp_flush(t);
       zca_flush(t);
@@ -904,6 +1140,7 @@ package gen_fcov_pkg;
         n_mul++;
         mul_cg.sample(op, mul_rs_cls(t.rs1_rdata), mul_rs_cls(t.rs2_rdata), sign_pair(t.rs1_rdata, t.rs2_rdata),
                       mul_same(t.rs1_addr, t.rs2_addr, t.rd_addr), t.rd_addr == 0, (t.rd_addr == 0) ? -1 : mul_res_cls(t.rd_wdata), is_cmul ? -1 : int'(f3));
+        if (!is_cmul) mt_sample(t, int'(f3[1:0]));
       end else if (is_op && f7 == 7'b0000001) begin
         n_div++;
         div_cg.sample(int'(f3[1:0]), div_dividend_cls(t.rs1_rdata), div_divisor_cls(t.rs2_rdata, t.rs1_rdata), sign_pair(t.rs1_rdata, t.rs2_rdata),
@@ -948,7 +1185,7 @@ package gen_fcov_pkg;
     function int unsigned query(int k);
       case (k)
         0: return n_slt_eq; 1: return n_zcmp; 2: return n_zcmp_minstret_no; 3: return n_cnt; 4: return n_cnt_res_na; 5: return n_imm;
-        6: return n_zcmp_uop_no; 7: return n_zcmp_order_no; 8: return n_zcmp_tags_no; 9: return n_br; 10: return n_mv; 11: return n_csr_pairs; 12: return n_mv_miss;
+        6: return n_zcmp_uop_no; 7: return n_zcmp_order_no; 8: return n_zcmp_tags_no; 9: return n_br; 10: return n_mv; 11: return n_csr_pairs; 12: return n_mv_miss; 13: return n_rec; 14: return n_mt; 15: return n_rst; 16: return n_sec;
         default: return 32'hffff_ffff;
       endcase
     endfunction
@@ -1023,15 +1260,68 @@ package gen_fcov_pkg;
       `GEN_FCOV_UT("cm.mva01s with a wrong second micro-op: uop_count_ok na", ut_last_mv[7], -1)
       `GEN_FCOV_UT("cm.mva01s with a wrong second micro-op: one counted miss", n_mv_miss, miss0 + 1)
       ut_mv_miss_expected += n_mv_miss - miss0;   // only the self-test's own miss is excluded from the referee
+      // Slice A classifiers (LOG-058): the record group's partitions
+      `GEN_FCOV_UT("pc delta +2 is plus2", rec_pc_delta_cls(32'h8000_0100, 32'h8000_0102, 0), GEN_FC_RVFI_RECORD_CP_PC_DELTA_PLUS2)
+      `GEN_FCOV_UT("pc delta +4 is plus4", rec_pc_delta_cls(32'h8000_0100, 32'h8000_0104, 0), GEN_FC_RVFI_RECORD_CP_PC_DELTA_PLUS4)
+      `GEN_FCOV_UT("pc delta +40 on a non-redirect record is jump_fwd", rec_pc_delta_cls(32'h8000_0100, 32'h8000_0128, 0), GEN_FC_RVFI_RECORD_CP_PC_DELTA_JUMP_FWD)
+      `GEN_FCOV_UT("pc delta -8 on a non-redirect record is jump_back", rec_pc_delta_cls(32'h8000_0100, 32'h8000_00f8, 0), GEN_FC_RVFI_RECORD_CP_PC_DELTA_JUMP_BACK)
+      `GEN_FCOV_UT("an mret record is redirect_other whatever its delta", rec_pc_delta_cls(32'h8000_0100, 32'h8000_0104, is_redirect_insn(32'h3020_0073)), GEN_FC_RVFI_RECORD_CP_PC_DELTA_REDIRECT_OTHER)
+      `GEN_FCOV_UT("fence.i is a redirect", is_redirect_insn(32'h0000_100f), 1)
+      `GEN_FCOV_UT("continuity: pc_rdata == previous pc_wdata", rec_cont_cls(32'h8000_0104, 32'h8000_0104, 0, 0, 0, 0), GEN_FC_RVFI_RECORD_CP_PC_CONTINUITY_CONTINUOUS)
+      `GEN_FCOV_UT("continuity: an intr record", rec_cont_cls(32'h8000_0104, 32'h8000_0080, 1, 0, 0, 0), GEN_FC_RVFI_RECORD_CP_PC_CONTINUITY_DISCONTINUOUS_INTR)
+      `GEN_FCOV_UT("continuity: after a trap record", rec_cont_cls(32'h8000_0104, 32'h8000_0080, 0, 1, 0, 0), GEN_FC_RVFI_RECORD_CP_PC_CONTINUITY_DISCONTINUOUS_AFTER_TRAP)
+      `GEN_FCOV_UT("continuity: after an mret / dret / fence.i", rec_cont_cls(32'h8000_0104, 32'h8000_0200, 0, 0, 1, 0), GEN_FC_RVFI_RECORD_CP_PC_CONTINUITY_DISCONTINUOUS_AFTER_FLUSH_REDIRECT)
+      `GEN_FCOV_UT("continuity: debug mode changed", rec_cont_cls(32'h8000_0104, 32'h1a11_0800, 0, 0, 0, 1), GEN_FC_RVFI_RECORD_CP_PC_CONTINUITY_DISCONTINUOUS_DEBUG)
+      `GEN_FCOV_UT("continuity: any other discontinuity is na (the protocol checker's error)", rec_cont_cls(32'h8000_0104, 32'h8000_0200, 0, 0, 0, 0), -1)
+      `GEN_FCOV_UT("intr kind: none", rec_intr_kind_cls(0, 32'h800, 0, 0), GEN_FC_RVFI_RECORD_CP_INTR_KIND_NONE)
+      `GEN_FCOV_UT("intr kind: irq (a pending bit, no NMI flag)", rec_intr_kind_cls(1, 32'h800, 0, 0), GEN_FC_RVFI_RECORD_CP_INTR_KIND_IRQ)
+      `GEN_FCOV_UT("intr kind: nmi", rec_intr_kind_cls(1, 32'h800, 1, 0), GEN_FC_RVFI_RECORD_CP_INTR_KIND_NMI)
+      `GEN_FCOV_UT("intr kind: nmi_int", rec_intr_kind_cls(1, 0, 0, 1), GEN_FC_RVFI_RECORD_CP_INTR_KIND_NMI_INT)
+      `GEN_FCOV_UT("rd source: x0 is none", rec_rd_source_cls(5'd0, 32'h0000_2083), GEN_FC_RVFI_RECORD_CP_RD_SOURCE_NONE)
+      `GEN_FCOV_UT("rd source: lw is load_lsu", rec_rd_source_cls(5'd1, 32'h0000_2083), GEN_FC_RVFI_RECORD_CP_RD_SOURCE_LOAD_LSU)
+      `GEN_FCOV_UT("rd source: addi is alu_wb", rec_rd_source_cls(5'd1, 32'h0010_0093), GEN_FC_RVFI_RECORD_CP_RD_SOURCE_ALU_WB)
+      `GEN_FCOV_UT("valid gap 1 / 2 / 5", rec_gap_cls(1) * 100 + rec_gap_cls(2) * 10 + rec_gap_cls(5), GEN_FC_RVFI_RECORD_CP_VALID_GAP_G1 * 100 + GEN_FC_RVFI_RECORD_CP_VALID_GAP_G2 * 10 + GEN_FC_RVFI_RECORD_CP_VALID_GAP_G3_PLUS)
+      // the multiply's neighbour classes
+      `GEN_FCOV_UT("prev class: addi is alu", mt_prev_cls(32'h0010_0093), GEN_FC_MUL_TIMING_CP_PREV_ALU)
+      `GEN_FCOV_UT("prev class: mul is mul", mt_prev_cls(32'h0220_80b3), GEN_FC_MUL_TIMING_CP_PREV_MUL)
+      `GEN_FCOV_UT("prev class: mulhu is mulh_class", mt_prev_cls(32'h0220_b0b3), GEN_FC_MUL_TIMING_CP_PREV_MULH_CLASS)
+      `GEN_FCOV_UT("prev class: divu is div", mt_prev_cls(32'h0220_d0b3), GEN_FC_MUL_TIMING_CP_PREV_DIV)
+      `GEN_FCOV_UT("prev class: lw is load", mt_prev_cls(32'h0000_2083), GEN_FC_MUL_TIMING_CP_PREV_LOAD)
+      `GEN_FCOV_UT("prev class: sw is store", mt_prev_cls(32'h0010_2023), GEN_FC_MUL_TIMING_CP_PREV_STORE)
+      `GEN_FCOV_UT("prev class: beq is branch", mt_prev_cls(32'h0000_0063), GEN_FC_MUL_TIMING_CP_PREV_BRANCH)
+      `GEN_FCOV_UT("prev class: c.j is branch", mt_prev_cls(32'h0000_a001), GEN_FC_MUL_TIMING_CP_PREV_BRANCH)
+      `GEN_FCOV_UT("prev class: c.lw is load", mt_prev_cls(32'h0000_4108), GEN_FC_MUL_TIMING_CP_PREV_LOAD)
+      `GEN_FCOV_UT("prev class: c.addi is alu", mt_prev_cls(32'h0000_0085), GEN_FC_MUL_TIMING_CP_PREV_ALU)
+      `GEN_FCOV_UT("prev class: csrr is other", mt_prev_cls(32'h3000_2573), GEN_FC_MUL_TIMING_CP_PREV_OTHER)
+      `GEN_FCOV_UT("mul delta 1 / 2 / 7", mt_delta_cls(1) * 100 + mt_delta_cls(2) * 10 + mt_delta_cls(7), GEN_FC_MUL_TIMING_CP_DELTA_D1 * 100 + GEN_FC_MUL_TIMING_CP_DELTA_D2 * 10 + GEN_FC_MUL_TIMING_CP_DELTA_D3PLUS)
+      // the reset release classes
+      `GEN_FCOV_UT("boot address 0x80000000 is high", rst_boot_cls(32'h8000_0000), GEN_FC_RST_BOOT_CP_BOOT_ADDR_HIGH)
+      `GEN_FCOV_UT("boot address 0x00100000 is low (page 0x001000)", rst_boot_cls(32'h0010_0000), GEN_FC_RST_BOOT_CP_BOOT_ADDR_LOW)
+      `GEN_FCOV_UT("boot address 0x10000000 is mid", rst_boot_cls(32'h1000_0000), GEN_FC_RST_BOOT_CP_BOOT_ADDR_MID)
+      `GEN_FCOV_UT("boot address 0x00000000 is zero", rst_boot_cls(32'h0000_0000), GEN_FC_RST_BOOT_CP_BOOT_ADDR_ZERO)
+      `GEN_FCOV_UT("hart id all-ones is max", rst_hart_cls(32'hffff_ffff), GEN_FC_RST_BOOT_CP_HART_ID_MAX)
+      `GEN_FCOV_UT("pending: nothing", rst_pending_cls(18'd0, 0, 0), GEN_FC_RST_BOOT_CP_PENDING_NONE)
+      `GEN_FCOV_UT("pending: a line with mie 0 is irq_enabled_later", rst_pending_cls(18'h4, 0, 0), GEN_FC_RST_BOOT_CP_PENDING_IRQ_ENABLED_LATER)
+      `GEN_FCOV_UT("pending: nmi and debug", rst_pending_cls(18'd0, 1, 1), GEN_FC_RST_BOOT_CP_PENDING_NMI_AND_DEBUG)
+      `GEN_FCOV_UT("pending: a line and debug", rst_pending_cls(18'h2, 0, 1), GEN_FC_RST_BOOT_CP_PENDING_IRQ_AND_DEBUG)
+      `GEN_FCOV_UT("first event: a plain first record", rst_first_event_cls(0, 0, 0), GEN_FC_RST_BOOT_CP_FIRST_EVENT_FIRST_INSTR_RETIRE)
+      `GEN_FCOV_UT("first event: an NMI entry", rst_first_event_cls(1, 1, 0), GEN_FC_RST_BOOT_CP_FIRST_EVENT_NMI_TAKEN)
+      `GEN_FCOV_UT("first event: a maskable entry is the plan's ignore (na)", rst_first_event_cls(1, 0, 0), -1)
+      `GEN_FCOV_UT("first event: debug entry", rst_first_event_cls(0, 0, 1), GEN_FC_RST_BOOT_CP_FIRST_EVENT_DEBUG_ENTRY)
+      `GEN_FCOV_UT("boot-to-request 2 / 3 / 6 / 1", rst_req_cls(2) * 1000 + rst_req_cls(3) * 100 + rst_req_cls(6) * 10 + (rst_req_cls(1) + 1), GEN_FC_RST_BOOT_CP_BOOT_TO_REQ_CYCLES_TWO * 1000 + GEN_FC_RST_BOOT_CP_BOOT_TO_REQ_CYCLES_THREE * 100 + GEN_FC_RST_BOOT_CP_BOOT_TO_REQ_CYCLES_MORE * 10)
+      `GEN_FCOV_UT("mubi: On / Off / other", mubi_cls_sec(ibex_pkg::IbexMuBiOn) * 100 + mubi_cls_sec(ibex_pkg::IbexMuBiOff) * 10 + mubi_cls_sec(ibex_pkg::ibex_mubi_t'(4'b0011)), GEN_FC_SEC_CTRL_INPUTS_CP_FETCH_EN_VAL_ON * 100 + GEN_FC_SEC_CTRL_INPUTS_CP_FETCH_EN_VAL_OFF * 10 + GEN_FC_SEC_CTRL_INPUTS_CP_FETCH_EN_VAL_INVALID)
       `undef GEN_FCOV_UT
       `uvm_info("GEN_FCOV_UT", $sformatf("self-test: %0d cases, %0d failures", n, fails), UVM_LOW)
       return fails;
     endfunction
     function void report_phase(uvm_phase phase);
       zca_flush(null);   // the last 16-bit record has no successor: its next_len is not applicable
+      mt_flush(null);    // a multiply at the very end has no successor: cp_next_dep na
+      if (!rst_sampled && rst_release_seen && rst_fetch_en != GEN_FC_RST_BOOT_CP_FETCH_EN_AT_RELEASE_ON) rst_sample(GEN_FC_RST_BOOT_CP_FIRST_EVENT_NONE_FETCH_DISABLED);   // no record: fetch stayed disabled
       mv_flush(null);    // a move pair at the very end has no neighbour after
       zcmp_flush(null);  // a sequence at the very end has no record after it: minstret_once not applicable
       `uvm_info("GEN_FCOV", $sformatf("move pairs: %0d sampled, %0d with mismatching micro-ops (%0d of them the self-test's)", n_mv, n_mv_miss, ut_mv_miss_expected), UVM_LOW)
+      `uvm_info("GEN_FCOV", $sformatf("slice A samples: records=%0d mul_timing=%0d rst_boot=%0d (boot_to_req %0d) sec_ctrl_inputs=%0d", n_rec, n_mt, n_rst, boot_to_req, n_sec), UVM_LOW)
       if (mul_cg != null) begin   // referee: a group the sampler fed must show coverage, a dropped sample is a collected failure
         if (n_mv_miss > ut_mv_miss_expected) `uvm_error("GEN_FCOV_REF", $sformatf("gen_cmp_zcmp_mv_cg: %0d legal move pairs whose micro-ops did not match the expansion", n_mv_miss - ut_mv_miss_expected))
         if (n_mul > 0 && mul_cg.get_coverage() == 0.0) `uvm_error("GEN_FCOV_REF", "gen_mul_ops_cg sampled without coverage")
@@ -1043,6 +1333,10 @@ package gen_fcov_pkg;
         if (n_cnt > 0 && cnt_cg.get_coverage() == 0.0) `uvm_error("GEN_FCOV_REF", "gen_bit_count_cg sampled without coverage")
         if (n_zca + n_zca32 > 0 && zca_cg.get_coverage() == 0.0) `uvm_error("GEN_FCOV_REF", "gen_cmp_zca_cg sampled without coverage")
         if (n_mv > 0 && mv_cg.get_coverage() == 0.0) `uvm_error("GEN_FCOV_REF", "gen_cmp_zcmp_mv_cg sampled without coverage")
+        if (n_rec > 0 && rec_cg.get_coverage() == 0.0) `uvm_error("GEN_FCOV_REF", "gen_rvfi_record_cg sampled without coverage")
+        if (n_mt > 0 && mt_cg.get_coverage() == 0.0) `uvm_error("GEN_FCOV_REF", "gen_mul_timing_cg sampled without coverage")
+        if (n_rst > 0 && rst_cg.get_coverage() == 0.0) `uvm_error("GEN_FCOV_REF", "gen_rst_boot_cg sampled without coverage")
+        if (n_sec > 0 && sec_cg.get_coverage() == 0.0) `uvm_error("GEN_FCOV_REF", "gen_sec_ctrl_inputs_cg sampled without coverage")
         if (n_br > 0 && br_cg.get_coverage() == 0.0) `uvm_error("GEN_FCOV_REF", "gen_isa_branch_cg sampled without coverage")
         if (n_zcmp > 0 && zcmp_cg.get_coverage() == 0.0) `uvm_error("GEN_FCOV_REF", "gen_cmp_zcmp_pushpop_cg sampled without coverage")
         if (n_csr_pairs > 0 && csr_cg.get_coverage() == 0.0) `uvm_error("GEN_FCOV_REF", "gen_csr_trap_setup_warl_cg sampled without coverage")

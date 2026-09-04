@@ -1,0 +1,21 @@
+# gen_fcov_proof_slice5d_fm15_ablation.fcov.yaml: the ablation control of mutant FM15 (gen_mut_fcov.md): gen_fcov_proof_slice5d.fcov.yaml without gen_sec_ctrl_inputs_cg.cp_bits67_readback.b6_0_b7_1, gen_sec_ctrl_inputs_cg.cp_bits67_readback.b6_1_b7_1; it must PASS on the mutant run's report while the full manifest fails there.
+test: gen_fcov_proof_slice5d_fm15_ablation
+owner: tb-infra
+bins:
+  - gen_sec_ctrl_inputs_cg.cp_event.fetch_en_change
+  - gen_sec_ctrl_inputs_cg.cp_event.cpuctrl_read
+  - gen_sec_ctrl_inputs_cg.cp_bit8_readback.one
+  - gen_sec_ctrl_inputs_cg.cp_bits67_readback.b6_1_b7_0
+  - gen_sec_ctrl_inputs_cg.cp_bits67_readback.b6_0_b7_0
+  - gen_sec_ctrl_inputs_cg.cp_fetch_en_val.on
+  - gen_sec_ctrl_inputs_cg.cp_key_delay.immediate
+  - gen_sec_ctrl_inputs_cg.cp_rvfi_ext_key_valid.one
+anti_vacuity:
+  gen_sec_ctrl_inputs_cg.cp_event.fetch_en_change: "plan CG-SEC-005 anti-vacuity: cpuctrl_read: rvfi_valid of a CSR op on CSR_CPUCTRLSTS with rvfi_rd_addr != 0 and; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_sec_ctrl_inputs_cg.cp_event.cpuctrl_read: "plan CG-SEC-005 anti-vacuity: cpuctrl_read: rvfi_valid of a CSR op on CSR_CPUCTRLSTS with rvfi_rd_addr != 0 and; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_sec_ctrl_inputs_cg.cp_bit8_readback.one: "plan CG-SEC-005 anti-vacuity: cpuctrl_read: rvfi_valid of a CSR op on CSR_CPUCTRLSTS with rvfi_rd_addr != 0 and; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_sec_ctrl_inputs_cg.cp_bits67_readback.b6_1_b7_0: "plan CG-SEC-005 anti-vacuity: cpuctrl_read: rvfi_valid of a CSR op on CSR_CPUCTRLSTS with rvfi_rd_addr != 0 and; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_sec_ctrl_inputs_cg.cp_bits67_readback.b6_0_b7_0: "plan CG-SEC-005 anti-vacuity: cpuctrl_read: rvfi_valid of a CSR op on CSR_CPUCTRLSTS with rvfi_rd_addr != 0 and; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_sec_ctrl_inputs_cg.cp_fetch_en_val.on: "plan CG-SEC-005 anti-vacuity: cpuctrl_read: rvfi_valid of a CSR op on CSR_CPUCTRLSTS with rvfi_rd_addr != 0 and; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_sec_ctrl_inputs_cg.cp_key_delay.immediate: "plan CG-SEC-005 anti-vacuity: cpuctrl_read: rvfi_valid of a CSR op on CSR_CPUCTRLSTS with rvfi_rd_addr != 0 and; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_sec_ctrl_inputs_cg.cp_rvfi_ext_key_valid.one: "plan CG-SEC-005 anti-vacuity: cpuctrl_read: rvfi_valid of a CSR op on CSR_CPUCTRLSTS with rvfi_rd_addr != 0 and; the hit is a retired instruction the lock-step compare judged against the ISA model"

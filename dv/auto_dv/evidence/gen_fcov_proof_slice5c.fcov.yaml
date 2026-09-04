@@ -1,0 +1,21 @@
+# gen_fcov_proof_slice5c.fcov.yaml: fcov-expectation proof of T-205 Slice A (gen_rst_boot_cg): the one reset sample of the boot run with fetch_enable Off at the release and enabled through the bridge (boot_to_req more); build ai, fresh vdb
+test: gen_fcov_proof_slice5c
+owner: tb-infra
+bins:
+  - gen_rst_boot_cg.cp_boot_addr.high
+  - gen_rst_boot_cg.cp_boot_low_byte.zero
+  - gen_rst_boot_cg.cp_fetch_en_at_release.off
+  - gen_rst_boot_cg.cp_pending.none
+  - gen_rst_boot_cg.cp_first_event.first_instr_retire
+  - gen_rst_boot_cg.cp_hart_id.zero
+  - gen_rst_boot_cg.cp_reset_kind.power_on
+  - gen_rst_boot_cg.cp_boot_to_req_cycles.more
+anti_vacuity:
+  gen_rst_boot_cg.cp_boot_addr.high: "plan CG-RST-001 anti-vacuity: rst_ni release, closed when the first post-reset event is classified (first retired; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_rst_boot_cg.cp_boot_low_byte.zero: "plan CG-RST-001 anti-vacuity: rst_ni release, closed when the first post-reset event is classified (first retired; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_rst_boot_cg.cp_fetch_en_at_release.off: "plan CG-RST-001 anti-vacuity: rst_ni release, closed when the first post-reset event is classified (first retired; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_rst_boot_cg.cp_pending.none: "plan CG-RST-001 anti-vacuity: rst_ni release, closed when the first post-reset event is classified (first retired; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_rst_boot_cg.cp_first_event.first_instr_retire: "plan CG-RST-001 anti-vacuity: rst_ni release, closed when the first post-reset event is classified (first retired; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_rst_boot_cg.cp_hart_id.zero: "plan CG-RST-001 anti-vacuity: rst_ni release, closed when the first post-reset event is classified (first retired; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_rst_boot_cg.cp_reset_kind.power_on: "plan CG-RST-001 anti-vacuity: rst_ni release, closed when the first post-reset event is classified (first retired; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_rst_boot_cg.cp_boot_to_req_cycles.more: "plan CG-RST-001 anti-vacuity: rst_ni release, closed when the first post-reset event is classified (first retired; the hit is a retired instruction the lock-step compare judged against the ISA model"

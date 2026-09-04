@@ -1,0 +1,86 @@
+Running new bashrc
+Unloading: soc_tools version 1.0
+Unloading: git version 2.26.2
+Unloading: Bender version 0.28.1-tenstorrent8-mr_fixes
+Unloading: Python version 3.9
+Unloading: Perl version perl-5.36.0
+Loading:   soc_tools version 1.0
+Loading:   git version 2.26.2
+Loading:   Bender version 0.28.1-tenstorrent8-mr_fixes
+Loading:   Python version 3.9
+Loading:   Perl version perl-5.36.0
+start 23:53:37Z sources sha256: b9adcdeb1cd01799
+ut_witness: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+lockstep_zcmp_mv: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+lockstep_pmc_s1_on: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+lockstep_pmc_s1_off: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+ut_isa_cov_zc: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+boot_zc: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+lockstep_zc: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+lockstep_s7: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+intg_s7_allchk: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+end 23:54:00Z
+lockstep_muldiv: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+end 23:54:04Z
+urg lockstep_muldiv exit=0 dashboard.txt groups.txt grpinfo.txt session.xml tests.txt 
+lockstep_muldiv_fast: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+end 23:54:09Z
+urg lockstep_muldiv_fast exit=0 dashboard.txt groups.txt grpinfo.txt session.xml tests.txt 
+lockstep_s7_dbg_storm: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+end 23:54:13Z
+urg lockstep_s7_dbg_storm exit=0 dashboard.txt groups.txt grpinfo.txt session.xml tests.txt 
+lockstep_irq_storm: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+end 23:54:18Z
+urg lockstep_irq_storm exit=0 dashboard.txt groups.txt grpinfo.txt session.xml tests.txt 
+lockstep_csrwarl: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+end 23:54:22Z
+urg lockstep_csrwarl exit=0 dashboard.txt groups.txt grpinfo.txt session.xml tests.txt 
+lockstep_cpuctrl: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+end 23:54:26Z
+urg lockstep_cpuctrl exit=0 dashboard.txt groups.txt grpinfo.txt session.xml tests.txt 
+lockstep_cpuctrl_keyw: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+end 23:54:31Z
+urg lockstep_cpuctrl_keyw exit=0 dashboard.txt groups.txt grpinfo.txt session.xml tests.txt 
+ut_fetch_en: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+end 23:54:35Z
+urg ut_fetch_en exit=0 dashboard.txt groups.txt grpinfo.txt session.xml tests.txt 
+boot_zc: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+end 23:54:40Z
+urg boot_zc exit=0 dashboard.txt groups.txt grpinfo.txt session.xml tests.txt 
+boot_zc_fe1: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+end 23:54:44Z
+urg boot_zc_fe1 exit=0 dashboard.txt groups.txt grpinfo.txt session.xml tests.txt 
+lockstep_zcmp: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+end 23:54:48Z
+urg lockstep_zcmp exit=0 dashboard.txt groups.txt grpinfo.txt session.xml tests.txt 
+gen_rvfi_record_cg: 30 coverpoint bins hit, 0 unhit: []
+  crosses (covered/expected): gen_rvfi_record_cg.cr_kind_trap 3/6, gen_rvfi_record_cg.cr_intr_cont 4/5, gen_rvfi_record_cg.cr_mode_trap 2/4, gen_rvfi_record_cg.cr_rd_kind 5/8, gen_rvfi_record_cg.cr_rd_source_kind 4/9; total 18/32
+gen_rvfi_record_cg: 30 coverpoint bins hit, 0 unhit: []
+  crosses (covered/expected): gen_rvfi_record_cg.cr_kind_trap 2/6, gen_rvfi_record_cg.cr_intr_cont 3/5, gen_rvfi_record_cg.cr_mode_trap 1/4, gen_rvfi_record_cg.cr_rd_kind 3/8, gen_rvfi_record_cg.cr_rd_source_kind 3/9; total 12/32
+gen_mul_timing_cg: 14 coverpoint bins hit, 0 unhit: []
+  crosses (covered/expected): gen_mul_timing_cg.cr_op_delta_clean 4/4, gen_mul_timing_cg.cr_op_next_dep 4/8, gen_mul_timing_cg.cr_seq 8/32, gen_mul_timing_cg.cr_wb_defer 0/12; total 16/56
+gen_mul_timing_cg: 13 coverpoint bins hit, 0 unhit: []
+  crosses (covered/expected): gen_mul_timing_cg.cr_op_delta_clean 4/4, gen_mul_timing_cg.cr_op_next_dep 4/8, gen_mul_timing_cg.cr_seq 8/32, gen_mul_timing_cg.cr_wb_defer 0/12; total 16/56
+gen_rst_boot_cg: 8 coverpoint bins hit, 0 unhit: []
+  crosses (covered/expected): gen_rst_boot_cg.cr_boot_kind 1/8, gen_rst_boot_cg.cr_pending_first 1/6, gen_rst_boot_cg.cr_fetch_en_first 1/4; total 3/18
+gen_rst_boot_cg: 8 coverpoint bins hit, 0 unhit: []
+  crosses (covered/expected): gen_rst_boot_cg.cr_boot_kind 1/8, gen_rst_boot_cg.cr_pending_first 1/6, gen_rst_boot_cg.cr_fetch_en_first 1/4; total 3/18
+gen_sec_ctrl_inputs_cg: 10 coverpoint bins hit, 0 unhit: []
+  crosses (covered/expected): gen_sec_ctrl_inputs_cg.cr_mcounteren 0/3, gen_sec_ctrl_inputs_cg.cr_key 1/5, gen_sec_ctrl_inputs_cg.cr_key_ctx 0/8; total 1/16
+gen_sec_ctrl_inputs_cg: 10 coverpoint bins hit, 0 unhit: []
+  crosses (covered/expected): gen_sec_ctrl_inputs_cg.cr_mcounteren 0/3, gen_sec_ctrl_inputs_cg.cr_key 1/5, gen_sec_ctrl_inputs_cg.cr_key_ctx 0/8; total 1/16
+gen_sec_ctrl_inputs_cg: 6 coverpoint bins hit, 0 unhit: []
+  crosses (covered/expected): gen_sec_ctrl_inputs_cg.cr_mcounteren 1/3, gen_sec_ctrl_inputs_cg.cr_key 0/5, gen_sec_ctrl_inputs_cg.cr_key_ctx 0/8; total 1/16
+gen_sec_ctrl_inputs_cg: 3 coverpoint bins hit, 0 unhit: []
+  crosses (covered/expected): gen_sec_ctrl_inputs_cg.cr_mcounteren 0/3, gen_sec_ctrl_inputs_cg.cr_key 0/5, gen_sec_ctrl_inputs_cg.cr_key_ctx 0/8; total 0/16
+gen_fcov_proof_slice5d_fm15_ablation.fcov.yaml notes derived: 8
+slice5a (lockstep_s7_dbg_storm): FCOV-EXPECTATION: PASS - all 30 declared bins hit
+slice5a2 (lockstep_irq_storm): FCOV-EXPECTATION: PASS - all 30 declared bins hit
+slice5b (lockstep_muldiv): FCOV-EXPECTATION: PASS - all 14 declared bins hit
+slice5b2 (lockstep_muldiv_fast): FCOV-EXPECTATION: PASS - all 13 declared bins hit
+slice5c (boot_zc): FCOV-EXPECTATION: PASS - all 8 declared bins hit
+slice5c2 (boot_zc_fe1): FCOV-EXPECTATION: PASS - all 8 declared bins hit
+slice5d (lockstep_cpuctrl): FCOV-EXPECTATION: PASS - all 10 declared bins hit
+slice5d2 (lockstep_cpuctrl_keyw): FCOV-EXPECTATION: PASS - all 10 declared bins hit
+slice5d3 (lockstep_csrwarl): FCOV-EXPECTATION: PASS - all 6 declared bins hit
+slice5d4 (ut_fetch_en): FCOV-EXPECTATION: PASS - all 3 declared bins hit

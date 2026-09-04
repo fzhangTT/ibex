@@ -2856,7 +2856,7 @@
     }
   endgroup
 
-  // CG-CSR-002 (gen_csr_trap_setup_warl_cg), 67 coverpoint bins, 143 cross bins
+  // CG-CSR-002 (gen_csr_trap_setup_warl_cg), 67 coverpoint bins, 141 cross bins
   localparam int GEN_FC_CSR_TRAP_SETUP_WARL_CP_CSR_MSTATUS = 0;
   localparam int GEN_FC_CSR_TRAP_SETUP_WARL_CP_CSR_MISA = 1;
   localparam int GEN_FC_CSR_TRAP_SETUP_WARL_CP_CSR_MIE = 2;
@@ -2944,8 +2944,6 @@
     cp_mcen_w: coverpoint v_cp_mcen_w { bins cy= {0}; bins ir= {1}; bins hpm3= {2}; bins hpm4= {3}; bins hpm5= {4}; bins hpm6= {5}; bins hpm7= {6}; bins hpm8= {7}; bins hpm9= {8}; bins hpm10= {9}; bins hpm11= {10}; bins hpm12= {11}; bins tm_ro= {12}; bins hi_ro= {13}; bins all1= {14}; ignore_bins na = {-1}; }
     cr_csr_wpat: cross cp_csr, cp_wpat {
       bins mie_all0= binsof(cp_csr.mie) && binsof(cp_wpat.all0);
-      bins misa_illegal= binsof(cp_csr.misa) && binsof(cp_wpat.illegal_only);
-      bins misa_legal= binsof(cp_csr.misa) && binsof(cp_wpat.legal_only);
       bins misa_msb= binsof(cp_csr.misa) && binsof(cp_wpat.msb_only);
       bins misa_rand= binsof(cp_csr.misa) && binsof(cp_wpat.\rand );
       bins misa_all0= binsof(cp_csr.misa) && binsof(cp_wpat.all0);
@@ -3589,5 +3587,344 @@
       bins c_mul_bit7_set= binsof(cp_insn.c_mul) && binsof(cp_alu_operand.bit7_set);
       bins c_mul_rand= binsof(cp_insn.c_mul) && binsof(cp_alu_operand.\rand );
       bins c_mul_zero= binsof(cp_insn.c_mul) && binsof(cp_alu_operand.zero);
+    }
+  endgroup
+
+  // CG-MUL-002 (gen_mul_timing_cg), 24 coverpoint bins, 56 cross bins
+  localparam int GEN_FC_MUL_TIMING_CP_OP_MUL = 0;
+  localparam int GEN_FC_MUL_TIMING_CP_OP_MULH = 1;
+  localparam int GEN_FC_MUL_TIMING_CP_OP_MULHSU = 2;
+  localparam int GEN_FC_MUL_TIMING_CP_OP_MULHU = 3;
+  localparam int GEN_FC_MUL_TIMING_CP_DELTA_D1 = 0;
+  localparam int GEN_FC_MUL_TIMING_CP_DELTA_D2 = 1;
+  localparam int GEN_FC_MUL_TIMING_CP_DELTA_D3PLUS = 2;
+  localparam int GEN_FC_MUL_TIMING_CP_PREV_ALU = 0;
+  localparam int GEN_FC_MUL_TIMING_CP_PREV_MUL = 1;
+  localparam int GEN_FC_MUL_TIMING_CP_PREV_MULH_CLASS = 2;
+  localparam int GEN_FC_MUL_TIMING_CP_PREV_LOAD = 3;
+  localparam int GEN_FC_MUL_TIMING_CP_PREV_STORE = 4;
+  localparam int GEN_FC_MUL_TIMING_CP_PREV_DIV = 5;
+  localparam int GEN_FC_MUL_TIMING_CP_PREV_BRANCH = 6;
+  localparam int GEN_FC_MUL_TIMING_CP_PREV_OTHER = 7;
+  localparam int GEN_FC_MUL_TIMING_CP_NEXT_DEP_NO = 0;
+  localparam int GEN_FC_MUL_TIMING_CP_NEXT_DEP_YES = 1;
+  localparam int GEN_FC_MUL_TIMING_CP_WB_BUSY_NO = 0;
+  localparam int GEN_FC_MUL_TIMING_CP_WB_BUSY_YES = 1;
+  localparam int GEN_FC_MUL_TIMING_CP_FETCH_STALL_NO = 0;
+  localparam int GEN_FC_MUL_TIMING_CP_FETCH_STALL_YES = 1;
+  localparam int GEN_FC_MUL_TIMING_CP_DMEM_DELAY_MIN1 = 0;
+  localparam int GEN_FC_MUL_TIMING_CP_DMEM_DELAY_SHORT = 1;
+  localparam int GEN_FC_MUL_TIMING_CP_DMEM_DELAY_LONG = 2;
+  covergroup gen_mul_timing_cg with function sample(int v_cp_op, int v_cp_delta, int v_cp_prev, int v_cp_next_dep, int v_cp_wb_busy, int v_cp_fetch_stall, int v_cp_dmem_delay);
+    option.per_instance = 0;
+    option.cross_auto_bin_max = 0;   // a cross has exactly the CSV's named bins: no automatic bins for the plan's ignored tuples
+    cp_op: coverpoint v_cp_op { bins mul= {0}; bins mulh= {1}; bins mulhsu= {2}; bins mulhu= {3}; ignore_bins na = {-1}; }
+    cp_delta: coverpoint v_cp_delta { bins d1= {0}; bins d2= {1}; bins d3plus= {2}; ignore_bins na = {-1}; }
+    cp_prev: coverpoint v_cp_prev { bins alu= {0}; bins mul= {1}; bins mulh_class= {2}; bins load= {3}; bins store= {4}; bins div= {5}; bins branch= {6}; bins other= {7}; ignore_bins na = {-1}; }
+    cp_next_dep: coverpoint v_cp_next_dep { bins no= {0}; bins yes= {1}; ignore_bins na = {-1}; }
+    cp_wb_busy: coverpoint v_cp_wb_busy { bins no= {0}; bins yes= {1}; ignore_bins na = {-1}; }
+    cp_fetch_stall: coverpoint v_cp_fetch_stall { bins no= {0}; bins yes= {1}; ignore_bins na = {-1}; }
+    cp_dmem_delay: coverpoint v_cp_dmem_delay { bins min1= {0}; bins short= {1}; bins long= {2}; ignore_bins na = {-1}; }
+    cr_op_delta_clean: cross cp_op, cp_delta, cp_fetch_stall, cp_wb_busy {
+      bins mulh_d2= binsof(cp_op.mulh) && binsof(cp_delta.d2) && binsof(cp_fetch_stall.no) && binsof(cp_wb_busy.no);
+      bins mulhu_d2= binsof(cp_op.mulhu) && binsof(cp_delta.d2) && binsof(cp_fetch_stall.no) && binsof(cp_wb_busy.no);
+      bins mulhsu_d2= binsof(cp_op.mulhsu) && binsof(cp_delta.d2) && binsof(cp_fetch_stall.no) && binsof(cp_wb_busy.no);
+      bins mul_d1= binsof(cp_op.mul) && binsof(cp_delta.d1) && binsof(cp_fetch_stall.no) && binsof(cp_wb_busy.no);
+    }
+    cr_op_next_dep: cross cp_op, cp_next_dep {
+      bins mul_yes= binsof(cp_op.mul) && binsof(cp_next_dep.yes);
+      bins mulh_yes= binsof(cp_op.mulh) && binsof(cp_next_dep.yes);
+      bins mulhsu_yes= binsof(cp_op.mulhsu) && binsof(cp_next_dep.yes);
+      bins mulhu_yes= binsof(cp_op.mulhu) && binsof(cp_next_dep.yes);
+      bins mul_no= binsof(cp_op.mul) && binsof(cp_next_dep.no);
+      bins mulh_no= binsof(cp_op.mulh) && binsof(cp_next_dep.no);
+      bins mulhsu_no= binsof(cp_op.mulhsu) && binsof(cp_next_dep.no);
+      bins mulhu_no= binsof(cp_op.mulhu) && binsof(cp_next_dep.no);
+    }
+    cr_seq: cross cp_prev, cp_op {
+      bins alu_mul= binsof(cp_prev.alu) && binsof(cp_op.mul);
+      bins alu_mulh= binsof(cp_prev.alu) && binsof(cp_op.mulh);
+      bins alu_mulhsu= binsof(cp_prev.alu) && binsof(cp_op.mulhsu);
+      bins alu_mulhu= binsof(cp_prev.alu) && binsof(cp_op.mulhu);
+      bins branch_mul= binsof(cp_prev.branch) && binsof(cp_op.mul);
+      bins branch_mulh= binsof(cp_prev.branch) && binsof(cp_op.mulh);
+      bins branch_mulhsu= binsof(cp_prev.branch) && binsof(cp_op.mulhsu);
+      bins branch_mulhu= binsof(cp_prev.branch) && binsof(cp_op.mulhu);
+      bins div_mul= binsof(cp_prev.div) && binsof(cp_op.mul);
+      bins div_mulh= binsof(cp_prev.div) && binsof(cp_op.mulh);
+      bins div_mulhsu= binsof(cp_prev.div) && binsof(cp_op.mulhsu);
+      bins div_mulhu= binsof(cp_prev.div) && binsof(cp_op.mulhu);
+      bins load_mul= binsof(cp_prev.load) && binsof(cp_op.mul);
+      bins load_mulh= binsof(cp_prev.load) && binsof(cp_op.mulh);
+      bins load_mulhsu= binsof(cp_prev.load) && binsof(cp_op.mulhsu);
+      bins load_mulhu= binsof(cp_prev.load) && binsof(cp_op.mulhu);
+      bins mul_mul= binsof(cp_prev.mul) && binsof(cp_op.mul);
+      bins mul_mulh= binsof(cp_prev.mul) && binsof(cp_op.mulh);
+      bins mul_mulhsu= binsof(cp_prev.mul) && binsof(cp_op.mulhsu);
+      bins mul_mulhu= binsof(cp_prev.mul) && binsof(cp_op.mulhu);
+      bins mulh_class_mul= binsof(cp_prev.mulh_class) && binsof(cp_op.mul);
+      bins mulh_class_mulh= binsof(cp_prev.mulh_class) && binsof(cp_op.mulh);
+      bins mulh_class_mulhsu= binsof(cp_prev.mulh_class) && binsof(cp_op.mulhsu);
+      bins mulh_class_mulhu= binsof(cp_prev.mulh_class) && binsof(cp_op.mulhu);
+      bins other_mul= binsof(cp_prev.other) && binsof(cp_op.mul);
+      bins other_mulh= binsof(cp_prev.other) && binsof(cp_op.mulh);
+      bins other_mulhsu= binsof(cp_prev.other) && binsof(cp_op.mulhsu);
+      bins other_mulhu= binsof(cp_prev.other) && binsof(cp_op.mulhu);
+      bins store_mul= binsof(cp_prev.store) && binsof(cp_op.mul);
+      bins store_mulh= binsof(cp_prev.store) && binsof(cp_op.mulh);
+      bins store_mulhsu= binsof(cp_prev.store) && binsof(cp_op.mulhsu);
+      bins store_mulhu= binsof(cp_prev.store) && binsof(cp_op.mulhu);
+    }
+    cr_wb_defer: cross cp_op, cp_wb_busy, cp_dmem_delay {
+      bins mul_yes_long= binsof(cp_op.mul) && binsof(cp_wb_busy.yes) && binsof(cp_dmem_delay.long);
+      bins mul_yes_min1= binsof(cp_op.mul) && binsof(cp_wb_busy.yes) && binsof(cp_dmem_delay.min1);
+      bins mul_yes_short= binsof(cp_op.mul) && binsof(cp_wb_busy.yes) && binsof(cp_dmem_delay.short);
+      bins mulh_yes_long= binsof(cp_op.mulh) && binsof(cp_wb_busy.yes) && binsof(cp_dmem_delay.long);
+      bins mulh_yes_min1= binsof(cp_op.mulh) && binsof(cp_wb_busy.yes) && binsof(cp_dmem_delay.min1);
+      bins mulh_yes_short= binsof(cp_op.mulh) && binsof(cp_wb_busy.yes) && binsof(cp_dmem_delay.short);
+      bins mulhsu_yes_long= binsof(cp_op.mulhsu) && binsof(cp_wb_busy.yes) && binsof(cp_dmem_delay.long);
+      bins mulhsu_yes_min1= binsof(cp_op.mulhsu) && binsof(cp_wb_busy.yes) && binsof(cp_dmem_delay.min1);
+      bins mulhsu_yes_short= binsof(cp_op.mulhsu) && binsof(cp_wb_busy.yes) && binsof(cp_dmem_delay.short);
+      bins mulhu_yes_long= binsof(cp_op.mulhu) && binsof(cp_wb_busy.yes) && binsof(cp_dmem_delay.long);
+      bins mulhu_yes_min1= binsof(cp_op.mulhu) && binsof(cp_wb_busy.yes) && binsof(cp_dmem_delay.min1);
+      bins mulhu_yes_short= binsof(cp_op.mulhu) && binsof(cp_wb_busy.yes) && binsof(cp_dmem_delay.short);
+    }
+  endgroup
+
+  // CG-RST-001 (gen_rst_boot_cg), 26 coverpoint bins, 18 cross bins
+  localparam int GEN_FC_RST_BOOT_CP_BOOT_ADDR_ZERO = 0;
+  localparam int GEN_FC_RST_BOOT_CP_BOOT_ADDR_LOW = 1;
+  localparam int GEN_FC_RST_BOOT_CP_BOOT_ADDR_MID = 2;
+  localparam int GEN_FC_RST_BOOT_CP_BOOT_ADDR_HIGH = 3;
+  localparam int GEN_FC_RST_BOOT_CP_BOOT_LOW_BYTE_ZERO = 0;
+  localparam int GEN_FC_RST_BOOT_CP_FETCH_EN_AT_RELEASE_ON = 0;
+  localparam int GEN_FC_RST_BOOT_CP_FETCH_EN_AT_RELEASE_OFF = 1;
+  localparam int GEN_FC_RST_BOOT_CP_FETCH_EN_AT_RELEASE_INVALID = 2;
+  localparam int GEN_FC_RST_BOOT_CP_PENDING_NONE = 0;
+  localparam int GEN_FC_RST_BOOT_CP_PENDING_IRQ_ENABLED_LATER = 1;
+  localparam int GEN_FC_RST_BOOT_CP_PENDING_NMI = 2;
+  localparam int GEN_FC_RST_BOOT_CP_PENDING_DEBUG_REQ = 3;
+  localparam int GEN_FC_RST_BOOT_CP_PENDING_NMI_AND_DEBUG = 4;
+  localparam int GEN_FC_RST_BOOT_CP_PENDING_IRQ_AND_DEBUG = 5;
+  localparam int GEN_FC_RST_BOOT_CP_FIRST_EVENT_FIRST_INSTR_RETIRE = 0;
+  localparam int GEN_FC_RST_BOOT_CP_FIRST_EVENT_NMI_TAKEN = 1;
+  localparam int GEN_FC_RST_BOOT_CP_FIRST_EVENT_DEBUG_ENTRY = 2;
+  localparam int GEN_FC_RST_BOOT_CP_FIRST_EVENT_NONE_FETCH_DISABLED = 3;
+  localparam int GEN_FC_RST_BOOT_CP_HART_ID_ZERO = 0;
+  localparam int GEN_FC_RST_BOOT_CP_HART_ID_MAX = 1;
+  localparam int GEN_FC_RST_BOOT_CP_HART_ID_RANDOM = 2;
+  localparam int GEN_FC_RST_BOOT_CP_RESET_KIND_POWER_ON = 0;
+  localparam int GEN_FC_RST_BOOT_CP_RESET_KIND_MID_RUN = 1;
+  localparam int GEN_FC_RST_BOOT_CP_BOOT_TO_REQ_CYCLES_TWO = 0;
+  localparam int GEN_FC_RST_BOOT_CP_BOOT_TO_REQ_CYCLES_THREE = 1;
+  localparam int GEN_FC_RST_BOOT_CP_BOOT_TO_REQ_CYCLES_MORE = 2;
+  covergroup gen_rst_boot_cg with function sample(int v_cp_boot_addr, int v_cp_boot_low_byte, int v_cp_fetch_en_at_release, int v_cp_pending, int v_cp_first_event, int v_cp_hart_id, int v_cp_reset_kind, int v_cp_boot_to_req_cycles);
+    option.per_instance = 0;
+    option.cross_auto_bin_max = 0;   // a cross has exactly the CSV's named bins: no automatic bins for the plan's ignored tuples
+    cp_boot_addr: coverpoint v_cp_boot_addr { bins zero= {0}; bins low= {1}; bins mid= {2}; bins high= {3}; ignore_bins na = {-1}; }
+    cp_boot_low_byte: coverpoint v_cp_boot_low_byte { bins zero= {0}; ignore_bins na = {-1}; }
+    cp_fetch_en_at_release: coverpoint v_cp_fetch_en_at_release { bins on= {0}; bins off= {1}; bins invalid= {2}; ignore_bins na = {-1}; }
+    cp_pending: coverpoint v_cp_pending { bins none= {0}; bins irq_enabled_later= {1}; bins nmi= {2}; bins debug_req= {3}; bins nmi_and_debug= {4}; bins irq_and_debug= {5}; ignore_bins na = {-1}; }
+    cp_first_event: coverpoint v_cp_first_event { bins first_instr_retire= {0}; bins nmi_taken= {1}; bins debug_entry= {2}; bins none_fetch_disabled= {3}; ignore_bins na = {-1}; }
+    cp_hart_id: coverpoint v_cp_hart_id { bins zero= {0}; bins max= {1}; bins random= {2}; ignore_bins na = {-1}; }
+    cp_reset_kind: coverpoint v_cp_reset_kind { bins power_on= {0}; bins mid_run= {1}; ignore_bins na = {-1}; }
+    cp_boot_to_req_cycles: coverpoint v_cp_boot_to_req_cycles { bins two= {0}; bins three= {1}; bins more= {2}; ignore_bins na = {-1}; }
+    cr_boot_kind: cross cp_boot_addr, cp_reset_kind {
+      bins high_power_on= binsof(cp_boot_addr.high) && binsof(cp_reset_kind.power_on);
+      bins low_power_on= binsof(cp_boot_addr.low) && binsof(cp_reset_kind.power_on);
+      bins mid_power_on= binsof(cp_boot_addr.mid) && binsof(cp_reset_kind.power_on);
+      bins zero_power_on= binsof(cp_boot_addr.zero) && binsof(cp_reset_kind.power_on);
+      bins high_mid_run= binsof(cp_boot_addr.high) && binsof(cp_reset_kind.mid_run);
+      bins low_mid_run= binsof(cp_boot_addr.low) && binsof(cp_reset_kind.mid_run);
+      bins mid_mid_run= binsof(cp_boot_addr.mid) && binsof(cp_reset_kind.mid_run);
+      bins zero_mid_run= binsof(cp_boot_addr.zero) && binsof(cp_reset_kind.mid_run);
+    }
+    cr_pending_first: cross cp_pending, cp_first_event {
+      bins none_first_instr_retire= binsof(cp_pending.none) && binsof(cp_first_event.first_instr_retire);
+      bins irq_enabled_later_first_instr_retire= binsof(cp_pending.irq_enabled_later) && binsof(cp_first_event.first_instr_retire);
+      bins debug_req_debug_entry= binsof(cp_pending.debug_req) && binsof(cp_first_event.debug_entry);
+      bins nmi_and_debug_debug_entry= binsof(cp_pending.nmi_and_debug) && binsof(cp_first_event.debug_entry);
+      bins nmi_nmi_taken= binsof(cp_pending.nmi) && binsof(cp_first_event.nmi_taken);
+      bins irq_and_debug_debug_entry= binsof(cp_pending.irq_and_debug) && binsof(cp_first_event.debug_entry);
+    }
+    cr_fetch_en_first: cross cp_fetch_en_at_release, cp_first_event {
+      bins on_first_instr_retire= binsof(cp_fetch_en_at_release.on) && binsof(cp_first_event.first_instr_retire);
+      bins invalid_none_fetch_disabled= binsof(cp_fetch_en_at_release.invalid) && binsof(cp_first_event.none_fetch_disabled);
+      bins off_first_instr_retire= binsof(cp_fetch_en_at_release.off) && binsof(cp_first_event.first_instr_retire);
+      bins off_none_fetch_disabled= binsof(cp_fetch_en_at_release.off) && binsof(cp_first_event.none_fetch_disabled);
+    }
+  endgroup
+
+  // CG-SEC-005 (gen_sec_ctrl_inputs_cg), 35 coverpoint bins, 16 cross bins
+  localparam int GEN_FC_SEC_CTRL_INPUTS_CP_EVENT_CPUCTRL_READ = 0;
+  localparam int GEN_FC_SEC_CTRL_INPUTS_CP_EVENT_FETCH_EN_CHANGE = 1;
+  localparam int GEN_FC_SEC_CTRL_INPUTS_CP_EVENT_MCOUNTEREN_W_CHANGE = 2;
+  localparam int GEN_FC_SEC_CTRL_INPUTS_CP_EVENT_KEY_REQ = 3;
+  localparam int GEN_FC_SEC_CTRL_INPUTS_CP_EVENT_KEY_VALID_CHANGE = 4;
+  localparam int GEN_FC_SEC_CTRL_INPUTS_CP_EVENT_MCOUNTEREN_WRITE = 5;
+  localparam int GEN_FC_SEC_CTRL_INPUTS_CP_EVENT_BOOT_ADDR_CHANGE = 6;
+  localparam int GEN_FC_SEC_CTRL_INPUTS_CP_BOOT_ADDR_CHANGE_CTX_RUNNING = 0;
+  localparam int GEN_FC_SEC_CTRL_INPUTS_CP_BOOT_ADDR_CHANGE_CTX_IN_HANDLER = 1;
+  localparam int GEN_FC_SEC_CTRL_INPUTS_CP_BOOT_ADDR_CHANGE_CTX_IN_WFI = 2;
+  localparam int GEN_FC_SEC_CTRL_INPUTS_CP_BIT8_READBACK_ZERO = 0;
+  localparam int GEN_FC_SEC_CTRL_INPUTS_CP_BIT8_READBACK_ONE = 1;
+  localparam int GEN_FC_SEC_CTRL_INPUTS_CP_BITS67_READBACK_B6_0_B7_0 = 0;
+  localparam int GEN_FC_SEC_CTRL_INPUTS_CP_BITS67_READBACK_B6_1_B7_0 = 1;
+  localparam int GEN_FC_SEC_CTRL_INPUTS_CP_BITS67_READBACK_B6_0_B7_1 = 2;
+  localparam int GEN_FC_SEC_CTRL_INPUTS_CP_BITS67_READBACK_B6_1_B7_1 = 3;
+  localparam int GEN_FC_SEC_CTRL_INPUTS_CP_ICACHE_EN_READBACK_IN_DEBUG_ONE = 0;
+  localparam int GEN_FC_SEC_CTRL_INPUTS_CP_ICACHE_EN_READBACK_IN_DEBUG_ZERO = 1;
+  localparam int GEN_FC_SEC_CTRL_INPUTS_CP_FETCH_EN_VAL_ON = 0;
+  localparam int GEN_FC_SEC_CTRL_INPUTS_CP_FETCH_EN_VAL_OFF = 1;
+  localparam int GEN_FC_SEC_CTRL_INPUTS_CP_FETCH_EN_VAL_INVALID = 2;
+  localparam int GEN_FC_SEC_CTRL_INPUTS_CP_MCOUNTEREN_W_VAL_ON = 0;
+  localparam int GEN_FC_SEC_CTRL_INPUTS_CP_MCOUNTEREN_W_VAL_OFF = 1;
+  localparam int GEN_FC_SEC_CTRL_INPUTS_CP_MCOUNTEREN_W_VAL_INVALID = 2;
+  localparam int GEN_FC_SEC_CTRL_INPUTS_CP_MCOUNTEREN_WRITE_EFFECT_APPLIED = 0;
+  localparam int GEN_FC_SEC_CTRL_INPUTS_CP_MCOUNTEREN_WRITE_EFFECT_DROPPED = 1;
+  localparam int GEN_FC_SEC_CTRL_INPUTS_CP_KEY_DELAY_IMMEDIATE = 0;
+  localparam int GEN_FC_SEC_CTRL_INPUTS_CP_KEY_DELAY_DELAYED = 1;
+  localparam int GEN_FC_SEC_CTRL_INPUTS_CP_KEY_DELAY_WITHHELD_THEN_VALID = 2;
+  localparam int GEN_FC_SEC_CTRL_INPUTS_CP_KEY_REQ_CONTEXT_RESET_INVAL = 0;
+  localparam int GEN_FC_SEC_CTRL_INPUTS_CP_KEY_REQ_CONTEXT_FENCE_I = 1;
+  localparam int GEN_FC_SEC_CTRL_INPUTS_CP_KEY_REQ_CONTEXT_DEBUG_MODE = 2;
+  localparam int GEN_FC_SEC_CTRL_INPUTS_CP_KEY_REQ_CONTEXT_ICACHE_DISABLED = 3;
+  localparam int GEN_FC_SEC_CTRL_INPUTS_CP_RVFI_EXT_KEY_VALID_ZERO = 0;
+  localparam int GEN_FC_SEC_CTRL_INPUTS_CP_RVFI_EXT_KEY_VALID_ONE = 1;
+  covergroup gen_sec_ctrl_inputs_cg with function sample(int v_cp_event, int v_cp_boot_addr_change_ctx, int v_cp_bit8_readback, int v_cp_bits67_readback, int v_cp_icache_en_readback_in_debug, int v_cp_fetch_en_val, int v_cp_mcounteren_w_val, int v_cp_mcounteren_write_effect, int v_cp_key_delay, int v_cp_key_req_context, int v_cp_rvfi_ext_key_valid);
+    option.per_instance = 0;
+    option.cross_auto_bin_max = 0;   // a cross has exactly the CSV's named bins: no automatic bins for the plan's ignored tuples
+    cp_event: coverpoint v_cp_event { bins cpuctrl_read= {0}; bins fetch_en_change= {1}; bins mcounteren_w_change= {2}; bins key_req= {3}; bins key_valid_change= {4}; bins mcounteren_write= {5}; bins boot_addr_change= {6}; ignore_bins na = {-1}; }
+    cp_boot_addr_change_ctx: coverpoint v_cp_boot_addr_change_ctx { bins running= {0}; bins in_handler= {1}; bins in_wfi= {2}; ignore_bins na = {-1}; }
+    cp_bit8_readback: coverpoint v_cp_bit8_readback { bins zero= {0}; bins one= {1}; ignore_bins na = {-1}; }
+    cp_bits67_readback: coverpoint v_cp_bits67_readback { bins b6_0_b7_0= {0}; bins b6_1_b7_0= {1}; bins b6_0_b7_1= {2}; bins b6_1_b7_1= {3}; ignore_bins na = {-1}; }
+    cp_icache_en_readback_in_debug: coverpoint v_cp_icache_en_readback_in_debug { bins one= {0}; bins zero= {1}; ignore_bins na = {-1}; }
+    cp_fetch_en_val: coverpoint v_cp_fetch_en_val { bins on= {0}; bins off= {1}; bins invalid= {2}; ignore_bins na = {-1}; }
+    cp_mcounteren_w_val: coverpoint v_cp_mcounteren_w_val { bins on= {0}; bins off= {1}; bins invalid= {2}; ignore_bins na = {-1}; }
+    cp_mcounteren_write_effect: coverpoint v_cp_mcounteren_write_effect { bins applied= {0}; bins dropped= {1}; ignore_bins na = {-1}; }
+    cp_key_delay: coverpoint v_cp_key_delay { bins immediate= {0}; bins delayed= {1}; bins withheld_then_valid= {2}; ignore_bins na = {-1}; }
+    cp_key_req_context: coverpoint v_cp_key_req_context { bins reset_inval= {0}; bins fence_i= {1}; bins debug_mode= {2}; bins icache_disabled= {3}; ignore_bins na = {-1}; }
+    cp_rvfi_ext_key_valid: coverpoint v_cp_rvfi_ext_key_valid { bins zero= {0}; bins one= {1}; ignore_bins na = {-1}; }
+    cr_mcounteren: cross cp_mcounteren_w_val, cp_mcounteren_write_effect {
+      bins invalid_dropped= binsof(cp_mcounteren_w_val.invalid) && binsof(cp_mcounteren_write_effect.dropped);
+      bins off_dropped= binsof(cp_mcounteren_w_val.off) && binsof(cp_mcounteren_write_effect.dropped);
+      bins on_applied= binsof(cp_mcounteren_w_val.on) && binsof(cp_mcounteren_write_effect.applied);
+    }
+    cr_key: cross cp_key_delay, cp_bit8_readback {
+      bins delayed_one= binsof(cp_key_delay.delayed) && binsof(cp_bit8_readback.one);
+      bins delayed_zero= binsof(cp_key_delay.delayed) && binsof(cp_bit8_readback.zero);
+      bins immediate_one= binsof(cp_key_delay.immediate) && binsof(cp_bit8_readback.one);
+      bins withheld_then_valid_one= binsof(cp_key_delay.withheld_then_valid) && binsof(cp_bit8_readback.one);
+      bins withheld_then_valid_zero= binsof(cp_key_delay.withheld_then_valid) && binsof(cp_bit8_readback.zero);
+    }
+    cr_key_ctx: cross cp_key_req_context, cp_key_delay {
+      bins debug_mode_delayed= binsof(cp_key_req_context.debug_mode) && binsof(cp_key_delay.delayed);
+      bins fence_i_delayed= binsof(cp_key_req_context.fence_i) && binsof(cp_key_delay.delayed);
+      bins fence_i_immediate= binsof(cp_key_req_context.fence_i) && binsof(cp_key_delay.immediate);
+      bins fence_i_withheld_then_valid= binsof(cp_key_req_context.fence_i) && binsof(cp_key_delay.withheld_then_valid);
+      bins icache_disabled_immediate= binsof(cp_key_req_context.icache_disabled) && binsof(cp_key_delay.immediate);
+      bins reset_inval_delayed= binsof(cp_key_req_context.reset_inval) && binsof(cp_key_delay.delayed);
+      bins reset_inval_immediate= binsof(cp_key_req_context.reset_inval) && binsof(cp_key_delay.immediate);
+      bins reset_inval_withheld_then_valid= binsof(cp_key_req_context.reset_inval) && binsof(cp_key_delay.withheld_then_valid);
+    }
+  endgroup
+
+  // CG-RVFI-001 (gen_rvfi_record_cg), 38 coverpoint bins, 32 cross bins
+  localparam int GEN_FC_RVFI_RECORD_CP_TRAP_NO = 0;
+  localparam int GEN_FC_RVFI_RECORD_CP_TRAP_YES = 1;
+  localparam int GEN_FC_RVFI_RECORD_CP_INTR_NO = 0;
+  localparam int GEN_FC_RVFI_RECORD_CP_INTR_YES = 1;
+  localparam int GEN_FC_RVFI_RECORD_CP_MODE_U = 0;
+  localparam int GEN_FC_RVFI_RECORD_CP_MODE_M = 1;
+  localparam int GEN_FC_RVFI_RECORD_CP_INSN_KIND_C16 = 0;
+  localparam int GEN_FC_RVFI_RECORD_CP_INSN_KIND_I32 = 1;
+  localparam int GEN_FC_RVFI_RECORD_CP_INSN_KIND_ZCMP_UOP = 2;
+  localparam int GEN_FC_RVFI_RECORD_CP_RD_X0 = 0;
+  localparam int GEN_FC_RVFI_RECORD_CP_RD_NONZERO = 1;
+  localparam int GEN_FC_RVFI_RECORD_CP_RS1_X0 = 0;
+  localparam int GEN_FC_RVFI_RECORD_CP_RS1_NONZERO = 1;
+  localparam int GEN_FC_RVFI_RECORD_CP_RS2_X0 = 0;
+  localparam int GEN_FC_RVFI_RECORD_CP_RS2_NONZERO = 1;
+  localparam int GEN_FC_RVFI_RECORD_CP_RS3_ZERO = 0;
+  localparam int GEN_FC_RVFI_RECORD_CP_RS3_NONZERO = 1;
+  localparam int GEN_FC_RVFI_RECORD_CP_PC_DELTA_PLUS2 = 0;
+  localparam int GEN_FC_RVFI_RECORD_CP_PC_DELTA_PLUS4 = 1;
+  localparam int GEN_FC_RVFI_RECORD_CP_PC_DELTA_JUMP_FWD = 2;
+  localparam int GEN_FC_RVFI_RECORD_CP_PC_DELTA_JUMP_BACK = 3;
+  localparam int GEN_FC_RVFI_RECORD_CP_PC_DELTA_REDIRECT_OTHER = 4;
+  localparam int GEN_FC_RVFI_RECORD_CP_ORDER_STEP_FIRST = 0;
+  localparam int GEN_FC_RVFI_RECORD_CP_PC_CONTINUITY_CONTINUOUS = 0;
+  localparam int GEN_FC_RVFI_RECORD_CP_PC_CONTINUITY_DISCONTINUOUS_INTR = 1;
+  localparam int GEN_FC_RVFI_RECORD_CP_PC_CONTINUITY_DISCONTINUOUS_AFTER_TRAP = 2;
+  localparam int GEN_FC_RVFI_RECORD_CP_PC_CONTINUITY_DISCONTINUOUS_AFTER_FLUSH_REDIRECT = 3;
+  localparam int GEN_FC_RVFI_RECORD_CP_PC_CONTINUITY_DISCONTINUOUS_DEBUG = 4;
+  localparam int GEN_FC_RVFI_RECORD_CP_VALID_GAP_G1 = 0;
+  localparam int GEN_FC_RVFI_RECORD_CP_VALID_GAP_G2 = 1;
+  localparam int GEN_FC_RVFI_RECORD_CP_VALID_GAP_G3_PLUS = 2;
+  localparam int GEN_FC_RVFI_RECORD_CP_INTR_KIND_IRQ = 0;
+  localparam int GEN_FC_RVFI_RECORD_CP_INTR_KIND_NMI = 1;
+  localparam int GEN_FC_RVFI_RECORD_CP_INTR_KIND_NMI_INT = 2;
+  localparam int GEN_FC_RVFI_RECORD_CP_INTR_KIND_NONE = 3;
+  localparam int GEN_FC_RVFI_RECORD_CP_RD_SOURCE_ALU_WB = 0;
+  localparam int GEN_FC_RVFI_RECORD_CP_RD_SOURCE_LOAD_LSU = 1;
+  localparam int GEN_FC_RVFI_RECORD_CP_RD_SOURCE_NONE = 2;
+  covergroup gen_rvfi_record_cg with function sample(int v_cp_trap, int v_cp_intr, int v_cp_mode, int v_cp_insn_kind, int v_cp_rd, int v_cp_rs1, int v_cp_rs2, int v_cp_rs3, int v_cp_pc_delta, int v_cp_order_step, int v_cp_pc_continuity, int v_cp_valid_gap, int v_cp_intr_kind, int v_cp_rd_source);
+    option.per_instance = 0;
+    option.cross_auto_bin_max = 0;   // a cross has exactly the CSV's named bins: no automatic bins for the plan's ignored tuples
+    cp_trap: coverpoint v_cp_trap { bins no= {0}; bins yes= {1}; ignore_bins na = {-1}; }
+    cp_intr: coverpoint v_cp_intr { bins no= {0}; bins yes= {1}; ignore_bins na = {-1}; }
+    cp_mode: coverpoint v_cp_mode { bins u= {0}; bins m= {1}; ignore_bins na = {-1}; }
+    cp_insn_kind: coverpoint v_cp_insn_kind { bins c16= {0}; bins i32= {1}; bins zcmp_uop= {2}; ignore_bins na = {-1}; }
+    cp_rd: coverpoint v_cp_rd { bins x0= {0}; bins nonzero= {1}; ignore_bins na = {-1}; }
+    cp_rs1: coverpoint v_cp_rs1 { bins x0= {0}; bins nonzero= {1}; ignore_bins na = {-1}; }
+    cp_rs2: coverpoint v_cp_rs2 { bins x0= {0}; bins nonzero= {1}; ignore_bins na = {-1}; }
+    cp_rs3: coverpoint v_cp_rs3 { bins zero= {0}; bins nonzero= {1}; ignore_bins na = {-1}; }
+    cp_pc_delta: coverpoint v_cp_pc_delta { bins plus2= {0}; bins plus4= {1}; bins jump_fwd= {2}; bins jump_back= {3}; bins redirect_other= {4}; ignore_bins na = {-1}; }
+    cp_order_step: coverpoint v_cp_order_step { bins first= {0}; ignore_bins na = {-1}; }
+    cp_pc_continuity: coverpoint v_cp_pc_continuity { bins continuous= {0}; bins discontinuous_intr= {1}; bins discontinuous_after_trap= {2}; bins discontinuous_after_flush_redirect= {3}; bins discontinuous_debug= {4}; ignore_bins na = {-1}; }
+    cp_valid_gap: coverpoint v_cp_valid_gap { bins g1= {0}; bins g2= {1}; bins g3_plus= {2}; ignore_bins na = {-1}; }
+    cp_intr_kind: coverpoint v_cp_intr_kind { bins irq= {0}; bins nmi= {1}; bins nmi_int= {2}; bins none= {3}; ignore_bins na = {-1}; }
+    cp_rd_source: coverpoint v_cp_rd_source { bins alu_wb= {0}; bins load_lsu= {1}; bins none= {2}; ignore_bins na = {-1}; }
+    cr_kind_trap: cross cp_insn_kind, cp_trap {
+      bins i32_yes= binsof(cp_insn_kind.i32) && binsof(cp_trap.yes);
+      bins zcmp_uop_no= binsof(cp_insn_kind.zcmp_uop) && binsof(cp_trap.no);
+      bins c16_no= binsof(cp_insn_kind.c16) && binsof(cp_trap.no);
+      bins i32_no= binsof(cp_insn_kind.i32) && binsof(cp_trap.no);
+      bins zcmp_uop_yes= binsof(cp_insn_kind.zcmp_uop) && binsof(cp_trap.yes);
+      bins c16_yes= binsof(cp_insn_kind.c16) && binsof(cp_trap.yes);
+    }
+    cr_intr_cont: cross cp_intr, cp_pc_continuity {
+      bins no_discontinuous_after_trap= binsof(cp_intr.no) && binsof(cp_pc_continuity.discontinuous_after_trap);
+      bins no_discontinuous_debug= binsof(cp_intr.no) && binsof(cp_pc_continuity.discontinuous_debug);
+      bins yes_discontinuous_intr= binsof(cp_intr.yes) && binsof(cp_pc_continuity.discontinuous_intr);
+      bins no_continuous= binsof(cp_intr.no) && binsof(cp_pc_continuity.continuous);
+      bins no_discontinuous_after_flush_redirect= binsof(cp_intr.no) && binsof(cp_pc_continuity.discontinuous_after_flush_redirect);
+    }
+    cr_mode_trap: cross cp_mode, cp_trap {
+      bins m_no= binsof(cp_mode.m) && binsof(cp_trap.no);
+      bins u_no= binsof(cp_mode.u) && binsof(cp_trap.no);
+      bins m_yes= binsof(cp_mode.m) && binsof(cp_trap.yes);
+      bins u_yes= binsof(cp_mode.u) && binsof(cp_trap.yes);
+    }
+    cr_rd_kind: cross cp_rd, cp_insn_kind, cp_trap {
+      bins nonzero_c16_no= binsof(cp_rd.nonzero) && binsof(cp_insn_kind.c16) && binsof(cp_trap.no);
+      bins nonzero_i32_no= binsof(cp_rd.nonzero) && binsof(cp_insn_kind.i32) && binsof(cp_trap.no);
+      bins nonzero_zcmp_uop_no= binsof(cp_rd.nonzero) && binsof(cp_insn_kind.zcmp_uop) && binsof(cp_trap.no);
+      bins x0_c16_no= binsof(cp_rd.x0) && binsof(cp_insn_kind.c16) && binsof(cp_trap.no);
+      bins x0_c16_yes= binsof(cp_rd.x0) && binsof(cp_insn_kind.c16) && binsof(cp_trap.yes);
+      bins x0_i32_no= binsof(cp_rd.x0) && binsof(cp_insn_kind.i32) && binsof(cp_trap.no);
+      bins x0_i32_yes= binsof(cp_rd.x0) && binsof(cp_insn_kind.i32) && binsof(cp_trap.yes);
+      bins x0_zcmp_uop_yes= binsof(cp_rd.x0) && binsof(cp_insn_kind.zcmp_uop) && binsof(cp_trap.yes);
+    }
+    cr_rd_source_kind: cross cp_rd_source, cp_insn_kind {
+      bins alu_wb_c16= binsof(cp_rd_source.alu_wb) && binsof(cp_insn_kind.c16);
+      bins alu_wb_i32= binsof(cp_rd_source.alu_wb) && binsof(cp_insn_kind.i32);
+      bins alu_wb_zcmp_uop= binsof(cp_rd_source.alu_wb) && binsof(cp_insn_kind.zcmp_uop);
+      bins load_lsu_c16= binsof(cp_rd_source.load_lsu) && binsof(cp_insn_kind.c16);
+      bins load_lsu_i32= binsof(cp_rd_source.load_lsu) && binsof(cp_insn_kind.i32);
+      bins load_lsu_zcmp_uop= binsof(cp_rd_source.load_lsu) && binsof(cp_insn_kind.zcmp_uop);
+      bins none_c16= binsof(cp_rd_source.none) && binsof(cp_insn_kind.c16);
+      bins none_i32= binsof(cp_rd_source.none) && binsof(cp_insn_kind.i32);
+      bins none_zcmp_uop= binsof(cp_rd_source.none) && binsof(cp_insn_kind.zcmp_uop);
     }
   endgroup

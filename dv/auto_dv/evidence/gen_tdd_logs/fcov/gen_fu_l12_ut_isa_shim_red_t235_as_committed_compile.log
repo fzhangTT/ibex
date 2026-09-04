@@ -1,0 +1,26 @@
+dv/auto_dv/isa/gen_ut_isa_shim.cc: In function -int main(int, char**)-:
+dv/auto_dv/isa/gen_ut_isa_shim.cc:507:5: error: -gen_isa_set_retire_gap- was not declared in this scope; did you mean -gen_isa_set_time-?
+  507 |     gen_isa_set_retire_gap(0);
+      |     ^~~~~~~~~~~~~~~~~~~~~~
+      |     gen_isa_set_time
+dv/auto_dv/isa/gen_ut_isa_shim.cc:530:30: error: -gen_isa_set_retire_gap- was not declared in this scope; did you mean -gen_isa_set_time-?
+  530 |     gen_isa_set_pc(scratch); gen_isa_set_retire_gap(0);
+      |                              ^~~~~~~~~~~~~~~~~~~~~~
+      |                              gen_isa_set_time
+dv/auto_dv/isa/gen_ut_isa_shim.cc:562:30: error: -gen_isa_set_retire_gap- was not declared in this scope; did you mean -gen_isa_set_time-?
+  562 |     gen_isa_set_pc(scratch); gen_isa_set_retire_gap(0);
+      |                              ^~~~~~~~~~~~~~~~~~~~~~
+      |                              gen_isa_set_time
+dv/auto_dv/isa/gen_isa_shim.cc: In function -int gen_isa_step(gen_isa_step_t*)-:
+dv/auto_dv/isa/gen_isa_shim.cc:443:38: warning: narrowing conversion of -(long unsigned int)((mst & 128) >> ((unsigned int){anonymous}::kShiftMpie))- from -long unsigned int- to -uint32_t- {aka -unsigned int-} [-Wnarrowing]
+  443 |     g_mstack = {(mst & MSTATUS_MPIE) >> kShiftMpie, (mst & MSTATUS_MPP) >> kShiftMpp, csr(CSR_MEPC), csr(CSR_MCAUSE)};
+      |                 ~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~
+dv/auto_dv/isa/gen_isa_shim.cc:443:73: warning: narrowing conversion of -(long unsigned int)((mst & 6144) >> ((unsigned int){anonymous}::kShiftMpp))- from -long unsigned int- to -uint32_t- {aka -unsigned int-} [-Wnarrowing]
+  443 |     g_mstack = {(mst & MSTATUS_MPIE) >> kShiftMpie, (mst & MSTATUS_MPP) >> kShiftMpp, csr(CSR_MEPC), csr(CSR_MCAUSE)};
+      |                                                     ~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~
+dv/auto_dv/isa/gen_isa_shim.cc:459:47: warning: narrowing conversion of -(long unsigned int)((mst_pre & 128) >> ((unsigned int){anonymous}::kShiftMpie))- from -long unsigned int- to -uint32_t- {aka -unsigned int-} [-Wnarrowing]
+  459 |   mstack_t stack_pre{(mst_pre & MSTATUS_MPIE) >> kShiftMpie, (mst_pre & MSTATUS_MPP) >> kShiftMpp, csr(CSR_MEPC), csr(CSR_MCAUSE)};
+      |                      ~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~
+dv/auto_dv/isa/gen_isa_shim.cc:459:86: warning: narrowing conversion of -(long unsigned int)((mst_pre & 6144) >> ((unsigned int){anonymous}::kShiftMpp))- from -long unsigned int- to -uint32_t- {aka -unsigned int-} [-Wnarrowing]
+  459 |   mstack_t stack_pre{(mst_pre & MSTATUS_MPIE) >> kShiftMpie, (mst_pre & MSTATUS_MPP) >> kShiftMpp, csr(CSR_MEPC), csr(CSR_MCAUSE)};
+      |                                                              ~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~

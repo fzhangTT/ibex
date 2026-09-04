@@ -1,0 +1,9 @@
+FCOV-EXPECTATION: gen_sec_ctrl_inputs_cg.cp_event.fetch_en_change = HIT (count=1)
+FCOV-EXPECTATION: gen_sec_ctrl_inputs_cg.cp_event.cpuctrl_read = HIT (count=6)
+FCOV-EXPECTATION: gen_sec_ctrl_inputs_cg.cp_bit8_readback.one = HIT (count=6)
+FCOV-EXPECTATION: gen_sec_ctrl_inputs_cg.cp_bits67_readback.b6_1_b7_0 = HIT (count=2)
+FCOV-EXPECTATION: gen_sec_ctrl_inputs_cg.cp_bits67_readback.b6_0_b7_0 = HIT (count=4)
+FCOV-EXPECTATION: gen_sec_ctrl_inputs_cg.cp_fetch_en_val.on = HIT (count=1)
+FCOV-EXPECTATION: gen_sec_ctrl_inputs_cg.cp_key_delay.immediate = HIT (count=6)
+FCOV-EXPECTATION: gen_sec_ctrl_inputs_cg.cp_rvfi_ext_key_valid.one = HIT (count=6)
+FCOV-EXPECTATION: PASS - all 8 declared bins hit

@@ -1,4 +1,4 @@
-# excerpt of scratch wit_root dv/auto_dv/work/tb-infra/wit/x/ut_isa_cov_zc/stdout.log (the sampler unit test on build x (27 vector cases); UVM_ERROR lines counted by grep: 0, first 0 kept)
+# excerpt of scratch wit_root dv/auto_dv/work/tb-infra/wit/x/ut_isa_cov_zc/stdout.log (the sampler unit test on build x (27 vector cases); UVM_ERROR lines counted by grep: 0, first 0 kept) [header corrected 2026-09-03, landing 9: the case count 26 -> 27 (CM119-L-2); the run output below is the original copy]
 GEN_CONFIG_BANNER build_config=opentitan
 GEN_CONFIG_BANNER BaseIsa=BaseIsaRV32IorCHERIoT RV32M=RV32MSingleCycle RV32B=RV32BOTEarlGrey RV32ZC=RV32ZcaZcbZcmp RegFile=RegFileFF
 GEN_CONFIG_BANNER RV32E=0 BranchTargetALU=1 WritebackStage=1 ICache=1 ICacheECC=1 ICacheScramble=1

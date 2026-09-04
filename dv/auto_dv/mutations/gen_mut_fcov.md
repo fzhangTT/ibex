@@ -73,11 +73,28 @@ ablation with `+gen_fcov_en=0` (no covergroup, so the referee has nothing to jud
 | mutant | what is broken | run | build | catch | ablation |
 |---|---|---|---|---|---|
 | FM10 | gen_fcov_pkg.sv (gen_isa_cov): `br_cg.sample(...)` removed while `n_br++` stays, so the branch group is counted and never sampled | gen_ut_lockstep on gen_branch_directed.S, 8000 retirements | 1094004eeaa5f94b | FAIL (UVM_ERROR 1): `GEN_FCOV_REF gen_isa_branch_cg sampled without coverage` (tb_l6 M-4) | PASS (0) |
-| FM4UT | the FM4 text (the slt eq compare on the 1-bit cast) run under the sampler unit test gen_ut_isa_cov, zc image, every knob default | b3d31097833751a4 | FAIL: `GEN_FCOV_UT slti rs1 == imm is eq: ... 6 expected 0`, self-test 27 cases 1 failure (the unit test's own red for FM4, tb_l6 M-3 as widened) | `+gen_fcov_en=0`: FAILS identically (the vector table judges the classifier, not the covergroup), retained as such |
+| FM4UT | the FM4 text (the slt eq compare on the 1-bit cast) run under the sampler unit test gen_ut_isa_cov, zc image, every knob default | b3d31097833751a4 | FAIL: `GEN_FCOV_UT slti rs1 == imm is eq: ... 6 expected 0`, self-test 27 cases 1 failure (the unit test's own red for FM4, tb_l6 M-3 as widened) | `+gen_fcov_en=0`: FAILS with 11 of 27 cases (the FM4 case and ten cases that need the covergroups on) (the vector table judges the classifier, not the covergroup), retained as such |
 | FM11 | gen_fcov_pkg.sv (gen_isa_cov): the cm.mva01s expansion expected with its registers swapped (`want_rd = sreg; want_rs1 = areg`), so every legal pair mismatches | gen_ut_lockstep on gen_zcmp_mv_directed.S, 1000 retirements | 1def4880d2bdaa6c | FAIL (UVM_ERROR 1): `GEN_FCOV_REF gen_cmp_zcmp_mv_cg: 68 legal move pairs whose micro-ops did not match the expansion`; report line `move pairs: 130 sampled, 68 with mismatching micro-ops` (tb_l6 M-2) | PASS (0) |
 
 FM10's first compile FAILED (the mutant text put its comment on the argument line of the multi-line `br_cg.sample(` call and
-commented the arguments out, `Too few arguments`; batch log gen_fu_l8_oot_mutation_batch_fm.log) and was re-run with the comment
+commented the arguments out; the first compile's log was not kept and the batch log gen_fu_l8_oot_mutation_batch_fm.log records only
+`FM10: compile FAILED`, so the compiler's message is not retained, tb_l10 L-3) and was re-run with the comment
 moved (gen_fu_l8_oot_mutation_batch_fm10.log). The unmutated build x reports `move pairs: 130 sampled, 0 with mismatching micro-ops` on the same program, and the unit-test run
 `5 sampled, 1 with mismatching micro-ops (1 of them the self-test's)`: the self-test's own miss vector is excluded from the referee
 by `ut_mv_miss_expected`, which the vector case sets after asserting the count.
+
+## Slice A (gen_rvfi_record_cg, gen_mul_timing_cg, gen_rst_boot_cg, gen_sec_ctrl_inputs_cg)
+
+Built out of tree from the wit_root copy beside build ag, row `fcov` (the catch is the slice's proof manifest failing on the mutant's report;
+the ablation is the same manifest minus the bins the mutant hides, PASS on the same report). The mutated file's original sha256 is the
+landing's gen_fcov_pkg.sv (8faf5e0d8b481186).
+
+| mutant | what is broken | run, manifest | build | catch | ablation |
+|---|---|---|---|---|---|
+| FM12 | gen_fcov_pkg.sv: a 32-bit sequential record classed plus2 (`rec_pc_delta_cls`) | gen_ut_lockstep s7 image debug storm, gen_fcov_proof_slice5a.fcov.yaml | 62d7aff8f43a9e23 | checker `FAIL -- 1 declared bin(s) not hit: gen_rvfi_record_cg.cp_pc_delta.plus4` (gen_fu_l12_FM12_check.log) | gen_fcov_proof_slice5a_fm12_ablation.fcov.yaml `PASS -- all 29 declared bins hit` |
+| FM13 | gen_fcov_pkg.sv: a load before the multiply classed ALU (`mt_prev_cls`) | gen_ut_lockstep on gen_muldiv_directed.S, gen_fcov_proof_slice5b.fcov.yaml | 6be9ba5bbda6f01e | `FAIL -- 1 declared bin(s) not hit: gen_mul_timing_cg.cp_prev.load` | slice5b_fm13_ablation `PASS -- all 13 declared bins hit` |
+| FM14 | gen_fcov_pkg.sv: a high boot page classed mid (`rst_boot_cls`) | gen_ut_boot zc, gen_fcov_proof_slice5c.fcov.yaml | 1742c09b93471f84 | `FAIL -- 1 declared bin(s) not hit: gen_rst_boot_cg.cp_boot_addr.high` | slice5c_fm14_ablation `PASS -- all 7 declared bins hit` |
+| FM15 | gen_fcov_pkg.sv: the cpuctrlsts read-back keeps bit 6 only (double_fault_seen dropped) | gen_ut_lockstep on gen_cpuctrl_directed.S, gen_fcov_proof_slice5d.fcov.yaml | d51e743703bfcf74 | `FAIL -- 2 declared bin(s) not hit: cp_bits67_readback.b6_1_b7_1, .b6_0_b7_1` | slice5d_fm15_ablation `PASS -- all 8 declared bins hit` |
+
+A first FM15 form swapped bits 7 and 6; with both mixed bins hit by the program the swap is invisible to a bin checker, so the mutant
+drops one bit instead (recorded so that nobody re-tries the swap).

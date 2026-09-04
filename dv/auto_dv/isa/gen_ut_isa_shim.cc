@@ -552,6 +552,33 @@ int main(int argc, char** argv) {
     check("csrw minstret in the carry cycle: Ibex's high word did not take the carry", gen_isa_read_csr(CSR_MINSTRETH), 5u);
     gen_isa_set_retire_gap(0); }
   check("re-reset", gen_isa_reset(&cfg) == 0, 1);
+  { const uint32_t prog15d[] = {0x00000013u,   // nop
+                                0xb8201073u,   // csrw minstreth, x0 (gap 1, minstreth already 0: the same value; the h write still reloads the low word)
+                                0x00000013u,   // nop
+                                0xb0201073u,   // csrw minstret, x0
+                                0xb8201073u,   // csrw minstreth, x0 (gap 1 after a writer: nothing was lost)
+                                0x00000013u};  // nop
+    uint32_t lo0;
+    for (unsigned i = 0; i < sizeof(prog15d) / 4; i++) gen_isa_write_word(scratch + 4 * i, prog15d[i]);
+    gen_isa_set_pc(scratch); gen_isa_set_retire_gap(0);
+    gen_isa_step(&st);
+    lo0 = gen_isa_read_csr(CSR_MINSTRET);
+    gen_isa_set_retire_gap(1);
+    gen_isa_step(&st);
+    check("csrw minstreth of its current value at gap 1: the high word stays 0", gen_isa_read_csr(CSR_MINSTRETH), 0u);
+    check("csrw minstreth of its current value at gap 1: the low word still loses the increment due (the half is known from the address)", gen_isa_read_csr(CSR_MINSTRET), lo0 - 1u);
+    gen_isa_set_retire_gap(0);
+    gen_isa_step(&st);
+    gen_isa_step(&st);
+    check("csrw minstret, x0 reads 0", gen_isa_read_csr(CSR_MINSTRET), 0u);
+    gen_isa_set_retire_gap(1);
+    gen_isa_step(&st);
+    check("csrw minstreth, x0 right after csrw minstret, x0 (gap 1): the writer before was counted by neither side, so the low word stays 0", gen_isa_read_csr(CSR_MINSTRET), 0u);
+    check("and the high word is 0", gen_isa_read_csr(CSR_MINSTRETH), 0u);
+    gen_isa_set_retire_gap(0);
+    gen_isa_step(&st);
+    check("the nop after the pair counts one", gen_isa_read_csr(CSR_MINSTRET), 1u); }
+  check("re-reset", gen_isa_reset(&cfg) == 0, 1);
   { const uint32_t prog15c[] = {0x00400413u,   // addi x8, x0, 4
                                 0x32041073u,   // csrw mcountinhibit, x8 (sets IR: this writer retires under IR = 1, not counted)
                                 0x00000013u,   // nop under IR = 1

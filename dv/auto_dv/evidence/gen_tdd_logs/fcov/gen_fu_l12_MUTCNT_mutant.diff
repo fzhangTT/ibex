@@ -1,0 +1,11 @@
+--- /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_save/MUTCNT.orig	2026-09-03 18:50:51.172398754 -0400
++++ /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/MUTCNT/dv/auto_dv/isa/gen_isa_shim.cc	2026-09-03 18:50:51.172398754 -0400
+@@ -517,7 +517,7 @@
+   uint64_t minstret1 = g_proc->get_csr(CSR_MINSTRET) | ((uint64_t)g_proc->get_csr(CSR_MINSTRETH) << 32);
+   out->retired = (int32_t)(minstret1 - minstret0);
+   if (g_minstret_written) out->retired = 1;                  // the writer retired; Spike's delta is the written value, not a count
+-  else if (g_mcountinhibit && g_mcountinhibit->ir_inhibited()) g_inh += (uint64_t)out->retired;   // an instruction retires under the inhibit state it leaves behind: the writer of mcountinhibit counts under the value it wrote (rtl/ibex_cs_registers.sv:1627; measured on gen_pmc_ctrl)
++  else if (false) g_inh += (uint64_t)out->retired;   // MUT-CNT: retirements under mcountinhibit.IR counted like any other   // an instruction retires under the inhibit state it leaves behind: the writer of mcountinhibit counts under the value it wrote (rtl/ibex_cs_registers.sv:1627; measured on gen_pmc_ctrl)
+   // debug entry: Spike parks pc in its own ROM (0x800/0x808); Ibex enters at DmHaltAddr (C5.2)
+   if (!was_debug && s->debug_mode) {
+     s->pc = GEN_MM_DM_HALT;

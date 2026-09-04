@@ -1,0 +1,324 @@
+Running new bashrc
+Unloading: soc_tools version 1.0
+Unloading: git version 2.26.2
+Unloading: Bender version 0.28.1-tenstorrent8-mr_fixes
+Unloading: Python version 3.9
+Unloading: Perl version perl-5.36.0
+Loading:   soc_tools version 1.0
+Loading:   git version 2.26.2
+Loading:   Bender version 0.28.1-tenstorrent8-mr_fixes
+Loading:   Python version 3.9
+Loading:   Perl version perl-5.36.0
+dv/auto_dv/isa/gen_isa_shim.cc: In function -int gen_isa_step(gen_isa_step_t*)-:
+dv/auto_dv/isa/gen_isa_shim.cc:486:38: warning: narrowing conversion of -(long unsigned int)((mst & 128) >> ((unsigned int){anonymous}::kShiftMpie))- from -long unsigned int- to -uint32_t- {aka -unsigned int-} [-Wnarrowing]
+  486 |     g_mstack = {(mst & MSTATUS_MPIE) >> kShiftMpie, (mst & MSTATUS_MPP) >> kShiftMpp, csr(CSR_MEPC), csr(CSR_MCAUSE)};
+      |                 ~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~
+dv/auto_dv/isa/gen_isa_shim.cc:486:73: warning: narrowing conversion of -(long unsigned int)((mst & 6144) >> ((unsigned int){anonymous}::kShiftMpp))- from -long unsigned int- to -uint32_t- {aka -unsigned int-} [-Wnarrowing]
+  486 |     g_mstack = {(mst & MSTATUS_MPIE) >> kShiftMpie, (mst & MSTATUS_MPP) >> kShiftMpp, csr(CSR_MEPC), csr(CSR_MCAUSE)};
+      |                                                     ~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~
+dv/auto_dv/isa/gen_isa_shim.cc:502:47: warning: narrowing conversion of -(long unsigned int)((mst_pre & 128) >> ((unsigned int){anonymous}::kShiftMpie))- from -long unsigned int- to -uint32_t- {aka -unsigned int-} [-Wnarrowing]
+  502 |   mstack_t stack_pre{(mst_pre & MSTATUS_MPIE) >> kShiftMpie, (mst_pre & MSTATUS_MPP) >> kShiftMpp, csr(CSR_MEPC), csr(CSR_MCAUSE)};
+      |                      ~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~
+dv/auto_dv/isa/gen_isa_shim.cc:502:86: warning: narrowing conversion of -(long unsigned int)((mst_pre & 6144) >> ((unsigned int){anonymous}::kShiftMpp))- from -long unsigned int- to -uint32_t- {aka -unsigned int-} [-Wnarrowing]
+  502 |   mstack_t stack_pre{(mst_pre & MSTATUS_MPIE) >> kShiftMpie, (mst_pre & MSTATUS_MPP) >> kShiftMpp, csr(CSR_MEPC), csr(CSR_MCAUSE)};
+      |                                                              ~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~
+# gen_ut_isa_shim 2026-09-03T23:52:21Z shim sha256 34559ec691021abd counters sha256 238f899ff36bdfc0 test sha256 5d7a5731adda12f4 image /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/zc/prog.vmem
+-- 1. reset legalization (C5.3a Reset row)
+gen_isa_reset                                got 0x1 exp 0x1 OK
+pc = boot page + boot_reset_offset           got 0x80000080 exp 0x80000080 OK
+mtvec = boot page | 1                        got 0x80000001 exp 0x80000001 OK
+mstatus = 0x80 (MPIE, MPP U)                 got 0x80 exp 0x80 OK
+prv M                                        got 0x3 exp 0x3 OK
+misa RV32IMCU + X (MisaXBit = 1 for BaseIsaRV32IorCHERIoT) got 0x40901104 exp 0x40901104 OK
+pmpcfg0 all OFF                              got 0x0 exp 0x0 OK
+pmpaddr0 zero                                got 0x0 exp 0x0 OK
+mie zero                                     got 0x0 exp 0x0 OK
+mcause zero                                  got 0x0 exp 0x0 OK
+-- 2. the Zc image runs to its tohost store
+image words                                  got 0x1 exp 0x1 OK
+entry word j _start                          got 0x40006f exp 0x40006f OK
+step 1 ok                                    got 0x1 exp 0x1 OK
+step 1 pc_before                             got 0x80000080 exp 0x80000080 OK
+step 1 insn                                  got 0x40006f exp 0x40006f OK
+step 1 retired                               got 0x1 exp 0x1 OK
+step 1 pc_after = _start (jal +4)            got 0x80000084 exp 0x80000084 OK
+step 1 no trap                               got 0x0 exp 0x0 OK
+step 1 fetch_insn(pc_before) = insn          got 0x40006f exp 0x40006f OK
+step 1 (j) logs no x-register write          got 0x0 exp 0x0 OK
+step 1 reg_write(0) -> -1                    got 0x1 exp 0x1 OK
+   (multi-store step: pc 0x800000ae insn 0xb872, 4 writes)
+cm.push mem_write(0) addr = mem_addr         got 0x8000039c exp 0x8000039c OK
+cm.push mem_write(0) data = mem_wdata        got 0x44444444 exp 0x44444444 OK
+cm.push mem_write(i) rc 0 for every i        got 0x0 exp 0x0 OK
+cm.push store addresses 4-byte aligned       got 0x0 exp 0x0 OK
+cm.push store sizes 4                        got 0x0 exp 0x0 OK
+cm.push consecutive stores descend by 4      got 0x0 exp 0x0 OK
+cm.push mem_write(mem_writes) -> -1          got 0x1 exp 0x1 OK
+cm.push logs no loads                        got 0x0 exp 0x0 OK
+cm.push mem_read(0) -> -1                    got 0x1 exp 0x1 OK
+   (multi-register-write step: pc 0x800000da insn 0xba72, 5 writes, 4 reads)
+cm.pop reg_write(i) rc 0 for every i         got 0x0 exp 0x0 OK
+cm.pop reg_write never reports x0            got 0x0 exp 0x0 OK
+cm.pop register indices strictly ascending (Spike log order) got 0x0 exp 0x0 OK
+cm.pop reg_write(reg_writes) -> -1           got 0x1 exp 0x1 OK
+cm.pop logs >= 2 loads                       got 0x1 exp 0x1 OK
+cm.pop mem_read(i) rc 0 for every i          got 0x0 exp 0x0 OK
+cm.pop load addresses 4-byte aligned         got 0x0 exp 0x0 OK
+cm.pop load sizes 4                          got 0x0 exp 0x0 OK
+cm.pop mem_read(mem_reads) -> -1             got 0x1 exp 0x1 OK
+cm.pop logs no stores                        got 0x0 exp 0x0 OK
+tohost store reached                         got 0x1 exp 0x1 OK
+tohost value 1 (pass)                        got 0x1 exp 0x1 OK
+steps to tohost within 400                   got 0x1 exp 0x1 OK
+   (149 steps)
+fetch_insn(pc_before) = insn on every step   got 0x0 exp 0x0 OK
+rd_we agrees with reg_writes on every step   got 0x0 exp 0x0 OK
+a multi-store step (cm.push) was found       got 0x1 exp 0x1 OK
+a multi-register-write step (cm.pop) was found got 0x1 exp 0x1 OK
+fetch_insn(unmapped) = 0                     got 0x0 exp 0x0 OK
+-- 3. grevi/gorci decode: aliases execute, other immediates trap, reference serves them
+re-reset                                     got 0x1 exp 0x1 OK
+x2 = 0x12345678                              got 0x12345678 exp 0x12345678 OK
+rev8 retires                                 got 0x1 exp 0x1 OK
+rev8 rd                                      got 0x1 exp 0x1 OK
+rev8 value                                   got 0x78563412 exp 0x78563412 OK
+rev8 reg_writes = 1                          got 0x1 exp 0x1 OK
+rev8 reg_write(0) rc                         got 0x0 exp 0x0 OK
+rev8 reg_write(0) idx = rd_addr              got 0x1 exp 0x1 OK
+rev8 reg_write(0) val = rd_wdata             got 0x78563412 exp 0x78563412 OK
+rev8 reg_write(1) -> -1                      got 0x1 exp 0x1 OK
+orc.b retires                                got 0x1 exp 0x1 OK
+orc.b value                                  got 0xffffffff exp 0xffffffff OK
+   (last shim note: csr 0x34b logged but not readable (cause 2))
+grevi imm 1 traps                            got 0x1 exp 0x1 OK
+grevi imm 1 cause illegal (2)                got 0x2 exp 0x2 OK
+grevi imm 1 mtval = insn                     got 0x68115213 exp 0x68115213 OK
+grevi imm 1 retires 0                        got 0x0 exp 0x0 OK
+grevi imm 1 fetch_insn(pc_before) = insn     got 0x68115213 exp 0x68115213 OK
+grevi imm 1 logs no x-register write         got 0x0 exp 0x0 OK
+trap pc = mtvec base                         got 0x80000000 exp 0x80000000 OK
+reference handles grevi imm 1                got 0x0 exp 0x0 OK
+grev(x,1)                                    got 0x2138a9b4 exp 0x2138a9b4 OK
+reference handles gorci imm 1                got 0x0 exp 0x0 OK
+gorc(x,1)                                    got 0x333cfffc exp 0x333cfffc OK
+reference grev 31 (rev)                      got 0x1 exp 0x1 OK
+reference gorc 16                            got 0x1 exp 0x1 OK
+reference rejects a plain addi               got 0x1 exp 0x1 OK
+-- 4. CSR legalization after retired writes
+re-reset                                     got 0x1 exp 0x1 OK
+csrw mtvec retires                           got 0x1 exp 0x1 OK
+mtvec legalized: BASE[7:2] = 0, MODE 1       got 0x80001201 exp 0x80001201 OK
+csr write list has mtvec                     got 0x1 exp 0x1 OK
+csr write 0 is mtvec                         got 0x305 exp 0x305 OK
+csr write 0 value legalized                  got 0x80001201 exp 0x80001201 OK
+mie fast bit 16 sticks                       got 0x10000 exp 0x10000 OK
+csrw cpuctrlsts retires (no trap)            got 0x1 exp 0x1 OK
+cpuctrlsts: 8 writable bits (icache_enable .. double_fault_seen), key_valid RO got 0xff exp 0xff OK
+gpr write/read                               got 0xdeadbeef exp 0xdeadbeef OK
+set_pc/get_pc                                got 0x80000100 exp 0x80000100 OK
+-- 5. T-102: Ibex conventions the model must show (reset values, WARL, counters, draft-B references)
+re-reset                                     got 0x1 exp 0x1 OK
+marchid = ibex_pkg CSR_MARCHID_VALUE         got 0x16 exp 0x16 OK
+mhpmevent3 = 1 (event bit i-3)               got 0x1 exp 0x1 OK
+mhpmevent(3+N-1) = 1 << (N-1)                got 0x200 exp 0x200 OK
+mhpmevent(3+N) = 0 beyond MHPMCounterNum     got 0x0 exp 0x0 OK
+mhpmevent31 = 0                              got 0x0 exp 0x0 OK
+tdata1 = Ibex mcontrol view                  got 0x28001048 exp 0x28001048 OK
+tdata1 write outside debug mode ignored      got 0x28001048 exp 0x28001048 OK
+tdata2 write outside debug mode ignored      got 0x0 exp 0x0 OK
+mstatus all-ones write: XS and SD stay 0     got 0x0 exp 0x0 OK
+pack                                         got 0x1 exp 0x1 OK
+packu                                        got 0x1 exp 0x1 OK
+packh                                        got 0x1 exp 0x1 OK
+slo 4                                        got 0x1 exp 0x1 OK
+slo rs2 = 32 acts as 0                       got 0x1 exp 0x1 OK
+sloi 31 of 0 = 0x7fffffff                    got 0x1 exp 0x1 OK
+sro 4                                        got 0x1 exp 0x1 OK
+sro 1 of 0 = 0x80000000                      got 0x1 exp 0x1 OK
+sroi 31 of 0 = 0xfffffffe                    got 0x1 exp 0x1 OK
+shfl 15 (zip)                                got 0x1 exp 0x1 OK
+unshfl 15 (unzip)                            got 0x1 exp 0x1 OK
+shfli 15                                     got 0x1 exp 0x1 OK
+unshfli 15                                   got 0x1 exp 0x1 OK
+xperm.n                                      got 0x1 exp 0x1 OK
+xperm.b                                      got 0x1 exp 0x1 OK
+xperm.b out-of-range lanes read 0            got 0x1 exp 0x1 OK
+xperm.h                                      got 0x1 exp 0x1 OK
+cmov rs2 = 0 selects rs3                     got 0x1 exp 0x1 OK
+cmov rs2 != 0 selects rs1                    got 0x1 exp 0x1 OK
+cmix                                         got 0x1 exp 0x1 OK
+fsl 1                                        got 0x1 exp 0x1 OK
+fsl 31                                       got 0x1 exp 0x1 OK
+fsl 32 = rs3                                 got 0x1 exp 0x1 OK
+fsl 64 acts as 0 = rs1                       got 0x1 exp 0x1 OK
+fsr 1                                        got 0x1 exp 0x1 OK
+fsri 1                                       got 0x1 exp 0x1 OK
+bfp len 8 off 8                              got 0x1 exp 0x1 OK
+bfp len 0 places 16 bits                     got 0x1 exp 0x1 OK
+crc32.b(1)                                   got 0x1 exp 0x1 OK
+crc32.b(2)                                   got 0x1 exp 0x1 OK
+crc32c.b(1)                                  got 0x1 exp 0x1 OK
+crc32.w(0) = 0                               got 0x1 exp 0x1 OK
+crc32c.w(0) = 0                              got 0x1 exp 0x1 OK
+crc32.h = crc32.b applied twice              got 0x65ee150b exp 0x65ee150b OK
+reference rejects rori (ratified)            got 0x1 exp 0x1 OK
+reference rejects clz (ratified)             got 0x1 exp 0x1 OK
+is_draft_b(pack) = 1                         got 0x1 exp 0x1 OK
+is_draft_b(rori) = 0                         got 0x0 exp 0x0 OK
+cycle CSR follows set_time                   got 0x3e8 exp 0x3e8 OK
+mcycle follows set_time                      got 0x3e8 exp 0x3e8 OK
+mhpmcounter5 follows set_hpm (lo)            got 0x1234 exp 0x1234 OK
+mhpmcounter5h follows set_hpm (hi)           got 0x1 exp 0x1 OK
+hpmcounter5 alias follows                    got 0x1234 exp 0x1234 OK
+cpuctrlsts bit 8 follows ic_scr_key_valid    got 0x100 exp 0x100 OK
+cpuctrlsts write: control bits taken, bit 8 is status got 0x1ff exp 0x1ff OK
+cpuctrlsts bit 8 cleared by status           got 0xff exp 0xff OK
+-- 6. T-102: prv_before is the privilege the instruction executed in (rvfi_mode's meaning)
+re-reset                                     got 0x1 exp 0x1 OK
+mret retires                                 got 0x1 exp 0x1 OK
+mret prv_before = M                          got 0x3 exp 0x3 OK
+mret prv (after) = U                         got 0x0 exp 0x0 OK
+mret pc_after = mepc                         got 0x80000090 exp 0x80000090 OK
+ecall from U traps                           got 0x1 exp 0x1 OK
+ecall cause 8 (U)                            got 0x8 exp 0x8 OK
+ecall prv_before = U                         got 0x0 exp 0x0 OK
+ecall prv (after) = M                        got 0x3 exp 0x3 OK
+-- 7. T-102: cpuctrlsts sync_exc_seen / double_fault_seen follow the model's traps (rtl/ibex_cs_registers.sv:935-943, :964-965)
+re-reset                                     got 0x1 exp 0x1 OK
+flags clear after reset                      got 0x0 exp 0x0 OK
+first ecall traps                            got 0x1 exp 0x1 OK
+sync_exc_seen set (bit 6)                    got 0x40 exp 0x40 OK
+second ecall traps                           got 0x1 exp 0x1 OK
+double_fault_seen set (bit 7)                got 0xc0 exp 0xc0 OK
+mret retires                                 got 0x1 exp 0x1 OK
+mret clears sync_exc_seen, double_fault_seen sticky got 0x80 exp 0x80 OK
+software clears the status bits              got 0x0 exp 0x0 OK
+-- 8. R10: a breakpoint exception writes mepc = the [c.]ebreak pc and mtval = 0 (rtl/ibex_controller.sv:550, :882-899)
+re-reset                                     got 0x1 exp 0x1 OK
+ebreak traps                                 got 0x1 exp 0x1 OK
+ebreak cause 3 (breakpoint)                  got 0x3 exp 0x3 OK
+ebreak mtval = 0 (Ibex, spec-legal)          got 0x0 exp 0x0 OK
+ebreak mtval CSR = 0                         got 0x0 exp 0x0 OK
+ebreak mepc = its own pc                     got 0x80000080 exp 0x80000080 OK
+c.ebreak traps                               got 0x1 exp 0x1 OK
+c.ebreak cause 3                             got 0x3 exp 0x3 OK
+c.ebreak mtval = 0                           got 0x0 exp 0x0 OK
+c.ebreak mepc = its own pc (2-byte aligned)  got 0x80000084 exp 0x80000084 OK
+-- 9. CR6-L-4: an exception taken in debug mode sets neither sync_exc_seen nor double_fault_seen (rtl/ibex_cs_registers.sv:918)
+re-reset                                     got 0x1 exp 0x1 OK
+debug entry retires nothing                  got 0x0 exp 0x0 OK
+debug entry parks the pc at DmHaltAddr       got 0x1a110800 exp 0x1a110800 OK
+flags clear after the entry                  got 0x0 exp 0x0 OK
+ecall in debug mode retires nothing          got 0x0 exp 0x0 OK
+ecall in debug mode leaves sync_exc_seen clear got 0x0 exp 0x0 OK
+-- 10. NMI emulation: an external NMI enters at mtvec base + 0x7C with mcause 0x8000001F, mepc = pc, mtval 0, MIE saved (rtl/ibex_cs_registers.sv:905-945)
+re-reset                                     got 0x1 exp 0x1 OK
+nmi entry retires nothing                    got 0x0 exp 0x0 OK
+nmi entry is a trap step                     got 0x1 exp 0x1 OK
+nmi mcause 0x8000001F                        got 0x8000001f exp 0x8000001f OK
+nmi mtval 0                                  got 0x0 exp 0x0 OK
+nmi mepc = interrupted pc                    got 0x80000080 exp 0x80000080 OK
+nmi pc = mtvec base + 0x7C                   got 0x8000007c exp 0x8000007c OK
+nmi prv M                                    got 0x3 exp 0x3 OK
+nmi mstatus: MIE 0, MPIE = old MIE, MPP = M  got 0x1880 exp 0x1880 OK
+mret from NMI retires                        got 0x1 exp 0x1 OK
+mret returns to the interrupted pc           got 0x80000080 exp 0x80000080 OK
+mret restores mepc from the mstack (outer handler's 0x1234) got 0x1234 exp 0x1234 OK
+mret restores mcause from the mstack (outer handler's 2) got 0x2 exp 0x2 OK
+mret restores MPIE/MPP from the mstack (MPIE 1, MPP U), MIE re-enabled got 0x88 exp 0x88 OK
+-- 11. NMI emulation: an internal NMI (integrity error) carries mcause 0xFFFFFFE0 and mtval = the corrupted address
+re-reset                                     got 0x1 exp 0x1 OK
+internal nmi is a trap step                  got 0x1 exp 0x1 OK
+internal nmi mcause 0xFFFFFFE0               got 0xffffffe0 exp 0xffffffe0 OK
+internal nmi mtval = corrupted address       got 0x80001230 exp 0x80001230 OK
+internal nmi pc = mtvec base + 0x7C          got 0x8000007c exp 0x8000007c OK
+mret from internal NMI returns               got 0x80000080 exp 0x80000080 OK
+-- 12. NMI emulation: an NMI inside a trap handler stacks the handler's context; the handler continues after the NMI's mret
+re-reset                                     got 0x1 exp 0x1 OK
+ecall traps into the handler                 got 0xb exp 0xb OK
+handler mepc = ecall pc                      got 0x80000080 exp 0x80000080 OK
+nested nmi mepc = handler pc                 got 0x80000004 exp 0x80000004 OK
+nested nmi mcause                            got 0x8000001f exp 0x8000001f OK
+nmi mret resumes the handler                 got 0x80000004 exp 0x80000004 OK
+nmi mret restored the handler's mepc (the ecall pc) got 0x80000080 exp 0x80000080 OK
+nmi mret restored the handler's mcause (11)  got 0xb exp 0xb OK
+handler mret returns to the ecall pc         got 0x80000080 exp 0x80000080 OK
+-- 12b. NMI emulation: a trap nested inside the NMI handler pushes the stack again, so its mret (the first one) leaves NMI mode with the NMI's own context restored (rtl/ibex_cs_registers.sv:921-935, :967-974)
+re-reset                                     got 0x1 exp 0x1 OK
+nested trap inside the NMI handler           got 0xb exp 0xb OK
+nested trap mepc = the NMI handler pc        got 0x8000007c exp 0x8000007c OK
+first mret returns to the nested trap's mepc (the NMI handler) got 0x8000007c exp 0x8000007c OK
+first mret restores mepc from the second push (the interrupted pc) got 0x80000080 exp 0x80000080 OK
+first mret restores mcause from the second push (the NMI's) got 0x8000001f exp 0x8000001f OK
+first mret: MIE = the nested trap's MPIE (0), MPIE / MPP from the push (1, M) got 0x1880 exp 0x1880 OK
+second mret returns to the interrupted pc    got 0x80000080 exp 0x80000080 OK
+second mret keeps mepc (no stack restore outside NMI mode) got 0x80000080 exp 0x80000080 OK
+second mret keeps mcause                     got 0x8000001f exp 0x8000001f OK
+second mret: MIE 1, MPIE 1, MPP U            got 0x88 exp 0x88 OK
+-- 13. an armed data fault takes the DUT's mtval: the last bus transaction's address, the second word of a spanning access (rtl/ibex_load_store_unit.sv:258)
+re-reset                                     got 0x1 exp 0x1 OK
+the spanning load faults                     got 0x1 exp 0x1 OK
+cause 5 (load access fault)                  got 0x5 exp 0x5 OK
+step tval = the second word                  got 0x80000188 exp 0x80000188 OK
+mtval CSR = the second word                  got 0x80000188 exp 0x80000188 OK
+mepc = the load's pc                         got 0x80000080 exp 0x80000080 OK
+an aligned-convention tval passes through unchanged got 0x80000186 exp 0x80000186 OK
+unarmed, the same load retires               got 0x1 exp 0x1 OK
+and reads the spanning bytes                 got 0x33332222 exp 0x33332222 OK
+-- 14. T-235 part R: Ibex's counter CSR holders (gen_counter_csr_anchors.md section 10: mcountinhibit mask, mhpmcounter13..31 zero)
+re-reset                                     got 0x1 exp 0x1 OK
+mcountinhibit mask from GEN_MHPM_COUNTER_NUM = 0x1FFD got 0x1ffd exp 0x1ffd OK
+mcountinhibit reset value 0                  got 0x0 exp 0x0 OK
+mcountinhibit write all-ones reads back the mask got 0x1ffd exp 0x1ffd OK
+mcountinhibit write 0x2 reads 0 (bit 1 reads 0) got 0x0 exp 0x0 OK
+mcountinhibit write 0x2004 reads 0x4 (bit 13 dropped) got 0x4 exp 0x4 OK
+csrw mhpmcounter13 retires (no trap)         got 0x1 exp 0x1 OK
+csrw mhpmcounter13 trap = 0                  got 0x0 exp 0x0 OK
+mhpmcounter13 reads 0 after the write        got 0x0 exp 0x0 OK
+csrw mhpmcounter31 retires (no trap)         got 0x1 exp 0x1 OK
+mhpmcounter31 reads 0 after the write        got 0x0 exp 0x0 OK
+mhpmcounter13h write reads 0                 got 0x0 exp 0x0 OK
+mhpmcounter31h write reads 0                 got 0x0 exp 0x0 OK
+mhpmevent13 (0x32D) write reads 0            got 0x0 exp 0x0 OK
+mhpmevent31 (0x33F) write reads 0            got 0x0 exp 0x0 OK
+hpmcounter13 alias reads 0 in M              got 0x0 exp 0x0 OK
+mhpmcounter5 (3..12) still the TB-synced holder got 0x1234 exp 0x1234 OK
+re-reset                                     got 0x1 exp 0x1 OK
+mret to U retires                            got 0x1 exp 0x1 OK
+prv U                                        got 0x0 exp 0x0 OK
+hpmcounter13 read in U traps                 got 0x1 exp 0x1 OK
+hpmcounter13 read in U cause illegal (2)     got 0x2 exp 0x2 OK
+hpmcounter13 read in U mtval = insn          got 0xc0d02373 exp 0xc0d02373 OK
+-- 15. T-235: Ibex's minstret as the program reads it: held under mcountinhibit.IR, the writer not counted, the two write corners (gen_counter_csr_anchors.md section 10)
+re-reset                                     got 0x1 exp 0x1 OK
+two retirements under IR = 0 count two       got 0x2 exp 0x2 OK
+a step under IR = 1 still retires            got 0x1 exp 0x1 OK
+two retirements under IR = 1 count nothing   got 0x2 exp 0x2 OK
+counting resumes when IR clears              got 0x3 exp 0x3 OK
+re-reset                                     got 0x1 exp 0x1 OK
+csrw minstret retires as one                 got 0x1 exp 0x1 OK
+csrw minstret V reads V (the writer not counted) got 0x12345678 exp 0x12345678 OK
+the next retirement counts                   got 0x12345679 exp 0x12345679 OK
+csrw minstreth in the retirement cycle: high word written got 0x12345678 exp 0x12345678 OK
+csrw minstreth in the retirement cycle: the low word lost the increment due got 0x12345678 exp 0x12345678 OK
+csrw minstreth with a bubble: high word written got 0x5 exp 0x5 OK
+csrw minstreth with a bubble: low word kept  got 0x12345678 exp 0x12345678 OK
+the low word wraps on the retirement         got 0x0 exp 0x0 OK
+and carries into the high word               got 0x6 exp 0x6 OK
+csrw minstret in the carry cycle: low word written got 0x5 exp 0x5 OK
+csrw minstret in the carry cycle: Ibex's high word did not take the carry got 0x5 exp 0x5 OK
+re-reset                                     got 0x1 exp 0x1 OK
+csrw minstreth of its current value at gap 1: the high word stays 0 got 0x0 exp 0x0 OK
+csrw minstreth of its current value at gap 1: the low word still loses the increment due (the half is known from the address) got 0x1 exp 0x0 FAIL
+csrw minstret, x0 reads 0                    got 0x0 exp 0x0 OK
+csrw minstreth, x0 right after csrw minstret, x0 (gap 1): the writer before was counted by neither side, so the low word stays 0 got 0x0 exp 0x0 OK
+and the high word is 0                       got 0xffffffff exp 0x0 FAIL
+the nop after the pair counts one            got 0x1 exp 0x1 OK
+re-reset                                     got 0x1 exp 0x1 OK
+the addi counts                              got 0x1 exp 0x1 OK
+the csrw that sets IR retires under the new state: not counted got 0x1 exp 0x1 OK
+mcountinhibit.IR set by the program          got 0x4 exp 0x4 OK
+a nop under IR = 1 is not counted            got 0x1 exp 0x1 OK
+the csrw that clears IR retires under the new state: counted got 0x2 exp 0x2 OK
+a nop under IR = 0 counts                    got 0x3 exp 0x3 OK
+GEN_UT_ISA_SHIM FAIL (2 failures)

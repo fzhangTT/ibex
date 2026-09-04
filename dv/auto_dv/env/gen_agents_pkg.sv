@@ -30,6 +30,10 @@ package gen_agents_pkg;
     int unsigned   cycle_gnt;
     int unsigned   cycle_rvalid;
     int unsigned   outstanding_at_gnt;
+    int unsigned   stamp_gnt;             // grant and response instants on the bridge interface's cycle counter: the RVFI record's base
+    int unsigned   stamp_rvalid;          // (cycle_* above are the driver's own counter, which starts at the release)
+    bit            first_after_release;   // the first request the driver saw after a reset release
+    int unsigned   since_release;         // driver cycles from the release to that request (meaningful when first_after_release)
     `uvm_object_utils_begin(gen_bus_txn)
       `uvm_field_enum(gen_bus_kind_e, kind, UVM_ALL_ON)
       `uvm_field_int(addr, UVM_ALL_ON)
@@ -171,6 +175,7 @@ package gen_agents_pkg;
     logic [31:0] addr;
     bit          we;
     logic [3:0]  be;
+    int unsigned stamp_gnt;         // the grant instant on the bridge interface's cycle counter (the RVFI record's base)
     logic [31:0] wdata;
     logic [31:0] word;      // response word (fetch/load) or the stored word (store)
     logic [6:0]  intg;      // driven integrity
@@ -253,15 +258,17 @@ package gen_agents_pkg;
       int unsigned req_stamp = 0;     // the same instant on the export's cycle base (E req / gnt lines)
       int unsigned last_due = 0;
       int unsigned data_w = $bits(vif.rdata);
+      bit released = 0, first_pending = 1, first_written = 0; int unsigned release_cycle = 0, first_since = 0;   // the boot-to-request distance (CG-RST-001)
       vif.gnt = 1'b0; vif.rvalid = 1'b0; vif.err = 1'b0; vif.rdata = '0; vif.intg_corrupt = 1'b0;
       forever begin
         @(negedge vif.clk);
         if (!vif.rst_n) begin
           vif.gnt = 1'b0; vif.rvalid = 1'b0; vif.err = 1'b0;
-          pend.delete(); gnt_armed = 0; cycle = 0; last_due = 0;
+          pend.delete(); gnt_armed = 0; cycle = 0; last_due = 0; released = 0; first_pending = 1; first_written = 0;
           continue;
         end
         cycle++;
+        if (!released) begin released = 1; release_cycle = cycle; end
         // ---- response side: at most one per cycle, in order
         vif.rvalid = 1'b0; vif.err = 1'b0; vif.intg_corrupt = 1'b0;
         if (pend.size() > 0 && pend[0].due <= cycle) begin
@@ -277,7 +284,8 @@ package gen_agents_pkg;
           t.kind = cfg.is_data ? (p.we ? GEN_BUS_STORE : GEN_BUS_LOAD) : GEN_BUS_FETCH;
           t.addr = p.addr; t.data = p.we ? p.wdata : p.word; t.intg = p.intg; t.be = p.be;
           t.err = p.err; t.injected = p.injected; t.gnt_delay = p.gnt_delay; t.rvalid_delay = p.rvalid_delay;
-          t.cycle_req = p.cycle_req; t.cycle_gnt = p.cycle_gnt; t.cycle_rvalid = cycle;
+          t.cycle_req = p.cycle_req; t.cycle_gnt = p.cycle_gnt; t.cycle_rvalid = cycle; t.stamp_gnt = p.stamp_gnt; t.stamp_rvalid = bvif.cycle_count;
+          if (!first_written) begin t.first_after_release = 1; t.since_release = first_since; first_written = 1; end
           t.outstanding_at_gnt = p.outstanding_at_gnt;
           ap.write(t);
         end
@@ -299,7 +307,8 @@ package gen_agents_pkg;
             logic [38:0] enc;
             p.addr = vif.addr; p.we = req_we(); p.be = req_be();
             p.wdata = cfg.is_data ? vif.wdata[31:0] : '0;
-            p.gnt_delay = cycle - req_cycle; p.cycle_req = req_cycle; p.cycle_gnt = cycle; p.outstanding_at_gnt = pend.size();
+            p.gnt_delay = cycle - req_cycle; p.cycle_req = req_cycle; p.cycle_gnt = cycle; p.outstanding_at_gnt = pend.size(); p.stamp_gnt = bvif.cycle_count;
+            if (first_pending) begin first_since = req_cycle - release_cycle + 1; first_pending = 0; end   // cycles from the release edge to the request (the driver counts from the first post-release negedge, so +1 gives the RTL's count)
             p.err = 0; p.injected = 0; p.intg_bad = 0;
             if (armed_hit(GEN_MEM_ERR_ARM_KIND_ERR, p.addr) || (cfg.err_rate > 0 && cfg.in_err_window(p.addr) && ($urandom_range(999, 0) < cfg.err_rate))) begin
               p.err = 1; p.injected = 1; injected_err++;
@@ -383,14 +392,30 @@ package gen_agents_pkg;
   // ------------------------------------------------------------------------------------------
   // Scramble-key responder (C3.5): answers each ic_scr_key_req_o pulse by dropping valid, holding it
   // low for the regime's delay, then raising it until the next pulse.
+  // One scramble-key pin change (req or valid), published for the coverage sampler (CG-SEC-005 events).
+  class gen_key_evt extends uvm_sequence_item;
+    bit req_changed, valid_changed, req, valid;
+    int unsigned cycle;
+    `uvm_object_utils_begin(gen_key_evt)
+      `uvm_field_int(req_changed, UVM_ALL_ON)
+      `uvm_field_int(valid_changed, UVM_ALL_ON)
+      `uvm_field_int(req, UVM_ALL_ON)
+      `uvm_field_int(valid, UVM_ALL_ON)
+      `uvm_field_int(cycle, UVM_ALL_ON)
+    `uvm_object_utils_end
+    function new(string name = "gen_key_evt"); super.new(name); endfunction
+  endclass
   class gen_scrkey_driver extends uvm_component;
     `uvm_component_utils(gen_scrkey_driver)
     virtual gen_scrkey_if vif;
     gen_env_cfg cfg;
     int unsigned requests = 0;
     gen_export_sink sink;   // E scrkey req / valid lines on every change
+    uvm_analysis_port #(gen_key_evt) ap;   // req / valid changes for the coverage sampler
+    int unsigned cyc = 0;
     function new(string name, uvm_component parent);
       super.new(name, parent);
+      ap = new("ap", this);
     endfunction
     function void build_phase(uvm_phase phase);
       super.build_phase(phase);
@@ -438,6 +463,12 @@ package gen_agents_pkg;
         if (sink != null && sink.source_on("scrkey")) begin
           if (vif.req != req_q) sink.write_event(gen_export_line_scrkey_req(sink.cycle(), vif.req));
           if (vif.valid != valid_q) sink.write_event(gen_export_line_scrkey_valid(sink.cycle(), vif.valid));
+        end
+        cyc++;
+        if (vif.req != req_q || vif.valid != valid_q) begin
+          gen_key_evt e = gen_key_evt::type_id::create("key_evt");
+          e.req_changed = (vif.req != req_q); e.valid_changed = (vif.valid != valid_q); e.req = vif.req; e.valid = vif.valid; e.cycle = cyc;
+          ap.write(e);
         end
         valid_q = vif.valid;
         req_q = vif.req;

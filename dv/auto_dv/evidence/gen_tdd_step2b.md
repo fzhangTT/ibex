@@ -389,10 +389,12 @@ the debug suspension, the decidability row, the SVA fixes), v cf73fd8a625e89a8 (
 build w is gen_fu_l7_sources_sha256_w.txt, its sha256 being the build id). Every rule below names its red and its green.
 
 - T-183 gate (gen_rvfi_pkg.sv): `rvfi_ext_rf_wr_suppress` is accepted only when `gen_bus_err_log::take_intg_word(mem_addr)` finds an
-  announced corruption of the load's word and the record reports no destination write; otherwise an `isa_rd` miss. Reds MUT-SUP,
+  announced corruption of the load's word and the record reports no destination write; otherwise an `isa_rd` miss; a record inside a Zcmp
+  sequence (`is_seq`) bypasses the gate and is judged by the sequence's union compare (tb_l10 L-4). Reds MUT-SUP,
   MUT-SUPB (the flag on one clean load of the Zc / Zcb images) and MUT-SUP2 (the announced address off by 0x100), ablations PASS
   (gen_mut_step2b.md). Green gen_fu_l7_intg_s7_allchk_*: 83 suppressed loads accepted, 54 internal NMIs, 0 mismatches, every checker
-  and isa row on. The s7 image cannot carry the clean-load red: its first 6000 records retire no load
+  and isa row on (the retained run headers of this run, boot_zc and lockstep_zc carry no +gen_chk_* plusarg, and every chk_* knob defaults
+  to 1 in gen_tb_knobs.yaml except chk_sva_b8, LOG-067: that is the evidence for the claim, A2c-6). The s7 image cannot carry the clean-load red: its first 6000 records retire no load
   (gen_fu_l7_s7_trace_opcode_summary.txt).
 - irq checker (gen_checkers_pkg.sv): an entry clears only the taken line of each expectation and restarts the others' bound; a line
   raised, enabled and still held at report that was never taken is an error at report. Reds MUT-NT (31 per-line bound errors; the same
@@ -401,14 +403,16 @@ build w is gen_fu_l7_sources_sha256_w.txt, its sha256 being the build id). Every
   _ut_irq_dir_*, _rows_nmi_irqp_*. The `misc irq_entry order,cause,decidable` row: 573 rows in the storm, 1 in rows_nmi
   (gen_fu_l7_*_export_irq_entry_rows.txt). The first build with the row FATALed at time 0 in every run (`row misc irq_entry emitted by
   an unregistered writer`) until the checker registered it in end_of_elaboration_phase: the sink's T-141 rule catching a missing
-  registration, recorded as an incidental red of that rule.
+  registration, recorded as an incidental red of that rule. That FATAL run was not retained: narrated only (A2c-6).
 - nmi_internal: records in debug mode are not counted; the bound is TB-side (4). Red MUT-NIB (the bound at 0: 54 errors, one per
-  announcement; at 1 none, so the observed latency is exactly 1 record), ablation PASS. Greens gen_fu_l7_lockstep_s7_dbg_storm_*,
+  announcement), ablation PASS; the bound-1 form (batch_tb7, build 16b938ccd6021cc1) PASSED both runs, but no retained line states that
+  build's bound, so the exactly-1-record latency is the author's unretained observation (A2c-5). Greens gen_fu_l7_lockstep_s7_dbg_storm_*,
   _intg_s7_allchk_*.
 - NMI classification and the pre-empt rule (gen_rvfi_pkg.sv): the scoreboard subscribes to the irq driver's events (`imp_irq`) and
   classifies external from the pin sample or a raise of the NM line in the current or previous record's window; the pre-empt rule
   works on a local `intr_now`, the monitor's transaction untouched. Greens gen_fu_l7_lockstep_irq_storm_nmi_* and
-  gen_fu_l7_storm_nmi_s2..s6_* (six simulator seeds); every one reports `nmi_preempted=0`, so the pre-empt rule has NO red and no
+  gen_fu_l7_storm_nmi_s2..s6_* (six simulator seeds; only seed 1 took an NMI entry, nmi=1, seeds 2-6 report nmi=0: one NMI entry in
+  the whole sweep, A2c-4); every one reports `nmi_preempted=0`, so the pre-empt rule has NO red and no
   observed case: it stands on its derivation until a directed raise-then-NMI timing sequence exists (not built).
 - Protocol SVAs (gen_protocol_props.sv): widths from `TagSizeECC` / `LineSizeECC`, `sva_alert_minor_window` on `ICACHE_ECC_WINDOW`
   (GEN_ICACHE_ECC_WINDOW 1 -> 2 with the reason), knob names from `PLUSARG_CHK_SVA_*` / `PLUSARG_CHK_ALL`, dcsr's prv through
@@ -417,7 +421,9 @@ build w is gen_fu_l7_sources_sha256_w.txt, its sha256 being the build id). Every
   group knob's ablation PASS (gen_mut_step2b.md; the ibex_top.sv form of MS-ALERT was inert and is recorded, not counted).
 - Shim (gen_isa_shim.cc): the mstatus shifts derived from the MSTATUS_* masks and the NMI causes named once in gen_isa_shim_map.h;
   the recoverable-NMI stack pushed on every exception entry outside debug mode. Unit test section 12b (a trap nested inside the NMI
-  handler) red on the pre-2c shim, 6 failures (gen_fu_l7_ut_isa_shim_red_nested.log), green on the landing shim
+  handler) red on an intermediate 2c shim (sha256 46324b7522a4dda3, between bd75f16 and cbadb7f: gen_fu_l7_ut_isa_shim_red_nested.log,
+  6 failures) and, re-run for A2c-2, on the committed pre-2c shim bd75f16 (76293bbdd49351b1) with the committed 2c test
+  (991603011f5b4f6f): the same 6 failures (gen_fu_l12_ut_isa_shim_red_12b_bd75f16.log), green on the landing shim
   (gen_fu_l7_ut_isa_shim.log, stamped with date, shim and test sha256, image). DUT-level greens: the with-NMI storm and the integrity
   run above.
 - Witness covergroup `option.weight = 0` (CR-2B-L-1): greens gen_fu_l7_ut_witness_*, _ut_witness_nofcov_*; the referee's red WM2
@@ -426,9 +432,10 @@ build w is gen_fu_l7_sources_sha256_w.txt, its sha256 being the build id). Every
   model=800003b0 dut=800003d0` at order 38 (gen_fu_l7_lockstep_zcmp_dummy_popret_*): the DUT's popret sequence under
   `dummy_instr_en` diverges from the fold; the dummy-in-expansion assertion waits for the C10 ruling (probe bind with a knob, or text
   only) and is NOT built; the program is retained as its vehicle.
-- Provenance: the mutants were built from the wit_root copy beside build u (MS-ICRAM, MS-IRQ, MS-DBG, MUT-SUP, MUT-SUPB, MUT-SUP2,
-  MUT-NT, WM2, MUT-NIB: their headers carry b7b1b3fe53bc65ec or the mutated TB's own sha, 21:29-21:53Z) or v (MS-ALERT, MUT-NT2:
-  cf73fd8a625e89a8), all before w (e287c87e3fdf8a97); the edits between those builds (the per-line release, the shim's stack push,
+- Provenance: the mutants were built from the wit_root copy beside build u or v; a copy time is retained nowhere, so "beside" is an
+  inference from the header shas (b7b1b3fe53bc65ec = u, cf73fd8a625e89a8 = v, or the mutated TB's own sha) and the catch-run times
+  (MS-ICRAM, MS-IRQ, MS-DBG, MUT-SUP2, MUT-NT, WM2 at 21:29-21:53Z; MUT-SUP 21:57Z, MUT-SUPB 21:58Z, MUT-NIB 22:06Z and MUT-NT2 22:10Z,
+  the last two after build w's driver start, tb_l10 L-3), not all before w (e287c87e3fdf8a97); the edits between those builds (the per-line release, the shim's stack push,
   unit test 12b, documents) enter none of the mutated rules, and each row carries its own build sha. Regressions on w: gen_fu_l7_lockstep_muldiv_nofcov_*,
   _ut_isa_cov_zc_*, _ut_fetch_en_*, all PASS; codegen `--check` up to date for the knobs and the fcov renderer.
 - Not built: the NMI-pre-empt red (above), the B8 assertion (ruling), an icram ECC injection (CM43-M-1's red impossible without it),
@@ -440,18 +447,22 @@ Build z e845572967179ff0 (wit_root; sources list gen_fu_l9_sources_sha256_z.txt)
 gen_fu_l9_gen_t235_hashes.txt): gen_isa_shim_counters.h / .cc (mcountinhibit with Ibex's mask, zero holders for mhpmcounter13..31 and
 mhpmevent13..31) and unit-test section 14 (23 rows). Mine: the minstret proxy (Spike's counter minus what Ibex did not count), the U-mode
 instret aliases through Spike's counter proxies, the retirement derivation fixed for minstret writes, the retirement-gap DPI fed by the
-scoreboard, unit-test section 15 (28 rows), gen_component_api_isa_shim.md's counter section.
+scoreboard, unit-test section 15 (24 rows then, 31 since the tb_l9 rows), gen_component_api_isa_shim.md's counter section.
 - Red first: sections 14 and 15 on the pre-integration shim, 8 failures (gen_fu_l9_ut_isa_shim_red_t235.log: the mask rows, a step
   under IR = 1 synthesized as a trap, the writer counted, the h-write corner, the TB write eating the next increment); green 271 OK
   (gen_fu_l9_ut_isa_shim.log).
 - Measurement (the Orchestrator's item): the Test Writer's gen_pmc_ctrl seed-1 image (provenance gen_fu_l9_pmc_s1_program_provenance.txt),
   which no build could follow (every record under IR = 1 an isa_trap mismatch). First form of the inhibit rule (the IR state as the
-  step began, Spike's reading): no isa_trap left, but 47 isa_rd (29 csrr minstret, 2 csrr instret, the rest their consequences), every
-  one DUT = model + 1, all after an IR clear and none under IR = 1 (retained red gen_fu_l9_lockstep_pmc_s1_on_red_*, _off_red_*). The
+  step began, Spike's reading): no isa_trap left (the reds' excerpts hold no isa_trap row), but 60 error rows, 47 isa_rd and 13 isa_mem
+  consequences, 45 of the isa_rd rows DUT = model + 1 and 2 of them + 2 (gen_fu_l12_lockstep_pmc_s1_on_red_errors.txt, every UVM_ERROR
+  line of the run; the per-row classification by the insn field, csrr minstret / instret reads against their arithmetic consequences,
+  in gen_fu_l12_lockstep_pmc_s1_on_red_isa_rd_classes.txt), all after an IR clear and none under IR = 1; the reds' build y is identified
+  by gen_fu_l12_compile_y.log and gen_fu_l12_sources_sha256_y.txt (e493e548da55b9ce) (retained red gen_fu_l9_lockstep_pmc_s1_on_red_*,
+  _off_red_*). The
   export trace decided the rule: an instruction retires under the inhibit state it leaves behind, so the csrw that sets IR is itself not
-  counted and the csrw that clears IR is (the Test Writer's docstring semantics; rtl/ibex_cs_registers.sv:1627 with the write landing
-  before the writer's own retirement). With that rule build z runs the image to its end: 8000 records, 0 mismatches, pin on and off
-  (gen_fu_l9_lockstep_pmc_s1_on_*, _off_*), and every earlier lock-step run stays green (gen_fu_l9_lockstep_s7_*, _csrwarl_*,
+  counted and the csrw that clears IR is (the Test Writer's docstring semantics; rtl/ibex_cs_registers.sv:1643 with the write landing
+  before the writer's own retirement). With that rule build z runs the image to its end: 8000 records (pin on) / 8001 (pin off), 0 mismatches
+  (gen_fu_l9_lockstep_pmc_s1_on_*, _off_*; those two runs followed the z driver's regression, so they are not in gen_fu_l9_z_driver.log), and every earlier lock-step run stays green (gen_fu_l9_lockstep_s7_*, _csrwarl_*,
   _intg_s7_allchk_*, _irq_storm_*, _s7_dbg_storm_*, _zcmp_mv_*, _muldiv_*, boot_zc, lockstep_zc, ut_isa_cov_zc, ut_witness).
 - Mutant MUT-CNT (gen_mut_step2b.md): the inhibit accounting removed; 91 isa_rd misses on the same image, ablation `+gen_chk_isa_rd=0`
   PASS.
@@ -462,15 +473,26 @@ scoreboard, unit-test section 15 (28 rows), gen_component_api_isa_shim.md's coun
 ## 13. Landing 9: the cross-model rows of landings 2c and 7, and the B8 probe (LOG-067)
 
 Build aa 4bc32b82a3b03340 (wit_root; sources list gen_fu_l10_sources_sha256_aa.txt). Greens: boot_zc, lockstep_zc, lockstep_s7,
-intg_s7_allchk, the two storms, the debug storm, ut_isa_cov_zc, ut_witness, lockstep_zcmp_mv (gen_fu_l10_*); codegen --check up to date.
+intg_s7_allchk, the two storms, the debug storm, ut_isa_cov_zc, ut_witness, lockstep_zcmp_mv (gen_fu_l10_*). The knobs and fcov codegen
+--check were up to date on the copy against the plan the copy carried (its base commit, before the v3d..v3h touches; that output was not
+retained); at 329902f the committed renderer reports STALE against the moved plan (CM132, tb_l10), and the Slice A state is up to date again
+against plan v3i (gen_fu_l12_codegen_check.log).
 - The B8 probe (T-225; rtl-arch's gen_b8_rtl_facts.md section 6; the C10 ruling LOG-067 = a probe bind behind a knob): tb/gen_b8_probe.sv
   bound into ibex_if_stage by gen_binds.sv, assertion `sva_b8_dummy_in_expansion` ((if_id_pipe_reg_we && insert_dummy_instr) |-> the
   Zcmp FSM's state, rlist and sp_offset unchanged), knob `+gen_chk_sva_b8` default 0. Red: the two dummy programs with the knob on,
-  gen_zcmp_dummy_directed.S 70 firings (gen_fu_l10_b8_zcmp_dummy_on_*) and gen_zcmp_dummy_popret_directed.S 118 firings
-  (gen_fu_l10_b8_zcmp_dummy_popret_on_*), beside their comparator rows (27 and 9408); with the knob off the same programs show 0
-  firings (gen_fu_l10_lockstep_zcmp_dummy_*, _popret_*), and no other run changes. No green with a true antecedent exists: a dummy-enabled
+  gen_zcmp_dummy_directed.S 35 firings (gen_fu_l10_b8_zcmp_dummy_on_*: 62 UVM_ERROR lines, of them 35 sva_b8_dummy_in_expansion; each
+  firing is one VCS failure line and one UVM_ERROR line) and gen_zcmp_dummy_popret_directed.S 59 firings (gen_fu_l10_b8_zcmp_dummy_popret_on_*:
+  13251 UVM_ERROR lines, of them 59 the assertion's; the knob-on run ran longer than the knob-off run's 9408 comparator rows); with the
+  knob off the same programs show 0 firings (gen_fu_l10_lockstep_zcmp_dummy_*, _popret_*; those controls ran with +gen_ut_boot_retire=10 and an
+  export file, not the knob-on runs' plusargs, tb_l10 L-1). Matched controls re-run on build ai with the knob-on plusargs (+gen_ut_boot_retire=1000,
+  no export) and the knob off: gen_fu_l12_b8_zcmp_dummy_off_1000_* 27 UVM_ERROR lines and gen_fu_l12_b8_zcmp_dummy_popret_off_1000_* 13192, 0
+  firings each, equal to the knob-on runs' non-B8 counts (62 - 35 and 13251 - 59): the knob adds exactly the assertion's lines. No green with a true antecedent exists: a dummy-enabled
   program without Zcmp is not in the stimulus set, so the assertion's silence there is vacuous and stated as such. The knob stays off by
-  default because the assertion fails on the DUT's B8 defect itself, not on a TB fault.
+  default because the assertion fails on the DUT's B8 defect itself, not on a TB fault. LOG-067's remaining conditions: the flow's
+  refusal of a measured entry that sets the knob is built by Runtime at fa9ba21 (the testlist loader refuses a measured entry whose plusargs
+  turn the knob on, and measured dispatch is refused when a canary build records it on or absent; LOG-076); the knob is named chk_sva_b8 after the per-assertion
+  family, the name ruled to stand (LOG-076); the probe-register row and the SVA layer header's C10-exception note are CM132-M-2 items
+  (the row in this landing, the header comment with the next source-changing landing).
 - The landing-2c review rows (gen_critic_response_fu2a.md, the table "cross-model review of landing 2c"): the gate looks up both words
   of a load spanning two bus words (the second announcement sits at +4), announcements enter the gate's list for loads only, the irq
   checker's two never-taken rules are silent in NMI mode and the summary prints `never taken=`, the dbg_dret message uses the dcsr
@@ -480,3 +502,30 @@ intg_s7_allchk, the two storms, the debug storm, ut_isa_cov_zc, ut_witness, lock
   have no corrupted second half of a spanning load (the integrity run's 83 are whole-word), stated rather than staged.
 - The landing-7 review rows (gen_critic_response_fcov.md): see gen_tdd_fcov.md Section 7 (the exclusion counts only the self-test's
   own miss, every counted group refereed, the unit test's own red on the FM4 build, the record corrections).
+
+### 12.1 The Critic's tb_l9 rows on T-235 (rows CR-9), fixed in the Slice A landing
+
+The T-235 red gen_fu_l9_ut_isa_shim_red_t235.log ran with an intermediate test file (sha256 36128fb905fc4f4e, not kept), not the
+committed test (c30369dd144e93fa): the committed test does not compile against the pre-integration shim (`gen_isa_set_retire_gap`
+undeclared, gen_fu_l12_ut_isa_shim_red_t235_as_committed_compile.log), so the 24 T-235 rows have no red as committed (CM123-L-8);
+the 7 rows added by tb_l9 have theirs (gen_fu_l12_ut_isa_shim_red_tbl9.log: the landing's test on the committed T-235 shim, 2 failures).
+
+- M-1: the minstret CSR objects know their half from the address (`gen_minstret_half_csr_t` for CSR_MINSTRET and CSR_MINSTRETH over one
+  64-bit view, `gen_minstret_proxy_t::write_half`), so a minstreth write of the value it already holds takes the high-word corner; new
+  row "csrw minstreth of its current value at gap 1: the low word still loses the increment due".
+- M-2: the gap-1 corners are skipped when the previous record was itself a minstret / minstreth writer (neither side counted it:
+  Spike's written flag, rtl/ibex_id_stage.sv:1213-1220); new rows for the back-to-back pair `csrw minstret, x0; csrw minstreth, x0`
+  at gap 1 (both words 0, the nop after counts one).
+- Red first: the new rows on the committed T-235 shim (34559ec691021abd) FAIL, 2 failures (gen_fu_l12_ut_isa_shim_red_tbl9.log; the diff
+  of that shim against the landing's is gen_fu_l12_ut_isa_shim_red_vs_landing.diff); green 278 OK (gen_fu_l12_ut_isa_shim.log). The
+  gen_pmc_ctrl image stays at 0 mismatches on the landing build (gen_fu_l12_lockstep_pmc_s1_on_*, _off_*).
+- L-1: the build-y reds are identified above; the unit-test red of Section 12 was HEAD's gen_isa_shim.cc of 22:39Z (1b51fec23d35a589) plus
+  an inert gap setter, its test file the landing's; the diff idiom is retained from this landing on.
+- L-2: figures corrected above (31 rows, 8000 / 8001, the classified error list, minstret's inhibit line is rtl/ibex_cs_registers.sv:1643,
+  mcycle's :1627 was cited before; the pmc greens after the driver's end line).
+- L-3: `g_ir_at_step` removed (the rule reads the holder after the step).
+- L-4: the mutation driver's `source tree untouched` line now hashes the mutated file's copy in the source tree and each batch retains the
+  mutant diff (gen_fu_l12_MUTCNT_mutant.diff from MUT-CNT's saved original; FM12..FM15 from their batches).
+- L-5: gen_fu_l9_gen_t235_README.md's "236 rows OK" is Runtime's unretained claim about their out-of-tree run; the committed test's own
+  count is the retained one (247 rows through section 14 at the T-235 commit, 278 now).
+- I-1: the writer comment cites Ibex's exclusion (rtl/ibex_id_stage.sv:1213-1220) beside Spike's written flag.

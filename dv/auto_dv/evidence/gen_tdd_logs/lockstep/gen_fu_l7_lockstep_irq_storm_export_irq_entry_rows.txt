@@ -1,4 +1,4 @@
-# the misc irq_entry rows of scratch wit_root dv/auto_dv/work/tb-infra/wit/w/lockstep_irq_storm/gen_export.txt: an EXCERPT, the first 199 of 574 rows (the TDD record counts the 573 entries the checker judged; the 574th row is the run's final entry)
+# the misc irq_entry rows of scratch wit_root dv/auto_dv/work/tb-infra/wit/w/lockstep_irq_storm/gen_export.txt: an EXCERPT, the first 199 of 574 rows (the TDD record counts the 573 entries the checker judged; the 574th row is the run's final entry) [header corrected 2026-09-03, landing 9: '574 rows' -> an EXCERPT of the first 199 of 574 (CM117-L-4); the rows below are the original copy]
 # events misc irq_entry order,cause,decidable
 E 6e misc irq_entry 9 15 1
 E 7a misc irq_entry a 1b 0

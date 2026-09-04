@@ -1,0 +1,17 @@
+# gen_fcov_proof_slice5d3.fcov.yaml: fcov-expectation proof of T-205 Slice A (gen_sec_ctrl_inputs_cg): the mcounteren write events of gen_csr_warl_directed.S (pin On: applied); build ai, fresh vdb
+test: gen_fcov_proof_slice5d3
+owner: tb-infra
+bins:
+  - gen_sec_ctrl_inputs_cg.cp_event.mcounteren_write
+  - gen_sec_ctrl_inputs_cg.cp_event.fetch_en_change
+  - gen_sec_ctrl_inputs_cg.cp_fetch_en_val.on
+  - gen_sec_ctrl_inputs_cg.cp_mcounteren_w_val.on
+  - gen_sec_ctrl_inputs_cg.cp_mcounteren_write_effect.dropped
+  - gen_sec_ctrl_inputs_cg.cp_mcounteren_write_effect.applied
+anti_vacuity:
+  gen_sec_ctrl_inputs_cg.cp_event.mcounteren_write: "plan CG-SEC-005 anti-vacuity: cpuctrl_read: rvfi_valid of a CSR op on CSR_CPUCTRLSTS with rvfi_rd_addr != 0 and; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_sec_ctrl_inputs_cg.cp_event.fetch_en_change: "plan CG-SEC-005 anti-vacuity: cpuctrl_read: rvfi_valid of a CSR op on CSR_CPUCTRLSTS with rvfi_rd_addr != 0 and; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_sec_ctrl_inputs_cg.cp_fetch_en_val.on: "plan CG-SEC-005 anti-vacuity: cpuctrl_read: rvfi_valid of a CSR op on CSR_CPUCTRLSTS with rvfi_rd_addr != 0 and; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_sec_ctrl_inputs_cg.cp_mcounteren_w_val.on: "plan CG-SEC-005 anti-vacuity: cpuctrl_read: rvfi_valid of a CSR op on CSR_CPUCTRLSTS with rvfi_rd_addr != 0 and; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_sec_ctrl_inputs_cg.cp_mcounteren_write_effect.dropped: "plan CG-SEC-005 anti-vacuity: cpuctrl_read: rvfi_valid of a CSR op on CSR_CPUCTRLSTS with rvfi_rd_addr != 0 and; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_sec_ctrl_inputs_cg.cp_mcounteren_write_effect.applied: "plan CG-SEC-005 anti-vacuity: cpuctrl_read: rvfi_valid of a CSR op on CSR_CPUCTRLSTS with rvfi_rd_addr != 0 and; the hit is a retired instruction the lock-step compare judged against the ISA model"

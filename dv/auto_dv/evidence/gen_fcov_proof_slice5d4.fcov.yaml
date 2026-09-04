@@ -1,0 +1,11 @@
+# gen_fcov_proof_slice5d4.fcov.yaml: fcov-expectation proof of T-205 Slice A (gen_sec_ctrl_inputs_cg): the fetch_enable change events of gen_ut_fetch_en; build ai, fresh vdb
+test: gen_fcov_proof_slice5d4
+owner: tb-infra
+bins:
+  - gen_sec_ctrl_inputs_cg.cp_event.fetch_en_change
+  - gen_sec_ctrl_inputs_cg.cp_fetch_en_val.off
+  - gen_sec_ctrl_inputs_cg.cp_fetch_en_val.on
+anti_vacuity:
+  gen_sec_ctrl_inputs_cg.cp_event.fetch_en_change: "plan CG-SEC-005 anti-vacuity: cpuctrl_read: rvfi_valid of a CSR op on CSR_CPUCTRLSTS with rvfi_rd_addr != 0 and; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_sec_ctrl_inputs_cg.cp_fetch_en_val.off: "plan CG-SEC-005 anti-vacuity: cpuctrl_read: rvfi_valid of a CSR op on CSR_CPUCTRLSTS with rvfi_rd_addr != 0 and; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_sec_ctrl_inputs_cg.cp_fetch_en_val.on: "plan CG-SEC-005 anti-vacuity: cpuctrl_read: rvfi_valid of a CSR op on CSR_CPUCTRLSTS with rvfi_rd_addr != 0 and; the hit is a retired instruction the lock-step compare judged against the ISA model"

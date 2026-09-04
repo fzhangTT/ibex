@@ -1,0 +1,9 @@
+FCOV-EXPECTATION: gen_rst_boot_cg.cp_boot_addr.high = UNHIT (count=0)
+FCOV-EXPECTATION: gen_rst_boot_cg.cp_boot_low_byte.zero = HIT (count=1)
+FCOV-EXPECTATION: gen_rst_boot_cg.cp_fetch_en_at_release.off = HIT (count=1)
+FCOV-EXPECTATION: gen_rst_boot_cg.cp_pending.none = HIT (count=1)
+FCOV-EXPECTATION: gen_rst_boot_cg.cp_first_event.first_instr_retire = HIT (count=1)
+FCOV-EXPECTATION: gen_rst_boot_cg.cp_hart_id.zero = HIT (count=1)
+FCOV-EXPECTATION: gen_rst_boot_cg.cp_reset_kind.power_on = HIT (count=1)
+FCOV-EXPECTATION: gen_rst_boot_cg.cp_boot_to_req_cycles.more = HIT (count=1)
+FCOV-EXPECTATION: FAIL - 1 declared bin(s) not hit: gen_rst_boot_cg.cp_boot_addr.high

@@ -1,0 +1,97 @@
+lockstep_cpuctrl: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+end 23:43:39Z
+urg lockstep_cpuctrl exit=0 dashboard.txt groups.txt grpinfo.txt session.xml tests.txt 
+lockstep_cpuctrl_keyw: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+end 23:43:43Z
+urg lockstep_cpuctrl_keyw exit=0 dashboard.txt groups.txt grpinfo.txt session.xml tests.txt 
+gen_rvfi_record_cg: 30 coverpoint bins hit, 0 unhit: []
+  crosses (covered/expected): gen_rvfi_record_cg.cr_kind_trap 3/6, gen_rvfi_record_cg.cr_intr_cont 4/5, gen_rvfi_record_cg.cr_mode_trap 2/4, gen_rvfi_record_cg.cr_rd_kind 5/8, gen_rvfi_record_cg.cr_rd_source_kind 4/9; total 18/32
+gen_rvfi_record_cg: 30 coverpoint bins hit, 0 unhit: []
+  crosses (covered/expected): gen_rvfi_record_cg.cr_kind_trap 2/6, gen_rvfi_record_cg.cr_intr_cont 3/5, gen_rvfi_record_cg.cr_mode_trap 1/4, gen_rvfi_record_cg.cr_rd_kind 3/8, gen_rvfi_record_cg.cr_rd_source_kind 3/9; total 12/32
+gen_mul_timing_cg: 14 coverpoint bins hit, 0 unhit: []
+  crosses (covered/expected): gen_mul_timing_cg.cr_op_delta_clean 4/4, gen_mul_timing_cg.cr_op_next_dep 4/8, gen_mul_timing_cg.cr_seq 8/32, gen_mul_timing_cg.cr_wb_defer 0/12; total 16/56
+gen_mul_timing_cg: 13 coverpoint bins hit, 0 unhit: []
+  crosses (covered/expected): gen_mul_timing_cg.cr_op_delta_clean 4/4, gen_mul_timing_cg.cr_op_next_dep 4/8, gen_mul_timing_cg.cr_seq 8/32, gen_mul_timing_cg.cr_wb_defer 0/12; total 16/56
+gen_rst_boot_cg: 8 coverpoint bins hit, 0 unhit: []
+  crosses (covered/expected): gen_rst_boot_cg.cr_boot_kind 1/8, gen_rst_boot_cg.cr_pending_first 1/6, gen_rst_boot_cg.cr_fetch_en_first 1/4; total 3/18
+gen_rst_boot_cg: 8 coverpoint bins hit, 0 unhit: []
+  crosses (covered/expected): gen_rst_boot_cg.cr_boot_kind 1/8, gen_rst_boot_cg.cr_pending_first 1/6, gen_rst_boot_cg.cr_fetch_en_first 1/4; total 3/18
+gen_sec_ctrl_inputs_cg: 10 coverpoint bins hit, 0 unhit: []
+  crosses (covered/expected): gen_sec_ctrl_inputs_cg.cr_mcounteren 0/3, gen_sec_ctrl_inputs_cg.cr_key 1/5, gen_sec_ctrl_inputs_cg.cr_key_ctx 0/8; total 1/16
+gen_sec_ctrl_inputs_cg: 10 coverpoint bins hit, 0 unhit: []
+  crosses (covered/expected): gen_sec_ctrl_inputs_cg.cr_mcounteren 0/3, gen_sec_ctrl_inputs_cg.cr_key 1/5, gen_sec_ctrl_inputs_cg.cr_key_ctx 0/8; total 1/16
+gen_sec_ctrl_inputs_cg: 6 coverpoint bins hit, 0 unhit: []
+  crosses (covered/expected): gen_sec_ctrl_inputs_cg.cr_mcounteren 1/3, gen_sec_ctrl_inputs_cg.cr_key 0/5, gen_sec_ctrl_inputs_cg.cr_key_ctx 0/8; total 1/16
+gen_sec_ctrl_inputs_cg: 3 coverpoint bins hit, 0 unhit: []
+  crosses (covered/expected): gen_sec_ctrl_inputs_cg.cr_mcounteren 0/3, gen_sec_ctrl_inputs_cg.cr_key 0/5, gen_sec_ctrl_inputs_cg.cr_key_ctx 0/8; total 0/16
+gen_fcov_proof_slice5d.fcov.yaml notes derived: 10
+slice5a (lockstep_s7_dbg_storm): FCOV-EXPECTATION: PASS - all 30 declared bins hit
+slice5a2 (lockstep_irq_storm): FCOV-EXPECTATION: PASS - all 30 declared bins hit
+slice5b (lockstep_muldiv): FCOV-EXPECTATION: PASS - all 14 declared bins hit
+slice5b2 (lockstep_muldiv_fast): FCOV-EXPECTATION: PASS - all 13 declared bins hit
+slice5c (boot_zc): FCOV-EXPECTATION: PASS - all 8 declared bins hit
+slice5c2 (boot_zc_fe1): FCOV-EXPECTATION: PASS - all 8 declared bins hit
+slice5d (lockstep_cpuctrl): FCOV-EXPECTATION: PASS - all 10 declared bins hit
+slice5d2 (lockstep_cpuctrl_keyw): FCOV-EXPECTATION: PASS - all 10 declared bins hit
+slice5d3 (lockstep_csrwarl): FCOV-EXPECTATION: PASS - all 6 declared bins hit
+slice5d4 (ut_fetch_en): FCOV-EXPECTATION: PASS - all 3 declared bins hit
+FM12 applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/FM12/dv/auto_dv/env/gen_fcov_pkg.sv; original sha256 8faf5e0d8b481186
+FM12_catch_dbg_storm: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first: 
+FM12: build sources sha256: 62d7aff8f43a9e23; source tree untouched: 1d9e2f8d9e5927dd
+FM12: checker FCOV-EXPECTATION: FAIL - 1 declared bin(s) not hit: gen_rvfi_record_cg.cp_pc_delta.plus4
+Traceback (most recent call last):
+  File "/tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mkablation.py", line 11, in <module>
+    lines = src.read_text().splitlines(); out = []; removed = 0
+            ^^^^^^^^^^^^^^^
+  File "/tools_soc/opensrc/python/python-3.12.10/lib/python3.12/pathlib.py", line 1027, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tools_soc/opensrc/python/python-3.12.10/lib/python3.12/pathlib.py", line 1013, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/FM12/gen_fcov_proof_slice5a.fcov.yaml'
+FM13 applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/FM13/dv/auto_dv/env/gen_fcov_pkg.sv; original sha256 8faf5e0d8b481186
+FM13_catch_muldiv: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first: 
+FM13: build sources sha256: 6be9ba5bbda6f01e; source tree untouched: 1d9e2f8d9e5927dd
+FM13: checker FCOV-EXPECTATION: FAIL - 1 declared bin(s) not hit: gen_mul_timing_cg.cp_prev.load
+Traceback (most recent call last):
+  File "/tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mkablation.py", line 11, in <module>
+    lines = src.read_text().splitlines(); out = []; removed = 0
+            ^^^^^^^^^^^^^^^
+  File "/tools_soc/opensrc/python/python-3.12.10/lib/python3.12/pathlib.py", line 1027, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tools_soc/opensrc/python/python-3.12.10/lib/python3.12/pathlib.py", line 1013, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/FM13/gen_fcov_proof_slice5a.fcov.yaml'
+FM14 applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/FM14/dv/auto_dv/env/gen_fcov_pkg.sv; original sha256 8faf5e0d8b481186
+FM14_catch_boot_zc: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first: 
+FM14: build sources sha256: 1742c09b93471f84; source tree untouched: 1d9e2f8d9e5927dd
+FM14: checker FCOV-EXPECTATION: FAIL - 1 declared bin(s) not hit: gen_rst_boot_cg.cp_boot_addr.high
+Traceback (most recent call last):
+  File "/tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mkablation.py", line 11, in <module>
+    lines = src.read_text().splitlines(); out = []; removed = 0
+            ^^^^^^^^^^^^^^^
+  File "/tools_soc/opensrc/python/python-3.12.10/lib/python3.12/pathlib.py", line 1027, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tools_soc/opensrc/python/python-3.12.10/lib/python3.12/pathlib.py", line 1013, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/FM14/gen_fcov_proof_slice5a.fcov.yaml'
+FM15 applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/FM15/dv/auto_dv/env/gen_fcov_pkg.sv; original sha256 8faf5e0d8b481186
+FM15_catch_cpuctrl: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first: 
+FM15: build sources sha256: d51e743703bfcf74; source tree untouched: 1d9e2f8d9e5927dd
+FM15: checker FCOV-EXPECTATION: FAIL - 2 declared bin(s) not hit: gen_sec_ctrl_inputs_cg.cp_bits67_readback.b6_1_b7_1, gen_sec_ctrl_inputs_cg.cp_bits67_readback.b6_0_b7_1
+Traceback (most recent call last):
+  File "/tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mkablation.py", line 11, in <module>
+    lines = src.read_text().splitlines(); out = []; removed = 0
+            ^^^^^^^^^^^^^^^
+  File "/tools_soc/opensrc/python/python-3.12.10/lib/python3.12/pathlib.py", line 1027, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tools_soc/opensrc/python/python-3.12.10/lib/python3.12/pathlib.py", line 1013, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/FM15/gen_fcov_proof_slice5a.fcov.yaml'

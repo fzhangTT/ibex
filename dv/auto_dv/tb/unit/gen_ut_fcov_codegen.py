@@ -63,6 +63,23 @@ def main():
     check("fixture differs (operand-only marker removed)", s2 != s); p.write_text(s2)
     r = codegen("--check", "--root", str(root))
     check("refuses a plan coverpoint without CSV rows unless marked operand-only", r.returncode != 0 and "no [operand-only:] marker" in r.stdout, r.stdout[-300:])
+    # ---- the plan grammar forms of the round-0 groups (Slice A): each renders the same include
+    def same_render(name, before, after, what):
+        root = scratch_tree(name)
+        p = root / PLAN; s = p.read_text(); s2 = s.replace(before, after, 1)
+        check(f"fixture differs ({name})", s2 != s); p.write_text(s2)
+        r = codegen("--check", "--root", str(root))
+        check(what, r.returncode == 0, r.stdout[-300:])
+    same_render("wrapped_bins_line", "cp_funct3 = instr[14:12], iff OP funct7 0000001: bins f0{000}, f1{001}, f2{010}, f3{011}",
+                "cp_funct3 = instr[14:12], iff OP funct7 0000001: bins f0{000}, f1{001},\n    f2{010}, f3{011}", "a bins list wrapped over an indented continuation line parses as one bullet")
+    same_render("expressionless_coverpoint", "  - cp_funct3 = instr[14:12], iff OP funct7 0000001: bins f0{000}, f1{001}, f2{010}, f3{011}",
+                "  - cp_funct3: bins f0{000}, f1{001}, f2{010}, f3{011}", "a coverpoint line without `= <expression>` parses")
+    same_render("iff_clause_before_expression", "  - cp_funct3 = instr[14:12], iff OP funct7 0000001: bins f0{000}, f1{001}, f2{010}, f3{011}",
+                "  - cp_funct3 iff OP funct7 0000001 = instr[14:12]: bins f0{000}, f1{001}, f2{010}, f3{011}", "a coverpoint line with an `iff` clause before the expression parses")
+    same_render("ignore_bins_clause", "cp_funct3 = instr[14:12], iff OP funct7 0000001: bins f0{000}, f1{001}, f2{010}, f3{011}",
+                "cp_funct3 = instr[14:12], iff OP funct7 0000001: bins f0{000}, f1{001}, f2{010}, f3{011}; ignore_bins f4{100}: never encoded", "an `; ignore_bins x{..}: reason` clause is not a bin")
+    same_render("names_only_cross", "  - cr_funct3_rd_x0 = cp_funct3 x cp_rd_x0: bins auto{all combinations}\n",
+                "  - cr_funct3_rd_x0 = cp_funct3 x cp_rd_x0: f0_no, f0_yes, f1_no, f1_yes, f2_no, f2_yes, f3_no, f3_yes\n", "a cross line listing bin names without tuples declares no tuple and renders from the CSV")
     # ---- refusals on scratch copies
     root = scratch_tree("plan_bins_differ")
     p = root / PLAN; s = p.read_text()

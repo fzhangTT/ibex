@@ -25,7 +25,7 @@ REL_PLAN = "dv/auto_dv/docs/gen_fcov_plan.md"
 REL_OUT = "dv/auto_dv/env/gen_fcov_groups.svh"
 # the covergroups whose samplers exist (gen_fcov_pkg.sv); plan order of implementation (evidence/gen_round0_covergroup_set.md)
 IMPLEMENTED = ("CG-MUL-001", "CG-MUL-003", "CG-ISA-002", "CG-BIT-001", "CG-ISA-001", "CG-ISA-003", "CG-BIT-002", "CG-CMP-001", "CG-CMP-006",
-               "CG-CMP-007", "CG-CSR-002", "CG-ISA-007", "CG-BIT-006", "CG-CMP-005")
+               "CG-CMP-007", "CG-CSR-002", "CG-ISA-007", "CG-BIT-006", "CG-CMP-005", "CG-MUL-002", "CG-RST-001", "CG-SEC-005", "CG-RVFI-001")
 
 
 def die(msg):
@@ -52,7 +52,14 @@ def load_plan(root):
     text = (root / REL_PLAN).read_text()
     groups = {}
     cur = None
-    for line in text.splitlines():
+    # a bullet wraps over indented lines: join them into one line before parsing (the plan's long bins lists)
+    joined = []
+    for raw in text.splitlines():
+        if joined and raw.startswith("    ") and not raw.lstrip().startswith("- ") and raw.strip():
+            joined[-1] = joined[-1].rstrip() + " " + raw.strip()
+        else:
+            joined.append(raw)
+    for line in joined:
         h = re.match(r"^### (CG-[A-Z]+-\d{3}): gen_cg_([a-z0-9_]+)\s*$", line)
         if h:
             cur = groups.setdefault(h.group(1), {"sv": f"gen_{h.group(2)}_cg", "cps": {}, "crosses": {}})
@@ -62,15 +69,20 @@ def load_plan(root):
             continue
         if cur is None:
             continue
-        m = re.match(r"^\s+- (cp_[a-z0-9_]+) = .*?: bins (.*)$", line)
+        # `- cp_x = <expr>: bins ...`, also `- cp_x iff <guard> = <expr>: bins ...` and the expression-less `- cp_x: bins ...`
+        m = re.match(r"^\s+- (cp_[a-z0-9_]+)(?: iff [^=:]*?)?(?: = .*?)?: bins (.*)$", line)
         if m:
-            pairs = re.findall(r"([a-z0-9_]+)\{((?:[^{}]|\{[^{}]*\})*)\}", m.group(2))   # a value may hold one brace level: low{{mtvec[31:8], 8'b0} < 32'h1000}
+            bins_text = re.split(r";\s*ignore(?:_bins)?\b", m.group(2))[0]   # `; ignore_bins x{..}: reason` and `; ignore ...` are not bins
+            pairs = re.findall(r"([a-z0-9_]+)\{((?:[^{}]|\{[^{}]*\})*)\}", bins_text)   # a value may hold one brace level: low{{mtvec[31:8], 8'b0} < 32'h1000}
+            if not pairs:   # names without values: `bins immediate, delayed, withheld_then_valid`
+                pairs = [(t.strip(), "") for t in re.split(r",", re.sub(r"\(.*?\)", "", bins_text)) if re.fullmatch(r"[a-z0-9_]+", t.strip())]
             if pairs:
                 cur["cps"][m.group(1)] = [n for n, v in pairs]
                 cur.setdefault("values", {})[m.group(1)] = {v.strip(): n for n, v in pairs if v.strip()}
-                if "[operand-only:" in line: cur.setdefault("operand_only", set()).add(m.group(1))   # counted in an adopted group, no CSV rows
+                if "[operand-only:" in line or "cross operand only" in line: cur.setdefault("operand_only", set()).add(m.group(1))   # counted in an adopted group, no CSV rows
             continue
-        m = re.match(r"^\s+- (cr_[a-z0-9_]+) = ((?:cp_[a-z0-9_]+\s*x\s*)+cp_[a-z0-9_]+)\s*:\s*bins (.*)$", line)
+        # `- cr_x = cp_a x cp_b: bins ...`; a names-only list (`: c16_no, c16_yes, ...`) declares no tuple, the CSV names split into components
+        m = re.match(r"^\s+- (cr_[a-z0-9_]+) = ((?:cp_[a-z0-9_]+\s*x\s*)+cp_[a-z0-9_]+)\s*:\s*(?:bins )?(.*)$", line)
         if m:
             comps = [c.strip() for c in re.split(r"\s+x\s+", m.group(2))]
             # explicit cross bins name the component tuple in braces, comma- or space-separated: `div_intmin_m1{div, int_min,

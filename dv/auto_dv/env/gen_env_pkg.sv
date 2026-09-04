@@ -243,6 +243,8 @@ package gen_env_pkg;
       rvfi_mon.ap.connect(sb.analysis_export);
       rvfi_mon.ap.connect(isa_cov.analysis_export);
       dbus_agent.ap.connect(isa_cov.dbus_imp);   // completed data-bus transactions: the Zcmp collector's observed latency class
+      ibus_agent.ap.connect(isa_cov.ibus_imp);   // fetches: the multiply's fetch-stall class and the boot-to-request distance
+      scrkey.ap.connect(isa_cov.key_imp);        // scramble-key req / valid changes: the security-input events
       sb.ap_state.connect(irq_chk.imp_state);
       sb.ap_state.connect(dbg_chk.imp_state);
       sb.ap_state.connect(misc_mon.imp_state);
