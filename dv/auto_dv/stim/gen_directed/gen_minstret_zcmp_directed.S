@@ -2,7 +2,7 @@
 # minstret / minstreth reads, and the same write after a plain instruction as the control. The high-word write reloads the low
 # word with its pre-increment value when an instruction retires in the write cycle; the model measures that gap from the previous
 # RECORD, so the gap after a folded Zcmp sequence must come from its last micro-op, not from the record before the sequence
-# (CM123-L-1). The lock-step compare on the reads is the red / green. 1 to tohost at the end, then spin.
+# The lock-step compare on the reads is the red / green. 1 to tohost at the end, then spin.
 .macro cm_insn kind, rlist, spimm
   .2byte 0xB002 | (\kind << 8) | (\rlist << 4) | (\spimm << 2)
 .endm

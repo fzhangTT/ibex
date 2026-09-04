@@ -1,0 +1,12 @@
+FM20 applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/FM20/dv/auto_dv/env/gen_fcov_pkg.sv; original sha256 05f130a4502aae58
+FM20_catch_divt: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first: 
+FM20: build sources sha256: 91b36ff74b8813ce; source tree untouched: dv/auto_dv/env/gen_fcov_pkg.sv sha256 05f130a4502aae58 (the mutated file's copy in the source tree, read after the runs)
+FM20: checker FCOV-EXPECTATION: FAIL - 1 declared bin(s) not hit: gen_div_timing_cg.cp_delta.d37
+gen_fcov_proof_slice6e_fm20_ablation.fcov.yaml bins 23
+FM20: ablation checker FCOV-EXPECTATION: PASS - all 23 declared bins hit
+FM21 applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/FM21/dv/auto_dv/env/gen_fcov_pkg.sv; original sha256 05f130a4502aae58
+FM21_catch_imm: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first: 
+FM21: build sources sha256: 9c3a417965de59e5; source tree untouched: dv/auto_dv/env/gen_fcov_pkg.sv sha256 05f130a4502aae58 (the mutated file's copy in the source tree, read after the runs)
+FM21: checker FCOV-EXPECTATION: FAIL - 1 declared bin(s) not hit: gen_cmp_imm_edges_cg.cp_addi4spn_imm.max
+gen_fcov_proof_slice6d_fm21_ablation.fcov.yaml bins 45
+FM21: ablation checker FCOV-EXPECTATION: PASS - all 45 declared bins hit

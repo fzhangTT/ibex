@@ -38,9 +38,9 @@ AS BUILT (landing 2c): the instance is `gen_protocol_props_i` (paths `gen_tb_top
 CR-2B-L-7); the group knobs are read from `gen_tb_pkg::PLUSARG_CHK_SVA_*` and `PLUSARG_CHK_ALL` (`chk_en(name)`, CR-2B-L-6);
 the icram widths are the parameters `TagSizeECC` / `LineSizeECC` the bind passes from gen_dut_top (CM43-L-1);
 `sva_alert_minor_window` uses `ICACHE_ECC_WINDOW`, bound to `GEN_ICACHE_ECC_WINDOW`, raised from 1 to 2 in gen_tb_knobs.yaml
-with the reason (the RAM read lands one cycle after the request and the alert one cycle after the check; landing 2b measured
-1 or 2), so the misc checker and the SVA share one window (CR-2B-L-5, CM43-M-1; no icram ECC injection exists, so no run
-shows the tighter window biting: stated in gen_mut_step2b.md); the header cites rtl-arch's tracked anchor file instead of
+with the reason (the RAM read lands one cycle after the request and the alert one cycle after the check; the injection runs observe
+latency 1 on every pulse, 2 is the declared bound), so the misc checker and the SVA share one window (CR-2B-L-5, CM43-M-1; the tag-RAM
+injection hook's reds and greens on both slices are in gen_mut_step2b.md MUT-WIN and gen_tdd_step2b.md Section 14); the header cites rtl-arch's tracked anchor file instead of
 the untracked draft path and the landing tag (CM43-L-6); dcsr's prv field is read through `GEN_DCSR_PRV_BIT_LOW` /
 `GEN_DCSR_PRV_BIT_HIGH` (CM43-L-3). The split rule (the second half's address and byte enables) has no checker of its own:
 the two draft asserts are covers in gen_protocol_props.sv, listed in its header's exception list, and the rule is covered

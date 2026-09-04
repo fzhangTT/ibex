@@ -1,0 +1,11 @@
+--- /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/sb_root/dv/auto_dv/env/gen_fcov_pkg.sv	2026-09-03 23:54:49.401500122 -0400
++++ /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/FM21/dv/auto_dv/env/gen_fcov_pkg.sv	2026-09-04 00:02:38.426602758 -0400
+@@ -1374,7 +1374,7 @@
+       case (op)
+         GEN_FC_CMP_ZCA_CP_INSN_C_ADDI4SPN: begin
+           imm = {i[10:7], i[12:11], i[5], i[6], 2'b00};
+-          v[0] = (imm == 4) ? GEN_FC_CMP_IMM_EDGES_CP_ADDI4SPN_IMM_MIN : (imm == 1020) ? GEN_FC_CMP_IMM_EDGES_CP_ADDI4SPN_IMM_MAX : GEN_FC_CMP_IMM_EDGES_CP_ADDI4SPN_IMM_RAND;
++          v[0] = (imm == 4) ? GEN_FC_CMP_IMM_EDGES_CP_ADDI4SPN_IMM_MIN : (imm == 1016) ? GEN_FC_CMP_IMM_EDGES_CP_ADDI4SPN_IMM_MAX : GEN_FC_CMP_IMM_EDGES_CP_ADDI4SPN_IMM_RAND;   // FM21: the 1020 immediate classed rand
+           v[11] = sum_wraps(t.rs1_rdata, imm) ? GEN_FC_CMP_IMM_EDGES_CP_SP_WRAP_YES : GEN_FC_CMP_IMM_EDGES_CP_SP_WRAP_NO;
+         end
+         GEN_FC_CMP_ZCA_CP_INSN_C_LW, GEN_FC_CMP_ZCA_CP_INSN_C_SW: begin

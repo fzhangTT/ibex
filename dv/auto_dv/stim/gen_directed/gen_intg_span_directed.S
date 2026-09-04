@@ -1,6 +1,6 @@
 # gen_intg_span_directed.S: one misaligned lw that spans two bus words, both halves carrying an injected integrity error (the
 # cocotb test gen_ut_intg_span arms two corruptions on the buffer), so the DUT suppresses the write and takes the internal NMI;
-# then a clean lw of the second word. The T-183 gate must consume BOTH announced words at the spanning load (CM132-L-4): a
+# then a clean lw of the second word. The T-183 gate must consume BOTH announced words at the spanning load: a
 # leftover second word would let a lying suppress on the later clean load pass (the TB mutant MUT-SUP3 is the red). The NMI
 # vector table is one mret per entry. 1 to tohost at the end, then spin.
 .section .text

@@ -1,0 +1,11 @@
+--- /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/sb_root/dv/auto_dv/env/gen_fcov_pkg.sv	2026-09-03 23:54:49.401500122 -0400
++++ /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/FM17/dv/auto_dv/env/gen_fcov_pkg.sv	2026-09-04 00:00:08.034601462 -0400
+@@ -1098,7 +1098,7 @@
+     function int lu_imm_cls(logic [19:0] imm20);
+       if (imm20 == 20'h0) return GEN_FC_ISA_LUI_AUIPC_CP_IMM20_ZERO;
+       if (imm20 == 20'hFFFFF) return GEN_FC_ISA_LUI_AUIPC_CP_IMM20_ALL_ONES;
+-      if (imm20 == 20'h80000) return GEN_FC_ISA_LUI_AUIPC_CP_IMM20_MSB;
++      if (imm20 == 20'h80001) return GEN_FC_ISA_LUI_AUIPC_CP_IMM20_MSB;   // FM17: the msb immediate classed rand
+       if (imm20 == 20'h1) return GEN_FC_ISA_LUI_AUIPC_CP_IMM20_ONE;
+       return GEN_FC_ISA_LUI_AUIPC_CP_IMM20_RAND;
+     endfunction

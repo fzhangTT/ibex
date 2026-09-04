@@ -1,0 +1,33 @@
+# python3 dv/auto_dv/tb/unit/gen_ut_fcov_codegen.py in the landing root, exit 0
+OK   --check passes on the tree
+OK   every rendered covergroup is type-based
+OK   every rendered covergroup drops the automatic cross bins (option.cross_auto_bin_max = 0)
+OK   keyword bin names are escaped identifiers
+OK   no auto cross bins: every cross bin is named from the CSV
+OK   a tuple naming 1-bit values renders the b<v> bins
+OK   a space-separated tuple renders its components
+OK   the rendered coverpoint lines carry one ignore_bins na each and the named bins are counted apart
+OK   fixture differs (nested-brace value)
+OK   a coverpoint value with an inner brace pair still parses (the bins are unchanged, the include is up to date)
+OK   fixture differs (operand-only marker removed)
+OK   refuses a plan coverpoint without CSV rows unless marked operand-only
+OK   fixture differs (wrapped_bins_line)
+OK   a bins list wrapped over an indented continuation line parses as one bullet
+OK   fixture differs (expressionless_coverpoint)
+OK   a coverpoint line without `= <expression>` parses
+OK   fixture differs (iff_clause_before_expression)
+OK   a coverpoint line with an `iff` clause before the expression parses
+OK   fixture differs (ignore_bins_clause)
+OK   an `; ignore_bins x{..}: reason` clause is not a bin
+OK   fixture differs (ignore_clause_names_a_listed_bin)
+OK   a bin listed before the clause and named by it leaves the comparison and renders nothing (the CSV has no row for it: Slice-A-1)
+OK   fixture differs (names_only_cross)
+OK   a cross line listing bin names without tuples declares no tuple and renders from the CSV
+OK   fixture differs (plan bins)
+OK   refuses a coverpoint whose plan bins differ from the CSV
+OK   fixture differs (cross bin)
+OK   refuses a cross bin that does not split into its components
+OK   fixture differs (cross line)
+OK   refuses a cross without a plan line
+OK   --check catches a stale include
+GEN_UT_FCOV_CODEGEN PASS (0 failures)

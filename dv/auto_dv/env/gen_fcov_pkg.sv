@@ -86,6 +86,8 @@ package gen_fcov_pkg;
   `uvm_analysis_imp_decl(_dbus)
   `uvm_analysis_imp_decl(_ibus)
   `uvm_analysis_imp_decl(_key)
+  `uvm_analysis_imp_decl(_irqe)
+  `uvm_analysis_imp_decl(_dbge)
   class gen_isa_cov extends uvm_subscriber #(gen_rvfi_txn);
     `uvm_component_utils(gen_isa_cov)
     gen_env_cfg cfg;
@@ -108,6 +110,11 @@ package gen_fcov_pkg;
     gen_rst_boot_cg    rst_cg;       // one sample per reset
     gen_sec_ctrl_inputs_cg sec_cg;   // the security-input events
     gen_cmp_zcmp_hazard_cg hz_cg;    // the Zcmp neighbour patterns (CG-CMP-009)
+    gen_isa_lui_auipc_cg lu_cg;      // U-type immediates, PC regions, the auipc wrap (CG-ISA-004)
+    gen_isa_hint_x0_cg hx_cg;        // x0-destination writers and the read after them (CG-ISA-005)
+    gen_isa_jump_cg jp_cg;           // jumps: offsets, link, targets (CG-ISA-006)
+    gen_div_timing_cg dt_cg;         // the divider's timing neighbours and the mid-op events (CG-MUL-004)
+    gen_cmp_imm_edges_cg ie_cg;      // Zca immediate extremes (CG-CMP-002)
     // CG-BIT-006 binv_twice: the record before was binv / binvi, with its rd and index
     bit sb_prev_binv = 0; logic [4:0] sb_prev_rd, sb_prev_idx; int unsigned n_sbit = 0, n_zcb = 0;
     // CG-CMP-007 move pair: form, register fields, the two source values, the neighbour facts; sampled once the next record is known
@@ -130,9 +137,9 @@ package gen_fcov_pkg;
     // data-bus responses seen (cycle of rvalid, latency after grant): cp_dmem_delay classifies the responses inside the sequence's window
     int unsigned dlat_cyc [$], dlat_lat [$], dlat_gnt [$]; logic [31:0] dlat_addr [$]; int unsigned prev_rec_cycle = 0, cur_rec_cycle = 0, zp_win_start;
     // CG-CMP-009 state: the neighbour facts of a sequence (the instruction before it, the sequence before it, the fall-through halfword,
-    // the recent plain stores, the micro-op cycles) and the pended return-target check
-    int unsigned n_hz = 0; int ut_last_hz [7]; logic [31:0] st_addr [$]; logic [31:0] zp_load_addr [$]; int prev_seq_kind = -1, hz_b2b_prev = -1;
-    logic [31:0] hz_prev_wr; bit hz_prev_ld; int unsigned zp_last_uop_cycle, zp_ra_load_cycle, zp_addi_cycle; bit zp_uop_stall; logic [31:0] zp_ret_target, zp_ra_addr;
+    // the store record before it, the micro-op cycles) and the pended return-target check
+    int unsigned n_hz = 0; int ut_last_hz [7]; logic [31:0] zp_load_addr [$]; int prev_seq_kind = -1, hz_b2b_prev = -1; bit hz_prev_st_valid = 0; logic [31:0] hz_prev_st_addr;
+    logic [31:0] hz_prev_wr; bit hz_prev_ld; int unsigned zp_last_uop_cycle, zp_ra_load_cycle; bit zp_uop_stall; logic [31:0] zp_ret_target, zp_ra_addr;
     bit hz_pend = 0; int hz_pend_kind; int hz_pend_v [7]; int unsigned hz_pend_cycle;
     // Slice A state: the previous record (continuity, gap, the multiply's neighbour), the pending multiply (its successor decides
     // cp_next_dep), the recent fetches (fetch-stall), the reset-release facts and the security-input trackers
@@ -141,13 +148,30 @@ package gen_fcov_pkg;
     logic [31:0] ib_addr [$]; int unsigned ib_rv [$]; int unsigned boot_to_req = 0; bit boot_to_req_seen = 0;
     int rst_fetch_en = -1, rst_pending = -1; bit rst_release_seen = 0, rst_sampled = 0; logic [31:0] hart_id_v = 0;
     bit icache_en_tracked = 0; bit fencei_pending = 0; bit mcen_pend = 0; logic [31:0] mcen_old, mcen_new; int mcen_pin_cls = -1;   // icache_en_tracked: cpuctrlsts.icache_enable resets to 0
+    // Slice B state: the pending x0-writer (its successor decides cp_x0_read), the pending divide (its successor decides cp_next and the
+    // irq latency), the asserted-edge events of the irq and debug drivers (cycle, cp_event_mid bin) and cpuctrlsts.data_ind_timing as written
+    bit hx_pend = 0; int hx_v [3]; bit dt_pend = 0, dt_irq_seen = 0; int dt_v [10]; logic [4:0] dt_rd; int unsigned dt_irq_cycle;
+    int unsigned ev_cyc [$]; int ev_kind [$]; bit dit_tracked = 0;   // dit_tracked: cpuctrlsts.data_ind_timing resets to 0
+    int unsigned n_lu = 0, n_hx = 0, n_jp = 0, n_dt = 0, n_ie = 0; int ut_last_lu [6], ut_last_hx [3], ut_last_jp [10], ut_last_dt [10], ut_last_ie [13];
+    uvm_analysis_imp_irqe #(gen_irq_evt, gen_isa_cov) irq_imp;   // the irq driver's line changes
+    uvm_analysis_imp_dbge #(gen_irq_evt, gen_isa_cov) dbg_imp;   // the debug driver's request changes (the same item: changed[0] = req)
     uvm_analysis_imp_dbus #(gen_bus_txn, gen_isa_cov) dbus_imp;
     uvm_analysis_imp_ibus #(gen_bus_txn, gen_isa_cov) ibus_imp;
     uvm_analysis_imp_key #(gen_key_evt, gen_isa_cov) key_imp;
     int unsigned n_mul = 0, n_div = 0, n_alu = 0, n_bit = 0, n_imm = 0, n_sh = 0, n_cnt = 0, n_zca = 0, n_zca32 = 0;
     // the pending 16-bit record of CG-CMP-001: sampled when the next record tells the next instruction's length
     bit zca_pend = 0; int zca_v [7];
-    function new(string name, uvm_component parent); super.new(name, parent); dbus_imp = new("dbus_imp", this); ibus_imp = new("ibus_imp", this); key_imp = new("key_imp", this); endfunction
+    function new(string name, uvm_component parent); super.new(name, parent); dbus_imp = new("dbus_imp", this); ibus_imp = new("ibus_imp", this); key_imp = new("key_imp", this); irq_imp = new("irq_imp", this); dbg_imp = new("dbg_imp", this); endfunction
+    function void write_irqe(gen_irq_evt e);   // an asserted edge of an interrupt line: an NMI raise or an ordinary irq (cp_event_mid)
+      if (e.level) ev_push(e.cycle, e.changed[18] ? GEN_FC_DIV_TIMING_CP_EVENT_MID_NMI : GEN_FC_DIV_TIMING_CP_EVENT_MID_IRQ);
+    endfunction
+    function void write_dbge(gen_irq_evt e);   // an asserted edge of debug_req_i
+      if (e.level) ev_push(e.cycle, GEN_FC_DIV_TIMING_CP_EVENT_MID_DEBUG_REQ);
+    endfunction
+    function void ev_push(int unsigned cycle, int kind);
+      ev_cyc.push_back(cycle); ev_kind.push_back(kind);
+      if (ev_cyc.size() > 64) begin void'(ev_cyc.pop_front()); void'(ev_kind.pop_front()); end
+    endfunction
     function void write_dbus(gen_bus_txn b);   // every completed data-bus transaction, in completion order
       dlat_cyc.push_back(b.stamp_rvalid); dlat_lat.push_back(b.rvalid_delay); dlat_gnt.push_back(b.stamp_gnt); dlat_addr.push_back({b.addr[31:2], 2'b00});   // the RVFI record's cycle base (bridge counter)
       if (dlat_cyc.size() > 256) begin void'(dlat_cyc.pop_front()); void'(dlat_lat.pop_front()); void'(dlat_gnt.pop_front()); void'(dlat_addr.pop_front()); end
@@ -159,7 +183,7 @@ package gen_fcov_pkg;
       if (!uvm_config_db#(virtual gen_irq_if)::get(this, "", "irq_vif", irq_vif)) `uvm_fatal("GEN_FCOV", "irq vif not in uvm_config_db")
       if (!uvm_config_db#(virtual gen_dbg_if)::get(this, "", "dbg_vif", dbg_vif)) `uvm_fatal("GEN_FCOV", "dbg vif not in uvm_config_db")
       hart_id_v = cfg.hart_id;
-      if (cfg.fcov_en) begin mul_cg = new(); div_cg = new(); alu_cg = new(); bit_cg = new(); imm_cg = new(); sh_cg = new(); cnt_cg = new(); zca_cg = new(); zcmp_cg = new(); mv_cg = new(); csr_cg = new(); br_cg = new(); sbit_cg = new(); zcb_cg = new(); rec_cg = new(); mt_cg = new(); rst_cg = new(); sec_cg = new(); hz_cg = new(); end
+      if (cfg.fcov_en) begin mul_cg = new(); div_cg = new(); alu_cg = new(); bit_cg = new(); imm_cg = new(); sh_cg = new(); cnt_cg = new(); zca_cg = new(); zcmp_cg = new(); mv_cg = new(); csr_cg = new(); br_cg = new(); sbit_cg = new(); zcb_cg = new(); rec_cg = new(); mt_cg = new(); rst_cg = new(); sec_cg = new(); hz_cg = new(); lu_cg = new(); hx_cg = new(); jp_cg = new(); dt_cg = new(); ie_cg = new(); end
     endfunction
     // ---- classifiers (plan bin order = the rendered GEN_FC_* indices)
     function int mul_rs_cls(logic [31:0] v);   // CG-MUL-001 cp_rs1_class / cp_rs2_class (same bin list)
@@ -549,10 +573,12 @@ package gen_fcov_pkg;
 
     // ---- CG-CMP-006: the 16-bit source word of a Zcmp stack instruction (rvfi_ext_expanded_insn): kind, rlist, spimm, N, stack_adj
     // ---- CG-CMP-009 helpers: the registers a push / pop rlist names, the cm.* kind of a halfword, the pattern sample
-    function logic [31:0] zp_regs(int rlist);   // ra, s0, s1, then s2..s11 (x18..x27) as rlist grows; rlist 15 = all twelve
-      logic [31:0] m = 32'h2;   // ra
-      if (rlist >= 5) m[8] = 1'b1; if (rlist >= 6) m[9] = 1'b1;
-      for (int r = 7; r <= rlist && r <= 15; r++) begin int idx = (r == 15) ? 27 : 18 + (r - 7); m[idx] = 1'b1; if (r == 15) begin m[26] = 1'b1; m[25] = 1'b1; end end
+    function logic [4:0] zcmp_sx(int k);   // the Zcmp s-register list: s0 = x8, s1 = x9, s2..s11 = x18..x27
+      return 5'((k < 2) ? 8 + k : 16 + k);
+    endfunction
+    function logic [31:0] zp_regs(int rlist);   // ra, then s0..s(rlist - 5); rlist 15 = all twelve
+      logic [31:0] m = 32'h2; int n_s = (rlist == 15) ? 12 : (rlist >= 5) ? rlist - 4 : 0;
+      for (int k = 0; k < n_s; k++) m[zcmp_sx(k)] = 1'b1;
       return m;
     endfunction
     function int hz_cm_kind(logic [15:0] hw);   // the fall-through halfword: a Zcmp stack op or a move, else -1
@@ -563,6 +589,18 @@ package gen_fcov_pkg;
       endcase
       if (hw[15:10] == 6'b101011 && hw[1:0] == 2'b10) return hw[6:5] == 2'b01 ? GEN_FC_CMP_ZCMP_HAZARD_CP_FT_KIND_CM_MVSA01 : hw[6:5] == 2'b11 ? GEN_FC_CMP_ZCMP_HAZARD_CP_FT_KIND_CM_MVA01S : -1;
       return -1;
+    endfunction
+    localparam int unsigned HZ_LAT_MIN1 = 1, HZ_LAT_SHORT_MAX = 4;   // the data-bus response classes: 1 / 2..4 / 5 and above
+    function int hz_delay_cls(int unsigned lat);
+      return (lat == HZ_LAT_MIN1) ? GEN_FC_CMP_ZCMP_HAZARD_CP_DMEM_DELAY_MIN1 : (lat <= HZ_LAT_SHORT_MAX) ? GEN_FC_CMP_ZCMP_HAZARD_CP_DMEM_DELAY_SHORT : GEN_FC_CMP_ZCMP_HAZARD_CP_DMEM_DELAY_LONG;
+    endfunction
+    function int hz_delay_of(int pushpop_cls);   // the sequence's class (gen_cmp_zcmp_pushpop_cg's) by name; the mixed class has no hazard bin
+      case (pushpop_cls)
+        GEN_FC_CMP_ZCMP_PUSHPOP_CP_DMEM_DELAY_MIN1:  return GEN_FC_CMP_ZCMP_HAZARD_CP_DMEM_DELAY_MIN1;
+        GEN_FC_CMP_ZCMP_PUSHPOP_CP_DMEM_DELAY_SHORT: return GEN_FC_CMP_ZCMP_HAZARD_CP_DMEM_DELAY_SHORT;
+        GEN_FC_CMP_ZCMP_PUSHPOP_CP_DMEM_DELAY_LONG:  return GEN_FC_CMP_ZCMP_HAZARD_CP_DMEM_DELAY_LONG;
+        default: return -1;
+      endcase
     endfunction
     function int hz_rlist_cls(int rlist);
       return (rlist == 4) ? GEN_FC_CMP_ZCMP_HAZARD_CP_RLIST_CLASS_R4 : (rlist == 15) ? GEN_FC_CMP_ZCMP_HAZARD_CP_RLIST_CLASS_R15 : GEN_FC_CMP_ZCMP_HAZARD_CP_RLIST_CLASS_R5_14;
@@ -589,8 +627,10 @@ package gen_fcov_pkg;
       logic [15:0] w = t.ext_exp_insn;
       zp_in = 1; zp_pc = t.pc_rdata; zp_count = 0; zp_mem_k = 0; zp_sp_valid = 0; zp_order_ok = 1; zp_tags_ok = 1; zp_ret_align = -1; zp_prev_reg = 5'd31;
       zp_mhpm10_first = t.ext_mhpmcounters[7]; zp_win_start = prev_rec_cycle;
-      zp_load_addr.delete(); zp_last_uop_cycle = t.cycle; zp_uop_stall = 0; zp_ra_load_cycle = 0; zp_addi_cycle = 0; zp_ret_target = 0;
+      zp_load_addr.delete(); zp_last_uop_cycle = t.cycle; zp_uop_stall = 0; zp_ra_load_cycle = 0; zp_ret_target = 0;
       hz_b2b_prev = (have_last && last_t.ext_exp_valid && last_t.ext_exp_last) ? prev_seq_kind : -1;   // the record before this first micro-op closed a sequence
+      prev_seq_kind = -1;   // set again only by a sampled push / pop sequence: a move pair or an unsampled sequence closes no pair
+      hz_prev_st_valid = have_last && !last_t.ext_exp_valid && last_t.mem_wmask != 0; hz_prev_st_addr = {last_t.mem_addr[31:2], 2'b00};   // the store record before the sequence
       hz_prev_wr = prev_wr; hz_prev_ld = prev_ld;   // the instruction before the sequence
       zp_kind = -1;
       if (w[15:13] == 3'b101 && w[1:0] == 2'b10) case (w[12:8])
@@ -617,7 +657,7 @@ package gen_fcov_pkg;
     function int zp_delay_cls(int unsigned lo, int unsigned hi);
       bit any = 0, all1 = 1, all_short = 1, all_long = 1;
       foreach (dlat_cyc[i]) if (dlat_cyc[i] > lo && dlat_cyc[i] <= hi) begin
-        any = 1; all1 &= (dlat_lat[i] == 1); all_short &= (dlat_lat[i] >= 2 && dlat_lat[i] <= 4); all_long &= (dlat_lat[i] >= 5);
+        any = 1; all1 &= (dlat_lat[i] == HZ_LAT_MIN1); all_short &= (dlat_lat[i] > HZ_LAT_MIN1 && dlat_lat[i] <= HZ_LAT_SHORT_MAX); all_long &= (dlat_lat[i] > HZ_LAT_SHORT_MAX);
       end
       if (!any) return -1;
       return all1 ? GEN_FC_CMP_ZCMP_PUSHPOP_CP_DMEM_DELAY_MIN1 : all_short ? GEN_FC_CMP_ZCMP_PUSHPOP_CP_DMEM_DELAY_SHORT : all_long ? GEN_FC_CMP_ZCMP_PUSHPOP_CP_DMEM_DELAY_LONG : GEN_FC_CMP_ZCMP_PUSHPOP_CP_DMEM_DELAY_MIXED;
@@ -666,7 +706,6 @@ package gen_fcov_pkg;
         zp_prev_reg = r;
         if (!is_st) begin zp_load_addr.push_back({t.mem_addr[31:2], 2'b00}); if (r == 5'd1) begin zp_ra_load_cycle = t.cycle; zp_ra_addr = {t.mem_addr[31:2], 2'b00}; end end   // the pop's slots; the ra load
       end
-      if (t.insn[6:0] == ibex_pkg::OPCODE_OP_IMM && t.insn[14:12] == 3'b000 && t.insn[11:7] == 5'd2 && t.insn[19:15] == 5'd2) zp_addi_cycle = t.cycle;   // the addi sp, sp, adj micro-op
       if (t.insn[6:0] == ibex_pkg::OPCODE_JALR) zp_ret_target = t.rs1_rdata;   // the ret's target (the loaded ra)
       if (t.insn[6:0] == ibex_pkg::OPCODE_JALR)   // the jalr x0, 0(ra) of popret / popretz: the loaded ra
         zp_ret_align = t.rs1_rdata[0] ? GEN_FC_CMP_ZCMP_PUSHPOP_CP_RET_ALIGN_ODD : t.rs1_rdata[1] ? GEN_FC_CMP_ZCMP_PUSHPOP_CP_RET_ALIGN_HALF : GEN_FC_CMP_ZCMP_PUSHPOP_CP_RET_ALIGN_WORD;
@@ -688,13 +727,13 @@ package gen_fcov_pkg;
           zcmp_v[12] = gen_isa_read_csr(GEN_CSR_CPUCTRLSTS)[GEN_CPUCTRLSTS_DUMMY_INSTR_EN_BIT] ? GEN_FC_CMP_ZCMP_PUSHPOP_CP_DUMMY_EN_ON : GEN_FC_CMP_ZCMP_PUSHPOP_CP_DUMMY_EN_OFF;
           zcmp_pend = 1;
           begin   // CG-CMP-009: the neighbour patterns of this sequence, one sample per pattern seen
-            int rl = hz_rlist_cls(zp_rlist), dl = zcmp_v[11], du = zp_uop_stall ? GEN_FC_CMP_ZCMP_HAZARD_CP_DELTA_UOP_SOME_STALL : GEN_FC_CMP_ZCMP_HAZARD_CP_DELTA_UOP_ALL_ONE;
+            int rl = hz_rlist_cls(zp_rlist), dl = hz_delay_of(zcmp_v[11]), du = zp_uop_stall ? GEN_FC_CMP_ZCMP_HAZARD_CP_DELTA_UOP_SOME_STALL : GEN_FC_CMP_ZCMP_HAZARD_CP_DELTA_UOP_ALL_ONE;
             bit is_pop = (zp_kind == GEN_FC_CMP_ZCMP_PUSHPOP_CP_INSN_CM_POP), is_ret = (zp_kind == GEN_FC_CMP_ZCMP_PUSHPOP_CP_INSN_CM_POPRET || zp_kind == GEN_FC_CMP_ZCMP_PUSHPOP_CP_INSN_CM_POPRETZ);
             if (is_push && (hz_prev_wr & zp_regs(zp_rlist)) != 0)
               hz_sample(hz_prev_ld ? GEN_FC_CMP_ZCMP_HAZARD_CP_HAZARD_LOAD_PUSHED_REG_THEN_PUSH : GEN_FC_CMP_ZCMP_HAZARD_CP_HAZARD_WRITE_PUSHED_REG_THEN_PUSH, -1, -1, -1, rl, dl, du);
             if (is_push && hz_b2b_prev == GEN_FC_CMP_ZCMP_PUSHPOP_CP_INSN_CM_POP) hz_sample(GEN_FC_CMP_ZCMP_HAZARD_CP_HAZARD_POP_THEN_PUSH_B2B, -1, -1, -1, rl, dl, du);
             if (is_pop && hz_b2b_prev == GEN_FC_CMP_ZCMP_PUSHPOP_CP_INSN_CM_PUSH) hz_sample(GEN_FC_CMP_ZCMP_HAZARD_CP_HAZARD_PUSH_THEN_POP_B2B, -1, -1, -1, rl, dl, du);
-            if (is_pop || is_ret) begin bit same = 0; foreach (zp_load_addr[i]) foreach (st_addr[j]) if (zp_load_addr[i] == st_addr[j]) same = 1;
+            if (is_pop || is_ret) begin bit same = 0; if (hz_prev_st_valid) foreach (zp_load_addr[i]) if (zp_load_addr[i] == hz_prev_st_addr) same = 1;   // the store immediately before the pop
               if (same) hz_sample(GEN_FC_CMP_ZCMP_HAZARD_CP_HAZARD_STORE_SAME_SLOT_THEN_POP, -1, -1, -1, rl, dl, du); end
             if (is_ret) begin
               logic [31:0] w = gen_isa_read_word({zp_pc[31:2], 2'b00} + (zp_pc[1] ? 32'd4 : 32'd0)); logic [15:0] hw = zp_pc[1] ? w[15:0] : w[31:16];   // the halfword at pc + 2
@@ -714,8 +753,8 @@ package gen_fcov_pkg;
     endfunction
     // ---- CG-CMP-007 helpers: the move form of a Zcmp source word (-1 for the stack forms), the b2b bin of an ordered pair
     // the Zcmp 3-bit sreg field: s0 = x8, s1 = x9, s2..s7 = x18..x23 (rtl/ibex_compressed_decoder.sv:153-165)
-    function logic [4:0] zcmp_sreg(int r);
-      return 5'((r < 2) ? 8 + r : 16 + r);
+    function logic [4:0] zcmp_sreg(int r);   // the 3-bit sreg field names the first eight of the list
+      return zcmp_sx(r);
     endfunction
     function int mv_form(logic [15:0] w);
       if (w[15:13] != 3'b101 || w[12:10] != 3'b011 || w[1:0] != 2'b10) return -1;
@@ -735,7 +774,7 @@ package gen_fcov_pkg;
       begin   // CG-CMP-009: the move patterns (no rlist; the delay class is the preceding load's response)
         int du = zp_uop_stall ? GEN_FC_CMP_ZCMP_HAZARD_CP_DELTA_UOP_SOME_STALL : GEN_FC_CMP_ZCMP_HAZARD_CP_DELTA_UOP_ALL_ONE;
         if (mv_v[0] == GEN_FC_CMP_ZCMP_MV_CP_INSN_CM_MVA01S && mv_v[6] == GEN_FC_CMP_ZCMP_MV_CP_HAZARD_SRC_LOAD_PREV) begin
-          int dl = -1; foreach (dlat_cyc[i]) if (dlat_cyc[i] <= zp_win_start + 1) dl = (dlat_lat[i] == 1) ? GEN_FC_CMP_ZCMP_HAZARD_CP_DMEM_DELAY_MIN1 : (dlat_lat[i] <= 4) ? GEN_FC_CMP_ZCMP_HAZARD_CP_DMEM_DELAY_SHORT : GEN_FC_CMP_ZCMP_HAZARD_CP_DMEM_DELAY_LONG;
+          int dl = -1; foreach (dlat_cyc[i]) if (dlat_cyc[i] <= zp_win_start + 1) dl = hz_delay_cls(dlat_lat[i]);
           hz_sample(GEN_FC_CMP_ZCMP_HAZARD_CP_HAZARD_LOAD_THEN_MVA01S, -1, -1, -1, -1, dl, du);
         end
         if (mv_v[0] == GEN_FC_CMP_ZCMP_MV_CP_INSN_CM_MVA01S && mv_v[5] == GEN_FC_CMP_ZCMP_MV_CP_B2B_MVSA01_THEN_MVA01S) hz_sample(GEN_FC_CMP_ZCMP_HAZARD_CP_HAZARD_MVSA01_THEN_MVA01S, -1, -1, -1, -1, -1, du);
@@ -1034,7 +1073,7 @@ package gen_fcov_pkg;
       return (gap == 1) ? GEN_FC_MUL_TIMING_CP_DELTA_D1 : (gap == 2) ? GEN_FC_MUL_TIMING_CP_DELTA_D2 : GEN_FC_MUL_TIMING_CP_DELTA_D3PLUS;
     endfunction
     function int lat_cls(int unsigned lat);
-      return (lat == 1) ? GEN_FC_MUL_TIMING_CP_DMEM_DELAY_MIN1 : (lat <= 4) ? GEN_FC_MUL_TIMING_CP_DMEM_DELAY_SHORT : GEN_FC_MUL_TIMING_CP_DMEM_DELAY_LONG;
+      return (lat == HZ_LAT_MIN1) ? GEN_FC_MUL_TIMING_CP_DMEM_DELAY_MIN1 : (lat <= HZ_LAT_SHORT_MAX) ? GEN_FC_MUL_TIMING_CP_DMEM_DELAY_SHORT : GEN_FC_MUL_TIMING_CP_DMEM_DELAY_LONG;
     endfunction
     function void mt_flush(gen_rvfi_txn nxt);
       if (!mt_pend) return;
@@ -1053,6 +1092,336 @@ package gen_fcov_pkg;
       mt_v[0] = f3; mt_v[1] = (!busy && !stall) ? mt_delta_cls(t.cycle - last_t.cycle) : -1; mt_v[2] = mt_prev_cls(last_t.insn);
       mt_v[4] = busy ? GEN_FC_MUL_TIMING_CP_WB_BUSY_YES : GEN_FC_MUL_TIMING_CP_WB_BUSY_NO; mt_v[5] = stall ? GEN_FC_MUL_TIMING_CP_FETCH_STALL_YES : GEN_FC_MUL_TIMING_CP_FETCH_STALL_NO;
       mt_v[6] = busy ? lat_cls(busy_lat) : -1; mt_rd = t.rd_addr; mt_pend = 1; n_mt++;
+    endfunction
+
+    // ---- CG-ISA-004: lui / auipc. The wrap is the 33-bit signed sum of pc and the sign-extended immediate leaving [0, 2^32).
+    function int lu_imm_cls(logic [19:0] imm20);
+      if (imm20 == 20'h0) return GEN_FC_ISA_LUI_AUIPC_CP_IMM20_ZERO;
+      if (imm20 == 20'hFFFFF) return GEN_FC_ISA_LUI_AUIPC_CP_IMM20_ALL_ONES;
+      if (imm20 == 20'h80000) return GEN_FC_ISA_LUI_AUIPC_CP_IMM20_MSB;
+      if (imm20 == 20'h1) return GEN_FC_ISA_LUI_AUIPC_CP_IMM20_ONE;
+      return GEN_FC_ISA_LUI_AUIPC_CP_IMM20_RAND;
+    endfunction
+    function int lu_region_cls(logic [31:0] pc);
+      if (pc <= 32'h0000_0FFF) return GEN_FC_ISA_LUI_AUIPC_CP_PC_REGION_LOW;
+      if (pc >= 32'hFFFF_F000) return GEN_FC_ISA_LUI_AUIPC_CP_PC_REGION_HIGH;
+      return GEN_FC_ISA_LUI_AUIPC_CP_PC_REGION_MID;
+    endfunction
+    function bit sum_wraps(logic [31:0] base, int imm);   // base (unsigned) + imm (signed) leaves [0, 2^32)
+      logic signed [33:0] ssum = 34'(signed'({2'b00, base})) + 34'(imm);
+      return ssum[33] || ssum[32];
+    endfunction
+    function void lu_sample(gen_rvfi_txn t);
+      bit auipc = (t.insn[6:0] == ibex_pkg::OPCODE_AUIPC);
+      if (t.insn[6:0] != ibex_pkg::OPCODE_LUI && !auipc) return;
+      ut_last_lu = '{auipc ? GEN_FC_ISA_LUI_AUIPC_CP_OP_AUIPC : GEN_FC_ISA_LUI_AUIPC_CP_OP_LUI, lu_imm_cls(t.insn[31:12]),
+                     t.pc_rdata[1] ? GEN_FC_ISA_LUI_AUIPC_CP_PC_ALIGN_HALF : GEN_FC_ISA_LUI_AUIPC_CP_PC_ALIGN_WORD, lu_region_cls(t.pc_rdata),
+                     auipc ? (sum_wraps(t.pc_rdata, signed'({t.insn[31:12], 12'h000})) ? GEN_FC_ISA_LUI_AUIPC_CP_WRAP_YES : GEN_FC_ISA_LUI_AUIPC_CP_WRAP_NO) : -1,
+                     (t.rd_addr == 0) ? GEN_FC_ISA_LUI_AUIPC_CP_RD_X0_YES : GEN_FC_ISA_LUI_AUIPC_CP_RD_X0_NO};
+      n_lu++;
+      lu_cg.sample(ut_last_lu[0], ut_last_lu[1], ut_last_lu[2], ut_last_lu[3], ut_last_lu[4], ut_last_lu[5]);
+    endfunction
+
+    // ---- CG-ISA-006: jumps. cp_jal_off and cp_rd_class belong to the 32-bit forms; the compressed offsets are CG-CMP-002's.
+    function int cj_off(logic [15:0] i);   // the CJ-format offset, 12 bits
+      return signed'({i[12], i[8], i[10:9], i[6], i[7], i[2], i[11], i[5:3], 1'b0});
+    endfunction
+    function int jal_off_cls(int imm);
+      if (imm == 0) return GEN_FC_ISA_JUMP_CP_JAL_OFF_SELF;
+      if (imm == 32'h000F_FFFE) return GEN_FC_ISA_JUMP_CP_JAL_OFF_MAX_FWD;
+      if (imm == -32'h0010_0000) return GEN_FC_ISA_JUMP_CP_JAL_OFF_MAX_BWD;
+      return (imm > 0) ? GEN_FC_ISA_JUMP_CP_JAL_OFF_POS_RAND : GEN_FC_ISA_JUMP_CP_JAL_OFF_NEG_RAND;
+    endfunction
+    function int jalr_imm_cls(int imm);   // the extremes before the parity bin: 2047 is max_pos, not odd
+      if (imm == 0) return GEN_FC_ISA_JUMP_CP_JALR_IMM_ZERO;
+      if (imm == 2047) return GEN_FC_ISA_JUMP_CP_JALR_IMM_MAX_POS;
+      if (imm == -2048) return GEN_FC_ISA_JUMP_CP_JALR_IMM_MIN_NEG;
+      if (imm[0]) return GEN_FC_ISA_JUMP_CP_JALR_IMM_ODD;
+      return (imm > 0) ? GEN_FC_ISA_JUMP_CP_JALR_IMM_POS_RAND : GEN_FC_ISA_JUMP_CP_JALR_IMM_NEG_RAND;
+    endfunction
+    function int jp_rd_cls(logic [4:0] rd);
+      return (rd == 0) ? GEN_FC_ISA_JUMP_CP_RD_CLASS_X0 : (rd == 1) ? GEN_FC_ISA_JUMP_CP_RD_CLASS_X1 : (rd == 5) ? GEN_FC_ISA_JUMP_CP_RD_CLASS_X5 : GEN_FC_ISA_JUMP_CP_RD_CLASS_OTHER;
+    endfunction
+    function void jp_sample(gen_rvfi_txn t);
+      int op = -1, imm = 0; bit pc_rel = 0, reg_base = 0; logic [31:0] base, tgt, link; logic [15:0] i = t.insn[15:0];
+      if (t.insn[1:0] == 2'b11) begin
+        if (t.insn[6:0] == ibex_pkg::OPCODE_JAL) begin op = GEN_FC_ISA_JUMP_CP_OP_JAL; pc_rel = 1; imm = signed'({t.insn[31], t.insn[19:12], t.insn[20], t.insn[30:21], 1'b0}); end
+        else if (t.insn[6:0] == ibex_pkg::OPCODE_JALR && t.insn[14:12] == 3'b000) begin op = GEN_FC_ISA_JUMP_CP_OP_JALR; reg_base = 1; imm = signed'(t.insn[31:20]); end
+        else return;
+      end else begin
+        if (i[1:0] == 2'b01 && i[15:13] == 3'b101) begin op = GEN_FC_ISA_JUMP_CP_OP_C_J; pc_rel = 1; imm = cj_off(i); end
+        else if (i[1:0] == 2'b01 && i[15:13] == 3'b001) begin op = GEN_FC_ISA_JUMP_CP_OP_C_JAL; pc_rel = 1; imm = cj_off(i); end
+        else if (i[1:0] == 2'b10 && i[15:13] == 3'b100 && i[6:2] == 5'd0 && i[11:7] != 5'd0) begin op = i[12] ? GEN_FC_ISA_JUMP_CP_OP_C_JALR : GEN_FC_ISA_JUMP_CP_OP_C_JR; reg_base = 1; end
+        else return;
+      end
+      base = pc_rel ? t.pc_rdata : t.rs1_rdata; tgt = base + 32'(imm); link = t.rd_wdata - t.pc_rdata;
+      ut_last_jp[0] = op;
+      ut_last_jp[1] = (op == GEN_FC_ISA_JUMP_CP_OP_JAL || op == GEN_FC_ISA_JUMP_CP_OP_JALR) ? jp_rd_cls(t.rd_addr) : -1;
+      ut_last_jp[2] = (op == GEN_FC_ISA_JUMP_CP_OP_JAL) ? jal_off_cls(imm) : -1;
+      ut_last_jp[3] = (op == GEN_FC_ISA_JUMP_CP_OP_JALR) ? jalr_imm_cls(imm) : -1;
+      ut_last_jp[4] = reg_base ? ((t.rs1_addr == 0) ? GEN_FC_ISA_JUMP_CP_JALR_RS1_X0 : (t.rs1_addr == t.rd_addr && t.rd_addr != 0) ? GEN_FC_ISA_JUMP_CP_JALR_RS1_EQ_RD : GEN_FC_ISA_JUMP_CP_JALR_RS1_OTHER) : -1;
+      ut_last_jp[5] = t.pc_wdata[1] ? GEN_FC_ISA_JUMP_CP_TARGET_ALIGN_HALF : GEN_FC_ISA_JUMP_CP_TARGET_ALIGN_WORD;
+      ut_last_jp[6] = reg_base ? (tgt[0] ? GEN_FC_ISA_JUMP_CP_TARGET_ODD_YES : GEN_FC_ISA_JUMP_CP_TARGET_ODD_NO) : -1;
+      ut_last_jp[7] = sum_wraps(base, imm) ? GEN_FC_ISA_JUMP_CP_WRAP_YES : GEN_FC_ISA_JUMP_CP_WRAP_NO;
+      ut_last_jp[8] = (t.pc_rdata <= 32'h0000_00FF) ? GEN_FC_ISA_JUMP_CP_PC_REGION_ZERO_PAGE : (t.pc_rdata >= 32'hFFFF_F000) ? GEN_FC_ISA_JUMP_CP_PC_REGION_HIGH : GEN_FC_ISA_JUMP_CP_PC_REGION_MID;
+      ut_last_jp[9] = (t.rd_addr == 0) ? -1 : (link == 32'd4) ? GEN_FC_ISA_JUMP_CP_LINK_LEN_PC4 : (link == 32'd2) ? GEN_FC_ISA_JUMP_CP_LINK_LEN_PC2 : -1;
+      n_jp++;
+      jp_cg.sample(ut_last_jp[0], ut_last_jp[1], ut_last_jp[2], ut_last_jp[3], ut_last_jp[4], ut_last_jp[5], ut_last_jp[6], ut_last_jp[7], ut_last_jp[8], ut_last_jp[9]);
+    endfunction
+
+    // ---- CG-ISA-005: an rd-writing instruction retired with rd = x0, then whether its successor reads x0. Ibex reports rs1_addr / rs2_addr
+    // as 0 for a field the format does not have, so a read of x0 is decided from the encoding: the field exists and is 0.
+    function bit insn_has_rs1(logic [31:0] insn);
+      logic [15:0] i = insn[15:0];
+      if (insn[1:0] == 2'b11) begin
+        case (insn[6:0])
+          ibex_pkg::OPCODE_OP, ibex_pkg::OPCODE_OP_IMM, ibex_pkg::OPCODE_LOAD, ibex_pkg::OPCODE_STORE, ibex_pkg::OPCODE_BRANCH, ibex_pkg::OPCODE_JALR: return 1;
+          ibex_pkg::OPCODE_SYSTEM: return insn[14:12] inside {3'b001, 3'b010, 3'b011};   // the register forms of csrrw / csrrs / csrrc
+          default: return 0;
+        endcase
+      end
+      case (i[1:0])
+        2'b00: return i[15:13] inside {3'b000, 3'b010, 3'b110};                        // c.addi4spn (sp), c.lw / c.sw (rs1')
+        2'b01: return i[15:13] inside {3'b000, 3'b010, 3'b011, 3'b100, 3'b110, 3'b111};   // c.addi (rd), c.li (x0), c.lui / c.addi16sp, the ALU forms, c.beqz / c.bnez
+        default: return i[15:13] inside {3'b000, 3'b010, 3'b100, 3'b110};                 // c.slli (rd), c.lwsp / c.swsp (sp), c.jr / c.jalr / c.mv (x0) / c.add, c.swsp
+      endcase
+    endfunction
+    function bit insn_has_rs2(logic [31:0] insn);
+      logic [15:0] i = insn[15:0];
+      if (insn[1:0] == 2'b11) return insn[6:0] inside {ibex_pkg::OPCODE_OP, ibex_pkg::OPCODE_STORE, ibex_pkg::OPCODE_BRANCH};
+      case (i[1:0])
+        2'b00: return i[15:13] == 3'b110;                                                 // c.sw
+        2'b01: return (i[15:13] == 3'b100 && i[11:10] == 2'b11) || i[15:14] == 2'b11;      // c.sub / c.xor / c.or / c.and, c.beqz / c.bnez (x0)
+        default: return i[15:13] == 3'b110 || (i[15:13] == 3'b100 && i[6:2] != 5'd0);      // c.swsp, c.mv / c.add
+      endcase
+    endfunction
+    function int hx_rs_field(logic [31:0] insn, bit second);   // the rs1 (rs2) register the encoding names, -1 when the format has none
+      logic [15:0] i = insn[15:0];
+      if (second ? !insn_has_rs2(insn) : !insn_has_rs1(insn)) return -1;
+      if (insn[1:0] == 2'b11) return second ? int'(insn[24:20]) : int'(insn[19:15]);
+      if (second) begin
+        if (i[1:0] == 2'b00 || (i[1:0] == 2'b01 && i[15:13] == 3'b100)) return 8 + int'(i[4:2]);   // rs2'
+        if (i[1:0] == 2'b01) return 0;                                                          // c.beqz / c.bnez compare against x0
+        return int'(i[6:2]);                                                                    // c.swsp, c.mv, c.add
+      end
+      case (i[1:0])
+        2'b00: return (i[15:13] == 3'b000) ? 2 : 8 + int'(i[9:7]);                              // sp, rs1'
+        2'b01: begin
+          if (i[15:13] == 3'b010) return 0;                                                       // c.li reads x0
+          if (i[15:13] inside {3'b100, 3'b110, 3'b111}) return 8 + int'(i[9:7]);                  // rs1'
+          return int'(i[11:7]);                                                                   // c.addi (c.nop reads x0), c.lui / c.addi16sp
+        end
+        default: begin
+          if (i[15:13] inside {3'b010, 3'b110}) return 2;                                          // c.lwsp / c.swsp
+          if (i[15:13] == 3'b100 && !i[12] && i[6:2] != 5'd0) return 0;                            // c.mv reads x0
+          return int'(i[11:7]);                                                                   // c.slli, c.jr / c.jalr, c.add
+        end
+      endcase
+    endfunction
+    function int hx_x0_read_cls(gen_rvfi_txn nxt);
+      if (hx_rs_field(nxt.insn, 0) == 0 && nxt.rs1_rdata == 0) return GEN_FC_ISA_HINT_X0_CP_X0_READ_RS1_ZERO;
+      if (hx_rs_field(nxt.insn, 1) == 0 && nxt.rs2_rdata == 0) return GEN_FC_ISA_HINT_X0_CP_X0_READ_RS2_ZERO;
+      return GEN_FC_ISA_HINT_X0_CP_X0_READ_NONE;
+    endfunction
+    function bit bit_two_cycle(logic [31:0] insn);   // the multicycle bit-manipulation ops: rotates, funnel shifts, cmov / cmix, crc32
+      logic [6:0] f7 = insn[31:25]; logic [2:0] f3 = insn[14:12]; logic [4:0] r2 = insn[24:20];
+      if (insn[6:0] == ibex_pkg::OPCODE_OP_IMM) begin
+        if (f3 == 3'b101 && (f7 == 7'b0110000 || insn[26])) return 1;                                  // rori, fsri
+        if (f3 == 3'b001 && f7 == 7'b0110000 && r2 inside {5'h10, 5'h11, 5'h12, 5'h18, 5'h19, 5'h1A}) return 1;   // crc32 / crc32c .b / .h / .w
+        return 0;
+      end
+      if (insn[6:0] != ibex_pkg::OPCODE_OP) return 0;
+      if (f7 == 7'b0110000 && (f3 == 3'b001 || f3 == 3'b101)) return 1;                                // rol, ror
+      if (insn[26:25] == 2'b11 && (f3 == 3'b001 || f3 == 3'b101)) return 1;                            // cmix, cmov
+      if (insn[26:25] == 2'b10 && (f3 == 3'b001 || f3 == 3'b101)) return 1;                            // fsl, fsr
+      return 0;
+    endfunction
+    function int hx_writer_cls(logic [31:0] insn);   // the class an rd-writing encoding belongs to; -1 for one that writes no rd
+      logic [6:0] f7 = insn[31:25]; logic [2:0] f3 = insn[14:12]; logic [15:0] i = insn[15:0];
+      if (insn[1:0] != 2'b11) begin   // c.li, c.lui, c.slli, c.mv, c.add with rd = x0 are the compressed HINTs
+        if (i[1:0] == 2'b01 && (i[15:13] == 3'b010 || (i[15:13] == 3'b011 && i[11:7] != 5'd2))) return GEN_FC_ISA_HINT_X0_CP_WRITER_CLASS_CMP_HINT;
+        if (i[1:0] == 2'b10 && (i[15:13] == 3'b000 || (i[15:13] == 3'b100 && i[6:2] != 5'd0))) return GEN_FC_ISA_HINT_X0_CP_WRITER_CLASS_CMP_HINT;
+        return -1;
+      end
+      case (insn[6:0])
+        ibex_pkg::OPCODE_LUI, ibex_pkg::OPCODE_AUIPC: return GEN_FC_ISA_HINT_X0_CP_WRITER_CLASS_LUI_AUIPC;
+        ibex_pkg::OPCODE_LOAD: return GEN_FC_ISA_HINT_X0_CP_WRITER_CLASS_LOAD;
+        ibex_pkg::OPCODE_JAL: return GEN_FC_ISA_HINT_X0_CP_WRITER_CLASS_JAL;
+        ibex_pkg::OPCODE_JALR: return GEN_FC_ISA_HINT_X0_CP_WRITER_CLASS_JALR;
+        ibex_pkg::OPCODE_SYSTEM: return (f3 != 3'b000) ? GEN_FC_ISA_HINT_X0_CP_WRITER_CLASS_CSRR : -1;
+        ibex_pkg::OPCODE_OP_IMM: begin
+          if (f3 != 3'b001 && f3 != 3'b101) return GEN_FC_ISA_HINT_X0_CP_WRITER_CLASS_ALU_IMM;
+          if (f7 == 7'b0000000 || (f3 == 3'b101 && f7 == 7'b0100000)) return GEN_FC_ISA_HINT_X0_CP_WRITER_CLASS_SHIFT;
+          return bit_two_cycle(insn) ? GEN_FC_ISA_HINT_X0_CP_WRITER_CLASS_BIT_2CYC : GEN_FC_ISA_HINT_X0_CP_WRITER_CLASS_BIT_1CYC;
+        end
+        ibex_pkg::OPCODE_OP: begin
+          if (f7 == 7'b0000001) return f3[2] ? GEN_FC_ISA_HINT_X0_CP_WRITER_CLASS_DIV_REM : (f3 == 3'b000) ? GEN_FC_ISA_HINT_X0_CP_WRITER_CLASS_MUL : GEN_FC_ISA_HINT_X0_CP_WRITER_CLASS_MULH;
+          if (f7 == 7'b0000000) return (f3 == 3'b001 || f3 == 3'b101) ? GEN_FC_ISA_HINT_X0_CP_WRITER_CLASS_SHIFT : GEN_FC_ISA_HINT_X0_CP_WRITER_CLASS_ALU_REG;
+          if (f7 == 7'b0100000 && f3 == 3'b000) return GEN_FC_ISA_HINT_X0_CP_WRITER_CLASS_ALU_REG;   // sub
+          if (f7 == 7'b0100000 && f3 == 3'b101) return GEN_FC_ISA_HINT_X0_CP_WRITER_CLASS_SHIFT;     // sra
+          return bit_two_cycle(insn) ? GEN_FC_ISA_HINT_X0_CP_WRITER_CLASS_BIT_2CYC : GEN_FC_ISA_HINT_X0_CP_WRITER_CLASS_BIT_1CYC;
+        end
+        default: return -1;
+      endcase
+    endfunction
+    function int hx_hint_cls(logic [31:0] insn);   // the 32-bit HINT encodings the plan names; every other x0 writer is other
+      logic [6:0] f7 = insn[31:25]; logic [2:0] f3 = insn[14:12]; logic [4:0] rs1 = insn[19:15], shamt = insn[24:20];
+      if (insn[1:0] != 2'b11) return GEN_FC_ISA_HINT_X0_CP_HINT_CLASS_OTHER;
+      case (insn[6:0])
+        ibex_pkg::OPCODE_LUI: return GEN_FC_ISA_HINT_X0_CP_HINT_CLASS_LUI_X0;
+        ibex_pkg::OPCODE_AUIPC: return GEN_FC_ISA_HINT_X0_CP_HINT_CLASS_AUIPC_X0;
+        ibex_pkg::OPCODE_OP_IMM: case (f3)
+          3'b000: return (rs1 == 0 && insn[31:20] == 12'h0) ? GEN_FC_ISA_HINT_X0_CP_HINT_CLASS_CANONICAL_NOP : GEN_FC_ISA_HINT_X0_CP_HINT_CLASS_ADDI_X0_NZIMM;
+          3'b010: return GEN_FC_ISA_HINT_X0_CP_HINT_CLASS_SLTI_X0;
+          3'b011: return GEN_FC_ISA_HINT_X0_CP_HINT_CLASS_SLTIU_X0;
+          3'b100: return GEN_FC_ISA_HINT_X0_CP_HINT_CLASS_XORI_X0;
+          3'b110: return GEN_FC_ISA_HINT_X0_CP_HINT_CLASS_ORI_X0;
+          3'b111: return GEN_FC_ISA_HINT_X0_CP_HINT_CLASS_ANDI_X0;
+          3'b001: begin
+            if (f7 != 7'b0000000) return GEN_FC_ISA_HINT_X0_CP_HINT_CLASS_OTHER;
+            return (rs1 == 0 && shamt == 5'd31) ? GEN_FC_ISA_HINT_X0_CP_HINT_CLASS_SLLI_X0_SEMIHOST : GEN_FC_ISA_HINT_X0_CP_HINT_CLASS_SLLI_X0_OTHER;
+          end
+          default: begin
+            if (f7 == 7'b0000000) return GEN_FC_ISA_HINT_X0_CP_HINT_CLASS_SRLI_X0;
+            if (f7 != 7'b0100000) return GEN_FC_ISA_HINT_X0_CP_HINT_CLASS_OTHER;
+            return (rs1 == 0 && shamt == 5'd7) ? GEN_FC_ISA_HINT_X0_CP_HINT_CLASS_SRAI_X0_SEMIHOST : GEN_FC_ISA_HINT_X0_CP_HINT_CLASS_SRAI_X0_OTHER;
+          end
+        endcase
+        ibex_pkg::OPCODE_OP: begin
+          if (f7 == 7'b0000000) case (f3)
+            3'b000: return GEN_FC_ISA_HINT_X0_CP_HINT_CLASS_ADD_X0; 3'b001: return GEN_FC_ISA_HINT_X0_CP_HINT_CLASS_SLL_X0;
+            3'b010: return GEN_FC_ISA_HINT_X0_CP_HINT_CLASS_SLT_X0; 3'b011: return GEN_FC_ISA_HINT_X0_CP_HINT_CLASS_SLTU_X0;
+            3'b100: return GEN_FC_ISA_HINT_X0_CP_HINT_CLASS_XOR_X0; 3'b101: return GEN_FC_ISA_HINT_X0_CP_HINT_CLASS_SRL_X0;
+            3'b110: return GEN_FC_ISA_HINT_X0_CP_HINT_CLASS_OR_X0;  default: return GEN_FC_ISA_HINT_X0_CP_HINT_CLASS_AND_X0;
+          endcase
+          if (f7 == 7'b0100000 && f3 == 3'b000) return GEN_FC_ISA_HINT_X0_CP_HINT_CLASS_SUB_X0;
+          if (f7 == 7'b0100000 && f3 == 3'b101) return GEN_FC_ISA_HINT_X0_CP_HINT_CLASS_SRA_X0;
+          return GEN_FC_ISA_HINT_X0_CP_HINT_CLASS_OTHER;
+        end
+        default: return GEN_FC_ISA_HINT_X0_CP_HINT_CLASS_OTHER;
+      endcase
+    endfunction
+    function void hx_sample(gen_rvfi_txn t);
+      int wc = hx_writer_cls(t.insn);
+      if (t.rd_addr != 0 || wc < 0) return;
+      hx_v[0] = hx_hint_cls(t.insn); hx_v[1] = wc; hx_pend = 1;
+    endfunction
+    function void hx_flush(gen_rvfi_txn nxt);
+      if (!hx_pend) return;
+      hx_v[2] = (nxt == null) ? -1 : hx_x0_read_cls(nxt);
+      hx_cg.sample(hx_v[0], hx_v[1], hx_v[2]);
+      ut_last_hx = hx_v; n_hx++; hx_pend = 0;
+    endfunction
+
+    // ---- CG-MUL-004: the divider's timing, sampled on the record after the divide (its successor decides cp_next and the irq latency).
+    // The occupancy window is approximated by the previous retirement's cycle and the divide's own, as the multiply's is.
+    function int dt_delta_cls(int unsigned gap);
+      return (gap == 2) ? GEN_FC_DIV_TIMING_CP_DELTA_D2 : (gap == 37) ? GEN_FC_DIV_TIMING_CP_DELTA_D37 : GEN_FC_DIV_TIMING_CP_DELTA_OTHER;
+    endfunction
+    function int dt_prev_cls(gen_rvfi_txn last, gen_rvfi_txn t);
+      bit st; int unsigned nb; int mc = mt_prev_cls(last.insn);
+      if (gen_insn_mem_access(last.insn, st, nb) && !st && last.rd_addr != 0 && (last.rd_addr == t.rs1_addr || last.rd_addr == t.rs2_addr)) return GEN_FC_DIV_TIMING_CP_PREV_LOAD_DEP;
+      if (mc == GEN_FC_MUL_TIMING_CP_PREV_MUL || mc == GEN_FC_MUL_TIMING_CP_PREV_MULH_CLASS) return GEN_FC_DIV_TIMING_CP_PREV_MUL;
+      if (mc == GEN_FC_MUL_TIMING_CP_PREV_DIV) return GEN_FC_DIV_TIMING_CP_PREV_DIV;
+      if (mc == GEN_FC_MUL_TIMING_CP_PREV_ALU) return GEN_FC_DIV_TIMING_CP_PREV_ALU;
+      return GEN_FC_DIV_TIMING_CP_PREV_OTHER;
+    endfunction
+    function int dt_next_cls(gen_rvfi_txn nxt, logic [4:0] rd);
+      int mc = mt_prev_cls(nxt.insn);
+      if (mc == GEN_FC_MUL_TIMING_CP_PREV_MUL || mc == GEN_FC_MUL_TIMING_CP_PREV_MULH_CLASS) return GEN_FC_DIV_TIMING_CP_NEXT_MUL;
+      if (mc == GEN_FC_MUL_TIMING_CP_PREV_DIV) return GEN_FC_DIV_TIMING_CP_NEXT_DIV;
+      if (mc == GEN_FC_MUL_TIMING_CP_PREV_ALU && rd != 0 && (nxt.rs1_addr == rd || nxt.rs2_addr == rd)) return GEN_FC_DIV_TIMING_CP_NEXT_DEP_ALU;
+      return GEN_FC_DIV_TIMING_CP_NEXT_OTHER;
+    endfunction
+    function void dt_sample(gen_rvfi_txn t, int f3);
+      int unsigned id_cyc; bit busy = 0, stall = 0; int ev = GEN_FC_DIV_TIMING_CP_EVENT_MID_NONE;
+      if (!have_last) return;   // the first retirement after reset has no previous one: not sampled (plan)
+      id_cyc = last_t.cycle;
+      foreach (dlat_cyc[i]) if (dlat_gnt[i] < id_cyc && dlat_cyc[i] > id_cyc) busy = 1;
+      foreach (ib_addr[i]) if (ib_addr[i][31:2] == t.pc_rdata[31:2] && ib_rv[i] >= id_cyc) stall = 1;
+      dt_irq_seen = 0;
+      foreach (ev_cyc[i]) if (ev == GEN_FC_DIV_TIMING_CP_EVENT_MID_NONE && ev_cyc[i] > id_cyc && ev_cyc[i] < t.cycle) begin   // the first assertion strictly inside the window
+        ev = ev_kind[i];
+        if (ev == GEN_FC_DIV_TIMING_CP_EVENT_MID_IRQ) begin dt_irq_seen = 1; dt_irq_cycle = ev_cyc[i]; end
+      end
+      dt_v[0] = f3; dt_v[1] = dit_tracked ? GEN_FC_DIV_TIMING_CP_DIT_ON : GEN_FC_DIV_TIMING_CP_DIT_OFF;
+      dt_v[2] = (t.rs2_rdata == 0) ? GEN_FC_DIV_TIMING_CP_DIV0_YES : GEN_FC_DIV_TIMING_CP_DIV0_NO;
+      dt_v[3] = (!busy && !stall) ? dt_delta_cls(t.cycle - last_t.cycle) : -1;
+      dt_v[4] = ev; dt_v[5] = busy ? GEN_FC_DIV_TIMING_CP_WB_DEFER_YES : GEN_FC_DIV_TIMING_CP_WB_DEFER_NO;
+      dt_v[6] = dt_prev_cls(last_t, t); dt_v[7] = -1;
+      dt_v[8] = stall ? GEN_FC_DIV_TIMING_CP_FETCH_STALL_YES : GEN_FC_DIV_TIMING_CP_FETCH_STALL_NO; dt_v[9] = -1;
+      dt_rd = t.rd_addr; dt_pend = 1;
+    endfunction
+    function void dt_flush(gen_rvfi_txn nxt);
+      if (!dt_pend) return;
+      dt_v[7] = (nxt == null) ? -1 : dt_next_cls(nxt, dt_rd);
+      dt_v[9] = (dt_irq_seen && nxt != null && nxt.intr) ? ((nxt.cycle - dt_irq_cycle <= 37) ? GEN_FC_DIV_TIMING_CP_IRQ_LATENCY_LE37 : GEN_FC_DIV_TIMING_CP_IRQ_LATENCY_GT37) : -1;
+      dt_cg.sample(dt_v[0], dt_v[1], dt_v[2], dt_v[3], dt_v[4], dt_v[5], dt_v[6], dt_v[7], dt_v[8], dt_v[9]);
+      ut_last_dt = dt_v; n_dt++; dt_pend = 0;
+    endfunction
+
+    // ---- CG-CMP-002: the immediate of a Zca retirement, decoded per format; every other coverpoint of the record stays na
+    function int ie_off_cls(int imm, int max_fwd, int max_bwd, int self_b, int fwd_b, int bwd_b, int pos_b, int neg_b);
+      if (imm == 0) return self_b;
+      if (imm == max_fwd) return fwd_b;
+      if (imm == max_bwd) return bwd_b;
+      return (imm > 0) ? pos_b : neg_b;
+    endfunction
+    function void ie_sample(gen_rvfi_txn t);
+      logic [15:0] i = t.insn[15:0]; int op = zca_insn(i), imm, v [13]; logic [4:0] shamt = i[6:2];
+      if (op < 0) return;
+      foreach (v[k]) v[k] = -1;
+      case (op)
+        GEN_FC_CMP_ZCA_CP_INSN_C_ADDI4SPN: begin
+          imm = {i[10:7], i[12:11], i[5], i[6], 2'b00};
+          v[0] = (imm == 4) ? GEN_FC_CMP_IMM_EDGES_CP_ADDI4SPN_IMM_MIN : (imm == 1020) ? GEN_FC_CMP_IMM_EDGES_CP_ADDI4SPN_IMM_MAX : GEN_FC_CMP_IMM_EDGES_CP_ADDI4SPN_IMM_RAND;
+          v[11] = sum_wraps(t.rs1_rdata, imm) ? GEN_FC_CMP_IMM_EDGES_CP_SP_WRAP_YES : GEN_FC_CMP_IMM_EDGES_CP_SP_WRAP_NO;
+        end
+        GEN_FC_CMP_ZCA_CP_INSN_C_LW, GEN_FC_CMP_ZCA_CP_INSN_C_SW: begin
+          imm = {i[5], i[12:10], i[6], 2'b00};
+          v[1] = (imm == 0) ? GEN_FC_CMP_IMM_EDGES_CP_LW_SW_UIMM_ZERO : (imm == 124) ? GEN_FC_CMP_IMM_EDGES_CP_LW_SW_UIMM_MAX : GEN_FC_CMP_IMM_EDGES_CP_LW_SW_UIMM_RAND;
+        end
+        GEN_FC_CMP_ZCA_CP_INSN_C_LWSP, GEN_FC_CMP_ZCA_CP_INSN_C_SWSP: begin
+          imm = (op == GEN_FC_CMP_ZCA_CP_INSN_C_LWSP) ? {i[3:2], i[12], i[6:4], 2'b00} : {i[8:7], i[12:9], 2'b00};
+          v[2] = (imm == 0) ? GEN_FC_CMP_IMM_EDGES_CP_SP_UIMM_ZERO : (imm == 252) ? GEN_FC_CMP_IMM_EDGES_CP_SP_UIMM_MAX : GEN_FC_CMP_IMM_EDGES_CP_SP_UIMM_RAND;
+        end
+        GEN_FC_CMP_ZCA_CP_INSN_C_ADDI, GEN_FC_CMP_ZCA_CP_INSN_C_LI, GEN_FC_CMP_ZCA_CP_INSN_C_ANDI: begin
+          imm = signed'({i[12], i[6:2]});
+          v[3] = (op == GEN_FC_CMP_ZCA_CP_INSN_C_ADDI) ? GEN_FC_CMP_IMM_EDGES_CP_CI_OP_C_ADDI : (op == GEN_FC_CMP_ZCA_CP_INSN_C_LI) ? GEN_FC_CMP_IMM_EDGES_CP_CI_OP_C_LI : GEN_FC_CMP_IMM_EDGES_CP_CI_OP_C_ANDI;
+          v[4] = (imm == -32) ? GEN_FC_CMP_IMM_EDGES_CP_CI_IMM6_MIN : (imm == -1) ? GEN_FC_CMP_IMM_EDGES_CP_CI_IMM6_MINUS1 : (imm == 0) ? GEN_FC_CMP_IMM_EDGES_CP_CI_IMM6_ZERO :
+                 (imm == 1) ? GEN_FC_CMP_IMM_EDGES_CP_CI_IMM6_ONE : (imm == 31) ? GEN_FC_CMP_IMM_EDGES_CP_CI_IMM6_MAX : GEN_FC_CMP_IMM_EDGES_CP_CI_IMM6_RAND;
+        end
+        GEN_FC_CMP_ZCA_CP_INSN_C_LUI: begin
+          imm = signed'({i[12], i[6:2]});
+          v[5] = (imm == 1) ? GEN_FC_CMP_IMM_EDGES_CP_LUI_IMM_POS_MIN : (imm == 31) ? GEN_FC_CMP_IMM_EDGES_CP_LUI_IMM_POS_MAX : (imm == -32) ? GEN_FC_CMP_IMM_EDGES_CP_LUI_IMM_NEG_MIN :
+                 (imm == -1) ? GEN_FC_CMP_IMM_EDGES_CP_LUI_IMM_NEG_MAX : GEN_FC_CMP_IMM_EDGES_CP_LUI_IMM_RAND;
+        end
+        GEN_FC_CMP_ZCA_CP_INSN_C_ADDI16SP: begin
+          imm = signed'({i[12], i[4:3], i[5], i[2], i[6], 4'b0000});
+          v[6] = (imm == -512) ? GEN_FC_CMP_IMM_EDGES_CP_ADDI16SP_IMM_MIN : (imm == 496) ? GEN_FC_CMP_IMM_EDGES_CP_ADDI16SP_IMM_MAX : (imm == 16) ? GEN_FC_CMP_IMM_EDGES_CP_ADDI16SP_IMM_PLUS16 :
+                 (imm == -16) ? GEN_FC_CMP_IMM_EDGES_CP_ADDI16SP_IMM_MINUS16 : GEN_FC_CMP_IMM_EDGES_CP_ADDI16SP_IMM_RAND;
+          v[11] = sum_wraps(t.rs1_rdata, imm) ? GEN_FC_CMP_IMM_EDGES_CP_SP_WRAP_YES : GEN_FC_CMP_IMM_EDGES_CP_SP_WRAP_NO;
+        end
+        GEN_FC_CMP_ZCA_CP_INSN_C_SRLI, GEN_FC_CMP_ZCA_CP_INSN_C_SRAI, GEN_FC_CMP_ZCA_CP_INSN_C_SLLI: begin
+          v[7] = (op == GEN_FC_CMP_ZCA_CP_INSN_C_SRLI) ? GEN_FC_CMP_IMM_EDGES_CP_SHIFT_OP_C_SRLI : (op == GEN_FC_CMP_ZCA_CP_INSN_C_SRAI) ? GEN_FC_CMP_IMM_EDGES_CP_SHIFT_OP_C_SRAI : GEN_FC_CMP_IMM_EDGES_CP_SHIFT_OP_C_SLLI;
+          if (shamt != 0) v[8] = (shamt == 1) ? GEN_FC_CMP_IMM_EDGES_CP_SHAMT_ONE : (shamt == 31) ? GEN_FC_CMP_IMM_EDGES_CP_SHAMT_MAX : GEN_FC_CMP_IMM_EDGES_CP_SHAMT_RAND;
+        end
+        GEN_FC_CMP_ZCA_CP_INSN_C_J, GEN_FC_CMP_ZCA_CP_INSN_C_JAL: begin
+          v[9] = ie_off_cls(cj_off(i), 2046, -2048, GEN_FC_CMP_IMM_EDGES_CP_CJ_OFF_SELF, GEN_FC_CMP_IMM_EDGES_CP_CJ_OFF_MAX_FWD, GEN_FC_CMP_IMM_EDGES_CP_CJ_OFF_MAX_BWD,
+                          GEN_FC_CMP_IMM_EDGES_CP_CJ_OFF_POS_RAND, GEN_FC_CMP_IMM_EDGES_CP_CJ_OFF_NEG_RAND);
+          if (op == GEN_FC_CMP_ZCA_CP_INSN_C_JAL) v[12] = (t.rd_wdata - t.pc_rdata == 32'd2) ? GEN_FC_CMP_IMM_EDGES_CP_LINK_PC2 : -1;
+        end
+        GEN_FC_CMP_ZCA_CP_INSN_C_BEQZ, GEN_FC_CMP_ZCA_CP_INSN_C_BNEZ: begin
+          imm = signed'({i[12], i[6:5], i[2], i[11:10], i[4:3], 1'b0});
+          v[10] = ie_off_cls(imm, 254, -256, GEN_FC_CMP_IMM_EDGES_CP_CB_OFF_SELF, GEN_FC_CMP_IMM_EDGES_CP_CB_OFF_MAX_FWD, GEN_FC_CMP_IMM_EDGES_CP_CB_OFF_MAX_BWD,
+                           GEN_FC_CMP_IMM_EDGES_CP_CB_OFF_POS_RAND, GEN_FC_CMP_IMM_EDGES_CP_CB_OFF_NEG_RAND);
+        end
+        GEN_FC_CMP_ZCA_CP_INSN_C_JALR: v[12] = (t.rd_wdata - t.pc_rdata == 32'd2) ? GEN_FC_CMP_IMM_EDGES_CP_LINK_PC2 : -1;
+        default: return;   // no immediate: c.nop, c.mv, c.add, c.jr, the register ALU forms
+      endcase
+      n_ie++;
+      ie_cg.sample(v[0], v[1], v[2], v[3], v[4], v[5], v[6], v[7], v[8], v[9], v[10], v[11], v[12]);
+      ut_last_ie = v;
     endfunction
     function void write_ibus(gen_bus_txn b);   // every completed fetch: its word and response cycle for the fetch-stall class; the first request's distance
       ib_addr.push_back(b.addr); ib_rv.push_back(b.stamp_rvalid);   // the RVFI record's cycle base
@@ -1134,7 +1503,10 @@ package gen_fcov_pkg;
       fencei_pending = (t.insn[6:0] == 7'b0001111 && t.insn[14:12] == 3'b001);
       if (is_csr && csr == GEN_CSR_CPUCTRLSTS && is_write) begin   // cpuctrlsts.icache_enable as written: rw takes the operand, set / clear apply it to the old value (rd_wdata when read, else the tracked bit)
         bit old_en = (t.rd_addr != 0) ? t.rd_wdata[0] : icache_en_tracked;
+        bit old_dit = (t.rd_addr != 0) ? t.rd_wdata[GEN_CPUCTRLSTS_DATA_IND_TIMING_BIT] : dit_tracked;
         icache_en_tracked = (f3[1:0] == 2'b01) ? opnd[0] : (f3[1:0] == 2'b10) ? (old_en | opnd[0]) : (old_en & ~opnd[0]);
+        dit_tracked = (f3[1:0] == 2'b01) ? opnd[GEN_CPUCTRLSTS_DATA_IND_TIMING_BIT] : (f3[1:0] == 2'b10) ? (old_dit | opnd[GEN_CPUCTRLSTS_DATA_IND_TIMING_BIT])
+                                                                                     : (old_dit & ~opnd[GEN_CPUCTRLSTS_DATA_IND_TIMING_BIT]);
       end
       if (mcen_pend && is_csr && csr == ibex_pkg::CSR_MCOUNTEREN && t.rd_addr != 0) begin   // the read-back after a mcounteren write decides its effect
         int eff = (t.rd_wdata == mcen_old && mcen_new != mcen_old) ? GEN_FC_SEC_CTRL_INPUTS_CP_MCOUNTEREN_WRITE_EFFECT_DROPPED : (t.rd_wdata != mcen_old) ? GEN_FC_SEC_CTRL_INPUTS_CP_MCOUNTEREN_WRITE_EFFECT_APPLIED : -1;
@@ -1174,8 +1546,9 @@ package gen_fcov_pkg;
       prev_rec_cycle = cur_rec_cycle; cur_rec_cycle = t.cycle;
       mt_flush(t);
       hz_flush(t);
+      dt_flush(t);
+      hx_flush(t);
       rec_sample(t);
-      if (!t.ext_exp_valid && t.mem_wmask != 0) begin st_addr.push_back({t.mem_addr[31:2], 2'b00}); if (st_addr.size() > 64) void'(st_addr.pop_front()); end   // recent plain stores (store_same_slot_then_pop)
       if (!rst_sampled) rst_sample(rst_first_event_cls(t.intr, t.ext_nmi, t.ext_debug_mode));
       sec_record(t);
       last_t = prev_t; have_last = have_prev;   // the neighbour facts of the rest of write() (the multiply's cp_prev / cp_delta) read the record before this one
@@ -1207,6 +1580,9 @@ package gen_fcov_pkg;
         zca_cg.sample(-1, -1, -1, -1, t.pc_rdata[1] ? GEN_FC_CMP_ZCA_CP_INSN32_STRADDLE_YES : GEN_FC_CMP_ZCA_CP_INSN32_STRADDLE_NO, -1, -1);
       end
       if (t.ext_exp_valid) begin sb_prev_binv = 0; return; end   // a micro-op record belongs to the collector, not to the base groups
+      if (t.insn[1:0] != 2'b11) ie_sample(t); else lu_sample(t);   // Slice B: the groups no later branch of this chain owns
+      jp_sample(t);
+      hx_sample(t);
       if (sbit_sample(t)) return;
       sb_prev_binv = 0;
       void'(zcb_sample(t));   // c.mul also samples the M-extension group below
@@ -1229,6 +1605,7 @@ package gen_fcov_pkg;
         n_div++;
         div_cg.sample(int'(f3[1:0]), div_dividend_cls(t.rs1_rdata), div_divisor_cls(t.rs2_rdata, t.rs1_rdata), sign_pair(t.rs1_rdata, t.rs2_rdata),
                       t.rd_addr == 0, (t.rd_addr == 0) ? -1 : div_res_cls(t.rd_wdata, t.rs1_rdata));
+        dt_sample(t, int'(f3[1:0]));
       end else if (bit_op(t.insn) >= 0) begin
         int op = bit_op(t.insn);
         n_bit++;
@@ -1269,7 +1646,7 @@ package gen_fcov_pkg;
     function int unsigned query(int k);
       case (k)
         0: return n_slt_eq; 1: return n_zcmp; 2: return n_zcmp_minstret_no; 3: return n_cnt; 4: return n_cnt_res_na; 5: return n_imm;
-        6: return n_zcmp_uop_no; 7: return n_zcmp_order_no; 8: return n_zcmp_tags_no; 9: return n_br; 10: return n_mv; 11: return n_csr_pairs; 12: return n_mv_miss; 13: return n_rec; 14: return n_mt; 15: return n_rst; 16: return n_sec; 17: return n_hz;
+        6: return n_zcmp_uop_no; 7: return n_zcmp_order_no; 8: return n_zcmp_tags_no; 9: return n_br; 10: return n_mv; 11: return n_csr_pairs; 12: return n_mv_miss; 13: return n_rec; 14: return n_mt; 15: return n_rst; 16: return n_sec; 17: return n_hz; 18: return n_lu; 19: return n_hx; 20: return n_jp; 21: return n_dt; 22: return n_ie;
         default: return 32'hffff_ffff;
       endcase
     endfunction
@@ -1405,6 +1782,63 @@ package gen_fcov_pkg;
       `GEN_FCOV_UT("halfword cm.mvsa01 s2, s3 is a cm_mvsa01", hz_cm_kind(16'had2e), GEN_FC_CMP_ZCMP_HAZARD_CP_FT_KIND_CM_MVSA01)
       `GEN_FCOV_UT("halfword c.addi is not a cm.*", hz_cm_kind(16'h0085), -1)
       `GEN_FCOV_UT("rlist classes 4 / 9 / 15", hz_rlist_cls(4) * 100 + hz_rlist_cls(9) * 10 + hz_rlist_cls(15), GEN_FC_CMP_ZCMP_HAZARD_CP_RLIST_CLASS_R4 * 100 + GEN_FC_CMP_ZCMP_HAZARD_CP_RLIST_CLASS_R5_14 * 10 + GEN_FC_CMP_ZCMP_HAZARD_CP_RLIST_CLASS_R15)
+      // Slice B classifiers
+      `GEN_FCOV_UT("jalr imm 2047 is max_pos, not odd", jalr_imm_cls(2047), GEN_FC_ISA_JUMP_CP_JALR_IMM_MAX_POS)
+      `GEN_FCOV_UT("jalr imm 3 is odd", jalr_imm_cls(3), GEN_FC_ISA_JUMP_CP_JALR_IMM_ODD)
+      `GEN_FCOV_UT("jalr imm -2046 is neg_rand", jalr_imm_cls(-2046), GEN_FC_ISA_JUMP_CP_JALR_IMM_NEG_RAND)
+      `GEN_FCOV_UT("jal offset 0xFFFFE is max_fwd", jal_off_cls(32'h000F_FFFE), GEN_FC_ISA_JUMP_CP_JAL_OFF_MAX_FWD)
+      `GEN_FCOV_UT("jal offset -0x100000 is max_bwd", jal_off_cls(-32'h0010_0000), GEN_FC_ISA_JUMP_CP_JAL_OFF_MAX_BWD)
+      `GEN_FCOV_UT("a jump from 0xFFFFFFF0 by +0x20 wraps", sum_wraps(32'hFFFF_FFF0, 32'h20), 1'b1)
+      `GEN_FCOV_UT("a jump from 0x80000000 by -4 does not wrap", sum_wraps(32'h8000_0000, -4), 1'b0)
+      `GEN_FCOV_UT("a jump from 0x00000010 by -0x20 wraps", sum_wraps(32'h0000_0010, -32'h20), 1'b1)
+      `GEN_FCOV_UT("auipc at 0x80000000 with the msb immediate does not wrap", sum_wraps(32'h8000_0000, signed'(32'h8000_0000)), 1'b0)
+      `GEN_FCOV_UT("auipc at 0 with the all-ones immediate wraps", sum_wraps(32'h0, signed'(32'hFFFF_F000)), 1'b1)
+      `GEN_FCOV_UT("lui imm20 0x80000 is msb", lu_imm_cls(20'h80000), GEN_FC_ISA_LUI_AUIPC_CP_IMM20_MSB)
+      `GEN_FCOV_UT("pc 0xFFFFF000 is the high region", lu_region_cls(32'hFFFF_F000), GEN_FC_ISA_LUI_AUIPC_CP_PC_REGION_HIGH)
+      `GEN_FCOV_UT("addi x0, x0, 0 is the canonical nop", hx_hint_cls(32'h0000_0013), GEN_FC_ISA_HINT_X0_CP_HINT_CLASS_CANONICAL_NOP)
+      `GEN_FCOV_UT("addi x0, x1, 0 is addi_x0_nzimm", hx_hint_cls(32'h0000_8013), GEN_FC_ISA_HINT_X0_CP_HINT_CLASS_ADDI_X0_NZIMM)
+      `GEN_FCOV_UT("slli x0, x0, 0x1f is the semihosting hint", hx_hint_cls(32'h01f0_1013), GEN_FC_ISA_HINT_X0_CP_HINT_CLASS_SLLI_X0_SEMIHOST)
+      `GEN_FCOV_UT("srai x0, x0, 7 is the semihosting hint", hx_hint_cls(32'h4070_5013), GEN_FC_ISA_HINT_X0_CP_HINT_CLASS_SRAI_X0_SEMIHOST)
+      `GEN_FCOV_UT("srai x0, x1, 7 is srai_x0_other", hx_hint_cls(32'h4070_d013), GEN_FC_ISA_HINT_X0_CP_HINT_CLASS_SRAI_X0_OTHER)
+      `GEN_FCOV_UT("rori is a two-cycle bit op", hx_writer_cls(32'h6050_d013), GEN_FC_ISA_HINT_X0_CP_WRITER_CLASS_BIT_2CYC)
+      `GEN_FCOV_UT("andn is a one-cycle bit op", hx_writer_cls(32'h4062_f033), GEN_FC_ISA_HINT_X0_CP_WRITER_CLASS_BIT_1CYC)
+      `GEN_FCOV_UT("sub x0 is alu_reg", hx_writer_cls(32'h4062_8033), GEN_FC_ISA_HINT_X0_CP_WRITER_CLASS_ALU_REG)
+      `GEN_FCOV_UT("csrr x0, mcycle is csrr", hx_writer_cls(32'hb000_2073), GEN_FC_ISA_HINT_X0_CP_WRITER_CLASS_CSRR)
+      `GEN_FCOV_UT("c.li x0, 1 is a compressed hint writer", hx_writer_cls(32'h0000_4005), GEN_FC_ISA_HINT_X0_CP_WRITER_CLASS_CMP_HINT)
+      `GEN_FCOV_UT("sw writes no rd", hx_writer_cls(32'h0062_a023), -1)
+      `GEN_FCOV_UT("c.li names x0 as rs1", hx_rs_field(32'h0000_4285, 0), 0)
+      `GEN_FCOV_UT("c.mv names x0 as rs1", hx_rs_field(32'h0000_8286, 0), 0)
+      `GEN_FCOV_UT("c.beqz compares against x0 (rs2)", hx_rs_field(32'h0000_c001, 1), 0)
+      `GEN_FCOV_UT("jal has no rs1", hx_rs_field(32'h0000_00ef, 0), -1)
+      `GEN_FCOV_UT("add t0, x0, t1 names x0 as rs1", hx_rs_field(32'h0060_02b3, 0), 0)
+      `GEN_FCOV_UT("add t0, t1, x0 names x0 as rs2", hx_rs_field(32'h0003_02b3, 1), 0)
+      `GEN_FCOV_UT("lui has neither rs1 nor rs2", hx_rs_field(32'h0000_12b7, 0) * 10 + hx_rs_field(32'h0000_12b7, 1), -11)
+      `GEN_FCOV_UT("divide deltas 2 / 37 / 5", dt_delta_cls(2) * 100 + dt_delta_cls(37) * 10 + dt_delta_cls(5), GEN_FC_DIV_TIMING_CP_DELTA_D2 * 100 + GEN_FC_DIV_TIMING_CP_DELTA_D37 * 10 + GEN_FC_DIV_TIMING_CP_DELTA_OTHER)
+      `GEN_FCOV_UT("c.j offset 2046 is max_fwd", ie_off_cls(2046, 2046, -2048, 0, 1, 2, 3, 4), 1)
+      `GEN_FCOV_UT("c.beqz offset -256 is max_bwd", ie_off_cls(-256, 254, -256, 0, 1, 2, 3, 4), 2)
+      `GEN_FCOV_UT("c.j offset -2 is neg_rand", ie_off_cls(-2, 2046, -2048, 0, 1, 2, 3, 4), 4)
+      `GEN_FCOV_UT("the CJ offset of c.j +2046", cj_off(16'haffd), 2046)
+      `GEN_FCOV_UT("the CJ offset of c.j -2048", cj_off(16'hb001), -2048)
+      // x0 writer then its successor through write(): add x0, x1, x2 then add t0, x0, t1 (rs1 zero) then lui (none)
+      write(ut_rec(32'h0020_8033, 5'd0, 32'h0, 5'd1, 32'h5, 32'h9000_0100, 1100, 32'd200));   // add x0, x1, x2
+      write(ut_rec(32'h0060_02b3, 5'd5, 32'h7, 5'd0, 32'h0, 32'h9000_0104, 1101, 32'd201));   // add t0, x0, t1
+      `GEN_FCOV_UT("add x0: hint class add_x0", ut_last_hx[0], GEN_FC_ISA_HINT_X0_CP_HINT_CLASS_ADD_X0)
+      `GEN_FCOV_UT("add x0: writer class alu_reg", ut_last_hx[1], GEN_FC_ISA_HINT_X0_CP_WRITER_CLASS_ALU_REG)
+      `GEN_FCOV_UT("add x0 then add t0, x0, t1: rs1_zero", ut_last_hx[2], GEN_FC_ISA_HINT_X0_CP_X0_READ_RS1_ZERO)
+      write(ut_rec(32'h0000_1037, 5'd0, 32'h0, 5'd0, 32'h0, 32'h9000_0108, 1102, 32'd202));   // lui x0, 1
+      write(ut_rec(32'h0000_12b7, 5'd5, 32'h1000, 5'd0, 32'h0, 32'h9000_010c, 1103, 32'd203));   // lui t0, 1: reads nothing
+      `GEN_FCOV_UT("lui x0 then lui t0: none", ut_last_hx[2], GEN_FC_ISA_HINT_X0_CP_X0_READ_NONE)
+      `GEN_FCOV_UT("lui x0: writer class lui_auipc", ut_last_hx[1], GEN_FC_ISA_HINT_X0_CP_WRITER_CLASS_LUI_AUIPC)
+      `GEN_FCOV_UT("lui t0, 1 at a word pc: op lui, imm one, rd nonzero", ut_last_lu[0] * 100 + ut_last_lu[1] * 10 + ut_last_lu[5], GEN_FC_ISA_LUI_AUIPC_CP_OP_LUI * 100 + GEN_FC_ISA_LUI_AUIPC_CP_IMM20_ONE * 10 + GEN_FC_ISA_LUI_AUIPC_CP_RD_X0_NO)
+      // a jalr record: jalr ra, 8(ra) from ra = 0x90000200 (rs1 == rd), even target, link pc + 4
+      write(ut_rec(32'h0080_80e7, 5'd1, 32'h9000_0114, 5'd1, 32'h9000_0200, 32'h9000_0110, 1104, 32'd204));
+      `GEN_FCOV_UT("jalr ra, 8(ra): rs1 eq_rd, imm pos_rand, target even, link pc4", ut_last_jp[4] * 1000 + ut_last_jp[3] * 100 + ut_last_jp[6] * 10 + ut_last_jp[9],
+                   GEN_FC_ISA_JUMP_CP_JALR_RS1_EQ_RD * 1000 + GEN_FC_ISA_JUMP_CP_JALR_IMM_POS_RAND * 100 + GEN_FC_ISA_JUMP_CP_TARGET_ODD_NO * 10 + GEN_FC_ISA_JUMP_CP_LINK_LEN_PC4)
+      // a c.addi16sp record: sp = 0x10 minus 32 borrows across 0
+      write(ut_rec(32'h0000_7139, 5'd2, 32'hffff_fff0, 5'd2, 32'h0000_0010, 32'h9000_0114, 1105, 32'd205));   // c.addi16sp sp, -32
+      `GEN_FCOV_UT("c.addi16sp sp, -32 from 0x10: imm rand, sp wrap yes", ut_last_ie[6] * 10 + ut_last_ie[11], GEN_FC_CMP_IMM_EDGES_CP_ADDI16SP_IMM_RAND * 10 + GEN_FC_CMP_IMM_EDGES_CP_SP_WRAP_YES)
+      write(ut_rec(32'h0000_1141, 5'd2, 32'hffff_fff0, 5'd2, 32'h0000_0000, 32'h9000_0116, 1106, 32'd206));   // c.addi sp, -16
+      `GEN_FCOV_UT("c.addi sp, -16: ci op c_addi, imm6 rand", ut_last_ie[3] * 10 + ut_last_ie[4], GEN_FC_CMP_IMM_EDGES_CP_CI_OP_C_ADDI * 10 + GEN_FC_CMP_IMM_EDGES_CP_CI_IMM6_RAND)
       `undef GEN_FCOV_UT
       `uvm_info("GEN_FCOV_UT", $sformatf("self-test: %0d cases, %0d failures", n, fails), UVM_LOW)
       return fails;

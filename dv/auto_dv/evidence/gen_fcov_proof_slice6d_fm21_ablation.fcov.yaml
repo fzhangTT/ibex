@@ -1,0 +1,95 @@
+# gen_fcov_proof_slice6d_fm21_ablation.fcov.yaml: the ablation control of mutant FM21 (gen_mut_fcov.md): gen_fcov_proof_slice6d.fcov.yaml without gen_cmp_imm_edges_cg.cp_addi4spn_imm.max; it must PASS on the mutant run's report while the full manifest fails there.
+test: gen_fcov_proof_slice6d_fm21_ablation
+owner: tb-infra
+bins:
+  - gen_cmp_imm_edges_cg.cp_addi4spn_imm.rand
+  - gen_cmp_imm_edges_cg.cp_addi4spn_imm.min
+  - gen_cmp_imm_edges_cg.cp_lw_sw_uimm.rand
+  - gen_cmp_imm_edges_cg.cp_lw_sw_uimm.max
+  - gen_cmp_imm_edges_cg.cp_lw_sw_uimm.zero
+  - gen_cmp_imm_edges_cg.cp_sp_uimm.rand
+  - gen_cmp_imm_edges_cg.cp_sp_uimm.max
+  - gen_cmp_imm_edges_cg.cp_sp_uimm.zero
+  - gen_cmp_imm_edges_cg.cp_ci_op.c_andi
+  - gen_cmp_imm_edges_cg.cp_ci_op.c_li
+  - gen_cmp_imm_edges_cg.cp_ci_op.c_addi
+  - gen_cmp_imm_edges_cg.cp_ci_imm6.rand
+  - gen_cmp_imm_edges_cg.cp_ci_imm6.max
+  - gen_cmp_imm_edges_cg.cp_ci_imm6.one
+  - gen_cmp_imm_edges_cg.cp_ci_imm6.zero
+  - gen_cmp_imm_edges_cg.cp_ci_imm6.minus1
+  - gen_cmp_imm_edges_cg.cp_ci_imm6.min
+  - gen_cmp_imm_edges_cg.cp_lui_imm.rand
+  - gen_cmp_imm_edges_cg.cp_lui_imm.neg_max
+  - gen_cmp_imm_edges_cg.cp_lui_imm.neg_min
+  - gen_cmp_imm_edges_cg.cp_lui_imm.pos_max
+  - gen_cmp_imm_edges_cg.cp_lui_imm.pos_min
+  - gen_cmp_imm_edges_cg.cp_addi16sp_imm.rand
+  - gen_cmp_imm_edges_cg.cp_addi16sp_imm.minus16
+  - gen_cmp_imm_edges_cg.cp_addi16sp_imm.plus16
+  - gen_cmp_imm_edges_cg.cp_addi16sp_imm.max
+  - gen_cmp_imm_edges_cg.cp_addi16sp_imm.min
+  - gen_cmp_imm_edges_cg.cp_shift_op.c_slli
+  - gen_cmp_imm_edges_cg.cp_shift_op.c_srai
+  - gen_cmp_imm_edges_cg.cp_shift_op.c_srli
+  - gen_cmp_imm_edges_cg.cp_shamt.rand
+  - gen_cmp_imm_edges_cg.cp_shamt.max
+  - gen_cmp_imm_edges_cg.cp_shamt.one
+  - gen_cmp_imm_edges_cg.cp_cj_off.neg_rand
+  - gen_cmp_imm_edges_cg.cp_cj_off.pos_rand
+  - gen_cmp_imm_edges_cg.cp_cj_off.max_bwd
+  - gen_cmp_imm_edges_cg.cp_cj_off.self
+  - gen_cmp_imm_edges_cg.cp_cb_off.neg_rand
+  - gen_cmp_imm_edges_cg.cp_cb_off.pos_rand
+  - gen_cmp_imm_edges_cg.cp_cb_off.max_bwd
+  - gen_cmp_imm_edges_cg.cp_cb_off.max_fwd
+  - gen_cmp_imm_edges_cg.cp_cb_off.self
+  - gen_cmp_imm_edges_cg.cp_sp_wrap.yes
+  - gen_cmp_imm_edges_cg.cp_sp_wrap.no
+  - gen_cmp_imm_edges_cg.cp_link.pc2
+anti_vacuity:
+  gen_cmp_imm_edges_cg.cp_addi4spn_imm.rand: "plan CG-CMP-002 anti-vacuity: each coverpoint is guarded to its format so only that instruction populates it; a hit proves the immediate extreme was decoded and executed (result on RVFI); the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_cmp_imm_edges_cg.cp_addi4spn_imm.min: "plan CG-CMP-002 anti-vacuity: each coverpoint is guarded to its format so only that instruction populates it; a hit proves the immediate extreme was decoded and executed (result on RVFI); the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_cmp_imm_edges_cg.cp_lw_sw_uimm.rand: "plan CG-CMP-002 anti-vacuity: each coverpoint is guarded to its format so only that instruction populates it; a hit proves the immediate extreme was decoded and executed (result on RVFI); the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_cmp_imm_edges_cg.cp_lw_sw_uimm.max: "plan CG-CMP-002 anti-vacuity: each coverpoint is guarded to its format so only that instruction populates it; a hit proves the immediate extreme was decoded and executed (result on RVFI); the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_cmp_imm_edges_cg.cp_lw_sw_uimm.zero: "plan CG-CMP-002 anti-vacuity: each coverpoint is guarded to its format so only that instruction populates it; a hit proves the immediate extreme was decoded and executed (result on RVFI); the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_cmp_imm_edges_cg.cp_sp_uimm.rand: "plan CG-CMP-002 anti-vacuity: each coverpoint is guarded to its format so only that instruction populates it; a hit proves the immediate extreme was decoded and executed (result on RVFI); the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_cmp_imm_edges_cg.cp_sp_uimm.max: "plan CG-CMP-002 anti-vacuity: each coverpoint is guarded to its format so only that instruction populates it; a hit proves the immediate extreme was decoded and executed (result on RVFI); the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_cmp_imm_edges_cg.cp_sp_uimm.zero: "plan CG-CMP-002 anti-vacuity: each coverpoint is guarded to its format so only that instruction populates it; a hit proves the immediate extreme was decoded and executed (result on RVFI); the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_cmp_imm_edges_cg.cp_ci_op.c_andi: "plan CG-CMP-002 anti-vacuity: each coverpoint is guarded to its format so only that instruction populates it; a hit proves the immediate extreme was decoded and executed (result on RVFI); the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_cmp_imm_edges_cg.cp_ci_op.c_li: "plan CG-CMP-002 anti-vacuity: each coverpoint is guarded to its format so only that instruction populates it; a hit proves the immediate extreme was decoded and executed (result on RVFI); the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_cmp_imm_edges_cg.cp_ci_op.c_addi: "plan CG-CMP-002 anti-vacuity: each coverpoint is guarded to its format so only that instruction populates it; a hit proves the immediate extreme was decoded and executed (result on RVFI); the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_cmp_imm_edges_cg.cp_ci_imm6.rand: "plan CG-CMP-002 anti-vacuity: each coverpoint is guarded to its format so only that instruction populates it; a hit proves the immediate extreme was decoded and executed (result on RVFI); the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_cmp_imm_edges_cg.cp_ci_imm6.max: "plan CG-CMP-002 anti-vacuity: each coverpoint is guarded to its format so only that instruction populates it; a hit proves the immediate extreme was decoded and executed (result on RVFI); the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_cmp_imm_edges_cg.cp_ci_imm6.one: "plan CG-CMP-002 anti-vacuity: each coverpoint is guarded to its format so only that instruction populates it; a hit proves the immediate extreme was decoded and executed (result on RVFI); the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_cmp_imm_edges_cg.cp_ci_imm6.zero: "plan CG-CMP-002 anti-vacuity: each coverpoint is guarded to its format so only that instruction populates it; a hit proves the immediate extreme was decoded and executed (result on RVFI); the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_cmp_imm_edges_cg.cp_ci_imm6.minus1: "plan CG-CMP-002 anti-vacuity: each coverpoint is guarded to its format so only that instruction populates it; a hit proves the immediate extreme was decoded and executed (result on RVFI); the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_cmp_imm_edges_cg.cp_ci_imm6.min: "plan CG-CMP-002 anti-vacuity: each coverpoint is guarded to its format so only that instruction populates it; a hit proves the immediate extreme was decoded and executed (result on RVFI); the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_cmp_imm_edges_cg.cp_lui_imm.rand: "plan CG-CMP-002 anti-vacuity: each coverpoint is guarded to its format so only that instruction populates it; a hit proves the immediate extreme was decoded and executed (result on RVFI); the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_cmp_imm_edges_cg.cp_lui_imm.neg_max: "plan CG-CMP-002 anti-vacuity: each coverpoint is guarded to its format so only that instruction populates it; a hit proves the immediate extreme was decoded and executed (result on RVFI); the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_cmp_imm_edges_cg.cp_lui_imm.neg_min: "plan CG-CMP-002 anti-vacuity: each coverpoint is guarded to its format so only that instruction populates it; a hit proves the immediate extreme was decoded and executed (result on RVFI); the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_cmp_imm_edges_cg.cp_lui_imm.pos_max: "plan CG-CMP-002 anti-vacuity: each coverpoint is guarded to its format so only that instruction populates it; a hit proves the immediate extreme was decoded and executed (result on RVFI); the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_cmp_imm_edges_cg.cp_lui_imm.pos_min: "plan CG-CMP-002 anti-vacuity: each coverpoint is guarded to its format so only that instruction populates it; a hit proves the immediate extreme was decoded and executed (result on RVFI); the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_cmp_imm_edges_cg.cp_addi16sp_imm.rand: "plan CG-CMP-002 anti-vacuity: each coverpoint is guarded to its format so only that instruction populates it; a hit proves the immediate extreme was decoded and executed (result on RVFI); the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_cmp_imm_edges_cg.cp_addi16sp_imm.minus16: "plan CG-CMP-002 anti-vacuity: each coverpoint is guarded to its format so only that instruction populates it; a hit proves the immediate extreme was decoded and executed (result on RVFI); the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_cmp_imm_edges_cg.cp_addi16sp_imm.plus16: "plan CG-CMP-002 anti-vacuity: each coverpoint is guarded to its format so only that instruction populates it; a hit proves the immediate extreme was decoded and executed (result on RVFI); the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_cmp_imm_edges_cg.cp_addi16sp_imm.max: "plan CG-CMP-002 anti-vacuity: each coverpoint is guarded to its format so only that instruction populates it; a hit proves the immediate extreme was decoded and executed (result on RVFI); the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_cmp_imm_edges_cg.cp_addi16sp_imm.min: "plan CG-CMP-002 anti-vacuity: each coverpoint is guarded to its format so only that instruction populates it; a hit proves the immediate extreme was decoded and executed (result on RVFI); the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_cmp_imm_edges_cg.cp_shift_op.c_slli: "plan CG-CMP-002 anti-vacuity: each coverpoint is guarded to its format so only that instruction populates it; a hit proves the immediate extreme was decoded and executed (result on RVFI); the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_cmp_imm_edges_cg.cp_shift_op.c_srai: "plan CG-CMP-002 anti-vacuity: each coverpoint is guarded to its format so only that instruction populates it; a hit proves the immediate extreme was decoded and executed (result on RVFI); the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_cmp_imm_edges_cg.cp_shift_op.c_srli: "plan CG-CMP-002 anti-vacuity: each coverpoint is guarded to its format so only that instruction populates it; a hit proves the immediate extreme was decoded and executed (result on RVFI); the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_cmp_imm_edges_cg.cp_shamt.rand: "plan CG-CMP-002 anti-vacuity: each coverpoint is guarded to its format so only that instruction populates it; a hit proves the immediate extreme was decoded and executed (result on RVFI); the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_cmp_imm_edges_cg.cp_shamt.max: "plan CG-CMP-002 anti-vacuity: each coverpoint is guarded to its format so only that instruction populates it; a hit proves the immediate extreme was decoded and executed (result on RVFI); the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_cmp_imm_edges_cg.cp_shamt.one: "plan CG-CMP-002 anti-vacuity: each coverpoint is guarded to its format so only that instruction populates it; a hit proves the immediate extreme was decoded and executed (result on RVFI); the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_cmp_imm_edges_cg.cp_cj_off.neg_rand: "plan CG-CMP-002 anti-vacuity: each coverpoint is guarded to its format so only that instruction populates it; a hit proves the immediate extreme was decoded and executed (result on RVFI); the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_cmp_imm_edges_cg.cp_cj_off.pos_rand: "plan CG-CMP-002 anti-vacuity: each coverpoint is guarded to its format so only that instruction populates it; a hit proves the immediate extreme was decoded and executed (result on RVFI); the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_cmp_imm_edges_cg.cp_cj_off.max_bwd: "plan CG-CMP-002 anti-vacuity: each coverpoint is guarded to its format so only that instruction populates it; a hit proves the immediate extreme was decoded and executed (result on RVFI); the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_cmp_imm_edges_cg.cp_cj_off.self: "plan CG-CMP-002 anti-vacuity: each coverpoint is guarded to its format so only that instruction populates it; a hit proves the immediate extreme was decoded and executed (result on RVFI); the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_cmp_imm_edges_cg.cp_cb_off.neg_rand: "plan CG-CMP-002 anti-vacuity: each coverpoint is guarded to its format so only that instruction populates it; a hit proves the immediate extreme was decoded and executed (result on RVFI); the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_cmp_imm_edges_cg.cp_cb_off.pos_rand: "plan CG-CMP-002 anti-vacuity: each coverpoint is guarded to its format so only that instruction populates it; a hit proves the immediate extreme was decoded and executed (result on RVFI); the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_cmp_imm_edges_cg.cp_cb_off.max_bwd: "plan CG-CMP-002 anti-vacuity: each coverpoint is guarded to its format so only that instruction populates it; a hit proves the immediate extreme was decoded and executed (result on RVFI); the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_cmp_imm_edges_cg.cp_cb_off.max_fwd: "plan CG-CMP-002 anti-vacuity: each coverpoint is guarded to its format so only that instruction populates it; a hit proves the immediate extreme was decoded and executed (result on RVFI); the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_cmp_imm_edges_cg.cp_cb_off.self: "plan CG-CMP-002 anti-vacuity: each coverpoint is guarded to its format so only that instruction populates it; a hit proves the immediate extreme was decoded and executed (result on RVFI); the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_cmp_imm_edges_cg.cp_sp_wrap.yes: "plan CG-CMP-002 anti-vacuity: each coverpoint is guarded to its format so only that instruction populates it; a hit proves the immediate extreme was decoded and executed (result on RVFI); the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_cmp_imm_edges_cg.cp_sp_wrap.no: "plan CG-CMP-002 anti-vacuity: each coverpoint is guarded to its format so only that instruction populates it; a hit proves the immediate extreme was decoded and executed (result on RVFI); the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_cmp_imm_edges_cg.cp_link.pc2: "plan CG-CMP-002 anti-vacuity: each coverpoint is guarded to its format so only that instruction populates it; a hit proves the immediate extreme was decoded and executed (result on RVFI); the hit is a retired instruction the lock-step compare judged against the ISA model"

@@ -1,0 +1,1 @@
+# gen_intg_store_directed.S: source sha256 3ebe16f510c6d23c1306e3919e93ebf73a76c1fb962e8ff8f43733d67f053f76 (1136 bytes); image sbprog_intg_store/prog.vmem crc32 0x40830927 words 156 (the +gen_mem_image_crc32 / +gen_mem_image_words of its runs); gen_program.py --directed, seed 1

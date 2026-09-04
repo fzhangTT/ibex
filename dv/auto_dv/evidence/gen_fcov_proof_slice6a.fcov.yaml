@@ -1,0 +1,31 @@
+# gen_fcov_proof_slice6a.fcov.yaml: fcov-expectation proof of T-205 Slice B (gen_isa_lui_auipc_cg): every coverpoint bin the lock-step run of gen_lui_auipc_directed.S hits; build sb3, fresh vdb
+test: gen_fcov_proof_slice6a
+owner: tb-infra
+bins:
+  - gen_isa_lui_auipc_cg.cp_op.auipc
+  - gen_isa_lui_auipc_cg.cp_op.lui
+  - gen_isa_lui_auipc_cg.cp_imm20.rand
+  - gen_isa_lui_auipc_cg.cp_imm20.one
+  - gen_isa_lui_auipc_cg.cp_imm20.msb
+  - gen_isa_lui_auipc_cg.cp_imm20.all_ones
+  - gen_isa_lui_auipc_cg.cp_imm20.zero
+  - gen_isa_lui_auipc_cg.cp_pc_align.half
+  - gen_isa_lui_auipc_cg.cp_pc_align.word
+  - gen_isa_lui_auipc_cg.cp_pc_region.mid
+  - gen_isa_lui_auipc_cg.cp_wrap.no
+  - gen_isa_lui_auipc_cg.cp_rd_x0.yes
+  - gen_isa_lui_auipc_cg.cp_rd_x0.no
+anti_vacuity:
+  gen_isa_lui_auipc_cg.cp_op.auipc: "plan CG-ISA-004 anti-vacuity: two opcodes out of the full program mix; a hit proves a U-type op retired at the sampled PC alignment/region with the sampled immediate; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_isa_lui_auipc_cg.cp_op.lui: "plan CG-ISA-004 anti-vacuity: two opcodes out of the full program mix; a hit proves a U-type op retired at the sampled PC alignment/region with the sampled immediate; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_isa_lui_auipc_cg.cp_imm20.rand: "plan CG-ISA-004 anti-vacuity: two opcodes out of the full program mix; a hit proves a U-type op retired at the sampled PC alignment/region with the sampled immediate; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_isa_lui_auipc_cg.cp_imm20.one: "plan CG-ISA-004 anti-vacuity: two opcodes out of the full program mix; a hit proves a U-type op retired at the sampled PC alignment/region with the sampled immediate; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_isa_lui_auipc_cg.cp_imm20.msb: "plan CG-ISA-004 anti-vacuity: two opcodes out of the full program mix; a hit proves a U-type op retired at the sampled PC alignment/region with the sampled immediate; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_isa_lui_auipc_cg.cp_imm20.all_ones: "plan CG-ISA-004 anti-vacuity: two opcodes out of the full program mix; a hit proves a U-type op retired at the sampled PC alignment/region with the sampled immediate; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_isa_lui_auipc_cg.cp_imm20.zero: "plan CG-ISA-004 anti-vacuity: two opcodes out of the full program mix; a hit proves a U-type op retired at the sampled PC alignment/region with the sampled immediate; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_isa_lui_auipc_cg.cp_pc_align.half: "plan CG-ISA-004 anti-vacuity: two opcodes out of the full program mix; a hit proves a U-type op retired at the sampled PC alignment/region with the sampled immediate; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_isa_lui_auipc_cg.cp_pc_align.word: "plan CG-ISA-004 anti-vacuity: two opcodes out of the full program mix; a hit proves a U-type op retired at the sampled PC alignment/region with the sampled immediate; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_isa_lui_auipc_cg.cp_pc_region.mid: "plan CG-ISA-004 anti-vacuity: two opcodes out of the full program mix; a hit proves a U-type op retired at the sampled PC alignment/region with the sampled immediate; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_isa_lui_auipc_cg.cp_wrap.no: "plan CG-ISA-004 anti-vacuity: two opcodes out of the full program mix; a hit proves a U-type op retired at the sampled PC alignment/region with the sampled immediate; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_isa_lui_auipc_cg.cp_rd_x0.yes: "plan CG-ISA-004 anti-vacuity: two opcodes out of the full program mix; a hit proves a U-type op retired at the sampled PC alignment/region with the sampled immediate; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_isa_lui_auipc_cg.cp_rd_x0.no: "plan CG-ISA-004 anti-vacuity: two opcodes out of the full program mix; a hit proves a U-type op retired at the sampled PC alignment/region with the sampled immediate; the hit is a retired instruction the lock-step compare judged against the ISA model"

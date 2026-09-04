@@ -1,0 +1,1 @@
+# gen_cmp_imm_edges_directed.S: source sha256 88039f59c3f0f9eb990c4e0f5707aa8d246abea9dd2d26df474f381240771e1b (3430 bytes); image sbprog_cmp_imm_edges/prog.vmem crc32 0x9febc33b words 1380 (the +gen_mem_image_crc32 / +gen_mem_image_words of its runs); gen_program.py --directed, seed 1

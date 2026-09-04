@@ -25,7 +25,8 @@ REL_PLAN = "dv/auto_dv/docs/gen_fcov_plan.md"
 REL_OUT = "dv/auto_dv/env/gen_fcov_groups.svh"
 # the covergroups whose samplers exist (gen_fcov_pkg.sv); plan order of implementation (evidence/gen_round0_covergroup_set.md)
 IMPLEMENTED = ("CG-MUL-001", "CG-MUL-003", "CG-ISA-002", "CG-BIT-001", "CG-ISA-001", "CG-ISA-003", "CG-BIT-002", "CG-CMP-001", "CG-CMP-006",
-               "CG-CMP-007", "CG-CSR-002", "CG-ISA-007", "CG-BIT-006", "CG-CMP-005", "CG-MUL-002", "CG-RST-001", "CG-SEC-005", "CG-RVFI-001", "CG-CMP-009")
+               "CG-CMP-007", "CG-CSR-002", "CG-ISA-007", "CG-BIT-006", "CG-CMP-005", "CG-MUL-002", "CG-RST-001", "CG-SEC-005", "CG-RVFI-001", "CG-CMP-009",
+               "CG-ISA-004", "CG-ISA-005", "CG-ISA-006", "CG-MUL-004", "CG-CMP-002")
 
 
 def die(msg):

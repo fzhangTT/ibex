@@ -1,0 +1,15 @@
+# check of dv/auto_dv/evidence/gen_fcov_proof_slice5b2.fcov.yaml (md5 5ee23b81c22b0700647c02fe621b664b) against /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/sb_root/dv/auto_dv/work/tb-infra/wit/fcov/urg_lockstep_muldiv_fast (urg text report of the run named in the manifest header; build sources sha256: 98518617fecfcf64); 2026-09-04T04:03:42Z
+FCOV-EXPECTATION: gen_mul_timing_cg.cp_op.mulhu = HIT (count=484)
+FCOV-EXPECTATION: gen_mul_timing_cg.cp_op.mulhsu = HIT (count=484)
+FCOV-EXPECTATION: gen_mul_timing_cg.cp_op.mulh = HIT (count=484)
+FCOV-EXPECTATION: gen_mul_timing_cg.cp_op.mul = HIT (count=605)
+FCOV-EXPECTATION: gen_mul_timing_cg.cp_delta.d3plus = HIT (count=121)
+FCOV-EXPECTATION: gen_mul_timing_cg.cp_delta.d2 = HIT (count=1452)
+FCOV-EXPECTATION: gen_mul_timing_cg.cp_delta.d1 = HIT (count=484)
+FCOV-EXPECTATION: gen_mul_timing_cg.cp_prev.load = HIT (count=605)
+FCOV-EXPECTATION: gen_mul_timing_cg.cp_prev.mulh_class = HIT (count=1089)
+FCOV-EXPECTATION: gen_mul_timing_cg.cp_prev.mul = HIT (count=363)
+FCOV-EXPECTATION: gen_mul_timing_cg.cp_next_dep.no = HIT (count=2057)
+FCOV-EXPECTATION: gen_mul_timing_cg.cp_wb_busy.no = HIT (count=2057)
+FCOV-EXPECTATION: gen_mul_timing_cg.cp_fetch_stall.no = HIT (count=2057)
+FCOV-EXPECTATION: PASS - all 13 declared bins hit

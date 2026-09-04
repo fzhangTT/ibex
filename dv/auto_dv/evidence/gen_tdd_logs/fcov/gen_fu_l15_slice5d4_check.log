@@ -1,0 +1,5 @@
+# check of dv/auto_dv/evidence/gen_fcov_proof_slice5d4.fcov.yaml (md5 cb2909ce107fa7f28de5b452f2f3fc45) against /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/sb_root/dv/auto_dv/work/tb-infra/wit/fcov/urg_ut_fetch_en (urg text report of the run named in the manifest header; build sources sha256: 98518617fecfcf64); 2026-09-04T04:03:43Z
+FCOV-EXPECTATION: gen_sec_ctrl_inputs_cg.cp_event.fetch_en_change = HIT (count=3)
+FCOV-EXPECTATION: gen_sec_ctrl_inputs_cg.cp_fetch_en_val.off = HIT (count=1)
+FCOV-EXPECTATION: gen_sec_ctrl_inputs_cg.cp_fetch_en_val.on = HIT (count=2)
+FCOV-EXPECTATION: PASS - all 3 declared bins hit

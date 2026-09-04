@@ -1,0 +1,15 @@
+# check of dv/auto_dv/evidence/gen_fcov_proof_slice6a.fcov.yaml (md5 7f8aeb628791774c93357040ba6c9f76) against /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/sb_root/dv/auto_dv/work/tb-infra/wit/fcov/urg_lockstep_lui (urg text report of the run named in the manifest header; build sources sha256: 98518617fecfcf64); 2026-09-04T04:04:09Z
+FCOV-EXPECTATION: gen_isa_lui_auipc_cg.cp_op.auipc = HIT (count=12)
+FCOV-EXPECTATION: gen_isa_lui_auipc_cg.cp_op.lui = HIT (count=11)
+FCOV-EXPECTATION: gen_isa_lui_auipc_cg.cp_imm20.rand = HIT (count=6)
+FCOV-EXPECTATION: gen_isa_lui_auipc_cg.cp_imm20.one = HIT (count=4)
+FCOV-EXPECTATION: gen_isa_lui_auipc_cg.cp_imm20.msb = HIT (count=4)
+FCOV-EXPECTATION: gen_isa_lui_auipc_cg.cp_imm20.all_ones = HIT (count=4)
+FCOV-EXPECTATION: gen_isa_lui_auipc_cg.cp_imm20.zero = HIT (count=5)
+FCOV-EXPECTATION: gen_isa_lui_auipc_cg.cp_pc_align.half = HIT (count=8)
+FCOV-EXPECTATION: gen_isa_lui_auipc_cg.cp_pc_align.word = HIT (count=15)
+FCOV-EXPECTATION: gen_isa_lui_auipc_cg.cp_pc_region.mid = HIT (count=23)
+FCOV-EXPECTATION: gen_isa_lui_auipc_cg.cp_wrap.no = HIT (count=12)
+FCOV-EXPECTATION: gen_isa_lui_auipc_cg.cp_rd_x0.yes = HIT (count=8)
+FCOV-EXPECTATION: gen_isa_lui_auipc_cg.cp_rd_x0.no = HIT (count=15)
+FCOV-EXPECTATION: PASS - all 13 declared bins hit

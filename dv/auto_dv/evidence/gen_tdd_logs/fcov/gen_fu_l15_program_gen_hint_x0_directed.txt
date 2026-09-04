@@ -1,0 +1,1 @@
+# gen_hint_x0_directed.S: source sha256 fb0d2bb03d7b302f294ea8d839145b65b0a5bef53985423fd0866b339ff58206 (3968 bytes); image sbprog_hint_x0/prog.vmem crc32 0x36e063ab words 148 (the +gen_mem_image_crc32 / +gen_mem_image_words of its runs); gen_program.py --directed, seed 1

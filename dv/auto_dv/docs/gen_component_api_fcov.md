@@ -295,8 +295,8 @@ vector table gains 47 classifier rows (74 cases in all).
 Rendered once plan v3f retired cp_hazard.popret_ra_fwd (12 pattern bins, the CSV's set). Sampled by gen_isa_cov's Zcmp collector at the
 completion of a push / pop / popret / popretz sequence (one sample per pattern the sequence matches) and at the move flush:
 - write_pushed_reg_then_push / load_pushed_reg_then_push: the instruction before the sequence (`prev_wr`, `prev_ld` at the sequence
-  start) wrote a register the push's rlist saves (`zp_regs`: ra, s0, s1, then x18..x27); store_same_slot_then_pop: one of the pop's
-  load words is among the last 64 plain-store words; push_then_pop_b2b / pop_then_push_b2b: the record before the sequence was the
+  start) wrote a register the push's rlist saves (`zp_regs`: ra, s0, s1, then x18..x27); store_same_slot_then_pop: the record
+  immediately before the sequence is a plain store to one of the pop's load words (the plan owner's ruling on the window); push_then_pop_b2b / pop_then_push_b2b: the record before the sequence was the
   last micro-op of the other kind; popret_then_target / popretz_then_target and cp_ret_once: pended, the next plain record's pc equals
   the loaded ra (`zp_ret_target`); cp_redirect_once, only while cpuctrlsts.icache_enable is tracked 0: exactly one ibus fetch of the
   target word between the ret's last micro-op and the target's retirement (APPROXIMATION: fetches are counted by word and stamp, not by
@@ -307,6 +307,50 @@ completion of a push / pop / popret / popretz sequence (one sample per pattern t
 - cp_rlist_class from rlist (4 / 5..14 / 15), cp_dmem_delay the sequence's class (as gen_cmp_zcmp_pushpop_cg's), cp_delta_uop from the
   micro-op record cycles (all consecutive = all_one).
 - Stimulus: gen_zcmp_hazard_directed.S under the default, the long and the same-cycle / min1 data-bus regimes (deferral and stall
-  classes). Also in this part: cpuctrlsts.icache_enable's tracked reset value corrected to 0 (the RTL's), which the security group's
-  key_req_context classes and the redirect coverpoint read.
+  classes).
 - Counters: FCOV_QUERY 17 (hazard samples); a referee line; 10 classifier rows in the vector table (84 cases in all).
+
+## Slice B (T-205): gen_isa_lui_auipc_cg, gen_isa_hint_x0_cg, gen_isa_jump_cg, gen_div_timing_cg, gen_cmp_imm_edges_cg
+
+Five groups rendered from the plan (CG-ISA-004, CG-ISA-005, CG-ISA-006, CG-MUL-004, CG-CMP-002; 24 groups, 892 coverpoint and 3116 cross
+bins in all), sampled by gen_isa_cov before the base chain of write() (the groups no branch of that chain owns) and, for the divide, from the
+M-extension branch:
+- gen_isa_lui_auipc_cg (`lu_sample`): every lui / auipc record; cp_imm20 from insn[31:12] with the extremes first (zero, all ones, msb, one,
+  then rand); cp_pc_align from pc_rdata[1]; cp_pc_region low below 0x1000, high from 0xFFFFF000; cp_wrap only for auipc, the 33-bit signed sum
+  of pc and the sign-extended immediate leaving [0, 2^32) (`sum_wraps`, the branch group's rule); cp_rd_x0 from rd_addr.
+- gen_isa_hint_x0_cg (`hx_sample`, pended to the next record): a record with rd_addr 0 whose encoding is an rd-writing class
+  (`hx_writer_cls`: OP-IMM non-shift, the base shifts, OP base, U-type, load, the CSR forms, jal, jalr, mul, the mulh forms, div / rem, the
+  one-cycle bit ops, the two-cycle bit ops rol / ror / rori / cmov / cmix / fsl / fsr / fsri / crc32 (`bit_two_cycle`, rtl/ibex_decoder.sv
+  alu_multicycle_o), and c.li / c.lui / c.slli / c.mv / c.add as the compressed hints); cp_hint_class the 32-bit encodings the plan names
+  (`hx_hint_cls`: the canonical nop is addi x0, x0, 0; the semihosting hints slli x0, x0, 0x1f and srai x0, x0, 7); cp_x0_read from the next
+  record: Ibex reports rs1_addr / rs2_addr as 0 for a field the format does not have, so a read of x0 is the encoding naming x0 in a field
+  it has (`hx_rs_field`: c.li and c.mv read x0 as rs1, c.beqz / c.bnez compare against x0 as rs2) with rdata 0; rs1 before rs2, else none.
+- gen_isa_jump_cg (`jp_sample`): jal, jalr (funct3 0), c.j, c.jal, c.jr, c.jalr; cp_rd_class and cp_jal_off only for the 32-bit jal / jalr
+  (the compressed offsets are gen_cmp_imm_edges_cg's); cp_jalr_imm with the extremes before the parity bin (2047 is max_pos, not odd);
+  cp_jalr_rs1 for the register-based forms (x0, the base equal to a nonzero link register, other); cp_target_align from pc_wdata[1];
+  cp_target_odd the low bit of rs1 + imm before the DUT drops it; cp_wrap the 33-bit sum of pc (jal family) or rs1 (jalr family) and the
+  offset; cp_pc_region zero page below 0x100, high from 0xFFFFF000; cp_link_len rd_wdata - pc_rdata for a nonzero rd.
+- gen_div_timing_cg (`dt_sample` at the divide, `dt_flush` at the next record): the multiply group's rules for the previous retirement's
+  cycle as the ID-entry approximation, the deferred start (`cp_wb_defer`: an access granted before it whose response came after it) and the
+  fetch stall; cp_delta iff neither (2, 37, other); cp_dit from cpuctrlsts.data_ind_timing tracked from the CSR write records as
+  icache_enable is (`dit_tracked`, GEN_CPUCTRLSTS_DATA_IND_TIMING_BIT); cp_div0 from rs2_rdata; cp_event_mid the first asserted edge of an
+  interrupt line, the NMI line or debug_req_i strictly inside (previous retirement, divide retirement), from the irq and debug drivers'
+  events (`write_irqe`, `write_dbge`; the same cycle base as the records); cp_prev load_dep (the record before is a load writing rs1 or rs2),
+  mul, div, alu, other; cp_next dep_alu (an ALU record reading rd), mul, div, other; cp_irq_latency iff the event was an ordinary irq and the
+  next record is an interrupt entry: its cycle minus the assertion's, 37 the bound.
+- gen_cmp_imm_edges_cg (`ie_sample`): every Zca retirement with an immediate, decoded per format from the CG-CMP-001 decoder's op
+  (`zca_insn`); each format's coverpoint alone is sampled, the rest na; cp_sp_wrap for c.addi4spn (carry of sp + nzuimm) and c.addi16sp (the
+  33-bit sum of sp and nzimm leaving [0, 2^32)); cp_link for c.jal / c.jalr; c.nop and the shift hints with shamt 0 sample nothing of theirs.
+- Stimulus: gen_lui_auipc_directed.S, gen_hint_x0_directed.S (every writer class followed by an rs1 reader of x0, an rs2 reader and a
+  register-free instruction), gen_isa_jump_directed.S (word and half targets, even and odd targets, every jalr immediate class from an
+  equal and a different base), gen_cmp_imm_edges_directed.S (the c.j and c.beqz / c.bnez extremes laid out with fillers, the stack pointer
+  crossing zero both ways for every c.addi16sp class), gen_div_timing_directed.S (a prev / next matrix per op under data-independent timing
+  off and on, then two long runs of divides for the event regimes) under the default bus regimes, the long regimes, the irq storm with NMIs
+  and the debug-request storm.
+- Not reached and stated in the manifests: the program window at 0x80000080 (gen_link.ld) leaves cp_pc_region low / zero_page / high, the
+  auipc and jump wraps (cr_auipc_pc wrap tuples, cr_op_wrap yes, cr_zero_page_bwd), the 1 MB jal offsets and an x0 base (cp_jalr_rs1.x0 and its
+  cross: the target would be an unmapped fetch, a memory-model error) unreachable; a jump to itself (cp_jal_off.self, cp_cj_off.self) is a
+  loop; cp_wb_defer.yes and its cross for the same reason as the multiply's cp_wb_busy.yes (the ID-entry approximation); the debug and NMI
+  events under data-independent timing on that the storms did not land (cr_event_div0_dit) and the irq latency above 37 (cp_irq_latency.gt37).
+- Counters: FCOV_QUERY 18 (lui / auipc), 19 (x0 writers), 20 (jumps), 21 (divides timed), 22 (Zca immediates); 45 classifier rows in the
+  vector table (129 cases in all).

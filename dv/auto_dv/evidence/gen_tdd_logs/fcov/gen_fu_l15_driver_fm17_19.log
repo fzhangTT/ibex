@@ -1,0 +1,18 @@
+FM17 applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/FM17/dv/auto_dv/env/gen_fcov_pkg.sv; original sha256 05f130a4502aae58
+FM17_catch_lui: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first: 
+FM17: build sources sha256: d3eb6663643e04a1; source tree untouched: dv/auto_dv/env/gen_fcov_pkg.sv sha256 05f130a4502aae58 (the mutated file's copy in the source tree, read after the runs)
+FM17: checker FCOV-EXPECTATION: FAIL - 1 declared bin(s) not hit: gen_isa_lui_auipc_cg.cp_imm20.msb
+gen_fcov_proof_slice6a_fm17_ablation.fcov.yaml bins 12
+FM17: ablation checker FCOV-EXPECTATION: PASS - all 12 declared bins hit
+FM18 applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/FM18/dv/auto_dv/env/gen_fcov_pkg.sv; original sha256 05f130a4502aae58
+FM18_catch_hint: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first: 
+FM18: build sources sha256: 95cd03e93a8967ed; source tree untouched: dv/auto_dv/env/gen_fcov_pkg.sv sha256 05f130a4502aae58 (the mutated file's copy in the source tree, read after the runs)
+FM18: checker FCOV-EXPECTATION: FAIL - 1 declared bin(s) not hit: gen_isa_hint_x0_cg.cp_hint_class.slli_x0_semihost
+gen_fcov_proof_slice6b_fm18_ablation.fcov.yaml bins 41
+FM18: ablation checker FCOV-EXPECTATION: PASS - all 41 declared bins hit
+FM19 applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/FM19/dv/auto_dv/env/gen_fcov_pkg.sv; original sha256 05f130a4502aae58
+FM19_catch_jump: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first: 
+FM19: build sources sha256: 847ed21c6fdaf905; source tree untouched: dv/auto_dv/env/gen_fcov_pkg.sv sha256 05f130a4502aae58 (the mutated file's copy in the source tree, read after the runs)
+FM19: checker FCOV-EXPECTATION: FAIL - 1 declared bin(s) not hit: gen_isa_jump_cg.cp_jalr_imm.max_pos
+gen_fcov_proof_slice6c_fm19_ablation.fcov.yaml bins 28
+FM19: ablation checker FCOV-EXPECTATION: PASS - all 28 declared bins hit

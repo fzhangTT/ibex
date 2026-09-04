@@ -1,0 +1,1 @@
+# gen_isa_jump_directed.S: source sha256 f95956e8ef7b64709b94d7873dcea6742b48898c8e58266fea5ae5d7a670db48 (3666 bytes); image sbprog_isa_jump/prog.vmem crc32 0x8efa1ef3 words 136 (the +gen_mem_image_crc32 / +gen_mem_image_words of its runs); gen_program.py --directed, seed 1

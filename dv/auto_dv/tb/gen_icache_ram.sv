@@ -12,7 +12,7 @@ module gen_icache_ram import gen_tb_pkg::*; #(
   parameter int unsigned Width = 28,
   parameter int unsigned Depth = 256,
   parameter string       Name  = "tag0",
-  parameter int unsigned Ways  = 2,      // IC_NUM_WAYS: a write on every way in one cycle is an invalidation-sweep write
+  parameter int unsigned Ways  = 2,      // IC_NUM_WAYS: a write on every way in one cycle is a sweep or an ECC-correction write
   parameter int unsigned Way   = 0,
   parameter bit          IsTag = 1'b0
 ) (
@@ -51,7 +51,7 @@ module gen_icache_ram import gen_tb_pkg::*; #(
       if (write) begin
         mem[addr] <= wdata;
         writes++;
-        if (IsTag) gen_icram_events::note_tag_write(cycle, Ways);
+        if (IsTag) gen_icram_events::note_tag_write(cycle, Ways, int'(addr));
       end else begin
         if (IsTag && gen_icram_events::inject_rate > 0 && ($urandom_range(999, 0) < gen_icram_events::inject_rate)) begin
           rdata <= mem[addr] ^ (Width'(1) << $urandom_range(Width - 1, 0));   // exactly one flipped bit: always a decodable ECC error

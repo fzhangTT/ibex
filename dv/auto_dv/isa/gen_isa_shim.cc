@@ -209,9 +209,9 @@ std::shared_ptr<gen_masked_csr_t> g_hpm_lo[GEN_MHPM_COUNTER_NUM], g_hpm_hi[GEN_M
 std::shared_ptr<gen_mcountinhibit_csr_t> g_mcountinhibit;   // Ibex's mcountinhibit (T-235); Spike's own stays 0 so its minstret keeps counting
 uint64_t g_inh = 0;              // retirements Spike counted that Ibex's minstret did not (IR held; the two write corners)
 int32_t  g_gap = 0;              // cycles between this record's retirement and the previous one's (1 = an instruction retired in the write cycle)
-bool     g_minstret_written = false, g_prev_minstret_written = false;
+bool     g_minstret_written = false, g_prev_minstret_written = false;   // this step's and the previous step's minstret / minstreth write
 class gen_minstret_proxy_t;
-static std::shared_ptr<gen_minstret_proxy_t> g_minstret_view;   // the scoreboard's uncounted retirements go here   // this step's and the previous step's minstret / minstreth write
+static std::shared_ptr<gen_minstret_proxy_t> g_minstret_view;   // the scoreboard's uncounted retirements go here
 bool     g_in_step = false;      // a write from the TB (not an instruction) must not eat the next retirement's increment
 uint32_t g_boot = 0;
 uint32_t g_mcounteren_writable = 1;

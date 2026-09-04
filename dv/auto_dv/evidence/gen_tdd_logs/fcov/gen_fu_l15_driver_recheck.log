@@ -1,0 +1,14 @@
+slice5a on lockstep_s7_dbg_storm: FCOV-EXPECTATION: PASS - all 30 declared bins hit
+slice5a2 on lockstep_irq_storm: FCOV-EXPECTATION: PASS - all 30 declared bins hit
+slice5b on lockstep_muldiv: FCOV-EXPECTATION: PASS - all 14 declared bins hit
+slice5b2 on lockstep_muldiv_fast: FCOV-EXPECTATION: PASS - all 13 declared bins hit
+slice5c on boot_zc: FCOV-EXPECTATION: PASS - all 8 declared bins hit
+slice5c2 on boot_zc_fe1: FCOV-EXPECTATION: PASS - all 8 declared bins hit
+slice5d on lockstep_cpuctrl: FCOV-EXPECTATION: PASS - all 10 declared bins hit
+slice5d2 on lockstep_cpuctrl_keyw: FCOV-EXPECTATION: PASS - all 10 declared bins hit
+slice5d3 on lockstep_csrwarl: FCOV-EXPECTATION: PASS - all 6 declared bins hit
+slice5d4 on ut_fetch_en: FCOV-EXPECTATION: PASS - all 3 declared bins hit
+slice2c on lockstep_zcmp: FCOV-EXPECTATION: PASS - all 38 declared bins hit
+slice5e on lockstep_zcmp_hz: FCOV-EXPECTATION: PASS - all 26 declared bins hit
+slice5e2 on lockstep_zcmp_hz_long: FCOV-EXPECTATION: PASS - all 26 declared bins hit
+slice5e3 on lockstep_zcmp_hz_fast: FCOV-EXPECTATION: PASS - all 24 declared bins hit

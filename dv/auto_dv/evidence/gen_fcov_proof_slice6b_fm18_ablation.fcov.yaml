@@ -1,0 +1,87 @@
+# gen_fcov_proof_slice6b_fm18_ablation.fcov.yaml: the ablation control of mutant FM18 (gen_mut_fcov.md): gen_fcov_proof_slice6b.fcov.yaml without gen_isa_hint_x0_cg.cp_hint_class.slli_x0_semihost; it must PASS on the mutant run's report while the full manifest fails there.
+test: gen_fcov_proof_slice6b_fm18_ablation
+owner: tb-infra
+bins:
+  - gen_isa_hint_x0_cg.cp_hint_class.other
+  - gen_isa_hint_x0_cg.cp_hint_class.srai_x0_other
+  - gen_isa_hint_x0_cg.cp_hint_class.srli_x0
+  - gen_isa_hint_x0_cg.cp_hint_class.slli_x0_other
+  - gen_isa_hint_x0_cg.cp_hint_class.srai_x0_semihost
+  - gen_isa_hint_x0_cg.cp_hint_class.and_x0
+  - gen_isa_hint_x0_cg.cp_hint_class.or_x0
+  - gen_isa_hint_x0_cg.cp_hint_class.xor_x0
+  - gen_isa_hint_x0_cg.cp_hint_class.sltu_x0
+  - gen_isa_hint_x0_cg.cp_hint_class.slt_x0
+  - gen_isa_hint_x0_cg.cp_hint_class.sra_x0
+  - gen_isa_hint_x0_cg.cp_hint_class.srl_x0
+  - gen_isa_hint_x0_cg.cp_hint_class.sll_x0
+  - gen_isa_hint_x0_cg.cp_hint_class.sub_x0
+  - gen_isa_hint_x0_cg.cp_hint_class.add_x0
+  - gen_isa_hint_x0_cg.cp_hint_class.auipc_x0
+  - gen_isa_hint_x0_cg.cp_hint_class.lui_x0
+  - gen_isa_hint_x0_cg.cp_hint_class.sltiu_x0
+  - gen_isa_hint_x0_cg.cp_hint_class.slti_x0
+  - gen_isa_hint_x0_cg.cp_hint_class.xori_x0
+  - gen_isa_hint_x0_cg.cp_hint_class.ori_x0
+  - gen_isa_hint_x0_cg.cp_hint_class.andi_x0
+  - gen_isa_hint_x0_cg.cp_hint_class.addi_x0_nzimm
+  - gen_isa_hint_x0_cg.cp_hint_class.canonical_nop
+  - gen_isa_hint_x0_cg.cp_writer_class.cmp_hint
+  - gen_isa_hint_x0_cg.cp_writer_class.bit_2cyc
+  - gen_isa_hint_x0_cg.cp_writer_class.bit_1cyc
+  - gen_isa_hint_x0_cg.cp_writer_class.div_rem
+  - gen_isa_hint_x0_cg.cp_writer_class.mulh
+  - gen_isa_hint_x0_cg.cp_writer_class.mul
+  - gen_isa_hint_x0_cg.cp_writer_class.jalr
+  - gen_isa_hint_x0_cg.cp_writer_class.jal
+  - gen_isa_hint_x0_cg.cp_writer_class.csrr
+  - gen_isa_hint_x0_cg.cp_writer_class.load
+  - gen_isa_hint_x0_cg.cp_writer_class.lui_auipc
+  - gen_isa_hint_x0_cg.cp_writer_class.alu_reg
+  - gen_isa_hint_x0_cg.cp_writer_class.shift
+  - gen_isa_hint_x0_cg.cp_writer_class.alu_imm
+  - gen_isa_hint_x0_cg.cp_x0_read.none
+  - gen_isa_hint_x0_cg.cp_x0_read.rs2_zero
+  - gen_isa_hint_x0_cg.cp_x0_read.rs1_zero
+anti_vacuity:
+  gen_isa_hint_x0_cg.cp_hint_class.other: "plan CG-ISA-005 anti-vacuity: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_isa_hint_x0_cg.cp_hint_class.srai_x0_other: "plan CG-ISA-005 anti-vacuity: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_isa_hint_x0_cg.cp_hint_class.srli_x0: "plan CG-ISA-005 anti-vacuity: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_isa_hint_x0_cg.cp_hint_class.slli_x0_other: "plan CG-ISA-005 anti-vacuity: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_isa_hint_x0_cg.cp_hint_class.srai_x0_semihost: "plan CG-ISA-005 anti-vacuity: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_isa_hint_x0_cg.cp_hint_class.and_x0: "plan CG-ISA-005 anti-vacuity: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_isa_hint_x0_cg.cp_hint_class.or_x0: "plan CG-ISA-005 anti-vacuity: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_isa_hint_x0_cg.cp_hint_class.xor_x0: "plan CG-ISA-005 anti-vacuity: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_isa_hint_x0_cg.cp_hint_class.sltu_x0: "plan CG-ISA-005 anti-vacuity: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_isa_hint_x0_cg.cp_hint_class.slt_x0: "plan CG-ISA-005 anti-vacuity: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_isa_hint_x0_cg.cp_hint_class.sra_x0: "plan CG-ISA-005 anti-vacuity: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_isa_hint_x0_cg.cp_hint_class.srl_x0: "plan CG-ISA-005 anti-vacuity: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_isa_hint_x0_cg.cp_hint_class.sll_x0: "plan CG-ISA-005 anti-vacuity: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_isa_hint_x0_cg.cp_hint_class.sub_x0: "plan CG-ISA-005 anti-vacuity: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_isa_hint_x0_cg.cp_hint_class.add_x0: "plan CG-ISA-005 anti-vacuity: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_isa_hint_x0_cg.cp_hint_class.auipc_x0: "plan CG-ISA-005 anti-vacuity: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_isa_hint_x0_cg.cp_hint_class.lui_x0: "plan CG-ISA-005 anti-vacuity: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_isa_hint_x0_cg.cp_hint_class.sltiu_x0: "plan CG-ISA-005 anti-vacuity: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_isa_hint_x0_cg.cp_hint_class.slti_x0: "plan CG-ISA-005 anti-vacuity: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_isa_hint_x0_cg.cp_hint_class.xori_x0: "plan CG-ISA-005 anti-vacuity: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_isa_hint_x0_cg.cp_hint_class.ori_x0: "plan CG-ISA-005 anti-vacuity: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_isa_hint_x0_cg.cp_hint_class.andi_x0: "plan CG-ISA-005 anti-vacuity: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_isa_hint_x0_cg.cp_hint_class.addi_x0_nzimm: "plan CG-ISA-005 anti-vacuity: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_isa_hint_x0_cg.cp_hint_class.canonical_nop: "plan CG-ISA-005 anti-vacuity: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_isa_hint_x0_cg.cp_writer_class.cmp_hint: "plan CG-ISA-005 anti-vacuity: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_isa_hint_x0_cg.cp_writer_class.bit_2cyc: "plan CG-ISA-005 anti-vacuity: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_isa_hint_x0_cg.cp_writer_class.bit_1cyc: "plan CG-ISA-005 anti-vacuity: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_isa_hint_x0_cg.cp_writer_class.div_rem: "plan CG-ISA-005 anti-vacuity: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_isa_hint_x0_cg.cp_writer_class.mulh: "plan CG-ISA-005 anti-vacuity: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_isa_hint_x0_cg.cp_writer_class.mul: "plan CG-ISA-005 anti-vacuity: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_isa_hint_x0_cg.cp_writer_class.jalr: "plan CG-ISA-005 anti-vacuity: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_isa_hint_x0_cg.cp_writer_class.jal: "plan CG-ISA-005 anti-vacuity: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_isa_hint_x0_cg.cp_writer_class.csrr: "plan CG-ISA-005 anti-vacuity: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_isa_hint_x0_cg.cp_writer_class.load: "plan CG-ISA-005 anti-vacuity: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_isa_hint_x0_cg.cp_writer_class.lui_auipc: "plan CG-ISA-005 anti-vacuity: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_isa_hint_x0_cg.cp_writer_class.alu_reg: "plan CG-ISA-005 anti-vacuity: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_isa_hint_x0_cg.cp_writer_class.shift: "plan CG-ISA-005 anti-vacuity: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_isa_hint_x0_cg.cp_writer_class.alu_imm: "plan CG-ISA-005 anti-vacuity: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_isa_hint_x0_cg.cp_x0_read.none: "plan CG-ISA-005 anti-vacuity: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_isa_hint_x0_cg.cp_x0_read.rs2_zero: "plan CG-ISA-005 anti-vacuity: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_isa_hint_x0_cg.cp_x0_read.rs1_zero: "plan CG-ISA-005 anti-vacuity: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0; the hit is a retired instruction the lock-step compare judged against the ISA model"

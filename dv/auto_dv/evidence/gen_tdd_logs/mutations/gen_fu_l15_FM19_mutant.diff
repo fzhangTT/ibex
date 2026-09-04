@@ -1,0 +1,11 @@
+--- /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/sb_root/dv/auto_dv/env/gen_fcov_pkg.sv	2026-09-03 23:54:49.401500122 -0400
++++ /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/FM19/dv/auto_dv/env/gen_fcov_pkg.sv	2026-09-04 00:01:28.302133253 -0400
+@@ -1134,7 +1134,7 @@
+     endfunction
+     function int jalr_imm_cls(int imm);   // the extremes before the parity bin: 2047 is max_pos, not odd
+       if (imm == 0) return GEN_FC_ISA_JUMP_CP_JALR_IMM_ZERO;
+-      if (imm == 2047) return GEN_FC_ISA_JUMP_CP_JALR_IMM_MAX_POS;
++      if (imm == 2046) return GEN_FC_ISA_JUMP_CP_JALR_IMM_MAX_POS;   // FM19: the 2047 immediate classed odd
+       if (imm == -2048) return GEN_FC_ISA_JUMP_CP_JALR_IMM_MIN_NEG;
+       if (imm[0]) return GEN_FC_ISA_JUMP_CP_JALR_IMM_ODD;
+       return (imm > 0) ? GEN_FC_ISA_JUMP_CP_JALR_IMM_POS_RAND : GEN_FC_ISA_JUMP_CP_JALR_IMM_NEG_RAND;

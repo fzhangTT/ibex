@@ -1,4 +1,4 @@
-# excerpt of scratch l12_root dv/auto_dv/work/tb-infra/wit/b12x/lockstep_zcmp_dummy/stdout.log (green on build b12 (landing 12 regression); UVM_ERROR lines counted by grep: 27, first 12 kept)
+# excerpt of scratch l12_root dv/auto_dv/work/tb-infra/wit/b12x/lockstep_zcmp_dummy/stdout.log (the B8 red by design on build b12: the dummy-instruction program, 27 comparator rows; UVM_ERROR lines counted by grep: 27, first 12 kept)
 GEN_CONFIG_BANNER build_config=opentitan
 GEN_CONFIG_BANNER BaseIsa=BaseIsaRV32IorCHERIoT RV32M=RV32MSingleCycle RV32B=RV32BOTEarlGrey RV32ZC=RV32ZcaZcbZcmp RegFile=RegFileFF
 GEN_CONFIG_BANNER RV32E=0 BranchTargetALU=1 WritebackStage=1 ICache=1 ICacheECC=1 ICacheScramble=1

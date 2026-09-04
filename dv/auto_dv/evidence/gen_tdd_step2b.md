@@ -548,7 +548,9 @@ landing-10 code ran on b0 / b0h (the landing-10 sources with the hook; gen_fu_l1
   the tag RAM unchecked, rtl/ibex_icache.sv:266, and the TB learns both states late). Program gen_icache_ecc_directed.S (enable once, a
   cross-line loop). Measured on b2 / b2r, rate frequent: 870 injections (682 qualified), 436 pulses, 0 mismatches, 0 missing, every pulse one
   cycle after its lookup read (the summary's latency histogram 0 / 436 / 0); rate rare with slow imem: 32 / 32 / 16 / 0 / 0.
-- CM132-H-1 red and green. b2r (the landing-9 slice [ICACHE_ECC_WINDOW:1]): sva_alert_minor_window FAILS 215 times in the frequent run (the assertion's own
+- CM132-H-1 red and green. b2r (the landing-9 slice shifted with the register, `[ICACHE_ECC_WINDOW-1:1]`: latencies 2..N, never 1; the literal
+  landing-9 form `[ICACHE_ECC_WINDOW:1]` has its red in the b0h run, 4 window failures beside the first hook's 2 missing pulses,
+  gen_fu_l13_b0h_red_h1_ecc_slow_rare_x_*): sva_alert_minor_window FAILS 215 times in the frequent run (the assertion's own
   count: about half of the 436 pulses; the other 221 passed the old slice through neighbouring lookups) and 9 times in the rare run
   (gen_fu_l13_red_h1_ecc_freq_*, gen_fu_l13_red_h1_ecc_slow_rare_*); the same with every check off but the alert SVA group
   FAILS (gen_fu_l13_catch_h1_ecc_freq_*) and with every check off PASSES (gen_fu_l13_ablate_h1_ecc_freq_*). b2 ([ICACHE_ECC_WINDOW-1:0]):
@@ -606,3 +608,34 @@ landing-10 code ran on b0 / b0h (the landing-10 sources with the hook; gen_fu_l1
   lockstep_zc, ut_isa_cov_zc, intg_s7_allchk (83 suppressed loads, 54 internal NMIs), the ECC program at rate frequent (436 pulses, 0 window
   failures, 0 missing), gen_ut_intg_span and gen_ut_irq_nmi_long, all PASS. Every other retained header of this landing names b2, b2r or a
   mutant build whose list equals b2's in every file but the mutated one.
+
+## 15. Landing 13: the deferred CM148 items (the grace rule, the shim comments, the store half of the raw-address rule)
+
+Build sb3 (sb_root = the committed landing 12 at ba3799b plus Slice B and these items; sources 98518617fecfcf64, the per-file list
+gen_fu_l15_sources_sha256_sb2.txt).
+- CM148-L-2, the grace rule. The misc monitor's ECC qualification opened GEN_ICACHE_ECC_GRACE_CYCLES after every all-ways tag write, which is
+  the invalidation sweep's write pattern but also an ECC correction's (rtl/ibex_icache.sv:591 invalidates every way after a tag error). Now a
+  sweep write is recognised by its pattern: an all-ways write at index 0, or at the index after the previous all-ways write one cycle later
+  (INVAL_CACHE writes consecutive indices on consecutive cycles, rtl/ibex_icache.sv:1241-1246); the tag RAM model passes its index. Measured on
+  gen_icache_ecc_directed.S at rate frequent, seed 1, the same injections on both builds (870 judged, the latency histogram 0 / 436 / 0): the
+  landing-12 build qualified 682 (gen_fu_l15_b12x_green_h1_ecc_freq_*), the landing build 866 (gen_fu_l15_green_h1_ecc_freq_*), 0 missing pulses
+  on both, so the 184 injections the old grace excused after corrections all pulsed as the rule requires; the four still unqualified sit in
+  the reset sweep's grace. A correction landing on index 0 is the one misclassification left (1 in IC_NUM_LINES), stated in the API doc.
+- CM148-L-5, the store half. A store response's corruption raises the internal NMI with mtval = the LSU's last address as a load's does; the
+  model replaced the announced word by the record's own address for suppressed loads only. gen_ut_intg_store (gen_intg_store_directed.S: a
+  misaligned sw whose first half's response is corrupted, the handler reading mtval): red on the landing-12 build, isa_rd on the handler's
+  csrr (model x15 = 800002d0, the word; DUT 800002d2, the store's address) and the crash_dump rows for the same values
+  (gen_fu_l15_red_intg_store_b12x_*, 21 UVM_ERROR lines); green on the landing build with the rule extended to store records
+  (gen_fu_l15_intg_store_*: one interrupt entry, 31 records consumed, 0 mismatches).
+- CM148-L-3 and L-4: the g_minstret_written comment on its own line; the review ids out of the three gen_ut_isa_shim.cc comments, its
+  section-9 title, the four directed-program headers and the two landing-11 test docstrings. No behaviour change; the shim unit test is
+  unchanged (293 rows).
+- The sampler unit test on this build: 129 cases, 0 failures (gen_fu_l15_ut_isa_cov_zc_*; the 45 Slice B rows are gen_tdd_fcov.md Section 10's).
+- Rules and retention the Critic's tb_l12 asked for (rows CR-12): a firing count is the assertion's own line count (the "of them" field of an
+  excerpt header or the UVM summary), never a grep over the token; the window's upper edge is declared, not measured (every retained injection run
+  puts every pulse at latency 1: histograms 0 / 436 / 0, 0 / 16 / 0, 0 / 4 / 0; the knob table says so); the red builds of landing 11 keep their
+  identity here where it still exists: b0 (the landing-10 code plus the first hook) and b0h (the first hook's second form) with their per-file lists
+  and compile logs (gen_fu_l15_sources_sha256_b0.txt, _b0h_, gen_fu_l15_compile_b0.log, _b0h_), b2r likewise (gen_fu_l15_sources_sha256_b2r.txt,
+  gen_fu_l15_compile_b2r.log) with the MUT-WIN mutation as compiled (gen_fu_l15_MUT-WIN_mutant.diff); the mutant reds nt3_b0 and sup3c_b0 were
+  built in copies since rebuilt for their landing-11 forms, so their lists are gone, and the FSDB behind L11-F3 was not retained: both stay
+  narrated. Every proof check log of this landing carries a stamp line.

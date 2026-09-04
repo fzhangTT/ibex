@@ -1,4 +1,4 @@
-"""Spanning-load integrity corruption (CM132-L-4): arm TWO integrity corruptions on the program's buffer (MEM_ERR_ARM, kind
+"""Spanning-load integrity corruption: arm TWO integrity corruptions on the program's buffer (MEM_ERR_ARM, kind
 integrity, count 2) before the core is released, so the misaligned lw of gen_intg_span_directed.S takes a corrupted response on
 each of its two bus words: the DUT suppresses the destination write and raises the internal NMI, the scoreboard's T-183 gate must
 consume BOTH announced words, and the later clean lw of the second word must find no announcement left (the TB mutant MUT-SUP3

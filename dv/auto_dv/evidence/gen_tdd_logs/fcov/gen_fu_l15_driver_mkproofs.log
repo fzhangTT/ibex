@@ -1,0 +1,25 @@
+gen_isa_lui_auipc_cg: 13 coverpoint bins hit, 0 unhit: []
+  crosses (covered/expected): gen_isa_lui_auipc_cg.cr_op_imm 10/10, gen_isa_lui_auipc_cg.cr_op_rd_x0 4/4, gen_isa_lui_auipc_cg.cr_auipc_pc 2/4; total 16/18
+gen_isa_hint_x0_cg: 42 coverpoint bins hit, 0 unhit: []
+  crosses (covered/expected): gen_isa_hint_x0_cg.cr_writer_read 42/42; total 42/42
+gen_isa_jump_cg: 29 coverpoint bins hit, 0 unhit: []
+  crosses (covered/expected): gen_isa_jump_cg.cr_link 4/4, gen_isa_jump_cg.cr_op_align 12/12, gen_isa_jump_cg.cr_op_wrap 6/10, gen_isa_jump_cg.cr_jal_off_rd 9/20, gen_isa_jump_cg.cr_zero_page_bwd 0/1, gen_isa_jump_cg.cr_jalr_rs1_imm 12/18, gen_isa_jump_cg.cr_odd 3/3; total 46/68
+gen_cmp_imm_edges_cg: 46 coverpoint bins hit, 0 unhit: []
+  crosses (covered/expected): gen_cmp_imm_edges_cg.cr_ci 17/17, gen_cmp_imm_edges_cg.cr_sp_wrap 10/10, gen_cmp_imm_edges_cg.cr_shift 9/9; total 36/36
+gen_div_timing_cg: 24 coverpoint bins hit, 0 unhit: []
+  crosses (covered/expected): gen_div_timing_cg.cr_dit_div0_delta 4/4, gen_div_timing_cg.cr_op_div0 16/16, gen_div_timing_cg.cr_event_div0_dit 0/12, gen_div_timing_cg.cr_op_event 4/16, gen_div_timing_cg.cr_op_wb_defer 4/8, gen_div_timing_cg.cr_next_op 16/16, gen_div_timing_cg.cr_prev_op 20/20; total
+gen_div_timing_cg: 24 coverpoint bins hit, 0 unhit: []
+  crosses (covered/expected): gen_div_timing_cg.cr_dit_div0_delta 4/4, gen_div_timing_cg.cr_op_div0 16/16, gen_div_timing_cg.cr_event_div0_dit 0/12, gen_div_timing_cg.cr_op_event 4/16, gen_div_timing_cg.cr_op_wb_defer 4/8, gen_div_timing_cg.cr_next_op 16/16, gen_div_timing_cg.cr_prev_op 20/20; total
+gen_div_timing_cg: 28 coverpoint bins hit, 0 unhit: []
+  crosses (covered/expected): gen_div_timing_cg.cr_dit_div0_delta 4/4, gen_div_timing_cg.cr_op_div0 16/16, gen_div_timing_cg.cr_event_div0_dit 8/12, gen_div_timing_cg.cr_op_event 12/16, gen_div_timing_cg.cr_op_wb_defer 4/8, gen_div_timing_cg.cr_next_op 15/16, gen_div_timing_cg.cr_prev_op 20/20; tota
+gen_div_timing_cg: 25 coverpoint bins hit, 0 unhit: []
+  crosses (covered/expected): gen_div_timing_cg.cr_dit_div0_delta 4/4, gen_div_timing_cg.cr_op_div0 16/16, gen_div_timing_cg.cr_event_div0_dit 2/12, gen_div_timing_cg.cr_op_event 6/16, gen_div_timing_cg.cr_op_wb_defer 4/8, gen_div_timing_cg.cr_next_op 16/16, gen_div_timing_cg.cr_prev_op 20/20; total
+gen_fcov_proof_slice6e4.fcov.yaml notes derived: 25
+slice6a on lockstep_lui: FCOV-EXPECTATION: gen_isa_lui_auipc_cg.cp_op.auipc = HIT (count=12)
+slice6b on lockstep_hint: FCOV-EXPECTATION: gen_isa_hint_x0_cg.cp_hint_class.other = HIT (count=48)
+slice6c on lockstep_jump: FCOV-EXPECTATION: gen_isa_jump_cg.cp_op.c_jalr = HIT (count=3)
+slice6d on lockstep_imm: FCOV-EXPECTATION: gen_cmp_imm_edges_cg.cp_addi4spn_imm.rand = HIT (count=2)
+slice6e on lockstep_divt: FCOV-EXPECTATION: gen_div_timing_cg.cp_op.remu = HIT (count=132)
+slice6e2 on lockstep_divt_long: FCOV-EXPECTATION: gen_div_timing_cg.cp_op.remu = HIT (count=132)
+slice6e3 on lockstep_divt_irq: FCOV-EXPECTATION: gen_div_timing_cg.cp_op.remu = HIT (count=132)
+slice6e4 on lockstep_divt_dbg: FCOV-EXPECTATION: gen_div_timing_cg.cp_op.remu = HIT (count=132)

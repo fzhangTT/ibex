@@ -2,7 +2,7 @@
 # execute it, the scoreboard computes the reference and returns before the record's bookkeeping), then minstret / minstreth
 # reads; the same write after a plain instruction as the control. The high-word write reloads the low word with its
 # pre-increment value when an instruction retires in the write cycle, and the model measures that gap from the previous
-# RECORD, so the record before the write must have updated it whatever path compared it (CM123-L-1). The lock-step compare on
+# RECORD, so the record before the write must have updated it whatever path compared it. The lock-step compare on
 # the reads is the red / green. 1 to tohost at the end, then spin.
 .section .text
 .globl _start

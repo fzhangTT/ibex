@@ -1,0 +1,53 @@
+# gen_fcov_proof_slice6e.fcov.yaml: fcov-expectation proof of T-205 Slice B (gen_div_timing_cg): every coverpoint bin the lock-step run of gen_div_timing_directed.S hits under the default bus regimes with no events; build sb3, fresh vdb
+test: gen_fcov_proof_slice6e
+owner: tb-infra
+bins:
+  - gen_div_timing_cg.cp_op.remu
+  - gen_div_timing_cg.cp_op.rem
+  - gen_div_timing_cg.cp_op.divu
+  - gen_div_timing_cg.cp_op.div
+  - gen_div_timing_cg.cp_dit.on
+  - gen_div_timing_cg.cp_dit.off
+  - gen_div_timing_cg.cp_div0.yes
+  - gen_div_timing_cg.cp_div0.no
+  - gen_div_timing_cg.cp_delta.other
+  - gen_div_timing_cg.cp_delta.d37
+  - gen_div_timing_cg.cp_delta.d2
+  - gen_div_timing_cg.cp_event_mid.none
+  - gen_div_timing_cg.cp_wb_defer.no
+  - gen_div_timing_cg.cp_prev.other
+  - gen_div_timing_cg.cp_prev.alu
+  - gen_div_timing_cg.cp_prev.div
+  - gen_div_timing_cg.cp_prev.mul
+  - gen_div_timing_cg.cp_prev.load_dep
+  - gen_div_timing_cg.cp_next.other
+  - gen_div_timing_cg.cp_next.div
+  - gen_div_timing_cg.cp_next.mul
+  - gen_div_timing_cg.cp_next.dep_alu
+  - gen_div_timing_cg.cp_fetch_stall.yes
+  - gen_div_timing_cg.cp_fetch_stall.no
+anti_vacuity:
+  gen_div_timing_cg.cp_op.remu: "plan CG-MUL-004 anti-vacuity: cp_delta is `iff gap_clean` and cr_dit_div0_delta also requires wb_defer == no; the event coverpoint records a pin assertion by the irq/debug drivers strictly inside the divide's occupancy window, so a hit proves the event arrived mid-op; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_div_timing_cg.cp_op.rem: "plan CG-MUL-004 anti-vacuity: cp_delta is `iff gap_clean` and cr_dit_div0_delta also requires wb_defer == no; the event coverpoint records a pin assertion by the irq/debug drivers strictly inside the divide's occupancy window, so a hit proves the event arrived mid-op; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_div_timing_cg.cp_op.divu: "plan CG-MUL-004 anti-vacuity: cp_delta is `iff gap_clean` and cr_dit_div0_delta also requires wb_defer == no; the event coverpoint records a pin assertion by the irq/debug drivers strictly inside the divide's occupancy window, so a hit proves the event arrived mid-op; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_div_timing_cg.cp_op.div: "plan CG-MUL-004 anti-vacuity: cp_delta is `iff gap_clean` and cr_dit_div0_delta also requires wb_defer == no; the event coverpoint records a pin assertion by the irq/debug drivers strictly inside the divide's occupancy window, so a hit proves the event arrived mid-op; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_div_timing_cg.cp_dit.on: "plan CG-MUL-004 anti-vacuity: cp_delta is `iff gap_clean` and cr_dit_div0_delta also requires wb_defer == no; the event coverpoint records a pin assertion by the irq/debug drivers strictly inside the divide's occupancy window, so a hit proves the event arrived mid-op; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_div_timing_cg.cp_dit.off: "plan CG-MUL-004 anti-vacuity: cp_delta is `iff gap_clean` and cr_dit_div0_delta also requires wb_defer == no; the event coverpoint records a pin assertion by the irq/debug drivers strictly inside the divide's occupancy window, so a hit proves the event arrived mid-op; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_div_timing_cg.cp_div0.yes: "plan CG-MUL-004 anti-vacuity: cp_delta is `iff gap_clean` and cr_dit_div0_delta also requires wb_defer == no; the event coverpoint records a pin assertion by the irq/debug drivers strictly inside the divide's occupancy window, so a hit proves the event arrived mid-op; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_div_timing_cg.cp_div0.no: "plan CG-MUL-004 anti-vacuity: cp_delta is `iff gap_clean` and cr_dit_div0_delta also requires wb_defer == no; the event coverpoint records a pin assertion by the irq/debug drivers strictly inside the divide's occupancy window, so a hit proves the event arrived mid-op; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_div_timing_cg.cp_delta.other: "plan CG-MUL-004 anti-vacuity: cp_delta is `iff gap_clean` and cr_dit_div0_delta also requires wb_defer == no; the event coverpoint records a pin assertion by the irq/debug drivers strictly inside the divide's occupancy window, so a hit proves the event arrived mid-op; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_div_timing_cg.cp_delta.d37: "plan CG-MUL-004 anti-vacuity: cp_delta is `iff gap_clean` and cr_dit_div0_delta also requires wb_defer == no; the event coverpoint records a pin assertion by the irq/debug drivers strictly inside the divide's occupancy window, so a hit proves the event arrived mid-op; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_div_timing_cg.cp_delta.d2: "plan CG-MUL-004 anti-vacuity: cp_delta is `iff gap_clean` and cr_dit_div0_delta also requires wb_defer == no; the event coverpoint records a pin assertion by the irq/debug drivers strictly inside the divide's occupancy window, so a hit proves the event arrived mid-op; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_div_timing_cg.cp_event_mid.none: "plan CG-MUL-004 anti-vacuity: cp_delta is `iff gap_clean` and cr_dit_div0_delta also requires wb_defer == no; the event coverpoint records a pin assertion by the irq/debug drivers strictly inside the divide's occupancy window, so a hit proves the event arrived mid-op; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_div_timing_cg.cp_wb_defer.no: "plan CG-MUL-004 anti-vacuity: cp_delta is `iff gap_clean` and cr_dit_div0_delta also requires wb_defer == no; the event coverpoint records a pin assertion by the irq/debug drivers strictly inside the divide's occupancy window, so a hit proves the event arrived mid-op; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_div_timing_cg.cp_prev.other: "plan CG-MUL-004 anti-vacuity: cp_delta is `iff gap_clean` and cr_dit_div0_delta also requires wb_defer == no; the event coverpoint records a pin assertion by the irq/debug drivers strictly inside the divide's occupancy window, so a hit proves the event arrived mid-op; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_div_timing_cg.cp_prev.alu: "plan CG-MUL-004 anti-vacuity: cp_delta is `iff gap_clean` and cr_dit_div0_delta also requires wb_defer == no; the event coverpoint records a pin assertion by the irq/debug drivers strictly inside the divide's occupancy window, so a hit proves the event arrived mid-op; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_div_timing_cg.cp_prev.div: "plan CG-MUL-004 anti-vacuity: cp_delta is `iff gap_clean` and cr_dit_div0_delta also requires wb_defer == no; the event coverpoint records a pin assertion by the irq/debug drivers strictly inside the divide's occupancy window, so a hit proves the event arrived mid-op; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_div_timing_cg.cp_prev.mul: "plan CG-MUL-004 anti-vacuity: cp_delta is `iff gap_clean` and cr_dit_div0_delta also requires wb_defer == no; the event coverpoint records a pin assertion by the irq/debug drivers strictly inside the divide's occupancy window, so a hit proves the event arrived mid-op; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_div_timing_cg.cp_prev.load_dep: "plan CG-MUL-004 anti-vacuity: cp_delta is `iff gap_clean` and cr_dit_div0_delta also requires wb_defer == no; the event coverpoint records a pin assertion by the irq/debug drivers strictly inside the divide's occupancy window, so a hit proves the event arrived mid-op; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_div_timing_cg.cp_next.other: "plan CG-MUL-004 anti-vacuity: cp_delta is `iff gap_clean` and cr_dit_div0_delta also requires wb_defer == no; the event coverpoint records a pin assertion by the irq/debug drivers strictly inside the divide's occupancy window, so a hit proves the event arrived mid-op; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_div_timing_cg.cp_next.div: "plan CG-MUL-004 anti-vacuity: cp_delta is `iff gap_clean` and cr_dit_div0_delta also requires wb_defer == no; the event coverpoint records a pin assertion by the irq/debug drivers strictly inside the divide's occupancy window, so a hit proves the event arrived mid-op; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_div_timing_cg.cp_next.mul: "plan CG-MUL-004 anti-vacuity: cp_delta is `iff gap_clean` and cr_dit_div0_delta also requires wb_defer == no; the event coverpoint records a pin assertion by the irq/debug drivers strictly inside the divide's occupancy window, so a hit proves the event arrived mid-op; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_div_timing_cg.cp_next.dep_alu: "plan CG-MUL-004 anti-vacuity: cp_delta is `iff gap_clean` and cr_dit_div0_delta also requires wb_defer == no; the event coverpoint records a pin assertion by the irq/debug drivers strictly inside the divide's occupancy window, so a hit proves the event arrived mid-op; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_div_timing_cg.cp_fetch_stall.yes: "plan CG-MUL-004 anti-vacuity: cp_delta is `iff gap_clean` and cr_dit_div0_delta also requires wb_defer == no; the event coverpoint records a pin assertion by the irq/debug drivers strictly inside the divide's occupancy window, so a hit proves the event arrived mid-op; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_div_timing_cg.cp_fetch_stall.no: "plan CG-MUL-004 anti-vacuity: cp_delta is `iff gap_clean` and cr_dit_div0_delta also requires wb_defer == no; the event coverpoint records a pin assertion by the irq/debug drivers strictly inside the divide's occupancy window, so a hit proves the event arrived mid-op; the hit is a retired instruction the lock-step compare judged against the ISA model"

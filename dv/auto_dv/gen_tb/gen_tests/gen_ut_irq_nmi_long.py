@@ -1,4 +1,4 @@
-"""An interrupt raised inside a long NMI handler (CM132-M-1): boot gen_nmi_long_directed.S (its NMI handler retires 41 records),
+"""An interrupt raised inside a long NMI handler: boot gen_nmi_long_directed.S (its NMI handler retires 41 records),
 raise the NMI through the bridge, then raise the external line while the handler runs and hold it until taken. NMI mode masks
 every interrupt, so the line's expectation outlives GEN_IRQ_ENTRY_BOUND_RECORDS inside the handler; the irq checker must keep it
 and judge it after the handler's mret, when the DUT takes the line (green) or a TB mutant withholds it (MUT-NT3: the never-taken

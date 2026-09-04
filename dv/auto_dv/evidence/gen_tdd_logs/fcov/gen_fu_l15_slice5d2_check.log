@@ -1,0 +1,12 @@
+# check of dv/auto_dv/evidence/gen_fcov_proof_slice5d2.fcov.yaml (md5 1d91d38d6c08e5bec00f5f7242c31dc1) against /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/sb_root/dv/auto_dv/work/tb-infra/wit/fcov/urg_lockstep_cpuctrl_keyw (urg text report of the run named in the manifest header; build sources sha256: 98518617fecfcf64); 2026-09-04T04:03:43Z
+FCOV-EXPECTATION: gen_sec_ctrl_inputs_cg.cp_event.fetch_en_change = HIT (count=1)
+FCOV-EXPECTATION: gen_sec_ctrl_inputs_cg.cp_event.cpuctrl_read = HIT (count=6)
+FCOV-EXPECTATION: gen_sec_ctrl_inputs_cg.cp_bit8_readback.one = HIT (count=6)
+FCOV-EXPECTATION: gen_sec_ctrl_inputs_cg.cp_bits67_readback.b6_1_b7_1 = HIT (count=1)
+FCOV-EXPECTATION: gen_sec_ctrl_inputs_cg.cp_bits67_readback.b6_0_b7_1 = HIT (count=2)
+FCOV-EXPECTATION: gen_sec_ctrl_inputs_cg.cp_bits67_readback.b6_1_b7_0 = HIT (count=1)
+FCOV-EXPECTATION: gen_sec_ctrl_inputs_cg.cp_bits67_readback.b6_0_b7_0 = HIT (count=2)
+FCOV-EXPECTATION: gen_sec_ctrl_inputs_cg.cp_fetch_en_val.on = HIT (count=1)
+FCOV-EXPECTATION: gen_sec_ctrl_inputs_cg.cp_key_delay.withheld_then_valid = HIT (count=6)
+FCOV-EXPECTATION: gen_sec_ctrl_inputs_cg.cp_rvfi_ext_key_valid.one = HIT (count=6)
+FCOV-EXPECTATION: PASS - all 10 declared bins hit

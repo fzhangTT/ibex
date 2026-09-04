@@ -495,6 +495,10 @@ package gen_rvfi_pkg;
         else if (t.rd_addr != 0) miss("isa_rd", $sformatf("rf_wr_suppress asserted but the record reports a write to x%0d", t.rd_addr), t, fld(cfg.chk_isa_rd, cfg.chk_isa_rd_set));
         if (sup_ok) for (int i = 1; i < 32; i++) gpr_before[i] = gen_isa_read_gpr(i);
       end
+      // a store response's corruption raises the same NMI with the same mtval rule: the store's own address when its first word was the
+      // announced one (for a misaligned store not the word address); the announcement itself is consumed at the NMI entry
+      if (!t.ext_rf_wr_suppress && !is_seq && t.mem_wmask != 0 && gen_bus_err_log::intg_pending && gen_bus_err_log::intg_first_addr[31:2] == t.mem_addr[31:2])
+        gen_bus_err_log::intg_first_addr = t.mem_addr;
       if (!step(pc_b, pc_a, insn, retired, trap, cause, tval, rd_we, rd_addr, rd_wdata, mem_r, mem_w, mem_addr, mem_wdata, mem_rdata, mem_size, prv, prv_b, csr_n, reg_n)) return;
       // cpuctrlsts.icache_enable as this record leaves it (the model's CSR after the step), for the misc monitor's ECC-injection
       // qualification: a lookup made while the cache is disabled reads the tag RAM but is not checked (rtl/ibex_icache.sv:266)

@@ -123,3 +123,18 @@ mutant directories' copies).
 | id | mutation | vehicle | build | catch (the checker on the proof manifest) | ablation |
 |---|---|---|---|---|---|
 | FM16 | gen_fcov_pkg.sv: the rlist class boundary off by one (`rlist == 14` classed r15, so rlist 15 falls into r5_14) | gen_ut_lockstep on gen_zcmp_hazard_directed.S, default bus regime; manifest gen_fcov_proof_slice5e.fcov.yaml | 9647b7f65ea4fc03 (mut_root/FM16, copied from the landing sources; canary gen_fcov_pkg.sv 802e323aab04ad8a) | FAIL: `1 declared bin(s) not hit: gen_cmp_zcmp_hazard_cg.cp_rlist_class.r15` (gen_fu_l14_FM16_check.log, stamped) | PASS, all 25 declared bins hit (gen_fcov_proof_slice5e_fm16_ablation.fcov.yaml, gen_fu_l14_FM16_ablation_check.log, stamped) |
+
+## Landing 13 (Slice B): one sampler mutant per group, against the landing sources (sb_root, build sb3 98518617fecfcf64)
+
+Out-of-tree copies of the landing sources with one classifier boundary moved (mut_root/FM17..FM21, canary gen_fcov_pkg.sv 05f130a4502aae58);
+each catch run is the group's default proof run on the mutant build, the checker on the slice's proof manifest is the catch, the ablation manifest
+(the same manifest without the one bin the mutant hides) must PASS on the same report; both checks stamped, the mutation as applied retained
+(gen_fu_l15_FM*_mutant.diff).
+
+| id | mutation | vehicle | build | catch (the checker on the proof manifest) | ablation |
+|---|---|---|---|---|---|
+| FM17 | gen_fcov_pkg.sv: the msb immediate boundary moved (`imm20 == 20'h80001`), so 0x80000 falls into rand | gen_ut_lockstep on gen_lui_auipc_directed.S; manifest gen_fcov_proof_slice6a.fcov.yaml | d3eb6663643e04a1 | FAIL: `1 declared bin(s) not hit: gen_isa_lui_auipc_cg.cp_imm20.msb` (gen_fu_l15_FM17_check.log) | PASS, 12 bins (gen_fu_l15_FM17_ablation_check.log) |
+| FM18 | gen_fcov_pkg.sv: the semihosting slli hint's shift amount moved (`shamt == 5'd30`), so slli x0, x0, 0x1f is classed other | gen_ut_lockstep on gen_hint_x0_directed.S; manifest gen_fcov_proof_slice6b.fcov.yaml | 95cd03e93a8967ed | FAIL: `1 declared bin(s) not hit: gen_isa_hint_x0_cg.cp_hint_class.slli_x0_semihost` (gen_fu_l15_FM18_check.log) | PASS, 41 bins (gen_fu_l15_FM18_ablation_check.log) |
+| FM19 | gen_fcov_pkg.sv: the jalr max_pos immediate moved (`imm == 2046`), so 2047 is classed odd | gen_ut_lockstep on gen_isa_jump_directed.S; manifest gen_fcov_proof_slice6c.fcov.yaml | 847ed21c6fdaf905 | FAIL: `1 declared bin(s) not hit: gen_isa_jump_cg.cp_jalr_imm.max_pos` (gen_fu_l15_FM19_check.log) | PASS, 28 bins (gen_fu_l15_FM19_ablation_check.log) |
+| FM20 | gen_fcov_pkg.sv: the divider's full-count delta moved (`gap == 36`), so the 37-cycle delta is classed other | gen_ut_lockstep on gen_div_timing_directed.S, default regimes; manifest gen_fcov_proof_slice6e.fcov.yaml | 91b36ff74b8813ce | FAIL: `1 declared bin(s) not hit: gen_div_timing_cg.cp_delta.d37` (gen_fu_l15_FM20_check.log) | PASS, 23 bins (gen_fu_l15_FM20_ablation_check.log) |
+| FM21 | gen_fcov_pkg.sv: the c.addi4spn maximum moved (`imm == 1016`), so 1020 is classed rand | gen_ut_lockstep on gen_cmp_imm_edges_directed.S; manifest gen_fcov_proof_slice6d.fcov.yaml | 9c3a417965de59e5 | FAIL: `1 declared bin(s) not hit: gen_cmp_imm_edges_cg.cp_addi4spn_imm.max` (gen_fu_l15_FM21_check.log) | PASS, 45 bins (gen_fu_l15_FM21_ablation_check.log) |

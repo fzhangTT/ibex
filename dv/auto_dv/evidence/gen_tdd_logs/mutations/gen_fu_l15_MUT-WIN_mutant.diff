@@ -1,0 +1,4 @@
+277c277
+<   `P_ASSERT(alert, sva_alert_minor_window,     alert_minor_o |-> |lookup_hist[ICACHE_ECC_WINDOW-1:0]) // DUT (1..ICACHE_ECC_WINDOW cycles after the lookup read that returned the corrupted tag, GEN_ICACHE_ECC_WINDOW)
+---
+>   `P_ASSERT(alert, sva_alert_minor_window,     alert_minor_o |-> |lookup_hist[ICACHE_ECC_WINDOW-1:1])   // the landing-9 slice as committed at 329902f, shifted with the register: latencies 2..N, never 1 // DUT (1..ICACHE_ECC_WINDOW cycles after the lookup read that returned the corrupted tag, GEN_ICACHE_ECC_WINDOW)

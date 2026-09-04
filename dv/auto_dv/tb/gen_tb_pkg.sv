@@ -236,7 +236,7 @@ package gen_tb_pkg;
   parameter int unsigned GEN_LSU_TRAP_TO_RVFI_OFFSET = 0;  // cycles from a load/store fault's commit edge to its RVFI record: the fault is seen in WB, so its record and the controller's save edge share a cycle
   parameter int unsigned GEN_IRQ_MARKER_TO_RVFI_OFFSET = 2;  // cycles from the interrupt entry commit to the rvfi_ext_irq_valid marker (v3 T-051 2.1)
   parameter int unsigned GEN_RVFI_ID_EXIT_OFFSET = 2;  // cycles from ID exit (rvfi_ext_mcycle sample point, rtl/ibex_core.sv:2102) to the record, plus the WB wait for loads/stores (v3 T-051 2.2)
-  parameter int unsigned GEN_ICACHE_ECC_WINDOW = 2;  // alert_minor_o within 1..2 cycles counted from the lookup request that returns corrupted data (the RAM read lands one cycle after the request, the alert one cycle after the check); measured on the landing-11 injection runs (gen_tdd_step2b.md Section 14): no run had alert_minor_o high before that landing; the misc checker and the protocol SVA use the same value
+  parameter int unsigned GEN_ICACHE_ECC_WINDOW = 2;  // alert_minor_o within 1..2 cycles counted from the lookup request that returns corrupted data (the RAM read lands one cycle after the request, the alert one cycle after the check): 1 is the latency observed on every retained injection run (gen_tdd_step2b.md Section 14, every pulse at 1), 2 the declared bound, not observed; no run had alert_minor_o high before the injection hook existed; the misc checker and the protocol SVA use the same value
   parameter int unsigned GEN_ICACHE_ECC_GRACE_CYCLES = 16;  // cycles after a cpuctrlsts.icache_enable write record or after the last invalidation-sweep tag write during which a tag-RAM ECC injection is not owed an alert_minor_o pulse: a lookup made while the cache is disabled or invalidating reads the tag RAM but is not checked (rtl/ibex_icache.sv:266), and the TB learns both states late (the write from its record, the sweep from its all-ways tag writes)
   parameter int unsigned GEN_IRQ_ENTRY_BOUND_RECORDS = 17;  // records between a pin edge and the interrupt entry, worst case WB + ID + 16 Zcmp micro-ops (v3 T-051 2.6)
   parameter int unsigned GEN_DBG_ENTRY_BOUND_RECORDS = 17;  // records between debug_req_i and the debug entry, same derivation (v3 T-051 2.6)
@@ -261,6 +261,7 @@ package gen_tb_pkg;
   parameter int unsigned GEN_CPUCTRLSTS_SYNC_EXC_SEEN_BIT = 6;  // cpuctrlsts.sync_exc_seen bit (cpu_ctrl_sts_part_t, rtl/ibex_cs_registers.sv:239-246); the shim sets and clears it from the model's traps
   parameter int unsigned GEN_CPUCTRLSTS_DOUBLE_FAULT_SEEN_BIT = 7;  // cpuctrlsts.double_fault_seen bit (cpu_ctrl_sts_part_t, rtl/ibex_cs_registers.sv:239-246)
   parameter int unsigned GEN_CPUCTRLSTS_ICACHE_ENABLE_BIT = 0;  // cpuctrlsts.icache_enable bit (cpu_ctrl_sts_part_t, rtl/ibex_cs_registers.sv:239-246); the scoreboard publishes the written value to gen_icram_events for the ECC-injection qualification
+  parameter int unsigned GEN_CPUCTRLSTS_DATA_IND_TIMING_BIT = 1;  // cpuctrlsts.data_ind_timing bit (cpu_ctrl_sts_part_t, rtl/ibex_cs_registers.sv:239-246); the fcov sampler tracks it from the cpuctrlsts write records for the divider's DIT class (CG-MUL-004)
   parameter int unsigned GEN_CPUCTRLSTS_DUMMY_INSTR_EN_BIT = 2;  // cpuctrlsts.dummy_instr_en bit (cpu_ctrl_sts_part_t, rtl/ibex_cs_registers.sv:239-246); the Zcmp collector reads it from the model
   parameter int unsigned GEN_DCSR_PRV_BIT_LOW = 0;  // dcsr.prv field low bit (rtl/ibex_pkg.sv dcsr_t prv[1:0]); the dbg_dret rule compares the record's mode with it
   parameter int unsigned GEN_DCSR_PRV_BIT_HIGH = 1;  // dcsr.prv field high bit (rtl/ibex_pkg.sv dcsr_t prv[1:0])
@@ -535,9 +536,10 @@ package gen_tb_pkg;
     static int unsigned injected = 0;
     static bit          icache_en = 0;         // cpuctrlsts.icache_enable as last written (reset value 0), with the record's cycle
     static int unsigned icache_en_cycle = 0;
-    static bit          inval_seen = 0;        // an all-ways tag write = an invalidation-sweep write (rtl/ibex_icache.sv:257, :274)
+    static bit          inval_seen = 0;        // an invalidation-sweep write seen: all ways at index 0, then consecutive indices on consecutive cycles (rtl/ibex_icache.sv INVAL_CACHE)
     static int unsigned last_inval_cycle = 0;
     static int unsigned last_tag_write_cycle = 0, tag_writes_this_cycle = 0;
+    static int unsigned last_allways_cycle = 0; static int last_allways_index = -1;   // the previous all-ways write: a sweep continues it, an ECC correction does not
     static function void announce(int unsigned cycle, int unsigned way, int unsigned index, string kind, bit qualified = 1'b0);
       q.push_back('{cycle, way, index, kind, qualified, 1'b0, 1'b0});
       while (q.size() > 256) void'(q.pop_front());
@@ -550,10 +552,13 @@ package gen_tb_pkg;
     static function void note_icache_en(bit en, int unsigned cycle);
       icache_en = en; icache_en_cycle = cycle;
     endfunction
-    static function void note_tag_write(int unsigned cycle, int unsigned ways);   // called by every tag RAM on its write
+    static function void note_tag_write(int unsigned cycle, int unsigned ways, int unsigned index);   // called by every tag RAM on its write
       if (cycle != last_tag_write_cycle) begin last_tag_write_cycle = cycle; tag_writes_this_cycle = 0; end
       tag_writes_this_cycle++;
-      if (tag_writes_this_cycle >= ways) begin inval_seen = 1; last_inval_cycle = cycle; end
+      if (tag_writes_this_cycle >= ways) begin   // an all-ways write: the sweep (index 0, or the index after the previous one a cycle later) or an ECC correction of one lookup
+        if (index == 0 || (last_allways_index >= 0 && cycle == last_allways_cycle + 1 && int'(index) == last_allways_index + 1)) begin inval_seen = 1; last_inval_cycle = cycle; end
+        last_allways_cycle = cycle; last_allways_index = int'(index);
+      end
     endfunction
   endclass
 

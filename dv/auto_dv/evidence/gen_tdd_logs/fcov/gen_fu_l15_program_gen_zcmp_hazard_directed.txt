@@ -1,0 +1,1 @@
+# gen_zcmp_hazard_directed.S: source sha256 e3b187f06c4d4d1cf369acdd2e4b0a22dad3fd059eb57cb4fd056ce994fc5fad (3199 bytes); image zcmp_hz/prog.vmem crc32 0x2a45342c words 202 (the +gen_mem_image_crc32 / +gen_mem_image_words of its runs); gen_program.py --directed, seed 1

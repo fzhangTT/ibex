@@ -329,7 +329,7 @@ int main(int argc, char** argv) {
   check("c.ebreak mtval = 0", st.trap_tval, 0);
   check("c.ebreak mepc = its own pc (2-byte aligned)", gen_isa_read_csr(CSR_MEPC), scratch + 4u);
 
-  std::puts("-- 9. CR6-L-4: an exception taken in debug mode sets neither sync_exc_seen nor double_fault_seen (rtl/ibex_cs_registers.sv:918)");
+  std::puts("-- 9. an exception taken in debug mode sets neither sync_exc_seen nor double_fault_seen (rtl/ibex_cs_registers.sv:918)");
   check("re-reset", gen_isa_reset(&cfg) == 0, 1);
   gen_isa_write_word(scratch, 0x00000013u);                  // nop at the reset pc; the debug request pre-empts it
   gen_isa_write_word(GEN_MM_DM_HALT, 0x00000073u);            // the debug ROM's first instruction: an ecall inside debug mode
@@ -600,7 +600,7 @@ int main(int argc, char** argv) {
     gen_isa_step(&st);
     check("a nop under IR = 0 counts", gen_isa_read_csr(CSR_MINSTRET), m0 + 3u); }
 
-  // CM123-L-3: a TB-side write is not an instruction; no retirement coincides with it, so neither write corner applies whatever gap the
+  // a TB-side write is not an instruction; no retirement coincides with it, so neither write corner applies whatever gap the
   // last record left behind
   check("re-reset", gen_isa_reset(&cfg) == 0, 1);
   gen_isa_write_csr(CSR_MINSTRET, 0x10u); gen_isa_write_csr(CSR_MINSTRETH, 0x1u);
@@ -614,7 +614,7 @@ int main(int argc, char** argv) {
   check("a TB write of minstret with the low word at 0 after a gap-1 record: the high word is kept (no carry corner for a TB write)", gen_isa_read_csr(CSR_MINSTRETH), 0x2u);
   check("and the low word is written", gen_isa_read_csr(CSR_MINSTRET), 0x5u);
   gen_isa_set_retire_gap(0);
-  // CM123-L-2: the carry Ibex did not take is decided by Ibex's own low word (Spike's minus the inhibited retirements), not by Spike's raw
+  // the carry Ibex did not take is decided by Ibex's own low word (Spike's minus the inhibited retirements), not by Spike's raw
   // counter: after an IR episode the two differ by g_inh
   check("re-reset", gen_isa_reset(&cfg) == 0, 1);
   { const uint32_t prog15d[] = {0x32041073u,   // csrw mcountinhibit, x8 (x8 = 4: sets IR; the writer retires under IR = 1, not counted by Ibex)
@@ -638,7 +638,7 @@ int main(int argc, char** argv) {
     check("csrw minstret in the nop's retirement cycle: Ibex lost the nop's carry (decided by Ibex's low word, not Spike's)", gen_isa_read_csr(CSR_MINSTRETH), 0u);
     gen_isa_set_retire_gap(0); }
 
-  // tb_l11 L-5: a TB-side write is not the program's writer, so the step after it keeps its corners
+  // a TB-side write is not the program's writer, so the step after it keeps its corners
   check("re-reset", gen_isa_reset(&cfg) == 0, 1);
   { const uint32_t prog15e[] = {0xb8201073u};  // csrw minstreth, x0, stepped at gap 1 right after a TB write of the counter
     gen_isa_write_word(scratch, prog15e[0]);

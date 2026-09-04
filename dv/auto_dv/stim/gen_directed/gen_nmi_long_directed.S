@@ -1,7 +1,7 @@
 # gen_nmi_long_directed.S: the interrupt-taking program of gen_irq_directed.S with a LONG NMI handler (40 nops before its mret),
 # so an interrupt expectation can outlive GEN_IRQ_ENTRY_BOUND_RECORDS inside NMI mode. Every other vector is one mret. The irq
 # checker must neither judge nor forget a line while NMI mode masks every interrupt, and must judge it after the handler's mret
-# (the CM132-M-1 rule); the TB mutant that withholds a line from the NMI on is the red. 1 to tohost at the end, then spin.
+# (the irq checker's NMI-mode rule); the TB mutant that withholds a line from the NMI on is the red. 1 to tohost at the end, then spin.
 .section .text
 .globl _start
 _start:

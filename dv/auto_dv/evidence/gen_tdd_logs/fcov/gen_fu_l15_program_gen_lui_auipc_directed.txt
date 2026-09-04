@@ -1,0 +1,1 @@
+# gen_lui_auipc_directed.S: source sha256 8ae760a66f3044e7cef0ba17cad3d351199346c595e69b8debf274b73ea738f9 (1273 bytes); image sbprog_lui_auipc/prog.vmem crc32 0xc2902e02 words 38 (the +gen_mem_image_crc32 / +gen_mem_image_words of its runs); gen_program.py --directed, seed 1

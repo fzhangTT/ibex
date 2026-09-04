@@ -245,6 +245,8 @@ package gen_env_pkg;
       dbus_agent.ap.connect(isa_cov.dbus_imp);   // completed data-bus transactions: the Zcmp collector's observed latency class
       ibus_agent.ap.connect(isa_cov.ibus_imp);   // fetches: the multiply's fetch-stall class and the boot-to-request distance
       scrkey.ap.connect(isa_cov.key_imp);        // scramble-key req / valid changes: the security-input events
+      irq.ap.connect(isa_cov.irq_imp);           // line assertions: the divider's mid-op events and the irq latency
+      dbg.ap.connect(isa_cov.dbg_imp);           // debug-request assertions: the same
       sb.ap_state.connect(irq_chk.imp_state);
       sb.ap_state.connect(dbg_chk.imp_state);
       sb.ap_state.connect(misc_mon.imp_state);

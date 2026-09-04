@@ -1,0 +1,24 @@
+end 04:00:35Z
+lockstep_lui: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+urg lockstep_lui exit=0 dashboard.txt groups.txt grpinfo.txt session.xml tests.txt 
+end 04:00:43Z
+lockstep_hint: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+urg lockstep_hint exit=0 dashboard.txt groups.txt grpinfo.txt session.xml tests.txt 
+end 04:00:51Z
+lockstep_jump: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+urg lockstep_jump exit=0 dashboard.txt groups.txt grpinfo.txt session.xml tests.txt 
+end 04:00:57Z
+lockstep_imm: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+urg lockstep_imm exit=0 dashboard.txt groups.txt grpinfo.txt session.xml tests.txt 
+end 04:01:10Z
+lockstep_divt: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+urg lockstep_divt exit=0 dashboard.txt groups.txt grpinfo.txt session.xml tests.txt 
+end 04:01:20Z
+lockstep_divt_long: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+urg lockstep_divt_long exit=0 dashboard.txt groups.txt grpinfo.txt session.xml tests.txt 
+end 04:01:27Z
+lockstep_divt_irq: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+urg lockstep_divt_irq exit=0 dashboard.txt groups.txt grpinfo.txt session.xml tests.txt 
+end 04:01:32Z
+lockstep_divt_dbg: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
+urg lockstep_divt_dbg exit=0 dashboard.txt groups.txt grpinfo.txt session.xml tests.txt 

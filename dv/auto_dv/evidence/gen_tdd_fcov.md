@@ -290,7 +290,8 @@ are byte-identical (--check up to date), five unit-test cases hold the forms (ge
 
 ## 9. Slice A, second part (landing 12): gen_cmp_zcmp_hazard_cg (CG-CMP-009)
 
-Build b12 (l12_root = the committed landing 11 at f28d09b plus this part; the per-file list gen_fu_l14_sources_sha256_b12.txt). The group
+Build b12 (one build under four names: b12 in the retained file names, b12x as the driver's build letter, l12_root in the retained
+headers, l12_rehearsal as the scratch directory; l12_root = the committed landing 11 at f28d09b plus this part; the per-file list gen_fu_l14_sources_sha256_b12.txt). The group
 renders since plan v3f retired cp_hazard.popret_ra_fwd (the renderer refused the group while the plan listed a bin the CSV did not carry: the
 Slice-A-1 row); 19 covergroups, 722 coverpoint and 2860 cross bins rendered on plan v3l, --check up to date, the codegen unit test PASS
 (gen_fu_l14_ut_fcov_codegen.log). The sampler sits in gen_isa_cov's Zcmp collector (gen_component_api_fcov.md, "Slice A, second part").
@@ -299,7 +300,8 @@ Slice-A-1 row); 19 covergroups, 722 coverpoint and 2860 cross bins rendered on p
   (84 cases in all, 0 failures on b12: gen_fu_l14_ut_isa_cov_zc_*).
 - Program gen_zcmp_hazard_directed.S under three data-bus regimes: default (gen_fcov_proof_slice5e.fcov.yaml, 26 coverpoint bins hit, crosses
   35 / 74), long rvalid and grant (slice5e2: 26 bins, the ra-load deferral class), same-cycle grant / min1 response (slice5e3: 24 bins, crosses
-  30 / 74: the deferral is absent under min1 as the plan's ignore says, and the long delay class is not reached). All 12 pattern bins are hit
+  30 / 74: the deferral is absent under min1 as the plan's ignore says, and cp_redirect_once.yes is not reached in that regime: the fast run's
+  report shows it uncovered, the reason not established). All 12 pattern bins are hit
   in the default and long runs; every check PASS on b12 (gen_fu_l14_slice5e_check.log, _slice5e2_, _slice5e3_; the urg reports and commands
   retained beside them). The notes are derived from the plan's Sample bullet (whole, wrapped lines joined) with the unowned-bin marking.
 - Not reached and stated in the manifests: the cross tuples that need the long class together with the same-cycle patterns (cr_hazard_delay
@@ -312,3 +314,48 @@ Slice-A-1 row); 19 covergroups, 722 coverpoint and 2860 cross bins rendered on p
 - Regression on b12: 21 of the 22-name set PASS (the Slice A set plus the Zcmp regime runs the collector serves: lockstep_zcmp_dummy is the
   B8 red by design, 27 comparator rows, gen_fu_l14_lockstep_zcmp_dummy_*), the eleven Slice A proofs re-checked on the landed build, every
   check PASS (gen_fu_l14_slice*_check.log), the sampler unit test 84 cases 0 failures (gen_fu_l14_ut_isa_cov_zc_*).
+
+## 10. Slice B (landing 13): gen_isa_lui_auipc_cg, gen_isa_hint_x0_cg, gen_isa_jump_cg, gen_div_timing_cg, gen_cmp_imm_edges_cg
+
+Build sb3 (sb_root = the committed landing 12 at ba3799b plus this slice and the CM148 items of gen_tdd_step2b.md Section 15; sources
+98518617fecfcf64, the per-file list gen_fu_l15_sources_sha256_sb2.txt). The five groups render from plan v3l unchanged: 24 covergroups, 892
+coverpoint and 3116 cross bins, --check up to date, both codegen unit tests PASS (gen_fu_l15_ut_fcov_codegen.log, gen_fu_l15_ut_knobs_codegen.log).
+The samplers and their rules: gen_component_api_fcov.md, "Slice B".
+- Red first: on the landing-12 build the five groups do not exist. Each program was run on that build (b12x, fresh vdb) and the landing's
+  manifest checked against its report: every declared bin MISSING-FROM-REPORT, 13 / 42 / 29 / 46 / 24 bins (gen_fu_l15_slice6*_red_check_b12x.log
+  with the reports gen_fu_l15_urg_b12x_*). The unit test carries 45 Slice B classifier rows (129 cases in all, 0 failures on sb3:
+  gen_fu_l15_ut_isa_cov_zc_*).
+- gen_lui_auipc_directed.S (gen_fcov_proof_slice6a.fcov.yaml): 13 coverpoint bins, every one reachable from the program window; crosses
+  cr_op_imm 10 / 10, cr_op_rd_x0 4 / 4, cr_auipc_pc 2 / 4 (the wrap tuples are not reachable).
+- gen_hint_x0_directed.S (slice6b): 42 coverpoint bins, all of them; cr_writer_read 42 / 42 (every writer class with an rs1 reader of x0, an
+  rs2 reader and a register-free successor; zcb_alu is the plan's ignore).
+- gen_isa_jump_directed.S (slice6c): 29 coverpoint bins; crosses cr_link 4 / 4, cr_op_align 12 / 12, cr_odd 3 / 3, cr_jalr_rs1_imm 12 / 18
+  (the x0 base is not reachable), cr_op_wrap 6 / 10 (no wrap is reachable), cr_jal_off_rd 9 / 20 (the 1 MB offsets and the jump to itself),
+  cr_zero_page_bwd 0 / 1; 46 / 68 in all.
+- gen_cmp_imm_edges_directed.S (slice6d): 46 coverpoint bins (cp_cj_off.self is a loop); crosses cr_ci 17 / 17, cr_shift 9 / 9,
+  cr_sp_wrap 10 / 10 (the stack pointer crossing zero for every c.addi16sp class); 36 / 36.
+- gen_div_timing_directed.S under four regimes: default (slice6e, 24 bins; cr_dit_div0_delta 4 / 4, cr_op_div0 16 / 16, cr_prev_op 20 / 20,
+  cr_next_op 16 / 16, cr_op_wb_defer 4 / 8, the event crosses 4 / 16 and 0 / 12 with no event), the long bus regimes (slice6e2, 24 bins: the
+  deferred start is not seen for the same reason as the multiply's cp_wb_busy, and the fetch stall class is), the irq storm with NMIs (slice6e3,
+  28 bins: cp_event_mid irq and nmi, cp_irq_latency le37; cr_op_event 12 / 16, cr_event_div0_dit 8 / 12, cr_next_op 15 / 16), the sparse
+  debug-request regime (slice6e4, 25 bins: cp_event_mid debug_req; cr_op_event 6 / 16, cr_event_div0_dit 2 / 12). The debug-request storm
+  does not let the program reach its end-of-test store inside gen_ut_lockstep's wait (the debug ROM's records dominate; two attempts, not
+  retained), so the sparse regime carries the debug event. Every check PASS on sb3 (gen_fu_l15_slice6*_check.log, the urg reports and commands
+  beside them). The notes are derived from the plan's Sample bullets with the unowned-bin marking.
+- Not reached and stated in the manifests: cp_pc_region low / zero_page / high, the auipc and jump wraps, cp_jal_off self / max_fwd / max_bwd,
+  cp_cj_off.self, cp_jalr_rs1.x0 (the program window at 0x80000080 and the unmapped-fetch error), cp_wb_defer.yes with its cross,
+  cp_irq_latency.gt37, the mid-op debug and NMI events under data-independent timing on that the regimes did not land.
+- Mutants FM17..FM21 (gen_mut_fcov.md, landing-13 table): one classifier boundary per group; each checker FAILS on the one hidden bin alone
+  and the ablation manifest PASSES on the same report; checks stamped, the mutation as applied retained (gen_fu_l15_FM*_mutant.diff).
+- The hazard group's store_same_slot_then_pop window (the landing-12 review's M-1 and the Critic's tb_l13 M-1; the plan owner's ruling in
+  plan v3r): the store record immediately before the pop sequence, in place of any of the last 64 plain stores. Re-proven on this build: the
+  bin counts 1 on gen_zcmp_hazard_directed.S (the one intended `sw t0, 4(sp)` then `cm.pop 6`; gen_fu_l15_slice5e_check.log) against 3
+  before, every hazard manifest still PASS. With it: the back-to-back class no longer pairs a push / pop with a move sequence or an
+  unsampled sequence between (prev_seq_kind cleared at every sequence start; the review's M-2), the never-read addi-cycle state removed
+  (the ra-load deferral stays the documented approximation), the data-bus delay boundaries in one pair of constants with one helper per
+  group and the sequence class mapped by name, the rlist mask built from the one s-register list.
+- The classifier rows' red (the Critic's tb_l13 L-2): gen_ut_isa_cov on two mutant builds, FM16's (the hazard rlist row fails: 84 cases,
+  1 failure, gen_fu_l15_FM16_ut_isa_cov_zc_*) and FM17's (the lui msb row fails, gen_fu_l15_FM17_ut_isa_cov_zc_*).
+- Regression on sb3: 20 of the 21-name set PASS (lockstep_zcmp_dummy is the B8 red by design, 27 comparator rows), the fourteen landed proof
+  runs of Slices A and the hazard part re-run and re-checked, every run and check PASS (gen_fu_l15_slice5*_check.log, _slice2c_), the plain
+  gen_ut_lockstep_icache_en run green (gen_fu_l15_lockstep_icache_en_*), the sampler unit test 129 cases 0 failures.
