@@ -266,9 +266,11 @@ name plus seed (SIM_RECIPE Section 5). Section C9.
 
 ## 6. Component API sections (TB Infra, version 3 revised, included verbatim)
 
-The text below is tb-infra's component-sections note in full at its T-068 revision, and quoting that hash FREEZES
-the source: an edit to the work file makes this document's hash claim false while it still reads as verified, so the
-note is not edited while this quotation stands, and a revision arrives by regenerating and re-hashing here
+The text below is tb-infra's component-sections note in full at its T-068 revision. The hash pins WHAT WAS QUOTED and
+nothing more: it cannot stop the work file changing, so if that file moves, this quotation does not follow it and
+becomes a quotation of a superseded revision rather than a false claim. A revision therefore arrives only by
+re-quoting the source here and re-hashing, and this document never edits the quoted text, which is why the citation
+pointers for the names inside it are stated above rather than applied within
 (`dv/auto_dv/work/tb-infra/gen_tb_arch_component_sections.md`)
 (sha256 prefix de5bc9573c84255b; C9 no longer names the retired knob forms and C4.8 uses the single ECC-window anchor;
 the bus regime windows now live in gen_tb_knobs.yaml `regime_windows`: rvalid min1 = 1, short = 2..4, long = 5..32,
@@ -278,28 +280,34 @@ flattened shows no other difference. Version 3 folds rtl-arch's RTL fact-check (
 N-01/N-02/N-04 and the link-test-2 corrections. Per-finding dispositions: `dv/auto_dv/evidence/gen_critic_response_tb_arch.md`;
 Critic v2 APPROVE with conditions: `dv/auto_dv/evidence/gen_critic_tb_arch_components_v2.md`.
 
+The names inside the quotation are the note's own and are read under this document's citation convention: work-file
+names in it are provenance, and the facts they carry are in the committed records that superseded them, namely
+`dv/auto_dv/docs/gen_critic_tb_arch_components_v1.md` for the Critic's A-rows, rtl-arch's architecture RTL fact-check
+for the Section 4 marks, `dv/auto_dv/docs/gen_rv32b_otearlgrey_encodings.md` for the encodings reference,
+`dv/auto_dv/docs/gen_feature_list.md` for the reading report, the committed component API documents for the scoping
+notes, and `dv/auto_dv/evidence/gen_t046_spike_linktest2.md` for the link test. Those pointers are stated here rather
+than edited into the text above, because the text above is quoted and this document must not alter it.
+
 ### TB architecture: component sections (tb-infra, T-018) - version 3
 
 Version 2, 2026-09-03: revised after the Critic's REQUEST-CHANGES
-(`dv/auto_dv/docs/gen_critic_tb_arch_components_v1.md`, A-01..A-25 and the C8 rulings), the
+(`dv/auto_dv/work/critic/gen_critic_tb_arch_components_v1.md`, A-01..A-25 and the C8 rulings), the
 cross-model pre-execution review (`dv/auto_dv/reviews/2026-09-03-claude-plan-gen_tb_arch_component_
 sections.md`, five mediums and the lows, marked "(v2, XM-n)") and rtl-arch's T-022 inputs
 (`gen_cover_props_draft.sv`, `gen_unreachability_evidence.md` 5.2). The per-finding disposition of
 both reviews is `dv/auto_dv/evidence/gen_critic_response_tb_arch.md`. Changes against v1 are
 marked "(v2)" in the text. Version 3 (2026-09-03, after the Critic's v2 APPROVE, no re-review
-required by the Orchestrator) folds rtl-arch's architecture RTL fact-check, Section 4 (marks "(v3, T-051-n)") and the Critic's v2 residuals
+required by the Orchestrator) folds rtl-arch's RTL fact-check `dv/auto_dv/work/rtl-arch/
+gen_arch_v2_rtl_factcheck.md` Section 4 (marks "(v3, T-051-n)") and the Critic's v2 residuals
 N-01, N-02, N-04, plus the second link test (`gen_t046_spike_linktest2.md`, marks "(link test 2)").
 
 For the DV Lead to fold into `dv/auto_dv/docs/gen_tb_architecture.md` (DV Lead owns the document;
 tb-infra owns these sections). Written for the Critic and the cross-model reviewer to judge
-feasibility: interfaces, timing, failure paths. Sources, with the tags the sections below cite:
-rtl-arch's answers to TB Infra (AN) and its interface inventory (II), both rtl-arch work records;
-rtl-arch's behaviour summaries (BS), whose facts the feature list carries with their RTL citations;
-the promoted encodings reference `dv/auto_dv/docs/gen_rv32b_otearlgrey_encodings.md` (ENC); the DV
-Lead's reading report (RR), superseded by `dv/auto_dv/docs/gen_feature_list.md`; and, for agents and
-knobs (SN), the committed component API documents `dv/auto_dv/docs/gen_component_api_env_knobs.md`
-and the per-agent ones, which superseded tb-infra's scoping notes; as-built wrapper
-`dv/auto_dv/tb/gen_dut_top.sv` and
+feasibility: interfaces, timing, failure paths. Sources: `dv/auto_dv/work/rtl-arch/
+gen_answers_tb_infra.md` (AN), `gen_interface_inventory.md` (II), `gen_behaviour_summaries.md`
+(BS), `gen_rv32b_otearlgrey_encodings.md` (ENC); `dv/auto_dv/work/dv-lead/gen_reading_report.md`
+Section 7 (RR); `dv/auto_dv/work/tb-infra/gen_tb_scoping_notes.md` (SN, with the T-014
+corrections folded in); as-built wrapper `dv/auto_dv/tb/gen_dut_top.sv` and
 `dv/auto_dv/docs/gen_component_api_dut_top.md`. Build configuration: `opentitan`. ASCII only.
 UNVERIFIED marks a claim from RTL or tool-source reading that bring-up must confirm.
 
@@ -784,7 +792,7 @@ public `state.csrmap` (processor.h:90) (v2, A-16, XM-I1; no RVFI intercept); the
 throws illegal-instruction, matching Ibex (v2, A-17).
 
 (v2, A-16) Prerequisite before shim coding, DONE: the second link test
-(tb-infra's second Spike link test, 98/98 checks, `out_linktest2/linktest2.log`,
+(`dv/auto_dv/work/tb-infra/gen_spike_linktest2.cc`, 98/98 checks, `out_linktest2/linktest2.log`,
 evidence `dv/auto_dv/evidence/gen_t046_spike_linktest2.md`) demonstrates `gen_mie_csr_t` taking a fast interrupt
 with Ibex's priority (retired 0, then 1), custom CSRs through `extension_t::get_csrs`, `wfi` /
 `in_wfi`, `halt_request` entry and `dret`, a tdata1 write from debug mode and an execute-address
@@ -1134,7 +1142,7 @@ mirror is the applied default).
   pinned by directed tests; F-RVFI-010 and F-RVFI-032 rulings from rtl-arch; B1 re-verification by
   rtl-arch. Removed from this list in v2: model byte order on misaligned store faults (A-15) and the
   `mie` write mask (A-14), both now decided by verified facts.
-- Second link test (A-16): DONE (98/98); grevi/gorci non-alias decode
+- Second link test (A-16): DONE (`gen_spike_linktest2.cc`, 98/98); grevi/gorci non-alias decode
   remains to be checked in the shim's first unit test.
 
 ## 7. Open questions and rulings as they stand in `dv/auto_dv/docs/gen_intervention_log.md`
