@@ -1106,3 +1106,30 @@ digest functions distinguished, the fixed root's digest shown equal to the local
 1deec4c sources, and the before-figure cited as 20 retained logs, a count that excludes this landing's own
 artefacts so it survives the file landing. That supplement also records why it is one: the corrigendum was
 overwritten after its commit with no withdrawal, and its committed bytes were restored and verified.
+
+## Landing 38: an end-of-run read race in gen_ut_intg_store's own assertion
+
+WHAT WAS WRONG. The test asserted two counts equal that are written by different mechanisms: evt_retired_count is
+incremented in the interface by a non-blocking assignment on the clock edge, and evt_isa_records is written by the
+scoreboard with a blocking assignment as it processes a record. So while a record is in flight the scoreboard is one
+ahead, and the test read both back to back and required equality.
+
+THE PROBE CAME FIRST and its result is uniform over all 31 records: every record took the main compare path, the
+fold count stayed at zero, neither the fold nor the draft-B site fired once, and at every record the scoreboard's
+count equals the record order while the interface's is exactly one behind. The draft-B double-count was ruled out
+statically rather than by the run, since that branch returns before reaching the second increment.
+
+THE FIX is test-side and leaves the assertion alone: between the export flush and the read, the test waits while the
+two counts differ, one cycle at a time, up to a named bound, then reads both and asserts equality as before. The
+bound decides how long to wait, never whether to report, because a record the comparator never consumed never
+converges and the equality then still fails. Loosening the assertion to "ahead by at most one" was the alternative
+and was rejected: it would also tolerate a genuine one-record skip.
+
+THE RED, ITS GREEN AND A CONTROL run on ONE build, since only a Python test file differs between the sides. The
+committed test fails at the failing seed with retired 30 against consumed 31; the fixed test passes at the same seed
+with 31 against 31; a control seed passes. THE NUMBER THAT CONFIRMS THE DIAGNOSIS is retired moving from 30 to 31:
+the thirty-first record had retired and the interface's count simply had not been sampled yet, so nothing was
+skipped. The occurrence counts of the bound's name in each root are the control that each side ran the file it
+claims.
+
+Retained: gen_tdd_logs/lockstep/gen_fu_l38_intg_store_read_race.log, with a manifest row.

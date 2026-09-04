@@ -24,6 +24,11 @@ def plus(name, default=None):
     return cocotb.plusargs.get(PLUSARGS[name]["plusarg"], default)
 
 
+# cycles to wait for the retired and compared counts to agree before reading them: the skew is one record and a
+# record retires every few cycles, so this is generous; non-convergence fails the equality rather than hiding
+QUIESCE_CYCLES = 20
+
+
 @cocotb.test()
 async def gen_ut_intg_store(dut):
     log = dut._log
@@ -54,6 +59,14 @@ async def gen_ut_intg_store(dut):
     entries = [r for r in e.records if r.intr]
     log.info("GEN_UT_INTG_STORE records %d interrupt entries %d (orders %s)", len(e.records), len(entries), [r.order for r in entries])
     assert entries, "GEN_UT_INTG_STORE: no interrupt-entry record (the corrupted store response should raise the internal NMI)"
+    # The two counts are written by different mechanisms: the comparator writes evt_isa_records while it processes a
+    # record, the interface increments evt_retired_count on the clock edge, so the pair is offset by one whenever a
+    # record is in flight. Read them only once nothing is in flight. The bound decides how long to wait, never
+    # whether to report: a record the comparator never consumed never converges, so the assertion below still fails.
+    for _ in range(QUIESCE_CYCLES):
+        if int(h.b.evt_retired_count.value) == int(h.b.evt_isa_records.value):
+            break
+        await b.wait_cycles_until(int(h.b.cycle_count.value) + 1)
     retired = int(h.b.evt_retired_count.value)
     consumed = int(h.b.evt_isa_records.value)
     mism = int(h.b.evt_isa_mismatch.value)

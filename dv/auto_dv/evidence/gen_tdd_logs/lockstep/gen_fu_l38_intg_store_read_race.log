@@ -1,0 +1,63 @@
+# AN END-OF-RUN READ RACE IN gen_ut_intg_store's OWN ASSERTION, found by a round-1 triage and fixed test-side.
+#
+# THE DEFECT, with both terms quoted. The test asserts that two counts are EQUAL:
+#   evt_retired_count   incremented in the interface by a NON-BLOCKING assignment on the clock edge,
+#                       gen_bridge_if.sv, "if (rvfi_valid) evt_retired_count <= evt_retired_count + 32'd1"
+#   evt_isa_records     written by the scoreboard with a BLOCKING assignment as it processes a record,
+#                       gen_rvfi_pkg.sv, "bvif.evt_isa_records = compared + folded"
+# Two different mechanisms, so while a record is in flight the scoreboard is one ahead. The test read both back to
+# back and required equality, which is only true when nothing is in flight.
+#
+# THE PROBE THAT SETTLED IT, before any fix was written. An out-of-tree root with a print at every site that moves
+# evt_isa_records, carrying the order, compared, folded, the value written and the interface's own count. The result
+# is uniform over ALL 31 records: every record took the main compare path, folded stayed 0, neither the fold nor the
+# draft-B site fired once, and at every record the scoreboard's count equals the order while the interface's is
+# exactly ONE BEHIND, from order 1 at 1 against 0 to order 31 at 31 against 30. Not one record deviates.
+# THE DRAFT-B DOUBLE-COUNT WAS RULED OUT STATICALLY, not by the run: that site does "draft_b++; compared++" and the
+# main site does "compared++", so a record taking both would double-count, but the draft-B branch returns before
+# reaching the main one. The probe confirms it never fired here.
+#
+# THE FIX, test-side and the assertion unchanged. Between the export flush and the read, the test now waits while
+# the two counts differ, one cycle at a time, up to QUIESCE_CYCLES; then it reads both and asserts equality exactly
+# as before. THE BOUND DECIDES HOW LONG TO WAIT, NEVER WHETHER TO REPORT: a record the comparator never consumed
+# never converges, so the loop exhausts the bound and the equality still fails. The bound is 20 cycles against a
+# measured skew of one record and a record every few cycles, which is generous by a wide margin, and the reason it
+# cannot mask a defect is written beside it.
+#
+# WHY NOT LOOSEN THE ASSERTION to "ahead by at most one", which was the alternative: the equality is the property
+# worth having, that the comparator consumed every retired record, and a relation that tolerates a skew would also
+# tolerate a genuine one-record skip. The wait costs cycles; the loosening costs the check.
+
+== THE RED, ITS GREEN AND A CONTROL ==
+   ONE BUILD serves all three runs, because only a Python test file differs between the sides. So the red and
+   the green are separated by exactly the change under test and by nothing else.
+   ONE BUILD serves both sides, since only a Python test file differs: sources sha256 (dv/auto_dv env, tb, isa, gen_tb): 50981c82f49d7574
+     that figure is the LOCAL runner's find-digest over dv/auto_dv env, tb, isa and gen_tb, written by
+     gen_tb_local.sh; it is NOT the committer's gate digest, and no committed gate identity applies to this root.
+   
+   == A. THE COMMITTED TEST (the counters read back to back): expect FAIL at the failing seed
+      QUIESCE_CYCLES occurrences in the test: 0
+      seed 2062654708: verdict FAIL
+        GEN_UT_INTG_STORE retired 30 consumed 31 mismatches 0 tohost 0x00000001
+        AssertionError: GEN_UT_INTG_STORE: comparator consumed 31 records, 30 retired (must be equal)
+   
+   == B. THE FIXED TEST (bounded quiesce before the read): expect PASS at the same seed
+      QUIESCE_CYCLES occurrences in the test: 2
+      seed 2062654708: verdict PASS
+        GEN_UT_INTG_STORE retired 31 consumed 31 mismatches 0 tohost 0x00000001
+        
+   
+   == C. A CONTROL SEED on the fixed test: must still pass
+      seed 1: verdict PASS
+        GEN_UT_INTG_STORE retired 31 consumed 31 mismatches 0 tohost 0x00000001
+        
+   end 2026-09-04T19:59:22Z
+
+   READING: the committed test FAILS at the failing seed with retired 30 against consumed 31. The fixed test
+   PASSES at the SAME seed with retired 31 against consumed 31, and the control seed passes too.
+   THE NUMBER THAT CONFIRMS THE DIAGNOSIS is retired moving from 30 to 31: the thirty-first record HAD retired,
+   and the interface's count simply had not been sampled yet. Nothing was skipped and nothing was invented; the
+   test was reading one observer before the other had caught up.
+   The QUIESCE_CYCLES occurrence counts printed above are the control on the experiment itself: 0 in the root
+   that ran the red and 2 in the root that ran the green, so each side really ran the file it claims.
+# END. Every figure above is read from a run's own artefacts by the script that produced the block.
