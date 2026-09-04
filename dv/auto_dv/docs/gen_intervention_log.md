@@ -1788,3 +1788,23 @@ plan at HEAD carries knob:icache_ecc_err_rate in 22 items across 15 groups: TP-D
 (gen_rvfi_random) were omitted, both random-regime items whose tests turn the knob on. The ruling is unchanged (the
 knob is legitimate measured stimulus; the same conditions); only its scope count is amended here. The DV Lead corrects
 the row in its next plan touch. The LOG-077 enforcement named in LOG-078 as owed is now committed at cd9638a.
+
+## LOG-079 - 2026-09-04 - The WP-12 lookup-address probe: a P-row under the LOG-067 conditions; measured-run use to the owner (Q-019)
+
+The DV Lead's plan v3t (03c2717) ruled the icache ECC data-RAM and two-bit halves checkable and requested them from
+TB Infra as WP-12. Its cross-model review (artifact 2026-09-04-claude-diff-86df6bee-03c27179.md, REQUEST-CHANGES,
+committed c4a5fd5) refuted the derivation: the lookup address's tag bits reach no DUT port, so the TB's tag RAM models
+cannot decide the hit way, and the fill-based boundary inference is confounded by the refetch on a data-error hit; the
+stored tag words are also tweaked (ICacheTweakInfection). tb-infra's original objection stood. tb-infra asked the DV
+Lead to choose a checker form and the DV Lead ruled form (a): a read-only probe of the lookup address behind a knob,
+off by default, registered as a P-row on the B8-probe path (a C10 exception that reads and never drives). Ruling
+(Orchestrator): the P-row is approved under the LOG-067 conditions: read-only bind, knob default off, the C10
+exception recorded in the probe register and the bind header, the knob marked debug_only in the knob table so the P6
+refusal keeps it out of every measured run, on only in WP-12 evidence runs. In measured runs the probe stays off, so
+the DV Lead's measured-run judge is its form (b) (retiring hits judged through the RVFI record's PC, squashed
+speculative lookups reported as unjudged) with form (a) as the evidence cross-check; the valid-bit-0 rule and the
+pulse-needs-an-injection half stay on regardless. The general question, whether a read-only internal probe may feed a
+checker in a measured run at all, is a boundary-discipline principle and goes to the owner as Q-019 with the
+recommendation to keep LOG-067's line until the owner rules; if allowed, the P-row condition is relaxed then and
+CG-IC-006's data bins may count from probe-on measured runs. The v3t REQUEST-CHANGES gate stands until the DV Lead's
+fix touch passes as the recorded re-review; WP-12 is not built to the v3t brief.
