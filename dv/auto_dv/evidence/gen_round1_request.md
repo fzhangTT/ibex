@@ -11,7 +11,7 @@ references restored at 1b65f86, so the round checks 12 measured entries and coun
 The scope figures were WRONG in this form's
 first version, which said 103 entries and 141 runs; that is the whole testlist, not the round's selection.
 runtime-2 caught it with the flow's own selector, the LOG-086 corrigendum at 7e3ecc8 records it, and every
-scope figure below is re-derived the same way at 4a00702, the commit the figures belong to. The testlist moved
+scope figure below is re-derived the same way at ac9b55c, the commit the figures belong to. The testlist moved
 after 18ac053, at f60bee5 and at 1b65f86, and the manifests moved with the re-scope landings, so nothing here
 holds by inheritance from an earlier reading. The tool that wrote this section derives every figure it states,
 refuses when an input differs from the commit in content it reads, and re-checks that between the derivation
@@ -23,18 +23,24 @@ re-scoped instead of detached, and acceptance is stated against that. Sections 1
 figures forward from the same derivation. Anything the d1f6019 version says about counted-only measured
 entries is void.
 
+ONE NAMING MAPPING, stated once so nothing below has to repeat it. The flow indexes MEASURED rounds from zero
+and the index's rounds list is empty, both existing entries being dry runs, so this measurement is the flow's
+measured round 0 and its evidence directory is gen_round_0. The team's name for it is round 1 and that is what
+this form and the records call it. The earlier gen_round_0_* directories are dry runs and a refused probe, not
+this measurement.
+
 ## 1. Scope, and what the round refuses
 
 `gen_round.py --round 1` runs tier full with coverage. TIER FULL IS NOT THE WHOLE TESTLIST. The selector
 (gen_flow_util.py:1609-1622) keeps an entry when `C.TIER_RANK[t["tier"]] <= rank`, over TIER_RANK
 `{smoke: 0, targeted: 1, full: 2}`; the check tier is absent from that map and has its own branch at :1616,
 `if tier == C.CHECK_TIER`, which only a tier of exactly `check` reaches. So tier full selects the smoke and
-targeted entries and no check-tier entry. Derived at e641b24 with that selector, at base seed 20260904:
+targeted entries and no check-tier entry. Derived at ac9b55c with that selector, at base seed 20260904:
 
 | tier | entries | runs | of which measured |
 |---|---|---|---|
-| smoke | 16 | 44 | 42 |
-| targeted | 3 | 9 | 3 |
+| smoke | 16 | 44 | 36 |
+| targeted | 3 | 9 | 0 |
 | THE ROUND | 19 | 53 | 36 |
 | check, NOT selected | 84 | 88 | 0 |
 
@@ -56,7 +62,7 @@ round does not select cannot pass or fail it, whatever its state in the tree.
 `--base-seed 20260904`, ruled by the Orchestrator. Without it gen_regress defaults the base to the
 dispatch's start time, which makes the round's seeds unreproducible. Re-derived by me over the round's own
 53-run plan at e641b24: 53 distinct seed values and 53 distinct entry-and-seed pairs, zero collisions, the
-same list on a second call, and 0 of the 45 measured values shared with base 20260905, so the base is
+same list on a second call, and 0 of the 36 measured values shared with base 20260905, so the base is
 load-bearing. (runtime-2's equivalent figures were 141 and 141 because they covered the whole testlist.)
 
 ## 3. Seed counts, and why three
@@ -128,9 +134,11 @@ CHECKED against their manifests (12 entries, 36 runs, 2895 declared bins, 8685 b
 | gen_test_csr_access | 3 | 4 | PASS, expectation met |
 
 THE EXPECTATION IS MEASURED, NOT ARGUED. runtime-2 re-flew every measured run at the round's own seeds at
-3142adc, tag r1_fcov_reflight2, and that manifest reports fcov checked 36, pass 36, unmet 0, unverifiable 0.
-It is the same 36-run shape the round will run, with the re-scoped manifests as the only difference from the
-earlier pre-flight, so the expectations in the table above are observed rather than predicted.
+3142adc, tag r1_fcov_reflight2, compiled from the head-mode mirror of that commit at
+/proj_soc/user_dev/fzhang/ibex_dv_mirror_head/3142adc rather than from the clone, and that manifest reports
+fcov checked 36, pass 36, unmet 0, unverifiable 0. It is the same 36-run shape the round will run, with the
+re-scoped manifests as the only difference from the earlier pre-flight, so the expectations in the table above
+are observed rather than predicted.
 
 THREE ENTRIES ARE NOT MEASURED THIS ROUND, and the reason is a rule rather than a convenience.
 gen_test_bit_draft, gen_test_csr_reset and gen_test_pmp_csr_warl declare 15 of 15, 68 of 68 and 266 of 266
@@ -157,23 +165,34 @@ hits; gen_cmp_zca_cg.cr_insn_align.c_jalr_half at 83 merged hits; gen_cmp_zca_cg
 merged hits; gen_csr_trap_setup_warl_cg.cr_csr_wpat.mie_msb at 6 merged hits;
 gen_cmp_zca_cg.cr_insn_next.c_mv_n16 at 5 merged hits. Each was unmet at all three seeds of its OWN entry and
 is reached by another entry in the same run, which is a fact from the report and holds whatever the cause
-turns out to be. WHY each went unmet is under audit BY MEASUREMENT and the round record must not lean on those
-causes yet: the Test Writer instrumented the csr_trap_setup generator over 40 seeds and found that its mie MSB
-write operand occurs in 10 of them, so gen_csr_trap_setup_warl_cg.cr_csr_wpat.mie_msb is seed-dependent at
-roughly one run in four rather than a stimulus gap, and the reason it carries today is wrong. The other five
-are being audited the same way. That one correction moves the reason classes to 46 stimulus and 20
-seed-dependent without moving any measured figure above, since 47 bins were still unmet at every seed and 19
-at some.
+turns out to be. WHY each went unmet was then audited BY MEASUREMENT rather than by reading the generators,
+and five of the six survive with a named mechanism and a positive control while one does not. cp_cj_off.self:
+over 40 seeds the generator emits 2845 c.j and 266 c.jal encodings and NONE with offset zero, decoded from the
+raw 16-bit forms because those jumps are emitted as .2byte and a mnemonic scan misses them, with the 3111
+jumps the decoder does find as its control. The three cr_insn_next legs: c.add, c.lui and c.mv are never
+immediately followed by a 16-bit instruction in any of the three forms a successor can take, while the same
+detector does find compressed successors for c.nop, c.li, c.slli, c.addi and c.addi16sp; none of the three is
+a control transfer, so its retired successor is its layout successor absent a trap. cr_insn_align.c_jalr_half:
+all 1240 c.jalr over 40 seeds sit at 0 mod 4 and none at 2 mod 4, while the same computation places 22 of 24
+tracked forms at 2 mod 4 at least once, with 520 regions abandoned where a width was not determinable from the
+text. THE SIXTH IS A CORRECTION: instrumenting the csr_trap_setup generator over 40 seeds shows 180 mie writes
+per run with the operand exactly 0x80000000 in 10 of the 40, so gen_csr_trap_setup_warl_cg.cr_csr_wpat.mie_msb
+is reachable by its OWN entry at about one run in four and is seed-dependent rather than a stimulus gap; the
+reason committed in the module today is wrong and its post-round touch fixes it. That correction moves the
+reason classes to 46 stimulus and 20 seed-dependent and moves no measured figure above, since 47 bins were
+still unmet at every seed and 19 at some.
 
 WHAT THE RE-SCOPE COST AND DID NOT COST. It removed 758 declarations on covergroups that do not exist, 631
-over the seven measured entries and 127 over the two unmeasured targeted ones, and 246 declarations on built
-covergroups the tests do not guarantee per run. Of those 246, exactly 123 were unmet at every one of the three
-pre-flight seeds and 123 at some seeds only, with no bin counted twice: the two halves are disjoint. The first
-half is a defect record, each bin carrying a stimulus or declaration cause, and the second is a semantics
-record, each bin stating that the test does not guarantee it per run. Neither half removes coverage: those
-bins stay PLANNED in the traceability and are credited from the merged report whenever a run hits them. The
-round record states the two halves separately because their futures differ, and it must not read as though
-excluding a check closed a bin.
+over the seven measured entries and 127 over the two unmeasured targeted ones, and 312 on built covergroups
+the tests do not guarantee per run, in two iterations: 246 after the first pre-flight and 66 after the
+re-flight that measured the three entries the marks alone had not fixed. Of the first 246, exactly 123 were
+unmet at every one of the three pre-flight seeds and 123 at some seeds only; of the later 66, 47 at every seed
+and 19 at some, with 25 hit elsewhere in the merged run and 41 left uncovered. No bin is counted twice in any
+of those splits: each pair is disjoint. The first half is a defect record, each bin carrying a stimulus or
+declaration cause, and the second is a semantics record, each bin stating that the test does not guarantee it
+per run. Neither half removes coverage: those bins stay PLANNED in the traceability and are credited from the
+merged report whenever a run hits them. The round record states the two halves separately because their
+futures differ, and it must not read as though excluding a check closed a bin.
 
 ## 6. The unmeasured runs (17), and what the round does not select
 
@@ -276,9 +295,45 @@ ROUND_HEAD is therefore two facts, not one commit:
    records-only one. The load-bearing property is not which commit that is but that its build identity still
    equals landing 39's.
 
-Both facts are checked with commands rather than asserted, at 4a00702: a diff of 726682a against it over the
-four build paths is empty across 31 commits, every one of them records, rulings, reviews, manifests or tests,
-and gen_build_identity.py --expect exits 0 on bc0cd7778e382b13. The Orchestrator should re-run that diff at
-dispatch, because more records commits may land before the canary: a manifest or testlist edit changes what
-the round checks but not the build identity, while anything under those four paths changes the identity and
-makes the canary stale.
+THE IDENTITY IS THE CHECK AND THE PATH DIFF IS ONLY ADVISORY, which the range since landing 39 shows rather
+than argues. gen_build_identity.py --expect exits 0 on bc0cd7778e382b13 at ac9b55c, and that is what the
+canary is gated on. The diff of 726682a against ac9b55c over dv/auto_dv/tb, dv/auto_dv/env, dv/auto_dv/isa and
+rtl is NOT empty across those 36 commits: it lists dv/auto_dv/tb/unit/gen_ut_pair_quiesce_model.py, from
+landing 40c, which is a Python unit model of the quiesce loop that the SV build does not compile, so the
+identity is unmoved. A file under those paths is therefore a reason to RE-CHECK the identity, not evidence
+that the canary is stale. Of the 36 commits in this range, 4 change a source at all and every one of those is
+a source the build does not read: 04a4808, 3142adc, ae6e73e, 802cae5. The other 32 are records, rulings and
+reviews, landing 40d at 01e515a among them, which adds a retained mutant diff file and touches nothing the
+build or the round reads. The Orchestrator should re-run the identity check rather than the path diff at
+dispatch.
+
+## 12. The round as run
+
+Written after the fact, because a request that never records its outcome makes the next round guess. The
+regression is done and clean: 53 planned and 53 PASS with zero fail, timeout or not-run, pinned at
+4a0070285557a2a7dfb50cea9390597143b984b0 in head mode, tag round_1. The expectation checks met exactly what
+section 5 asked for: fcov checked 36, met 36, unmet 0, unverifiable 0.
+
+THE GATED ROW, over gen_tb_top.u_dut.u_ibex_core and gen_tb_top.u_dut.u_register_file, each metric being
+covered and total objects summed across those two disjoint subtrees:
+
+| metric | percent | covered / total |
+|---|---|---|
+| line | 83.83 | 3654/4359 |
+| cond | 67.17 | 6464/9624 |
+| toggle | 67.39 | 16877/25044 |
+| fsm | 44.19 | 38/86 |
+| branch | 75.41 | 1831/2428 |
+| assert | 92.74 | 166/179 |
+
+THE GROUP FIGURE NEEDS ITS SCOPE SAID OUT LOUD, because three different numbers are in play and the manifest's
+own gate row pairs two of them. 78.29 is the WEIGHT-AVERAGED covergroup score over the 25 scored covergroups
+with the witness ledger covergroup gen_wit_cycle_clause_cg excluded by its SV name, which is what
+gen_cov_report.py:230-239 computes and :137-140 puts in the gate row. 81.47 is URG's report-wide group total,
+which is the bin ratio 3477/4268 and includes the ledger. The gate row copies that ratio beside the averaged
+percent, so "78.29 from 3477/4268" is a false pairing and no record should write it. The ledger itself
+witnessed 0 of 220 clauses under CG-WIT-001.
+
+Two figures that are NOT gates: URG's report-wide score 72.64 covers the whole report including the testbench,
+and the informational scope gen_tb_top.u_dut at 71.25 is reported and never gated. Quote either only with its
+scope attached.
