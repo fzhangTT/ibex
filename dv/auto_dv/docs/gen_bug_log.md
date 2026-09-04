@@ -111,7 +111,8 @@ is a ret, with the push counterpart "Zcmp store 0: model 800003ac<=800000fa (4 b
 at order 41 and an x2 divergence of exactly 0x20 on the ret record. The earlier citation x18 = 800003ff
 came from the unretained gen_zcmp_directed.S run and occurs in NO retained log (counted across the 12 retained popret
 LOG files, the thirteenth tracked path being the stimulus program rather than a log, with "popret"
-itself as the positive control hitting in all 12), so it is withdrawn; the mv-pair symptom (first move lost, destination unwritten) has no run yet (TP-CMP-065 reproducer clause). Consecutive micro-ops can be lost: dummy_cnt_threshold = lfsr cnt & {dummy_instr_mask, ones} (rtl/ibex_dummy_instr.sv:97), so with mask 0 the threshold is 0..3.
+itself as the positive control at 12 line hits over 8 of those files, the four verdict files
+carrying the token nowhere), so it is withdrawn; the mv-pair symptom (first move lost, destination unwritten) has no run yet (TP-CMP-065 reproducer clause). Consecutive micro-ops can be lost: dummy_cnt_threshold = lfsr cnt & {dummy_instr_mask, ones} (rtl/ibex_dummy_instr.sv:97), so with mask 0 the threshold is 0..3.
 
 ### B10: dcsr.cause = 2 (trigger) recorded on an ebreak entry when the next PC matches tdata2
 - Status: candidate, reproducer pending

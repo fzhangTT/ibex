@@ -2,7 +2,7 @@
 
 Deliverable 3 (DV_prompt.txt Section 11): the definition of every functional-coverage bin (not the
 implementation; TB Infra implements covergroups in the gen_ namespace from this plan). Owner: dv-lead.
-Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in), generated 2026-09-04 11:11 UTC from dv/auto_dv/work/dv-lead/parts6/fcov_*.md. Part-file names in this document (tp_<area>.md, fcov_<area>.md, gen_part_<area>.md, trace_*_<area>.csv and the README_*_BRIEF.md briefs) are this plan set's own gitignored sources, named as provenance: the content they hold is in the corresponding area of gen_test_plan.md, gen_fcov_plan.md or gen_feature_list.md, and the bug and doc-defect number series they define are in gen_bug_log.md. No claim in this document rests on opening one. Three rtl-arch notes this plan set cites are committed references, not work files: dv/auto_dv/evidence/gen_multdiv_bound_props.md (the MD-n bound properties and covers), dv/auto_dv/evidence/gen_bug_reproducer_specs.md (the reproducer recipes behind the bug log) and dv/auto_dv/evidence/gen_interface_inventory.md (the numbered driver and protocol rules); citations name them by basename and resolve there.
+Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in), generated 2026-09-04 11:33 UTC from dv/auto_dv/work/dv-lead/parts6/fcov_*.md. Part-file names in this document (tp_<area>.md, fcov_<area>.md, gen_part_<area>.md, trace_*_<area>.csv and the README_*_BRIEF.md briefs) are this plan set's own gitignored sources, named as provenance: the content they hold is in the corresponding area of gen_test_plan.md, gen_fcov_plan.md or gen_feature_list.md, and the bug and doc-defect number series they define are in gen_bug_log.md. No claim in this document rests on opening one. Three rtl-arch notes this plan set cites are committed references, not work files: dv/auto_dv/evidence/gen_multdiv_bound_props.md (the MD-n bound properties and covers), dv/auto_dv/evidence/gen_bug_reproducer_specs.md (the reproducer recipes behind the bug log) and dv/auto_dv/evidence/gen_interface_inventory.md (the numbered driver and protocol rules); citations name them by basename and resolve there.
 
 Build configuration: `opentitan` (ibex_configs.yaml): BaseIsa=RV32IorCHERIoT (CHERIoT mode excluded
 by owner ruling), RV32E=0, RV32M=RV32MSingleCycle, RV32B=RV32BOTEarlGrey, RV32ZC=RV32ZcaZcbZcmp,
@@ -282,6 +282,12 @@ Conventions
   TP item lists `cr_x.auto` and also explicit bins of one of the cross's coverpoints, the
   expansion is restricted to those bins of that coverpoint (the item's own stimulus scope).
   "iff" gives the per-coverpoint sampling guard. How a cross bin is reached, since the mechanism is
+  easy to state wrongly: the rendered covergroup takes ONE sample argument per coverpoint and NONE per
+  cross ("with function sample(int v_cp_...)"), and `option.cross_auto_bin_max = 0` leaves a cross with
+  exactly the CSV's named bins, so a cross tuple is reached only through its component coverpoints'
+  values and is excluded when any component's value lands in that component's `ignore_bins na`. Nothing
+  passes a cross a value of its own. Diagnostically: a cross bin unhit while its component bins are hit
+  is a component-value problem, not a cross-declaration one. How a cross bin is reached, since the mechanism is
   easy to state wrongly: the rendered covergroup takes ONE sample argument per coverpoint and NONE per
   cross ("with function sample(int v_cp_...)"), and `option.cross_auto_bin_max = 0` leaves a cross with
   exactly the CSV's named bins, so a cross tuple is reached only through its component coverpoints'
@@ -4836,7 +4842,7 @@ bug-candidate behaviour carry the bug tie (B16 in CG-DMEM-007).
     rvfi_ext_nmi_int carried no set flag on any retirement inside the retirement window}. Not claimed
     where the two windows disagree: a sample closing before any retirement has been seen samples -1
     rather than yes, since an early closure, a probe-on evidence run where form (a) decides at once,
-    cannot record a quiet that no retirement window supports. In practice this is a measured-run bin.
+    cannot record a quiet that no retirement window supports. In practice this is a measured-run bin..
   - cp_lookups_blocked_next iff alerted: bins yes{1: no lookup read on any port in the ECC write
     cycle; a data-port WRITE of ECC(0) in that cycle is legal, rtl/ibex_icache.sv:280, 1000-1011}
   - cp_no_alert_case iff the corruption or read must not alert: bins unused_way_data{data of the
@@ -4889,11 +4895,17 @@ bug-candidate behaviour carry the bug tie (B16 in CG-DMEM-007).
   a -1. The part-2 real bins stay at 0 per cent BY INTENT: owned, declared by no
   manifest, hidden by no ignore_bins (docs/dv/dv_principles.md:101-102, a coverpoint may be built
   before stimulus can hit it and 0 per cent marks intent, while only genuinely unhittable bins are
-  pruned; these become hittable when part 2 lands, so the dilution is correct and temporary). Part 1
-  declares 29 bins and part 2 the remaining 8 (cp_inval_ways 2, cp_refetch 1,
-  cp_lookups_blocked_next 1, cp_multiway_mismatch 2, cr_ram_x_inval 2). Both figures count
-  coverpoint-bin PAIRS, which is the unit a manifest names as covergroup.coverpoint.bin: three
-  coverpoints share the bin name yes, so a distinct-name count would lose two. cp_knob's three
+  pruned; these become hittable when part 2 lands, so the dilution is correct and temporary). Part 1 covers 29 bins and part 2 the
+  remaining 8 (cp_inval_ways 2, cp_refetch 1, cp_lookups_blocked_next 1, cp_multiway_mismatch 2,
+  cr_ram_x_inval 2). WHAT PART 1's MANIFEST MAY DECLARE IS NARROWER, per the LOG-084 interim ruling:
+  the 15 coverpoint bins now, with the 14 part-1 cross bins (cr_ram_x_bits_x_way 8, cr_data_x_beat 2,
+  cr_bits_x_rate 4) recorded as OWED until the shared expectation checker parses a cross heading, so
+  29 is the plan's part-1 bin count and not a manifest declaration. Both figures count coverpoint-bin
+  PAIRS, which is the unit a manifest names as covergroup.coverpoint.bin: three coverpoints of this
+  group share the bin name yes, so a distinct-name count would lose two, AND that shared name is the
+  false-pass vector LOG-084 names, since the checker attributes a cross bin's count to the group's
+  last coverpoint, which can make a declared coverpoint bin read as hit when a same-named cross bin
+  was the thing hit. cp_knob's three
   rendered bins have no traceability rows and are namable in no manifest, which is why 29 is not the
   render's 24 plus 16. The eight-and-four split is the state after part 1 builds two of the six
   observations and was first sized six-and-six by observability alone, so it is a statement about a
