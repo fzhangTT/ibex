@@ -169,7 +169,8 @@ executes. Not part of the B8 reproduction; listed because the same mechanism app
   the knob on: dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_fu_l10_b8_zcmp_dummy_on_* (35 firings on gen_zcmp_dummy_directed.S)
   and gen_fu_l10_b8_zcmp_dummy_popret_on_* (59 firings on gen_zcmp_dummy_popret_directed.S), counts per the excerpt headers;
   with the knob off the same programs show 0 firings (gen_fu_l10_lockstep_zcmp_dummy_* and gen_fu_l10_lockstep_zcmp_dummy_popret_*,
-  same build, excerpt headers "sva_b8_dummy_in_expansion: 0").
+  same build and programs, shorter retire target +gen_ut_boot_retire=10 against 1000 for the knob-on runs, all kept firings
+  preceding the tohost store; excerpt headers "sva_b8_dummy_in_expansion: 0").
 
 ## 7. Anchors table
 
