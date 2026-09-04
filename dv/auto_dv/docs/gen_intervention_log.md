@@ -2124,3 +2124,23 @@ gains a cumulative check); the Test Writer re-scopes the six declarations to wha
 with the stable unmet bins (c_beqz/c_bnez, boot_addr.zero, bit8_readback.zero) triaged as stimulus or declaration defects.
 Execution: runtime-2 edits the six fields (HOLD; manifests 18 -> 12; the standing guard still the only deferred-shape entry; the
 other 97 entries yaml-equal); the DV Lead's form counts 2 checked and 13 counted-only measured entries and cites the pre-flight.
+
+## LOG-089 - 2026-09-04 - Round 1 blocked by the trust-triad policy on the detached measured entries; ruling: rt38, an explicit deferral key
+
+Finding (runtime-2, 20:40Z, by calling the rule): gen_regress.fcov_policy_failures, called unconditionally on the coverage path
+(gen_regress.py:730), flips a measured run on a tier named in fcov_manifest_required_tiers (smoke and targeted in the testlist
+header; every measured tier once covergroups exist) to FAIL when its entry has no fcov_expectation_file, with the reason "no
+fcov_expectation_file on tier smoke (fcov_manifest_required_tiers)". On round 1's 53 planned runs it flips 39: the 13 measured
+entries detached by LOG-086 and LOG-088 at three seeds each. The detaches therefore trade 39 expectation failures for 39 policy
+failures at the same runs; the round would still return 2 and write no record. Setting measured false on the 13 is not a remedy:
+their coverage would leave the measured merge (Critic ruling R-5.5, gen_regress.py:15 and :689-698), leaving 6 measured runs.
+
+Ruling: the round HEAD d1f6019 is void for dispatch (the commit stands as the request form); the canary is not built. runtime-2
+plans and, after a pre-execution cross-model review and the Critic's ruling that it stays within P-07's intent, implements rt38:
+an explicit per-entry key carrying a mandatory non-empty reason that the policy treats as the artefact present-but-deferred
+(a missing artefact still fails; self-tests in both directions), the round manifest and record counting those runs as
+counted-only with the expectation deferred and never as passing an expectation, the measured merge unchanged, the API document
+updated. The 13 detached entries then receive the key with their LOG-086/LOG-088 reasons in one testlist touch, and a new round
+HEAD is announced. Rejected: correcting the 13 manifests first (Test Writer stimulus and declaration work, hours, and the
+per-run vs cumulative semantics ruling first); dispatching without a record. If the Critic finds the key a relaxation of P-07
+rather than an extension, the question goes to the owner and round 1 waits for the answer.
