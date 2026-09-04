@@ -1,4 +1,4 @@
-"""gen_trace_tagwrite_history.py <landing root> <scratch root> [--from-artifact]: retain the tag-write history at the
+"""gen_trace_tagwrite_history.py <landing root> (<scratch root> | --from-artifact): retain the tag-write history at the
 indices where a cache line was valid in both ways at once, and reconstruct the coexistence episodes from it.
 
 The indices come from the retained duplicate-copies artifact rather than a literal, so the filter follows the evidence
@@ -9,7 +9,7 @@ import hashlib
 import pathlib
 import re
 import sys
-USAGE = "usage: gen_trace_tagwrite_history.py <landing root> <scratch root>"
+USAGE = "usage: gen_trace_tagwrite_history.py <landing root> (<scratch root> | --from-artifact)"
 
 
 def _usage(msg=None):
@@ -20,12 +20,15 @@ def _usage(msg=None):
     sys.exit(2)
 
 
-if len(sys.argv) < 3 or sys.argv[1] in ("-h", "--help"):
+if len(sys.argv) < 2 or sys.argv[1] in ("-h", "--help"):
     _usage()
+if "--from-artifact" not in sys.argv[2:] and len(sys.argv) < 3:
+    _usage("the scratch root is required unless --from-artifact is given")
 
 
 ROOT = pathlib.Path(sys.argv[1])
-S = pathlib.Path(sys.argv[2])   # the scratch root holding the trace session
+# the scratch root is only meaningful when reading the trace session; --from-artifact needs none
+S = pathlib.Path(sys.argv[2]) if len(sys.argv) > 2 and sys.argv[2] != "--from-artifact" else pathlib.Path(".")
 L = ROOT / "dv/auto_dv/evidence/gen_tdd_logs"
 MAN = L / "gen_manifest.md"
 MU = L / "mutations"
@@ -55,7 +58,12 @@ if FROM_ARTIFACT:
     if not DST.exists():
         die("--from-artifact needs the retained artifact to read: %s" % DST)
     prev = DST.read_text(errors="replace").splitlines()
-    keep = [l for l in prev if "ICTRACE tagwrite" in l and not l.startswith("#")]
+    # filter by the indices derived above rather than trusting that the retained lines match the header: the two agreed
+    # only because one filter produced both, so re-applying it makes the mode self-checking
+    raw = [l for l in prev if "ICTRACE tagwrite" in l and not l.startswith("#")]
+    keep = [l for l in raw if any(re.search(r"index=%d " % i, l) for i in idx)]
+    if len(keep) != len(raw):
+        die("the retained artifact holds %d tag-write lines outside the indices %s it names" % (len(raw) - len(keep), idx))
     if not keep:
         die("the retained artifact holds no raw tag-write lines to re-derive from: %s" % DST)
     m = re.search(r"total of (\d+) tag-write lines", "\n".join(l for l in prev if l.startswith("#")))
