@@ -1744,3 +1744,21 @@ cross-model review of landing 9 (CM132-M-2) records the rename as undocumented. 
 ruled knob; every other LOG-067 condition is unchanged (default off, on only in B8 evidence runs, the C10 exception
 recorded in the probe register and the SVA layer header, and the flow refusing a measured entry that sets it, which
 Runtime now builds). tb-infra records the name in its response table; no rename.
+
+## LOG-077 - 2026-09-04 - The icache ECC injection knob is measured stimulus (plan owner ruling Q-018)
+
+Landing 11 (f28d09b) built the tag-RAM ECC injection hook behind gen_knob_icache_ecc_err_rate (values none, rare,
+frequent; default none). tb-infra's hand-off note said the knob belongs off in every measured run like chk_sva_b8, and
+Runtime asked for a ruling, recommending a debug_only mark in the knob table so the existing P6 refusal covers it.
+The Orchestrator took no position and routed the question to the DV Lead as plan owner. Ruling (DV Lead, 02:41Z):
+the knob is legitimate measured stimulus, not debug_only. The behaviours it exercises are plan features (F-IC-030..035,
+F-SEC-001) reachable only by corrupting RAM contents that live in the TB RAM models, so the injection is boundary
+stimulus on a DUT input; every injection is announced to the checkers through gen_icram_events and a stricter checker
+runs with it, the opposite of chk_sva_b8, which alters what a check sees. Twenty plan items in thirteen groups name
+the knob; bins in CG-IC-006, CG-IC-008, CG-REG-005 and CG-SEC-001 need an injection. Conditions: default none stays; a
+test turns the knob on only when its plan items name it; a measured run with the knob at rare or frequent counts only
+with gen_chk_alerts' alert_minor rows on; the built form is tag RAMs only, one bit per injection; the data-RAM and
+two-bit halves of the plan's distribution are NOT BUILT by the DV Lead's dated decision until a checkable form exists.
+The ruling rides the DV Lead's next plan touch as a Q-018 row and in TP-SEC-001's Notes; Runtime proposes the
+smallest enforcement of the knob-on-implies-alert-rows-on condition. A disagreement with this recorded ruling goes to
+the owner.
