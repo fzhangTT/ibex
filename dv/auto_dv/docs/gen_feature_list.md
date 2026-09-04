@@ -2,7 +2,7 @@
 
 Deliverable 1 (DV_prompt.txt Section 11). Version 2 (promoted from the T-002 draft after the Critic's
 verdict v1, dv/auto_dv/work/critic/gen_critic_feature_list_v1.md, findings C-02..C-26 addressed).
-Owner: dv-lead. Generated 2026-09-04 07:08 UTC from the area parts under dv/auto_dv/work/dv-lead/parts/.
+Owner: dv-lead. Generated 2026-09-04 07:24 UTC from the area parts under dv/auto_dv/work/dv-lead/parts/.
 
 Build configuration: `opentitan` (ibex_configs.yaml): BaseIsa=RV32IorCHERIoT (CHERIoT mode excluded
 by owner ruling), RV32E=0, RV32M=RV32MSingleCycle, RV32B=RV32BOTEarlGrey, RV32ZC=RV32ZcaZcbZcmp,
@@ -11339,8 +11339,9 @@ WAIT_RVALID_MIS, WAIT_GNT, WAIT_RVALID_MIS_GNTS_DONE, CTX_WAIT_GNT1, CTX_WAIT_GN
   ECC error (minor alert). When the copies are two independently written codewords, which is what
   the self-modifying-code path of TP-IC-038 produces, set and clear have no reference copy: the
   check bits differ, so the OR is in general not a codeword and the per-bank decoder flags it
-  (rtl/ibex_icache.sv:541, :569-572), and an OR that happens to equal one codeword delivers that
-  copy's data, which is stale rather than correct.
+  (rtl/ibex_icache.sv:568-573), and an OR that happens to equal one codeword delivers that
+  copy's data, which is stale when the matched copy is the pre-store one and current when it is the
+  newly written one.
 - Observable at: alert_minor_o, rvfi_insn
 - Config: cpuctrlsts.icache_enable = 1
 - Source: doc: doc/03_reference/icache.rst "Detailed behaviour" (last two paragraphs) | RTL:

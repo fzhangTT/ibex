@@ -2,7 +2,7 @@
 
 Deliverable 3 (DV_prompt.txt Section 11): the definition of every functional-coverage bin (not the
 implementation; TB Infra implements covergroups in the gen_ namespace from this plan). Owner: dv-lead.
-Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in), generated 2026-09-04 07:08 UTC from dv/auto_dv/work/dv-lead/parts6/fcov_*.md.
+Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in), generated 2026-09-04 07:24 UTC from dv/auto_dv/work/dv-lead/parts6/fcov_*.md.
 
 Build configuration: `opentitan` (ibex_configs.yaml): BaseIsa=RV32IorCHERIoT (CHERIoT mode excluded
 by owner ruling), RV32E=0, RV32M=RV32MSingleCycle, RV32B=RV32BOTEarlGrey, RV32ZC=RV32ZcaZcbZcmp,
@@ -4816,8 +4816,9 @@ bug-candidate behaviour carry the bug tie (B16 in CG-DMEM-007).
     masked_duplicate_copy{a data flip clearing a bit in one of two valid copies of the line, restored
     by the OR of the hit-data mux, rtl/ibex_icache.sv:507-514}
   - cp_multiway_mismatch (informational, TP-IC-038 only) iff both ways valid with the same tag and
-    differing data: bins alert_or_wrong{1: alert_minor_o, a wrong rvfi_insn or a stale-but-valid
-    word, the outcomes when the copies are two independently written codewords}, masked{1: no alert
+    differing data: bins alert_or_wrong{1: alert_minor_o, a wrong rvfi_insn, or a word that is
+    stale because the OR matched the pre-store copy: the outcomes when the copies are two independently
+    written codewords}, masked{1: no alert
     and the fetched word correct, reachable only where one copy is a corrupted image of the other
     and the flip cleared a bit of the un-tweaked word the mux ORs, which is the injection path and
     not this item's stimulus}
