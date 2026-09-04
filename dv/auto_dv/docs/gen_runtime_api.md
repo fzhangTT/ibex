@@ -386,7 +386,7 @@ Measured-dispatch gate (ruling LOG-046a): a purpose-4 request in an accepted bat
 regression's build manifest, named by `--canary-build DIR|build_manifest.yaml`, is a head-mode build (`source_mode: head`)
 of the batch's pinned commit (`head_sha` equal to `pinned_sha`; a worktree build may carry an in-progress covergroup and a
 head build of another commit proves nothing about this one) and records `covergroups_declared: true`
-(`gen_flow_util.measured_dispatch_refusal`); otherwise every purpose-4 request of the pass is refused in writing
+(`gen_flow_util.measured_dispatch_verdict`, whose refusal text `measured_dispatch_refusal` returns); otherwise every purpose-4 request of the pass is refused in writing
 (`scope_decision: refused`, the refusal names the build, the manifest and the rule; the batch record's `sync` carries
 `measured_dispatch: {canary_build, pinned_sha, facts, decision, refusal}` with `decision` one of `accepted`,
 `refused_canary_build_unbound` (no manifest, a worktree build, a build of another commit, no pin), `refused_no_covergroups`,

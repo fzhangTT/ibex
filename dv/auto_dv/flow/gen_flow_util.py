@@ -164,7 +164,8 @@ def canary_build_facts(path: Path | None) -> dict[str, Any] | None:
     man = man or {}
     return {"path": str(path), "manifest": str(mp), "manifest_present": bool(man), "build": man.get("build"),
             "source_mode": man.get("source_mode"), "head_sha": man.get("head_sha"),
-            C.COVERGROUPS_DECLARED_KEY: man.get(C.COVERGROUPS_DECLARED_KEY), "covergroup_files": man.get("covergroup_files")}
+            C.COVERGROUPS_DECLARED_KEY: man.get(C.COVERGROUPS_DECLARED_KEY), "covergroup_files": man.get("covergroup_files"),
+            C.B8_PROBE_KNOB_DEFAULT_KEY: man.get(C.B8_PROBE_KNOB_DEFAULT_KEY), C.B8_PROBE_SV_DEFAULT_KEY: man.get(C.B8_PROBE_SV_DEFAULT_KEY)}
 
 
 def remove_tree_guarded(path: Path, roots: tuple[Path, ...], what: str) -> int:
@@ -728,6 +729,10 @@ def self_test() -> int:
         and v_ok == (C.CANARY_ACCEPTED, None) and v_b8[1] == r_b8_on
     ok &= cond_v
     print("SELF-TEST", "ok " if cond_v else "BAD", f"measured_dispatch_verdict labels the condition (CM136-L-1): knob default {v_b8[0]}, no covergroup {v_cg[0]}, worktree build {v_wt[0]}, good build {v_ok[0]}")
+    facts = canary_build_facts(gd)
+    cond_f = facts is not None and C.B8_PROBE_KNOB_DEFAULT_KEY in facts and C.B8_PROBE_SV_DEFAULT_KEY in facts and facts[C.COVERGROUPS_DECLARED_KEY] is True
+    ok &= cond_f
+    print("SELF-TEST", "ok " if cond_f else "BAD", f"canary_build_facts records the two B8 probe facts beside covergroups_declared (CM140-L-3): {[k for k in facts if k.startswith('b8_')] if facts else None}")
     svd = Path(tempfile.mkdtemp(prefix="gen_b8sv_selftest_", dir=C.selftest_tmp()))
     (svd / "on.sv").write_text("module p;\n  bit en = 1'b1;\nendmodule\n"); (svd / "off.sv").write_text("module p;\n  bit en = 1'b0;\nendmodule\n"); (svd / "none.sv").write_text("module p; endmodule\n")
     got_sv = (b8_probe_sv_default_on(svd / "on.sv"), b8_probe_sv_default_on(svd / "off.sv"), b8_probe_sv_default_on(svd / "none.sv"), b8_probe_sv_default_on(svd / "missing.sv"), b8_probe_sv_default_on())

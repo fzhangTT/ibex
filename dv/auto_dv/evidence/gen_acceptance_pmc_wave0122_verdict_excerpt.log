@@ -1,0 +1,80 @@
+# gen_acceptance_pmc_wave0122_verdict_excerpt.log: acceptance verdicts of the direct regression pmc_accept_0122 (no request file)
+# Source: the regression manifest /proj_soc/user_dev/fzhang/ibex_dv_out/regress_pmc_accept_0122/manifest.yaml (out root, site storage) and each
+# run's result.yaml, sim.log and sim_stdout.log under the out root (site storage). Lines are copied, long lines truncated as marked.
+requester: runtime   purpose: 1   scope_decision: direct regression pmc_accept_0122   status: done
+request tests: ['gen_test_pmc_ctrl', 'gen_test_pmc_ctrl_pin_off', 'gen_test_pmc_ctrl_red']   seeds: per entry   coverage: False
+received_utc: 2026-09-04T01:22:29Z   finished_utc: 2026-09-04T01:24:25Z   regress_rc: done
+pinned_sha: 86b8aa059fd599edd5b873fa6049fc9677d43720   canary_sha: None   canary_decision: source mode head
+batch_record (work tree): /proj_soc/user_dev/fzhang/ibex_dv_out/regress_pmc_accept_0122/regress.log
+regress_outdir: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_pmc_accept_0122
+regress_cmd: gen_regress.py --tag pmc_accept_0122
+summary: planned=5 pass=4 fail=0 xfail=0 timeout=0 not_run=0 red_ok=1 pass_rate_pct=100.0 runs_without_fcov_manifest=1 tests_without_fcov_manifest=['gen_test_pmc_ctrl_red']
+
+## manifest rows (test, seed, verdict, reason, wall_s, lsf_job_id, sim_log)
+gen_test_pmc_ctrl | 12969737 | PASS | no collected failure mechanism; end marker and config banner present | 12.0 | 10957895 | /proj_soc/user_dev/fzhang/ibex_dv_out/regress_pmc_accept_0122/runs/gen_test_pmc_ctrl_12969737/sim.log
+gen_test_pmc_ctrl | 1256602830 | PASS | no collected failure mechanism; end marker and config banner present | 58.1 | 10957894 | /proj_soc/user_dev/fzhang/ibex_dv_out/regress_pmc_accept_0122/runs/gen_test_pmc_ctrl_1256602830/sim.log
+gen_test_pmc_ctrl | 1360912442 | PASS | no collected failure mechanism; end marker and config banner present | 12.3 | 10957892 | /proj_soc/user_dev/fzhang/ibex_dv_out/regress_pmc_accept_0122/runs/gen_test_pmc_ctrl_1360912442/sim.log
+gen_test_pmc_ctrl_pin_off | 927002064 | PASS | no collected failure mechanism; end marker and config banner present | 11.5 | 10957893 | /proj_soc/user_dev/fzhang/ibex_dv_out/regress_pmc_accept_0122/runs/gen_test_pmc_ctrl_pin_off_927002064/sim.log
+gen_test_pmc_ctrl_red | 2079766320 | RED-OK | red fixture failed as designed (red_expect matched): gen_fail_marker at sim_stdout.log:750 | 11.8 | 10957896 | /proj_soc/user_dev/fzhang/ibex_dv_out/regress_pmc_accept_0122/runs/gen_test_pmc_ctrl_red_2079766320/sim.log
+
+## run gen_test_pmc_ctrl seed 12969737: result.yaml
+verdict: PASS   reason: no collected failure mechanism; end marker and config banner present
+exit_code: 0   timed_out: False   uvm_counts: {'INFO': 56, 'WARNING': 0, 'ERROR': 0, 'FATAL': 0}   cocotb_summary: {'tests': 1, 'passed': 1, 'failed': 0, 'skipped': 0}
+evidence: 
+## run gen_test_pmc_ctrl seed 12969737: collected lines of sim_stdout.log and sim.log
+sim_stdout.log:771: 1391920.00ns INFO cocotb.gen_tb_top GEN_TEST_FIRE fire_schedule_applied ok=True reached 27 of 27 scheduled entries by EOT (cycle 139187, retired 6987), applied 27 (k=5, source=derived)
+sim_stdout.log:786: 1391920.00ns INFO cocotb.gen_tb_top GEN_TEST_BINS n=204 gen_pmc_ctrl_csr_cg.cp_bit.cy gen_pmc_ctrl_csr_cg.cp_bit.hpm_first gen_pmc_ctrl_csr_cg.cp_bit.hpm_last gen_pmc_ctrl_csr_cg.cp_bit.hpm_mid gen_pmc_ctrl_csr_cg.cp_bit.ir gen_pmc_ctrl_csr ...[8022 more chars]
+sim_stdout.log:806: 1391920.00ns INFO cocotb.gen_tb_top gen_test_pmc_ctrl GEN_TEST_PASS
+sim_stdout.log:813: UVM_ERROR : 0
+sim_stdout.log:814: UVM_FATAL : 0
+sim.log:225: UVM_ERROR : 0
+sim.log:226: UVM_FATAL : 0
+
+## run gen_test_pmc_ctrl seed 1256602830: result.yaml
+verdict: PASS   reason: no collected failure mechanism; end marker and config banner present
+exit_code: 0   timed_out: False   uvm_counts: {'INFO': 39, 'WARNING': 0, 'ERROR': 0, 'FATAL': 0}   cocotb_summary: {'tests': 1, 'passed': 1, 'failed': 0, 'skipped': 0}
+evidence: 
+## run gen_test_pmc_ctrl seed 1256602830: collected lines of sim_stdout.log and sim.log
+sim_stdout.log:698: 1332130.00ns INFO cocotb.gen_tb_top GEN_TEST_FIRE fire_schedule_applied ok=True reached 12 of 12 scheduled entries by EOT (cycle 133208, retired 6564), applied 12 (k=3, source=derived)
+sim_stdout.log:713: 1332130.00ns INFO cocotb.gen_tb_top GEN_TEST_BINS n=204 gen_pmc_ctrl_csr_cg.cp_bit.cy gen_pmc_ctrl_csr_cg.cp_bit.hpm_first gen_pmc_ctrl_csr_cg.cp_bit.hpm_last gen_pmc_ctrl_csr_cg.cp_bit.hpm_mid gen_pmc_ctrl_csr_cg.cp_bit.ir gen_pmc_ctrl_csr ...[8022 more chars]
+sim_stdout.log:733: 1332130.00ns INFO cocotb.gen_tb_top gen_test_pmc_ctrl GEN_TEST_PASS
+sim_stdout.log:740: UVM_ERROR : 0
+sim_stdout.log:741: UVM_FATAL : 0
+sim.log:188: UVM_ERROR : 0
+sim.log:189: UVM_FATAL : 0
+
+## run gen_test_pmc_ctrl seed 1360912442: result.yaml
+verdict: PASS   reason: no collected failure mechanism; end marker and config banner present
+exit_code: 0   timed_out: False   uvm_counts: {'INFO': 40, 'WARNING': 0, 'ERROR': 0, 'FATAL': 0}   cocotb_summary: {'tests': 1, 'passed': 1, 'failed': 0, 'skipped': 0}
+evidence: 
+## run gen_test_pmc_ctrl seed 1360912442: collected lines of sim_stdout.log and sim.log
+sim_stdout.log:664: 552800.00ns INFO cocotb.gen_tb_top GEN_TEST_FIRE fire_schedule_applied ok=True reached 14 of 14 scheduled entries by EOT (cycle 55275, retired 6117), applied 14 (k=3, source=derived)
+sim_stdout.log:679: 552800.00ns INFO cocotb.gen_tb_top GEN_TEST_BINS n=204 gen_pmc_ctrl_csr_cg.cp_bit.cy gen_pmc_ctrl_csr_cg.cp_bit.hpm_first gen_pmc_ctrl_csr_cg.cp_bit.hpm_last gen_pmc_ctrl_csr_cg.cp_bit.hpm_mid gen_pmc_ctrl_csr_cg.cp_bit.ir gen_pmc_ctrl_csr_ ...[8021 more chars]
+sim_stdout.log:699: 552800.00ns INFO cocotb.gen_tb_top gen_test_pmc_ctrl GEN_TEST_PASS
+sim_stdout.log:706: UVM_ERROR : 0
+sim_stdout.log:707: UVM_FATAL : 0
+sim.log:171: UVM_ERROR : 0
+sim.log:172: UVM_FATAL : 0
+
+## run gen_test_pmc_ctrl_pin_off seed 927002064: result.yaml
+verdict: PASS   reason: no collected failure mechanism; end marker and config banner present
+exit_code: 0   timed_out: False   uvm_counts: {'INFO': 34, 'WARNING': 0, 'ERROR': 0, 'FATAL': 0}   cocotb_summary: {'tests': 1, 'passed': 1, 'failed': 0, 'skipped': 0}
+evidence: 
+## run gen_test_pmc_ctrl_pin_off seed 927002064: collected lines of sim_stdout.log and sim.log
+sim_stdout.log:847: 471430.00ns INFO cocotb.gen_tb_top GEN_TEST_FIRE fire_schedule_applied ok=True reached 8 of 8 scheduled entries by EOT (cycle 47138, retired 8124), applied 8 (k=2, source=derived)
+sim_stdout.log:862: 471430.00ns INFO cocotb.gen_tb_top GEN_TEST_BINS n=204 gen_pmc_ctrl_csr_cg.cp_bit.cy gen_pmc_ctrl_csr_cg.cp_bit.hpm_first gen_pmc_ctrl_csr_cg.cp_bit.hpm_last gen_pmc_ctrl_csr_cg.cp_bit.hpm_mid gen_pmc_ctrl_csr_cg.cp_bit.ir gen_pmc_ctrl_csr_ ...[8021 more chars]
+sim_stdout.log:882: 471430.00ns INFO cocotb.gen_tb_top gen_test_pmc_ctrl GEN_TEST_PASS
+sim_stdout.log:889: UVM_ERROR : 0
+sim_stdout.log:890: UVM_FATAL : 0
+sim.log:263: UVM_ERROR : 0
+sim.log:264: UVM_FATAL : 0
+
+## run gen_test_pmc_ctrl_red seed 2079766320: result.yaml
+verdict: RED-OK   reason: red fixture failed as designed (red_expect matched): gen_fail_marker at sim_stdout.log:750
+exit_code: 0   timed_out: False   uvm_counts: {}   cocotb_summary: {'tests': 1, 'passed': 0, 'failed': 1, 'skipped': 0}
+evidence: AssertionError: GEN_TEST_FAIL gen_test_pmc_ctrl: 1 fire-check failure(s): fire_tp_pmc_022: 44 words compared, 1 mismatches (first: idx 156 [walking csrrw readback 0x320] expected 0x00000000 got 0x00000010); 42 writes over 10 pattern x op cl ...[4 more chars]
+## run gen_test_pmc_ctrl_red seed 2079766320: collected lines of sim_stdout.log and sim.log
+sim_stdout.log:726: 818650.00ns INFO cocotb.gen_tb_top GEN_TEST_FIRE fire_schedule_applied ok=True reached 21 of 21 scheduled entries by EOT (cycle 81860, retired 6580), applied 21 (k=5, source=derived)
+sim_stdout.log:741: 818650.00ns INFO cocotb.gen_tb_top GEN_TEST_BINS n=204 gen_pmc_ctrl_csr_cg.cp_bit.cy gen_pmc_ctrl_csr_cg.cp_bit.hpm_first gen_pmc_ctrl_csr_cg.cp_bit.hpm_last gen_pmc_ctrl_csr_cg.cp_bit.hpm_mid gen_pmc_ctrl_csr_cg.cp_bit.ir gen_pmc_ctrl_csr_ ...[8021 more chars]
+sim_stdout.log:750: AssertionError: GEN_TEST_FAIL gen_test_pmc_ctrl: 1 fire-check failure(s): fire_tp_pmc_022: 44 words compared, 1 mismatches (first: idx 156 [walking csrrw readback 0x320] expected 0x00000000 got 0x00000010); 42 writes over 10 pattern x op cl ...[143 more chars]
+sim.log: no collected line

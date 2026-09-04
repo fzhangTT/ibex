@@ -50,9 +50,7 @@ def compose(build: dict[str, Any], test: dict[str, Any], seed: int, run_dir: Pat
         argv.append(f"+{C.PLUSARG_UVM_TESTNAME}={uvm_test}")
     argv += [f"+{C.PLUSARG_UVM_VERBOSITY}={C.UVM_VERBOSITY_DEFAULT}", f"+{C.PLUSARG_UVM_NO_RELNOTES}",
              f"+{C.PLUSARG_BUILD_CONFIG}={build['build_config']}"]
-    # An operator plusarg replaces a same-name testlist plusarg: VCS takes the FIRST occurrence.
-    extra_names = {U.plusarg_name(x) for x in extra_plusargs}
-    argv += [x for x in test["plusargs"] if U.plusarg_name(x) not in extra_names] + list(extra_plusargs)
+    argv += effective_plusargs(test, extra_plusargs)   # the list measured_refusal judged: one expression, judged and run
     argv += ["-l", str(run_dir / C.SIM_LOG)]
     if cov_vdb is not None:
         argv += ["-cm", build["cov_metrics"], "-cm_dir", str(cov_vdb), "-cm_name", cm_name(test["name"], seed),
@@ -186,8 +184,8 @@ def export_check(res: dict[str, Any], build: dict[str, Any], argv: list[str], ru
 
 
 def effective_plusargs(test: dict[str, Any], extra_plusargs: list[str]) -> list[str]:
-    """The plusargs a run carries: the entry's, an operator plusarg replacing a same-name entry plusarg (compose_command
-    keeps the same order, and VCS takes the first occurrence)."""
+    """The plusargs a run carries: the entry's, an operator plusarg replacing a same-name entry plusarg (compose appends
+    exactly this list to the simv argv, and VCS takes the first occurrence)."""
     extra_names = {U.plusarg_name(x) for x in extra_plusargs}
     return [x for x in test["plusargs"] if U.plusarg_name(x) not in extra_names] + list(extra_plusargs)
 

@@ -42,13 +42,16 @@ def excerpt_name(tag: str, request: str) -> str:
     return f"gen_acceptance_{tag}_{request.rsplit('-', 1)[-1]}_verdict_excerpt.log"
 
 
-def render(request: str, tag: str, manifest: dict, results_rel: str) -> str:
-    """The excerpt text for one request manifest; every run's logs are read from the manifest's sim_log directory."""
+def render(request: str, tag: str, manifest: dict, results_rel: str, what: str | None = None, source: str | None = None) -> str:
+    """The excerpt text for one request manifest; every run's logs are read from the manifest's sim_log directory.
+    `what` and `source` name the wave and the manifest in the header (defaults: the request-manifest wording)."""
     seq = request.rsplit("-", 1)[-1]
     sms = manifest.get("server_mirror_sync") or {}
     echo = manifest.get("request_echo") or {}
-    L = [f"# gen_acceptance_{tag}_{seq}_verdict_excerpt.log: batch-3 acceptance verdicts of request {request} (CM103-m-2)",
-         f"# Source: the request manifest {results_rel}/{request}/manifest.yaml (work tree, unmirrored) and each",
+    what = what or f"batch-3 acceptance verdicts of request {request} (CM103-m-2)"
+    source = source or f"the request manifest {results_rel}/{request}/manifest.yaml (work tree, unmirrored)"
+    L = [f"# gen_acceptance_{tag}_{seq}_verdict_excerpt.log: {what}",
+         f"# Source: {source} and each",
          "# run's result.yaml, sim.log and sim_stdout.log under the out root (site storage). Lines are copied, long lines truncated as marked.",
          f"requester: {manifest.get('requester')}   purpose: {manifest.get('purpose')}   scope_decision: {manifest.get('scope_decision')}   status: {manifest.get('status')}",
          f"request tests: {echo.get('tests')}   seeds: {echo.get('seeds')}   coverage: {echo.get('coverage')}",
@@ -62,7 +65,8 @@ def render(request: str, tag: str, manifest: dict, results_rel: str) -> str:
          "## manifest rows (test, seed, verdict, reason, wall_s, lsf_job_id, sim_log)"]
     runs = manifest.get("runs") or []
     for r in runs:
-        L.append(f"{r.get('test')} | {r.get('seed')} | {r.get('verdict')} | {r.get('reason')} | {r.get('wall_s')} | {r.get('lsf_job_id')} | {r.get('sim_log')}")
+        job = r.get("lsf_job_id") if "lsf_job_id" in r else (r.get("lsf") or {}).get("job_id")
+        L.append(f"{r.get('test')} | {r.get('seed')} | {r.get('verdict')} | {r.get('reason')} | {r.get('wall_s')} | {job} | {r.get('sim_log')}")
     for r in runs:
         rd = Path(r["sim_log"]).parent
         res_path = rd / "result.yaml"
@@ -95,6 +99,28 @@ def excerpt_for(request: str, tag: str, results_dir: Path = RESULTS_DIR) -> str:
     manifest = yaml.safe_load((results_dir / request / "manifest.yaml").read_text())
     rel = results_dir.relative_to(REPO_ROOT).as_posix() if results_dir.is_relative_to(REPO_ROOT) else str(results_dir)
     return render(request, tag, manifest, rel)
+
+
+def regress_as_request(manifest: dict, label: str) -> dict:
+    """A gen_regress manifest viewed through the request-manifest fields render() reads: an acceptance wave run
+    directly (no request file) keeps the same excerpt shape, with the regression's tag, source and scope as the echo."""
+    src = manifest.get("source") or {}
+    return {"requester": manifest.get("requester") or "runtime", "purpose": manifest.get("purpose"),
+            "scope_decision": f"direct regression {manifest.get('tag') or label}", "status": manifest.get("status"),
+            "request_echo": {"tests": sorted({r.get("test") for r in manifest.get("runs") or []}), "seeds": "per entry",
+                             "coverage": bool(manifest.get("builds") and any(b.get("coverage") for b in (manifest.get("builds") or {}).values()) if isinstance(manifest.get("builds"), dict) else None)},
+            "received_utc": manifest.get("started_utc"), "finished_utc": manifest.get("finished_utc"), "regress_rc": manifest.get("status"),
+            "server_mirror_sync": {"pinned_sha": src.get("head_sha"), "canary_sha": manifest.get("canary_sha"), "canary_decision": f"source mode {src.get('mode')}",
+                                   "batch_record": manifest.get("regress_log")},
+            "regress_outdir": manifest.get("outdir"), "regress_cmd": manifest.get("regress_cmd") or f"gen_regress.py --tag {manifest.get('tag')}",
+            "summary": manifest.get("summary"), "runs": manifest.get("runs") or []}
+
+
+def excerpt_for_regress(manifest_path: Path, label: str, tag: str) -> str:
+    manifest = yaml.safe_load(manifest_path.read_text())
+    return render(f"regress-{label}", tag, regress_as_request(manifest, label), str(manifest_path.parent),
+                  what=f"acceptance verdicts of the direct regression {manifest.get('tag') or label} (no request file)",
+                  source=f"the regression manifest {manifest_path} (out root, site storage)")
 
 
 def self_test() -> int:
@@ -133,6 +159,13 @@ def self_test() -> int:
     ok &= cond; print("SELF-TEST", "ok " if cond else "BAD", "output is ASCII (a non-ASCII byte becomes '?')")
     cond = excerpt_name("b3", "test-writer-071") == "gen_acceptance_b3_071_verdict_excerpt.log"
     ok &= cond; print("SELF-TEST", "ok " if cond else "BAD", "excerpt file name")
+    reg = {"tag": "wave1", "status": "done", "started_utc": "t0", "finished_utc": "t1", "outdir": str(d), "regress_log": str(d / "r.log"),
+           "source": {"mode": "head", "head_sha": "p" * 40}, "summary": {"planned": 3}, "runs": runs, "purpose": 1}
+    (d / "manifest.yaml").write_text(yaml.safe_dump(reg))
+    rtext = excerpt_for_regress(d / "manifest.yaml", "wave1", "zz")
+    cond = rtext.splitlines()[0].startswith("# gen_acceptance_zz_wave1_verdict_excerpt.log: acceptance verdicts of the direct regression wave1") and "the regression manifest" in rtext and ("p" * 40) in rtext \
+        and "## manifest rows" in rtext and f"sim.log: {NO_LINE}" in rtext and rtext == excerpt_for_regress(d / "manifest.yaml", "wave1", "zz")
+    ok &= cond; print("SELF-TEST", "ok " if cond else "BAD", "a regression manifest renders the same excerpt shape (direct acceptance wave, no request file), deterministic")
     exact, crlf, missing = d / "exact.log", d / "crlf.log", d / "missing.log"
     exact.write_bytes(text.encode()); crlf.write_bytes(text.replace("\n", "\r\n").encode())
     cond = same_bytes(exact, text) and not same_bytes(crlf, text) and not same_bytes(missing, text)
@@ -145,6 +178,8 @@ def self_test() -> int:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--request", action="append", default=[], help="request name, e.g. test-writer-071 (repeatable)")
+    ap.add_argument("--regress", type=Path, help="a gen_regress manifest.yaml (an acceptance wave run without a request file)")
+    ap.add_argument("--label", help="with --regress: the excerpt's sequence label (gen_acceptance_<tag>_<label>_...)")
     ap.add_argument("--tag", default="b3", help="wave tag in the excerpt file name")
     ap.add_argument("--write", action="store_true", help="write dv/auto_dv/evidence/<excerpt> (default: print the sha256 only)")
     ap.add_argument("--check", action="store_true", help="exit 1 when the committed excerpt differs from a fresh render")
@@ -152,11 +187,14 @@ def main() -> int:
     a = ap.parse_args()
     if a.self_test:
         return self_test()
-    if not a.request:
-        ap.error("--request is required")
+    if not a.request and not a.regress:
+        ap.error("--request or --regress is required")
+    if a.regress and not a.label:
+        ap.error("--regress needs --label")
     rc = 0
-    for req in a.request:
-        text = excerpt_for(req, a.tag)
+    sources = [(req, None) for req in a.request] + ([(f"regress-{a.label}", a.regress)] if a.regress else [])
+    for req, reg in sources:
+        text = excerpt_for_regress(reg, a.label, a.tag) if reg else excerpt_for(req, a.tag)
         out = EVIDENCE_DIR / excerpt_name(a.tag, req)
         digest = hashlib.sha256(text.encode()).hexdigest()
         if a.write:
