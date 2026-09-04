@@ -49,11 +49,11 @@ rank,covergroup,plan_id,ledger,bins_referenced,coverpoints_referenced,coverpoint
 48,gen_pmp_recfg_cg,CG-PMP-011,no,5,2,cp_bb (4); cr_csr_data (1),2,gen_test_pmp_lock (4); gen_test_pmp_mseccfg (1),gen_test_pmp_lock; gen_test_pmp_mseccfg,gen_fcov_plan.md:2654 ### CG-PMP-011: gen_cg_pmp_recfg
 49,gen_csr_trigger_csr_cg,CG-CSR-008,no,4,4,cp_csr (1); cp_dbg (1); cp_form (1); cr_csr_dbg_form (1),1,gen_test_csr_reset (4),-,gen_fcov_plan.md:1363 ### CG-CSR-008: gen_cg_csr_trigger_csr
 50,gen_pmc_rvfi_ext_cg,CG-PMC-008,no,3,3,cp_debug (1); cp_mcycle_rel (1); cr_rel_debug (1),1,gen_test_pmc_ctrl (3),-,gen_fcov_plan.md:3495 ### CG-PMC-008: gen_cg_pmc_rvfi_ext
-51,gen_rst_boot_cg,CG-RST-001,no,3,2,cp_boot_addr (2); cp_first_event (1),1,gen_test_rst_boot (3),-,gen_fcov_plan.md:5720 ### CG-RST-001: gen_cg_rst_boot
-52,gen_sec_ctrl_inputs_cg,CG-SEC-005,no,3,2,cp_bit8_readback (2); cp_bits67_readback (1),1,gen_test_rst_boot (3),-,gen_fcov_plan.md:5619 ### CG-SEC-005: gen_cg_sec_ctrl_inputs
+51,gen_rst_boot_cg,CG-RST-001,no,3,2,cp_boot_addr (2); cp_first_event (1),1,gen_test_rst_boot (3),-,gen_fcov_plan.md:5722 ### CG-RST-001: gen_cg_rst_boot
+52,gen_sec_ctrl_inputs_cg,CG-SEC-005,no,3,2,cp_bit8_readback (2); cp_bits67_readback (1),1,gen_test_rst_boot (3),-,gen_fcov_plan.md:5621 ### CG-SEC-005: gen_cg_sec_ctrl_inputs
 53,gen_csr_cpuctrlsts_cg,CG-CSR-009,no,2,1,cp_key_pin (2),1,gen_test_csr_reset (2),-,gen_fcov_plan.md:1387 ### CG-CSR-009: gen_cg_csr_cpuctrlsts
 54,gen_csr_pmp_warl_cg,CG-CSR-011,no,2,1,cp_fam (2),1,gen_test_csr_reset (2),gen_test_csr_reset,gen_fcov_plan.md:1445 ### CG-CSR-011: gen_cg_csr_pmp_warl
 55,gen_pmc_minstret_cg,CG-PMC-002,no,2,1,cp_inhibit_ir (2),1,gen_test_pmc_ctrl (2),gen_test_pmc_ctrl,gen_fcov_plan.md:3320 ### CG-PMC-002: gen_cg_pmc_minstret
-56,gen_rvfi_record_cg,CG-RVFI-001,no,2,1,cp_mode (2),1,gen_test_rst_boot (2),gen_test_rst_boot,gen_fcov_plan.md:5885 ### CG-RVFI-001: gen_cg_rvfi_record
+56,gen_rvfi_record_cg,CG-RVFI-001,no,2,1,cp_mode (2),1,gen_test_rst_boot (2),gen_test_rst_boot,gen_fcov_plan.md:5887 ### CG-RVFI-001: gen_cg_rvfi_record
 57,gen_bit_bfp_cg,CG-BIT-009,no,1,1,cp_rd_x0 (1),1,gen_test_bit_ratified (1),gen_test_bit_ratified,gen_fcov_plan.md:979 ### CG-BIT-009: gen_cg_bit_bfp
 58,gen_cmp_illegal_cg,CG-CMP-004,no,1,1,cp_class (1),1,gen_test_cmp_zca (1),gen_test_cmp_zca,gen_fcov_plan.md:687 ### CG-CMP-004: gen_cg_cmp_illegal

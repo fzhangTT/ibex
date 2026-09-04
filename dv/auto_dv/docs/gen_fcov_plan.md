@@ -2,7 +2,7 @@
 
 Deliverable 3 (DV_prompt.txt Section 11): the definition of every functional-coverage bin (not the
 implementation; TB Infra implements covergroups in the gen_ namespace from this plan). Owner: dv-lead.
-Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in), generated 2026-09-04 15:06 UTC from dv/auto_dv/work/dv-lead/parts6/fcov_*.md. Part-file names in this document (tp_<area>.md, fcov_<area>.md, gen_part_<area>.md, trace_*_<area>.csv and the README_*_BRIEF.md briefs) are this plan set's own gitignored sources, named as provenance: the content they hold is in the corresponding area of gen_test_plan.md, gen_fcov_plan.md or gen_feature_list.md, and the bug and doc-defect number series they define are in gen_bug_log.md. No claim in this document rests on opening one. Three rtl-arch notes this plan set cites are committed references, not work files: dv/auto_dv/evidence/gen_multdiv_bound_props.md (the MD-n bound properties and covers), dv/auto_dv/evidence/gen_bug_reproducer_specs.md (the reproducer recipes behind the bug log) and dv/auto_dv/evidence/gen_interface_inventory.md (the numbered driver and protocol rules); citations name them by basename and resolve there.
+Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in), generated 2026-09-04 15:42 UTC from dv/auto_dv/work/dv-lead/parts6/fcov_*.md. Part-file names in this document (tp_<area>.md, fcov_<area>.md, gen_part_<area>.md, trace_*_<area>.csv and the README_*_BRIEF.md briefs) are this plan set's own gitignored sources, named as provenance: the content they hold is in the corresponding area of gen_test_plan.md, gen_fcov_plan.md or gen_feature_list.md, and the bug and doc-defect number series they define are in gen_bug_log.md. No claim in this document rests on opening one. Three rtl-arch notes this plan set cites are committed references, not work files: dv/auto_dv/evidence/gen_multdiv_bound_props.md (the MD-n bound properties and covers), dv/auto_dv/evidence/gen_bug_reproducer_specs.md (the reproducer recipes behind the bug log) and dv/auto_dv/evidence/gen_interface_inventory.md (the numbered driver and protocol rules); citations name them by basename and resolve there.
 
 Build configuration: `opentitan` (ibex_configs.yaml): BaseIsa=RV32IorCHERIoT (CHERIoT mode excluded
 by owner ruling), RV32E=0, RV32M=RV32MSingleCycle, RV32B=RV32BOTEarlGrey, RV32ZC=RV32ZcaZcbZcmp,
@@ -4954,8 +4954,10 @@ bug-candidate behaviour carry the bug tie (B16 in CG-DMEM-007).
   removal, and the two OWED bins are declared by no entry on either side and close by a seed sweep, so they
   do not turn on the probe either. Owner item Q-019 therefore governs whether those four may ALSO be
   promoted, for volume and for their own judge's evidence, not whether any bin is reachable; promotion is a
-  separate decision with its own acceptance work and no entry of the nine has yet been exercised by a flow
-  run. Figures measured by tb-infra and re-derived by me through the flow's own function. Per
+  separate decision with its own acceptance work, and no entry of the nine has yet run as a MEASURED entry
+  in a regression round, so no bin of this group has earned measured credit yet; the nine HAVE been
+  exercised unmeasured, which is what the confirmed-through-the-flow paragraph above records, and the
+  distinction is the whole point of the clause. Figures measured by tb-infra and re-derived by me through the flow's own function. Per
   LOG-084c the owed key is not a ban but a pending check: manifests may claim cross bins, and such a claim
   is evidence once it is VERIFIED through the flow's derived report, so the owed key retires when the part-1
   cross bins are verified that way. Both figures count coverpoint-bin
