@@ -1,0 +1,82 @@
+# gen_l14 merge + CM168 + F2 + F1, verified on a detached archive of fc81da5 with runtime's ten files copied in
+# staging file sha256 432c013b808ac955b33b80aef71d212334103f6cd0153c64eea918a9c82ea417, re-hashed at merge time
+# run at 2026-09-04T08:05:08Z
+
+$ sha256sum dv/auto_dv/flow/gen_testlist.yaml
+4d3eb62507336ee74ed0b8386c0c929ecd8b279879f81e8e25982bb6395760cd  dv/auto_dv/flow/gen_testlist.yaml
+
+$ gen_flow_const.py --check
+CONST-CHECK: PASS
+
+$ gen_flow_util.py --self-test
+rc=2 ok=150 BAD=1
+SELF-TEST BAD build-input gate case 13: every listed non-input is tracked and each gl
+
+$ gen_run.py --self-test
+rc=0 ok=28 BAD=0
+
+$ gen_regress.py --self-test
+rc=0 ok=11 BAD=0
+
+$ gen_serve_requests.py --self-test
+rc=2 ok=6 BAD=1
+SELF-TEST BAD build-input gate case 12: build_input_delta returns exactly the five fi
+
+$ gen_round.py --self-test
+rc=0 ok=8 BAD=0
+
+$ gen_mirror.py --self-test
+rc=1 ok=0 BAD=0
+
+$ gen_fcov.py --self-test
+rc=0 ok=13 BAD=0
+
+$ gen_verdict.py --self-test
+rc=0 ok=60 BAD=0
+
+$ gen_flow_util.py --dump-testlist (entry count)
+tests 101 builds 3
+
+$ gen_flow_util.py --check-red-signatures
+RED-CHECK: PASS
+
+$ gen_acceptance_excerpt.py --self-test
+SELF-TEST: PASS
+
+$ gen_covergroup_set.py --testlist <merged> --md/--csv <scratch> --plan-sha l14-merge
+57 covergroups, 4093 referenced bins, 19 manifests; extra committed manifests 0; ledger in ranking False; unknown []; wrote /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/l14b/set.md, /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/l14b/set.csv
+rc=0
+
+$ gen_promotion_table.py --testlist <merged> --out <scratch> --plan-sha l14-merge
+/tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/l14b/promo.md: 20 entries; held 0 items over 0 groups {}; plan l14-merge
+rc=0
+
+### P6 and LOG-077 refusals on the merged testlist, both paths
+  loader  REFUSED  [expected]  measured entry, tag rate rare, alert row off (LOG-077 row 1)
+            cand3.yaml: test gen_smoke is measured and carries +gen_knob_icache_ecc_err_rate=rare while +gen_chk_alert_minor reads off (row 0, +gen_chk_all 1); LO
+  loader  REFUSED  [expected]  measured entry, DATA rate rare, alert row off (LOG-077 row 2, new)
+            cand3.yaml: test gen_smoke is measured and carries +gen_knob_icache_data_ecc_err_rate=rare while +gen_chk_alert_minor reads off (row 0, +gen_chk_all 1
+  loader  accepted [expected]  measured entry, bit count two, both rates default, row off (no row by design)
+  loader  accepted [expected]  measured entry setting the P9 probe knob (P6 lives in the run path, not the loader)
+  loader  REFUSED  [expected]  measured entry turning on the B8 probe knob (LOG-067)
+            cand3.yaml: test gen_smoke is measured and turns on +gen_chk_sva_b8; LOG-067 (name per LOG-076): the B8 probe assertion knob chk_sva_b8 (+gen_chk_sva_
+
+  run     REFUSED  [expected]  P9 probe knob, measured + coverage (P6)
+            debug-only plusarg(s) ['gen_probe_ic_lookup'] enabled in a measured run (P6); run it unmeasured (measured: false or --measured no)
+  run     REFUSED  [expected]  P9 probe knob, measured, coverage OFF (P6 as widened by F1)
+            debug-only plusarg(s) ['gen_probe_ic_lookup'] enabled in a measured run (P6); run it unmeasured (measured: false or --measured no)
+  run     accepted [expected]  P9 probe knob, unmeasured (its evidence run)
+  run     REFUSED  [expected]  tag rate rare + alert row off, measured
+            measured run with +gen_knob_icache_ecc_err_rate=rare while +gen_chk_alert_minor reads off (row 0, +gen_chk_all 1); LOG-077 (Q-018): icache ECC injecti
+  run     REFUSED  [expected]  DATA rate rare + alert row off, measured
+            measured run with +gen_knob_icache_data_ecc_err_rate=rare while +gen_chk_alert_minor reads off (row 0, +gen_chk_all 1); LOG-077 (Q-018), extended from
+  run     accepted [expected]  bit count two, measured + coverage
+
+  the seven appended entries under the gates as authored (unmeasured check tier):
+    runs     gen_ut_lockstep_icache_ecc_data
+    runs     gen_ut_lockstep_icache_ecc_data_noprobe
+    runs     gen_ut_lockstep_icache_ecc_tag_two
+    runs     gen_ut_lockstep_icache_ecc_data_two
+    runs     gen_ut_lockstep_icache_ecc_both
+    runs     gen_ut_lockstep_icache_ecc_far_data
+    runs     gen_ut_lockstep_icache_ecc_far_data_noprobe

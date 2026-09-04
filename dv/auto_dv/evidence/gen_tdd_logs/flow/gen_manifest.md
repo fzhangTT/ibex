@@ -92,6 +92,16 @@ unmeasured accept case pass, so the red discriminates the coverage term rather t
 dropped all four pass (gen_run 28 ok) and no other self-test moves. The excerpt is the redirected output of
 `command grep -h -E 'P6 \(F1\)|^SELF-TEST BAD|^SELF-TEST: ' red_run.log`, never retyped.
 
+gen_l14_merge_verify.log is the merge verification of the gen_l14 touch, retained on CR-F14-L-1 because the response
+row cited it while it lived only in the gitignored work tree. It is the redirected output of the commands it names,
+never retyped: the merged testlist digest, the constant drift check, the eight flow self-tests, the loader entry
+count, the red-signature check, the excerpt tool self-test, and both testlist tools, followed by the eleven gate
+readings across the loader and the run path and the seven appended entries run through the run-path gate as authored.
+Two of its lines name absolute scratch paths: those are the throwaway output destinations the two testlist tools were
+given so they never write into evidence, and they are part of the commands' own output rather than added afterwards.
+The readings it carries are independently pinned by the committed self-tests, which is the alternative CR-F14-L-1
+offered; both now hold.
+
 | evidence path | source | bytes | md5 |
 |---|---|---|---|
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_gate_rule_red.log | dv/auto_dv/work/runtime/gate_rule_red.log | 926 | 78b72aae6509d2776a43c9314808b01b |
@@ -111,3 +121,4 @@ dropped all four pass (gen_run 28 ok) and no other self-test moves. The excerpt 
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_cm168_testlist_whitespace_red.log | (runtime scratchpad) cm168/red_full.log | 870 | 17ce1af6f42a6a07ceb08ce9b14f4d78 |
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_cm174_data_ecc_condition_red.log | (runtime scratchpad) cm174/red_util.log + cm174/red_run.log | 1785 | c17a82573242002de87fa9f88921adc8 |
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_f1_probe_measured_red.log | (runtime scratchpad) f1/red_run.log | 594 | 4ffa5560c95bb2187ca21c2610339e06 |
+| dv/auto_dv/evidence/gen_tdd_logs/flow/gen_l14_merge_verify.log | (runtime scratchpad) l14b/gen_l14_merge_verify.log | 4440 | 5e428524195514ac8d949a2565940955 |

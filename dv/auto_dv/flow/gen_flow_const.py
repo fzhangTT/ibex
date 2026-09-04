@@ -469,12 +469,13 @@ MEASURED_KNOB_CONDITIONS = (
               f"gen_chk_alerts' alert_minor row on (+{PLUSARG_CHK_ALERT_MINOR}; the knob table default counts as on); a "
               "measured run with the rate on and the row off is refused: turn the row on or run it unmeasured")},
 )
-# A testlist plusarg carries no whitespace: VCS converts a whitespace-carrying value to 0, so such a token would
-# mean something other than it reads. The checker-knob reader stays VCS-faithful for operator argv, which the loader
-# never sees.
+# A testlist plusarg carries no whitespace: the value then reads other than written, whatever the knob kind, so
+# such a token would mean something other than it says. The checker-knob reader stays VCS-faithful for operator
+# argv, which the loader never sees.
 TESTLIST_PLUSARG_WHITESPACE = " \t\n\r\v\f"
-TESTLIST_PLUSARG_RULE = ("a testlist plusarg carries no whitespace: VCS converts a whitespace-carrying value to 0 "
-                         "($value$plusargs \"name=%d\"), so the entry would not mean what it reads; write the value "
+TESTLIST_PLUSARG_RULE = ("a testlist plusarg carries no whitespace: the value then reads other than written (a "
+                         "$value$plusargs \"name=%d\" reader converts it to 0; a \"name=%s\" reader carries the "
+                         "whitespace into the string), so the entry would not mean what it says; write the value "
                          "without whitespace, or drop the plusarg")
 ROUND_EXIT_REFUSED = 2
 # Collected failure mechanisms scanned in sim.log (name, regex). Order = report priority.
