@@ -1762,3 +1762,20 @@ two-bit halves of the plan's distribution are NOT BUILT by the DV Lead's dated d
 The ruling rides the DV Lead's next plan touch as a Q-018 row and in TP-SEC-001's Notes; Runtime proposes the
 smallest enforcement of the knob-on-implies-alert-rows-on condition. A disagreement with this recorded ruling goes to
 the owner.
+
+## LOG-078 - 2026-09-04 - The landing-9 and landing-10 REQUEST-CHANGES gates lift on the landing-11 re-review
+
+The cross-model reviews of tb-infra's landing 9 (2aff8372..329902f2, rows CM132) and landing 10 (6f35cae6..73ff0751,
+rows CM138) returned REQUEST-CHANGES, and the Critic's tb_l10 and tb_l11 verdicts on the same landings did too. Under
+the policy no progress built on those landings was allowed until a recorded re-review. Landing 11 (f28d09b, 333
+files) is that re-review candidate: it carries the source fixes and record corrections the four verdicts demanded,
+each with a red before the fix. Its cross-model review (artifact 2026-09-03-claude-diff-f1bc4d9b-f28d09b9.md,
+committed a1fd8ee) is APPROVE-WITH-CHANGES and states that every CM132 and CM138 finding is answered in substance
+with the evidence the rows cite, that the CR-10 and CR-11 rows are answered as stated, that the injection hook is off
+by default and weakens no check, and that the b2 / landed-tree identity gap is stated honestly; its one Medium is a
+record figure (the doubled assertion counts 431 / 19 where the retained logs show 215 / 9) and its five Lows are
+record and comment corrections. Ruling: the landing-9 and landing-10 gates are lifted at a1fd8ee. Work built on
+landing 11 may proceed: Runtime's gen_l11 testlist merge, the LOG-077 enforcement touch, the DV Lead's plan rebuild,
+tb-infra's landing 12. The CM148 rows (the Medium and the record Lows as a records-only touch now; the source-comment
+and grace-rule Lows with landing 12, whose build re-takes the sources identity) remain owed. The Critic's tb_l12 on
+f28d09b is pending and independent of this ruling.
