@@ -2205,3 +2205,9 @@ untouched; the joint landing 04a4808 removed five manifests (bit_draft, csr_rese
 their declarations, the generator refuses or renders empty, and the library self-test fails on a stale file) and edited two of the three
 modules (csr_reset and pmp_lock lose stale bins_not_hit entries). The round record states which instrument removed which bins: the plan
 marks for declarations on unbuilt covergroups, bins_not_hit for built-but-unreached bins.
+
+Corrigendum to LOG-089/LOG-091 (21:4xZ, review of e641b24..04870ee): class A is 758 bins in total = 631 over the seven detached measured
+entries + 127 over the two unmeasured targeted entries (the corrigendum (e) wording "758 + 127" double-counted); seven test modules use
+bins_not_hit (csr_reset, csr_trap_setup, isa_alu, pmc_ctrl, pmp_lock, pmp_mseccfg, rst_boot), not nine; the R-5.5 text sits at
+gen_regress.py:16. The DV Lead ruling (gen_p07_manifest_semantics_ruling.md), the Critic P-07 note (gen_critic_p07_note.md) and the
+bins_not_hit worklist, cited above at work-directory paths, are being committed as evidence files so the record holds them.
