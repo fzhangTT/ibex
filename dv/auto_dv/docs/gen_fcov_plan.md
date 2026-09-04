@@ -2,7 +2,7 @@
 
 Deliverable 3 (DV_prompt.txt Section 11): the definition of every functional-coverage bin (not the
 implementation; TB Infra implements covergroups in the gen_ namespace from this plan). Owner: dv-lead.
-Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in), generated 2026-09-04 10:48 UTC from dv/auto_dv/work/dv-lead/parts6/fcov_*.md. Part-file names in this document (tp_<area>.md, fcov_<area>.md, gen_part_<area>.md, trace_*_<area>.csv and the README_*_BRIEF.md briefs) are this plan set's own gitignored sources, named as provenance: the content they hold is in the corresponding area of gen_test_plan.md, gen_fcov_plan.md or gen_feature_list.md, and the bug and doc-defect number series they define are in gen_bug_log.md. No claim in this document rests on opening one. Three rtl-arch notes this plan set cites are committed references, not work files: dv/auto_dv/evidence/gen_multdiv_bound_props.md (the MD-n bound properties and covers), dv/auto_dv/evidence/gen_bug_reproducer_specs.md (the reproducer recipes behind the bug log) and dv/auto_dv/evidence/gen_interface_inventory.md (the numbered driver and protocol rules); citations name them by basename and resolve there.
+Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in), generated 2026-09-04 11:11 UTC from dv/auto_dv/work/dv-lead/parts6/fcov_*.md. Part-file names in this document (tp_<area>.md, fcov_<area>.md, gen_part_<area>.md, trace_*_<area>.csv and the README_*_BRIEF.md briefs) are this plan set's own gitignored sources, named as provenance: the content they hold is in the corresponding area of gen_test_plan.md, gen_fcov_plan.md or gen_feature_list.md, and the bug and doc-defect number series they define are in gen_bug_log.md. No claim in this document rests on opening one. Three rtl-arch notes this plan set cites are committed references, not work files: dv/auto_dv/evidence/gen_multdiv_bound_props.md (the MD-n bound properties and covers), dv/auto_dv/evidence/gen_bug_reproducer_specs.md (the reproducer recipes behind the bug log) and dv/auto_dv/evidence/gen_interface_inventory.md (the numbered driver and protocol rules); citations name them by basename and resolve there.
 
 Build configuration: `opentitan` (ibex_configs.yaml): BaseIsa=RV32IorCHERIoT (CHERIoT mode excluded
 by owner ruling), RV32E=0, RV32M=RV32MSingleCycle, RV32B=RV32BOTEarlGrey, RV32ZC=RV32ZcaZcbZcmp,
@@ -281,7 +281,13 @@ Conventions
   trace_tp_bin CSV lists every reachable auto bin by that name and never an ignored one. When a
   TP item lists `cr_x.auto` and also explicit bins of one of the cross's coverpoints, the
   expansion is restricted to those bins of that coverpoint (the item's own stimulus scope).
-  "iff" gives the per-coverpoint sampling guard.
+  "iff" gives the per-coverpoint sampling guard. How a cross bin is reached, since the mechanism is
+  easy to state wrongly: the rendered covergroup takes ONE sample argument per coverpoint and NONE per
+  cross ("with function sample(int v_cp_...)"), and `option.cross_auto_bin_max = 0` leaves a cross with
+  exactly the CSV's named bins, so a cross tuple is reached only through its component coverpoints'
+  values and is excluded when any component's value lands in that component's `ignore_bins na`. Nothing
+  passes a cross a value of its own. Diagnostically: a cross bin unhit while its component bins are hit
+  is a component-value problem, not a cross-declaration one.
 - Witness bins (`yes{1}`, `observed{1}`) are sampled only on the retirement of the very
   instruction whose property they witness, never on a free-running or unrelated event; the
   failing case is a checker error, not a bin, so no `no{0}` counterpart is declared for them.
@@ -4830,7 +4836,7 @@ bug-candidate behaviour carry the bug tie (B16 in CG-DMEM-007).
     rvfi_ext_nmi_int carried no set flag on any retirement inside the retirement window}. Not claimed
     where the two windows disagree: a sample closing before any retirement has been seen samples -1
     rather than yes, since an early closure, a probe-on evidence run where form (a) decides at once,
-    cannot record a quiet that no retirement window supports. In practice this is a measured-run bin
+    cannot record a quiet that no retirement window supports. In practice this is a measured-run bin.
   - cp_lookups_blocked_next iff alerted: bins yes{1: no lookup read on any port in the ECC write
     cycle; a data-port WRITE of ECC(0) in that cycle is legal, rtl/ibex_icache.sv:280, 1000-1011}
   - cp_no_alert_case iff the corruption or read must not alert: bins unused_way_data{data of the
