@@ -1,0 +1,27 @@
+# TDD red 2 for the CM136 rows of the LOG-067 refusal: cases in place, no implementation (the gen_run cases discriminate: the P6 case passes, the B8 cases fail BAD)
+Fri Sep  4 01:02:58 UTC 2026
+## gen_run.py --self-test
+SELF-TEST ok  measured_refusal P6: a debug-only knob in a measured coverage run refuses: debug-only plusarg(s) ['gen_dbg_x'] enabled in a measured coverage run (P6); run it unmeasured (measured: false or --measured no)
+SELF-TEST ok  measured_refusal P6: the same knob unmeasured runs: None
+SELF-TEST BAD measured_refusal LOG-067: the operator B8 plusarg on a measured coverage run refuses: None
+SELF-TEST BAD measured_refusal LOG-067: the operator B8 plusarg on a measured run without coverage refuses too: None
+SELF-TEST BAD measured_refusal LOG-067: the bare +gen_chk_sva_b8 counts as on: None
+SELF-TEST ok  measured_refusal LOG-067: the entry's B8 plusarg on an unmeasured run runs (B8 evidence): None
+SELF-TEST ok  measured_refusal LOG-067: an operator =0 replaces the entry's =1, the measured run runs: None
+SELF-TEST ok  measured_refusal clean measured coverage run runs: None
+SELF-TEST: FAIL
+rc=2
+## gen_flow_util.py --self-test
+SELF-TEST ok  load_testlist refuses a measured entry turning on the B8 probe knob (LOG-067) (message names 'LOG-067')
+SELF-TEST ok  load_testlist accepts an unmeasured entry that turns the B8 probe knob on (B8 evidence runs stay possible)
+    r_sv_on = gate(dict(head_ok, **{C.B8_PROBE_SV_DEFAULT_KEY: True}))
+AttributeError: module 'gen_flow_const' has no attribute 'B8_PROBE_SV_DEFAULT_KEY'. Did you mean: 'B8_PROBE_KNOB_DEFAULT_KEY'?
+rc=1
+## gen_serve_requests.py --self-test
+    cond = p4 == [r4] and refusal is not None and gate["decision"] == C.CANARY_REFUSED_B8_PROBE and C.B8_PROBE_KNOB in refusal
+AttributeError: module 'gen_flow_const' has no attribute 'CANARY_REFUSED_B8_PROBE'. Did you mean: 'CANARY_REFUSED_MISSING'?
+rc=1
+## gen_round.py --self-test
+    (f"{C.B8_PROBE_SV_DEFAULT_KEY} true refuses (LOG-067, CM136-L-2)", dict(head, **{C.B8_PROBE_SV_DEFAULT_KEY: True}), C.ROUND_EXIT_REFUSED, f"{C.B8_PROBE_SV_DEFAULT_KEY}=True"),
+AttributeError: module 'gen_flow_const' has no attribute 'B8_PROBE_SV_DEFAULT_KEY'. Did you mean: 'B8_PROBE_KNOB_DEFAULT_KEY'?
+rc=1

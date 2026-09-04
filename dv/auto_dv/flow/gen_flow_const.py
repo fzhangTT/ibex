@@ -424,14 +424,22 @@ COVERGROUPS_DECLARED_KEY = "covergroups_declared"
 MEASURED_DISPATCH_RULE = ("LOG-046a: a measured regression dispatches only on a head-mode canary build of the pinned commit whose "
                           "manifest records covergroups_declared true (a covergroup declaration in the compiled SV sources)")
 CANARY_REFUSED_NO_COVERGROUPS = "refused_no_covergroups"
+CANARY_REFUSED_UNBOUND = "refused_canary_build_unbound"      # no manifest, a worktree build, another commit, or no pin
+CANARY_REFUSED_B8_PROBE = "refused_b8_probe_default_on"      # LOG-067: the knob table or the probe source defaults the B8 probe on
 # LOG-067 (knob name per LOG-076): the B8 probe assertion is bound into DUT internals and fails on the DUT's own B8 defect, so
 # its knob may be on only in unmeasured B8 evidence runs. The loader refuses a measured entry whose plusargs turn it on; the
 # build manifest records the knob table's default at build time and measured dispatch refuses when that default is on or absent.
 B8_PROBE_KNOB = "chk_sva_b8"                      # gen_knobs.PLUSARGS key of the knob whose plusarg is PLUSARG_CHK_SVA_B8
 B8_PROBE_KNOB_DEFAULT_KEY = "b8_probe_knob_default_on"
-B8_PROBE_RULE = ("LOG-067 (name per LOG-076): the B8 probe assertion knob chk_sva_b8 (+gen_chk_sva_b8) may be on only in unmeasured "
-                 "B8 evidence runs; a measured entry that sets it is refused at load, and a canary build whose knob table defaults "
-                 "it on (or records no default) refuses measured dispatch")
+# The probe module reads the plusarg itself over its own enable default (`bit en = 1'b0;` in gen_b8_probe.sv), so the build also
+# records that literal: the gate attests both the rendered table and the compiled probe's default.
+B8_PROBE_SV = TB_DIR / "gen_b8_probe.sv"
+B8_PROBE_SV_DEFAULT_RE = re.compile(r"^\s*bit\s+en\s*=\s*1'b([01])\s*;", re.M)
+B8_PROBE_SV_DEFAULT_KEY = "b8_probe_sv_default_on"
+B8_PROBE_RULE = (f"LOG-067 (name per LOG-076): the B8 probe assertion knob {B8_PROBE_KNOB} (+{PLUSARG_CHK_SVA_B8}) may be on only in "
+                 "unmeasured B8 evidence runs; a measured entry that sets it is refused at load, a measured run whose effective plusargs "
+                 "(entry plus operator) turn it on is refused before it starts, and a canary build whose knob table or probe source "
+                 "defaults it on (or records no default) refuses measured dispatch")
 ROUND_EXIT_REFUSED = 2
 # Collected failure mechanisms scanned in sim.log (name, regex). Order = report priority.
 FAIL_PATTERNS = (

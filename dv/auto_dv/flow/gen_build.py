@@ -349,7 +349,7 @@ def main() -> int:
         "command": " ".join(shlex.quote(x) for x in argv), "flag_groups": groups,
         "inputs": U.filelist_digest([C.SOURCE_ROOT / f for f in build["filelists"]]),
         "covergroup_files": cg_files, C.COVERGROUPS_DECLARED_KEY: bool(cg_files),
-        C.B8_PROBE_KNOB_DEFAULT_KEY: U.knob_default_on(C.B8_PROBE_KNOB),
+        C.B8_PROBE_KNOB_DEFAULT_KEY: U.knob_default_on(C.B8_PROBE_KNOB), C.B8_PROBE_SV_DEFAULT_KEY: U.b8_probe_sv_default_on(),
         "source_root": str(C.SOURCE_ROOT), **source_facts(), **U.export_facts(),
         "staged_env_sh": {"path": str(outdir / C.STAGED_ENV_SH), "sha256": U.sha256_file(C.ENV_SH)},
         "git": U.git_head(), "tools": U.tool_versions(), "started_utc": U.now_utc(),

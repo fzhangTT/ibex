@@ -111,13 +111,25 @@ def load_build_manifest(path: Path) -> tuple[dict[str, Any] | None, Path]:
     return (load_yaml(p) if p.is_file() else None), p
 
 
-def measured_dispatch_refusal(canary_manifest: dict[str, Any] | None, where: str, pinned_sha: str | None) -> str | None:
-    """None when the canary build manifest is a head-mode build of the pinned commit, records covergroups_declared
-    true and records the B8 probe knob's table default off (LOG-067); else the refusal text naming the failed condition,
-    the build, the manifest and the rule. A worktree build (its covergroups may be an in-progress edit), a head build of
-    another commit, an absent fact (no manifest, or one older than the record) and a missing pin all refuse."""
+def b8_probe_sv_default_on(path: Path = C.B8_PROBE_SV) -> bool | None:
+    """The B8 probe module's own enable default (`bit en = 1'b0;` in gen_b8_probe.sv) as a truth value, None when the file
+    or the declaration is missing: the second build manifest fact behind the LOG-067 measured-dispatch refusal, because
+    the probe reads its plusarg over that literal, not over the rendered knob table."""
+    if not path.is_file():
+        return None
+    m = C.B8_PROBE_SV_DEFAULT_RE.search(path.read_text(encoding="utf-8", errors="replace"))
+    return None if m is None else m.group(1) == "1"
+
+
+def measured_dispatch_verdict(canary_manifest: dict[str, Any] | None, where: str, pinned_sha: str | None) -> tuple[str, str | None]:
+    """(decision, refusal): CANARY_ACCEPTED with None when the canary build manifest is a head-mode build of the pinned
+    commit, records covergroups_declared true and records both B8 probe defaults off (LOG-067); else the decision naming the
+    failed condition (CANARY_REFUSED_UNBOUND: no manifest, a worktree build whose covergroups may be an in-progress edit, a
+    head build of another commit, or no pin; CANARY_REFUSED_NO_COVERGROUPS; CANARY_REFUSED_B8_PROBE, an absent fact
+    included) with the refusal text naming the build, the manifest and the rule."""
     man = canary_manifest or {}
     head = f"canary build {man.get('build') or '?'} ({where})"
+    decision = C.CANARY_REFUSED_UNBOUND
     if not man:
         why = "has no build manifest"
     elif man.get("source_mode") != C.SOURCE_MODE_HEAD:
@@ -128,13 +140,20 @@ def measured_dispatch_refusal(canary_manifest: dict[str, Any] | None, where: str
         why = f"is the head-mode build of {str(man.get('head_sha') or '?')[:12]}, not of the pinned {pinned_sha[:12]}"
     elif man.get(C.COVERGROUPS_DECLARED_KEY) is not True:
         val = man.get(C.COVERGROUPS_DECLARED_KEY)
-        why = f"records {C.COVERGROUPS_DECLARED_KEY}={'absent' if val is None else val}"
+        decision, why = C.CANARY_REFUSED_NO_COVERGROUPS, f"records {C.COVERGROUPS_DECLARED_KEY}={'absent' if val is None else val}"
     else:
-        b8 = man.get(C.B8_PROBE_KNOB_DEFAULT_KEY)
-        if b8 is False:
-            return None
-        why = f"records {C.B8_PROBE_KNOB_DEFAULT_KEY}={'absent' if b8 is None else b8} ({C.B8_PROBE_KNOB}); {C.B8_PROBE_RULE}"
-    return f"measured dispatch refused: {head} {why}; {C.MEASURED_DISPATCH_RULE}"
+        facts = {k: man.get(k) for k in (C.B8_PROBE_KNOB_DEFAULT_KEY, C.B8_PROBE_SV_DEFAULT_KEY)}
+        bad = {k: v for k, v in facts.items() if v is not False}
+        if not bad:
+            return C.CANARY_ACCEPTED, None
+        decision = C.CANARY_REFUSED_B8_PROBE
+        why = "records " + ", ".join(f"{k}={'absent' if v is None else v}" for k, v in bad.items()) + f" ({C.B8_PROBE_KNOB}); {C.B8_PROBE_RULE}"
+    return decision, f"measured dispatch refused: {head} {why}; {C.MEASURED_DISPATCH_RULE}"
+
+
+def measured_dispatch_refusal(canary_manifest: dict[str, Any] | None, where: str, pinned_sha: str | None) -> str | None:
+    """The refusal text of measured_dispatch_verdict, None when the dispatch is allowed."""
+    return measured_dispatch_verdict(canary_manifest, where, pinned_sha)[1]
 
 
 def canary_build_facts(path: Path | None) -> dict[str, Any] | None:
@@ -683,7 +702,7 @@ def self_test() -> int:
             dump_yaml(man, gd / C.BUILD_MANIFEST)
         return measured_dispatch_refusal(*load_build_manifest(where), pinned)
     head_ok = {"build": "gen_tb", "source_mode": C.SOURCE_MODE_HEAD, "head_sha": pin, C.COVERGROUPS_DECLARED_KEY: True, "covergroup_files": ["dv/auto_dv/env/x.sv"],
-               C.B8_PROBE_KNOB_DEFAULT_KEY: False}
+               C.B8_PROBE_KNOB_DEFAULT_KEY: False, C.B8_PROBE_SV_DEFAULT_KEY: False}
     r_true = gate(head_ok)
     r_false = gate(dict(head_ok, **{C.COVERGROUPS_DECLARED_KEY: False, "covergroup_files": []}))
     r_absent = gate({"build": "gen_tb", "source_mode": C.SOURCE_MODE_HEAD, "head_sha": pin})
@@ -693,7 +712,29 @@ def self_test() -> int:
     r_none = gate(None, where=gd / "no_such_dir")
     r_b8_on = gate(dict(head_ok, **{C.B8_PROBE_KNOB_DEFAULT_KEY: True}))
     r_b8_absent = gate({k: v for k, v in head_ok.items() if k != C.B8_PROBE_KNOB_DEFAULT_KEY})
-    cond_b8 = r_b8_on is not None and C.B8_PROBE_KNOB in r_b8_on and "LOG-067" in r_b8_on and r_b8_absent is not None and "absent" in r_b8_absent
+    r_sv_on = gate(dict(head_ok, **{C.B8_PROBE_SV_DEFAULT_KEY: True}))
+    r_sv_absent = gate({k: v for k, v in head_ok.items() if k != C.B8_PROBE_SV_DEFAULT_KEY})
+    cond_b8 = r_b8_on is not None and C.B8_PROBE_KNOB in r_b8_on and "LOG-067" in r_b8_on and r_b8_absent is not None and "absent" in r_b8_absent \
+        and r_sv_on is not None and C.B8_PROBE_SV_DEFAULT_KEY in r_sv_on and r_sv_absent is not None and "absent" in r_sv_absent
+    dump_yaml(dict(head_ok, **{C.B8_PROBE_KNOB_DEFAULT_KEY: True}), gd / C.BUILD_MANIFEST)
+    v_b8 = measured_dispatch_verdict(*load_build_manifest(gd), pin)
+    dump_yaml(dict(head_ok, **{C.COVERGROUPS_DECLARED_KEY: False}), gd / C.BUILD_MANIFEST)
+    v_cg = measured_dispatch_verdict(*load_build_manifest(gd), pin)
+    dump_yaml(dict(head_ok, source_mode=C.SOURCE_MODE_WORKTREE), gd / C.BUILD_MANIFEST)
+    v_wt = measured_dispatch_verdict(*load_build_manifest(gd), pin)
+    dump_yaml(head_ok, gd / C.BUILD_MANIFEST)
+    v_ok = measured_dispatch_verdict(*load_build_manifest(gd), pin)
+    cond_v = v_b8[0] == C.CANARY_REFUSED_B8_PROBE and v_cg[0] == C.CANARY_REFUSED_NO_COVERGROUPS and v_wt[0] == C.CANARY_REFUSED_UNBOUND \
+        and v_ok == (C.CANARY_ACCEPTED, None) and v_b8[1] == r_b8_on
+    ok &= cond_v
+    print("SELF-TEST", "ok " if cond_v else "BAD", f"measured_dispatch_verdict labels the condition (CM136-L-1): knob default {v_b8[0]}, no covergroup {v_cg[0]}, worktree build {v_wt[0]}, good build {v_ok[0]}")
+    svd = Path(tempfile.mkdtemp(prefix="gen_b8sv_selftest_", dir=C.selftest_tmp()))
+    (svd / "on.sv").write_text("module p;\n  bit en = 1'b1;\nendmodule\n"); (svd / "off.sv").write_text("module p;\n  bit en = 1'b0;\nendmodule\n"); (svd / "none.sv").write_text("module p; endmodule\n")
+    got_sv = (b8_probe_sv_default_on(svd / "on.sv"), b8_probe_sv_default_on(svd / "off.sv"), b8_probe_sv_default_on(svd / "none.sv"), b8_probe_sv_default_on(svd / "missing.sv"), b8_probe_sv_default_on())
+    cond_sv = got_sv == (True, False, None, None, False)
+    ok &= cond_sv
+    print("SELF-TEST", "ok " if cond_sv else "BAD", f"b8_probe_sv_default_on (CM136-L-2): fabricated on/off/no-default/missing -> {got_sv[:4]}; the tree's gen_b8_probe.sv -> {got_sv[4]}")
+    remove_selftest_tree(svd)
     ok &= cond_b8
     print("SELF-TEST", "ok " if cond_b8 else "BAD", f"measured_dispatch_refusal (LOG-067): a canary build whose knob table defaults the B8 probe knob on refuses naming the knob and the ruling; an absent fact refuses: {(r_b8_on or '')[:90]}")
     cond = (r_true is None

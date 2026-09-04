@@ -436,10 +436,9 @@ def measured_gate(p234: list[Path], canary_build: Path | None, pinned_sha: str |
     if not p4:
         return [], None, {}
     man, mp = U.load_build_manifest(canary_build) if canary_build else (None, Path("(no --canary-build)"))
-    refusal = U.measured_dispatch_refusal(man, str(mp), pinned_sha)
+    decision, refusal = U.measured_dispatch_verdict(man, str(mp), pinned_sha)
     return p4, refusal, {"canary_build": str(canary_build) if canary_build else None, "pinned_sha": pinned_sha,
-                         "facts": U.canary_build_facts(canary_build),
-                         "decision": C.CANARY_REFUSED_NO_COVERGROUPS if refusal else C.CANARY_ACCEPTED, "refusal": refusal}
+                         "facts": U.canary_build_facts(canary_build), "decision": decision, "refusal": refusal}
 
 
 def self_test() -> int:
@@ -452,7 +451,7 @@ def self_test() -> int:
     U.dump_yaml({"purpose": 2, "requester": "tb-infra"}, r2)
     b = d / "canary_build"; b.mkdir()
     pin = "e" * 40
-    head = {"build": "gen_tb", "source_mode": C.SOURCE_MODE_HEAD, "head_sha": pin, C.COVERGROUPS_DECLARED_KEY: True, "covergroup_files": ["x.sv"], C.B8_PROBE_KNOB_DEFAULT_KEY: False}
+    head = {"build": "gen_tb", "source_mode": C.SOURCE_MODE_HEAD, "head_sha": pin, C.COVERGROUPS_DECLARED_KEY: True, "covergroup_files": ["x.sv"], C.B8_PROBE_KNOB_DEFAULT_KEY: False, C.B8_PROBE_SV_DEFAULT_KEY: False}
     U.dump_yaml(dict(head, **{C.COVERGROUPS_DECLARED_KEY: False, "covergroup_files": []}), b / C.BUILD_MANIFEST)
     p4, refusal, gate = measured_gate([r2, r4], b, pin)
     cond = p4 == [r4] and refusal is not None and f"{C.COVERGROUPS_DECLARED_KEY}=False" in refusal and gate["decision"] == C.CANARY_REFUSED_NO_COVERGROUPS and gate["facts"]["head_sha"] == pin
@@ -470,6 +469,10 @@ def self_test() -> int:
     p4, refusal, gate = measured_gate([r2, r4], b, pin)
     cond = p4 == [r4] and refusal is None and gate["decision"] == C.CANARY_ACCEPTED
     ok &= cond; print("SELF-TEST", "ok " if cond else "BAD", "a head-mode canary build of the pinned sha with a covergroup: the purpose-4 request dispatches (accepted)")
+    U.dump_yaml(dict(head, **{C.B8_PROBE_KNOB_DEFAULT_KEY: True}), b / C.BUILD_MANIFEST)
+    p4, refusal, gate = measured_gate([r2, r4], b, pin)
+    cond = p4 == [r4] and refusal is not None and gate["decision"] == C.CANARY_REFUSED_B8_PROBE and C.B8_PROBE_KNOB in refusal
+    ok &= cond; print("SELF-TEST", "ok " if cond else "BAD", f"a canary build whose knob table defaults the B8 probe knob on: the purpose-4 request is refused with its own decision label {gate['decision']} (CM136-L-1)")
     cond = measured_gate([r2], None, pin) == ([], None, {})
     ok &= cond; print("SELF-TEST", "ok " if cond else "BAD", "a batch without a purpose-4 request needs no canary build")
     U.remove_selftest_tree(d)
@@ -540,7 +543,7 @@ def serve_pass(pending: list[Path], testlist: dict[str, Any], dry_run: bool, ext
         if p4:
             sync["measured_dispatch"] = gate
             if p4_refusal:
-                U.log(f"REFUSING {len(p4)} purpose-4 request(s) ({C.CANARY_REFUSED_NO_COVERGROUPS}): {p4_refusal}")
+                U.log(f"REFUSING {len(p4)} purpose-4 request(s) ({gate['decision']}): {p4_refusal}")
         manifests: list[Path] = []
         if rc == 0 and not timed_out and sync.get("head_sha") == batch_sha:
             U.log(f"batch mirror sync rc={rc} in {wall:.0f}s for {len(pinned)} head-mode request(s) ({len(p1)} purpose-1), pinned to {batch_sha[:12]}")

@@ -203,6 +203,8 @@ gen_run.py --build-dir DIR --test NAME --seed N --run-dir DIR [--cov-dir VDB | -
   no job): tb-arch ruling P6, the CSR-flop debug compare never enters a measurement.
 - `--pass-marker`: overrides the testlist marker (red-run evidence only; refused on a measured run).
   An operator `--plusarg` replaces a same-name testlist plusarg (VCS honours the first occurrence).
+  The B8 probe knob `+gen_chk_sva_b8` on in the effective plusargs (entry plus operator) of a measured run, with or without
+  coverage, is refused the same way (NOT_RUN naming `B8_PROBE_RULE`, LOG-067): the operator path is guarded like the entry.
 - `--waves`: needs a `--waves` build; renders `gen_dump.tcl` into the run dir (FSDB with
   `$VERDI_HOME`, else VPD) and adds `-ucli -do dump.tcl`. Templates are rendered by
   `gen_flow_util.render_fields` (token replacement, Tcl braces untouched); `python3 gen_flow_util.py
@@ -386,14 +388,22 @@ of the batch's pinned commit (`head_sha` equal to `pinned_sha`; a worktree build
 head build of another commit proves nothing about this one) and records `covergroups_declared: true`
 (`gen_flow_util.measured_dispatch_refusal`); otherwise every purpose-4 request of the pass is refused in writing
 (`scope_decision: refused`, the refusal names the build, the manifest and the rule; the batch record's `sync` carries
-`measured_dispatch: {canary_build, pinned_sha, facts, decision: refused_no_covergroups | accepted, refusal}`, and each
+`measured_dispatch: {canary_build, pinned_sha, facts, decision, refusal}` with `decision` one of `accepted`,
+`refused_canary_build_unbound` (no manifest, a worktree build, a build of another commit, no pin), `refused_no_covergroups`,
+`refused_b8_probe_default_on` (`gen_flow_util.measured_dispatch_verdict`; the REFUSING log line prints the same label), and each
 purpose-4 regression receives `--canary-build` so its own manifest records the same `canary_build` facts) while the purpose-1 to -3
 requests of the same batch are served. A TB without a covergroup makes every fcov manifest unverifiable, so the
 refusal lands before the first job instead of after the pass (round 0 of 2026-09-03 was refused after 700 s). The same gate
-carries the LOG-067 condition (knob name per LOG-076): the build manifest records `b8_probe_knob_default_on`, the knob table's
-default of `chk_sva_b8` (`+gen_chk_sva_b8`, the B8 probe assertion bound into DUT internals, which fails on the DUT's own B8
-defect) at build time, and a measured dispatch is refused when that fact is true or absent (`gen_flow_const.B8_PROBE_RULE`);
-the loader refuses any measured entry whose plusargs turn the knob on, so the probe runs only in unmeasured B8 evidence entries.
+carries the LOG-067 condition (knob name per LOG-076): the build manifest records `b8_probe_knob_default_on`, the rendered knob
+table's default of `chk_sva_b8` (`+gen_chk_sva_b8`, the B8 probe assertion bound into DUT internals, which fails on the DUT's own
+B8 defect), and `b8_probe_sv_default_on`, the probe module's own enable literal in `dv/auto_dv/tb/gen_b8_probe.sv` (the probe reads
+its plusarg over that literal, not over the table; the rendered `gen_env_cfg_knobs.svh` is kept equal to the table by tb-infra's
+knobs codegen `--check`), both read at build time from the source tree the build binds to; a measured dispatch is refused when
+either fact is true or absent (`gen_flow_const.B8_PROBE_RULE`). The loader refuses any measured entry whose plusargs turn the knob
+on, and gen_run.py refuses (NOT_RUN, `measured_refusal`) any measured run whose effective plusargs (the entry's plus the operator's
+`--plusarg`, an operator value replacing a same-name entry value) turn it on, with or without coverage, so the probe runs only in
+unmeasured B8 evidence runs. Both refuse conservatively: the bare `+gen_chk_sva_b8` and `=00` count as on, stricter than the
+probe's `=%d` parse.
 
 ## 5. gen_dashboard.py (results dashboard)
 

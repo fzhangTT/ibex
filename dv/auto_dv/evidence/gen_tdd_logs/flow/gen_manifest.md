@@ -15,7 +15,12 @@ name the image), the gen_boot_zc program image of work/runtime/out/tick_canary_2
 (34559ec69102) or unit test (c30369dd144e).
 gen_b8_probe_refusal_red.log is the TDD red of the LOG-067 refusal (the B8 probe knob chk_sva_b8 on a measured entry): the util and
 round self-tests with the new cases in place and no implementation die with AttributeError on the missing constants (rc=1); the
-serve self-test still passed because its fixture gained the new manifest key only with the implementation.
+serve self-test still passed because its fixture gained the new manifest key only with the implementation. That red is a
+missing-constant crash raised while the case tuples are built, before any case runs (CM136-L-3): it shows the tests could not pass
+without the implementation, not that the cases discriminate a missing refusal from a present one.
+gen_b8_probe_refusal_red2.log is the TDD red of the CM136 follow-up: the gen_run cases run against the factored measured_refusal
+before the LOG-067 rule was added to it and print BAD for the three B8 cases while the P6 cases pass (a discriminating red); the
+util, serve and round cases of the same touch are again missing-constant crashes (B8_PROBE_SV_DEFAULT_KEY, CANARY_REFUSED_B8_PROBE).
 
 | evidence path | source | bytes | md5 |
 |---|---|---|---|
@@ -23,3 +28,4 @@ serve self-test still passed because its fixture gained the new manifest key onl
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_t235_ut_run.log | dv/auto_dv/work/runtime/t235/gen_t235_ut_run.log | 17932 | 642eb85258afe2f6a0dbe38169ae9fb0 |
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_t235_install_verification.diff | dv/auto_dv/work/runtime/t235/scratch/gen_isa_shim_install_verification.diff | 1733 | 426d1881834219787850d7acd9e47338 |
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_b8_probe_refusal_red.log | dv/auto_dv/work/runtime/b8_probe_refusal_red.log | 669 | 79c2e3e5ad16318c78ea72c156e17b02 |
+| dv/auto_dv/evidence/gen_tdd_logs/flow/gen_b8_probe_refusal_red2.log | dv/auto_dv/work/runtime/b8_probe_refusal_red2.log | 2231 | d9c707ba179d81930b8edb06f3440db0 |

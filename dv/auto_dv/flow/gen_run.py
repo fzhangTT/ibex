@@ -185,8 +185,31 @@ def export_check(res: dict[str, Any], build: dict[str, Any], argv: list[str], ru
     return header, path
 
 
+def effective_plusargs(test: dict[str, Any], extra_plusargs: list[str]) -> list[str]:
+    """The plusargs a run carries: the entry's, an operator plusarg replacing a same-name entry plusarg (compose_command
+    keeps the same order, and VCS takes the first occurrence)."""
+    extra_names = {U.plusarg_name(x) for x in extra_plusargs}
+    return [x for x in test["plusargs"] if U.plusarg_name(x) not in extra_names] + list(extra_plusargs)
+
+
+def measured_refusal(test: dict[str, Any], extra_plusargs: list[str], testlist: dict[str, Any], measured: bool, coverage: bool) -> str | None:
+    """The reason a run must not start, or None: a debug-only knob in a measured coverage run (tb-arch P6), or the B8
+    probe knob on in any measured run (LOG-067), both judged on the effective plusargs (operator values included, so the
+    operator path is guarded like the entry; plusarg_enabled counts the bare form and =00 as on, stricter than the
+    probe's =%d parse)."""
+    eff = effective_plusargs(test, extra_plusargs)
+    debug_only = [n for n in (testlist.get("debug_only_plusargs") or []) if U.plusarg_enabled(eff, n)]
+    if measured and coverage and debug_only:
+        return (f"debug-only plusarg(s) {debug_only} enabled in a measured coverage run (P6); "
+                "run it unmeasured (measured: false or --measured no)")
+    if measured and U.plusarg_enabled(eff, C.PLUSARG_CHK_SVA_B8):
+        return f"+{C.PLUSARG_CHK_SVA_B8} on in a measured run; {C.B8_PROBE_RULE}; run it unmeasured (--measured no)"
+    return None
+
+
 def self_test() -> int:
-    """export_check against fabricated run directories: absent file, equal sets, mismatch, narrowed subset."""
+    """export_check against fabricated run directories: absent file, equal sets, mismatch, narrowed subset; the measured-run
+    refusals (P6, LOG-067) on fabricated entries."""
     import tempfile
     ok = True
     root = Path(tempfile.mkdtemp(prefix="gen_run_selftest_", dir=C.selftest_tmp()))
@@ -213,6 +236,23 @@ def self_test() -> int:
     case("knob narrowed, header a subset: PASS kept", [f"+{efile}=exp.txt", f"+{esrc}=ibus"], "# gen_export v1 sources=ibus", C.VERDICT_PASS, "decided")
     case("knob narrowed, header names a source the build cannot emit: FAIL", [f"+{efile}=exp.txt", f"+{esrc}=pin"], "# gen_export v1 sources=pin", C.VERDICT_FAIL, "emitted mismatch")
     case("a FAIL stays FAIL with its own reason", [f"+{efile}=exp.txt"], None, C.VERDICT_FAIL, "decided", verdict=C.VERDICT_FAIL)
+    # Measured-run refusals on the effective plusargs (entry + operator, operator replacing).
+    tl = {"debug_only_plusargs": ["gen_dbg_x"]}
+    entry = {"name": "gen_t", "plusargs": ["+gen_fetch_en_at_reset=0"]}
+    b8 = f"+{C.PLUSARG_CHK_SVA_B8}=1"
+    for label, extra, entry_extra, measured, coverage, want in (
+            ("P6: a debug-only knob in a measured coverage run refuses", ["+gen_dbg_x=1"], [], True, True, "(P6)"),
+            ("P6: the same knob unmeasured runs", ["+gen_dbg_x=1"], [], False, True, None),
+            ("LOG-067: the operator B8 plusarg on a measured coverage run refuses", [b8], [], True, True, "LOG-067"),
+            ("LOG-067: the operator B8 plusarg on a measured run without coverage refuses too", [b8], [], True, False, "LOG-067"),
+            ("LOG-067: the bare +gen_chk_sva_b8 counts as on", [f"+{C.PLUSARG_CHK_SVA_B8}"], [], True, True, "LOG-067"),
+            ("LOG-067: the entry's B8 plusarg on an unmeasured run runs (B8 evidence)", [], [b8], False, True, None),
+            ("LOG-067: an operator =0 replaces the entry's =1, the measured run runs", [f"+{C.PLUSARG_CHK_SVA_B8}=0"], [b8], True, True, None),
+            ("clean measured coverage run runs", [], [], True, True, None)):
+        got = measured_refusal(dict(entry, plusargs=entry["plusargs"] + entry_extra), extra, tl, measured, coverage)
+        cond = (got is None) if want is None else (got is not None and want in got)
+        ok &= cond
+        print("SELF-TEST", "ok " if cond else "BAD", f"measured_refusal {label}: {got}")
     U.remove_selftest_tree(root)
     print("SELF-TEST:", "PASS" if ok else "FAIL")
     return 0 if ok else 2
@@ -282,13 +322,10 @@ def main() -> int:
         U.die("--pass-marker overrides the testlist marker for red-run evidence only; refused on a measured run "
               "(use --measured no or --no-coverage)")
     pass_marker = a.pass_marker or test.get("pass_marker")
-    # Debug-only knobs (tb-arch P6) never run in a measured coverage run: refuse in writing.
-    debug_only = [n for n in (testlist.get("debug_only_plusargs") or [])
-                  if U.plusarg_enabled(list(test["plusargs"]) + list(a.plusarg), n)]
-    if measured and cov_vdb is not None and debug_only:
-        refusal = {"test": test["name"], "seed": seed, "verdict": C.VERDICT_NOT_RUN,
-                   "reason": f"debug-only plusarg(s) {debug_only} enabled in a measured coverage run (P6); "
-                             "run it unmeasured (measured: false or --measured no)",
+    # Knobs a measured run must not carry (P6 debug-only knobs, the LOG-067 B8 probe knob): refuse in writing.
+    reason = measured_refusal(test, list(a.plusarg), testlist, measured, cov_vdb is not None)
+    if reason:
+        refusal = {"test": test["name"], "seed": seed, "verdict": C.VERDICT_NOT_RUN, "reason": reason,
                    "run_dir": str(run_dir), "build": build["build"], "owner": test["owner"], "measured": True,
                    "sim_log": None, "run_log": None, "run_cmd": None, "vdb": None, "cm_name": None, "waves": None,
                    "wall_s": None, "lsf": None, "exit_code": None}
