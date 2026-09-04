@@ -2268,3 +2268,28 @@ mie_msb move: 46 stimulus / 20 seed-dependent / 1 legacy across three modules; t
 DV Lead plan call that decides if a generator change is needed at all) and 6 sweep targets never produced in 40 seeds; gen_test_cmp_zca's
 22 are one cause plus two singletons; building the unbuilt covergroups; rt39; the per-run vs cumulative manifest semantics follow-up; the
 frozen TB items (LOG-085) lift when the round record is reviewed.
+
+## LOG-093 - 2026-09-04 22:25Z - Owner directive: analyze and report the round's coverage metrics and gaps, then pause for review; the build-define record finding
+
+Owner (22:25Z, verbatim): "After the first coverage regression is done. Analyze and report the coverage metrics (report numbers and where we
+have gaps) then pause for review." Dispatch (22:26Z-22:30Z): the DV Lead leads the analysis, dv/auto_dv/evidence/gen_round_0_coverage_analysis.md
+(due 22:55Z; numbers with scope and source per figure, code-coverage gaps per module and FSM and assertion and toggle family, functional gaps
+per covergroup with a cause class, the 41 re-scoped bins unhit by anything, the 182 unbuilt covergroups as the largest structural gap, a
+ranked gap list with owner and round-2 reachability, and what the numbers do not mean); runtime-2 extracts the tables read-only from the
+committed record and the urg report (gen_round_0_coverage_tables.md, due 22:45Z; the command or parse behind every table); rtl-arch hands the
+pass-14 exclusion result against gen_round_0 (due 22:50Z) so unreachable misses are told from stimulus gaps; the Critic verdicts the analysis
+before the owner reads it. No run, no re-merge, no flow change. After the report the team PAUSES: the LOG-085 freeze continues and nothing
+forward hands (rt39 and rt40 plans, the generator fixes, the DV Lead's post-round list, tb-infra's CR-36 rows, the Test Writer's mapping
+sentence) until the owner's review lifts it. The rev45 record-range review and the Critic's round verdict continue, as review not forward work.
+
+Finding (DV Lead, 22:21Z; verified by the Orchestrator from the files): the retained dv/auto_dv/evidence/gen_round_0/gen_build_manifest_gen_tb.yaml
+lists defines: [+define+RVFI] only, aliased as coverage.build_defines in the round manifest, while its own command: field (:59-66) carries the
+full compile line with all nine defines (UVM, UVM_REGEX_NO_DPI, RVFI, COCOTB_SIM, BaseIsa=ibex_pkg::BaseIsaRV32IorCHERIoT,
+RV32M=ibex_pkg::RV32MSingleCycle, RV32B=ibex_pkg::RV32BOTEarlGrey, RV32ZC=ibex_pkg::RV32ZcaZcbZcmp, RegFile=ibex_pkg::RegFileFF) and every
+-pvalue parameter; dv/auto_dv/tb/gen_dut_top.sv:28-29 defaults RV32B to RV32BNone when the define is absent, so a rebuild from the defines
+field alone would measure a DUT without bitmanip. The DUT's GEN_CONFIG_BANNER (gen_dut_top.sv:434) prints the configuration in every run log.
+Ruling: the record reproduces from its own bytes (the command line, the banner), so the collected files are not corrected; the defect is the
+under-described field (gen_build.py:117 builds it from the testlist's per-build defines list plus -D arguments, :348 records it under a name
+that reads as the compile's define set) = rt40, owner runtime-2, folded with rt39 into one plan for pre-execution review after the pause lifts:
+record the full define set and the parameters under a name that says what it is. Readers of round-0 evidence take the configuration from the
+command: line or the banner, never from defines:.
