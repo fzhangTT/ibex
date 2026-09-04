@@ -370,3 +370,29 @@ and the docstring, the two not_hit reasons and the staged entry's description no
 The own pin-off manifest (a pin-aware declare_bins() and a second manifest under fcov_expectations, a joint landing since the covergroup set
 reads every manifest) comes with the group's promotion to measured. The manifest is re-rendered for the reason text (header lines only, 204 bins
 unchanged; gen_test_pmc_ctrl.fcov.yaml c3f77460af5d), and the docstring's plan anchor drops its commit id.
+
+## 10. Retained-log integrity: the ugrep -I hazard and the retention-completeness check
+
+The site shell's `grep` is a function wrapping ugrep with `--ignore-files`, so a recursive grep rooted at or above dv/auto_dv
+silently skips the ignored work/ tree, and `-I` drops a file it deems binary even when that file is named explicitly, returning
+rc 1 with no output, which is indistinguishable from the pattern being absent. Either would let a count read low and look clean.
+Audited over this batch's records at the Orchestrator's request; the full measurement is under
+work/test-writer/gen_watch_answer_grep_I.md.
+
+No count in these records could have come from a suppressed grep, for two independent reasons. First the suppression cannot reach
+the files: every file in gen_tdd_logs/test_writer (701, the manifest's 700 subjects plus gen_manifest.md) holds no NUL byte and
+decodes as ASCII, as do gen_tdd_batch1/2/3.md and gen_critic_response_batch3.md, so -I cannot drop any of them named or recursive;
+on a named retained log the wrapper, `command grep` and `command grep -a` return the same count at rc 0. Second the numbers were
+not grep-derived: the manifest's bytes and md5 columns and its row count come from stat, md5sum and a row loop, re-derived as 700
+rows and 0 bad, and the log-derived figures re-derive from the retained logs by byte-based match, giving GEN_TEST_BINS n=204 and
+UVM_ERROR : 0 in all four green gen_pmc_ctrl logs and fire_schedule_applied ok=True reaching 6 of 6, 15 of 15, 12 of 12 and 6 of
+6. Both reds fail exactly one item and it is the item the record names: fire_tp_pmc_022 at 46 words compared with 1 mismatch, and
+fire_tp_pmc_023 at 170 words with 1 mismatch. Neither red log contains the string UVM_ERROR anywhere, which is correct rather
+than suppressed: these tests fail through a python AssertionError on the cocotb path, so a red carries no UVM_ERROR summary line
+and no record here claims one.
+
+Retention completeness is the gap shape the row-verify check cannot see, because a log owed a manifest row and missing one never
+appears as a bad row. Measured in both directions: 700 manifest rows against 701 files on disk, 0 files with no row, 0 rows
+pointing outside the directory, and 0 rows failing size or md5, so no retention gap exists in these records. No
+trace_core_*-shaped file exists anywhere under committed dv/auto_dv/evidence either; the nested-.gitignore case measured under the
+export copies reaches only the working copies under work/, which are never the retained record.
