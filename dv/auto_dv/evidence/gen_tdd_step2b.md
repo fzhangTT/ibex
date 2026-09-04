@@ -947,9 +947,13 @@ drains, which is the signal the fixture needs.
 
 THE FAULTS. MUT-NT2 withholds one line once a record count is reached; MUT-BND1 withholds every maskable line from
 the finish request onward; MUT-BND2 does the same with its onset read from a plusarg, which is the only one of the
-three that frees the raise phase from the finish request. Its 47 onset values collapse to 25 DISTINCT outcomes,
-because an onset falling in a gap between raise events changes nothing, so the free-phase sample is 25 and zero
-hits over it BOUNDS NOTHING. The case is not claimed unreachable.
+three that frees the raise phase from the finish request. Its 47 distinct onset values collapse to 25 DISTINCT
+OUTCOMES, which is the count of distinct FINISH RECORDS per onset as the Critic verified; wider field
+comparisons per onset give the same 25, and keyed over all 52 rows the count is 29 because four extra seeds
+share one onset and diverge.
+An onset falling in a gap between raise events changes nothing, so the free-phase sample is 25 and zero hits
+over it BOUNDS NOTHING. The case is not claimed unreachable. The definition and every neighbouring count are
+in gen_fu_l33_age17_attempt_corrigendum.log, answering CM211-Low-4.
 
 THREE MEASUREMENTS THAT STAND ON THEIR OWN. First, the boot-retire plusarg is not a lever: the same build and seed
 at 2490 and 2500 give the identical finish request at record 3710, the same 18-record drain, the same 3728 records
@@ -1057,3 +1061,41 @@ making a release a few cycles late rather than never. That is also why the asser
 level, since a lagging level would still admit the occasional assert-while-in-debug and the release covers it.
 
 Retained: gen_tdd_logs/mutations/gen_fu_l36_dbg_driver_livelock.log, with a manifest row.
+
+## Landing 37: the tag half's end-of-run hole, found by a round-1 triage
+
+WHAT WAS WRONG, and it was an asymmetry inside one checker. At the end of a run report_phase treated the two
+injection kinds differently. A data injection whose verdict never arrived became unjudged and counted as pending,
+with the code's own comment reading "the run ended before their verdict: unjudged, reported, never failed". A tag
+injection was set to verdict = qualified and then failed by close_owed. So the data half had an end-of-run allowance
+and the tag half had none, because the tag half's qualification tests only that the cache is enabled and no
+invalidation sweep is near; it never tested whether the lookup was CONSUMED. The DUT checks a lookup it consumes, so
+a tag word read on a lookup the core never consumes can never produce an alert.
+
+THE MEASUREMENT THAT SETTLED THE RULE. The failing run was reproduced locally byte-exactly with the export on, and
+the injected index resolved against every retired record: the run's last retirement is at cycle 21478, the injection
+is at 21479, one cycle after it, and there are ZERO retirements at or after the injection. The positive control
+keeps the index mapping out of the story, since index 28 is retired 18 times earlier in the run, the last at cycle
+21478. So the corrupted word was read one cycle after the core retired its last instruction.
+
+THE RULE mirrors the data half rather than approximating it: a qualified tag injection with no pulse and no record
+retired at or after its cycle is UNJUDGED, counted as unconsumed and never failed, and the in-run pass defers such
+an injection while no retirement has yet been seen after it, since the answer is not knowable then. A time window
+keyed on the finish request was the first idea and was rejected as too broad: the finish request came at cycle 21433
+and the core kept retiring for another 45 cycles, so it would have excused injections that were genuinely checkable.
+
+THE RED IS TWO-SIDED, which is what makes the allowance narrow rather than a blindfold. Side A: the failing seed
+passes with missing=0 and unconsumed=1, and a different seed reports unconsumed=0. Side B: MUT-ALERTSUP forces the
+alert the monitor sees low once a record count is reached, and the fixed rule still raises 875 alert_minor errors,
+the first at cycle 862 which is deep in-run, while unconsumed stays at 1 throughout, so the mutation adds missing
+without touching the allowance. The ablation, the same mutated build with the fault never armed, passes at zero.
+
+Retained: gen_tdd_logs/mutations/gen_fu_l37_tag_eor_unconsumed.log, with a manifest row. Two corrigenda ride the
+same records touch, each with its own row and each leaving its retained log closed: CM211-Low-4 and CR-33-L-3
+are answered by gen_fu_l33_age17_attempt_corrigendum.log, which states the definition the Critic verified; and
+OR-36-1 and CM212 Low-1, Low-2 and Info-3 by gen_fu_l36_dbg_driver_livelock_corrigendum.log, which names all
+three local runs with their roots' heads and the three changed files hashed on both sides, shows those files
+byte-identical to the blobs at 1deec4c, corrects the retained log's blank severity lines by measurement (the
+failing runs have no report summary at all, since the cocotb assertion aborts before the report phase), scopes
+that log's closing every-figure claim to the block it describes, and records that the level lags on EXIT too,
+so a request asserted just after a dret is released at once as a one-cycle pulse rather than held.

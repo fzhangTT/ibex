@@ -1,0 +1,77 @@
+# THE TAG HALF'S END-OF-RUN HOLE: a qualified injection the core never consumed was reported MISSING.
+# Found triaging a round-1 dry-run failure of gen_ut_lockstep_icache_ecc_tag_two at seed 508609593.
+#
+# THE DEFECT, and it was an asymmetry inside one checker. At the end of a run report_phase treated the two
+# injection kinds differently: kind inject_data with a valid way became verdict -1 and was counted as pending and
+# UNJUDGED, with the code's own comment reading "the run ended before their verdict: unjudged, reported, never
+# failed"; kind inject was set to verdict = qualified and close_owed then raised alert_minor for it. So the data
+# half had an end-of-run allowance and the tag half had NONE. The tag half's qualification tests only that the
+# cache is enabled and no invalidation sweep is near; it never tested whether the lookup was CONSUMED.
+#
+# WHY THAT MATTERS: the DUT checks a lookup it consumes. A tag word read on a lookup the core never consumes can
+# never produce alert_minor_o, and at the end of a run that is exactly what happens.
+#
+# THE MEASUREMENT THAT SETTLED IT, from the failing run reproduced locally with the export on so the retirement
+# stream is visible. The injected index was resolved against every retired record, taking the index as the pc bits
+# above the line offset with 256 lines from the rendered lines-times-ways constant:
+#     the run's LAST retirement is at cycle 21478
+#     the injection is at cycle 21479, ONE CYCLE AFTER IT
+#     retirements at or after the injection: ZERO
+#     positive control, so the index mapping is not the story: index 28 is retired 18 times in the run, the last at
+#     cycle 21478 with pc 0x800000e4, which maps to index 28
+# The corrupted word was read one cycle after the core retired its last instruction.
+#
+# THE RULE, mirroring the data half rather than approximating it: a qualified tag injection with no pulse and NO
+# RECORD RETIRED AT OR AFTER its cycle is UNJUDGED, counted as unconsumed and never failed. The in-run pass defers
+# such an injection while no retirement has yet been seen after it, because the answer is not knowable yet, which is
+# the same shape the data half uses while its revealing retirement has not arrived.
+# WHY NOT A TIME WINDOW KEYED ON THE FINISH REQUEST, which was the first idea: the finish request was seen at cycle
+# 21433 and the core kept retiring for another 45 cycles, so a finish-keyed rule would have excused injections that
+# were genuinely consumed and checkable. The retirement test is strictly narrower.
+
+== 1. THE FAILURE, reproduced locally byte-exactly before anything was changed ==
+   base: 92c0850  (committed checker, the FAIL side)
+   compile OK: sources sha256 (dv/auto_dv env, tb, isa, gen_tb): f8087204d5d26cc3
+   verdict: FAIL
+   UVM_ERROR : 1
+   alert_minor_o missing within 2 cycles of the tag-RAM ECC injection at cycle 21479 (way 1 index 28)
+   finish_req seen at cycle 21433
+   ecc injections judged=906 qualified=894 missing=1
+   The same injection, the same finish request and the same 906/894/1 counters as the LSF run.
+
+== 2. SIDE A OF THE RED: the tail injection is now unconsumed, not missing ==
+   == A. THE FAILING SEED on the fixed checker: expect PASS with unconsumed=1
+      seed 508609593: verdict PASS  UVM_ERROR : 0
+        ecc injections judged=906 qualified=894 missing=0 unconsumed=1
+   
+   == B. A DIFFERENT SEED as the unchanged control
+      seed 1: verdict PASS  UVM_ERROR : 0
+        ecc injections judged=944 qualified=935 missing=0 unconsumed=0
+   end 2026-09-04T19:12:07Z
+   READING: the failing seed PASSES with missing=0 and unconsumed=1, and the other 893 qualified injections
+   are untouched. A different seed reports unconsumed=0, so the allowance does not fire where it should not.
+
+== 3. SIDE B OF THE RED: an in-run missing alert STILL fails the fixed rule ==
+   MUT-ALERTSUP forces the alert the monitor sees low once +mutsup_at records have retired, so every qualified
+   in-run injection after that owes a pulse it cannot get. Those injections have retirements after them, so the
+   unconsumed allowance cannot apply to them and the rule must still fire.
+   base: 1deec4c  checker: FIXED  mutation: MUT-ALERTSUP
+      baseline gen_tb_top.sv sha256 first16: 736a8d8099339024
+      mutated  gen_tb_top.sv sha256 first16: 85b50e1343c65af1
+   compile OK: sources sha256 (dv/auto_dv env, tb, isa, gen_tb): 46f6e1dfdddebb10
+   
+   == THE MUTATION ACTIVE from record 500: the fixed rule must FAIL
+      verdict FAIL  UVM_ERROR : 875
+      first alert_minor error: alert_minor_o missing within 2 cycles of the tag-RAM ECC injection at cycle 862 (way 1 index 25)
+      ecc injections judged=906 qualified=894 missing=875 unconsumed=1
+   
+   == THE ABLATION, same mutated build with the mutation never armed: must PASS
+      verdict PASS  UVM_ERROR : 0
+      first alert_minor error: 
+      ecc injections judged=906 qualified=894 missing=0 unconsumed=1
+   end 2026-09-04T19:13:54Z
+   READING: 875 alert_minor errors with the mutation armed at record 500, the first at cycle 862 which is deep
+   in-run, and unconsumed stays at 1 throughout: the mutation adds 875 MISSING without touching the allowance.
+   The ABLATION, the same mutated build with the mutation never armed, PASSES at zero errors, so the 875 come
+   from the fault and not from the build.
+# END. Every figure is read from a run's own artefacts by the command printed above it.

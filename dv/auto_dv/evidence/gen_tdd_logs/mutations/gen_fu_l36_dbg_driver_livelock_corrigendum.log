@@ -1,0 +1,71 @@
+# CORRIGENDUM to the retained log gen_fu_l36_dbg_driver_livelock.log (landing 36, committed 1deec4c).
+# The retained log is NOT edited. This answers OR-36-1 and CM212 Low-1, Low-2 and Info-3.
+#
+# OR-36-1 and CM212-Low-1: THE BUILDS. The retained log named the failing run's build (head-mode at 962d31f) and
+# called the others "one root" and "the fixed root". All three local runs are named here, each with the root's git
+# head and the sha256 of the three SystemVerilog files the fix changes, on both sides of the change. Two of the three
+# runs changed only a Python bound, and the identical hashes below are the evidence for that rather than a claim.
+#   local reproduction and the sixteenfold-bound run   root: a detached archive of 962d31f
+#   the fixed-driver run                               root: a detached archive of b105c09
+# The digest each root's compile reports is the LOCAL runner's find-digest over dv/auto_dv env, tb, isa and gen_tb,
+# written by gen_tb_local.sh line 37 into config_opts.txt under the key "sources sha256 (dv/auto_dv env, tb, isa,
+# gen_tb)". It is NOT the committer's gate digest, which is gen_flow_util.filelist_digest over gen_rtl.f plus
+# gen_tb.f. NO COMMITTED GATE IDENTITY APPLIES to any of these roots and none is claimed: the fixed root is b105c09
+# plus three files, while the landing committed a different tree at 1deec4c.
+# THE LINK THAT MATTERS, stronger than any digest of a scratch root: the three overlaid files are byte-identical to
+# the blobs the landing committed, compared per file below, so the green half of the red ran on the bytes that landed.
+#
+# CM212-Low-2: A CLAIM WITH NOTHING UNDER IT, corrected. Section 1 of the retained log reads "Zero UVM_ERROR and zero
+# UVM_FATAL: the log's own severity counts read" and is then followed by BLANK LINES, at its lines 43-44, 73 and 80.
+# The reason is in section 3 of the same log: the cocotb assertion aborts the test before the UVM report phase, so a
+# failing run has no severity summary at all and the grep that was to quote it matched nothing. The log therefore
+# stated the reason in one place and asserted the counts in another, which is the defect. THE MEASURED POSITION:
+# both committed-driver runs have ZERO severity lines and no UVM report summary; the FIXED run has both, reading
+# UVM_ERROR : 0 and UVM_FATAL : 0. The zero-error claim is true of the fixed run and is unsupported for the failing
+# runs, where the correct statement is that no checker verdict exists because the report phase never ran. What does
+# stand for the failing runs is the cocotb assertion text and the record-stream evidence, neither of which needs the
+# report phase.
+# ALSO CM212-Low-2: the retained log's closing line says every figure is read "by the command printed above it".
+# That holds for the section-1 measurement block and NOT for the whole log: sections 2, 3 and 4 quote figures from
+# scripts whose commands are not reproduced line by line beside them. The claim is scoped here to the block it
+# describes.
+#
+# CM212-Info-3: THE LEVEL LAGS ON EXIT AS WELL AS ON ENTRY, and the consequence differs. The retained log records the
+# entry lag, that the level is derived from retired records so a release can be a few cycles late. The same lag
+# applies leaving debug mode: after a dret the core is out while the level still reads high until a non-debug record
+# retires, so a request asserted inside that window sees the level high and is released at once, giving a ONE-CYCLE
+# PULSE instead of a hold until the next entry. That is narrower stimulus than the policy intends, not a hang, and it
+# is the price of deriving the level from the record stream rather than from a DUT-boundary signal.
+
+== 1. THE THREE ROOTS, their heads and the three files on both sides ==
+$ for root in tohost_root drv_root; do for f in the three; do git show <base>:$f | sha256sum; sha256sum <root>/$f; done; done
+   -- local-repro-and-x16   root: detached archive of 962d31f
+      gen_bridge_if.sv   before 8102a0f2199ee1be  after 8102a0f2199ee1be  IDENTICAL
+      gen_rvfi_pkg.sv    before a95a7fb5318c2b2c  after a95a7fb5318c2b2c  IDENTICAL
+      gen_agents_pkg.sv  before d3f0672de0a270fd  after d3f0672de0a270fd  IDENTICAL
+      compile digest: sources sha256 (dv/auto_dv env, tb, isa, gen_tb): f8087204d5d26cc3
+   -- fixed-driver   root: detached archive of b105c09
+      gen_bridge_if.sv   before 8102a0f2199ee1be  after 16aa4c868f79fbb2  CHANGED
+      gen_rvfi_pkg.sv    before a95a7fb5318c2b2c  after f41f8c8cde61b5ad  CHANGED
+      gen_agents_pkg.sv  before d3f0672de0a270fd  after 217c3910142dd3a0  CHANGED
+      compile digest: sources sha256 (dv/auto_dv env, tb, isa, gen_tb): 1a7de65f7001a0fa
+
+$ for f in the three; do md5sum drv_root/$f; git show 1deec4c:$f | md5sum; done   (the run against the landed blobs)
+   gen_bridge_if.sv   run 943c6310131ec872ec1c56d8a13f07b6  committed 943c6310131ec872ec1c56d8a13f07b6  MATCH
+   gen_rvfi_pkg.sv    run d9a4afc2659544e4945b141391ea860d  committed d9a4afc2659544e4945b141391ea860d  MATCH
+   gen_agents_pkg.sv  run 673a364fffc886f12625b69a59e1635e  committed 673a364fffc886f12625b69a59e1635e  MATCH
+
+== 2. THE SEVERITY LINES EACH RUN ACTUALLY HAS ==
+$ for d in the three run dirs; do command grep -acE "^UVM_(ERROR|FATAL) :" $d/stdout.log; and print them; done
+   -- local-repro-flat-bound: severity lines 0, report summary 0
+   -- x16-bound: severity lines 0, report summary 0
+   -- fixed-driver: severity lines 2, report summary 1
+        UVM_ERROR : 0
+        UVM_FATAL : 0
+   READING: the two committed-driver runs have none, so no checker verdict exists for them; the fixed run has
+   both at zero. That is the figure the retained log's blank lines were meant to carry.
+$ command grep -n "sources sha256" dv/auto_dv/tb/gen_tb_local.sh
+   37:    echo "sources sha256 (dv/auto_dv env, tb, isa, gen_tb): $SRC_SHA" | tee -a "$OUT/config_opts.txt"
+   55:    echo "sources sha256: $SRC_SHA" >> "$OUT/compile.log"
+# END. Every figure in the two blocks above is read by the command printed above it, from a root's own files or
+# from a committed blob. This scoping is deliberate: it is the claim CM212-Low-2 found overstated.

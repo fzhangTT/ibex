@@ -1,0 +1,38 @@
+# CORRIGENDUM to the retained log gen_fu_l33_age17_attempt.log: what "DISTINCT OUTCOMES" counts.
+# The retained log is NOT edited. It answers CM211-Low-4, which found the figure stated with no definition and
+# reproduced several different numbers from the same rows depending on what was compared.
+#
+# THE DEFINITION, as the Critic verified it: 25 is the count of DISTINCT FINISH RECORDS PER ONSET. The sweep has 52
+# rows carrying 47 distinct onset values, because four extra seeds share one onset; taking one row per onset and
+# counting distinct finish records gives 25.
+# THE SAME FIGURE FALLS OUT OF WIDER COMPARISONS, which is why the log's own wording was loose rather than wrong:
+# comparing six fields of the summariser's row (finish, drained, records, boundfail, open, ages) per onset also gives
+# 25, as does adding fired_at, and record total alone and fired_at alone each give 25 too. The measurements below
+# show all of them, so a reader can see the figure is not an artefact of one field choice.
+#
+# WHY THE FIGURE EXISTS AT ALL: it is the FREE-PHASE SAMPLE SIZE. Many onsets fall in a gap between raise events and
+# change nothing, so the number of onsets overstates how much of the phase space was explored. The claim it supports
+# is that zero hits over 25 outcomes bounds nothing, which is why the attempt reports a miss rather than a bound.
+#
+# THE OTHER KEYING AND WHY IT DIFFERS, since the reviewer reproduced 29: keyed over all 52 ROWS instead of the 47
+# distinct onsets, every variant gives 29, because the four extra seeds at one onset diverge from each other and from
+# the row that onset already had. Neither number is wrong; they answer different questions, and the log stated one
+# without saying which.
+#
+# ONE FIGURE OF THE ROW THAT DOES NOT REPRODUCE HERE, said plainly: the row's 27 "for the tuple" does not come out of
+# these rows under any keying tried below. Every onset-keyed variant gives 25 and every row-keyed variant gives 29.
+# The definition above removes the ambiguity that produced it rather than explaining it away.
+
+== THE MEASUREMENT, over the retained log's own summariser rows ==
+$ python3 (key the doldi rows by onset and by row, comparing several field sets)
+   doldi rows 52   distinct onset values 47
+   KEYED BY ONSET, one row per onset:
+     six fields (finish, drained, records, boundfail, open, ages) : 25   <== the log's figure
+     those six plus fired_at                                      : 25
+     finish alone 25   records alone 25   fired_at alone 25
+   KEYED BY ROW, all rows:
+     six fields                     : 29
+     six fields plus fired_at       : 29
+     six fields plus seed           : 29
+     six fields plus fired_at, seed : 29
+# END. The rows are the retained log's own, produced by its summariser from each run's artefacts.
