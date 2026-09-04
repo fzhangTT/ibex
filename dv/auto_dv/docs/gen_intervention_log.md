@@ -1850,3 +1850,17 @@ than ten minutes by a literal find path (944 to 10 entries; /tmp from 99% to 47%
 superseded outputs by literal path. Rule from here: the trash directory is purged of settled entries at every watchdog
 tick while /tmp is above 90%, and every teammate deletes a superseded build output when its successor is proven, not
 at landing time.
+
+## LOG-083 - 2026-09-04 - Owner cost steer: teammates move to Opus with a context transfer; Runtime uses cheaper subagents
+
+The owner's steer at 05:35Z: pause at the next convenient point and do a model and context transfer; every teammate
+except the Critic runs on Opus; the Runtime Manager uses simpler models (subagents) for basic tasks. Mechanics: each
+teammate at a clean point (files clean at HEAD, nothing mid-edit) writes a HANDOVER block at the top of its STATUS.md
+(role and standing rules, exact queue with file pointers, recipes, gotchas), replies, and edits nothing further; the
+Orchestrator stops that instance and respawns the same role name on Opus with a spawn prompt carrying DV_prompt.txt,
+agent_team_prompt.txt, the role section, the handoff rules, the rulings that bind the role (LOG-067, LOG-070, LOG-077,
+LOG-079, A-002 and the rest) and a pointer to the HANDOVER block. The DV Lead, Runtime, Test Writer and RTL/Arch are
+transferred now; TB Infra at the end of its current WP-12 turn (its LSF chains continue); the Critic stays. The
+respawned Runtime dispatches Sonnet or Haiku subagents for mechanical work (hash lists, yaml equality, log grepping,
+retention manifests, probe runs) and keeps Opus for judgment; LSF commands stay with the Runtime Manager itself, never a
+subagent. The Orchestrator's own model is the session's and is not changed here.
