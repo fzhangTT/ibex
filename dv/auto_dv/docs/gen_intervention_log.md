@@ -1826,3 +1826,13 @@ data tweak (rtl/ibex_icache.sv:318-352) is disabled for invalidation and ECC-cor
 (:388-403, :450) is the index and applies to every tag write, the reset sweep included, so the valid bit is XORed with
 index[7] on all writes; the un-tweak operands are the index for tag words and the line address from the same-cycle tag
 write for data words. The DV Lead corrects the plan (rows CM166); tb-infra builds to the corrected facts.
+
+## LOG-081 - 2026-09-04 - The Critic's REQUEST-CHANGES on landing 12 lifts on its tb_l14 re-review of landing 13
+
+The Critic's tb_l13 (gen_critic_tb_l13.md, 7026974) was REQUEST-CHANGES on tb-infra's landing 12 (ba3799b) for the
+store_same_slot_then_pop window (the CM150-M-1 point). Landing 13 (3bf3d6b) bound the window to the plan owner's
+ruling (the plain-store record immediately before the pop) and re-proved the bin at 1; its cross-model review
+(2026-09-04-claude-diff-c4a5fd56-3bf3d6bf.md, 9f67070) is APPROVE-WITH-CHANGES and the Critic's tb_l14
+(gen_critic_tb_l14.md, 442d484) is APPROVE, verifying build sb3's identity first-hand and closing tb_l13 M-1 and the
+tb_l12, tb_l13, CM148, CM149 and CM150 items. Ruling: the landing-12 gate is lifted at 442d484; tb_l14's six lows ride
+tb-infra's WP-12 landing as rows CR-14.
