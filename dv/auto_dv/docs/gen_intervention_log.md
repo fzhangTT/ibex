@@ -2000,3 +2000,26 @@ stays at 15 declared and 14 owed as landed at f0723d6; the owed key retires in a
 are checked through the derived path. Runtime's API note (17bb791) is rescoped in its next touch to the direct raw-report
 path. The owner decision narrows to whether ci/check_fcov_expectations.py should parse cross sections itself so a direct
 call cannot mislead; the flow does not depend on it.
+
+## LOG-085 - 2026-09-04 - Owner directive: proceed to round 1 (the first measured coverage run); freeze non-gating TB and plan work
+
+Owner (18:2xZ), on the Orchestrator's path-to-coverage assessment: "If the steps are short then just proceed - we should start
+iterating on coverage metrics soon."
+
+State at the directive: 103 testlist entries, 15 measured (each with an fcov manifest whose stem equals the entry), 23 red
+fixtures, 28 manifests; the fcov-expectation leg exercised in both directions through the flow and its grading landed (rt35
+e988ee6, rt35b bea12ec); the standing guard built and pre-validated (joint landing pending); round 0 was a refused probe
+(LOG-046) with zero credited; measured dispatch held by the Orchestrator and refused by the flow without a head-mode canary
+build (LOG-046a).
+
+Ruling (Orchestrator, executing the directive):
+1. Round 1 is the next goal. Its gating items are: the joint standing-guard landing and the cap resize (in hand); the DV Lead's
+   round-1 request in the acceptance form (the 15 measured entries, their seeds, the expected per-entry outcome stated before the
+   wave, the standing gates P6 / LOG-067 / LOG-077 named); Runtime's head-mode canary build at the round's HEAD; the dispatch of
+   gen_round.py --round 1 on LSF with coverage, the merge, the fcov checks, the verdicts; rtl-arch's F-1 exclusion chain (pass 14)
+   on the announcement; the DV Lead's crediting; one cross-model review of the round record.
+2. The measured-dispatch hold lifts the moment the round-1 request is in Runtime's queue and the canary build is green.
+3. FROZEN until round 1 is in and its record reviewed: the NMI timing knob (its two bins stay counted-only), the sva_rvfi_irq_valid
+   replacement property, the age-17 driver-hook fixture, the retirement-stall residual, the loader tightening rt37, and any new
+   plan set beyond the round-1 request. Corrigenda to already-committed records still land when their rows arrive.
+4. Reviews continue for every landing; the round record's review is the Critic's and the reviewer's next priority once it exists.
