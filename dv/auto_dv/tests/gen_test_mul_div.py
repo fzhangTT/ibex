@@ -102,9 +102,7 @@ class MulDiv(GenTest):
     name = "gen_test_mul_div"
     schedulable = lib.TIMING_ONLY_KNOBS
     # items of the plan group this test does not check, with the reason (two-sided against the group by the structure check)
-    # bins this test does not guarantee per run, with the reason and its class: seed-dependent bins
-    # are credited from the merged report, stimulus bins need a program change, declaration bins cannot
-    # be a per-run guarantee at all
+    # bins this test does not guarantee per run, with the reason and its class (gen_test_template.bins_not_hit)
     bins_not_hit = {
         "gen_div_ops_cg.cr_div0.div_zero_neg_rand":
             "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",

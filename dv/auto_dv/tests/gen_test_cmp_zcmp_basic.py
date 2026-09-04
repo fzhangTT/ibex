@@ -100,9 +100,7 @@ class CmpZcmpBasic(GenTest):
     # The items' Knobs lines (dmem/imem rvalid and gnt delay regimes), all timing-only.
     schedulable = ("knob_dmem_rvalid_delay", "knob_dmem_gnt_delay", "knob_imem_rvalid_delay", "knob_imem_gnt_delay")
     # items of the plan group this test does not check, with the reason (two-sided against the group by the structure check)
-    # bins this test does not guarantee per run, with the reason and its class: seed-dependent bins
-    # are credited from the merged report, stimulus bins need a program change, declaration bins cannot
-    # be a per-run guarantee at all
+    # bins this test does not guarantee per run, with the reason and its class (gen_test_template.bins_not_hit)
     bins_not_hit = {
         "gen_cmp_zcmp_hazard_cg.cp_hazard.popret_ra_deferred":
             "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",

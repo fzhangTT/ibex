@@ -63,9 +63,7 @@ class BitRatified(GenTest):
     name = "gen_test_bit_ratified"
     schedulable = lib.TIMING_ONLY_KNOBS
     # items of the plan group this test does not check, with the reason (two-sided against the group by the structure check)
-    # bins this test does not guarantee per run, with the reason and its class: seed-dependent bins
-    # are credited from the merged report, stimulus bins need a program change, declaration bins cannot
-    # be a per-run guarantee at all
+    # bins this test does not guarantee per run, with the reason and its class (gen_test_template.bins_not_hit)
     bins_not_hit = {
         "gen_bit_sbit_cg.cp_binv_twice.yes":
             "stimulus: the program never applies binv twice to the same bit position in one sequence",

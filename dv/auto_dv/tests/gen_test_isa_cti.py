@@ -116,9 +116,7 @@ class IsaCti(GenTest):
     name = "gen_test_isa_cti"
     schedulable = lib.TIMING_ONLY_KNOBS
     # Items of the plan group this test does not check, with the missing component (two-sided against the group).
-    # bins this test does not guarantee per run, with the reason and its class: seed-dependent bins
-    # are credited from the merged report, stimulus bins need a program change, declaration bins cannot
-    # be a per-run guarantee at all
+    # bins this test does not guarantee per run, with the reason and its class (gen_test_template.bins_not_hit)
     bins_not_hit = {
         "gen_isa_branch_cg.cp_op.c_beqz":
             "stimulus: the program emits no compressed branch: gen_isa_cti_prog.py generates the 32-bit forms only",

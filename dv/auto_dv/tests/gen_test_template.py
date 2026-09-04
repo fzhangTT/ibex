@@ -81,7 +81,10 @@ class GenTest:
     # leaves its value in evt_eot_code, so Python collects them edge by edge into self.reports and
     # treats store number expected_reports + 1 as the end of test. 0 = tohost only (riscv-dv programs).
     expected_reports = 0
-    bins_not_hit = {}       # bins of built items the test cannot hit (precondition not applied), with the reason; left out of the manifest
+    # bins of built items the test cannot hit (precondition not applied), left out of the manifest, each
+    # with its reason and class: a seed-dependent bin is credited from the merged report, a stimulus bin
+    # needs a program change, a declaration bin cannot be a per-run guarantee at all
+    bins_not_hit = {}
     # The handlers the program carries ("dbg": a debug ROM in the DM window, "irq": a returning interrupt handler, also for the NMI,
     # "exc": a trap handler for injected bus faults) and whether it keeps mstatus.MIE at 0 throughout: a regime knob may be in play
     # only with its handler, the irq knobs also under mie_stays_zero while no NMI can be driven (lib.regime_handler_violations; the

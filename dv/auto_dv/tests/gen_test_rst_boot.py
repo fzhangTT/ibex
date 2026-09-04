@@ -153,7 +153,7 @@ class RstBoot(GenTest):
         "gen_rst_boot_cg.cr_pending_first.irq_enabled_later_first_instr_retire":
             "irq agent absent: no interrupt line is driven",
         "gen_sec_ctrl_inputs_cg.cp_bit8_readback.zero":
-            "stimulus: the readback never returns zero for this field in any run of this entry",
+            "stimulus: bit 8 is the registered ic_scr_key_valid_i and the TB drives the key valid out of reset (gen_key_reset_valid default 1), which this entry does not turn off, so every cpuctrlsts read returns one there; the reset expectation of this test asserts that bit",
     }
     not_built = {
         "TP-SEC-031": "alert pin behaviour at reset: needs the event export (pin records)",

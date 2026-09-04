@@ -117,9 +117,7 @@ class CmpZca(GenTest):
     name = "gen_test_cmp_zca"
     schedulable = lib.TIMING_ONLY_KNOBS
     # every item of the plan group has a fire_tp method (two-sided against the group by the structure check)
-    # bins this test does not guarantee per run, with the reason and its class: seed-dependent bins
-    # are credited from the merged report, stimulus bins need a program change, declaration bins cannot
-    # be a per-run guarantee at all
+    # bins this test does not guarantee per run, with the reason and its class (gen_test_template.bins_not_hit)
     bins_not_hit = {
         "gen_cmp_imm_edges_cg.cp_cj_off.self":
             "stimulus: the program emits no compressed jump whose target is the jump itself",
