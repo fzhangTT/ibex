@@ -32,11 +32,20 @@ daf27d0 with the handed CM152 flow files and the three l12 fields null: the case
 (a manifest outside dv/auto_dv/fcov_expectations, a missing file, a measured entry with another test's stem) print BAD while the
 two positive cases (an unmeasured group manifest in the home, null) pass; the build-input gate case 13 BAD is the archive's
 missing .git, not part of this red. Then the rule was written and all pass. Re-retained at CM157-L-3 without the 190-column cut
-of the first copy (the refuse cases carry the distinct want tokens of CM157-I-1), from the loader with the rule block removed.
+of the first copy (the refuse cases carry the distinct want tokens of CM157-I-1), from the loader with the rule block removed;
+like every red here it is the self-test's output filtered to the case lines and the verdict (grep -E on CM153, the two positive
+labels, SELF-TEST BAD, Error and SELF-TEST:), byte-exact within that filter, not the whole 112-line output (CM160-I-1).
 gen_cm155_checker_value_red.log is the TDD red of the CM155 value-parsing fix (the review of the CM152 gate fix): the cases in
 place and the old parsing (a bare +row counted as set, =00 counted as on): the four refuse cases print BAD (a bare row under
 the master enable off, +gen_chk_all=00, +row=00, a non-numeric row value under the master enable off) while the non-numeric
-master case passes; then checker_knob_state reads the knobs as the SV's =%d parse does and all pass.
+master case passes; then checker_knob_state reads the knobs as the SV's =%d parse does and all pass. That fifth case
+(+gen_chk_all=x runs) passed under the old and the new reader alike and is wrong by VCS's actual conversion; CM159-M-1 flips it
+to a refuse case (see gen_cm159_vcs_value_red.log).
+gen_cm159_vcs_value_red.log is the TDD red of the CM159 fix: VCS's $value$plusargs("name=%d") matches on the name= prefix and
+converts a non-decimal remainder to 0 (yes, off, false, empty, 0x1, 1abc all read set with value 0; a bare +name never matches;
+u is 32 bits), while the CM155 reader called those unset and fell to the table default 1: eight cases print BAD before the fix
+(the flipped fifth case, =false, = empty, =0x1, =1abc, +gen_chk_all=false, =4294967296, the bare-then-= ordering) and four pass
+(=off and =yes under the master enable off, which the unset path already refused; =-1 runs; =0 before =1 refuses).
 
 | evidence path | source | bytes | md5 |
 |---|---|---|---|
@@ -49,3 +58,4 @@ master case passes; then checker_knob_state reads the knobs as the SV's =%d pars
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_log077_red2.log | dv/auto_dv/work/runtime/log077_red2.log | 1239 | cc6584b37c1fe68356a5aeefeeb98ec9 |
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_cm153_fcov_home_red.log | (runtime scratchpad) cm157/red_full.log | 1344 | 6c86dc2d8b7ae805107a85d5235ebe43 |
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_cm155_checker_value_red.log | (runtime scratchpad) cm155/red.log | 1266 | 492bf8cda8363303c4dda4a34fd93821 |
+| dv/auto_dv/evidence/gen_tdd_logs/flow/gen_cm159_vcs_value_red.log | dv/auto_dv/work/runtime/cm159_red.log | 2244 | 5230a37ea1af24d47533598d49a2d3c4 |

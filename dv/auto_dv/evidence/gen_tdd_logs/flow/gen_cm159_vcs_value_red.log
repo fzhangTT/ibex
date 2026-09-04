@@ -1,0 +1,15 @@
+# TDD red for CM159-M-1 / L-1 / L-2: the VCS value-parsing cases in place, the CM155 reader unchanged; the cases the sim treats as row-off but the reader as unset (or on) print BAD
+Fri Sep  4 03:53:38 UTC 2026
+SELF-TEST BAD measured_knob_condition_refusal (LOG-077) +gen_chk_all=x: VCS matches the name= prefix and converts the non-decimal remainder to 0, master off, row unmentioned refuses (CM159-M-1, flipping the CM155 fifth case): None
+SELF-TEST ok  measured_knob_condition_refusal (LOG-077) +row=off under the master enable off: set with value 0 in the sim, refuses (CM159-M-1): +gen_knob_icache_ecc_err_rate=frequent while +gen_chk_alert_minor reads off (row
+SELF-TEST ok  measured_knob_condition_refusal (LOG-077) +row=yes: set with value 0, refuses (CM159-M-1): +gen_knob_icache_ecc_err_rate=frequent while +gen_chk_alert_minor reads off (row
+SELF-TEST BAD measured_knob_condition_refusal (LOG-077) +row=false with the master enable on: set with value 0, refuses (CM159-M-1): None
+SELF-TEST BAD measured_knob_condition_refusal (LOG-077) +row= (empty): set with value 0, refuses (CM159-M-1; the old lambda refused it too): None
+SELF-TEST BAD measured_knob_condition_refusal (LOG-077) +row=0x1: the remainder is not a decimal integer, value 0, refuses (CM159-M-1): None
+SELF-TEST BAD measured_knob_condition_refusal (LOG-077) +row=1abc: not a decimal integer, value 0, refuses (CM159-M-1): None
+SELF-TEST BAD measured_knob_condition_refusal (LOG-077) +gen_chk_all=false: master off, row unmentioned refuses (CM159-M-1): None
+SELF-TEST BAD measured_knob_condition_refusal (LOG-077) +row=4294967296 wraps to 0 in the sim's 32-bit u, refuses (CM159-L-1): None
+SELF-TEST ok  measured_knob_condition_refusal (LOG-077) +row=-1 is non-zero in 32 bits, runs (CM159-L-1): None
+SELF-TEST BAD measured_knob_condition_refusal (LOG-077) a bare +row before +row=1: VCS skips the bare form (no name= match) and takes the = form, runs (CM159-L-2): +gen_knob_icache_ecc_err_rate=frequent while +gen_chk_alert_minor reads off (row
+SELF-TEST ok  measured_knob_condition_refusal (LOG-077) +row=0 before +row=1: VCS takes the first = form, refuses (CM159-L-2): +gen_knob_icache_ecc_err_rate=frequent while +gen_chk_alert_minor reads off (row
+SELF-TEST: FAIL
