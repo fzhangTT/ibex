@@ -169,8 +169,11 @@ executes. Not part of the B8 reproduction; listed because the same mechanism app
   the knob on: dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_fu_l10_b8_zcmp_dummy_on_* (35 firings on gen_zcmp_dummy_directed.S)
   and gen_fu_l10_b8_zcmp_dummy_popret_on_* (59 firings on gen_zcmp_dummy_popret_directed.S), counts per the excerpt headers;
   with the knob off the same programs show 0 firings (gen_fu_l10_lockstep_zcmp_dummy_* and gen_fu_l10_lockstep_zcmp_dummy_popret_*,
-  same build and programs, shorter retire target +gen_ut_boot_retire=10 against 1000 for the knob-on runs, all kept firings
-  preceding the tohost store; excerpt headers "sva_b8_dummy_in_expansion: 0").
+  same build and programs, shorter retire target +gen_ut_boot_retire=10 against 1000 for the knob-on runs; coverage of the
+  firing window per pair: for zcmp_dummy the kept firings end at 6375000 ps and both runs reach the tohost store (excerpt line
+  "tohost 0x00000001"); for popret neither run reaches tohost, both end in "no tohost store (SimTimeoutError)", the knob-on
+  run at 279455 ns with its last kept firing at 11415000 ps and the knob-off run at 201095 ns, far beyond that window; excerpt
+  headers "sva_b8_dummy_in_expansion: 0").
 
 ## 7. Anchors table
 
