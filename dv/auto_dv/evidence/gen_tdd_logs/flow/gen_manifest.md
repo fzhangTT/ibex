@@ -106,6 +106,18 @@ given so they never write into evidence, and they are part of the commands' own 
 The readings it carries are independently pinned by the committed self-tests, which is the alternative CR-F14-L-1
 offered; both now hold.
 
+gen_log084_cross_parse.log is the LOG-084 corroboration the Orchestrator asked for: whether the fcov checker's
+grpinfo parser keys cross bins under their cross. Measured on a real report rather than read off the parser, using
+the checker's own urg invocation against tb-infra's WP-8 part-1 database with the per-test isolation confirmed at one
+test, then running the checker's own parser on that report. It carries the three elements asked for: the report
+excerpt showing the group, coverpoint and cross heading kinds; the parser's emitted key count; and the attribution
+observed. Both halves hold: of 3959 emitted keys none carries any of the 96 cross names (so a declared cross bin
+always reads unhit), and 3130 cross bins across 119 group-and-cross pairs are keyed under the group's last-seen
+coverpoint, 56 of them with non-zero counts, one reporting 1200 hits that belong to a cross. The single name
+collision found has zero on both sides here, so the summing mechanism is proven while an inflation for that key is
+not demonstrated. The checker is the owner's file and was not edited; the log is the redirected output of the
+measurement, never retyped.
+
 | evidence path | source | bytes | md5 |
 |---|---|---|---|
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_gate_rule_red.log | dv/auto_dv/work/runtime/gate_rule_red.log | 926 | 78b72aae6509d2776a43c9314808b01b |
@@ -126,3 +138,4 @@ offered; both now hold.
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_cm174_data_ecc_condition_red.log | (runtime scratchpad) cm174/red_util.log + cm174/red_run.log | 1785 | c17a82573242002de87fa9f88921adc8 |
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_f1_probe_measured_red.log | (runtime scratchpad) f1/red_run.log | 594 | 4ffa5560c95bb2187ca21c2610339e06 |
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_l14_merge_verify.log | (runtime scratchpad) l14b/gen_l14_merge_verify.log | 4440 | 5e428524195514ac8d949a2565940955 |
+| dv/auto_dv/evidence/gen_tdd_logs/flow/gen_log084_cross_parse.log | (runtime scratchpad) log084/gen_log084_cross_parse.log | 2593 | 24774302bf4a00609ca49a9def5c0295 |

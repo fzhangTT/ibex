@@ -1,0 +1,37 @@
+# LOG-084 corroboration: ci/check_fcov_expectations.py's grpinfo parser and cross bins
+# Measured by Runtime on a real urg report, not from reading the parser alone. The checker is the owner's
+# file and is NOT edited. Report generated with the checker's own invocation:
+#   urg -full64 -dir <vdb> -format text -report <dir> -tests <selection>
+# vdb: dv/auto_dv/work/tb-infra/wit/w23/vcs_simv.vdb (tb-infra's WP-8 part-1 build), cm_name test,
+# tests.txt confirming Total tests in report: 1.
+# run at 2026-09-04T11:37:38Z
+
+== 1. report excerpt: the three heading kinds the report actually uses ==
+   Group : gen_fcov_pkg::gen_ic_ecc_cg
+   Summary for Variable cp_knob
+   Summary for Cross cr_ram_x_bits_x_way
+   headings present: 157 Variable, 96 Cross
+
+== 2. the parser's emitted keys ==
+   keys emitted from this report: 3959
+   keys keyed under any of the 96 cross names: 0
+   CONSEQUENCE (false fail): a manifest declaring <cg>.<cross>.<bin> can never be found, so it always reads unhit.
+
+== 3. count attribution observed ==
+   cross bins keyed under the group's LAST-SEEN coverpoint: 3130 bins over 119 (group, cross) pairs
+   of those, carrying a NON-ZERO count: 56
+   CONSEQUENCE (false pass), the live cases:
+      gen_cmp_imm_edges_cg.cp_link.c_addi_one -> parser reports 1200; the count truly belongs to cross cr_ci
+      gen_cmp_imm_edges_cg.cp_link.c_li_one -> parser reports 1; the count truly belongs to cross cr_ci
+      gen_isa_alu_imm_cg.cp_slt_case.addi_pos_rand -> parser reports 2; the count truly belongs to cross cr_op_imm
+      gen_isa_alu_imm_cg.cp_slt_case.addi_no -> parser reports 2; the count truly belongs to cross cr_op_rd_x0
+      gen_isa_alu_imm_cg.cp_slt_case.addi_neg_rand -> parser reports 1; the count truly belongs to cross cr_op_rs1
+   name collisions (a cross bin sharing a name with a real bin of that coverpoint): 1
+      gen_csr_trap_setup_warl_cg.cp_mcen_w.all1 is both a real coverpoint bin and a bin of cross cr_mst_fields; the parser SUMS them under one key
+   In this database both sides of that collision are zero, so no inflation is demonstrated for that key;
+   the mechanism means a genuinely unhit coverpoint bin reads HIT whenever its same-named cross bin is hit.
+
+== mechanism, from the parser's own source ==
+   'Summary for Cross <x>' does not match ^Summary for Variable (\S+)$, so the current coverpoint is not updated;
+   it matches the generic ^Summary for clause instead, which only clears the in-bins flag. The cross's own
+   'Covered bins' heading then re-opens bin parsing while the coverpoint still names the previous Variable.
