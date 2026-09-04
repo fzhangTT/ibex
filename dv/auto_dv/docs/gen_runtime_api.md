@@ -943,6 +943,19 @@ From any manifest: `bash <run_dir>/run_cmd.sh` reruns the exact simv command wit
 the current host (sources the staged env.sh). Through the flow: `gen_regress.py --repro <test>
 <seed>` (fresh build, same testlist entry) or a purpose-3 request.
 
+## 8a. Build identity: which "sources sha256" a header quotes
+
+Two quantities are called "sources sha256" in prose and are not the same thing, so a retained header must name the
+key it quotes rather than the words. `inputs.sources_sha256` in a build manifest is `gen_flow_util.filelist_digest`
+over `dv/auto_dv/tb/gen_rtl.f` and `gen_tb.f`, the sources those two filelists name, and is what the committer gate
+recomputes; `build_sources_sha256` in a run header is `gen_tb_local.sh`'s own digest over a find of
+`dv/auto_dv/env`, `tb`, `isa` and `gen_tb`. The two cover different input sets, so they do not compare.
+`dv/auto_dv/tools/gen_build_identity.py` prints the first for a given `--root`, so it works on a detached archive as
+well as the clone, and `--expect <16 hex>` exits 1 on a mismatch so a hand-off can gate on it (`--self-test` proves
+its four exit paths; the retained proof is `gen_tdd_logs/flow/gen_cr26_build_identity_selftest.log`). The manifest
+field's scope is also stated in `gen_build_input_gate_rule.md`; the owner decision was to leave both keys as they
+are, since the collision was in prose rather than in the schema.
+
 ## 9. Cleanup rule
 
 Owner ruling A-002 (2026-09-03): the flow deletes a computed directory only through

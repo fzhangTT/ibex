@@ -1,0 +1,28 @@
+# gen_build_identity.py: the four exit paths proven, and the tool's own --self-test retained
+# CR-26-L-1 asked for the tool's four-way proof (rc 0, 0, 1, 2) to be retained rather than described, and for the
+# tool to carry a self-test. Both are here: the self-test drives the tool AS A SUBPROCESS against a synthetic tree,
+# so each exit code is observed rather than reasoned about.
+# WHY SYNTHETIC rather than the clone: the real digest changes with every RTL or TB edit, so a self-test asserting
+# the clone's own value would fail on the next unrelated commit and teach people to ignore its output.
+# Ownership: the tool arrived from tb-infra and is mine from landing 26 onward. The two docstring lines that drop a
+# review id (CM203-Low-4) were already in the working tree when this touch began and are not my work; the exact-key
+# wording (inputs.sources_sha256 against build_sources_sha256) and everything below are.
+== 1. the tool's own --self-test on a synthetic tree ==
+   command: python3 dv/auto_dv/tools/gen_build_identity.py --self-test
+   Running new bashrc
+   SELF-TEST ok  the synthetic tree prints a digest over its 2 sources (rc 0, e0231679dce85ab0)
+   SELF-TEST ok  --expect with the true digest exits 0 (rc 0)
+   SELF-TEST ok  --expect with a wrong digest exits 1 and says MISMATCH (rc 1)
+   SELF-TEST ok  an unknown argument exits 2 with the usage (rc 2)
+   SELF-TEST ok  a --root with no flow exits 2 (rc 2)
+   SELF-TEST: PASS
+
+== 2. the same four paths on the REAL tree, since section 1 is synthetic ==
+   Exit codes captured directly, never through a pipe: a pipeline reports the LAST stage,
+   so a first draft of this section read rc 0 for the mismatch and the bad call. That is
+   how a proof log tells you the opposite of the truth.
+   no argument            rc=0 (want 0)  build identity   b48479a3bc6f1d9f   (filelist_digest over gen_rtl.f + gen_tb.f, 117 sources)
+   --expect true          rc=0 (want 0)
+   --expect wrong         rc=1 (want 1)  MISMATCH: expected 0000000000000000
+   unknown argument       rc=2 (want 2)  unknown argument: --frobnicate
+   --self-test with args  rc=2 (want 2)  --self-test takes no other argument

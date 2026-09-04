@@ -158,6 +158,12 @@ claim rested on two entries of the nine. The claim is now measured over all nine
 measurement, the per-entry isolation evidence, every declared bin with its count, and the prefix-glob near-miss that
 nearly reported the opposite. Nothing in the committed log is corrected beyond that one header sentence's provenance.
 
+gen_cr26_build_identity_selftest.log is the four-way proof CR-26-L-1 asked to see retained rather than described, plus
+the tool's own new --self-test. Section 1 is the self-test on a synthetic tree, deliberately synthetic because the real
+digest moves with every RTL or TB edit and a self-test pinned to the clone's value would fail on the next unrelated
+commit. Section 2 repeats the four paths on the real tree and records a mistake worth keeping: its first draft piped
+each run through tail, so it read rc 0 for the mismatch and the bad call, since a pipeline reports its last stage.
+
 | evidence path | source | bytes | md5 |
 |---|---|---|---|
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_gate_rule_red.log | dv/auto_dv/work/runtime/gate_rule_red.log | 926 | 78b72aae6509d2776a43c9314808b01b |
@@ -183,3 +189,4 @@ nearly reported the opposite. Nothing in the committed log is corrected beyond t
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_cm202_manifest_test_field_red.log | (runtime scratchpad) rt32/gen_cm202_manifest_test_field_red.log | 2838 | 383168720e28c1bacb84072cd346e9d8 |
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_l25_fcov_exercised.log | (runtime scratchpad) rt33/gen_l25_fcov_exercised.log | 8866 | d7ebcb05197e73e149655108a5c96ac3 |
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_l25_fcov_exercised_corrigendum.log | (runtime scratchpad) rt34a/gen_l25_fcov_exercised_corrigendum.log | 10240 | d9fadbf3e1e6dd7a6807fc704c4906b0 |
+| dv/auto_dv/evidence/gen_tdd_logs/flow/gen_cr26_build_identity_selftest.log | (runtime scratchpad) rt34a/gen_cr26_build_identity_selftest.log | 2160 | 3e7d97e63d49aa7a94ccfeff362e8f08 |
