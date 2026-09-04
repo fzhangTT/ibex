@@ -1,0 +1,110 @@
+# The fcov-expectation leg exercised for the first time: the nine WP-8 icache ECC entries
+# Until this run the leg was DECLARED AND BOUND but had never executed: two roles found that independently, the
+# Test Writer that no retained log of its own carried a checker line, and tb-infra that a manifest binds only
+# through fcov_expectation_file. This run is what makes it enforced rather than intended.
+# Source: HEAD 813994b, head mode, mirror source root ibex_dv_mirror_head/813994b3d483.
+# Build identity: b48479a3bc6f1d9f (filelist_digest over gen_rtl.f + gen_tb.f, 117 sources), read with
+# dv/auto_dv/tools/gen_build_identity.py --root against the source root the runs actually used, not the clone.
+# Unmeasured (each entry's own flag), coverage enabled, seed 1, purpose 2, requester tb-infra.
+# TWO FORMS WERE RUN and every figure below is from the second: one shared output root first, on my own judgment
+# about how the flow isolates; then the literal form the Orchestrator asked for, one fresh output directory AND its
+# own coverage database per entry, against the build the first pass compiled. The shared form agreed on all nine
+# verdicts and all 78 bins and is recorded here as a cross-check, not as the source.
+# HOW THE BINS WERE READ: not from the checker's verdict line. Its keyed output was compared bin by bin against a
+# parser of the urg report written for this purpose, so two independent readings of the same report stand behind
+# every count. That agreement is also what lets the owed-bin counts below rest on my reading alone.
+== 1. the nine verdicts (isolated form) ==
+   command: gen_run.py --build-dir <build> --test <name> --seed 1 --run-dir <own> --cov-dir <own> --fcov-check
+   RUN-EXIT gen_ut_lockstep_icache_ecc=0
+   RUN-EXIT gen_ut_lockstep_icache_ecc_data=0
+   RUN-EXIT gen_ut_lockstep_icache_ecc_data_noprobe=0
+   RUN-EXIT gen_ut_lockstep_icache_ecc_tag_two=0
+   RUN-EXIT gen_ut_lockstep_icache_ecc_data_two=0
+   RUN-EXIT gen_ut_lockstep_icache_ecc_both=0
+   RUN-EXIT gen_ut_lockstep_icache_ecc_far_data=0
+   RUN-EXIT gen_ut_lockstep_icache_ecc_far_data_noprobe=0
+   RUN-EXIT gen_ut_lockstep_icache_ecc_tag_disabled=0
+
+== 2. simulation verdicts from the shared-root cross-check ==
+   [2026-09-04T14:31:36Z] gen_ut_lockstep_icache_ecc_data seed=1: PASS (no collected failure mechanism; end marker and config banner present)
+   [2026-09-04T14:31:36Z] gen_ut_lockstep_icache_ecc seed=1: PASS (no collected failure mechanism; end marker and config banner present)
+   [2026-09-04T14:31:36Z] gen_ut_lockstep_icache_ecc_data_noprobe seed=1: PASS (no collected failure mechanism; end marker and config banner present)
+   [2026-09-04T14:31:44Z] gen_ut_lockstep_icache_ecc_tag_two seed=1: PASS (no collected failure mechanism; end marker and config banner present)
+   [2026-09-04T14:31:46Z] gen_ut_lockstep_icache_ecc_far_data seed=1: PASS (no collected failure mechanism; end marker and config banner present)
+   [2026-09-04T14:31:47Z] gen_ut_lockstep_icache_ecc_data_two seed=1: PASS (no collected failure mechanism; end marker and config banner present)
+   [2026-09-04T14:31:50Z] gen_ut_lockstep_icache_ecc_both seed=1: PASS (no collected failure mechanism; end marker and config banner present)
+   [2026-09-04T14:31:59Z] gen_ut_lockstep_icache_ecc_tag_disabled seed=1: PASS (no collected failure mechanism; end marker and config banner present)
+   [2026-09-04T14:32:00Z] gen_ut_lockstep_icache_ecc_far_data_noprobe seed=1: PASS (no collected failure mechanism; end marker and config banner present)
+   summary:
+   [2026-09-04T14:32:31Z] done: 9 pass, 0 fail, 0 xfail, 0 red_ok, 0 timeout, 0 not_run of 9; fcov expectations checked 9 (unmet 0, unverifiable 0); 0 run(s) without an fcov manifest []; manifest /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/runtime/out/l25_exercise_1430/manifest.yaml
+
+== 3. the keyed output read against the report, per entry ==
+   command: read_keyed.py <the nine run dirs>  (its own parser, then a bin-by-bin comparison)
+
+=== gen_ut_lockstep_icache_ecc ===
+  declared bins 7 | my reading agrees on 7, differs on 0, absent from my reading 0
+  checker's own status line, NOT relied on above: PASS
+  owed bins read from the report (declared by no manifest): {'gen_ic_ecc_cg.cp_no_alert_case.masked_duplicate_copy': 0, 'gen_ic_ecc_cg.cp_no_alert_case.during_invalidation': 10}
+
+=== gen_ut_lockstep_icache_ecc_data ===
+  declared bins 10 | my reading agrees on 10, differs on 0, absent from my reading 0
+  checker's own status line, NOT relied on above: PASS
+  owed bins read from the report (declared by no manifest): {'gen_ic_ecc_cg.cp_no_alert_case.during_invalidation': 0, 'gen_ic_ecc_cg.cp_no_alert_case.masked_duplicate_copy': 4}
+
+=== gen_ut_lockstep_icache_ecc_data_noprobe ===
+  declared bins 10 | my reading agrees on 10, differs on 0, absent from my reading 0
+  checker's own status line, NOT relied on above: PASS
+  owed bins read from the report (declared by no manifest): {'gen_ic_ecc_cg.cp_no_alert_case.masked_duplicate_copy': 0, 'gen_ic_ecc_cg.cp_no_alert_case.during_invalidation': 0}
+
+=== gen_ut_lockstep_icache_ecc_tag_two ===
+  declared bins 7 | my reading agrees on 7, differs on 0, absent from my reading 0
+  checker's own status line, NOT relied on above: PASS
+  owed bins read from the report (declared by no manifest): {'gen_ic_ecc_cg.cp_no_alert_case.masked_duplicate_copy': 0, 'gen_ic_ecc_cg.cp_no_alert_case.during_invalidation': 9}
+
+=== gen_ut_lockstep_icache_ecc_data_two ===
+  declared bins 10 | my reading agrees on 10, differs on 0, absent from my reading 0
+  checker's own status line, NOT relied on above: PASS
+  owed bins read from the report (declared by no manifest): {'gen_ic_ecc_cg.cp_no_alert_case.during_invalidation': 0, 'gen_ic_ecc_cg.cp_no_alert_case.masked_duplicate_copy': 2}
+
+=== gen_ut_lockstep_icache_ecc_both ===
+  declared bins 11 | my reading agrees on 11, differs on 0, absent from my reading 0
+  checker's own status line, NOT relied on above: PASS
+  owed bins read from the report (declared by no manifest): {'gen_ic_ecc_cg.cp_no_alert_case.masked_duplicate_copy': 14, 'gen_ic_ecc_cg.cp_no_alert_case.during_invalidation': 22}
+
+=== gen_ut_lockstep_icache_ecc_far_data ===
+  declared bins 9 | my reading agrees on 9, differs on 0, absent from my reading 0
+  checker's own status line, NOT relied on above: PASS
+  owed bins read from the report (declared by no manifest): {'gen_ic_ecc_cg.cp_no_alert_case.masked_duplicate_copy': 0, 'gen_ic_ecc_cg.cp_no_alert_case.during_invalidation': 0}
+
+=== gen_ut_lockstep_icache_ecc_far_data_noprobe ===
+  declared bins 8 | my reading agrees on 8, differs on 0, absent from my reading 0
+  checker's own status line, NOT relied on above: PASS
+  owed bins read from the report (declared by no manifest): {'gen_ic_ecc_cg.cp_no_alert_case.masked_duplicate_copy': 0, 'gen_ic_ecc_cg.cp_no_alert_case.during_invalidation': 0}
+
+=== gen_ut_lockstep_icache_ecc_tag_disabled ===
+  declared bins 6 | my reading agrees on 6, differs on 0, absent from my reading 0
+  checker's own status line, NOT relied on above: PASS
+  owed bins read from the report (declared by no manifest): {'gen_ic_ecc_cg.cp_no_alert_case.masked_duplicate_copy': 0, 'gen_ic_ecc_cg.cp_no_alert_case.during_invalidation': 0}
+
+every declared bin agrees with my own reading of the report
+
+== 4. the owed bins, collected: no manifest declares either, so only a direct reading finds them ==
+   entry                                  during_invalidation  masked_duplicate_copy
+   ecc                                            10                    0
+   ecc_data                                        0                    4
+   ecc_data_noprobe                                0                    0
+   ecc_tag_two                                     9                    0
+   ecc_data_two                                    0                    2
+   ecc_both                                       22                   14
+   ecc_far_data                                    0                    0
+   ecc_far_data_noprobe                            0                    0
+   ecc_tag_disabled                                0                    0
+   Both are reached today, in three entries each. Under tb-infra's own threshold (a structural bound or at
+   least thirty in that entry's own run) they STAY OWED: the highest single-entry counts are 22 and 14, both
+   in ecc_both, which is therefore the entry the seed sweep should target.
+
+== 5. what this run does and does not establish ==
+   Establishes: the leg executes end to end, 78 declared bins over 13 distinct read HIT, and the checker's
+   keyed output matches an independent reading of the same report bin for bin.
+   Does not establish: that a declared-but-unhit bin fails a run. No entry declared a bin it missed, so the
+   failing direction of this leg is still unexercised in the retained record.

@@ -142,6 +142,15 @@ could read the field, so a loader-level fixture would mean writing a bad manifes
 a self-test. The rule is defense in depth against drift, not a hole being closed: a mismatch it catches needs the
 sweep's equality and the stem rule both already satisfied.
 
+gen_l25_fcov_exercised.log is the first execution of the fcov-expectation leg: until this run it was declared and
+bound but had never run, which two roles found independently. Five sections: the nine verdicts from the isolated
+form, the shared-root cross-check, the keyed output read bin by bin against a parser of the urg report written for
+the purpose rather than against the checker's verdict line, the two owed bins that no manifest declares and that
+only a direct reading finds, and a section saying what the run does not establish. Two forms were run and the log
+says which figures come from which: one shared output root on my own judgment about the flow's isolation, then the
+literal one-directory-and-database-per-entry form the Orchestrator asked for. The build identity in the header was
+read against the source root the runs used rather than against the clone.
+
 | evidence path | source | bytes | md5 |
 |---|---|---|---|
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_gate_rule_red.log | dv/auto_dv/work/runtime/gate_rule_red.log | 926 | 78b72aae6509d2776a43c9314808b01b |
@@ -165,3 +174,4 @@ sweep's equality and the stem rule both already satisfied.
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_log084_cross_parse.log | (runtime scratchpad) log084/gen_log084_cross_parse.log | 3728 | 4aeb2ea5928a7b87a1d5db89343374e9 |
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_cr23_manifest_stem_red.log | (runtime scratchpad) rt30/gen_cr23_manifest_stem_red.log | 2885 | 65b16eef885b324b9b9997c5ebe6c891 |
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_cm202_manifest_test_field_red.log | (runtime scratchpad) rt32/gen_cm202_manifest_test_field_red.log | 2838 | 383168720e28c1bacb84072cd346e9d8 |
+| dv/auto_dv/evidence/gen_tdd_logs/flow/gen_l25_fcov_exercised.log | (runtime scratchpad) rt33/gen_l25_fcov_exercised.log | 8866 | d7ebcb05197e73e149655108a5c96ac3 |
