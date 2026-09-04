@@ -2,7 +2,7 @@
 
 Deliverable 1 (DV_prompt.txt Section 11). Version 2 (promoted from the T-002 draft after the Critic's
 verdict v1, dv/auto_dv/work/critic/gen_critic_feature_list_v1.md, findings C-02..C-26 addressed).
-Owner: dv-lead. Generated 2026-09-04 07:24 UTC from the area parts under dv/auto_dv/work/dv-lead/parts/.
+Owner: dv-lead. Generated 2026-09-04 07:44 UTC from the area parts under dv/auto_dv/work/dv-lead/parts/. Part-file names in this document (tp_<area>.md, fcov_<area>.md, gen_part_<area>.md, trace_*_<area>.csv and the README_*_BRIEF.md briefs) are this plan set's own gitignored sources, named as provenance: the content they hold is in the corresponding area of gen_test_plan.md, gen_fcov_plan.md or gen_feature_list.md, and the bug and doc-defect number series they define are in gen_bug_log.md. No claim in this document rests on opening one.
 
 Build configuration: `opentitan` (ibex_configs.yaml): BaseIsa=RV32IorCHERIoT (CHERIoT mode excluded
 by owner ruling), RV32E=0, RV32M=RV32MSingleCycle, RV32B=RV32BOTEarlGrey, RV32ZC=RV32ZcaZcbZcmp,
@@ -1306,7 +1306,7 @@ Conventions used below:
   rtl/ibex_multdiv_fast.sv:101-115 (state flop enabled by div_en_internal only),
   rtl/ibex_multdiv_fast.sv:412-526 (FSM), rtl/ibex_id_stage.sv:734 (div_en_id = instr_executing ?
   div_en_dec : 0), rtl/ibex_id_stage.sv:1033-1036 (instr_kill), rtl/ibex_id_stage.sv:1059-1062
-  (instr_executing) | map: dv/auto_dv/work/rtl-arch/gen_hierarchy_map.md H-D3 and "Unverified items"
+  (instr_executing) | map: dv/auto_dv/evidence/gen_hierarchy_map.md H-D3 and "Unverified items"
   1
 - Edge: yes, of F-MUL-012
 - Status: ACTIVE
@@ -6173,7 +6173,7 @@ exception_interrupts.rst "Interrupts" lines 52-57 states them).
   nmi_mode_q), 574 (nmi_mode_d holds by default), 736-745 (set in IRQ_TAKEN), 958-960 (cleared only
   by mret), 961-965 (dret leaves it), 640-645 and 785-814 (DBG_TAKEN_IF / DBG_TAKEN_ID entry paths
   do not write nmi_mode_d), 474-477 (debug entry itself is not masked by nmi_mode_q), 1033,1043
-  (flop); dv/auto_dv/work/rtl-arch/gen_hierarchy_map.md H-N1
+  (flop); dv/auto_dv/evidence/gen_hierarchy_map.md H-N1
 - Edge: yes, of F-IRQ-030
 - Status: ACTIVE
 - Notes: NEW (Critic C-09 item 2). Differs from F-IRQ-037 (NMI arriving while already in debug mode,
@@ -11358,10 +11358,15 @@ WAIT_RVALID_MIS, WAIT_GNT, WAIT_RVALID_MIS_GNTS_DONE, CTX_WAIT_GNT1, CTX_WAIT_GN
   so two fills of one line both write. With IC_NUM_WAYS = 2 (rtl/ibex_pkg.sv:401), and while the other
   way is invalid at the erroring lookup, the two selections differ exactly when the erroring copy
   sits in way 0, because allocation takes the lowest invalid way whenever any way is invalid and the
-  round-robin pointer otherwise (rtl/ibex_icache.sv:534-535): all 13 duplicates in the retained trace
-  dv/auto_dv/evidence/gen_tdd_logs/mutations/gen_fu_l16_TRACE_index26.log meet that precondition and
-  are in that direction. When the other way instead holds a valid different line, the first fill
-  takes round_robin_way_q and the copies differ when that pointer is not the erroring way. The
+  round-robin pointer otherwise (rtl/ibex_icache.sv:534-535). That direction was corroborated by a
+  tag-write trace that landing 15 retired, and the retained set records no tag writes, so the claim
+  now rests on the RTL alone and no case count is quoted for it. What the retained evidence does show
+  is that the masking precondition is not index-specific: 20 announced injections met the
+  two-way-valid equal-tag condition at two indices on build w18
+  (dv/auto_dv/evidence/gen_tdd_logs/mutations/gen_fu_l16_trace17_duplicate_copies.log, 17 at index 26
+  and 3 at index 27, counted from the run's own trace lines). When the other way instead holds a valid
+  different line, the first fill takes round_robin_way_q and the copies differ when that pointer is not
+  the erroring way. The
   copies then differ either from self-modifying code without fence.i (a software constraint per doc)
   or from a corruption of one copy, which the TB injects as WP-12 stimulus with no software
   constraint broken; in the second case a flip clearing a bit of the un-tweaked word the mux ORs is
@@ -11369,7 +11374,7 @@ WAIT_RVALID_MIS, WAIT_GNT, WAIT_RVALID_MIS_GNTS_DONE, CTX_WAIT_GNT1, CTX_WAIT_GN
   CG-IC-006.cp_no_alert_case.masked_duplicate_copy). The duplicate is self-limiting, since a
   duplicated line leaves no invalid way at its index so the next lookup of another line there evicts
   one copy (rtl/ibex_icache.sv:534-535), and self-clearing, since the next data error at that index
-  invalidates both matching ways in one write (:591-592, observed 13 times in that trace). No RTL
+  invalidates both matching ways in one write (:591-592). No RTL
   assertion forbids multiple tag matches. TP-IC-038 is informational (own `_info` test,
   gen_chk_alerts on), candidate owner question 5.
 
