@@ -209,7 +209,7 @@ MUT-SUP3 catch without it reported nothing and is not retained).
 
 Rule for these rows (the Critic's tb_l12 L-3): a build sha in a mutant row is copied from the retained run header (build_sources_sha256) or the compile log, never typed; a firing count is the assertion's or the checker's own count, never a grep over its name.
 
-## Landing 14 mutants (WP-12: the data-RAM ECC hook and the hit judgement; builds on the w16 sources)
+## Landing 14 mutants (WP-12: the data-RAM ECC hook and the hit judgement; re-run on w18 in landing 15, table below)
 
 Provenance: six copies of wp12_root (the landing sources, build w16 de983a8e68063c27) with one mutation each, applied out of tree by
 mut_oot_fcov.sh (the source tree's copy of the mutated file read back unchanged after the runs); the mutations as applied are
@@ -225,3 +225,42 @@ gen_fu_l16_<mutant>_mutant.diff and each copy's compile log gen_fu_l16_<mutant>_
 | MUT-ICE-WAY | gen_icache_ram.sv: the announcement names the other way | gen_ut_lockstep on gen_icache_ecc_directed.S, data rate frequent, probe on, row alert_minor (+gen_chk_all=0 +gen_chk_alert_minor=1) | 97a589a799b81066 (dataway_w16) | FAIL (UVM_ERROR 830): 453 `without an announced ECC injection`, 377 `missing within` (gen_fu_l16_DATAWAY_catch_ecc_data_freq_*) | PASS (0) gen_fu_l16_DATAWAY_ablate_ecc_data_freq_* |
 | MUT-BITS | gen_icache_ram.sv: the second flip of a two-bit injection lands on the first position (no corruption) | gen_ut_lockstep on gen_icache_ecc_directed.S, tag rate frequent, two bits, row alert_minor (+gen_chk_all=0 +gen_chk_alert_minor=1) | 21b77abf9c06b6f8 (bits_w16) | FAIL (UVM_ERROR 930): 930 `missing within` (gen_fu_l16_BITS_catch_ecc_tag_two_*) | PASS (0) gen_fu_l16_BITS_ablate_ecc_tag_two_* |
 | MUT-ALIGN | gen_checkers_pkg.sv: form (a) reads the probe's tag of cycle c + 2 instead of c + 1 | gen_ut_lockstep on gen_icache_ecc_far_directed.S, data rate frequent, probe on, row alert_minor (+gen_chk_all=0 +gen_chk_alert_minor=1) | da54df85425870e4 (align_w16) | FAIL (UVM_ERROR 13): 13 `every ECC injection in its window was judged not to owe it` (the true hit way judged from the wrong cycle's tag) (gen_fu_l16_ALIGN_catch_ecc_far_data_freq_*) | PASS (0) gen_fu_l16_ALIGN_ablate_ecc_far_data_freq_* |
+
+## Landing 15 mutants (the measured-run judge's own reds, the probe-off data reds, and the landing-14 six re-run on w18)
+
+Both verdicts on landing 14 found the same gap: every data-side mutant ran with the P9 probe on, where form (a) decides the hit way, and the one
+tag-only mutant cannot cover the data judgement, so form (b) -- the judge a measured entry actually uses -- had no mutation it alone caught. This
+batch answers that and re-runs the landing-14 six on the landing-15 build so every retained header names the build the landing claims.
+
+Build w18, sources cff50f81508de1a9. Each mutant is built out of tree by mut_oot_fcov.sh from a copy of the landing sources, and the shared tree is
+never touched (the source tree's copy of the mutated file is read back unchanged after the runs). Each mutant build was checked to differ from w18 in
+exactly the file its mutation names by comparing per-file sha256 lists (scratchpad/gen_l15_mut_identity.py): 13 roots including the trace session, 13
+matches, 0 mismatches. Every catch run carries +gen_chk_all=0 +gen_chk_alert_minor=1, so the failure signature belongs to the named checker with every
+other Zone A check inert; every ablation runs the same mutant with the row off. Build shas are copied from the run headers. The per-site splits are the
+checker's own counts over the whole run, retained in each excerpt header: gen_checkers_pkg.sv(660) a pulse with no announced injection at all, (664) a
+pulse whose window held only injections judged not to owe it, (682) a tag-RAM injection's pulse missing, (687) a data-RAM injection's pulse missing.
+
+The two mutations of form (b)'s own rule are new here. Neither touches the RAM model: they break the retirement-stream rule itself, so with the probe
+off nothing else can decide the hit way and the run fails.
+
+| Mutant | Mutation | Run | Build (from the run header) | Catch | Ablation |
+|---|---|---|---|---|---|
+| RETSEQ | gen_checkers_pkg.sv: form (b) without its sequential-flow requirement, so a discontinuity retiring first no longer makes the parse ambiguous | gen_ut_lockstep on gen_icache_ecc_far_directed.S, data rate frequent, probe OFF, row alert_minor | 55eede56b5827462 | FAIL (UVM_ERROR 71): 664=42, 687=29 (gen_fu_l16_RETSEQ_catch_ecc_far_data_freq_noprobe_*) | PASS (0) gen_fu_l16_RETSEQ_ablate_ecc_far_data_freq_noprobe_* |
+| RETIDX | gen_checkers_pkg.sv: form (b) takes the first retirement after the read whatever its line index | gen_ut_lockstep on gen_icache_ecc_far_directed.S, data rate frequent, probe OFF, row alert_minor | b0603cffda046b92 | FAIL (UVM_ERROR 22): 664=10, 687=12 (gen_fu_l16_RETIDX_catch_ecc_far_data_freq_noprobe_*) | PASS (0) gen_fu_l16_RETIDX_ablate_ecc_far_data_freq_noprobe_* |
+| MUT-ICE-DATA-MISS | gen_icache_ram.sv: announced, the clean word returned | gen_ut_lockstep on gen_icache_ecc_directed.S, data rate frequent, probe OFF, row alert_minor | 25c24ad6874dcc58 | FAIL (UVM_ERROR 150): 687=150 (gen_fu_l16_DATAMISS_catch_ecc_data_freq_noprobe_*) | PASS (0) gen_fu_l16_DATAMISS_ablate_ecc_data_freq_noprobe_* |
+| MUT-ICE-DATA-MISS | the same mutation on the far program | gen_ut_lockstep on gen_icache_ecc_far_directed.S, data rate frequent, probe OFF, row alert_minor | 25c24ad6874dcc58 | FAIL (UVM_ERROR 21): 687=21 (gen_fu_l16_DATAMISS_catch_ecc_far_data_freq_noprobe_*) | PASS (0) gen_fu_l16_DATAMISS_ablate_ecc_far_data_freq_noprobe_* |
+| MUT-ICE-WAY | gen_icache_ram.sv: the announcement names the other way | gen_ut_lockstep on gen_icache_ecc_directed.S, data rate frequent, probe OFF, row alert_minor | 22e470ea79db9c1c | FAIL (UVM_ERROR 557): 660=453, 687=104 (gen_fu_l16_DATAWAY_catch_ecc_data_freq_noprobe_*) | PASS (0) gen_fu_l16_DATAWAY_ablate_ecc_data_freq_noprobe_* |
+| MUT-ICE-WAY | the same mutation on the far program | gen_ut_lockstep on gen_icache_ecc_far_directed.S, data rate frequent, probe OFF, row alert_minor | 22e470ea79db9c1c | FAIL (UVM_ERROR 49): 660=1, 664=26, 687=22 (gen_fu_l16_DATAWAY_catch_ecc_far_data_freq_noprobe_*) | PASS (0) gen_fu_l16_DATAWAY_ablate_ecc_far_data_freq_noprobe_* |
+| RED0 | gen_checkers_pkg.sv: the monitor before the data half | gen_ut_lockstep on gen_icache_ecc_directed.S, data rate frequent, probe on, row alert_minor | c048df91ff5107ff | FAIL (UVM_ERROR 988): 660=494, 687=494 (gen_fu_l16_RED0_catch_ecc_data_freq_*) | PASS (0) gen_fu_l16_RED0_ablate_ecc_data_freq_* |
+| MUT-ICE-DATA-ANN | gen_icache_ram.sv: corrupted and not announced | gen_ut_lockstep on gen_icache_ecc_directed.S, data rate frequent, probe on, row alert_minor | c62152f657a84373 | FAIL (UVM_ERROR 494): 660=494 (gen_fu_l16_DATAANN_catch_ecc_data_freq_*) | PASS (0) gen_fu_l16_DATAANN_ablate_ecc_data_freq_* |
+| MUT-ICE-DATA-MISS | as above, probe on | gen_ut_lockstep on gen_icache_ecc_directed.S, data rate frequent, probe on, row alert_minor | 25c24ad6874dcc58 | FAIL (UVM_ERROR 483): 687=483 (gen_fu_l16_DATAMISS_catch_ecc_data_freq_*) | PASS (0) gen_fu_l16_DATAMISS_ablate_ecc_data_freq_* |
+| MUT-ICE-WAY | as above, probe on | gen_ut_lockstep on gen_icache_ecc_directed.S, data rate frequent, probe on, row alert_minor | 22e470ea79db9c1c | FAIL (UVM_ERROR 830): 660=453, 687=377 (gen_fu_l16_DATAWAY_catch_ecc_data_freq_*) | PASS (0) gen_fu_l16_DATAWAY_ablate_ecc_data_freq_* |
+| MUT-BITS | gen_icache_ram.sv: the second flip of a two-bit injection lands on the first position | gen_ut_lockstep on gen_icache_ecc_directed.S, tag rate frequent, two bits, row alert_minor | a3d6a46ef3eb4ec8 | FAIL (UVM_ERROR 930): 682=930 (gen_fu_l16_BITS_catch_ecc_tag_two_*) | PASS (0) gen_fu_l16_BITS_ablate_ecc_tag_two_* |
+| MUT-ALIGN | gen_checkers_pkg.sv: form (a) reads the probe's tag of cycle c + 2 instead of c + 1 | gen_ut_lockstep on gen_icache_ecc_far_directed.S, data rate frequent, probe on, row alert_minor | 140b96a8e4f34ba2 | FAIL (UVM_ERROR 13): 664=13 (gen_fu_l16_ALIGN_catch_ecc_far_data_freq_*) | PASS (0) gen_fu_l16_ALIGN_ablate_ecc_far_data_freq_* |
+
+Notes on reading the table. The six landing-14 mutants reproduce their w16 error counts exactly on w18 (988, 494, 483, 830, 930, 13), which is
+independent evidence that the landing-15 source changes alter no behaviour. MUT-BITS carries no probe plusarg and exercises the tag path, which is why
+it could not cover the data judgement. MUT-ALIGN is a mutation of form (a) and is caught only on the far program, since the one-region program's
+consecutive lookups share a tag; the alignment histogram retained in landing 15 is what makes that statement checkable rather than asserted. DATAMISS
+and DATAWAY appear three times each: one mutation, proved on two programs with the probe off and once with it on, in three separate out-of-tree roots
+so no run overwrites another.

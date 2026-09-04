@@ -60,6 +60,24 @@ pipeline state.
 | `data_tag_quiet` | `data_tag_o == 0` | carve-out sanity | `+gen_chk_data_tag_quiet=0` |
 | `fetch_en` | BUILT (landing 2b): after `fetch_enable_i` leaves On (sampled at the posedge), only the in-flight instructions retire: a record later than GEN_FETCH_EN_DRAIN_CYCLES (64) after that edge is a failure (intent: doc/02_user/integration.rst:323-328, fetch_enable_i allows the core to fetch, Off stops fetching and the pipeline drains; the bound is TB-derived, not read from the RTL: the longest instruction, a 37-cycle divide, plus the longest response the bus agent holds outstanding under its `long` rvalid regime, rounded up to 64; rtl/ibex_core.sv:644-656 is the mechanism, CR-2B-L-9); back On clears the window. Unit test gen_ut_fetch_en (Off after 60 records, drain, 256 idle cycles, On, tohost; also under long rvalid delays); mutation MB14 (the DUT's fetch_enable_i tied On while the TB drives Off): caught at order 90, 68 cycles after the edge, ablation PASS. NOT built: the bus-side clause (no new `instr_req_o` beyond the fill buffers) | fetch gate (`rtl/ibex_core.sv:644-656`), controller halt_if (`rtl/ibex_controller.sv:996-999`) | `+gen_chk_fetch_en=0` |
 
+## 5a. The measured-run judge's reach (read a measured run's alert_minor verdict with this)
+
+The data half of `alert_minor` decides the hit way from the lookup tag, and in a measured run that tag can only come from form (b), the retirement
+stream: the P9 probe is debug-only and the flow refuses a measured entry that sets it. Form (b) is silent whenever a control-flow discontinuity makes
+the association ambiguous, and an unjudged injection excuses a pulse, so a missing pulse among the unjudged ones would not fail the run. Its reach is
+therefore part of the checker's power, not a detail. Measured with the probe off on build w18, from the retained summary lines:
+
+| program | announced valid-way injections | decided by form (b) | reach | of the injections that owed a pulse |
+|---|---|---|---|---|
+| gen_icache_ecc_directed.S (one 2 KB tag region) | 904 | 554 | 61.3% | 148 of 494 (30.0%) |
+| gen_icache_ecc_far_directed.S (two bodies 2 KB apart, a jump every 14 instructions) | 619 | 174 | 28.1% | 27 of 180 (15.0%) |
+
+The owed-injection column is the narrower and the safety-relevant one: it counts how many of the injections that actually owed a pulse form (b)
+identified as owing one, taking the owed total from form (a)'s hit-way count on the probe-on run of the same program. The far program's lower reach is
+its jump density. Two mutations of the rule itself are caught probe-off on the far program (RETSEQ, RETIDX; gen_mut_step2b.md, the landing-15 section),
+so the reach figure bounds what the judge can see rather than whether it works. Raising it is what Q-019 would decide: if a read-only probe may feed a
+checker in a measured run, form (a) judges there and the reach becomes total.
+
 ## 6. Failure path and diagnostics
 
 `uvm_error` per id with cycle and expected-versus-actual.

@@ -1,0 +1,11 @@
+--- /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/wp12_root/dv/auto_dv/env/gen_checkers_pkg.sv	2026-09-04 01:54:59.634553339 -0400
++++ /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/RETIDX_npf/dv/auto_dv/env/gen_checkers_pkg.sv	2026-09-04 03:12:17.931396634 -0400
+@@ -557,7 +557,7 @@
+       foreach (rt_cyc[k]) begin
+         if (rt_cyc[k] <= e.cycle) continue;
+         if (rt_disc[k]) return -1;
+-        if (rt_pc[k][ibex_pkg::IC_INDEX_HI:ibex_pkg::IC_LINE_W] == e.index[ibex_pkg::IC_INDEX_W-1:0]) begin
++        if (1) begin   // RETIDX: form (b) takes the first retirement after the read whatever its line index
+           tag = 32'(rt_pc[k][31:ibex_pkg::IC_INDEX_HI+1]); lat = rt_cyc[k] - e.cycle;
+           return 1;
+         end

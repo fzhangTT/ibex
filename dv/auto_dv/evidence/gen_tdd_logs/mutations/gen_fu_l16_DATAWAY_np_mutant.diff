@@ -1,0 +1,11 @@
+--- /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/wp12_root/dv/auto_dv/tb/gen_icache_ram.sv	2026-09-04 02:56:12.491471832 -0400
++++ /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/DATAWAY_np/dv/auto_dv/tb/gen_icache_ram.sv	2026-09-04 03:10:24.213525816 -0400
+@@ -90,7 +90,7 @@
+           begin
+             logic [31:0] line_addr;   // no initializer (static block-local)
+             line_addr = {gen_icram_events::shadow_tag(Way, int'(addr))[ibex_pkg::IC_TAG_SIZE-2:0], addr[ibex_pkg::IC_INDEX_W-1:0], {ibex_pkg::IC_LINE_W{1'b0}}};
+-            gen_icram_events::announce(cycle, Way, int'(addr), "inject_data", gen_icram_events::qualified_at(cycle), pos / (Width / ibex_pkg::IC_LINE_BEATS), gen_icram_events::inject_bits,
++            gen_icram_events::announce(cycle, Way ^ 1, int'(addr), "inject_data", gen_icram_events::qualified_at(cycle), pos / (Width / ibex_pkg::IC_LINE_BEATS), gen_icram_events::inject_bits,
+                                        |(mask & ~(mem[addr] ^ data_tweak(line_addr))));   // a flip that raises a DATA bit (the un-tweaked word the DUT ORs) stays visible across duplicate copies
+           end
+         end else begin

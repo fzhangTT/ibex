@@ -1,4 +1,5 @@
-# excerpt of scratch mut_root/DATAMISS/out/DATAMISS_catch_ecc_data_freq/stdout.log (DATAMISS catch run on the mutant build; UVM_ERROR lines counted by grep: 483, first 12 kept)
+# excerpt of scratch mut_root/DATAMISS/out/DATAMISS_catch_ecc_data_freq/stdout.log (DATAMISS catch run on the mutant build: announced and not corrupted, probe on; UVM_ERROR lines counted by python: 483, first 12 kept; of them gen_checkers_pkg.sv(687) "alert_minor_o missing within N cycles of the data-RAM ECC injection at": 483)
+# the GEN_MISC summary line is kept whole; every other kept line is capped at 400 characters
 GEN_CONFIG_BANNER build_config=opentitan
 GEN_CONFIG_BANNER BaseIsa=BaseIsaRV32IorCHERIoT RV32M=RV32MSingleCycle RV32B=RV32BOTEarlGrey RV32ZC=RV32ZcaZcbZcmp RegFile=RegFileFF
 GEN_CONFIG_BANNER RV32E=0 BranchTargetALU=1 WritebackStage=1 ICache=1 ICacheECC=1 ICacheScramble=1
@@ -45,7 +46,7 @@ UVM_INFO dv/auto_dv/env/gen_checkers_pkg.sv(269) @ 19324500: uvm_test_top.env.ir
 UVM_INFO dv/auto_dv/env/gen_fcov_pkg.sv(1855) @ 19324500: uvm_test_top.env.isa_cov [GEN_FCOV] move pairs: 0 sampled, 0 with mismatching micro-ops (0 of them the self-test's)
 UVM_INFO dv/auto_dv/env/gen_fcov_pkg.sv(1856) @ 19324500: uvm_test_top.env.isa_cov [GEN_FCOV] slice A samples: records=16007 mul_timing=0 rst_boot=1 (boot_to_req 62) sec_ctrl_inputs=1 zcmp_hazard=0
 UVM_INFO dv/auto_dv/env/gen_fcov_pkg.sv(1879) @ 19324500: uvm_test_top.env.isa_cov [GEN_FCOV] isa samples: mul=0 div=0 alu_reg=0 zba_zbb=0 alu_imm=2 shift=0 bit_count=0 zca=14001 zca32=2006 zcmp=0 (abandoned 0; uop_count no 0, order no 0, tags no 0, minstret_once no 0) zcmp_mv=0 branch=400 csr_pairs=0 (writes 0, replaced 0) sbit=0 zcb=0
-UVM_INFO dv/auto_dv/env/gen_checkers_pkg.sv(708) @ 19324500: uvm_test_top.env.misc_mon [GEN_MISC] alert_bus hits=0 mismatches=0; alert_minor hits=0 mismatches=0 (ecc injections judged=0 qualified=0 missing=0, pulse latencies '{'h0, 'h0, 'h0} ; data injections judged=905 hit_way=483 other_or_invalid_way=422 (other valid way 0) unjudged=0 (ambiguous 333, pending at the end 0) missing=483 other_way_p
+UVM_INFO dv/auto_dv/env/gen_checkers_pkg.sv(708) @ 19324500: uvm_test_top.env.misc_mon [GEN_MISC] alert_bus hits=0 mismatches=0; alert_minor hits=0 mismatches=0 (ecc injections judged=0 qualified=0 missing=0, pulse latencies '{'h0, 'h0, 'h0} ; data injections judged=905 hit_way=483 other_or_invalid_way=422 (other valid way 0) unjudged=0 (ambiguous 333, pending at the end 0) missing=483 other_way_pulses=0 held_pulses=0 duplicate_copies visible=0 masked=0; forms a/b both=572 agree=572 disagree=0, b latency 7..11); alert_internal hits=0; data_tag hits=0; sync traps=0 double faults expected=0 pulses=0 mismatches=0; crash_dump checked=16007 late=0 early=0 mismatches=0; fetch_en records after off=0 late=0
 UVM_INFO dv/auto_dv/env/gen_rvfi_pkg.sv(166) @ 19324500: uvm_test_top.env.rvfi_mon [GEN_RVFI_MON] records=16007 irq_markers=0
 UVM_INFO dv/auto_dv/env/gen_rvfi_pkg.sv(594) @ 19324500: uvm_test_top.env.sb [GEN_SB] ISA compare: records=16007 mismatches=0 folded=0 draft_b=0 traps=0 breakpoints=0 irq_entries=0 dbg_entries=0 zcmp_splits=0 faults_armed=0 faults_unannounced=0 bus_err_announced=0 b13_odd_jalr=0 rf_wr_suppressed=0 nmi_preempted=0 rvfi_rmask_on_nonload=16006
 UVM_INFO dv/auto_dv/env/gen_fcov_pkg.sv(77) @ 19324500: uvm_test_top.env.wit [GEN_WIT] witnesses=0 distinct=0 covergroup=0 foreign=0 out_of_range=0
@@ -68,4 +69,4 @@ UVM_FATAL :    0
 [GEN_SB]     3
 [GEN_WIT]     1
 193245.01ns INFO     cocotb.regression                  gen_ut_lockstep passed
-                                                        ** TESTS=1 PASS=1 FAIL=0 SKIP=0                                            193245.01           1.32     146897.86  **
+                                                        ** TESTS=1 PASS=1 FAIL=0 SKIP=0                                            193245.01           1.48     130645.56  **

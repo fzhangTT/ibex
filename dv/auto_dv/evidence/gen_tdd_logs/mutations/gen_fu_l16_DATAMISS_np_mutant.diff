@@ -1,0 +1,11 @@
+--- /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/wp12_root/dv/auto_dv/tb/gen_icache_ram.sv	2026-09-04 02:56:12.491471832 -0400
++++ /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/DATAMISS_np/dv/auto_dv/tb/gen_icache_ram.sv	2026-09-04 03:09:02.682917373 -0400
+@@ -85,7 +85,7 @@
+         end else if (!IsTag && gen_icram_events::inject_rate_data > 0 && (rnd(1000) < gen_icram_events::inject_rate_data)) begin
+           int unsigned pos; logic [Width-1:0] mask;   // no initializer: a block-local with one would be static and keep its first value
+           mask = inject_mask(gen_icram_events::inject_bits, Width / ibex_pkg::IC_LINE_BEATS, pos);   // both flips inside one beat
+-          rdata <= mem[addr] ^ mask;
++          rdata <= mem[addr];   // DATAMISS: announced, not corrupted
+           gen_icram_events::injected_data++;
+           begin
+             logic [31:0] line_addr;   // no initializer (static block-local)

@@ -6,7 +6,7 @@
 module gen_ic_lookup_probe
   import gen_tb_pkg::*;
 #(
-  parameter int unsigned TagW = 21
+  parameter int unsigned TagW = ibex_pkg::ADDR_W - ibex_pkg::IC_INDEX_HI - 1
 ) (
   input logic            clk_i,
   input logic            rst_ni,

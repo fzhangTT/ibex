@@ -1,0 +1,6 @@
+# the P9 probe's published lookup tag per cycle, counted over the whole run (scratch mut_root/TRACE17,
+# the TRACE displays on the landing-15 sources, one-region program prog_icache_ecc, probe on).
+# Counted by python from the run's own ICTRACE lookup lines; this file is the record's source for the
+# alignment figure. 20509 lookup lines, 2 distinct tag values.
+tag 00100000 cycles 20448
+tag 00000000 cycles 61

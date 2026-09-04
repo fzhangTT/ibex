@@ -89,7 +89,7 @@ module gen_icache_ram import gen_tb_pkg::*; #(
           gen_icram_events::injected_data++;
           begin
             logic [31:0] line_addr;   // no initializer (static block-local)
-            line_addr = {gen_icram_events::shadow_tag(Way, int'(addr))[20:0], addr[7:0], 3'b000};
+            line_addr = {gen_icram_events::shadow_tag(Way, int'(addr))[ibex_pkg::IC_TAG_SIZE-2:0], addr[ibex_pkg::IC_INDEX_W-1:0], {ibex_pkg::IC_LINE_W{1'b0}}};
             gen_icram_events::announce(cycle, Way, int'(addr), "inject_data", gen_icram_events::qualified_at(cycle), pos / (Width / ibex_pkg::IC_LINE_BEATS), gen_icram_events::inject_bits,
                                        |(mask & ~(mem[addr] ^ data_tweak(line_addr))));   // a flip that raises a DATA bit (the un-tweaked word the DUT ORs) stays visible across duplicate copies
           end

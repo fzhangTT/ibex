@@ -9,11 +9,11 @@ Loading:   git version 2.26.2
 Loading:   Bender version 0.28.1-tenstorrent8-mr_fixes
 Loading:   Python version 3.9
 Loading:   Perl version perl-5.36.0
-far program: OK seed=1 steps=['directed', 'link', 'image'] elf=/tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/prog_icache_ecc_far/prog.elf image=/tmp/clau
-compiled 05:55:46Z sources sha256: de983a8e68063c27
-start 05:55:46Z sources sha256: de983a8e68063c27
+ibex env: vcs=/tools_vendor/synopsys/vcs/X-2025.06-SP2/bin/vcs gcc=/localdev/fzhang/ws/tools/lowrisc-toolchain-gcc-rv32imcb/bin/riscv32-unknown-elf-gcc
+compiled 07:07:49Z sources sha256: cff50f81508de1a9
+start 07:07:49Z sources sha256: cff50f81508de1a9
 ut_isa_cov_zc: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
-end 05:55:58Z
+end 07:07:57Z
 green_h1_ecc_freq: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
 lockstep_icache_en: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
 ecc_data_freq: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
@@ -26,6 +26,6 @@ ecc_tag_freq_probe: verdict: PASS reason: no collected failure mechanism; end ma
 ecc_far_data_freq: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
 ecc_far_data_noprobe: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
 ecc_far_both_freq: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  uvm_err=1
-runs done 05:57:40Z
-./w16_chain.sh: line 12: 3698845 Terminated              bash "$SCR/wp12_muts.sh" RED0 DATAANN DATAMISS DATAWAY BITS ALIGN > "$SCR/wp12_muts16.log" 2>&1
-MUTS_DONE 05:57:56Z
+RUNS_DONE 07:09:01Z
+MUTS_DONE 07:17:03Z
+TRACE_DONE 07:17:30Z trace_align_dup: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  trace_align_dup: UVM_ERROR lines 0 trace_align_dup: ICTRACE lookup lines 19320, inject lines 0, tagwrite lines 530 TRACE17_DONE 07:17:30Z 

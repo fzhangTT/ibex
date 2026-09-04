@@ -6,8 +6,9 @@
 // parameter, every property reports through uvm_report_error under its own id, and the knobs are per group
 // (+gen_chk_sva_<group>, +gen_chk_all precedence) rather than per property; the two split-address rows are covers (below). Nothing here
 // drives or forces a DUT net. C10 exception (LOG-067; the knob name LOG-076): the B8 probe gen_b8_probe.sv is bound into
-// ibex_if_stage by gen_binds.sv behind +gen_chk_sva_b8 (default off), the one property over DUT internals; every other internal
-// property stays unbound in the probe register.
+// ibex_if_stage by gen_binds.sv behind +gen_chk_sva_b8 (default off), the one property over DUT internals; the P9 lookup-address
+// probe gen_ic_lookup_probe.sv (LOG-079) is a second read-only bind on the same path behind +gen_probe_ic_lookup (default off,
+// debug-only) and carries no property; every other internal property stays unbound in the probe register.
 module gen_protocol_props
   import ibex_pkg::*;
   import prim_secded_pkg::*;

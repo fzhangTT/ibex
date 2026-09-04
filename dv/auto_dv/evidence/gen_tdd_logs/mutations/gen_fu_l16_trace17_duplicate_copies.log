@@ -1,0 +1,24 @@
+# WP12-F2's mechanism, index-general: every announced injection whose line was valid in BOTH ways
+# (v0=1 v1=1) with the same stored tag (t0=t1), so the DUT ORs the two copies before its check
+# (rtl/ibex_icache.sv:507-513) and a flip that only clears a bit is masked. 20 such injections of
+# 20 two-way-valid announcements; counted by python from the run's own ICTRACE inject lines.
+ICTRACE inject kind=inject_data cycle=2125 way=1 index=26 beat=1 q=1 v0=1 v1=1 t0=00100000 t1=00100000
+ICTRACE inject kind=inject_data cycle=3086 way=1 index=27 beat=0 q=1 v0=1 v1=1 t0=00100000 t1=00100000
+ICTRACE inject kind=inject_data cycle=6481 way=0 index=27 beat=0 q=1 v0=1 v1=1 t0=00100000 t1=00100000
+ICTRACE inject kind=inject_data cycle=6691 way=0 index=26 beat=0 q=1 v0=1 v1=1 t0=00100000 t1=00100000
+ICTRACE inject kind=inject_data cycle=6787 way=1 index=26 beat=0 q=1 v0=1 v1=1 t0=00100000 t1=00100000
+ICTRACE inject kind=inject_data cycle=6861 way=0 index=26 beat=1 q=1 v0=1 v1=1 t0=00100000 t1=00100000
+ICTRACE inject kind=inject_data cycle=7857 way=0 index=26 beat=1 q=1 v0=1 v1=1 t0=00100000 t1=00100000
+ICTRACE inject kind=inject_data cycle=8081 way=0 index=26 beat=1 q=1 v0=1 v1=1 t0=00100000 t1=00100000
+ICTRACE inject kind=inject_data cycle=8650 way=1 index=26 beat=0 q=1 v0=1 v1=1 t0=00100000 t1=00100000
+ICTRACE inject kind=inject_data cycle=9732 way=1 index=26 beat=1 q=1 v0=1 v1=1 t0=00100000 t1=00100000
+ICTRACE inject kind=inject_data cycle=9883 way=1 index=26 beat=1 q=1 v0=1 v1=1 t0=00100000 t1=00100000
+ICTRACE inject kind=inject_data cycle=10242 way=0 index=26 beat=0 q=1 v0=1 v1=1 t0=00100000 t1=00100000
+ICTRACE inject kind=inject_data cycle=11337 way=0 index=26 beat=1 q=1 v0=1 v1=1 t0=00100000 t1=00100000
+ICTRACE inject kind=inject_data cycle=12803 way=1 index=26 beat=0 q=1 v0=1 v1=1 t0=00100000 t1=00100000
+ICTRACE inject kind=inject_data cycle=13218 way=0 index=26 beat=0 q=1 v0=1 v1=1 t0=00100000 t1=00100000
+ICTRACE inject kind=inject_data cycle=13425 way=0 index=26 beat=1 q=1 v0=1 v1=1 t0=00100000 t1=00100000
+ICTRACE inject kind=inject_data cycle=13430 way=0 index=26 beat=0 q=1 v0=1 v1=1 t0=00100000 t1=00100000
+ICTRACE inject kind=inject_data cycle=14104 way=0 index=26 beat=0 q=1 v0=1 v1=1 t0=00100000 t1=00100000
+ICTRACE inject kind=inject_data cycle=14954 way=0 index=27 beat=0 q=1 v0=1 v1=1 t0=00100000 t1=00100000
+ICTRACE inject kind=inject_data cycle=16921 way=1 index=26 beat=0 q=1 v0=1 v1=1 t0=00100000 t1=00100000
