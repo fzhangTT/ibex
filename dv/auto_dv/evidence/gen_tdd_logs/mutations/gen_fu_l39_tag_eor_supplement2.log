@@ -1,0 +1,67 @@
+# gen_fu_l39_tag_eor_supplement2.log -- landing 39c, records-only (TB Infra, 2026-09-04)
+#
+# WHAT THIS FILE IS. A NEW log, not an edit of a closed one. gen_fu_l39_tag_eor_supplement.log is committed and
+# stays closed at its manifest figures; a committed retained log is never reopened. The two review rows below were
+# written for that supplement and did not reach its commit, so they are carried here instead.
+# RECORDS ONLY: no run and no build stands behind this file. No gate identity exists for it and none is claimed.
+# Every figure below is preceded by the command that produced it.
+#
+# ================ WHY A SECOND SUPPLEMENT EXISTS ================
+# Landing 39b was handed twice. The commit took the FIRST hand's bytes, which matched that hand's hashes. The
+# second hand's text, the two sections below, was then written into three already-handed files after the commit
+# existed and before I had read its confirmation. Stated as a reviewer would state it: an edit of
+# handed-unconfirmed files, which for gen_fu_l39_tag_eor_supplement.log is a reopened retained log, and the
+# Orchestrator classes it as the fourth such event today. The remedy is not a correction in place. The three files
+# were restored to their committed bytes and the material moved into this new log with its own manifest row.
+#
+# $ git log -1 --format='%h %ad' --date=iso -- dv/auto_dv/evidence/gen_tdd_logs/mutations/gen_fu_l39_tag_eor_supplement.log
+#   420cbc6 2026-09-04 16:24:25 -0400
+# $ stat -c '%y' dv/auto_dv/evidence/gen_tdd_logs/mutations/gen_fu_l39_tag_eor_supplement.log   [run at 20:29Z, BEFORE the restore]
+#   2026-09-04 16:25:41.448722625 -0400
+#   The commit precedes the edit by 76 seconds. That stat figure is not reproducible after the fact: the restore
+#   rewrote the file and with it the mtime, so it is recorded here as measured before the restore, not as a
+#   standing measurement.
+# $ git show 420cbc6:dv/auto_dv/evidence/gen_tdd_logs/mutations/gen_fu_l39_tag_eor_supplement.log | md5sum
+#   ddf32c21cad745582c42a16bcf142ba4
+# $ md5sum dv/auto_dv/evidence/gen_tdd_logs/mutations/gen_fu_l39_tag_eor_supplement.log   [after the restore]
+#   ddf32c21cad745582c42a16bcf142ba4
+#
+# ================ WHAT NO GATE COULD SEE ================
+# The committed snapshot was INTERNALLY CONSISTENT: the manifest row and the log it describes moved together, one
+# hand behind. So the manifest gate passes on either version and its green says nothing about WHICH hand's bytes
+# are in the tree. The check reproduced on this landing, with the checklist built from the manifest's own rows so
+# no private tool is needed (run from the root being checked):
+#
+# $ awk -F'|' '/^\| dv\/auto_dv\//{md5=$(NF-1); path=$2; gsub(/^[ \t]+|[ \t]+$/,"",md5); gsub(/^[ \t]+|[ \t]+$/,"",path); print md5"  "path}' dv/auto_dv/evidence/gen_tdd_logs/gen_manifest.md > CK ; wc -l < CK ; md5sum -c --quiet CK ; echo rc=$?
+#   on a detached archive of HEAD d1f6019, unmodified:             3484 rows, md5sum -c silent, rc=0
+#   on that archive with this landing's three files copied in:    3485 rows, md5sum -c silent, rc=0
+# Both pass. Only a per-file comparison against the hand-off hash list separates the two, so that comparison now
+# runs on every commit confirmation I read, before the landing is treated as closed.
+
+# ================ CM214-Low-1: the landing-39 log's closing claim, scoped ================
+# The landing-39 log gen_fu_l39_tag_eor_observability.log line 56 reads "Every figure is read from a run's own
+# artefacts by the command printed above it", and no command is printed above its figure blocks: they are a
+# script's collected output. The log is committed and stays
+# closed, so the claim is scoped HERE instead. What is true of it: every figure in it was produced by the pair
+# scripts named in landing 39's records, from each run's own verdict.txt, stdout.log and export, and none was
+# retyped. What is NOT true is that a reader can see the producing command beside each figure.
+# THE HABIT THIS EARNS, and it is the third time this exact sentence has been found overreaching in one of my logs
+# (CM212-Low-2 on the l36 log, CM213-Low-2 on the l37 log, this one on the l39 log): print the producing command
+# above EVERY figure block, or do not make the claim at all. I will print it from now on rather than scope it after
+# the fact a fourth time.
+#
+# ================ CM214-Low-3: the discriminating red is OWED, with the stimulus it needs ================
+# The measured negative in gen_fu_l39_tag_eor_supplement.log says the case is not constructible ON THIS ENTRY,
+# whose retirement stream runs to within two cycles of the last observed cycle. It does NOT say the case is
+# unreachable, and the red is OWED.
+# WHAT IT NEEDS: a run whose retirement stream stops WELL BEFORE the run's end while lookups and injections
+# continue, so an injection can sit after the last retirement with its whole alert window still inside the observed
+# region. Concretely, a WFI or an otherwise stalled core that keeps fetching, or any stimulus that halts retirement
+# with the clock and the cache still running, plus the tag-RAM injection rate left on and the alert suppressed so
+# the miss is genuine. Under landing 37's predicate that injection is excused, because no record retires at or after
+# it; under landing 39's it is judged and fails, because its window closed inside the observed region. That is the
+# discriminating pair, and it is the only shape that separates the two rules.
+# WHY IT IS NOT IN LANDING 39 OR 39C: the entry has no such stimulus today, and adding one is TB work with its
+# own trust triad rather than a line in a records touch. It is listed as owed with the shape above so the next
+# attempt starts from the requirement and not from a search.
+# END. Each figure above is preceded by the command that produced it.

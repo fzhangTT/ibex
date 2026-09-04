@@ -1177,3 +1177,10 @@ five parts also answer CM213 Low-1 and Low-2 and CR-35 L-2 and M-1 while leaving
 gen_fu_l39_MUTALERTSUP_mutant.diff, the applied fault the red cites, both landing in 39b with
 gen_fu_l39_tag_eor_supplement.log, which carries the CR-35 rows that arrived after the corrigendum was
 committed and the probe's measured tail. Each with a manifest row.
+
+LANDING 39C CORRECTS THE PARAGRAPH ABOVE RATHER THAN EDITING IT: the CR-35 L-2 and M-1 answers are
+gen_fu_l39_tag_eor_supplement.log's, not the corrigendum's five parts, which answer CM213 Low-1 and Low-2; and the
+two CM214 rows written for that supplement after its commit are retained instead in
+gen_fu_l39_tag_eor_supplement2.log, Low-1 scoping the landing-39 log's closing every-figure claim and Low-3 stating
+the discriminating red as OWED with the stimulus it needs, with the first supplement restored to its committed bytes
+and a manifest row for the new log.
