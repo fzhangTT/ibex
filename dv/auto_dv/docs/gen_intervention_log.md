@@ -1954,3 +1954,23 @@ Standing: no manifest claims a cross bin (tb-infra's part-1 manifest declares 15
 the expectation mechanism has never verified a bin against real functional coverage in the retained record. The owner
 decision of LOG-084 stands open; the false-fail path alone justifies the fix, and option (c) would retire 72 percent of
 what the manifests claim.
+
+## LOG-084b - 2026-09-04 - Supplement: the false-pass exposure is zero on a measured premise; the ordering laws
+
+By 11:52Z the inference LOG-084a flagged is measured. The Test Writer measured over the retained urg reports that every
+cross heading falls after every coverpoint heading of its group, and that for all 24 covergroups having both a rendered
+body and a retained report the rendered last coverpoint equals the report's last coverpoint (24 of 24). The DV Lead
+reproduced the ordering law independently with positive controls: 1509 variable-section and 1416 cross-section headings
+across 165 retained report files, zero violations among the 1416 groups that have both sections (the honest denominator;
+groups without a cross section cannot violate), and a synthetic group with a variables section after a crosses section
+flagged by the same code, so the check can fail. Both roles first produced a wrong figure (a regex matching no heading,
+a doubled denominator of 3018) and corrected it; the combined rule recorded by both: an absence claim ships a positive
+control in the same output, its denominator is restricted to the cases where the thing could happen, and a detector
+control shows the check can fail.
+
+Consequence: the false-pass exposure of committed declarations is zero, on a three-part predicate that needs a name
+collision, the colliding bin declared on the receiving coverpoint, and that coverpoint being the group's last in the
+render. One prediction carries a named check for when gen_pmp_cfg_write_cg renders: confirm its last coverpoint is not
+cp_wr_mode. The false-fail figure stands unchanged and remains the whole problem: 3001 of 4169 committed declarations
+are cross bins the checker never keys. Runtime's retained report came from tb-infra's uncommitted w23 build (its
+provenance is being added to the log header under a HOLD); the parser defect is independent of that provenance.
