@@ -1808,3 +1808,21 @@ checker in a measured run at all, is a boundary-discipline principle and goes to
 recommendation to keep LOG-067's line until the owner rules; if allowed, the P-row condition is relaxed then and
 CG-IC-006's data bins may count from probe-on measured runs. The v3t REQUEST-CHANGES gate stands until the DV Lead's
 fix touch passes as the recorded re-review; WP-12 is not built to the v3t brief.
+
+## LOG-080 - 2026-09-04 - The v3t REQUEST-CHANGES gate lifts on the v3u re-review; two WP-12 corrections owed before the build settles
+
+The DV Lead's plan v3u (77c6b3f) is the fix touch for the REQUEST-CHANGES on v3t (artifact
+2026-09-04-claude-diff-86df6bee-03c27179.md, c4a5fd5). Its cross-model review (artifact
+2026-09-04-claude-diff-cec68ea6-77c6b3f1.md, committed e8848f6) is APPROVE-WITH-CHANGES: the High is answered (the
+hit way is no longer claimed decidable from the TB's stored tags; two judges are named and the probe follows LOG-079),
+so the gate lifts at e8848f6 and WP-12 may be built. Two Mediums remain and go to tb-infra before its build settles:
+M-1 the boundary inference's association rule between a lookup (seen only as an index read) and a retiring instruction
+is unstated, and two mis-association cases (a squashed same-index lookup followed by a redirect to a target with the
+same index; a lookup consumed only by the straddling upper half of a 32-bit instruction) would make the "none owed"
+half false-fail a measured run: the rule (reconstruct the lookup stream from RVFI control-flow discontinuities, match
+in order, report any ambiguous parse as unjudged with no bin sample and no failure) and the probe cross-check as the
+bound on the mis-association rate are owed to the WP-12 row. M-2 the tweak statement is wrong for the tag half: the
+data tweak (rtl/ibex_icache.sv:318-352) is disabled for invalidation and ECC-correction writes, but the tag tweak
+(:388-403, :450) is the index and applies to every tag write, the reset sweep included, so the valid bit is XORed with
+index[7] on all writes; the un-tweak operands are the index for tag words and the line address from the same-cycle tag
+write for data words. The DV Lead corrects the plan (rows CM166); tb-infra builds to the corrected facts.
