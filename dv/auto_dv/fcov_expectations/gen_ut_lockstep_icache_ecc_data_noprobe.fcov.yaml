@@ -1,7 +1,11 @@
 # CG-IC-006 part 1, the bins THIS entry can hit: data-RAM injection at the frequent rate, probe off, so form (b) judges.
 # Derived from the entry's own plusargs and confirmed by a run of that program and plusarg set ALONE in its own
 # output directory through the local runner, so no other run's coverage contributed. "This entry's own run" in
-# the notes below means that run; no run of this entry through the flow has happened yet. Robust means a structural bound or a measured count of at least 30 in that
+# the notes below means that run. The entry HAS since been exercised through the flow, unmeasured with coverage
+# on, from the committed tree at 813994b: it passed and every bin declared here read HIT, checked against the
+# coverage report by the Runtime Manager's own parser and cross-checked with the expectation checker's keyed
+# output, and retained as dv/auto_dv/evidence/gen_tdd_logs/flow/gen_l25_fcov_exercised.log. The counts in the
+# notes stay the local figures, since that is where they were measured. Robust means a structural bound or a measured count of at least 30 in that
 # run; the count is in each note. Nine such manifests, one per WP-8 icache ECC entry, and their union is the
 # part-1 reachable set of 15 minus the two bins no entry hits robustly.
 #

@@ -408,13 +408,25 @@ classifier fault is a failing run and not only a failing offline check.
   is the bus one under an announced corruption. The gap is named here so the mutation table says what it does not
   cover.
 - fcov-expectation. NINE PER-ENTRY MANIFESTS, one per WP-8 icache ECC testlist entry, each stem equal to its entry
-  name, each declaring only the bins its own entry can hit with an anti-vacuity note per bin. DECLARED AND BOUND,
-  NOT YET EXERCISED. At the landing itself nothing enforced them: the flow binds a manifest only through the entry's
+  name, each declaring only the bins its own entry can hit with an anti-vacuity note per bin. DECLARED, BOUND AND
+  EXERCISED. At the landing itself nothing enforced them: the flow binds a manifest only through the entry's
   fcov_expectation_file, every WP-8 entry still carried null there, and the sweep's 27 OK counted these nine as
   present-but-unbound files. The Runtime Manager's landing-25 merge, commit 28c8c0b, commits all nine bindings, so
-  each entry names its own manifest and a future run of that entry is gated by it. No run of these entries through
-  the flow has happened yet, so no declared bin has been enforced by a run; the counts below come from local runs of
-  each entry's program and plusarg set. ALL NINE ARE EXERCISABLE unmeasured: the flow's refusal keys on the measured
+  each entry names its own manifest and a run of that entry is gated by it. The exercising run then ran all nine
+  unmeasured with coverage on, from the committed tree at 813994b at build identity b48479a3bc6f1d9f, one fresh
+  output directory and coverage database per entry: nine of nine PASS and 78 of 78 declared bins HIT, per entry 7,
+  10, 10, 7, 10, 11, 9, 8 and 6. The Runtime Manager read them with its own parser of the coverage report and
+  cross-checked bin by bin against the expectation checker's keyed output rather than reading a verdict line, and its
+  earlier shared-root run of the same nine agreed on every verdict and every bin, which settles the flow's per-entry
+  isolation by measurement. So every declared bin here has now been enforced by a run and none read unhit. The run's
+  record is dv/auto_dv/evidence/gen_tdd_logs/flow/gen_l25_fcov_exercised.log, committed at 8f265b2, which carries the
+  verdicts, the per-entry keyed reading and the owed-bin table. The counts in the notes remain the local figures; the
+  counts that record reports as NUMBERS are the six owed-bin figures, and those agree with the local ones exactly, so
+  the comparison of all 78 counts waits for the per-bin figures rather than being claimed here. WHAT THE RUN DOES NOT
+  ESTABLISH, in that record's own words: that a declared-but-unhit bin fails a run, since no entry missed a bin it
+  declared. The failing direction is evidenced elsewhere, by the landing-23 mutation reds in
+  gen_fu_l23_wp8_cov_reds.log, where a mutation drove a declared bin from HIT to UNHIT and the checker named it; that
+  was a direct invocation, so what remains unexercised is a FLOW run failing on an unhit declared bin. ALL NINE ARE EXERCISABLE unmeasured: the flow's refusal keys on the measured
   flag alone and never on coverage (dv/auto_dv/flow/gen_run.py:193 takes a coverage argument, the clause at :204 reads
   "if measured and debug_only", and its docstring records the widening, since a measured run feeds the credit report
   whether coverage is on or not), which the Runtime Manager and I each evaluated on all nine entries: zero refusals
@@ -428,7 +440,10 @@ classifier fault is a failing run and not only a failing offline check.
   The union reachable today is 15 of 15 across nine entries; the nine manifests declare the robust subset of 13 bins,
   robust meaning a structural bound or a measured count of at least 30 in that entry's own run; OWED are two bins,
   both thinly hit and closing on one route, a seed sweep at coverage closure: cp_no_alert_case.during_invalidation
-  (10, 9, 22) and cp_no_alert_case.masked_duplicate_copy (4, 2, 14). Separately and NOT owed, two per-entry exclusions
+  (10, 9, 22) and cp_no_alert_case.masked_duplicate_copy (4, 2, 14). The exercising run reproduced those six figures
+  exactly, entry for entry, so both bins are hit today and both stay owed under the robustness rule, since the
+  highest single-entry count is 22 and 14 against a threshold of thirty or a structural bound; both peaks are in the
+  both-injection entry, which is therefore the one to sweep. Separately and NOT owed, two per-entry exclusions
   live in the manifest headers rather than here, since the bin is robust elsewhere and thin only on those entries:
   cp_no_alert_case.uninitialised_data_ram on the two far-program entries (9, 9) and cp_alert_pulses.one on the far
   probe-off entry (27). The counts are measured per entry in its own output directory through the local

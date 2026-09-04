@@ -2,9 +2,8 @@
 so a retained header's claim can be checked by whoever reads it.
 
 The identity is gen_flow_util.filelist_digest over dv/auto_dv/tb/gen_rtl.f and gen_tb.f, which is NOT the "sources
-sha256" gen_tb_local.sh writes into its own compile log: two functions over two different input sets. Quoting the local
-figure as the committed-sources identity is the defect CM200-Major-1 named, and it recurred while the distinction lived
-only in one agent's memory. With --expect the tool exits 1 on a mismatch, so a hand-off script can gate on it.
+sha256" gen_tb_local.sh writes into its own compile log: two functions over two different input sets, so a retained
+header must say which one it quotes. With --expect the tool exits 1 on a mismatch, so a hand-off script can gate on it.
 
 Exit codes: 0 printed (and equal to --expect when given); 1 the digest differs from --expect; 2 a wrong call."""
 import importlib.util
