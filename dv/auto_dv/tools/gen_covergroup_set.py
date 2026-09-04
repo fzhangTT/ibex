@@ -41,6 +41,7 @@ def main():
     ledger_impls = set(LEDGER_COVERGROUPS)
     tl = yaml.safe_load(open(a.testlist))
     entries = [e for e in tl['tests'] if e.get('fcov_expectation_file')]
+    required_tiers = set(tl.get('fcov_manifest_required_tiers') or [])   # a measured or required-tier entry must keep its manifest under the home
     per_cg = collections.defaultdict(lambda: {'bins': set(), 'cps': collections.defaultdict(set), 'manifests': collections.Counter()})
     per_man = {}; declarers = collections.defaultdict(set)   # bin token -> manifests declaring it
     nh_all = set()   # distinct bins_not_hit tokens across the named manifests (a manifest named by two entries counts once)
@@ -49,7 +50,9 @@ def main():
     except ValueError: sys.exit(f'manifest home {FCOV_HOME} is outside the clone root {R}')
     for e in sorted(entries, key=lambda e: e['name']):
         rel = pathlib.Path(e['fcov_expectation_file'])
-        if rel.parent != home_rel: outside.append((e['name'], str(rel), e.get('tier'), e.get('measured'))); continue   # a proof manifest kept as evidence, not a promotion manifest: reported below, neither read nor counted
+        if rel.parent != home_rel:
+            if e.get('measured') or e.get('tier') in required_tiers: sys.exit(f"{e['name']}: manifest {rel} is outside {home_rel} and the entry is measured or in a required tier ({e.get('tier')}, measured {e.get('measured')}): refused")
+            outside.append((e['name'], str(rel), e.get('tier'), e.get('measured'))); continue   # an unmeasured check-tier entry's proof manifest: reported below, neither read nor counted
         p = pathlib.Path(a.fcov_dir) / rel.name   # named manifests are read from --fcov-dir too, so a rehearsal dir stands in for the tree
         if not p.exists(): sys.exit(f'{e["name"]}: manifest {p} missing')
         txt = p.read_text(); nh = set(re.findall(r'^# not_hit (\S+):', txt, re.M)); dig.update(txt.encode()); nh_all |= nh
@@ -121,7 +124,7 @@ Totals: {len(rows)} covergroups, {total_bins} distinct referenced bins, {len(ent
     mt += "\n## Entries whose manifest lies outside the manifest home (not read, not counted)\n\n"
     if outside:
         mt += "| Entry | Tier | measured | Manifest named |\n|---|---|---|---|\n" + ''.join(f"| {n} | {tr} | {str(bool(m)).lower()} | {p} |\n" for n, p, tr, m in outside)
-        mt += f"\nA manifest outside {home_rel} is a proof manifest kept as evidence, not a promotion manifest: its entry hosts no bins of this set until a manifest under the home names them.\n"
+        mt += f"\nA manifest outside {home_rel} is a proof manifest kept as evidence, not a promotion manifest: its entry hosts no bins of this set until a manifest under the home names them. Only an unmeasured entry outside the required tiers ({', '.join(sorted(required_tiers))}) is listed; a measured or required-tier entry with such a manifest stops this tool.\n"
     else: mt += "None.\n"
     # the ledger covergroup: derived from the witness CSV and the promoted tests' manifests and modules
     wit_rows = list(csv.DictReader(open(WITNESS_CSV, newline='')))
