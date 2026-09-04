@@ -2025,3 +2025,30 @@ Ruling (Orchestrator, executing the directive):
 4. Reviews continue for every landing; the round record's review is the Critic's and the reviewer's next priority once it exists.
 
 Corrigendum (CM211-Low-3, review b9bc640): the counts in "State at the directive" (103 entries, 23 red fixtures, 28 manifests) describe the tree with the staged standing guard, which landed at b105c09; the committed state at 71c1c70 was 102 entries, 22 red fixtures, 27 manifests.
+
+## LOG-086 - 2026-09-04 - Orchestrator ruling under LOG-085: seven measured entries detached from their fcov manifests for round 1 (declarations on unbuilt covergroups)
+
+Finding (DV Lead, 19:23Z, measured at HEAD 20b3a4e against the 25 covergroups rendered in gen_fcov_groups.svh): seven of
+the fifteen measured entries declare bins on covergroups that are not built: gen_test_pmp_csr_warl 266 of 266,
+gen_test_bit_ratified 176 of 830, gen_test_csr_access 76 of 80, gen_test_csr_reset 68 of 68, gen_test_csr_trap_setup 17 of
+168, gen_test_bit_draft 15 of 15, gen_test_cmp_zca 13 of 337; 631 of 3838 declared bins in total. The other eight measured
+entries declare 2074 bins, all on built covergroups. On the gen_test_pmc_ctrl precedent (92c0850) the expectation check
+fails such declarations at every seed, and gen_round indexes only a round with zero bad runs.
+
+Ruling: for round 1 the seven entries run with fcov_expectation_file null and the reason in their descriptions, exactly as
+gen_test_pmc_ctrl; their manifest files stay committed and untouched; every other field is kept, so their coverage is
+still collected and credited (the credit path reads the coverage report and the plan, not the manifests). Round 1 loses
+the per-entry expectation CHECK for those seven, not their coverage: it checks eight measured entries against their
+manifests and counts seven plus gen_test_pmc_ctrl. The round record states this.
+
+Rejected for round 1: splitting the three manifests whose built share dominates (gen_test_bit_ratified 654,
+gen_test_cmp_zca 324, gen_test_csr_trap_setup 151 built bins) would keep their checks but needs three test declaration
+touches under the freeze; building the missing covergroups is out of scope for round 1. Both are the first items after
+the round record is reviewed, together with the load-time validator that resolves declared bins against the built
+covergroup set (runtime-2's flagged gap), which would have refused these manifests at load.
+
+Execution: runtime-2 edits the seven fields (HOLD on gen_testlist.yaml first; on a detached archive of HEAD: the loader
+accepts 103 entries, the seven read None and leave the manifest-naming set, manifests 27 -> 20, the standing guard is
+still the only deferred-shape entry, the other 96 entries and the non-tests keys yaml-equal). The Test Writer re-derives
+the DV Lead's table from the manifests and gen_fcov_groups.svh as an independent check. The DV Lead's round-1 request
+counts eight checked and eight counted-only measured entries.
