@@ -163,11 +163,13 @@ BUILD_CONFIG = "opentitan"
 # --- Plusarg names shared with gen_tb_pkg.sv (checked by --check) ----------------------------
 PLUSARG_BUILD_CONFIG = "gen_build_config"
 PLUSARG_SMOKE_CYCLES = "gen_smoke_cycles"
+PLUSARG_CHK_SVA_B8 = "gen_chk_sva_b8"   # the B8 probe assertion knob (LOG-067, name per LOG-076): B8 evidence runs only
 BANNER_TAG = "GEN_CONFIG_BANNER"
 # name in gen_tb_pkg.sv -> value here
 SV_SHARED_CONSTANTS = {
     "PLUSARG_BUILD_CONFIG": PLUSARG_BUILD_CONFIG,
     "PLUSARG_SMOKE_CYCLES": PLUSARG_SMOKE_CYCLES,
+    "PLUSARG_CHK_SVA_B8": PLUSARG_CHK_SVA_B8,
     "GEN_BANNER_TAG": BANNER_TAG,
 }
 
@@ -422,6 +424,14 @@ COVERGROUPS_DECLARED_KEY = "covergroups_declared"
 MEASURED_DISPATCH_RULE = ("LOG-046a: a measured regression dispatches only on a head-mode canary build of the pinned commit whose "
                           "manifest records covergroups_declared true (a covergroup declaration in the compiled SV sources)")
 CANARY_REFUSED_NO_COVERGROUPS = "refused_no_covergroups"
+# LOG-067 (knob name per LOG-076): the B8 probe assertion is bound into DUT internals and fails on the DUT's own B8 defect, so
+# its knob may be on only in unmeasured B8 evidence runs. The loader refuses a measured entry whose plusargs turn it on; the
+# build manifest records the knob table's default at build time and measured dispatch refuses when that default is on or absent.
+B8_PROBE_KNOB = "chk_sva_b8"                      # gen_knobs.PLUSARGS key of the knob whose plusarg is PLUSARG_CHK_SVA_B8
+B8_PROBE_KNOB_DEFAULT_KEY = "b8_probe_knob_default_on"
+B8_PROBE_RULE = ("LOG-067 (name per LOG-076): the B8 probe assertion knob chk_sva_b8 (+gen_chk_sva_b8) may be on only in unmeasured "
+                 "B8 evidence runs; a measured entry that sets it is refused at load, and a canary build whose knob table defaults "
+                 "it on (or records no default) refuses measured dispatch")
 ROUND_EXIT_REFUSED = 2
 # Collected failure mechanisms scanned in sim.log (name, regex). Order = report priority.
 FAIL_PATTERNS = (

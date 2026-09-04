@@ -452,7 +452,7 @@ def self_test() -> int:
     U.dump_yaml({"purpose": 2, "requester": "tb-infra"}, r2)
     b = d / "canary_build"; b.mkdir()
     pin = "e" * 40
-    head = {"build": "gen_tb", "source_mode": C.SOURCE_MODE_HEAD, "head_sha": pin, C.COVERGROUPS_DECLARED_KEY: True, "covergroup_files": ["x.sv"]}
+    head = {"build": "gen_tb", "source_mode": C.SOURCE_MODE_HEAD, "head_sha": pin, C.COVERGROUPS_DECLARED_KEY: True, "covergroup_files": ["x.sv"], C.B8_PROBE_KNOB_DEFAULT_KEY: False}
     U.dump_yaml(dict(head, **{C.COVERGROUPS_DECLARED_KEY: False, "covergroup_files": []}), b / C.BUILD_MANIFEST)
     p4, refusal, gate = measured_gate([r2, r4], b, pin)
     cond = p4 == [r4] and refusal is not None and f"{C.COVERGROUPS_DECLARED_KEY}=False" in refusal and gate["decision"] == C.CANARY_REFUSED_NO_COVERGROUPS and gate["facts"]["head_sha"] == pin

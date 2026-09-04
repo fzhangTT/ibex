@@ -1,0 +1,13 @@
+# TDD red for the LOG-067 B8 probe refusal: self-tests with the cases in place and no implementation
+Fri Sep  4 00:43:23 UTC 2026
+## gen_flow_util.py --self-test
+    lambda d: d["tests"][0].update(measured=True, tier="smoke", plusargs=d["tests"][0]["plusargs"] + [f"+{C.PLUSARG_CHK_SVA_B8}=1"]),
+AttributeError: module 'gen_flow_const' has no attribute 'PLUSARG_CHK_SVA_B8'
+rc=1
+## gen_round.py --self-test
+    (f"{C.B8_PROBE_KNOB_DEFAULT_KEY} true refuses (LOG-067)", dict(head, **{C.B8_PROBE_KNOB_DEFAULT_KEY: True})),
+AttributeError: module 'gen_flow_const' has no attribute 'B8_PROBE_KNOB_DEFAULT_KEY'
+rc=1
+## gen_serve_requests.py --self-test
+SELF-TEST: PASS
+rc=0

@@ -1,0 +1,26 @@
+--- dv/auto_dv/isa/gen_isa_shim.cc	2026-09-03 13:29:17.283422476 -0400
++++ dv/auto_dv/work/runtime/t235/scratch/gen_isa_shim.cc	2026-09-03 17:09:59.748583523 -0400
+@@ -8,6 +8,7 @@
+ // collected report). Build: dv/auto_dv/isa/gen_isa_shim_build.sh. ASCII only.
+ #include "gen_isa_shim.h"
+ #include "gen_isa_shim_map.h"
++#include "gen_isa_shim_counters.h"   // T-235 part R (verification copy: tb-infra lands the real integration)
+ 
+ #include <riscv/cfg.h>
+ #include <riscv/simif.h>
+@@ -204,6 +205,7 @@
+ struct mem_access_t { uint32_t addr, data, size; };
+ std::vector<mem_access_t> g_mem_writes, g_mem_reads;       // data accesses of the last step, log order
+ std::shared_ptr<gen_masked_csr_t> g_hpm_lo[GEN_MHPM_COUNTER_NUM], g_hpm_hi[GEN_MHPM_COUNTER_NUM];   // mhpmcounter3.. synced from RVFI
++std::shared_ptr<gen_mcountinhibit_csr_t> g_mcountinhibit;   // T-235: Ibex's mcountinhibit holder (Spike's own stays 0)
+ uint32_t g_boot = 0;
+ uint32_t g_mcounteren_writable = 1;
+ uint32_t g_mcounteren_prev = 0;
+@@ -240,6 +242,7 @@
+     s->csrmap[CSR_HPMCOUNTER3 + i] = std::make_shared<counter_proxy_csr_t>(g_proc.get(), CSR_HPMCOUNTER3 + i, g_hpm_lo[i]);
+     s->csrmap[CSR_HPMCOUNTER3H + i] = std::make_shared<counter_proxy_csr_t>(g_proc.get(), CSR_HPMCOUNTER3H + i, g_hpm_hi[i]);
+   }
++  gen_install_counter_holders(g_proc.get(), s, g_mcountinhibit);   // T-235 part R: mcountinhibit mask, mhpmcounter13..31 zero
+   s->csrmap[CSR_MSTATUS] = std::make_shared<gen_mstatus_view_t>(g_proc.get(), s->mstatus);
+   s->csrmap[CSR_TDATA1] = std::make_shared<gen_trigger_view_t>(g_proc.get(), CSR_TDATA1, s->csrmap[CSR_TDATA1]);
+   s->csrmap[CSR_TDATA2] = std::make_shared<gen_trigger_view_t>(g_proc.get(), CSR_TDATA2, s->csrmap[CSR_TDATA2]);

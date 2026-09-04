@@ -112,10 +112,10 @@ def load_build_manifest(path: Path) -> tuple[dict[str, Any] | None, Path]:
 
 
 def measured_dispatch_refusal(canary_manifest: dict[str, Any] | None, where: str, pinned_sha: str | None) -> str | None:
-    """None when the canary build manifest is a head-mode build of the pinned commit and records covergroups_declared
-    true; else the refusal text naming the failed condition, the build, the manifest and the rule. A worktree build
-    (its covergroups may be an in-progress edit), a head build of another commit, an absent fact (no manifest, or one
-    older than the record) and a missing pin all refuse."""
+    """None when the canary build manifest is a head-mode build of the pinned commit, records covergroups_declared
+    true and records the B8 probe knob's table default off (LOG-067); else the refusal text naming the failed condition,
+    the build, the manifest and the rule. A worktree build (its covergroups may be an in-progress edit), a head build of
+    another commit, an absent fact (no manifest, or one older than the record) and a missing pin all refuse."""
     man = canary_manifest or {}
     head = f"canary build {man.get('build') or '?'} ({where})"
     if not man:
@@ -126,11 +126,14 @@ def measured_dispatch_refusal(canary_manifest: dict[str, Any] | None, where: str
         why = "cannot be bound: no pinned commit given"
     elif str(man.get("head_sha") or "") != pinned_sha:
         why = f"is the head-mode build of {str(man.get('head_sha') or '?')[:12]}, not of the pinned {pinned_sha[:12]}"
-    else:
+    elif man.get(C.COVERGROUPS_DECLARED_KEY) is not True:
         val = man.get(C.COVERGROUPS_DECLARED_KEY)
-        if val is True:
-            return None
         why = f"records {C.COVERGROUPS_DECLARED_KEY}={'absent' if val is None else val}"
+    else:
+        b8 = man.get(C.B8_PROBE_KNOB_DEFAULT_KEY)
+        if b8 is False:
+            return None
+        why = f"records {C.B8_PROBE_KNOB_DEFAULT_KEY}={'absent' if b8 is None else b8} ({C.B8_PROBE_KNOB}); {C.B8_PROBE_RULE}"
     return f"measured dispatch refused: {head} {why}; {C.MEASURED_DISPATCH_RULE}"
 
 
@@ -401,7 +404,10 @@ def self_test() -> int:
                  "names no fire_ id"),
                 ("witness_ids naming a TP id absent from the CSV", lambda d: d["tests"][0].update(witness_ids=["TP-NOPE-999"])),
                 ("witness_ids as a bare string", lambda d: d["tests"][0].update(witness_ids="TP-BIT-036")),
-                ("debug_only_plusargs missing a knob marked debug_only", lambda d: d.__setitem__("debug_only_plusargs", d["debug_only_plusargs"][:-1]))):
+                ("debug_only_plusargs missing a knob marked debug_only", lambda d: d.__setitem__("debug_only_plusargs", d["debug_only_plusargs"][:-1])),
+                ("a measured entry turning on the B8 probe knob (LOG-067)",
+                 lambda d: d["tests"][0].update(measured=True, tier="smoke", plusargs=d["tests"][0]["plusargs"] + [f"+{C.PLUSARG_CHK_SVA_B8}=1"]),
+                 "LOG-067")):
             t2 = load_yaml(C.TESTLIST_YAML)
             mutate(t2)
             f = Path(td) / "testlist_bad.yaml"
@@ -415,6 +421,18 @@ def self_test() -> int:
                 cond = not want or want[0] in err.getvalue()   # the refusal names the rule, not just any exit
             ok &= cond
             print("SELF-TEST", "ok " if cond else "BAD", f"load_testlist refuses {label}" + (f" (message names {want[0]!r})" if want else ""))
+        # LOG-067, the positive side: an unmeasured entry may turn the B8 probe knob on (a B8 evidence run).
+        t3 = load_yaml(C.TESTLIST_YAML)
+        t3["tests"][0].update(measured=False, tier=C.CHECK_TIER, plusargs=t3["tests"][0]["plusargs"] + [f"+{C.PLUSARG_CHK_SVA_B8}=1"])
+        f3 = Path(td) / "testlist_b8_unmeasured.yaml"
+        f3.write_text(_y.safe_dump(t3, sort_keys=False), encoding="utf-8")
+        try:
+            load_testlist(f3)
+            cond = True
+        except SystemExit:
+            cond = False
+        ok &= cond
+        print("SELF-TEST", "ok " if cond else "BAD", "load_testlist accepts an unmeasured entry that turns the B8 probe knob on (B8 evidence runs stay possible)")
         # The positive side of the policy: a fire_ id in the signature is accepted.
         t3 = load_yaml(C.TESTLIST_YAML); t3["red_expect_policy"] = ["fire_id"]
         for t in t3["tests"]:
@@ -664,7 +682,8 @@ def self_test() -> int:
         if man is not None:
             dump_yaml(man, gd / C.BUILD_MANIFEST)
         return measured_dispatch_refusal(*load_build_manifest(where), pinned)
-    head_ok = {"build": "gen_tb", "source_mode": C.SOURCE_MODE_HEAD, "head_sha": pin, C.COVERGROUPS_DECLARED_KEY: True, "covergroup_files": ["dv/auto_dv/env/x.sv"]}
+    head_ok = {"build": "gen_tb", "source_mode": C.SOURCE_MODE_HEAD, "head_sha": pin, C.COVERGROUPS_DECLARED_KEY: True, "covergroup_files": ["dv/auto_dv/env/x.sv"],
+               C.B8_PROBE_KNOB_DEFAULT_KEY: False}
     r_true = gate(head_ok)
     r_false = gate(dict(head_ok, **{C.COVERGROUPS_DECLARED_KEY: False, "covergroup_files": []}))
     r_absent = gate({"build": "gen_tb", "source_mode": C.SOURCE_MODE_HEAD, "head_sha": pin})
@@ -672,6 +691,11 @@ def self_test() -> int:
     r_other = gate(dict(head_ok, head_sha="b" * 40))
     r_nopin = gate(head_ok, pinned=None)
     r_none = gate(None, where=gd / "no_such_dir")
+    r_b8_on = gate(dict(head_ok, **{C.B8_PROBE_KNOB_DEFAULT_KEY: True}))
+    r_b8_absent = gate({k: v for k, v in head_ok.items() if k != C.B8_PROBE_KNOB_DEFAULT_KEY})
+    cond_b8 = r_b8_on is not None and C.B8_PROBE_KNOB in r_b8_on and "LOG-067" in r_b8_on and r_b8_absent is not None and "absent" in r_b8_absent
+    ok &= cond_b8
+    print("SELF-TEST", "ok " if cond_b8 else "BAD", f"measured_dispatch_refusal (LOG-067): a canary build whose knob table defaults the B8 probe knob on refuses naming the knob and the ruling; an absent fact refuses: {(r_b8_on or '')[:90]}")
     cond = (r_true is None
             and r_false is not None and "gen_tb" in r_false and f"{C.COVERGROUPS_DECLARED_KEY}=False" in r_false and "LOG-046a" in r_false
             and r_absent is not None and f"{C.COVERGROUPS_DECLARED_KEY}=absent" in r_absent
@@ -1069,6 +1093,23 @@ def debug_only_from_knobs() -> set[str]:
     return {p["plusarg"] for p in knobs.PLUSARGS.values() if p.get("debug_only")}
 
 
+def knob_default_on(knob: str) -> bool | None:
+    """The rendered knob table's default of `knob` as a truth value, None when the table has no such knob: the build
+    manifest fact behind the LOG-067 measured-dispatch refusal (read from the source tree the build binds to)."""
+    import importlib
+    if str(C.SOURCE_ROOT) not in sys.path:
+        sys.path.insert(0, str(C.SOURCE_ROOT))
+    try:
+        knobs = importlib.import_module(C.KNOBS_MODULE)
+    except ModuleNotFoundError as e:
+        die(f"{C.KNOBS_MODULE} is not importable ({e}); the rendered knob table is the origin of knob defaults")
+    require_under_source_root(knobs, C.KNOBS_MODULE)
+    entry = knobs.PLUSARGS.get(knob)
+    if entry is None:
+        return None
+    return str(entry.get("default")).strip() not in ("0", "", "None", "False")
+
+
 def load_testlist(path: Path = C.TESTLIST_YAML) -> dict[str, Any]:
     data = load_yaml(path)
     if not isinstance(data, dict) or data.get("schema_version") != C.TESTLIST_SCHEMA_VERSION:
@@ -1130,6 +1171,8 @@ def load_testlist(path: Path = C.TESTLIST_YAML) -> dict[str, Any]:
             die(f"{path}: test {t['name']} tier {t['tier']!r} not in {C.ALL_TIERS}")
         if t["tier"] == C.CHECK_TIER and t.get("measured", True):
             die(f"{path}: test {t['name']} is tier {C.CHECK_TIER} and must be measured: false (Critic R-01)")
+        if t.get("measured", True) and plusarg_enabled(t.get("plusargs") or [], C.PLUSARG_CHK_SVA_B8):
+            die(f"{path}: test {t['name']} is measured and turns on +{C.PLUSARG_CHK_SVA_B8}; {C.B8_PROBE_RULE}")
         if t.get("red_fixture"):
             if t.get("expected_fail"):
                 die(f"{path}: test {t['name']}: red_fixture and expected_fail are exclusive (a fixture is not an RTL-bug candidate)")

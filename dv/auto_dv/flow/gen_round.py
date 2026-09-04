@@ -356,8 +356,9 @@ def self_test() -> int:
     ok = True
     d = Path(tempfile.mkdtemp(prefix="gen_round_selftest_", dir=C.selftest_tmp()))
     pin = "c" * 40
-    head = {"build": "gen_tb", "source_mode": C.SOURCE_MODE_HEAD, "head_sha": pin, C.COVERGROUPS_DECLARED_KEY: True, "covergroup_files": ["a.sv"]}
+    head = {"build": "gen_tb", "source_mode": C.SOURCE_MODE_HEAD, "head_sha": pin, C.COVERGROUPS_DECLARED_KEY: True, "covergroup_files": ["a.sv"], C.B8_PROBE_KNOB_DEFAULT_KEY: False}
     cases = ((f"{C.COVERGROUPS_DECLARED_KEY} false refuses", dict(head, **{C.COVERGROUPS_DECLARED_KEY: False, "covergroup_files": []}), C.ROUND_EXIT_REFUSED, f"{C.COVERGROUPS_DECLARED_KEY}=False"),
+             (f"{C.B8_PROBE_KNOB_DEFAULT_KEY} true refuses (LOG-067)", dict(head, **{C.B8_PROBE_KNOB_DEFAULT_KEY: True}), C.ROUND_EXIT_REFUSED, f"{C.B8_PROBE_KNOB_DEFAULT_KEY}=True"),
              ("fact absent (older manifest) refuses", {"build": "gen_tb", "source_mode": C.SOURCE_MODE_HEAD, "head_sha": pin}, C.ROUND_EXIT_REFUSED, f"{C.COVERGROUPS_DECLARED_KEY}=absent"),
              ("a worktree build refuses even with a covergroup", dict(head, source_mode=C.SOURCE_MODE_WORKTREE), C.ROUND_EXIT_REFUSED, "worktree-mode build"),
              ("a head build of another commit refuses", dict(head, head_sha="d" * 40), C.ROUND_EXIT_REFUSED, "not of the pinned"),

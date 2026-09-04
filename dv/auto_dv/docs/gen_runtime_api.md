@@ -389,7 +389,11 @@ head build of another commit proves nothing about this one) and records `covergr
 `measured_dispatch: {canary_build, pinned_sha, facts, decision: refused_no_covergroups | accepted, refusal}`, and each
 purpose-4 regression receives `--canary-build` so its own manifest records the same `canary_build` facts) while the purpose-1 to -3
 requests of the same batch are served. A TB without a covergroup makes every fcov manifest unverifiable, so the
-refusal lands before the first job instead of after the pass (round 0 of 2026-09-03 was refused after 700 s).
+refusal lands before the first job instead of after the pass (round 0 of 2026-09-03 was refused after 700 s). The same gate
+carries the LOG-067 condition (knob name per LOG-076): the build manifest records `b8_probe_knob_default_on`, the knob table's
+default of `chk_sva_b8` (`+gen_chk_sva_b8`, the B8 probe assertion bound into DUT internals, which fails on the DUT's own B8
+defect) at build time, and a measured dispatch is refused when that fact is true or absent (`gen_flow_const.B8_PROBE_RULE`);
+the loader refuses any measured entry whose plusargs turn the knob on, so the probe runs only in unmeasured B8 evidence entries.
 
 ## 5. gen_dashboard.py (results dashboard)
 
@@ -487,7 +491,8 @@ class; otherwise a class identifier, anything else is rejected), `plusargs` (lis
 optional `pass_marker`, `feature_groups`, `cocotb_module`, `expected_fail`, `component`, `notes`,
 `measured`, `program` (Section 7e).
 `gen_flow_util.load_testlist` rejects unknown keys, unknown builds, non-gen_ names, bad tiers and
-owners, a tier-check test that is not `measured: false`, and any plusarg whose name is neither a
+owners, a tier-check test that is not `measured: false`, a measured test whose plusargs turn on the B8 probe knob
+`+gen_chk_sva_b8` (LOG-067, knob name per LOG-076: the knob is for unmeasured B8 evidence runs only), and any plusarg whose name is neither a
 `PLUSARG_*` constant of `dv/auto_dv/tb/gen_tb_pkg.sv` nor a simulator/UVM plusarg (Critic P-06).
 `gen_build.py`, `gen_run.py` and `gen_regress.py` each call `gen_flow_util.require_sv_constants()` first thing in `main()` (the SV/Python constants check); `gen_serve_requests.py` and `gen_dashboard.py` do not compile or run anything and rely on those three. The Test Writer adds test entries; TB Infra adds build entries; both through the runtime
 owner (one owner per file).
