@@ -1,0 +1,12 @@
+SELF-TEST BAD measured_knob_condition_refusal (LOG-077) +row=1 with a trailing newline: VCS converts no whitespace, set with value 0, refuses (CM167-L-1): None
+SELF-TEST ok  measured_knob_condition_refusal (LOG-077) +row=1 with a trailing carriage return: set with value 0, refuses (CM167-L-1): +gen_knob_icache_ecc_err_rate=frequent while +gen_chk_alert_minor reads off (row
+SELF-TEST ok  measured_knob_condition_refusal (LOG-077) +row=1 with CR LF: set with value 0, refuses (CM167-L-1): +gen_knob_icache_ecc_err_rate=frequent while +gen_chk_alert_minor reads off (row
+SELF-TEST BAD measured_knob_condition_refusal (LOG-077) +row= with a newline before the digit: VCS matches the name= prefix and reads 0, refuses (CM167-L-1, the plusarg_name hole): None
+SELF-TEST ok  measured_knob_condition_refusal (LOG-077) +row=_-1: a separator before the sign reads 0 in VCS, refuses (CM167-I-1): +gen_knob_icache_ecc_err_rate=frequent while +gen_chk_alert_minor reads off (row
+SELF-TEST ok  measured_knob_condition_refusal (LOG-077) +row=+-1: a doubled sign reads 0, refuses (CM167-I-1): +gen_knob_icache_ecc_err_rate=frequent while +gen_chk_alert_minor reads off (row
+SELF-TEST ok  measured_knob_condition_refusal (LOG-077) +row=--1: a doubled sign reads 0, refuses (CM167-I-1): +gen_knob_icache_ecc_err_rate=frequent while +gen_chk_alert_minor reads off (row
+SELF-TEST ok  measured_knob_condition_refusal (LOG-077) +row=-: a bare sign reads 0, refuses (CM167-I-1): +gen_knob_icache_ecc_err_rate=frequent while +gen_chk_alert_minor reads off (row
+SELF-TEST ok  measured_knob_condition_refusal (LOG-077) +row=+: a bare sign reads 0, refuses (CM167-I-1): +gen_knob_icache_ecc_err_rate=frequent while +gen_chk_alert_minor reads off (row
+SELF-TEST ok  measured_knob_condition_refusal (LOG-077) +row=1-: a trailing sign reads 0, refuses (CM167-I-1): +gen_knob_icache_ecc_err_rate=frequent while +gen_chk_alert_minor reads off (row
+SELF-TEST BAD build-input gate case 13: every listed non-input is tracked and each glob class matches a tracked file (['git ls-files failed: fatal: not a git repository (or any parent up to mount point /)\nStopping at filesystem boundary (GIT_DISCOVERY_ACROSS_FILESYSTEM not set).']); list sha256 80d4a7081e03
+SELF-TEST: FAIL

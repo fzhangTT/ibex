@@ -821,7 +821,17 @@ def self_test() -> int:
             ([f"+{rate}=frequent", f"+{row}=-_1"], None, False, "+row=-_1: sign then separator, 0xFFFFFFFF in 32 bits, runs (CM162-L-2)"),
             ([f"+{rate}=frequent", f"+{row}=0_0"], None, True, "+row=0_0: value 0, refuses (CM162-L-2)"),
             ([f"+{rate}=frequent", f"+{row}=1_abc"], None, True, "+row=1_abc: letters after the separator are no decimal integer, value 0, refuses (CM162-L-2)"),
-            ([f"+{rate}=frequent", f"+{row}=_"], None, True, "+row=_: a separator with no digit reads 0, refuses (CM162-L-2)")):
+            ([f"+{rate}=frequent", f"+{row}=_"], None, True, "+row=_: a separator with no digit reads 0, refuses (CM162-L-2)"),
+            ([f"+{rate}=frequent", f"+{row}=1\n"], None, True, "+row=1 with a trailing newline: VCS converts no whitespace, set with value 0, refuses (CM167-L-1)"),
+            ([f"+{rate}=frequent", f"+{row}=1\r"], None, True, "+row=1 with a trailing carriage return: set with value 0, refuses (CM167-L-1)"),
+            ([f"+{rate}=frequent", f"+{row}=1\r\n"], None, True, "+row=1 with CR LF: set with value 0, refuses (CM167-L-1)"),
+            ([f"+{rate}=frequent", f"+{row}=\n1"], None, True, "+row= with a newline before the digit: VCS matches the name= prefix and reads 0, refuses (CM167-L-1, the plusarg_name hole)"),
+            ([f"+{rate}=frequent", f"+{row}=_-1"], None, True, "+row=_-1: a separator before the sign reads 0 in VCS, refuses (CM167-I-1)"),
+            ([f"+{rate}=frequent", f"+{row}=+-1"], None, True, "+row=+-1: a doubled sign reads 0, refuses (CM167-I-1)"),
+            ([f"+{rate}=frequent", f"+{row}=--1"], None, True, "+row=--1: a doubled sign reads 0, refuses (CM167-I-1)"),
+            ([f"+{rate}=frequent", f"+{row}=-"], None, True, "+row=-: a bare sign reads 0, refuses (CM167-I-1)"),
+            ([f"+{rate}=frequent", f"+{row}=+"], None, True, "+row=+: a bare sign reads 0, refuses (CM167-I-1)"),
+            ([f"+{rate}=frequent", f"+{row}=1-"], None, True, "+row=1-: a trailing sign reads 0, refuses (CM167-I-1)")):
         got = measured_knob_condition_refusal(pas, defaults)
         cond = (got is not None and "LOG-077" in got) if want_refuse else got is None
         ok &= cond
@@ -1262,20 +1272,21 @@ def effective_knob_value(plusargs: list[str], plusarg: str, defaults: dict[str, 
     return None if d is None else str(d)
 
 
-PLUSARG_DECIMAL_RE = re.compile(r"^[+-]?[0-9_]*[0-9][0-9_]*$")   # the remainder VCS's %d converts: sign, digits, _ separators; anything else (whitespace included) reads 0
+PLUSARG_DECIMAL_RE = re.compile(r"[+-]?[0-9_]*[0-9][0-9_]*")   # the whole remainder VCS's %d converts: a leading sign, digits, _ separators; anything else (whitespace, newlines included) reads 0
 
 
 def checker_knob_state(plusargs: list[str], name: str, defaults: dict[str, Any] | None = None) -> tuple[bool, bool]:
     """(set, on) of a bool checker knob as VCS's `$value$plusargs({PLUSARG, "=%d"}, u)` reads it: the first plusarg
     whose text starts with "name=" matches (a bare +name never matches, so it is skipped, not stopped at), and the match
     sets the knob; the value is the remainder as a decimal integer in the 32 bits of u (sign and underscore digit separators
-    as VCS accepts them: 1_000 is 1000), and any other remainder (yes, off, false, empty, 0x1, 1abc, or one carrying
-    whitespace: VCS converts no whitespace, so " 1" and "1 " read 0) reads 0; unset, on follows the table default."""
+    as VCS accepts them: 1_000 is 1000; the sign, if any, leads the digits), and any other remainder (yes, off, false,
+    empty, 0x1, 1abc, _-1, +-1, a bare or trailing sign, or one carrying whitespace: VCS converts no whitespace, so " 1",
+    "1 " and "1" followed by a newline read 0) reads 0; unset, on follows the table default."""
     for pa in plusargs:
         if plusarg_name(pa) != name or "=" not in pa:
             continue
         rest = pa.split("=", 1)[1]
-        val = (int(rest.replace("_", ""), 10) & 0xFFFFFFFF) if PLUSARG_DECIMAL_RE.match(rest) else 0
+        val = (int(rest.replace("_", ""), 10) & 0xFFFFFFFF) if PLUSARG_DECIMAL_RE.fullmatch(rest) else 0
         return True, val != 0
     d = defaults[name] if defaults and name in defaults else knob_default_by_plusarg(name)
     return False, str(d).strip() not in ("0", "", "None", "False")
@@ -1498,7 +1509,7 @@ def plusarg_value(pa: str) -> str | None:
 
 
 def plusarg_name(pa: str) -> str | None:
-    m = re.match(r"^\+([A-Za-z_][\w+]*)(=.*)?$", pa)
+    m = re.match(r"^\+([A-Za-z_][\w+]*)(=[\s\S]*)?$", pa)   # the value may span newlines: VCS matches the name= prefix whatever follows
     return m.group(1) if m else None
 
 

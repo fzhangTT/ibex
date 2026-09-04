@@ -212,8 +212,10 @@ gen_run.py --build-dir DIR --test NAME --seed N --run-dir DIR [--cov-dir VDB | -
   from the rendered knob table's default, and the required row is judged as the TB judges it (`gen_chk_en`: `chk_all ? val :
   (set && val)`) with the knobs read as VCS's `$value$plusargs("name=%d")` reads them (`checker_knob_state`): the first `name=`
   form sets the knob, its value is the remainder as a 32-bit decimal integer (sign and underscore digit separators as VCS
-  accepts them: `1_000` is 1000) and any other remainder (yes, off, false, empty, 0x1, 1abc, or one carrying whitespace: VCS
-  converts no whitespace, so `= 1` and `=1 ` read 0) reads 0; a bare `+name` never matches; an unset row follows its table default, and is on only while the master
+  accepts them: `1_000` is 1000; the sign, if any, leads the digits) and any other remainder (yes, off, false, empty, 0x1, 1abc,
+  `_-1`, `+-1`, a bare or trailing sign, or one carrying whitespace, a newline or carriage return included: VCS converts no
+  whitespace, so `= 1`, `=1 ` and `=1` followed by a newline read 0; every form probed on VCS, gen_tdd_logs/flow/gen_cm162_vcs_probe.log
+  and gen_cm167_vcs_probe.log) reads 0; a bare `+name` never matches; an unset row follows its table default, and is on only while the master
   enable `+gen_chk_all` is on (`gen_flow_util.measured_knob_condition_refusal`, `checker_row_on`).
 - `--waves`: needs a `--waves` build; renders `gen_dump.tcl` into the run dir (FSDB with
   `$VERDI_HOME`, else VPD) and adds `-ucli -do dump.tcl`. Templates are rendered by

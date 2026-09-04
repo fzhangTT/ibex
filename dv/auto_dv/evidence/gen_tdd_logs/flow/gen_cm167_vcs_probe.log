@@ -1,0 +1,23 @@
+VCS X-2025.06-SP2 (/tools_vendor/synopsys/vcs/X-2025.06-SP2/bin/vcs) probe of $value$plusargs("x=%d", int unsigned u), u preloaded 0xDEADBEEF, the same simv_probe as gen_cm162_vcs_probe.log; 2026-09-04T04:37:21Z
+FORM $'+x=1\n'        PROBE set=1 u=0 hex=00000000
+FORM $'+x=1\r'        PROBE set=1 u=0 hex=00000000
+FORM $'+x=\n1'        PROBE set=1 u=0 hex=00000000
+FORM $'+x=1\r\n'      PROBE set=1 u=0 hex=00000000
+FORM +x=_-1           PROBE set=1 u=0 hex=00000000
+FORM +x=+-1           PROBE set=1 u=0 hex=00000000
+FORM +x=--1           PROBE set=1 u=0 hex=00000000
+FORM +x=-             PROBE set=1 u=0 hex=00000000
+FORM +x=+             PROBE set=1 u=0 hex=00000000
+FORM +x=1-            PROBE set=1 u=0 hex=00000000
+FORM +x=-_-1          PROBE set=1 u=0 hex=00000000
+FORM +x=_+1           PROBE set=1 u=0 hex=00000000
+FORM +x=1             PROBE set=1 u=1 hex=00000001
+--- run_probe167.sh, the forms loop over the gen_cm162_vcs_probe.log simv (gen_knob_probe.sv there); each FORM line one simv run with the form as one argv token, printf %q quoted ---
+#!/bin/bash
+# CM167 forms: newline / carriage return inside the token, and the sign-position forms the CM162 probe did not cover; each form one argv token.
+echo "VCS X-2025.06-SP2 (/tools_vendor/synopsys/vcs/X-2025.06-SP2/bin/vcs) probe of \$value\$plusargs(\"x=%d\", int unsigned u), u preloaded 0xDEADBEEF, the same simv_probe as gen_cm162_vcs_probe.log; $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+forms=( $'+x=1\n' $'+x=1\r' $'+x=\n1' $'+x=1\r\n' "+x=_-1" "+x=+-1" "+x=--1" "+x=-" "+x=+" "+x=1-" "+x=-_-1" "+x=_+1" "+x=1" )
+for f in "${forms[@]}"; do
+  out=$(./simv_probe "$f" 2>&1 | grep '^PROBE' | head -1)
+  printf 'FORM %-16s %s\n' "$(printf '%q' "$f")" "$out"
+done

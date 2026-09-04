@@ -1948,7 +1948,7 @@ tests:
     tier: check
     build: gen_tb
     uvm_test: gen_base_test
-    plusargs: [+gen_fetch_en_at_reset=0, +gen_ut_boot_retire=200, +gen_export_file=gen_export.txt]
+    plusargs: [+gen_fetch_en_at_reset=0, +gen_export_file=gen_export.txt]
     program: {directed: [dv/auto_dv/stim/gen_directed/gen_nmi_long_directed.S], seed: 1}
     seeds: 1
     fcov_expectation_file: null
@@ -2069,4 +2069,185 @@ tests:
     expected_fail: false
     keep_artifacts: true
     component: gen_fcov_pkg
+    measured: false
+  - name: gen_ut_lockstep_lui_auipc
+    description: 'lock-step run of gen_lui_auipc_directed.S: the U-type immediate extremes at both pc alignments (gen_fcov_proof_slice6a)'
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0, +gen_ut_boot_retire=40]
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_lui_auipc_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 600
+    owner: tb-infra
+    pass_marker: GEN_UT_LOCKSTEP_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_fcov_pkg
+    measured: false
+  - name: gen_ut_lockstep_hint_x0
+    description: 'lock-step run of gen_hint_x0_directed.S: every x0-destination writer class followed by a reader of x0 (gen_fcov_proof_slice6b)'
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0, +gen_ut_boot_retire=150]
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_hint_x0_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 600
+    owner: tb-infra
+    pass_marker: GEN_UT_LOCKSTEP_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_fcov_pkg
+    measured: false
+  - name: gen_ut_lockstep_isa_jump
+    description: 'lock-step run of gen_isa_jump_directed.S: jal / jalr / c.j / c.jal / c.jr / c.jalr with the immediate classes and word, half, even and odd targets (gen_fcov_proof_slice6c)'
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0, +gen_ut_boot_retire=150]
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_isa_jump_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 600
+    owner: tb-infra
+    pass_marker: GEN_UT_LOCKSTEP_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_fcov_pkg
+    measured: false
+  - name: gen_ut_lockstep_cmp_imm_edges
+    description: 'lock-step run of gen_cmp_imm_edges_directed.S: the Zca immediate extremes and the stack pointer crossing zero (gen_fcov_proof_slice6d)'
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0, +gen_ut_boot_retire=120]
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_cmp_imm_edges_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 600
+    owner: tb-infra
+    pass_marker: GEN_UT_LOCKSTEP_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_fcov_pkg
+    measured: false
+  - name: gen_ut_lockstep_div_timing
+    description: 'lock-step run of gen_div_timing_directed.S under the default regimes: the divider''s neighbour matrix and the clean deltas (gen_fcov_proof_slice6e)'
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0, +gen_ut_boot_retire=800]
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_div_timing_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 600
+    owner: tb-infra
+    pass_marker: GEN_UT_LOCKSTEP_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_fcov_pkg
+    measured: false
+  - name: gen_ut_lockstep_div_timing_long
+    description: 'the same program under the long bus regimes: the fetch-stall class (gen_fcov_proof_slice6e2)'
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0, +gen_ut_boot_retire=800, +gen_knob_dmem_rvalid_delay=long, +gen_knob_dmem_gnt_delay=long, +gen_knob_imem_rvalid_delay=long]
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_div_timing_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 600
+    owner: tb-infra
+    pass_marker: GEN_UT_LOCKSTEP_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_fcov_pkg
+    measured: false
+  - name: gen_ut_lockstep_div_timing_irq
+    description: 'the same program under the irq storm with NMIs: the mid-divide irq and NMI events and the irq latency (gen_fcov_proof_slice6e3)'
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0, +gen_ut_boot_retire=800, +gen_knob_irq_regime=storm, +gen_knob_irq_line_mix=with_nmi, +gen_export_file=gen_export.txt]
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_div_timing_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 600
+    owner: tb-infra
+    pass_marker: GEN_UT_LOCKSTEP_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_fcov_pkg
+    measured: false
+  - name: gen_ut_lockstep_div_timing_dbg
+    description: 'the same program under the sparse debug-request regime: the mid-divide debug_req event (gen_fcov_proof_slice6e4; the storm does not let the program finish inside the test''s wait)'
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0, +gen_ut_boot_retire=800, +gen_knob_debug_req_regime=sparse]
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_div_timing_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 600
+    owner: tb-infra
+    pass_marker: GEN_UT_LOCKSTEP_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_fcov_pkg
+    measured: false
+  - name: gen_ut_intg_store
+    description: 'gen_ut_intg_store on gen_intg_store_directed.S: one integrity corruption on the first half of a misaligned store; the internal NMI''s mtval is the store''s own address (the handler reads
+      it)'
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0, +gen_ut_boot_retire=30, +gen_export_file=gen_export.txt]
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_intg_store_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 600
+    owner: tb-infra
+    pass_marker: GEN_UT_INTG_STORE_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_intg_store
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_rvfi_pkg
     measured: false

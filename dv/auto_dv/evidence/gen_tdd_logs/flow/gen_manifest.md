@@ -56,6 +56,13 @@ reader on a detached archive of 3bf3d6b; the three whitespace cases and the four
 three underscore refuse cases pass (a discriminating red); the gate case 13 BAD line is the archive's missing .git (git
 ls-files), not part of the red, and is kept because the excerpt filter keeps every BAD line; then the strip was dropped, the
 regex widened and all ten pass (129 ok, case 13 the only BAD in the archive).
+gen_cm167_vcs_probe.log is the second run of the same probe (the CM162 simv) on the CM167 forms: `=1` followed by LF, CR or CR LF,
+`=` LF `1`, and the sign-position forms `_-1`, `+-1`, `--1`, `-`, `+`, `1-`, `-_-1`, `_+1`; every one reads set with u=0, `=1` reads 1;
+the forms script is appended as the trailer.
+gen_cm167_newline_red.log is the TDD red of the CM167-L-1 fix on a detached archive of 12411be: ten new cases against the CM162 reader;
+the LF-after-the-digit case (the regex's `$` before a trailing newline) and the LF-before-the-digit case (plusarg_name's `.*` stopping
+at the newline, a hole found while writing the red) print BAD while CR, CR LF and the six sign forms pass (a discriminating red); the gate
+case 13 BAD line is again the archive's missing .git; then fullmatch and the `[\s\S]*` value group make all ten pass (139 ok).
 | evidence path | source | bytes | md5 |
 |---|---|---|---|
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_gate_rule_red.log | dv/auto_dv/work/runtime/gate_rule_red.log | 926 | 78b72aae6509d2776a43c9314808b01b |
@@ -70,3 +77,5 @@ regex widened and all ten pass (129 ok, case 13 the only BAD in the archive).
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_cm159_vcs_value_red.log | dv/auto_dv/work/runtime/cm159_red.log | 2244 | 5230a37ea1af24d47533598d49a2d3c4 |
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_cm162_vcs_probe.log | (runtime scratchpad) cm162/probe/probe.log + gen_knob_probe.sv | 2390 | 7f3cccd42a44567dd75ae3ac4f448d70 |
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_cm162_whitespace_underscore_red.log | (runtime scratchpad) cm162/red.log | 2176 | 9b2ee182f9e500422e5dc0a057e0fd7d |
+| dv/auto_dv/evidence/gen_tdd_logs/flow/gen_cm167_vcs_probe.log | (runtime scratchpad) l13/probe167.log + cm162/probe/run_probe167.sh | 1720 | bb0ad1b719b38c26c462ce04bcb4cc3f |
+| dv/auto_dv/evidence/gen_tdd_logs/flow/gen_cm167_newline_red.log | (runtime scratchpad) l13/red167.log | 2245 | fd340befe73f21baa64c30030da0dbc6 |
