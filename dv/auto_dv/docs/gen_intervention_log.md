@@ -1864,3 +1864,14 @@ transferred now; TB Infra at the end of its current WP-12 turn (its LSF chains c
 respawned Runtime dispatches Sonnet or Haiku subagents for mechanical work (hash lists, yaml equality, log grepping,
 retention manifests, probe runs) and keeps Opus for judgment; LSF commands stay with the Runtime Manager itself, never a
 subagent. The Orchestrator's own model is the session's and is not changed here.
+
+## LOG-083a - 2026-09-04 - Addendum: subagent-driven development for every agent
+
+The owner's addendum at 05:45Z: each agent follows subagent-driven development (the superpowers skill
+subagent-driven-development): simple, well-specified tasks fan out to smaller-model subagents (the Agent tool with the
+model override sonnet or haiku), and the agent's own model is spent on judgment, integration and the hand-off
+statement. Team rules that stay in force around it: subagents are unnamed and hold no ownership; a subagent writes
+only the file it was given and its output is folded into the dispatching agent's deliverable and verified by that
+agent before hand-off; LSF commands stay with the Runtime Manager itself, never a subagent; the Critic's verdict and
+the Orchestrator's hash gates and commits are never delegated, only the mechanical reading behind them may be.
+Relayed to all six teammates and applied by the Orchestrator to its own mechanical work.
