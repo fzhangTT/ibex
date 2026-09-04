@@ -346,8 +346,8 @@ verified in Section 6 on out_head14 and are not re-run here; the fire checks are
 under work/test-writer/batch3/gen_pmc_ctrl/verified_h14/) and the committed test differ only in the docstring (the dependency paragraph replaced
 here, the pin-off manifest statement and the plan anchor's commit id corrected under CM141), one comment and the two not_hit reason strings of
 bins_not_hit (which feed the rendered header); no fire-check or expectation code differs. The committed test is 0383702cd933 and its runs above
-were re-done against the out_head18 build with that text as the Python root (a detached-archive copy of HEAD with the corrected test), so their
-headers name it.
+were re-done against the out_head18 build with that text as the Python root (a scratchpad copy of a detached archive of HEAD with the corrected test),
+so their headers name it.
 Staged entries (dv/auto_dv/work/test-writer/gen_testlist_entries.yaml, sha256 9c8aed00c141 as handed, 32fd0a2d0b3f after the pin-off argument
 was quoted for YAML and its description corrected under CM141; merged into the testlist at c0d12f4 and bb3a0a6): gen_test_pmc_ctrl (tier check, 3 seeds,
 measured false until the PMC covergroups are built), gen_test_pmc_ctrl_pin_off (tier check, 1 seed, --pin off with the pin plusarg) and
