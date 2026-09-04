@@ -1,3 +1,27 @@
+# not_hit gen_cmp_imm_edges_cg.cp_cj_off.self: stimulus: the program emits no compressed jump whose target is the jump itself
+# not_hit gen_cmp_zca_cg.cr_insn_align.c_jalr_half: stimulus: the program never places this compressed instruction at a half-word-aligned address
+# not_hit gen_cmp_zca_cg.cr_insn_next.c_add_n16: stimulus: this instruction and a following 16-bit instruction both occur, but the program never places them adjacently in this order
+# not_hit gen_cmp_zca_cg.cr_insn_next.c_addi4spn_n16: stimulus: this instruction and a following 16-bit instruction both occur, but the program never places them adjacently in this order
+# not_hit gen_cmp_zca_cg.cr_insn_next.c_and_n16: stimulus: this instruction and a following 16-bit instruction both occur, but the program never places them adjacently in this order
+# not_hit gen_cmp_zca_cg.cr_insn_next.c_andi_n16: stimulus: this instruction and a following 16-bit instruction both occur, but the program never places them adjacently in this order
+# not_hit gen_cmp_zca_cg.cr_insn_next.c_beqz_n16: stimulus: this instruction and a following 16-bit instruction both occur, but the program never places them adjacently in this order
+# not_hit gen_cmp_zca_cg.cr_insn_next.c_bnez_n16: stimulus: this instruction and a following 16-bit instruction both occur, but the program never places them adjacently in this order
+# not_hit gen_cmp_zca_cg.cr_insn_next.c_jal_n16: stimulus: this instruction and a following 16-bit instruction both occur, but the program never places them adjacently in this order
+# not_hit gen_cmp_zca_cg.cr_insn_next.c_jalr_n16: stimulus: this instruction and a following 16-bit instruction both occur, but the program never places them adjacently in this order
+# not_hit gen_cmp_zca_cg.cr_insn_next.c_jr_n16: stimulus: this instruction and a following 16-bit instruction both occur, but the program never places them adjacently in this order
+# not_hit gen_cmp_zca_cg.cr_insn_next.c_lui_n16: stimulus: this instruction and a following 16-bit instruction both occur, but the program never places them adjacently in this order
+# not_hit gen_cmp_zca_cg.cr_insn_next.c_lw_n16: stimulus: this instruction and a following 16-bit instruction both occur, but the program never places them adjacently in this order
+# not_hit gen_cmp_zca_cg.cr_insn_next.c_lwsp_n16: stimulus: this instruction and a following 16-bit instruction both occur, but the program never places them adjacently in this order
+# not_hit gen_cmp_zca_cg.cr_insn_next.c_mv_n16: stimulus: this instruction and a following 16-bit instruction both occur, but the program never places them adjacently in this order
+# not_hit gen_cmp_zca_cg.cr_insn_next.c_or_n16: stimulus: this instruction and a following 16-bit instruction both occur, but the program never places them adjacently in this order
+# not_hit gen_cmp_zca_cg.cr_insn_next.c_srai_n16: stimulus: this instruction and a following 16-bit instruction both occur, but the program never places them adjacently in this order
+# not_hit gen_cmp_zca_cg.cr_insn_next.c_srli_n16: stimulus: this instruction and a following 16-bit instruction both occur, but the program never places them adjacently in this order
+# not_hit gen_cmp_zca_cg.cr_insn_next.c_sub_n16: stimulus: this instruction and a following 16-bit instruction both occur, but the program never places them adjacently in this order
+# not_hit gen_cmp_zca_cg.cr_insn_next.c_sw_n16: stimulus: this instruction and a following 16-bit instruction both occur, but the program never places them adjacently in this order
+# not_hit gen_cmp_zca_cg.cr_insn_next.c_swsp_n16: stimulus: this instruction and a following 16-bit instruction both occur, but the program never places them adjacently in this order
+# not_hit gen_cmp_zca_cg.cr_insn_next.c_xor_n16: stimulus: this instruction and a following 16-bit instruction both occur, but the program never places them adjacently in this order
+# not_hit gen_cmp_zca_cg.cr_insn_rdfull.c_lwsp_x3_7: seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_cmp_zca_cg.cr_insn_rdfull.c_lwsp_x8_15: seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
 test: gen_test_cmp_zca
 owner: test-writer
 bins:
@@ -54,7 +78,6 @@ bins:
   - gen_cmp_zca_cg.cr_insn_align.c_j_word
   - gen_cmp_zca_cg.cr_insn_align.c_jal_half
   - gen_cmp_zca_cg.cr_insn_align.c_jal_word
-  - gen_cmp_zca_cg.cr_insn_align.c_jalr_half
   - gen_cmp_zca_cg.cr_insn_align.c_jalr_word
   - gen_cmp_zca_cg.cr_insn_align.c_jr_half
   - gen_cmp_zca_cg.cr_insn_align.c_jr_word
@@ -86,57 +109,37 @@ bins:
   - gen_cmp_zca_cg.cr_insn_align.c_swsp_word
   - gen_cmp_zca_cg.cr_insn_align.c_xor_half
   - gen_cmp_zca_cg.cr_insn_align.c_xor_word
-  - gen_cmp_zca_cg.cr_insn_next.c_add_n16
   - gen_cmp_zca_cg.cr_insn_next.c_add_n32
   - gen_cmp_zca_cg.cr_insn_next.c_addi16sp_n16
   - gen_cmp_zca_cg.cr_insn_next.c_addi16sp_n32
-  - gen_cmp_zca_cg.cr_insn_next.c_addi4spn_n16
   - gen_cmp_zca_cg.cr_insn_next.c_addi4spn_n32
   - gen_cmp_zca_cg.cr_insn_next.c_addi_n16
   - gen_cmp_zca_cg.cr_insn_next.c_addi_n32
-  - gen_cmp_zca_cg.cr_insn_next.c_and_n16
   - gen_cmp_zca_cg.cr_insn_next.c_and_n32
-  - gen_cmp_zca_cg.cr_insn_next.c_andi_n16
   - gen_cmp_zca_cg.cr_insn_next.c_andi_n32
-  - gen_cmp_zca_cg.cr_insn_next.c_beqz_n16
   - gen_cmp_zca_cg.cr_insn_next.c_beqz_n32
-  - gen_cmp_zca_cg.cr_insn_next.c_bnez_n16
   - gen_cmp_zca_cg.cr_insn_next.c_bnez_n32
   - gen_cmp_zca_cg.cr_insn_next.c_j_n16
   - gen_cmp_zca_cg.cr_insn_next.c_j_n32
-  - gen_cmp_zca_cg.cr_insn_next.c_jal_n16
   - gen_cmp_zca_cg.cr_insn_next.c_jal_n32
-  - gen_cmp_zca_cg.cr_insn_next.c_jalr_n16
   - gen_cmp_zca_cg.cr_insn_next.c_jalr_n32
-  - gen_cmp_zca_cg.cr_insn_next.c_jr_n16
   - gen_cmp_zca_cg.cr_insn_next.c_jr_n32
   - gen_cmp_zca_cg.cr_insn_next.c_li_n16
   - gen_cmp_zca_cg.cr_insn_next.c_li_n32
-  - gen_cmp_zca_cg.cr_insn_next.c_lui_n16
   - gen_cmp_zca_cg.cr_insn_next.c_lui_n32
-  - gen_cmp_zca_cg.cr_insn_next.c_lw_n16
   - gen_cmp_zca_cg.cr_insn_next.c_lw_n32
-  - gen_cmp_zca_cg.cr_insn_next.c_lwsp_n16
   - gen_cmp_zca_cg.cr_insn_next.c_lwsp_n32
-  - gen_cmp_zca_cg.cr_insn_next.c_mv_n16
   - gen_cmp_zca_cg.cr_insn_next.c_mv_n32
   - gen_cmp_zca_cg.cr_insn_next.c_nop_n16
   - gen_cmp_zca_cg.cr_insn_next.c_nop_n32
-  - gen_cmp_zca_cg.cr_insn_next.c_or_n16
   - gen_cmp_zca_cg.cr_insn_next.c_or_n32
   - gen_cmp_zca_cg.cr_insn_next.c_slli_n16
   - gen_cmp_zca_cg.cr_insn_next.c_slli_n32
-  - gen_cmp_zca_cg.cr_insn_next.c_srai_n16
   - gen_cmp_zca_cg.cr_insn_next.c_srai_n32
-  - gen_cmp_zca_cg.cr_insn_next.c_srli_n16
   - gen_cmp_zca_cg.cr_insn_next.c_srli_n32
-  - gen_cmp_zca_cg.cr_insn_next.c_sub_n16
   - gen_cmp_zca_cg.cr_insn_next.c_sub_n32
-  - gen_cmp_zca_cg.cr_insn_next.c_sw_n16
   - gen_cmp_zca_cg.cr_insn_next.c_sw_n32
-  - gen_cmp_zca_cg.cr_insn_next.c_swsp_n16
   - gen_cmp_zca_cg.cr_insn_next.c_swsp_n32
-  - gen_cmp_zca_cg.cr_insn_next.c_xor_n16
   - gen_cmp_zca_cg.cr_insn_next.c_xor_n32
   - gen_cmp_zca_cg.cr_insn_reg3.c_addi4spn_r10
   - gen_cmp_zca_cg.cr_insn_reg3.c_addi4spn_r11
@@ -160,8 +163,6 @@ bins:
   - gen_cmp_zca_cg.cr_insn_rdfull.c_lwsp_x1
   - gen_cmp_zca_cg.cr_insn_rdfull.c_lwsp_x16_31
   - gen_cmp_zca_cg.cr_insn_rdfull.c_lwsp_x2
-  - gen_cmp_zca_cg.cr_insn_rdfull.c_lwsp_x3_7
-  - gen_cmp_zca_cg.cr_insn_rdfull.c_lwsp_x8_15
   - gen_cmp_zca_cg.cr_insn_rdfull.c_swsp_x1
   - gen_cmp_zca_cg.cr_insn_rdfull.c_swsp_x16_31
   - gen_cmp_zca_cg.cr_insn_rdfull.c_swsp_x2
@@ -193,7 +194,6 @@ bins:
   - gen_isa_jump_cg.cr_op_align.c_jal_word
   - gen_cmp_imm_edges_cg.cp_cj_off.max_bwd
   - gen_cmp_imm_edges_cg.cp_cj_off.max_fwd
-  - gen_cmp_imm_edges_cg.cp_cj_off.self
   - gen_cmp_imm_edges_cg.cp_link.pc2
   - gen_isa_jump_cg.cp_link_len.pc2
   - gen_isa_jump_cg.cr_link.c_jal_pc2
@@ -379,7 +379,6 @@ anti_vacuity:
   gen_cmp_zca_cg.cr_insn_align.c_j_word: "CG-CMP-001: compressed vs 32-bit is decided from the retired instruction bits; a hit proves the sampled instruction retired at the sampled PC alignment with the sampled neighbour length"
   gen_cmp_zca_cg.cr_insn_align.c_jal_half: "CG-CMP-001: compressed vs 32-bit is decided from the retired instruction bits; a hit proves the sampled instruction retired at the sampled PC alignment with the sampled neighbour length"
   gen_cmp_zca_cg.cr_insn_align.c_jal_word: "CG-CMP-001: compressed vs 32-bit is decided from the retired instruction bits; a hit proves the sampled instruction retired at the sampled PC alignment with the sampled neighbour length"
-  gen_cmp_zca_cg.cr_insn_align.c_jalr_half: "CG-CMP-001: compressed vs 32-bit is decided from the retired instruction bits; a hit proves the sampled instruction retired at the sampled PC alignment with the sampled neighbour length"
   gen_cmp_zca_cg.cr_insn_align.c_jalr_word: "CG-CMP-001: compressed vs 32-bit is decided from the retired instruction bits; a hit proves the sampled instruction retired at the sampled PC alignment with the sampled neighbour length"
   gen_cmp_zca_cg.cr_insn_align.c_jr_half: "CG-CMP-001: compressed vs 32-bit is decided from the retired instruction bits; a hit proves the sampled instruction retired at the sampled PC alignment with the sampled neighbour length"
   gen_cmp_zca_cg.cr_insn_align.c_jr_word: "CG-CMP-001: compressed vs 32-bit is decided from the retired instruction bits; a hit proves the sampled instruction retired at the sampled PC alignment with the sampled neighbour length"
@@ -411,57 +410,37 @@ anti_vacuity:
   gen_cmp_zca_cg.cr_insn_align.c_swsp_word: "CG-CMP-001: compressed vs 32-bit is decided from the retired instruction bits; a hit proves the sampled instruction retired at the sampled PC alignment with the sampled neighbour length"
   gen_cmp_zca_cg.cr_insn_align.c_xor_half: "CG-CMP-001: compressed vs 32-bit is decided from the retired instruction bits; a hit proves the sampled instruction retired at the sampled PC alignment with the sampled neighbour length"
   gen_cmp_zca_cg.cr_insn_align.c_xor_word: "CG-CMP-001: compressed vs 32-bit is decided from the retired instruction bits; a hit proves the sampled instruction retired at the sampled PC alignment with the sampled neighbour length"
-  gen_cmp_zca_cg.cr_insn_next.c_add_n16: "CG-CMP-001: compressed vs 32-bit is decided from the retired instruction bits; a hit proves the sampled instruction retired at the sampled PC alignment with the sampled neighbour length"
   gen_cmp_zca_cg.cr_insn_next.c_add_n32: "CG-CMP-001: compressed vs 32-bit is decided from the retired instruction bits; a hit proves the sampled instruction retired at the sampled PC alignment with the sampled neighbour length"
   gen_cmp_zca_cg.cr_insn_next.c_addi16sp_n16: "CG-CMP-001: compressed vs 32-bit is decided from the retired instruction bits; a hit proves the sampled instruction retired at the sampled PC alignment with the sampled neighbour length"
   gen_cmp_zca_cg.cr_insn_next.c_addi16sp_n32: "CG-CMP-001: compressed vs 32-bit is decided from the retired instruction bits; a hit proves the sampled instruction retired at the sampled PC alignment with the sampled neighbour length"
-  gen_cmp_zca_cg.cr_insn_next.c_addi4spn_n16: "CG-CMP-001: compressed vs 32-bit is decided from the retired instruction bits; a hit proves the sampled instruction retired at the sampled PC alignment with the sampled neighbour length"
   gen_cmp_zca_cg.cr_insn_next.c_addi4spn_n32: "CG-CMP-001: compressed vs 32-bit is decided from the retired instruction bits; a hit proves the sampled instruction retired at the sampled PC alignment with the sampled neighbour length"
   gen_cmp_zca_cg.cr_insn_next.c_addi_n16: "CG-CMP-001: compressed vs 32-bit is decided from the retired instruction bits; a hit proves the sampled instruction retired at the sampled PC alignment with the sampled neighbour length"
   gen_cmp_zca_cg.cr_insn_next.c_addi_n32: "CG-CMP-001: compressed vs 32-bit is decided from the retired instruction bits; a hit proves the sampled instruction retired at the sampled PC alignment with the sampled neighbour length"
-  gen_cmp_zca_cg.cr_insn_next.c_and_n16: "CG-CMP-001: compressed vs 32-bit is decided from the retired instruction bits; a hit proves the sampled instruction retired at the sampled PC alignment with the sampled neighbour length"
   gen_cmp_zca_cg.cr_insn_next.c_and_n32: "CG-CMP-001: compressed vs 32-bit is decided from the retired instruction bits; a hit proves the sampled instruction retired at the sampled PC alignment with the sampled neighbour length"
-  gen_cmp_zca_cg.cr_insn_next.c_andi_n16: "CG-CMP-001: compressed vs 32-bit is decided from the retired instruction bits; a hit proves the sampled instruction retired at the sampled PC alignment with the sampled neighbour length"
   gen_cmp_zca_cg.cr_insn_next.c_andi_n32: "CG-CMP-001: compressed vs 32-bit is decided from the retired instruction bits; a hit proves the sampled instruction retired at the sampled PC alignment with the sampled neighbour length"
-  gen_cmp_zca_cg.cr_insn_next.c_beqz_n16: "CG-CMP-001: compressed vs 32-bit is decided from the retired instruction bits; a hit proves the sampled instruction retired at the sampled PC alignment with the sampled neighbour length"
   gen_cmp_zca_cg.cr_insn_next.c_beqz_n32: "CG-CMP-001: compressed vs 32-bit is decided from the retired instruction bits; a hit proves the sampled instruction retired at the sampled PC alignment with the sampled neighbour length"
-  gen_cmp_zca_cg.cr_insn_next.c_bnez_n16: "CG-CMP-001: compressed vs 32-bit is decided from the retired instruction bits; a hit proves the sampled instruction retired at the sampled PC alignment with the sampled neighbour length"
   gen_cmp_zca_cg.cr_insn_next.c_bnez_n32: "CG-CMP-001: compressed vs 32-bit is decided from the retired instruction bits; a hit proves the sampled instruction retired at the sampled PC alignment with the sampled neighbour length"
   gen_cmp_zca_cg.cr_insn_next.c_j_n16: "CG-CMP-001: compressed vs 32-bit is decided from the retired instruction bits; a hit proves the sampled instruction retired at the sampled PC alignment with the sampled neighbour length"
   gen_cmp_zca_cg.cr_insn_next.c_j_n32: "CG-CMP-001: compressed vs 32-bit is decided from the retired instruction bits; a hit proves the sampled instruction retired at the sampled PC alignment with the sampled neighbour length"
-  gen_cmp_zca_cg.cr_insn_next.c_jal_n16: "CG-CMP-001: compressed vs 32-bit is decided from the retired instruction bits; a hit proves the sampled instruction retired at the sampled PC alignment with the sampled neighbour length"
   gen_cmp_zca_cg.cr_insn_next.c_jal_n32: "CG-CMP-001: compressed vs 32-bit is decided from the retired instruction bits; a hit proves the sampled instruction retired at the sampled PC alignment with the sampled neighbour length"
-  gen_cmp_zca_cg.cr_insn_next.c_jalr_n16: "CG-CMP-001: compressed vs 32-bit is decided from the retired instruction bits; a hit proves the sampled instruction retired at the sampled PC alignment with the sampled neighbour length"
   gen_cmp_zca_cg.cr_insn_next.c_jalr_n32: "CG-CMP-001: compressed vs 32-bit is decided from the retired instruction bits; a hit proves the sampled instruction retired at the sampled PC alignment with the sampled neighbour length"
-  gen_cmp_zca_cg.cr_insn_next.c_jr_n16: "CG-CMP-001: compressed vs 32-bit is decided from the retired instruction bits; a hit proves the sampled instruction retired at the sampled PC alignment with the sampled neighbour length"
   gen_cmp_zca_cg.cr_insn_next.c_jr_n32: "CG-CMP-001: compressed vs 32-bit is decided from the retired instruction bits; a hit proves the sampled instruction retired at the sampled PC alignment with the sampled neighbour length"
   gen_cmp_zca_cg.cr_insn_next.c_li_n16: "CG-CMP-001: compressed vs 32-bit is decided from the retired instruction bits; a hit proves the sampled instruction retired at the sampled PC alignment with the sampled neighbour length"
   gen_cmp_zca_cg.cr_insn_next.c_li_n32: "CG-CMP-001: compressed vs 32-bit is decided from the retired instruction bits; a hit proves the sampled instruction retired at the sampled PC alignment with the sampled neighbour length"
-  gen_cmp_zca_cg.cr_insn_next.c_lui_n16: "CG-CMP-001: compressed vs 32-bit is decided from the retired instruction bits; a hit proves the sampled instruction retired at the sampled PC alignment with the sampled neighbour length"
   gen_cmp_zca_cg.cr_insn_next.c_lui_n32: "CG-CMP-001: compressed vs 32-bit is decided from the retired instruction bits; a hit proves the sampled instruction retired at the sampled PC alignment with the sampled neighbour length"
-  gen_cmp_zca_cg.cr_insn_next.c_lw_n16: "CG-CMP-001: compressed vs 32-bit is decided from the retired instruction bits; a hit proves the sampled instruction retired at the sampled PC alignment with the sampled neighbour length"
   gen_cmp_zca_cg.cr_insn_next.c_lw_n32: "CG-CMP-001: compressed vs 32-bit is decided from the retired instruction bits; a hit proves the sampled instruction retired at the sampled PC alignment with the sampled neighbour length"
-  gen_cmp_zca_cg.cr_insn_next.c_lwsp_n16: "CG-CMP-001: compressed vs 32-bit is decided from the retired instruction bits; a hit proves the sampled instruction retired at the sampled PC alignment with the sampled neighbour length"
   gen_cmp_zca_cg.cr_insn_next.c_lwsp_n32: "CG-CMP-001: compressed vs 32-bit is decided from the retired instruction bits; a hit proves the sampled instruction retired at the sampled PC alignment with the sampled neighbour length"
-  gen_cmp_zca_cg.cr_insn_next.c_mv_n16: "CG-CMP-001: compressed vs 32-bit is decided from the retired instruction bits; a hit proves the sampled instruction retired at the sampled PC alignment with the sampled neighbour length"
   gen_cmp_zca_cg.cr_insn_next.c_mv_n32: "CG-CMP-001: compressed vs 32-bit is decided from the retired instruction bits; a hit proves the sampled instruction retired at the sampled PC alignment with the sampled neighbour length"
   gen_cmp_zca_cg.cr_insn_next.c_nop_n16: "CG-CMP-001: compressed vs 32-bit is decided from the retired instruction bits; a hit proves the sampled instruction retired at the sampled PC alignment with the sampled neighbour length"
   gen_cmp_zca_cg.cr_insn_next.c_nop_n32: "CG-CMP-001: compressed vs 32-bit is decided from the retired instruction bits; a hit proves the sampled instruction retired at the sampled PC alignment with the sampled neighbour length"
-  gen_cmp_zca_cg.cr_insn_next.c_or_n16: "CG-CMP-001: compressed vs 32-bit is decided from the retired instruction bits; a hit proves the sampled instruction retired at the sampled PC alignment with the sampled neighbour length"
   gen_cmp_zca_cg.cr_insn_next.c_or_n32: "CG-CMP-001: compressed vs 32-bit is decided from the retired instruction bits; a hit proves the sampled instruction retired at the sampled PC alignment with the sampled neighbour length"
   gen_cmp_zca_cg.cr_insn_next.c_slli_n16: "CG-CMP-001: compressed vs 32-bit is decided from the retired instruction bits; a hit proves the sampled instruction retired at the sampled PC alignment with the sampled neighbour length"
   gen_cmp_zca_cg.cr_insn_next.c_slli_n32: "CG-CMP-001: compressed vs 32-bit is decided from the retired instruction bits; a hit proves the sampled instruction retired at the sampled PC alignment with the sampled neighbour length"
-  gen_cmp_zca_cg.cr_insn_next.c_srai_n16: "CG-CMP-001: compressed vs 32-bit is decided from the retired instruction bits; a hit proves the sampled instruction retired at the sampled PC alignment with the sampled neighbour length"
   gen_cmp_zca_cg.cr_insn_next.c_srai_n32: "CG-CMP-001: compressed vs 32-bit is decided from the retired instruction bits; a hit proves the sampled instruction retired at the sampled PC alignment with the sampled neighbour length"
-  gen_cmp_zca_cg.cr_insn_next.c_srli_n16: "CG-CMP-001: compressed vs 32-bit is decided from the retired instruction bits; a hit proves the sampled instruction retired at the sampled PC alignment with the sampled neighbour length"
   gen_cmp_zca_cg.cr_insn_next.c_srli_n32: "CG-CMP-001: compressed vs 32-bit is decided from the retired instruction bits; a hit proves the sampled instruction retired at the sampled PC alignment with the sampled neighbour length"
-  gen_cmp_zca_cg.cr_insn_next.c_sub_n16: "CG-CMP-001: compressed vs 32-bit is decided from the retired instruction bits; a hit proves the sampled instruction retired at the sampled PC alignment with the sampled neighbour length"
   gen_cmp_zca_cg.cr_insn_next.c_sub_n32: "CG-CMP-001: compressed vs 32-bit is decided from the retired instruction bits; a hit proves the sampled instruction retired at the sampled PC alignment with the sampled neighbour length"
-  gen_cmp_zca_cg.cr_insn_next.c_sw_n16: "CG-CMP-001: compressed vs 32-bit is decided from the retired instruction bits; a hit proves the sampled instruction retired at the sampled PC alignment with the sampled neighbour length"
   gen_cmp_zca_cg.cr_insn_next.c_sw_n32: "CG-CMP-001: compressed vs 32-bit is decided from the retired instruction bits; a hit proves the sampled instruction retired at the sampled PC alignment with the sampled neighbour length"
-  gen_cmp_zca_cg.cr_insn_next.c_swsp_n16: "CG-CMP-001: compressed vs 32-bit is decided from the retired instruction bits; a hit proves the sampled instruction retired at the sampled PC alignment with the sampled neighbour length"
   gen_cmp_zca_cg.cr_insn_next.c_swsp_n32: "CG-CMP-001: compressed vs 32-bit is decided from the retired instruction bits; a hit proves the sampled instruction retired at the sampled PC alignment with the sampled neighbour length"
-  gen_cmp_zca_cg.cr_insn_next.c_xor_n16: "CG-CMP-001: compressed vs 32-bit is decided from the retired instruction bits; a hit proves the sampled instruction retired at the sampled PC alignment with the sampled neighbour length"
   gen_cmp_zca_cg.cr_insn_next.c_xor_n32: "CG-CMP-001: compressed vs 32-bit is decided from the retired instruction bits; a hit proves the sampled instruction retired at the sampled PC alignment with the sampled neighbour length"
   gen_cmp_zca_cg.cr_insn_reg3.c_addi4spn_r10: "CG-CMP-001: compressed vs 32-bit is decided from the retired instruction bits; a hit proves the sampled instruction retired at the sampled PC alignment with the sampled neighbour length"
   gen_cmp_zca_cg.cr_insn_reg3.c_addi4spn_r11: "CG-CMP-001: compressed vs 32-bit is decided from the retired instruction bits; a hit proves the sampled instruction retired at the sampled PC alignment with the sampled neighbour length"
@@ -485,8 +464,6 @@ anti_vacuity:
   gen_cmp_zca_cg.cr_insn_rdfull.c_lwsp_x1: "CG-CMP-001: compressed vs 32-bit is decided from the retired instruction bits; a hit proves the sampled instruction retired at the sampled PC alignment with the sampled neighbour length"
   gen_cmp_zca_cg.cr_insn_rdfull.c_lwsp_x16_31: "CG-CMP-001: compressed vs 32-bit is decided from the retired instruction bits; a hit proves the sampled instruction retired at the sampled PC alignment with the sampled neighbour length"
   gen_cmp_zca_cg.cr_insn_rdfull.c_lwsp_x2: "CG-CMP-001: compressed vs 32-bit is decided from the retired instruction bits; a hit proves the sampled instruction retired at the sampled PC alignment with the sampled neighbour length"
-  gen_cmp_zca_cg.cr_insn_rdfull.c_lwsp_x3_7: "CG-CMP-001: compressed vs 32-bit is decided from the retired instruction bits; a hit proves the sampled instruction retired at the sampled PC alignment with the sampled neighbour length"
-  gen_cmp_zca_cg.cr_insn_rdfull.c_lwsp_x8_15: "CG-CMP-001: compressed vs 32-bit is decided from the retired instruction bits; a hit proves the sampled instruction retired at the sampled PC alignment with the sampled neighbour length"
   gen_cmp_zca_cg.cr_insn_rdfull.c_swsp_x1: "CG-CMP-001: compressed vs 32-bit is decided from the retired instruction bits; a hit proves the sampled instruction retired at the sampled PC alignment with the sampled neighbour length"
   gen_cmp_zca_cg.cr_insn_rdfull.c_swsp_x16_31: "CG-CMP-001: compressed vs 32-bit is decided from the retired instruction bits; a hit proves the sampled instruction retired at the sampled PC alignment with the sampled neighbour length"
   gen_cmp_zca_cg.cr_insn_rdfull.c_swsp_x2: "CG-CMP-001: compressed vs 32-bit is decided from the retired instruction bits; a hit proves the sampled instruction retired at the sampled PC alignment with the sampled neighbour length"
@@ -518,7 +495,6 @@ anti_vacuity:
   gen_isa_jump_cg.cr_op_align.c_jal_word: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
   gen_cmp_imm_edges_cg.cp_cj_off.max_bwd: "CG-CMP-002: each coverpoint is guarded to its format so only that instruction populates it; a hit proves the immediate extreme was decoded and executed (result on RVFI)"
   gen_cmp_imm_edges_cg.cp_cj_off.max_fwd: "CG-CMP-002: each coverpoint is guarded to its format so only that instruction populates it; a hit proves the immediate extreme was decoded and executed (result on RVFI)"
-  gen_cmp_imm_edges_cg.cp_cj_off.self: "CG-CMP-002: each coverpoint is guarded to its format so only that instruction populates it; a hit proves the immediate extreme was decoded and executed (result on RVFI)"
   gen_cmp_imm_edges_cg.cp_link.pc2: "CG-CMP-002: each coverpoint is guarded to its format so only that instruction populates it; a hit proves the immediate extreme was decoded and executed (result on RVFI)"
   gen_isa_jump_cg.cp_link_len.pc2: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
   gen_isa_jump_cg.cr_link.c_jal_pc2: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"

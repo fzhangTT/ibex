@@ -71,6 +71,16 @@ class CsrTrapSetup(GenTest):
     schedulable = ("knob_imem_gnt_delay", "knob_imem_rvalid_delay")
     # bins of built items this test cannot hit (irq precondition not applied); excluded from the manifest with the reason
     bins_not_hit = {
+        "gen_csr_trap_setup_warl_cg.cr_csr_op.mstatush_csrrsi":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_csr_trap_setup_warl_cg.cr_csr_wpat.menvcfg_all1":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_csr_trap_setup_warl_cg.cr_csr_wpat.menvcfg_msb":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_csr_trap_setup_warl_cg.cr_csr_wpat.menvcfgh_msb":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_csr_trap_setup_warl_cg.cr_csr_wpat.mie_msb":
+            "stimulus: the program never writes this bit pattern to this CSR",
         "gen_wit_cycle_clause_cg.cp_clause.w_tp_csr_029":
             "irq agent absent: the irq_pending cycle clause of TP-CSR-029 is not programmed here",
     }

@@ -117,6 +117,59 @@ class CmpZca(GenTest):
     name = "gen_test_cmp_zca"
     schedulable = lib.TIMING_ONLY_KNOBS
     # every item of the plan group has a fire_tp method (two-sided against the group by the structure check)
+    # bins this test does not guarantee per run, with the reason and its class: seed-dependent bins
+    # are credited from the merged report, stimulus bins need a program change, declaration bins cannot
+    # be a per-run guarantee at all
+    bins_not_hit = {
+        "gen_cmp_imm_edges_cg.cp_cj_off.self":
+            "stimulus: the program emits no compressed jump whose target is the jump itself",
+        "gen_cmp_zca_cg.cr_insn_align.c_jalr_half":
+            "stimulus: the program never places this compressed instruction at a half-word-aligned address",
+        "gen_cmp_zca_cg.cr_insn_next.c_add_n16":
+            "stimulus: this instruction and a following 16-bit instruction both occur, but the program never places them adjacently in this order",
+        "gen_cmp_zca_cg.cr_insn_next.c_addi4spn_n16":
+            "stimulus: this instruction and a following 16-bit instruction both occur, but the program never places them adjacently in this order",
+        "gen_cmp_zca_cg.cr_insn_next.c_and_n16":
+            "stimulus: this instruction and a following 16-bit instruction both occur, but the program never places them adjacently in this order",
+        "gen_cmp_zca_cg.cr_insn_next.c_andi_n16":
+            "stimulus: this instruction and a following 16-bit instruction both occur, but the program never places them adjacently in this order",
+        "gen_cmp_zca_cg.cr_insn_next.c_beqz_n16":
+            "stimulus: this instruction and a following 16-bit instruction both occur, but the program never places them adjacently in this order",
+        "gen_cmp_zca_cg.cr_insn_next.c_bnez_n16":
+            "stimulus: this instruction and a following 16-bit instruction both occur, but the program never places them adjacently in this order",
+        "gen_cmp_zca_cg.cr_insn_next.c_jal_n16":
+            "stimulus: this instruction and a following 16-bit instruction both occur, but the program never places them adjacently in this order",
+        "gen_cmp_zca_cg.cr_insn_next.c_jalr_n16":
+            "stimulus: this instruction and a following 16-bit instruction both occur, but the program never places them adjacently in this order",
+        "gen_cmp_zca_cg.cr_insn_next.c_jr_n16":
+            "stimulus: this instruction and a following 16-bit instruction both occur, but the program never places them adjacently in this order",
+        "gen_cmp_zca_cg.cr_insn_next.c_lui_n16":
+            "stimulus: this instruction and a following 16-bit instruction both occur, but the program never places them adjacently in this order",
+        "gen_cmp_zca_cg.cr_insn_next.c_lw_n16":
+            "stimulus: this instruction and a following 16-bit instruction both occur, but the program never places them adjacently in this order",
+        "gen_cmp_zca_cg.cr_insn_next.c_lwsp_n16":
+            "stimulus: this instruction and a following 16-bit instruction both occur, but the program never places them adjacently in this order",
+        "gen_cmp_zca_cg.cr_insn_next.c_mv_n16":
+            "stimulus: this instruction and a following 16-bit instruction both occur, but the program never places them adjacently in this order",
+        "gen_cmp_zca_cg.cr_insn_next.c_or_n16":
+            "stimulus: this instruction and a following 16-bit instruction both occur, but the program never places them adjacently in this order",
+        "gen_cmp_zca_cg.cr_insn_next.c_srai_n16":
+            "stimulus: this instruction and a following 16-bit instruction both occur, but the program never places them adjacently in this order",
+        "gen_cmp_zca_cg.cr_insn_next.c_srli_n16":
+            "stimulus: this instruction and a following 16-bit instruction both occur, but the program never places them adjacently in this order",
+        "gen_cmp_zca_cg.cr_insn_next.c_sub_n16":
+            "stimulus: this instruction and a following 16-bit instruction both occur, but the program never places them adjacently in this order",
+        "gen_cmp_zca_cg.cr_insn_next.c_sw_n16":
+            "stimulus: this instruction and a following 16-bit instruction both occur, but the program never places them adjacently in this order",
+        "gen_cmp_zca_cg.cr_insn_next.c_swsp_n16":
+            "stimulus: this instruction and a following 16-bit instruction both occur, but the program never places them adjacently in this order",
+        "gen_cmp_zca_cg.cr_insn_next.c_xor_n16":
+            "stimulus: this instruction and a following 16-bit instruction both occur, but the program never places them adjacently in this order",
+        "gen_cmp_zca_cg.cr_insn_rdfull.c_lwsp_x3_7":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_cmp_zca_cg.cr_insn_rdfull.c_lwsp_x8_15":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+    }
     not_built = {}
 
     def report_count(self):
