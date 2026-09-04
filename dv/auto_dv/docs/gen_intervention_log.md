@@ -2211,3 +2211,5 @@ entries + 127 over the two unmeasured targeted entries (the corrigendum (e) word
 bins_not_hit (csr_reset, csr_trap_setup, isa_alu, pmc_ctrl, pmp_lock, pmp_mseccfg, rst_boot), not nine; the R-5.5 text sits at
 gen_regress.py:16. The DV Lead ruling (gen_p07_manifest_semantics_ruling.md), the Critic P-07 note (gen_critic_p07_note.md) and the
 bins_not_hit worklist, cited above at work-directory paths, are being committed as evidence files so the record holds them.
+
+Corrigendum (22:0xZ, review of 1b65f86..4a00702): six test modules carry a NON-EMPTY bins_not_hit at 04870ee (gen_test_pmp_mseccfg.py has an empty dict), not seven; the DV Lead ruling and the bins_not_hit worklist are committed as evidence at 0dfac95 (gen_p07_manifest_semantics_ruling.md, gen_bins_not_hit_worklist.md), the Critic P-07 note at 755e813.
