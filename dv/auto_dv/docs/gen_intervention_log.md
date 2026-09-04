@@ -2087,3 +2087,13 @@ run the check tier with coverage (measured: 87 runs in about five minutes on exi
 deferred red no stage could judge, excluded from the failing total by its own name with its own red, is the alternative
 considered and not taken; it is rt37-shaped work frozen behind round 1 (LOG-085). Every round-1 run carries coverage
 (gen_round passes neither --no-coverage nor --repro), so the guard grades RED-OK in the round.
+
+Corrigendum (20:2xZ, runtime-2, measured with the flow's own selector): `gen_round.py --round 1` runs tier full, which
+U.select_tests resolves to the 16 smoke and 3 targeted entries: 19 entries, 53 runs at base seed 20260904 (45 measured over the
+15 measured entries at 3 seeds, 8 unmeasured), 24 of them checked against a manifest. The earlier "103 entries / 141 runs"
+counted the whole testlist including the 88 check-tier runs, which the round does not select. Consequently gen_test_pmc_ctrl
+(tier check, measured false) is not in the round at all, so the round's eight manifest-checked entries are gen_test_rst_boot,
+gen_test_cmp_zcb, gen_test_cmp_zcmp_basic, gen_test_mul_div, gen_test_mul_mul, gen_test_isa_cti, gen_test_isa_shift and
+gen_test_isa_alu (2074 declared bins, 6222 bin checks over 24 runs); the "seven plus gen_test_pmc_ctrl" wording above and in the
+18ac053 subject is wrong in composition though right in count. The 23 red fixtures, the standing guard and the four check-tier
+entries fixed today (landings 36 to 39) are exercised by check-tier regressions, not by round 1; the fixes stand on their own.
