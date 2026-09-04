@@ -1,0 +1,12 @@
+SELF-TEST BAD measured_knob_condition_refusal (LOG-077) +row= 1 (embedded space): VCS converts no whitespace, set with value 0, refuses (CM162-L-1): None
+SELF-TEST BAD measured_knob_condition_refusal (LOG-077) +row=1 followed by a space: set with value 0, refuses (CM162-L-1): None
+SELF-TEST BAD measured_knob_condition_refusal (LOG-077) +gen_chk_all= 1: the master enable reads set with value 0, row unmentioned refuses (CM162-L-1): None
+SELF-TEST BAD measured_knob_condition_refusal (LOG-077) +row=1_000: VCS accepts the underscore digit separator, value 1000, runs (CM162-L-2): +gen_knob_icache_ecc_err_rate=frequent while +gen_chk_alert_minor reads off (row
+SELF-TEST BAD measured_knob_condition_refusal (LOG-077) +row=_1: a leading separator, value 1, runs (CM162-L-2): +gen_knob_icache_ecc_err_rate=frequent while +gen_chk_alert_minor reads off (row
+SELF-TEST BAD measured_knob_condition_refusal (LOG-077) +row=1__0: value 10, runs (CM162-L-2): +gen_knob_icache_ecc_err_rate=frequent while +gen_chk_alert_minor reads off (row
+SELF-TEST BAD measured_knob_condition_refusal (LOG-077) +row=-_1: sign then separator, 0xFFFFFFFF in 32 bits, runs (CM162-L-2): +gen_knob_icache_ecc_err_rate=frequent while +gen_chk_alert_minor reads off (row
+SELF-TEST ok  measured_knob_condition_refusal (LOG-077) +row=0_0: value 0, refuses (CM162-L-2): +gen_knob_icache_ecc_err_rate=frequent while +gen_chk_alert_minor reads off (row
+SELF-TEST ok  measured_knob_condition_refusal (LOG-077) +row=1_abc: letters after the separator are no decimal integer, value 0, refuses (CM162-L-2): +gen_knob_icache_ecc_err_rate=frequent while +gen_chk_alert_minor reads off (row
+SELF-TEST ok  measured_knob_condition_refusal (LOG-077) +row=_: a separator with no digit reads 0, refuses (CM162-L-2): +gen_knob_icache_ecc_err_rate=frequent while +gen_chk_alert_minor reads off (row
+SELF-TEST BAD build-input gate case 13: every listed non-input is tracked and each glob class matches a tracked file (['git ls-files failed: fatal: not a git repository (or any parent up to mount point /)\nStopping at filesystem boundary (GIT_DISCOVERY_ACROSS_FILESYSTEM not set).']); list sha256 80d4a7081e03
+SELF-TEST: FAIL

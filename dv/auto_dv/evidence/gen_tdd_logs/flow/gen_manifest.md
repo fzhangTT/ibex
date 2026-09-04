@@ -47,6 +47,15 @@ u is 32 bits), while the CM155 reader called those unset and fell to the table d
 (the flipped fifth case, =false, = empty, =0x1, =1abc, +gen_chk_all=false, =4294967296, the bare-then-= ordering) and four pass
 (=off and =yes under the master enable off, which the unset path already refused; =-1 runs; =0 before =1 refuses).
 
+gen_cm162_vcs_probe.log is Runtime's own VCS probe (X-2025.06-SP2) of `$value$plusargs("x=%d", u)` with `int unsigned u`, run
+before the CM162 fix was coded: 29 FORM lines, each one simv run with the form as one argv token (whitespace, underscore,
+sign, empty, non-decimal, wrap and first-occurrence forms), followed by the probe source; the retained copy is the log plus
+that source trailer, so its md5 is not the bare run log's.
+gen_cm162_whitespace_underscore_red.log is the TDD red of the CM162-L-1 and L-2 fix: the ten new cases against the CM159
+reader on a detached archive of 3bf3d6b; the three whitespace cases and the four underscore run cases print BAD while the
+three underscore refuse cases pass (a discriminating red); the gate case 13 BAD line is the archive's missing .git (git
+ls-files), not part of the red, and is kept because the excerpt filter keeps every BAD line; then the strip was dropped, the
+regex widened and all ten pass (129 ok, case 13 the only BAD in the archive).
 | evidence path | source | bytes | md5 |
 |---|---|---|---|
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_gate_rule_red.log | dv/auto_dv/work/runtime/gate_rule_red.log | 926 | 78b72aae6509d2776a43c9314808b01b |
@@ -59,3 +68,5 @@ u is 32 bits), while the CM155 reader called those unset and fell to the table d
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_cm153_fcov_home_red.log | (runtime scratchpad) cm157/red_full.log | 1344 | 6c86dc2d8b7ae805107a85d5235ebe43 |
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_cm155_checker_value_red.log | (runtime scratchpad) cm155/red.log | 1266 | 492bf8cda8363303c4dda4a34fd93821 |
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_cm159_vcs_value_red.log | dv/auto_dv/work/runtime/cm159_red.log | 2244 | 5230a37ea1af24d47533598d49a2d3c4 |
+| dv/auto_dv/evidence/gen_tdd_logs/flow/gen_cm162_vcs_probe.log | (runtime scratchpad) cm162/probe/probe.log + gen_knob_probe.sv | 2390 | 7f3cccd42a44567dd75ae3ac4f448d70 |
+| dv/auto_dv/evidence/gen_tdd_logs/flow/gen_cm162_whitespace_underscore_red.log | (runtime scratchpad) cm162/red.log | 2176 | 9b2ee182f9e500422e5dc0a057e0fd7d |

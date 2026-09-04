@@ -800,10 +800,9 @@ def self_test() -> int:
             ([f"+{rate}=frequent", f"+{C.PLUSARG_CHK_ALL}=0", f"+{row}"], None, True, "a bare +row with the master enable off refuses: the SV parses =%d only, so the bare form leaves the row unset (CM155-L-1)"),
             ([f"+{rate}=frequent", f"+{C.PLUSARG_CHK_ALL}=00"], None, True, "+gen_chk_all=00 reads 0 as the SV's %d does, master off, row unmentioned refuses (CM155-L-2)"),
             ([f"+{rate}=frequent", f"+{row}=00"], None, True, "+row=00 reads 0 as the SV's %d does, the row set off refuses (CM155-L-2)"),
-            ([f"+{rate}=frequent", f"+{C.PLUSARG_CHK_ALL}=0", f"+{row}=yes"], None, True, "a non-numeric row value is no match for =%d, the row stays unset and off under the master enable off (CM155-L-2)"),
             ([f"+{rate}=frequent", f"+{C.PLUSARG_CHK_ALL}=x"], None, True, "+gen_chk_all=x: VCS matches the name= prefix and converts the non-decimal remainder to 0, master off, row unmentioned refuses (CM159-M-1, flipping the CM155 fifth case)"),
             ([f"+{rate}=frequent", f"+{C.PLUSARG_CHK_ALL}=0", f"+{row}=off"], None, True, "+row=off under the master enable off: set with value 0 in the sim, refuses (CM159-M-1)"),
-            ([f"+{rate}=frequent", f"+{C.PLUSARG_CHK_ALL}=0", f"+{row}=yes"], None, True, "+row=yes: set with value 0, refuses (CM159-M-1)"),
+            ([f"+{rate}=frequent", f"+{C.PLUSARG_CHK_ALL}=0", f"+{row}=yes"], None, True, "+row=yes: set with value 0, refuses (CM159-M-1; the CM155-L-2 case relabelled, CM162-I-1)"),
             ([f"+{rate}=frequent", f"+{row}=false"], None, True, "+row=false with the master enable on: set with value 0, refuses (CM159-M-1)"),
             ([f"+{rate}=frequent", f"+{row}="], None, True, "+row= (empty): set with value 0, refuses (CM159-M-1; the old lambda refused it too)"),
             ([f"+{rate}=frequent", f"+{row}=0x1"], None, True, "+row=0x1: the remainder is not a decimal integer, value 0, refuses (CM159-M-1)"),
@@ -812,7 +811,17 @@ def self_test() -> int:
             ([f"+{rate}=frequent", f"+{row}=4294967296"], None, True, "+row=4294967296 wraps to 0 in the sim's 32-bit u, refuses (CM159-L-1)"),
             ([f"+{rate}=frequent", f"+{row}=-1"], None, False, "+row=-1 is non-zero in 32 bits, runs (CM159-L-1)"),
             ([f"+{rate}=frequent", f"+{C.PLUSARG_CHK_ALL}=0", f"+{row}", f"+{row}=1"], None, False, "a bare +row before +row=1: VCS skips the bare form (no name= match) and takes the = form, runs (CM159-L-2)"),
-            ([f"+{rate}=frequent", f"+{row}=0", f"+{row}=1"], None, True, "+row=0 before +row=1: VCS takes the first = form, refuses (CM159-L-2)")):
+            ([f"+{rate}=frequent", f"+{row}=0", f"+{row}=1"], None, True, "+row=0 before +row=1: VCS takes the first = form, refuses (CM159-L-2)"),
+            ([f"+{rate}=frequent", f"+{row}= 1"], None, True, "+row= 1 (embedded space): VCS converts no whitespace, set with value 0, refuses (CM162-L-1)"),
+            ([f"+{rate}=frequent", f"+{row}=1 "], None, True, "+row=1 followed by a space: set with value 0, refuses (CM162-L-1)"),
+            ([f"+{rate}=frequent", f"+{C.PLUSARG_CHK_ALL}= 1"], None, True, "+gen_chk_all= 1: the master enable reads set with value 0, row unmentioned refuses (CM162-L-1)"),
+            ([f"+{rate}=frequent", f"+{row}=1_000"], None, False, "+row=1_000: VCS accepts the underscore digit separator, value 1000, runs (CM162-L-2)"),
+            ([f"+{rate}=frequent", f"+{row}=_1"], None, False, "+row=_1: a leading separator, value 1, runs (CM162-L-2)"),
+            ([f"+{rate}=frequent", f"+{row}=1__0"], None, False, "+row=1__0: value 10, runs (CM162-L-2)"),
+            ([f"+{rate}=frequent", f"+{row}=-_1"], None, False, "+row=-_1: sign then separator, 0xFFFFFFFF in 32 bits, runs (CM162-L-2)"),
+            ([f"+{rate}=frequent", f"+{row}=0_0"], None, True, "+row=0_0: value 0, refuses (CM162-L-2)"),
+            ([f"+{rate}=frequent", f"+{row}=1_abc"], None, True, "+row=1_abc: letters after the separator are no decimal integer, value 0, refuses (CM162-L-2)"),
+            ([f"+{rate}=frequent", f"+{row}=_"], None, True, "+row=_: a separator with no digit reads 0, refuses (CM162-L-2)")):
         got = measured_knob_condition_refusal(pas, defaults)
         cond = (got is not None and "LOG-077" in got) if want_refuse else got is None
         ok &= cond
@@ -1253,19 +1262,20 @@ def effective_knob_value(plusargs: list[str], plusarg: str, defaults: dict[str, 
     return None if d is None else str(d)
 
 
-PLUSARG_DECIMAL_RE = re.compile(r"^[+-]?[0-9]+$")   # the remainder VCS's %d converts to a number; anything else reads 0
+PLUSARG_DECIMAL_RE = re.compile(r"^[+-]?[0-9_]*[0-9][0-9_]*$")   # the remainder VCS's %d converts: sign, digits, _ separators; anything else (whitespace included) reads 0
 
 
 def checker_knob_state(plusargs: list[str], name: str, defaults: dict[str, Any] | None = None) -> tuple[bool, bool]:
     """(set, on) of a bool checker knob as VCS's `$value$plusargs({PLUSARG, "=%d"}, u)` reads it: the first plusarg
     whose text starts with "name=" matches (a bare +name never matches, so it is skipped, not stopped at), and the match
-    sets the knob; the value is the remainder as a decimal integer in the 32 bits of u, and a remainder that is not a
-    decimal integer (yes, off, false, empty, 0x1, 1abc) reads 0; unset, on follows the table default."""
+    sets the knob; the value is the remainder as a decimal integer in the 32 bits of u (sign and underscore digit separators
+    as VCS accepts them: 1_000 is 1000), and any other remainder (yes, off, false, empty, 0x1, 1abc, or one carrying
+    whitespace: VCS converts no whitespace, so " 1" and "1 " read 0) reads 0; unset, on follows the table default."""
     for pa in plusargs:
         if plusarg_name(pa) != name or "=" not in pa:
             continue
-        rest = pa.split("=", 1)[1].strip()
-        val = (int(rest, 10) & 0xFFFFFFFF) if PLUSARG_DECIMAL_RE.match(rest) else 0
+        rest = pa.split("=", 1)[1]
+        val = (int(rest.replace("_", ""), 10) & 0xFFFFFFFF) if PLUSARG_DECIMAL_RE.match(rest) else 0
         return True, val != 0
     d = defaults[name] if defaults and name in defaults else knob_default_by_plusarg(name)
     return False, str(d).strip() not in ("0", "", "None", "False")

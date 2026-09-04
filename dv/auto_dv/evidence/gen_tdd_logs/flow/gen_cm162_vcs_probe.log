@@ -1,0 +1,42 @@
+VCS X-2025.06-SP2 (/tools_vendor/synopsys/vcs/X-2025.06-SP2/bin/vcs) probe of $value$plusargs("x=%d", int unsigned u), u preloaded 0xDEADBEEF; 2026-09-04T04:14:56Z
+FORM +x=1                   PROBE set=1 u=1 hex=00000001
+FORM +x=\ 1                 PROBE set=1 u=0 hex=00000000
+FORM +x=1\                  PROBE set=1 u=0 hex=00000000
+FORM +x=\ 1\                PROBE set=1 u=0 hex=00000000
+FORM $'+x=\t1'              PROBE set=1 u=0 hex=00000000
+FORM +x=1_000               PROBE set=1 u=1000 hex=000003e8
+FORM +x=_1                  PROBE set=1 u=1 hex=00000001
+FORM +x=1_                  PROBE set=1 u=1 hex=00000001
+FORM +x=1__0                PROBE set=1 u=10 hex=0000000a
+FORM +x=0_0                 PROBE set=1 u=0 hex=00000000
+FORM +x=_                   PROBE set=1 u=0 hex=00000000
+FORM +x=+_1                 PROBE set=1 u=1 hex=00000001
+FORM +x=-_1                 PROBE set=1 u=4294967295 hex=ffffffff
+FORM +x=_1_                 PROBE set=1 u=1 hex=00000001
+FORM +x=1_abc               PROBE set=1 u=0 hex=00000000
+FORM +x=1abc                PROBE set=1 u=0 hex=00000000
+FORM +x=abc                 PROBE set=1 u=0 hex=00000000
+FORM +x=                    PROBE set=1 u=0 hex=00000000
+FORM +x=00                  PROBE set=1 u=0 hex=00000000
+FORM +x=-1                  PROBE set=1 u=4294967295 hex=ffffffff
+FORM +x=+5                  PROBE set=1 u=5 hex=00000005
+FORM +x=0x1                 PROBE set=1 u=0 hex=00000000
+FORM +x                     PROBE set=0 u=3735928559 hex=deadbeef
+FORM +x=4294967296          PROBE set=1 u=0 hex=00000000
+FORM +x=4294967297          PROBE set=1 u=1 hex=00000001
+FORM +x=\                   PROBE set=1 u=0 hex=00000000
+FORM +x_then_+x=1           PROBE set=1 u=1 hex=00000001
+FORM +x=0_then_+x=1         PROBE set=1 u=0 hex=00000000
+FORM '+x= 1'_then_+x=1      PROBE set=1 u=0 hex=00000000
+--- gen_knob_probe.sv, the compiled probe (vcs -sverilog -full64 -q gen_knob_probe.sv -o simv_probe; each FORM line is one simv run with the form as one argv token, printf %q quoted; the three _then_ lines pass two tokens) ---
+// Standalone probe of VCS's $value$plusargs("x=%d", int unsigned u): (set, u) per plusarg form.
+module gen_knob_probe;
+  initial begin
+    int unsigned u;
+    bit set;
+    u = 32'hDEADBEEF;
+    set = $value$plusargs("x=%d", u);
+    $display("PROBE set=%0d u=%0d hex=%08h", set, u, u);
+    $finish;
+  end
+endmodule
