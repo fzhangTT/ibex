@@ -2023,3 +2023,5 @@ Ruling (Orchestrator, executing the directive):
    replacement property, the age-17 driver-hook fixture, the retirement-stall residual, the loader tightening rt37, and any new
    plan set beyond the round-1 request. Corrigenda to already-committed records still land when their rows arrive.
 4. Reviews continue for every landing; the round record's review is the Critic's and the reviewer's next priority once it exists.
+
+Corrigendum (CM211-Low-3, review b9bc640): the counts in "State at the directive" (103 entries, 23 red fixtures, 28 manifests) describe the tree with the staged standing guard, which landed at b105c09; the committed state at 71c1c70 was 102 entries, 22 red fixtures, 27 manifests.
