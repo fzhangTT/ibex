@@ -78,6 +78,9 @@ def main():
                 "  - cp_funct3 iff OP funct7 0000001 = instr[14:12]: bins f0{000}, f1{001}, f2{010}, f3{011}", "a coverpoint line with an `iff` clause before the expression parses")
     same_render("ignore_bins_clause", "cp_funct3 = instr[14:12], iff OP funct7 0000001: bins f0{000}, f1{001}, f2{010}, f3{011}",
                 "cp_funct3 = instr[14:12], iff OP funct7 0000001: bins f0{000}, f1{001}, f2{010}, f3{011}; ignore_bins f4{100}: never encoded", "an `; ignore_bins x{..}: reason` clause is not a bin")
+    same_render("ignore_clause_names_a_listed_bin", "cp_funct3 = instr[14:12], iff OP funct7 0000001: bins f0{000}, f1{001}, f2{010}, f3{011}",
+                "cp_funct3 = instr[14:12], iff OP funct7 0000001: bins f0{000}, f1{001}, f2{010}, f3{011}, f4{100}; ignore_bins f4: never encoded",
+                "a bin listed before the clause and named by it leaves the comparison and renders nothing (the CSV has no row for it: Slice-A-1)")
     same_render("names_only_cross", "  - cr_funct3_rd_x0 = cp_funct3 x cp_rd_x0: bins auto{all combinations}\n",
                 "  - cr_funct3_rd_x0 = cp_funct3 x cp_rd_x0: f0_no, f0_yes, f1_no, f1_yes, f2_no, f2_yes, f3_no, f3_yes\n", "a cross line listing bin names without tuples declares no tuple and renders from the CSV")
     # ---- refusals on scratch copies

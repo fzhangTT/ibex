@@ -503,6 +503,39 @@ against plan v3i (gen_fu_l12_codegen_check.log).
 - The landing-7 review rows (gen_critic_response_fcov.md): see gen_tdd_fcov.md Section 7 (the exclusion counts only the self-test's
   own miss, every counted group refereed, the unit test's own red on the FM4 build, the record corrections).
 
+## 13. Landing 9: the cross-model rows of landings 2c and 7, and the B8 probe (LOG-067)
+
+Build aa 4bc32b82a3b03340 (wit_root; sources list gen_fu_l10_sources_sha256_aa.txt). Greens: boot_zc, lockstep_zc, lockstep_s7,
+intg_s7_allchk, the two storms, the debug storm, ut_isa_cov_zc, ut_witness, lockstep_zcmp_mv (gen_fu_l10_*). The knobs and fcov codegen
+--check were up to date on the copy against the plan the copy carried (its base commit, before the v3d..v3h touches; that output was not
+retained); at 329902f the committed renderer reports STALE against the moved plan (CM132, tb_l10), and the Slice A state is up to date again
+against plan v3i (gen_fu_l12_codegen_check.log).
+- The B8 probe (T-225; rtl-arch's gen_b8_rtl_facts.md section 6; the C10 ruling LOG-067 = a probe bind behind a knob): tb/gen_b8_probe.sv
+  bound into ibex_if_stage by gen_binds.sv, assertion `sva_b8_dummy_in_expansion` ((if_id_pipe_reg_we && insert_dummy_instr) |-> the
+  Zcmp FSM's state, rlist and sp_offset unchanged), knob `+gen_chk_sva_b8` default 0. Red: the two dummy programs with the knob on,
+  gen_zcmp_dummy_directed.S 35 firings (gen_fu_l10_b8_zcmp_dummy_on_*: 62 UVM_ERROR lines, of them 35 sva_b8_dummy_in_expansion; each
+  firing is one VCS failure line and one UVM_ERROR line) and gen_zcmp_dummy_popret_directed.S 59 firings (gen_fu_l10_b8_zcmp_dummy_popret_on_*:
+  13251 UVM_ERROR lines, of them 59 the assertion's; the knob-on run ran longer than the knob-off run's 9408 comparator rows); with the
+  knob off the same programs show 0 firings (gen_fu_l10_lockstep_zcmp_dummy_*, _popret_*; those controls ran with +gen_ut_boot_retire=10 and an
+  export file, not the knob-on runs' plusargs, tb_l10 L-1). Matched controls re-run on build ai with the knob-on plusargs (+gen_ut_boot_retire=1000,
+  no export) and the knob off: gen_fu_l12_b8_zcmp_dummy_off_1000_* 27 UVM_ERROR lines and gen_fu_l12_b8_zcmp_dummy_popret_off_1000_* 13192, 0
+  firings each, equal to the knob-on runs' non-B8 counts (62 - 35 and 13251 - 59): the knob adds exactly the assertion's lines. No green with a true antecedent exists: a dummy-enabled
+  program without Zcmp is not in the stimulus set, so the assertion's silence there is vacuous and stated as such. The knob stays off by
+  default because the assertion fails on the DUT's B8 defect itself, not on a TB fault. LOG-067's remaining conditions: the flow's
+  refusal of a measured entry that sets the knob is built by Runtime at fa9ba21 (the testlist loader refuses a measured entry whose plusargs
+  turn the knob on, and measured dispatch is refused when a canary build records it on or absent; LOG-076); the knob is named chk_sva_b8 after the per-assertion
+  family, the name ruled to stand (LOG-076); the probe-register row and the SVA layer header's C10-exception note are CM132-M-2 items
+  (the row in this landing, the header comment with the next source-changing landing).
+- The landing-2c review rows (gen_critic_response_fu2a.md, the table "cross-model review of landing 2c"): the gate looks up both words
+  of a load spanning two bus words (the second announcement sits at +4), announcements enter the gate's list for loads only, the irq
+  checker's two never-taken rules are silent in NMI mode and the summary prints `never taken=`, the dbg_dret message uses the dcsr
+  constants, the alert_minor window is a range over a lookup shift register with the parameter default 2, and the record corrections
+  (MUT-NT2's build sha, per-mutant provenance, the export-rows excerpt header, the CM43-L-3 file name). Greens: the runs above, the
+  integrity run with 83 suppressed loads through the widened gate. No red for the spanning second-half case: the retained programs
+  have no corrupted second half of a spanning load (the integrity run's 83 are whole-word), stated rather than staged.
+- The landing-7 review rows (gen_critic_response_fcov.md): see gen_tdd_fcov.md Section 7 (the exclusion counts only the self-test's
+  own miss, every counted group refereed, the unit test's own red on the FM4 build, the record corrections).
+
 ### 12.1 The Critic's tb_l9 rows on T-235 (rows CR-9), fixed in the Slice A landing
 
 The T-235 red gen_fu_l9_ut_isa_shim_red_t235.log ran with an intermediate test file (sha256 36128fb905fc4f4e, not kept), not the
@@ -518,7 +551,7 @@ the 7 rows added by tb_l9 have theirs (gen_fu_l12_ut_isa_shim_red_tbl9.log: the 
   at gap 1 (both words 0, the nop after counts one).
 - Red first: the new rows on the committed T-235 shim (34559ec691021abd) FAIL, 2 failures (gen_fu_l12_ut_isa_shim_red_tbl9.log; the diff
   of that shim against the landing's is gen_fu_l12_ut_isa_shim_red_vs_landing.diff); green 278 OK (gen_fu_l12_ut_isa_shim.log). The
-  gen_pmc_ctrl image stays at 0 mismatches on the landing build (gen_fu_l12_lockstep_pmc_s1_on_*, _off_*).
+  gen_pmc_ctrl image stays at 0 mismatches on the landing build (the two verdict lines of gen_fu_l12_ai_driver.log, :15-16; the ai runs were not retained as files, CR-11 L-2; the b2 runs are gen_fu_l13_lockstep_pmc_s1_on_* / _off_*).
 - L-1: the build-y reds are identified above; the unit-test red of Section 12 was HEAD's gen_isa_shim.cc of 22:39Z (1b51fec23d35a589) plus
   an inert gap setter, its test file the landing's; the diff idiom is retained from this landing on.
 - L-2: figures corrected above (31 rows, 8000 / 8001, the classified error list, minstret's inhibit line is rtl/ibex_cs_registers.sv:1643,
@@ -529,3 +562,79 @@ the 7 rows added by tb_l9 have theirs (gen_fu_l12_ut_isa_shim_red_tbl9.log: the 
 - L-5: gen_fu_l9_gen_t235_README.md's "236 rows OK" is Runtime's unretained claim about their out-of-tree run; the committed test's own
   count is the retained one (247 rows through section 14 at the T-235 commit, 278 now).
 - I-1: the writer comment cites Ibex's exclusion (rtl/ibex_id_stage.sv:1213-1220) beside Spike's written flag.
+
+## 14. Landing 11: the re-review landing (landings 9 and 10 gates), the tag-RAM ECC injection hook, the source fixes and their reds
+
+Build b2 (l11_root, a detached archive of 4140581 with the landing's edits; the per-file list gen_fu_l13_sources_sha256_b2.txt), build b2r
+(b2 with gen_protocol_props.sv's window slice as landing 9 committed it, gen_fu_l13_sources_sha256_b2r.txt), the four mutant builds on b2's
+sources (their lists gen_fu_l13_<mutant>_sources_sha256.txt). Every retained header of this landing names one of these builds; the reds of the
+landing-10 code ran on b0 / b0h (the landing-10 sources with the hook; gen_fu_l13_sources_sha256_b0h.txt).
+
+- The tag-RAM ECC injection hook (CM132-H-1's precondition). The knob knob_icache_ecc_err_rate had no consumer (gen_icache_ram.sv's header
+  said the hooks "arrive with the icram checkers in step 2"); no run before this landing had alert_minor_o high: two lockstep runs of the
+  icache program on the landing-10 build with the knob at frequent and rare showed alert_minor hits 0 and sva_alert_minor_seen 0 matches
+  (wit/ai/red_h1_icen_ecc_*, driver lines only), so the yaml constant's "landing 2b measured 1 or 2" had no run behind it and now says so.
+  As built: the tag RAM models flip one bit of a lookup read at the regime's rate_per_mille and announce it (cycle, way, index, qualified) through
+  gen_icram_events; the misc monitor's first half stands (a pulse needs an injection within GEN_ICACHE_ECC_WINDOW; the injections of one lookup
+  cycle share one pulse) and the second half is new (a qualified injection owes a pulse: the cache enabled per the scoreboard's cpuctrlsts
+  tracking and no invalidation-sweep tag write within GEN_ICACHE_ECC_GRACE_CYCLES, because a lookup made while disabled or invalidating reads
+  the tag RAM unchecked, rtl/ibex_icache.sv:266, and the TB learns both states late). Program gen_icache_ecc_directed.S (enable once, a
+  cross-line loop). Measured on b2 / b2r, rate frequent: 870 injections (682 qualified), 436 pulses, 0 mismatches, 0 missing, every pulse one
+  cycle after its lookup read (the summary's latency histogram 0 / 436 / 0); rate rare with slow imem: 32 / 32 / 16 / 0 / 0.
+- CM132-H-1 red and green. b2r (the landing-9 slice [ICACHE_ECC_WINDOW:1]): sva_alert_minor_window FAILS 431 times in the frequent run and 19
+  in the rare run (gen_fu_l13_red_h1_ecc_freq_*, gen_fu_l13_red_h1_ecc_slow_rare_*); the same with every check off but the alert SVA group
+  FAILS (gen_fu_l13_catch_h1_ecc_freq_*) and with every check off PASSES (gen_fu_l13_ablate_h1_ecc_freq_*). b2 ([ICACHE_ECC_WINDOW-1:0]):
+  0 failures on the same runs (gen_fu_l13_green_h1_*). Why the first attempts stayed green: the fetch stream looks up nearly every cycle,
+  so the neighbouring lookups set lookup_hist[2:1] when a pulse came one cycle after its own lookup; the dedicated program's loop and the
+  slow-imem runs isolate lookups.
+- Finding L11-F3 (the hook's first form). Two injections of one lookup produced no pulse (b0h, rate rare, slow imem: gen_fu_l13_b0h_red_h1_ecc_slow_rare_x_*);
+  the FSDB of that run shows the lookup actual, IC1 valid and ecc_err_ic1 low: the decoder saw a valid codeword. The flip mask was a
+  block-local variable with an initializer inside the always block (static in SystemVerilog), so flipped bits accumulated across injections
+  and an even-weight pattern can land on another valid codeword. The landing's RAM model flips exactly one bit per injection; the b2 / b2r
+  runs report 0 missing pulses.
+- The misc monitor's two halves proven. MUT-ICE-ANN (the RAM corrupts without announcing): 436 `alert_minor_o high ... without an announced
+  ECC injection`, ablation PASS. MUT-ICE-MISS (the RAM announces without corrupting): 862 `alert_minor_o missing within 2 cycles`, ablation
+  PASS (gen_fu_l13_ICEANN_* / gen_fu_l13_ICEMISS_*; gen_mut_step2b.md rows).
+- CM132-M-1. An expired expectation in NMI mode or debug mode is neither judged nor deleted (its bound restarts when the mask lifts).
+  Red: gen_ut_irq_nmi_long on gen_nmi_long_directed.S (a 41-record NMI handler; the bridge raises NM, then the external line 6 records into
+  the handler) with MUT-NT3 (irq_external withheld from the first NMI on) on the landing-10 checker and irq_entry alone: PASS, the silence
+  (gen_fu_l13_red_m1_nt3_nmi_raise_old_entryonly_*; the storm form was caught by the irq_pending pin rule and by re-raises, so it proved
+  nothing). On b2: catch FAIL `lines 00004 raised ... not taken within 17 records`, ablation PASS (gen_fu_l13_NT3b_*); unmutated: entries 2
+  (gen_fu_l13_green_m1_nmi_raise_*); the long-NMI program under the with-NMI storm green (gen_fu_l13_green_m1_nmi_long_storm_*).
+- CM132-L-4 and finding L11-F2. The gate consumes both words of a spanning load (`a0`, `a1`). Program gen_intg_span_directed.S (a
+  misaligned lw over gen_span_buf+0 / +4, then a clean c.lw of +4) under gen_ut_intg_span, which arms two integrity corruptions on the buffer
+  through MEM_ERR_ARM. Red: MUT-SUP3 (the flag set and the rd fields cleared on the clean c.lw, order 18) on the landing-10 gate with the isa
+  rows: PASS with two suppressions accepted (gen_fu_l13_red_l4_sup3_old_isa_*); on b2: catch FAIL `asserted without an announced integrity
+  corruption for 800002e4 (order=18 ... rd=x0)`, ablation PASS (gen_fu_l13_SUP3b_*). The same test on the landing-10 scoreboard raised 21
+  crash_dump errors (gen_fu_l13_red_l4_intg_span_old_crash_dump_*): the DUT's internal-NMI mtval is the LSU's last address, the misaligned
+  address itself when the first half is hit (rtl/ibex_controller.sv:416, rtl/ibex_load_store_unit.sv:258), the model's was the announced word;
+  the suppressed record's own address now replaces the pending corruption's when its first word was announced; green on b2 with crash_dump
+  mismatches 0 (gen_fu_l13_green_l4_intg_span_*).
+- CM123-L-1 and finding L11-F1. The gap update sits at the top of write() for every record. gen_minstret_zcmp_directed.S (csrw minstreth at
+  gap 1 after cm.push / cm.pop) is green on the landing-10 code too (gen_fu_l13_red_l1_minstret_zcmp_*): the fold reached the update. The
+  draft-B path did not, and gen_minstret_draftb_directed.S (grevi then csrw minstreth) read model 3 / DUT 4 on the first minstret read:
+  the model never counted the draft-B retirement, since that path never steps it (gen_fu_l13_red_l1_minstret_draftb_*). Fix: the path calls
+  gen_isa_count_retire(1) (Spike's counter bumped unless IR inhibits); green on b2 (gen_fu_l13_green_l1_minstret_draftb_*).
+- CM123-L-2, L-3 and tb_l11 L-5 (the shim). The carry corner is decided on Ibex's own low word; no corner and no writer mark for a TB write.
+  Unit-test rows (section 15): the four new rows FAIL on the committed (73ff075) shim and pass on the landing's (gen_fu_l13_ut_isa_shim_red_73ff075.log:
+  4 failures; gen_fu_l13_ut_isa_shim.log: 293 OK, stamped with the landing shim 59672952dc4fbfc8).
+- The renderer rule (Slice-A-1): a bin the line's ignore clause names leaves the plan-versus-CSV comparison and renders nothing; unit-test case
+  red on the landing-10 renderer, green now (gen_fu_l13_ut_fcov_codegen.log); the rendered include is unchanged (no rendered group has such a
+  bin) and --check is up to date against plan v3k.
+- The sampler (CM138): icache_en tracked from 0 by op, trap records sample redirect_other (the DV Lead's ruling), GEN_CSR_CPUCTRLSTS and
+  cfg.hart_id, the mcounteren set / clear result; the ten history-narrating comments rewritten (CR-8 L-8).
+- Regression on b2: 17 regression runs, 11 proof runs on fresh vdbs (the ten Slice A manifests and slice2c, every check PASS; slice5a /
+  slice5a2 gain the trap record's redirect_other bin: 30 bins; the fetch-enabled boot run as gen_ut_boot_fe1 with one plusarg value,
+  CM138-m-5) and 8 new greens: 36 PASS, 0 FAIL (gen_fu_l13_*; the pmc runs retained as files, CR-11 L-2). FM12-FM15 re-run against the
+  landing sources (gen_fu_l13_FM*_*): every catch FAILS on the hidden bin, every ablation check PASSES, both stamped with the manifest's md5,
+  the report and the build; the canary hashes gen_fcov_pkg.sv (51315dd2b793c8a2) and the mutant diffs are retained (CM138-Ma-1 / Ma-2,
+  tb_l11 M-1 / M-2).
+- Not retained and narrated: the first icen runs at frequent / rare on build ai (driver lines only); the b1 dry run (the shim changed once
+  more after it, for tb_l11 L-5, so every run repeated on b2).
+- Identity of the landed sources. Build b2 compiled the landing's compiled sources before gen_ut_boot_fe1.py existed (the fetch-enabled boot
+  module, written for CM138-m-5 and loaded by cocotb at run time, never compiled into the simv); the landed tree's per-file list therefore
+  differs from b2's by that one file, and its own sha256 is 7a083655868cb9c9 (gen_fu_l13_sources_sha256_shared_out_l12.txt, the shared-tree
+  canary compile gen_fu_l13_compile_shared_out_l12.log). The seven canary runs on that build are retained as gen_fu_l13_shared_*: boot_zc,
+  lockstep_zc, ut_isa_cov_zc, intg_s7_allchk (83 suppressed loads, 54 internal NMIs), the ECC program at rate frequent (436 pulses, 0 window
+  failures, 0 missing), gen_ut_intg_span and gen_ut_irq_nmi_long, all PASS. Every other retained header of this landing names b2, b2r or a
+  mutant build whose list equals b2's in every file but the mutated one.

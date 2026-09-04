@@ -1,4 +1,4 @@
-# gen_fcov_proof_slice5b2.fcov.yaml: fcov-expectation proof of T-205 Slice A (gen_mul_timing_cg): the same program under the same-cycle grant / min1 response regimes: the clean deltas d1 (mul) and d2 (mulh / mulhsu / mulhu), cr_op_delta_clean; build ai, fresh vdb
+# gen_fcov_proof_slice5b2.fcov.yaml: fcov-expectation proof of T-205 Slice A (gen_mul_timing_cg): the same program under the same-cycle grant / min1 response regimes: the clean deltas d1 (mul) and d2 (mulh / mulhsu / mulhu), cr_op_delta_clean; build b2, fresh vdb
 test: gen_fcov_proof_slice5b2
 owner: tb-infra
 bins:

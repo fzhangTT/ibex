@@ -36,6 +36,7 @@
 #define GEN_IRQ_MARKER_TO_RVFI_OFFSET      2u
 #define GEN_RVFI_ID_EXIT_OFFSET            2u
 #define GEN_ICACHE_ECC_WINDOW              2u
+#define GEN_ICACHE_ECC_GRACE_CYCLES        16u
 #define GEN_IRQ_ENTRY_BOUND_RECORDS        17u
 #define GEN_DBG_ENTRY_BOUND_RECORDS        17u
 #define GEN_CLK_PERIOD_NS                  10u
@@ -53,6 +54,7 @@
 #define GEN_TDATA1_IBEX_RDATA              671092808u
 #define GEN_CPUCTRLSTS_SYNC_EXC_SEEN_BIT   6u
 #define GEN_CPUCTRLSTS_DOUBLE_FAULT_SEEN_BIT 7u
+#define GEN_CPUCTRLSTS_ICACHE_ENABLE_BIT   0u
 #define GEN_CPUCTRLSTS_DUMMY_INSTR_EN_BIT  2u
 #define GEN_DCSR_PRV_BIT_LOW               0u
 #define GEN_DCSR_PRV_BIT_HIGH              1u

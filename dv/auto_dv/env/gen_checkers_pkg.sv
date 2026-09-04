@@ -128,9 +128,11 @@ package gen_checkers_pkg;
           // still enabled? (the line may have been released or masked meanwhile)
           bit still = 0;
           logic [17:0] pins = vif.lines();
+          // NMI mode and debug mode mask every line: the expectation is neither judged nor forgotten, its bound restarts when the mask lifts
+          if (nmi_mode || st.debug_mode) begin expects[i].order_at = st.order; continue; end
           for (int l = 0; l < 18; l++) if (expects[i].lines[l] && pins[l] && st.mie[gen_irq_mie_bit(l)]) still = 1;
           if (expects[i].nmi) still = vif.nm;
-          if (still && (expects[i].nmi || st.mstatus[ibex_pkg::CSR_MSTATUS_MIE_BIT] || st.prv != ibex_pkg::PRIV_LVL_M) && !st.debug_mode && !nmi_mode) begin   // NMI mode masks every line
+          if (still && (expects[i].nmi || st.mstatus[ibex_pkg::CSR_MSTATUS_MIE_BIT] || st.prv != ibex_pkg::PRIV_LVL_M)) begin
             expect_fail++;
             if (gen_chk_en(cfg, expects[i].nmi ? cfg.chk_nmi_entry : cfg.chk_irq_entry, expects[i].nmi ? cfg.chk_nmi_entry_set : cfg.chk_irq_entry_set))
               `uvm_error(expects[i].nmi ? "nmi_entry" : "irq_entry",
@@ -339,6 +341,8 @@ package gen_checkers_pkg;
     uvm_analysis_imp_state #(gen_model_state, gen_misc_monitor) imp_state;
     int unsigned alert_bus_hits = 0, alert_bus_mismatch = 0, alert_internal_hits = 0, data_tag_hits = 0;
     int unsigned alert_minor_hits = 0, alert_minor_mismatch = 0;
+    int unsigned alert_minor_injections = 0, alert_minor_qualified = 0, alert_minor_missing = 0;   // tag-RAM ECC injections judged
+    int unsigned alert_minor_lat [GEN_ICACHE_ECC_WINDOW + 1];   // pulses by (pulse cycle - injection cycle): the window as measured
     gen_export_sink sink;   // E alert / misc lines: the levels at reset release, then every change
     bit ev_init = 0;
     logic a_minor_q, a_bus_q, a_int_q, dfs_q, irq_pend_q;
@@ -477,17 +481,37 @@ package gen_checkers_pkg;
                          misc.cycle, misc.alert_major_bus, exp, ibus.rvalid, ibus.intg_corrupt, dbus.rvalid, dbus.intg_corrupt))
           end
         end
-        begin   // alert_minor: only within GEN_ICACHE_ECC_WINDOW of an ECC injection the RAM models announced (none exist yet, so never)
-          bit exp_minor = 0;
-          foreach (gen_icram_events::q[i])
-            if (gen_icram_events::q[i].kind == "inject" && misc.cycle >= gen_icram_events::q[i].cycle &&
-                misc.cycle - gen_icram_events::q[i].cycle <= GEN_ICACHE_ECC_WINDOW) exp_minor = 1;
-          if (misc.alert_minor) alert_minor_hits++;
-          if (misc.alert_minor && !exp_minor) begin
-            alert_minor_mismatch++;
-            if (gen_chk_en(cfg, cfg.chk_alert_minor, cfg.chk_alert_minor_set))
-              `uvm_error("alert_minor", $sformatf("alert_minor_o high at cycle %0d without an announced ECC injection", misc.cycle))
+        begin   // alert_minor: a pulse needs a tag-RAM ECC injection within GEN_ICACHE_ECC_WINDOW (one pulse per injection cycle: the
+                // ways read together share one check), and a qualified injection owes a pulse (gen_icram_events, the grace rules)
+          if (misc.alert_minor) begin
+            int unsigned matched_cycle = 0; bit matched = 0;
+            alert_minor_hits++;
+            foreach (gen_icram_events::q[i])
+              if (gen_icram_events::q[i].kind == "inject" && misc.cycle >= gen_icram_events::q[i].cycle &&
+                  misc.cycle - gen_icram_events::q[i].cycle <= GEN_ICACHE_ECC_WINDOW &&
+                  (matched ? gen_icram_events::q[i].cycle == matched_cycle : !gen_icram_events::q[i].seen)) begin
+                if (!matched) begin matched = 1; matched_cycle = gen_icram_events::q[i].cycle; alert_minor_lat[misc.cycle - matched_cycle]++; end
+                gen_icram_events::q[i].seen = 1;
+              end
+            if (!matched) begin
+              alert_minor_mismatch++;
+              if (gen_chk_en(cfg, cfg.chk_alert_minor, cfg.chk_alert_minor_set))
+                `uvm_error("alert_minor", $sformatf("alert_minor_o high at cycle %0d without an announced ECC injection", misc.cycle))
+            end
           end
+          foreach (gen_icram_events::q[i])
+            if (gen_icram_events::q[i].kind == "inject" && !gen_icram_events::q[i].judged && misc.cycle > gen_icram_events::q[i].cycle + GEN_ICACHE_ECC_WINDOW) begin
+              gen_icram_events::q[i].judged = 1; alert_minor_injections++;
+              if (gen_icram_events::q[i].qualified) begin
+                alert_minor_qualified++;
+                if (!gen_icram_events::q[i].seen) begin
+                  alert_minor_missing++;
+                  if (gen_chk_en(cfg, cfg.chk_alert_minor, cfg.chk_alert_minor_set))
+                    `uvm_error("alert_minor", $sformatf("alert_minor_o missing within %0d cycles of the tag-RAM ECC injection at cycle %0d (way %0d index %0d)",
+                                                        GEN_ICACHE_ECC_WINDOW, gen_icram_events::q[i].cycle, gen_icram_events::q[i].way, gen_icram_events::q[i].index))
+                end
+              end
+            end
         end
         begin   // fetch_enable_i: remember the cycle it left On; back On clears the window
           bit fe_on = (misc.fetch_enable == ibex_pkg::IbexMuBiOn);
@@ -505,8 +529,8 @@ package gen_checkers_pkg;
     function void report_phase(uvm_phase phase);
       if (dfs_pulses > dfs_expected && gen_chk_en(cfg, cfg.chk_double_fault, cfg.chk_double_fault_set))
         `uvm_error("double_fault", $sformatf("%0d double_fault_seen_o pulses for %0d expected double faults", dfs_pulses, dfs_expected))
-      `uvm_info("GEN_MISC", $sformatf("alert_bus hits=%0d mismatches=%0d; alert_minor hits=%0d mismatches=%0d; alert_internal hits=%0d; data_tag hits=%0d; sync traps=%0d double faults expected=%0d pulses=%0d mismatches=%0d; crash_dump checked=%0d late=%0d early=%0d mismatches=%0d; fetch_en records after off=%0d late=%0d",
-                alert_bus_hits, alert_bus_mismatch, alert_minor_hits, alert_minor_mismatch, alert_internal_hits, data_tag_hits, sync_traps, dfs_expected, dfs_pulses, dfs_mismatch, cd_checked, cd_late, cd_early, cd_mismatch, fe_records_after_off, fe_late_records), UVM_LOW)
+      `uvm_info("GEN_MISC", $sformatf("alert_bus hits=%0d mismatches=%0d; alert_minor hits=%0d mismatches=%0d (ecc injections judged=%0d qualified=%0d missing=%0d, pulse latencies %p); alert_internal hits=%0d; data_tag hits=%0d; sync traps=%0d double faults expected=%0d pulses=%0d mismatches=%0d; crash_dump checked=%0d late=%0d early=%0d mismatches=%0d; fetch_en records after off=%0d late=%0d",
+                alert_bus_hits, alert_bus_mismatch, alert_minor_hits, alert_minor_mismatch, alert_minor_injections, alert_minor_qualified, alert_minor_missing, alert_minor_lat, alert_internal_hits, data_tag_hits, sync_traps, dfs_expected, dfs_pulses, dfs_mismatch, cd_checked, cd_late, cd_early, cd_mismatch, fe_records_after_off, fe_late_records), UVM_LOW)
     endfunction
   endclass
 endpackage

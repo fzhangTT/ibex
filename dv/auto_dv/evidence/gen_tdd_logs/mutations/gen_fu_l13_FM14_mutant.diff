@@ -1,0 +1,11 @@
+--- /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/l11_root/dv/auto_dv/env/gen_fcov_pkg.sv	2026-09-03 21:58:40.145450532 -0400
++++ /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/FM14/dv/auto_dv/env/gen_fcov_pkg.sv	2026-09-03 22:11:37.485587291 -0400
+@@ -988,7 +988,7 @@
+       if (a[31:8] == 24'd0) return GEN_FC_RST_BOOT_CP_BOOT_ADDR_ZERO;
+       if (a[31:8] <= 24'h0FFFFF) return GEN_FC_RST_BOOT_CP_BOOT_ADDR_LOW;
+       if (a[31:8] <= 24'h7FFFFF) return GEN_FC_RST_BOOT_CP_BOOT_ADDR_MID;
+-      return GEN_FC_RST_BOOT_CP_BOOT_ADDR_HIGH;
++      return GEN_FC_RST_BOOT_CP_BOOT_ADDR_MID;   // FM14: a high boot page classed as mid
+     endfunction
+     function int rst_hart_cls(logic [31:0] h);
+       return (h == 0) ? GEN_FC_RST_BOOT_CP_HART_ID_ZERO : (h == 32'hFFFF_FFFF) ? GEN_FC_RST_BOOT_CP_HART_ID_MAX : GEN_FC_RST_BOOT_CP_HART_ID_RANDOM;

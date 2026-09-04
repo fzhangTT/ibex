@@ -1,0 +1,6 @@
+170c170,172
+<   assign irq_external = u_irq_if.ext;
+---
+>   logic nt3_q = 1'b0;   // MUT-NT3: the external line is withheld from the DUT from the first NMI on
+>   always @(posedge clk) if (irq_nm) nt3_q <= 1'b1;
+>   assign irq_external = u_irq_if.ext & ~nt3_q;

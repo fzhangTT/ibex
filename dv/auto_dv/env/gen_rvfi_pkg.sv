@@ -323,6 +323,8 @@ package gen_rvfi_pkg;
       logic [31:0] gpr_before [32];   // snapshot for a suppressed register write (any encoding of the load)
       bit is_seq = 0, dbg_entry = 0, is_store, intr_now = 0, sup_ok = 0;
       if (!model_ready) return;
+      // the minstret write corners need the retirement gap of EVERY record, whichever path compares it (a folded micro-op, a draft-B op)
+      gen_isa_set_retire_gap(int'(t.cycle - last_cycle)); last_cycle = t.cycle;
       // ---- asynchronous entries before this record (C5.2) come before the Zcmp fold: the handler's first record can
       //      itself be a micro-op, and an entry inside a sequence drops its partial micro-ops (the sequence restarts, R9)
       dbg_entry = t.ext_debug_mode && (!dbg_q || dret_q) && t.pc_rdata == GEN_MM_DM_HALT;   // a request held through dret re-enters at once
@@ -434,6 +436,7 @@ package gen_rvfi_pkg;
           miss("isa_pc_next", $sformatf("draft-B pc_next model=%08h dut=%08h", model_pc + 4, t.pc_wdata), t, fld(cfg.chk_isa_pc_next, cfg.chk_isa_pc_next_set));
         if (rd_i != 0) gen_isa_write_gpr(rd_i, ref_rd);
         gen_isa_set_pc(model_pc + 4);
+        gen_isa_count_retire(1);   // the model did not step this instruction; Ibex counts it in minstret (unless IR inhibits)
         return;
       end
       if (!intr_now && !dbg_entry) begin
@@ -448,9 +451,9 @@ package gen_rvfi_pkg;
       // ---- the record itself: the model's counters and status follow the record's sampled values (ID-exit sample point,
       //      the cycle a CSR read sees). A csrr of cycle, mhpmcounterN or cpuctrlsts bit 8 under isa_rd is therefore a
       //      CONSISTENCY compare (record value == read value), not an independent check (Critic T-102 M-1): the counters
-      //      belong to the counter checkers (ctr_mcycle, ctr_minstret, ctr_hpm_exact, ctr_hpm_bound; step 2d) and bit 8
+      //      belong to the counter checkers (ctr_mcycle, ctr_hpm_exact, ctr_hpm_bound; step 2d; minstret and instret are the model's own
+      //      since T-235, gen_component_api_isa_shim.md) and bit 8
       //      to the scramble-key responder's scrkey_proto status row
-      gen_isa_set_retire_gap(int'(t.cycle - last_cycle)); last_cycle = t.cycle;   // T-235: the minstret write corners need the retirement gap
       gen_isa_set_time(t.ext_mcycle);
       for (int k = 0; k < GEN_MHPM_COUNTER_NUM; k++) gen_isa_set_hpm(k, t.ext_mhpmcounters[k], t.ext_mhpmcountersh[k]);
       gen_isa_set_status(t.ext_ic_scr_key_valid);
@@ -479,15 +482,25 @@ package gen_rvfi_pkg;
       // no write (rtl/ibex_core.sv:2379-2385 clears them with rf_we); a flag without either is an isa_rd miss, never an undo
       sup_ok = 0;
       if (t.ext_rf_wr_suppress && !is_seq) begin
-        bit announced, ld_st; int unsigned ld_bytes;
+        bit announced, ld_st, a0, a1; int unsigned ld_bytes;
         bit spans = gen_insn_mem_access(t.insn, ld_st, ld_bytes) && ((t.mem_addr[1:0] + ld_bytes) > 4);   // a load over two bus words: the driver announces each word at its own address
-        announced = gen_bus_err_log::take_intg_word(t.mem_addr) || (spans && gen_bus_err_log::take_intg_word(t.mem_addr + 32'd4));
+        a0 = gen_bus_err_log::take_intg_word(t.mem_addr);
+        a1 = spans && gen_bus_err_log::take_intg_word(t.mem_addr + 32'd4);   // both words consumed: a doubly corrupted spanning load leaves nothing behind
+        announced = a0 || a1;
+        // the DUT's internal-NMI mtval is the LSU's last address (rtl/ibex_controller.sv:416): the access address itself when its first word
+        // was hit, which for a misaligned access is not the announced word (rtl/ibex_load_store_unit.sv:258)
+        if (a0 && gen_bus_err_log::intg_pending && gen_bus_err_log::intg_first_addr[31:2] == t.mem_addr[31:2]) gen_bus_err_log::intg_first_addr = t.mem_addr;
         sup_ok = announced && (t.rd_addr == 0);
         if (!announced) miss("isa_rd", $sformatf("rf_wr_suppress asserted without an announced integrity corruption for %08h", t.mem_addr), t, fld(cfg.chk_isa_rd, cfg.chk_isa_rd_set));
         else if (t.rd_addr != 0) miss("isa_rd", $sformatf("rf_wr_suppress asserted but the record reports a write to x%0d", t.rd_addr), t, fld(cfg.chk_isa_rd, cfg.chk_isa_rd_set));
         if (sup_ok) for (int i = 1; i < 32; i++) gpr_before[i] = gen_isa_read_gpr(i);
       end
       if (!step(pc_b, pc_a, insn, retired, trap, cause, tval, rd_we, rd_addr, rd_wdata, mem_r, mem_w, mem_addr, mem_wdata, mem_rdata, mem_size, prv, prv_b, csr_n, reg_n)) return;
+      // cpuctrlsts.icache_enable as this record leaves it (the model's CSR after the step), for the misc monitor's ECC-injection
+      // qualification: a lookup made while the cache is disabled reads the tag RAM but is not checked (rtl/ibex_icache.sv:266)
+      if (!t.trap && t.insn[6:0] == ibex_pkg::OPCODE_SYSTEM && t.insn[14:12] != 3'b000 && t.insn[31:20] == GEN_CSR_CPUCTRLSTS &&
+          (t.insn[13:12] == 2'b01 || t.insn[19:15] != 5'd0))
+        gen_icram_events::note_icache_en(gen_isa_read_csr(GEN_CSR_CPUCTRLSTS)[GEN_CPUCTRLSTS_ICACHE_ENABLE_BIT], t.cycle);
       if (sup_ok && rd_we && rd_addr != 0) begin
         gen_isa_write_gpr(rd_addr, gpr_before[rd_addr]); rf_wr_suppressed++; rd_we = 0;
       end

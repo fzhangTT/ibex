@@ -1,0 +1,11 @@
+--- /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/l11_root/dv/auto_dv/env/gen_fcov_pkg.sv	2026-09-03 21:58:40.145450532 -0400
++++ /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/FM15/dv/auto_dv/env/gen_fcov_pkg.sv	2026-09-03 22:12:27.933923504 -0400
+@@ -1062,7 +1062,7 @@
+         sec_sample(GEN_FC_SEC_CTRL_INPUTS_CP_EVENT_MCOUNTEREN_WRITE, .mw(mcen_pin_cls), .eff(eff)); mcen_pend = 0;
+       end
+       if (is_csr && csr == GEN_CSR_CPUCTRLSTS && t.rd_addr != 0)
+-        sec_sample(GEN_FC_SEC_CTRL_INPUTS_CP_EVENT_CPUCTRL_READ, .bits67(int'(t.rd_wdata[7:6])), .bit8(t.rd_wdata[8] ? GEN_FC_SEC_CTRL_INPUTS_CP_BIT8_READBACK_ONE : GEN_FC_SEC_CTRL_INPUTS_CP_BIT8_READBACK_ZERO),
++        sec_sample(GEN_FC_SEC_CTRL_INPUTS_CP_EVENT_CPUCTRL_READ, .bits67(int'(t.rd_wdata[6])), .bit8(t.rd_wdata[8] ? GEN_FC_SEC_CTRL_INPUTS_CP_BIT8_READBACK_ONE : GEN_FC_SEC_CTRL_INPUTS_CP_BIT8_READBACK_ZERO),
+                    .ic_dbg(t.ext_debug_mode ? (t.rd_wdata[0] ? GEN_FC_SEC_CTRL_INPUTS_CP_ICACHE_EN_READBACK_IN_DEBUG_ONE : GEN_FC_SEC_CTRL_INPUTS_CP_ICACHE_EN_READBACK_IN_DEBUG_ZERO) : -1),
+                    .kv(t.ext_ic_scr_key_valid ? GEN_FC_SEC_CTRL_INPUTS_CP_RVFI_EXT_KEY_VALID_ONE : GEN_FC_SEC_CTRL_INPUTS_CP_RVFI_EXT_KEY_VALID_ZERO));
+       if (is_csr && csr == ibex_pkg::CSR_MCOUNTEREN && is_write) begin   // the effect waits for the program's read-back

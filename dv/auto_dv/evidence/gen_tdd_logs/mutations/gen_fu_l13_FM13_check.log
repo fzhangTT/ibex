@@ -1,0 +1,16 @@
+# check of /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/l11_root/dv/auto_dv/evidence/gen_fcov_proof_slice5b.fcov.yaml (md5 4c51e2d55b37584446e054f0a0cab008) against /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/FM13/urg (urg text report of the mutant's catch run; build sources sha256: ce582876c7996cb2); mutant FM13, 2026-09-04T02:19:22Z
+FCOV-EXPECTATION: gen_mul_timing_cg.cp_op.mulhu = HIT (count=484)
+FCOV-EXPECTATION: gen_mul_timing_cg.cp_op.mulhsu = HIT (count=484)
+FCOV-EXPECTATION: gen_mul_timing_cg.cp_op.mulh = HIT (count=484)
+FCOV-EXPECTATION: gen_mul_timing_cg.cp_op.mul = HIT (count=605)
+FCOV-EXPECTATION: gen_mul_timing_cg.cp_delta.d3plus = HIT (count=298)
+FCOV-EXPECTATION: gen_mul_timing_cg.cp_delta.d2 = HIT (count=1080)
+FCOV-EXPECTATION: gen_mul_timing_cg.cp_delta.d1 = HIT (count=318)
+FCOV-EXPECTATION: gen_mul_timing_cg.cp_prev.load = UNHIT (count=0)
+FCOV-EXPECTATION: gen_mul_timing_cg.cp_prev.mulh_class = HIT (count=1089)
+FCOV-EXPECTATION: gen_mul_timing_cg.cp_prev.mul = HIT (count=363)
+FCOV-EXPECTATION: gen_mul_timing_cg.cp_next_dep.no = HIT (count=2057)
+FCOV-EXPECTATION: gen_mul_timing_cg.cp_wb_busy.no = HIT (count=2057)
+FCOV-EXPECTATION: gen_mul_timing_cg.cp_fetch_stall.yes = HIT (count=361)
+FCOV-EXPECTATION: gen_mul_timing_cg.cp_fetch_stall.no = HIT (count=1696)
+FCOV-EXPECTATION: FAIL - 1 declared bin(s) not hit: gen_mul_timing_cg.cp_prev.load

@@ -251,13 +251,14 @@ Build ai (wit_root, out of tree; the per-file list gen_fu_l12_sources_sha256_ai.
 the tb_l9 shim fixes and the plan v3f re-render, which drops CG-CSR-002's two misa cross bins and changes no other group). Retention
 correction: the first retention script took the 17 run headers, verdicts and excerpts from build ag (4a670252697ee80e) while labelling them
 build ai; they were re-retained from the ai run directories before the hand-off (every proof and regression run header among gen_fu_l12_*
-carries b9adcdeb1cd01799). The renderer reports the include up to date against plan v3i (ec1d8ea) as well: the v3g..v3i touches change
-no rendered bin (gen_fu_l12_codegen_check.log). gen_cmp_zcmp_hazard_cg, the slice's first group, is
+carries b9adcdeb1cd01799). The renderer reports the include up to date against plan v3i (2572fe8) as well: the v3g..v3i touches change
+no rendered bin (gen_fu_l12_codegen_check.log names the tree it ran on: plan v3h at 329902f plus the Slice A files; the v3i check is the
+landing-11 one, gen_fu_l13_ut_fcov_codegen.log on the landing root). gen_cmp_zcmp_hazard_cg, the slice's first group, is
 held: the plan's cp_hazard lists popret_ra_fwd, the CSV does not, and the renderer refuses the group until they agree (reported to the
 Orchestrator 23:10Z). The other four render after the renderer's grammar was widened (wrapped bullets, `iff` before the expression,
 expression-less coverpoints, `; ignore_bins` clauses, names-only bins and crosses, the prose operand-only marker): the 14 earlier renders
 are byte-identical (--check up to date), five unit-test cases hold the forms (gen_fu_l12_ut_fcov_codegen.log, 24 OK), 18 covergroups,
-694 coverpoint bins, 2788 cross bins.
+694 coverpoint bins, 2786 cross bins (the two misa cross bins left with the v3f re-render).
 - Samplers (gen_component_api_fcov.md "Slice A"): 47 classifier rows in the vector table (74 cases, 0 failures in gen_fu_l12_ut_isa_cov_zc_*);
   the key responder publishes its req / valid changes (gen_key_evt); the bus agents stamp completed transactions on the bridge cycle
   counter (`stamp_gnt`, `stamp_rvalid`) and the first request after a release with its distance (`since_release`).
@@ -281,5 +282,8 @@ are byte-identical (--check up to date), five unit-test cases hold the forms (ge
   were built beside build ag, whose sampler is the landing's (the ai edits are the shim, the render's two misa bins and anchors).
 - Not reached and stated: cp_next_dep.yes, cp_wb_busy.yes and their crosses, cp_boot_to_req_cycles.three, cp_hart_id.max / random,
   cp_pending beyond none, cp_first_event beyond first_instr_retire, cp_key_req_context beyond reset_inval, the key_delay `delayed`
-  class, cp_icache_en_readback_in_debug; unreachable by construction: cp_reset_kind.mid_run, boot_addr_change and its context.
+  class, cp_icache_en_readback_in_debug; in the key-withheld run (slice5d2) the key arrives before the program's read-backs, so
+  cp_bit8_readback.zero, cp_rvfi_ext_key_valid.zero, cp_event.key_req / key_valid_change and cr_key's zero tuples are not reached either
+  (the core makes no key request: its header once claimed the zero read-backs, CM138-M-1); unreachable by construction:
+  cp_reset_kind.mid_run, boot_addr_change and its context.
 - Regression on ai: boot_zc, lockstep_zc, ut_witness, lockstep_s7, intg_s7_allchk, lockstep_zcmp_mv, the two gen_pmc_ctrl runs PASS (gen_fu_l12_*).

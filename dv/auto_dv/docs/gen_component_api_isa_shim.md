@@ -174,10 +174,14 @@ installed by `gen_install_counter_holders` in legalize_after_reset) and tb-infra
   than the DUT after every IR clear: the retained red gen_fu_l9_lockstep_pmc_s1_on_red_*). An explicit write defines the value (`g_inh` = 0; the writer itself is not counted,
   Spike's written flag) with the two corners of an instruction retiring in the write cycle, decided by the retirement gap the scoreboard
   passes before every step (`gen_isa_set_retire_gap(t.cycle - previous record's cycle)`; 1 = back to back), and only when that previous
-  record was not itself a minstret / minstreth writer (neither side counted a writer, so nothing was lost: tb_l9 M-2): a low-word write while
-  Spike's low word had just wrapped loses the carry Ibex never took (`g_inh` = 2^32; rtl/ibex_counter.sv:36-37, :44-47), a high-word
-  write reloads the low word with its pre-increment value (`g_inh` = 1; :40, :44-47). A TB-side write (gen_isa_write_csr) clears
-  Spike's written flag with `bump(0)` so it does not eat the next retirement's increment. mcycle needs none of this: the TB syncs it
+  record was not itself a minstret / minstreth writer (neither side counted a writer, so nothing was lost: tb_l9 M-2), and only for the
+  program's own writer: a low-word write while Ibex's own low word (Spike's minus the inhibited retirements) had just wrapped loses the
+  carry Ibex never took (`g_inh` = 2^32; rtl/ibex_counter.sv:36-37, :44-47; decided on Ibex's word, not Spike's raw counter: CM123-L-2), a
+  high-word write reloads the low word with its pre-increment value (`g_inh` = 1; :40, :44-47). A TB-side write (gen_isa_write_csr) is
+  no instruction: it takes neither corner, does not mark the next step as after a writer (CM123-L-3, tb_l11 L-5), and clears Spike's
+  written flag with `bump(0)` so it does not eat the next retirement's increment. A draft-B op the scoreboard executes itself is counted
+  through `gen_isa_count_retire` (unless IR inhibits), since the model never steps it (landing 11, finding L11-F1). The retirement gap
+  reaches the shim for EVERY record, whichever path compares it (CM123-L-1). mcycle needs none of this: the TB syncs it
   from the record before every step.
 - Not modelled: the hazard variant of the high-word corner (a csrw with a register hazard against a load in WB defers the write one
   cycle to an empty WB, rtl/ibex_id_stage.sv:1059-1062, :1120): the gap rule sees the retirement gap, not the hazard, so a program with that pattern

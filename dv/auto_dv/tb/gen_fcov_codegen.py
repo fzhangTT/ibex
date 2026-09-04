@@ -73,9 +73,11 @@ def load_plan(root):
         m = re.match(r"^\s+- (cp_[a-z0-9_]+)(?: iff [^=:]*?)?(?: = .*?)?: bins (.*)$", line)
         if m:
             bins_text = re.split(r";\s*ignore(?:_bins)?\b", m.group(2))[0]   # `; ignore_bins x{..}: reason` and `; ignore ...` are not bins
+            ignored = set(re.findall(r"ignore(?:_bins)?\s+([a-z0-9_]+)", m.group(2)[len(bins_text):]))   # a listed bin the clause names has no CSV row and renders nothing
             pairs = re.findall(r"([a-z0-9_]+)\{((?:[^{}]|\{[^{}]*\})*)\}", bins_text)   # a value may hold one brace level: low{{mtvec[31:8], 8'b0} < 32'h1000}
             if not pairs:   # names without values: `bins immediate, delayed, withheld_then_valid`
                 pairs = [(t.strip(), "") for t in re.split(r",", re.sub(r"\(.*?\)", "", bins_text)) if re.fullmatch(r"[a-z0-9_]+", t.strip())]
+            pairs = [(n, v) for n, v in pairs if n not in ignored]
             if pairs:
                 cur["cps"][m.group(1)] = [n for n, v in pairs]
                 cur.setdefault("values", {})[m.group(1)] = {v.strip(): n for n, v in pairs if v.strip()}

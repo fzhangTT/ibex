@@ -1,0 +1,4 @@
+FCOV-EXPECTATION: gen_sec_ctrl_inputs_cg.cp_event.fetch_en_change = HIT (count=3)
+FCOV-EXPECTATION: gen_sec_ctrl_inputs_cg.cp_fetch_en_val.off = HIT (count=1)
+FCOV-EXPECTATION: gen_sec_ctrl_inputs_cg.cp_fetch_en_val.on = HIT (count=2)
+FCOV-EXPECTATION: PASS - all 3 declared bins hit

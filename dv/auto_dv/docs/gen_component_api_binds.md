@@ -106,5 +106,8 @@ one bind that reads DUT internals (a probe, approved by the C10 ruling LOG-067):
 `chk_sva_b8`, default 0; `+gen_chk_all=0` also silences it) is OFF by default because the DUT fails it on every dummy insertion inside
 an expansion (the B8 defect), which would turn every dummy-enabled Zcmp run red twice; the reproducer runs enable it
 (gen_tdd_step2b.md Section 13: the two dummy programs with the knob on fire it, with the knob off they stay silent, and the plain
-regression is unaffected). The `sva_alert_minor_window` window is now a range over a `lookup_hist` shift register (1..ICACHE_ECC_WINDOW
-cycles), and the parameter default equals the yaml constant (2).
+regression is unaffected). The `sva_alert_minor_window` window is `|lookup_hist[ICACHE_ECC_WINDOW-1:0]` over a shift register that updates after the read
+cycle, so bit k is the lookup read k+1 cycles before the sample: alerts 1..ICACHE_ECC_WINDOW cycles after the lookup read pass, and the
+parameter default equals the yaml constant (2). The landing-9 slice `[ICACHE_ECC_WINDOW:1]` accepted 2..3 and rejected the latency the
+injection runs measure, exactly 1 (CM132-H-1; the red and the green in gen_tdd_step2b.md Section 14). The SVA layer header records the
+C10 exception of the B8 probe (LOG-067, LOG-076).

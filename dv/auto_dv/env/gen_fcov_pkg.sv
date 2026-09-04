@@ -119,13 +119,12 @@ package gen_fcov_pkg;
     virtual gen_irq_if irq_vif; virtual gen_dbg_if dbg_vif;   // the pins pending at the reset release
     int unsigned n_br = 0, n_mv = 0, n_csr_pairs = 0, n_csr_wr = 0, n_csr_replaced = 0;
     int unsigned n_mv_miss = 0, ut_mv_miss_expected = 0;   // legal move pairs whose micro-ops did not match the expansion (the self-test's own excluded)
-    // counters and last-sample copies the unit test reads (FCOV_QUERY / FCOV_SELFTEST, LOG-058)
+    // counters and last-sample copies the unit test reads (FCOV_QUERY / FCOV_SELFTEST)
     int unsigned n_slt_eq = 0, n_cnt_res_na = 0; int ut_last_zcmp [13], ut_last_imm [8], ut_last_cnt [5], ut_last_mv [8];
     // CG-CMP-006 sequence collector: one cm.push / cm.pop / cm.popret / cm.popretz from its first micro-op record to its last
     bit zp_in = 0, zp_sp_valid, zp_order_ok, zp_tags_ok; int zp_kind, zp_rlist, zp_spimm, zp_n, zp_adj, zp_count, zp_mem_k, zp_ret_align;
     logic [31:0] zp_pc, zp_sp, zp_mhpm10_first; logic [4:0] zp_prev_reg; int unsigned n_zcmp = 0, n_zcmp_abandoned = 0;
-    // the sequence's sample waits for the record after it: that record's mhpmcounter10 counts through the last micro-op (H-1(a) of the
-    // landing-4 review), the first micro-op's counts through the instruction before the sequence, so their difference is the cm.*'s own count
+    // the sequence's sample waits for the record after it: that record's mhpmcounter10 counts through the last micro-op, the first micro-op's counts through the instruction before the sequence, so their difference is the cm.*'s own count
     bit zcmp_pend = 0; int zcmp_v [13]; int unsigned n_zcmp_uop_no = 0, n_zcmp_order_no = 0, n_zcmp_tags_no = 0, n_zcmp_minstret_no = 0;
     // data-bus responses seen (cycle of rvalid, latency after grant): cp_dmem_delay classifies the responses inside the sequence's window
     int unsigned dlat_cyc [$], dlat_lat [$], dlat_gnt [$]; int unsigned prev_rec_cycle = 0, cur_rec_cycle = 0, zp_win_start;
@@ -135,7 +134,7 @@ package gen_fcov_pkg;
     bit mt_pend = 0; int mt_v [7]; logic [4:0] mt_rd; int ut_last_rec [14], ut_last_mt [7], ut_last_rst [8], ut_last_sec [11];
     logic [31:0] ib_addr [$]; int unsigned ib_rv [$]; int unsigned boot_to_req = 0; bit boot_to_req_seen = 0;
     int rst_fetch_en = -1, rst_pending = -1; bit rst_release_seen = 0, rst_sampled = 0; logic [31:0] hart_id_v = 0;
-    bit icache_en_tracked = 1; bit fencei_pending = 0; bit mcen_pend = 0; logic [31:0] mcen_old, mcen_new; int mcen_pin_cls = -1;
+    bit icache_en_tracked = 0; bit fencei_pending = 0; bit mcen_pend = 0; logic [31:0] mcen_old, mcen_new; int mcen_pin_cls = -1;   // icache_en_tracked: cpuctrlsts.icache_enable resets to 0
     uvm_analysis_imp_dbus #(gen_bus_txn, gen_isa_cov) dbus_imp;
     uvm_analysis_imp_ibus #(gen_bus_txn, gen_isa_cov) ibus_imp;
     uvm_analysis_imp_key #(gen_key_evt, gen_isa_cov) key_imp;
@@ -153,7 +152,7 @@ package gen_fcov_pkg;
       if (!uvm_config_db#(virtual gen_ctrl_if)::get(this, "", "vif", ctrl_vif)) `uvm_fatal("GEN_FCOV", "ctrl vif not in uvm_config_db")
       if (!uvm_config_db#(virtual gen_irq_if)::get(this, "", "irq_vif", irq_vif)) `uvm_fatal("GEN_FCOV", "irq vif not in uvm_config_db")
       if (!uvm_config_db#(virtual gen_dbg_if)::get(this, "", "dbg_vif", dbg_vif)) `uvm_fatal("GEN_FCOV", "dbg vif not in uvm_config_db")
-      begin logic [31:0] h; if ($value$plusargs({PLUSARG_HART_ID, "=%h"}, h)) hart_id_v = h; end
+      hart_id_v = cfg.hart_id;
       if (cfg.fcov_en) begin mul_cg = new(); div_cg = new(); alu_cg = new(); bit_cg = new(); imm_cg = new(); sh_cg = new(); cnt_cg = new(); zca_cg = new(); zcmp_cg = new(); mv_cg = new(); csr_cg = new(); br_cg = new(); sbit_cg = new(); zcb_cg = new(); rec_cg = new(); mt_cg = new(); rst_cg = new(); sec_cg = new(); end
     endfunction
     // ---- classifiers (plan bin order = the rendered GEN_FC_* indices)
@@ -703,7 +702,7 @@ package gen_fcov_pkg;
       end
       taken = (t.pc_wdata != t.pc_rdata + (c16 ? 32'd2 : 32'd4));
       target = t.pc_rdata + 32'(imm);
-      ssum = 34'(signed'({2'b00, t.pc_rdata})) + 34'(imm);   // the 33-bit signed target: a wrap leaves [0, 2^32) (ruling L5R-1)
+      ssum = 34'(signed'({2'b00, t.pc_rdata})) + 34'(imm);   // the 33-bit signed target: a wrap leaves [0, 2^32)
       n_br++;
       br_cg.sample(op, taken ? GEN_FC_ISA_BRANCH_CP_TAKEN_YES : GEN_FC_ISA_BRANCH_CP_TAKEN_NO, br_cmp_cls(t.rs1_rdata, rs2), br_off_cls(imm, c16),
                    target[1] ? GEN_FC_ISA_BRANCH_CP_TARGET_ALIGN_HALF : GEN_FC_ISA_BRANCH_CP_TARGET_ALIGN_WORD,
@@ -919,7 +918,7 @@ package gen_fcov_pkg;
       v[5] = (t.rs1_addr == 0) ? GEN_FC_RVFI_RECORD_CP_RS1_X0 : GEN_FC_RVFI_RECORD_CP_RS1_NONZERO;
       v[6] = (t.rs2_addr == 0) ? GEN_FC_RVFI_RECORD_CP_RS2_X0 : GEN_FC_RVFI_RECORD_CP_RS2_NONZERO;
       v[7] = (t.rs3_addr == 0) ? GEN_FC_RVFI_RECORD_CP_RS3_ZERO : GEN_FC_RVFI_RECORD_CP_RS3_NONZERO;
-      v[8] = t.trap ? -1 : rec_pc_delta_cls(t.pc_rdata, t.pc_wdata, is_redirect_insn(t.insn));   // a trapping record's pc_wdata is the vector: cp_trap owns it
+      v[8] = t.trap ? GEN_FC_RVFI_RECORD_CP_PC_DELTA_REDIRECT_OTHER : rec_pc_delta_cls(t.pc_rdata, t.pc_wdata, is_redirect_insn(t.insn));   // a trap record is redirect_other by kind (the plan); its pc_wdata is the sequential address, the vector shows in the next record
       v[9] = (t.order == 64'd1) ? GEN_FC_RVFI_RECORD_CP_ORDER_STEP_FIRST : -1;
       v[10] = have_prev ? rec_cont_cls(prev_t.pc_wdata, t.pc_rdata, t.intr, prev_t.trap, is_redirect_insn(prev_t.insn), prev_t.ext_debug_mode != t.ext_debug_mode) : -1;
       v[11] = have_prev ? rec_gap_cls(t.cycle - prev_t.cycle) : -1;
@@ -1051,19 +1050,23 @@ package gen_fcov_pkg;
     function void sec_record(gen_rvfi_txn t);   // the record-side events: cpuctrlsts reads, mcounteren writes and their read-back, the trackers
       bit is_csr = (t.insn[6:0] == ibex_pkg::OPCODE_SYSTEM) && (t.insn[14:12] != 3'b000) && !t.trap;
       logic [11:0] csr = t.insn[31:20]; logic [2:0] f3 = t.insn[14:12];
-      bit is_write = is_csr && (f3[1:0] == 2'b01 || (f3[2] ? t.insn[19:15] != 5'd0 : t.insn[19:15] != 5'd0));   // csrrw always writes; csrrs / csrrc with rs1 / uimm 0 read only
+      bit is_write = is_csr && (f3[1:0] == 2'b01 || t.insn[19:15] != 5'd0);   // csrrw always writes; csrrs / csrrc with rs1 / uimm 0 read only
+      logic [31:0] opnd = f3[2] ? 32'(t.insn[19:15]) : t.rs1_rdata;   // the write operand: uimm for the i forms, rs1 otherwise
       fencei_pending = (t.insn[6:0] == 7'b0001111 && t.insn[14:12] == 3'b001);
-      if (is_csr && csr == 12'h7C0 && is_write) icache_en_tracked = t.rs1_rdata[0];   // cpuctrlsts.icache_enable as written (csrrw form); a set / clear form keeps the tracked value
+      if (is_csr && csr == GEN_CSR_CPUCTRLSTS && is_write) begin   // cpuctrlsts.icache_enable as written: rw takes the operand, set / clear apply it to the old value (rd_wdata when read, else the tracked bit)
+        bit old_en = (t.rd_addr != 0) ? t.rd_wdata[0] : icache_en_tracked;
+        icache_en_tracked = (f3[1:0] == 2'b01) ? opnd[0] : (f3[1:0] == 2'b10) ? (old_en | opnd[0]) : (old_en & ~opnd[0]);
+      end
       if (mcen_pend && is_csr && csr == ibex_pkg::CSR_MCOUNTEREN && t.rd_addr != 0) begin   // the read-back after a mcounteren write decides its effect
         int eff = (t.rd_wdata == mcen_old && mcen_new != mcen_old) ? GEN_FC_SEC_CTRL_INPUTS_CP_MCOUNTEREN_WRITE_EFFECT_DROPPED : (t.rd_wdata != mcen_old) ? GEN_FC_SEC_CTRL_INPUTS_CP_MCOUNTEREN_WRITE_EFFECT_APPLIED : -1;
         sec_sample(GEN_FC_SEC_CTRL_INPUTS_CP_EVENT_MCOUNTEREN_WRITE, .mw(mcen_pin_cls), .eff(eff)); mcen_pend = 0;
       end
-      if (is_csr && csr == 12'h7C0 && t.rd_addr != 0)
+      if (is_csr && csr == GEN_CSR_CPUCTRLSTS && t.rd_addr != 0)
         sec_sample(GEN_FC_SEC_CTRL_INPUTS_CP_EVENT_CPUCTRL_READ, .bits67(int'(t.rd_wdata[7:6])), .bit8(t.rd_wdata[8] ? GEN_FC_SEC_CTRL_INPUTS_CP_BIT8_READBACK_ONE : GEN_FC_SEC_CTRL_INPUTS_CP_BIT8_READBACK_ZERO),
                    .ic_dbg(t.ext_debug_mode ? (t.rd_wdata[0] ? GEN_FC_SEC_CTRL_INPUTS_CP_ICACHE_EN_READBACK_IN_DEBUG_ONE : GEN_FC_SEC_CTRL_INPUTS_CP_ICACHE_EN_READBACK_IN_DEBUG_ZERO) : -1),
                    .kv(t.ext_ic_scr_key_valid ? GEN_FC_SEC_CTRL_INPUTS_CP_RVFI_EXT_KEY_VALID_ONE : GEN_FC_SEC_CTRL_INPUTS_CP_RVFI_EXT_KEY_VALID_ZERO));
       if (is_csr && csr == ibex_pkg::CSR_MCOUNTEREN && is_write) begin   // the effect waits for the program's read-back
-        mcen_old = t.rd_wdata; mcen_new = (f3[1:0] == 2'b01) ? (f3[2] ? 32'(t.insn[19:15]) : t.rs1_rdata) : t.rd_wdata; mcen_pend = (t.rd_addr != 0);
+        mcen_old = t.rd_wdata; mcen_new = (f3[1:0] == 2'b01) ? opnd : (f3[1:0] == 2'b10) ? (t.rd_wdata | opnd) : (t.rd_wdata & ~opnd); mcen_pend = (t.rd_addr != 0);   // the set / clear result from the read-back old value
         mcen_pin_cls = (ctrl_vif.mcounteren_writable == ibex_pkg::IbexMuBiOn) ? GEN_FC_SEC_CTRL_INPUTS_CP_MCOUNTEREN_W_VAL_ON : (ctrl_vif.mcounteren_writable == ibex_pkg::IbexMuBiOff) ? GEN_FC_SEC_CTRL_INPUTS_CP_MCOUNTEREN_W_VAL_OFF : GEN_FC_SEC_CTRL_INPUTS_CP_MCOUNTEREN_W_VAL_INVALID;
         if (!mcen_pend) sec_sample(GEN_FC_SEC_CTRL_INPUTS_CP_EVENT_MCOUNTEREN_WRITE, .mw(mcen_pin_cls));   // no old value to compare: effect na
       end
@@ -1189,7 +1192,7 @@ package gen_fcov_pkg;
         default: return 32'hffff_ffff;
       endcase
     endfunction
-    // ---- FCOV_SELFTEST (LOG-058): the classifier vector table; each row names the case, the classifier's answer and the plan's bin.
+    // ---- FCOV_SELFTEST: the classifier vector table; each row names the case, the classifier's answer and the plan's bin.
     // Synthetic records go through write() itself, so the run's coverage database carries these samples: a self-test run is never a proof run.
     function gen_rvfi_txn ut_rec(logic [31:0] insn, logic [4:0] rd, logic [31:0] rd_wdata, logic [4:0] rs1, logic [31:0] rs1_rdata, logic [31:0] pc, int unsigned cyc, logic [31:0] c10,
                                  bit exp_valid = 0, bit exp_last = 0, logic [15:0] exp_insn = 0);
@@ -1204,16 +1207,16 @@ package gen_fcov_pkg;
     function int unsigned self_test();
       int unsigned fails = 0, n = 0, imm0, miss0;
       `define GEN_FCOV_UT(name, got, exp) begin n++; if ((got) !== (exp)) begin fails++; `uvm_error("GEN_FCOV_UT", $sformatf("%s: got %0d expected %0d", name, got, exp)) end else `uvm_info("GEN_FCOV_UT", $sformatf("%s OK (%0d)", name, got), UVM_LOW) end
-      // slt_case (the landing-3 major): eq needs the whole 32-bit compare, the boundary cases come first
+      // slt_case: eq needs the whole 32-bit compare, the boundary cases come first
       `GEN_FCOV_UT("slti rs1 == imm is eq", slt_case(GEN_FC_ISA_ALU_IMM_CP_OP_SLTI, 32'd5, 5), GEN_FC_ISA_ALU_IMM_CP_SLT_CASE_EQ)
       `GEN_FCOV_UT("slti rs1[0] == imm[0] alone is not eq", slt_case(GEN_FC_ISA_ALU_IMM_CP_OP_SLTI, 32'h11, 1), GEN_FC_ISA_ALU_IMM_CP_SLT_CASE_OTHER)
       `GEN_FCOV_UT("slti INT_MIN, 0 is slti_intmin_0", slt_case(GEN_FC_ISA_ALU_IMM_CP_OP_SLTI, 32'h8000_0000, 0), GEN_FC_ISA_ALU_IMM_CP_SLT_CASE_SLTI_INTMIN_0)
       `GEN_FCOV_UT("slt_case on addi is na", slt_case(GEN_FC_ISA_ALU_IMM_CP_OP_ADDI, 32'd5, 5), -1)
-      // addi_wrap from the operands (the landing-3 H-1(c)): rd = x0 does not matter
+      // addi_wrap from the operands: rd = x0 does not matter
       `GEN_FCOV_UT("addi INT_MAX + 1 wraps positive", addi_wrap(GEN_FC_ISA_ALU_IMM_CP_OP_ADDI, 32'h7fff_ffff, 1), GEN_FC_ISA_ALU_IMM_CP_ADDI_WRAP_POS_WRAP)
       `GEN_FCOV_UT("addi INT_MIN - 1 wraps negative", addi_wrap(GEN_FC_ISA_ALU_IMM_CP_OP_ADDI, 32'h8000_0000, -1), GEN_FC_ISA_ALU_IMM_CP_ADDI_WRAP_NEG_WRAP)
       `GEN_FCOV_UT("addi 5 + 1 does not wrap", addi_wrap(GEN_FC_ISA_ALU_IMM_CP_OP_ADDI, 32'd5, 1), GEN_FC_ISA_ALU_IMM_CP_ADDI_WRAP_NONE)
-      // the divisor's magnitude (the landing-3 H-1(b)): |-3| > 2, |-3| < |-5|
+      // the divisor's magnitude: |-3| > 2, |-3| < |-5|
       `GEN_FCOV_UT("divisor -3 against dividend 2 is abs_gt_dividend", div_divisor_cls(32'hffff_fffd, 32'd2), GEN_FC_DIV_OPS_CP_DIVISOR_ABS_GT_DIVIDEND)
       `GEN_FCOV_UT("divisor -3 against dividend -5 is neg_rand", div_divisor_cls(32'hffff_fffd, 32'hffff_fffb), GEN_FC_DIV_OPS_CP_DIVISOR_NEG_RAND)
       `GEN_FCOV_UT("divisor 3 against dividend -5 is pos_rand", div_divisor_cls(32'd3, 32'hffff_fffb), GEN_FC_DIV_OPS_CP_DIVISOR_POS_RAND)
@@ -1223,7 +1226,7 @@ package gen_fcov_pkg;
       `GEN_FCOV_UT("clz rd = x0: rd_x0 yes", ut_last_cnt[4], 1)
       write(ut_rec(32'h6001_1093, 5'd1, 32'd24, 5'd2, 32'h0000_00f0, 32'h9000_0004, 1002, 32'd7));   // clz ra, sp = 24
       `GEN_FCOV_UT("clz rd = ra: result class from rd_wdata", ut_last_cnt[3], cnt_result_cls(32'd24))
-      // minstret_once (the landing-4 H-1(a)): a cm.push {ra} sequence followed by a record whose counter moved by one, then one that did not
+      // minstret_once: a cm.push {ra} sequence followed by a record whose counter moved by one, then one that did not
       imm0 = n_imm;
       write(ut_rec(32'hfe11_2e23, 5'd0, 32'h0, 5'd2, 32'h8000_0230, 32'h9000_0010, 1010, 32'd100, 1, 0, 16'hb84a));   // sw ra, -4(sp): the first micro-op
       write(ut_rec(32'hfd01_0113, 5'd2, 32'h8000_0200, 5'd2, 32'h8000_0230, 32'h9000_0010, 1012, 32'd100, 1, 1, 16'hb84a));   // addi sp, sp, -48: the last
@@ -1234,7 +1237,7 @@ package gen_fcov_pkg;
       write(ut_rec(32'hfd01_0113, 5'd2, 32'h8000_0200, 5'd2, 32'h8000_0230, 32'h9000_0020, 1022, 32'd101, 1, 1, 16'hb84a));
       write(ut_rec(32'h0000_0013, 5'd0, 32'h0, 5'd0, 32'h0, 32'h9000_0022, 1024, 32'd101));   // the record after: counter unchanged
       `GEN_FCOV_UT("cm.push followed by an unchanged counter: minstret_once na", ut_last_zcmp[9], -1)
-      // the Zcmp sreg field (the landing-5 review's second high): cm.mva01s s7, s6 expands to addi a0, x23, 0 then addi a1, x22, 0
+      // the Zcmp sreg field: cm.mva01s s7, s6 expands to addi a0, x23, 0 then addi a1, x22, 0
       write(ut_rec(32'h000b_8513, 5'd10, 32'h77, 5'd23, 32'h77, 32'h9000_0030, 1030, 32'd101, 1, 0, 16'haffa));
       write(ut_rec(32'h000b_0593, 5'd11, 32'h66, 5'd22, 32'h66, 32'h9000_0030, 1032, 32'd101, 1, 1, 16'haffa));
       write(ut_rec(32'h0000_0013, 5'd0, 32'h0, 5'd0, 32'h0, 32'h9000_0032, 1034, 32'd101));
@@ -1260,7 +1263,7 @@ package gen_fcov_pkg;
       `GEN_FCOV_UT("cm.mva01s with a wrong second micro-op: uop_count_ok na", ut_last_mv[7], -1)
       `GEN_FCOV_UT("cm.mva01s with a wrong second micro-op: one counted miss", n_mv_miss, miss0 + 1)
       ut_mv_miss_expected += n_mv_miss - miss0;   // only the self-test's own miss is excluded from the referee
-      // Slice A classifiers (LOG-058): the record group's partitions
+      // Slice A classifiers: the record group's partitions
       `GEN_FCOV_UT("pc delta +2 is plus2", rec_pc_delta_cls(32'h8000_0100, 32'h8000_0102, 0), GEN_FC_RVFI_RECORD_CP_PC_DELTA_PLUS2)
       `GEN_FCOV_UT("pc delta +4 is plus4", rec_pc_delta_cls(32'h8000_0100, 32'h8000_0104, 0), GEN_FC_RVFI_RECORD_CP_PC_DELTA_PLUS4)
       `GEN_FCOV_UT("pc delta +40 on a non-redirect record is jump_fwd", rec_pc_delta_cls(32'h8000_0100, 32'h8000_0128, 0), GEN_FC_RVFI_RECORD_CP_PC_DELTA_JUMP_FWD)

@@ -1,0 +1,11 @@
+--- /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/l11_root/dv/auto_dv/env/gen_fcov_pkg.sv	2026-09-03 21:58:40.145450532 -0400
++++ /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/FM13/dv/auto_dv/env/gen_fcov_pkg.sv	2026-09-03 22:11:10.721408985 -0400
+@@ -945,7 +945,7 @@
+           return GEN_FC_MUL_TIMING_CP_PREV_ALU;
+         end
+         ibex_pkg::OPCODE_OP_IMM, ibex_pkg::OPCODE_LUI, ibex_pkg::OPCODE_AUIPC: return GEN_FC_MUL_TIMING_CP_PREV_ALU;
+-        ibex_pkg::OPCODE_LOAD: return GEN_FC_MUL_TIMING_CP_PREV_LOAD;
++        ibex_pkg::OPCODE_LOAD: return GEN_FC_MUL_TIMING_CP_PREV_ALU;   // FM13: a load before the multiply classed as ALU
+         ibex_pkg::OPCODE_STORE: return GEN_FC_MUL_TIMING_CP_PREV_STORE;
+         ibex_pkg::OPCODE_BRANCH, ibex_pkg::OPCODE_JAL, ibex_pkg::OPCODE_JALR: return GEN_FC_MUL_TIMING_CP_PREV_BRANCH;
+         default: return GEN_FC_MUL_TIMING_CP_PREV_OTHER;

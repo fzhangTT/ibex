@@ -5,7 +5,9 @@
 // hold those rules at the boundary), the integrity rows take the bus interfaces' intg_corrupt flags instead of a static
 // parameter, every property reports through uvm_report_error under its own id, and the knobs are per group
 // (+gen_chk_sva_<group>, +gen_chk_all precedence) rather than per property; the two split-address rows are covers (below). Nothing here
-// drives or forces a DUT net.
+// drives or forces a DUT net. C10 exception (LOG-067; the knob name LOG-076): the B8 probe gen_b8_probe.sv is bound into
+// ibex_if_stage by gen_binds.sv behind +gen_chk_sva_b8 (default off), the one property over DUT internals; every other internal
+// property stays unbound in the probe register.
 module gen_protocol_props
   import ibex_pkg::*;
   import prim_secded_pkg::*;
@@ -154,8 +156,8 @@ module gen_protocol_props
 
   // icache lookup read (both RAM banks read, no write): the cycle before an ECC check
   wire icram_lookup_read = (|ic_tag_req_o) & ~ic_tag_write_o;
-  logic [ICACHE_ECC_WINDOW:0] lookup_hist;   // bit k = the lookup read k cycles ago (bit 0 this cycle)
-  always_ff @(posedge clk_i or negedge rst_ni) if (!rst_ni) lookup_hist <= '0; else lookup_hist <= (lookup_hist << 1) | {{ICACHE_ECC_WINDOW{1'b0}}, icram_lookup_read};
+  logic [ICACHE_ECC_WINDOW-1:0] lookup_hist;   // at the assertion's sample bit k = the lookup read k+1 cycles before (the register updates after the read cycle)
+  always_ff @(posedge clk_i or negedge rst_ni) if (!rst_ni) lookup_hist <= '0; else lookup_hist <= (lookup_hist << 1) | {{(ICACHE_ECC_WINDOW-1){1'b0}}, icram_lookup_read};
 
   // integrity decode of the three 39-bit words (err == 0 means a valid inverted-SECDED codeword)
   wire instr_rdata_bad = (prim_secded_inv_39_32_dec(instr_rdata_i).err != 2'b00);
@@ -272,7 +274,7 @@ module gen_protocol_props
   `P_ASSERT(alert, sva_alert_internal_never,   !alert_major_internal_o)                                      // DUT (legal stimulus, RegFileECC=0)
   `P_ASSERT(alert, sva_alert_bus_iff_intg,     alert_major_bus_o == ((instr_rvalid_i && instr_rdata_bad) ||
                                                               (data_rvalid_i  && data_rdata_bad)))    // DUT (exact, same cycle)
-  `P_ASSERT(alert, sva_alert_minor_window,     alert_minor_o |-> |lookup_hist[ICACHE_ECC_WINDOW:1]) // DUT (windowed: 1..ICACHE_ECC_WINDOW = 2 cycles from the lookup, GEN_ICACHE_ECC_WINDOW)
+  `P_ASSERT(alert, sva_alert_minor_window,     alert_minor_o |-> |lookup_hist[ICACHE_ECC_WINDOW-1:0]) // DUT (1..ICACHE_ECC_WINDOW cycles after the lookup read that returned the corrupted tag, GEN_ICACHE_ECC_WINDOW)
   `P_ASSERT(alert, sva_alerts_known,           !$isunknown({alert_minor_o, alert_major_internal_o, alert_major_bus_o})) // DUT
   `P_COVER(sva_alert_bus_seen,          alert_major_bus_o)
   `P_COVER(sva_alert_minor_seen,        alert_minor_o)

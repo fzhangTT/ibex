@@ -339,6 +339,9 @@ package gen_env_pkg;
                cfg.knob_imem_intg_err_rate, cfg.knob_imem_outstanding_cap, cfg.knob_dmem_gnt_delay,
                cfg.knob_dmem_rvalid_delay, cfg.knob_dmem_err_rate, cfg.knob_dmem_intg_err_rate,
                cfg.knob_scr_key_delay, cfg.icram_init);
+      // the tag RAM models read the injection rate from gen_icram_events (they hold no cfg handle)
+      if (!gen_regime_scalar("rate_per_mille", cfg.knob_icache_ecc_err_rate, gen_icram_events::inject_rate))
+        `uvm_fatal("GEN_ENV", {"bad icache ECC rate regime ", cfg.knob_icache_ecc_err_rate})
       $display("%s knobs irq regime=%s line_mix=%s hold=%s debug_req=%s fetch_enable=%s icache_ecc=%s", GEN_BANNER_TAG,
                cfg.knob_irq_regime, cfg.knob_irq_line_mix, cfg.knob_irq_hold, cfg.knob_debug_req_regime,
                cfg.knob_fetch_enable_regime, cfg.knob_icache_ecc_err_rate);

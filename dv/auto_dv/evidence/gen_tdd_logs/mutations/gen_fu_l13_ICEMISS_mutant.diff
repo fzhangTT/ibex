@@ -1,0 +1,4 @@
+57c57
+<           rdata <= mem[addr] ^ (Width'(1) << $urandom_range(Width - 1, 0));   // exactly one flipped bit: always a decodable ECC error
+---
+>           rdata <= mem[addr];   // MUT-ICE-MISS: announced but not corrupted

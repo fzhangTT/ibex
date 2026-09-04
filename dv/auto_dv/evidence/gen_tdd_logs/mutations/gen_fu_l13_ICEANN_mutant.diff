@@ -1,0 +1,4 @@
+59c59
+<           gen_icram_events::announce(cycle, Way, int'(addr), "inject", gen_icram_events::qualified_at(cycle));
+---
+>           // MUT-ICE-ANN: the corruption is not announced

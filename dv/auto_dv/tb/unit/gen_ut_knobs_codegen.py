@@ -75,10 +75,10 @@ def refused_fixtures(text):
                                                 "eot_addr: {offset: 0x104, sise: 0x4}", 1), "unknown key(s) sise")
     yield ("unknown top-level key", text + "\nregime_windowz: {}\n", "top level: unknown key(s) regime_windowz")
     yield ("regime knob without regime_set_consumer refused", text.replace(
-        ", regime_set_consumer: none, desc: \"icache RAM ECC injection regime\"", ", desc: \"icache RAM ECC injection regime\"", 1),
+        ", regime_set_consumer: none, desc: \"icache tag-RAM ECC injection regime", ", desc: \"icache tag-RAM ECC injection regime", 1),
         "regime_set_consumer must be one of")
     yield ("unknown regime_set_consumer refused", text.replace(
-        "regime_set_consumer: none, desc: \"icache RAM ECC injection regime\"", "regime_set_consumer: nobody, desc: \"icache RAM ECC injection regime\"", 1),
+        "regime_set_consumer: none, desc: \"icache tag-RAM ECC injection regime", "regime_set_consumer: nobody, desc: \"icache tag-RAM ECC injection regime", 1),
         "regime_set_consumer must be one of")
     yield ("missing export_active_sources refused", text.replace("export_active_sources: [ibus, dbus, pin, alert, misc, scrkey, regime]\n", "", 1),
            "missing export_active_sources")

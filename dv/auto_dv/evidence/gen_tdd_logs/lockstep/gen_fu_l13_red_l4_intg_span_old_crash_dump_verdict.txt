@@ -1,0 +1,8 @@
+verdict: FAIL
+reason: uvm_error at sim.log:34
+evidence: UVM_ERROR dv/auto_dv/env/gen_checkers_pkg.sv(412) @ 72500: uvm_test_top.env.misc_mon [crash_dump] crash_dump exception_pc/exception_addr 00000000/800002e2 at order 9: model mepc/mtval 00000000/800002e0, previous 00000000/800002e0, next 00000000/800002e0
+uvm_counts: {'INFO': 28, 'WARNING': 0, 'ERROR': 21, 'FATAL': 0}
+cocotb_summary: {'tests': 1, 'passed': 1, 'failed': 0, 'skipped': 0}
+marker_seen: True
+banner_seen: True
+exit_code: 0

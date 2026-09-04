@@ -600,6 +600,56 @@ int main(int argc, char** argv) {
     gen_isa_step(&st);
     check("a nop under IR = 0 counts", gen_isa_read_csr(CSR_MINSTRET), m0 + 3u); }
 
+  // CM123-L-3: a TB-side write is not an instruction; no retirement coincides with it, so neither write corner applies whatever gap the
+  // last record left behind
+  check("re-reset", gen_isa_reset(&cfg) == 0, 1);
+  gen_isa_write_csr(CSR_MINSTRET, 0x10u); gen_isa_write_csr(CSR_MINSTRETH, 0x1u);
+  gen_isa_set_retire_gap(1);
+  gen_isa_write_csr(CSR_MINSTRETH, 0x2u);
+  check("a TB write of minstreth after a gap-1 record: the low word is kept (no high-word corner for a TB write)", gen_isa_read_csr(CSR_MINSTRET), 0x10u);
+  check("a TB write of minstreth after a gap-1 record: the high word is written", gen_isa_read_csr(CSR_MINSTRETH), 0x2u);
+  gen_isa_write_csr(CSR_MINSTRET, 0x0u);
+  gen_isa_set_retire_gap(1);
+  gen_isa_write_csr(CSR_MINSTRET, 0x5u);
+  check("a TB write of minstret with the low word at 0 after a gap-1 record: the high word is kept (no carry corner for a TB write)", gen_isa_read_csr(CSR_MINSTRETH), 0x2u);
+  check("and the low word is written", gen_isa_read_csr(CSR_MINSTRET), 0x5u);
+  gen_isa_set_retire_gap(0);
+  // CM123-L-2: the carry Ibex did not take is decided by Ibex's own low word (Spike's minus the inhibited retirements), not by Spike's raw
+  // counter: after an IR episode the two differ by g_inh
+  check("re-reset", gen_isa_reset(&cfg) == 0, 1);
+  { const uint32_t prog15d[] = {0x32041073u,   // csrw mcountinhibit, x8 (x8 = 4: sets IR; the writer retires under IR = 1, not counted by Ibex)
+                                0x32001073u,   // csrw mcountinhibit, x0 (clears IR; counted by Ibex)
+                                0x00000013u,   // nop: Ibex's low word wraps here (0xFFFFFFFF -> 0, the carry into the high word)
+                                0xb0239073u};  // csrw minstret, x7 (gap 1: the nop retired in the write cycle, so Ibex's write loses that carry)
+    for (unsigned i = 0; i < sizeof(prog15d) / 4; i++) gen_isa_write_word(scratch + 4 * i, prog15d[i]);
+    gen_isa_write_gpr(8, 4u); gen_isa_write_gpr(7, 0x55u);
+    gen_isa_write_csr(CSR_MINSTRET, 0xfffffffeu); gen_isa_write_csr(CSR_MINSTRETH, 0u);
+    gen_isa_set_pc(scratch); gen_isa_set_retire_gap(0);
+    gen_isa_step(&st);
+    check("the IR-setting writer is not counted: Ibex's low word stays 0xFFFFFFFE", gen_isa_read_csr(CSR_MINSTRET), 0xfffffffeu);
+    gen_isa_step(&st);
+    check("the IR-clearing writer is counted: 0xFFFFFFFF (Spike's raw counter is one ahead)", gen_isa_read_csr(CSR_MINSTRET), 0xffffffffu);
+    gen_isa_step(&st);
+    check("the nop wraps Ibex's low word", gen_isa_read_csr(CSR_MINSTRET), 0u);
+    check("and carries into the high word", gen_isa_read_csr(CSR_MINSTRETH), 1u);
+    gen_isa_set_retire_gap(1);
+    gen_isa_step(&st);
+    check("csrw minstret in the nop's retirement cycle: the low word is written", gen_isa_read_csr(CSR_MINSTRET), 0x55u);
+    check("csrw minstret in the nop's retirement cycle: Ibex lost the nop's carry (decided by Ibex's low word, not Spike's)", gen_isa_read_csr(CSR_MINSTRETH), 0u);
+    gen_isa_set_retire_gap(0); }
+
+  // tb_l11 L-5: a TB-side write is not the program's writer, so the step after it keeps its corners
+  check("re-reset", gen_isa_reset(&cfg) == 0, 1);
+  { const uint32_t prog15e[] = {0xb8201073u};  // csrw minstreth, x0, stepped at gap 1 right after a TB write of the counter
+    gen_isa_write_word(scratch, prog15e[0]);
+    gen_isa_set_pc(scratch);
+    gen_isa_write_csr(CSR_MINSTRET, 0x20u); gen_isa_write_csr(CSR_MINSTRETH, 0u);   // the TB sets the counter right before the program's own write
+    gen_isa_set_retire_gap(1);
+    gen_isa_step(&st);
+    check("csrw minstreth at gap 1 right after a TB write: the high-word corner applies (a TB write is no writer)", gen_isa_read_csr(CSR_MINSTRET), 0x1fu);
+    check("and the high word is written", gen_isa_read_csr(CSR_MINSTRETH), 0u);
+    gen_isa_set_retire_gap(0); }
+
   std::printf("GEN_UT_ISA_SHIM %s (%d failures)\n", fails ? "FAIL" : "PASS", fails);
   return fails ? 1 : 0;
 }

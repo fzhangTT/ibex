@@ -1,0 +1,11 @@
+--- /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/l11_root/dv/auto_dv/env/gen_fcov_pkg.sv	2026-09-03 21:58:40.145450532 -0400
++++ /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/FM12/dv/auto_dv/env/gen_fcov_pkg.sv	2026-09-03 22:10:45.625243029 -0400
+@@ -883,7 +883,7 @@
+       logic [31:0] d = pc_w - pc_r;
+       if (redirect) return GEN_FC_RVFI_RECORD_CP_PC_DELTA_REDIRECT_OTHER;
+       if (d == 32'd2) return GEN_FC_RVFI_RECORD_CP_PC_DELTA_PLUS2;
+-      if (d == 32'd4) return GEN_FC_RVFI_RECORD_CP_PC_DELTA_PLUS4;
++      if (d == 32'd4) return GEN_FC_RVFI_RECORD_CP_PC_DELTA_PLUS2;   // FM12: a 32-bit sequential record classed as plus2
+       return d[31] ? GEN_FC_RVFI_RECORD_CP_PC_DELTA_JUMP_BACK : GEN_FC_RVFI_RECORD_CP_PC_DELTA_JUMP_FWD;
+     endfunction
+     function int rec_cont_cls(logic [31:0] prev_pc_w, logic [31:0] pc_r, bit intr, bit prev_trap, bit prev_redirect, bit debug_changed);

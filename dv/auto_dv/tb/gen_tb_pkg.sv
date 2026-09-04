@@ -83,7 +83,7 @@ package gen_tb_pkg;
   parameter string PLUSARG_KNOB_IRQ_HOLD = "gen_knob_irq_hold";  // enum, default until_taken: interrupt line release policy
   parameter string PLUSARG_KNOB_DEBUG_REQ_REGIME = "gen_knob_debug_req_regime";  // enum, default none: debug_req_i event rate
   parameter string PLUSARG_KNOB_SCR_KEY_DELAY = "gen_knob_scr_key_delay";  // enum, default immediate: scramble-key response regime
-  parameter string PLUSARG_KNOB_ICACHE_ECC_ERR_RATE = "gen_knob_icache_ecc_err_rate";  // enum, default none: icache RAM ECC injection regime
+  parameter string PLUSARG_KNOB_ICACHE_ECC_ERR_RATE = "gen_knob_icache_ecc_err_rate";  // enum, default none: icache tag-RAM ECC injection regime (rates: regime_windows.rate_per_mille): the tag RAM models flip one bit of a lookup read at the rate and announce it through gen_icram_events; the misc monitor expects alert_minor_o within GEN_ICACHE_ECC_WINDOW of every qualified injection
   parameter string PLUSARG_KNOB_FETCH_ENABLE_REGIME = "gen_knob_fetch_enable_regime";  // enum, default always_on: fetch_enable_i regime
   parameter string PLUSARG_KNOB_MCOUNTEREN_WRITABLE = "gen_knob_mcounteren_writable";  // enum, default on: mcounteren_writable_i encoding
   parameter string PLUSARG_KNOB_INSTR_MIX = "gen_knob_instr_mix";  // enum, default mixed: program-side instruction mix (region marker)
@@ -236,7 +236,8 @@ package gen_tb_pkg;
   parameter int unsigned GEN_LSU_TRAP_TO_RVFI_OFFSET = 0;  // cycles from a load/store fault's commit edge to its RVFI record: the fault is seen in WB, so its record and the controller's save edge share a cycle
   parameter int unsigned GEN_IRQ_MARKER_TO_RVFI_OFFSET = 2;  // cycles from the interrupt entry commit to the rvfi_ext_irq_valid marker (v3 T-051 2.1)
   parameter int unsigned GEN_RVFI_ID_EXIT_OFFSET = 2;  // cycles from ID exit (rvfi_ext_mcycle sample point, rtl/ibex_core.sv:2102) to the record, plus the WB wait for loads/stores (v3 T-051 2.2)
-  parameter int unsigned GEN_ICACHE_ECC_WINDOW = 2;  // alert_minor_o within 1..2 cycles counted from the lookup request that returns corrupted data (the RAM read lands one cycle after the request, the alert one cycle after the check; landing 2b measured 1 or 2); the misc checker and the protocol SVA use the same value
+  parameter int unsigned GEN_ICACHE_ECC_WINDOW = 2;  // alert_minor_o within 1..2 cycles counted from the lookup request that returns corrupted data (the RAM read lands one cycle after the request, the alert one cycle after the check); measured on the landing-11 injection runs (gen_tdd_step2b.md Section 14): no run had alert_minor_o high before that landing; the misc checker and the protocol SVA use the same value
+  parameter int unsigned GEN_ICACHE_ECC_GRACE_CYCLES = 16;  // cycles after a cpuctrlsts.icache_enable write record or after the last invalidation-sweep tag write during which a tag-RAM ECC injection is not owed an alert_minor_o pulse: a lookup made while the cache is disabled or invalidating reads the tag RAM but is not checked (rtl/ibex_icache.sv:266), and the TB learns both states late (the write from its record, the sweep from its all-ways tag writes)
   parameter int unsigned GEN_IRQ_ENTRY_BOUND_RECORDS = 17;  // records between a pin edge and the interrupt entry, worst case WB + ID + 16 Zcmp micro-ops (v3 T-051 2.6)
   parameter int unsigned GEN_DBG_ENTRY_BOUND_RECORDS = 17;  // records between debug_req_i and the debug entry, same derivation (v3 T-051 2.6)
   parameter int unsigned GEN_CLK_PERIOD_NS = 10;  // TB clock period (gen_tb_top ClkHalfPeriodNs = 5); Python converts cycle budgets to ns with it
@@ -259,6 +260,7 @@ package gen_tb_pkg;
   parameter logic [31:0] GEN_TDATA1_IBEX_RDATA = 671092808;  // tdata1 read value with execute = 0: type 2, dmode 1, action 1, m and u (rtl/ibex_cs_registers.sv:1848-1864); bit 2 is the stored execute flag; the codegen verifies this literal against the RTL assign at every render
   parameter int unsigned GEN_CPUCTRLSTS_SYNC_EXC_SEEN_BIT = 6;  // cpuctrlsts.sync_exc_seen bit (cpu_ctrl_sts_part_t, rtl/ibex_cs_registers.sv:239-246); the shim sets and clears it from the model's traps
   parameter int unsigned GEN_CPUCTRLSTS_DOUBLE_FAULT_SEEN_BIT = 7;  // cpuctrlsts.double_fault_seen bit (cpu_ctrl_sts_part_t, rtl/ibex_cs_registers.sv:239-246)
+  parameter int unsigned GEN_CPUCTRLSTS_ICACHE_ENABLE_BIT = 0;  // cpuctrlsts.icache_enable bit (cpu_ctrl_sts_part_t, rtl/ibex_cs_registers.sv:239-246); the scoreboard publishes the written value to gen_icram_events for the ECC-injection qualification
   parameter int unsigned GEN_CPUCTRLSTS_DUMMY_INSTR_EN_BIT = 2;  // cpuctrlsts.dummy_instr_en bit (cpu_ctrl_sts_part_t, rtl/ibex_cs_registers.sv:239-246); the Zcmp collector reads it from the model
   parameter int unsigned GEN_DCSR_PRV_BIT_LOW = 0;  // dcsr.prv field low bit (rtl/ibex_pkg.sv dcsr_t prv[1:0]); the dbg_dret rule compares the record's mode with it
   parameter int unsigned GEN_DCSR_PRV_BIT_HIGH = 1;  // dcsr.prv field high bit (rtl/ibex_pkg.sv dcsr_t prv[1:0])
@@ -520,14 +522,38 @@ package gen_tb_pkg;
   endfunction
   parameter logic [31:0] GEN_BOOT_ADDR_DEFAULT = 32'h8000_0000;  // literal twin of GEN_MM_BOOT_ADDR_DEFAULT (regex readers: gen_program.py, gen_smoke_run.sh)
   // GEN_KNOBS_END
-  // ICache RAM model announcements (C3.4): the RAM models push injected-error lookups here; gen_misc_monitor consumes them
-  // as the expected-alert feed and the export's icram rows (T-080 step 3) read the same queue. No injection exists yet.
+  // ICache RAM model announcements (C3.4): the tag RAM models push their ECC injections here (one flipped bit of a lookup read,
+  // at knob_icache_ecc_err_rate's rate) and gen_misc_monitor consumes them as the alert_minor_o expectation: a pulse needs an
+  // injection within GEN_ICACHE_ECC_WINDOW, and a QUALIFIED injection owes a pulse. Qualified = the cache is enabled per the
+  // scoreboard's cpuctrlsts tracking and no invalidation sweep is within GEN_ICACHE_ECC_GRACE_CYCLES: a lookup made while the
+  // cache is disabled or invalidating reads the tag RAM but is not checked (rtl/ibex_icache.sv:266), and the TB sees both
+  // states late (the enable from its record, the sweep from its all-ways tag writes).
   class gen_icram_events;
-    typedef struct { int unsigned cycle; int unsigned way; int unsigned index; string kind; } evt_t;
+    typedef struct { int unsigned cycle; int unsigned way; int unsigned index; string kind; bit qualified; bit seen; bit judged; } evt_t;
     static evt_t q [$];
-    static function void announce(int unsigned cycle, int unsigned way, int unsigned index, string kind);
-      q.push_back('{cycle, way, index, kind});
+    static int unsigned inject_rate = 0;       // per mille per tag read, from knob_icache_ecc_err_rate (gen_env sets it; 0 = off)
+    static int unsigned injected = 0;
+    static bit          icache_en = 0;         // cpuctrlsts.icache_enable as last written (reset value 0), with the record's cycle
+    static int unsigned icache_en_cycle = 0;
+    static bit          inval_seen = 0;        // an all-ways tag write = an invalidation-sweep write (rtl/ibex_icache.sv:257, :274)
+    static int unsigned last_inval_cycle = 0;
+    static int unsigned last_tag_write_cycle = 0, tag_writes_this_cycle = 0;
+    static function void announce(int unsigned cycle, int unsigned way, int unsigned index, string kind, bit qualified = 1'b0);
+      q.push_back('{cycle, way, index, kind, qualified, 1'b0, 1'b0});
       while (q.size() > 256) void'(q.pop_front());
+    endfunction
+    static function bit qualified_at(int unsigned cycle);
+      if (!icache_en || cycle < icache_en_cycle + GEN_ICACHE_ECC_GRACE_CYCLES) return 1'b0;
+      if (inval_seen && cycle < last_inval_cycle + GEN_ICACHE_ECC_GRACE_CYCLES) return 1'b0;
+      return 1'b1;
+    endfunction
+    static function void note_icache_en(bit en, int unsigned cycle);
+      icache_en = en; icache_en_cycle = cycle;
+    endfunction
+    static function void note_tag_write(int unsigned cycle, int unsigned ways);   // called by every tag RAM on its write
+      if (cycle != last_tag_write_cycle) begin last_tag_write_cycle = cycle; tag_writes_this_cycle = 0; end
+      tag_writes_this_cycle++;
+      if (tag_writes_this_cycle >= ways) begin inval_seen = 1; last_inval_cycle = cycle; end
     endfunction
   endclass
 

@@ -17,7 +17,7 @@ the RVFI stream; checks the internal NMI from injected LSU integrity errors. AS 
 rules): `gen_checkers_pkg::gen_irq_checker` consumes the scoreboard's `gen_model_state` (mie / mstatus / mcause / prv /
 debug per record, published after every compared record) and the driver's `gen_irq_evt`: `irq_pending` (every cycle,
 evaluated GEN_CSR_WRITE_TO_RVFI_OFFSET + 1 cycles later against the driven pins and the model's mie history),
-`irq_entry` / `nmi_entry` (a raised, enabled line not taken within GEN_IRQ_ENTRY_BOUND_RECORDS records; an entry satisfies only the taken line of a raise group and restarts the bound of the lines raised with it, and a line still held and enabled at the end of the run that was never taken is an error at report, CR8-M-5, landing 2c), `irq_masked`
+`irq_entry` / `nmi_entry` (a raised, enabled line not taken within GEN_IRQ_ENTRY_BOUND_RECORDS records; an entry satisfies only the taken line of a raise group and restarts the bound of the lines raised with it, a line still held and enabled at the end of the run that was never taken is an error at report, and an expectation whose bound expires while NMI mode or debug mode masks every line is neither judged nor forgotten: its bound restarts when the mask lifts, so a line raised inside a long NMI handler and never taken after the mret fails (CM132-M-1; red MUT-NT3 on gen_ut_irq_nmi_long, gen_mut_step2b.md)), `irq_masked`
 (an interrupt entry while M-mode with MIE clear); `nmi_internal` (an internal NMI entry not backed by an announced data-side corruption, or later than its bound).
 
 Cause rule (T-136, ids `irq_entry` / `nmi_entry`, built after the first storm program showed the model following the

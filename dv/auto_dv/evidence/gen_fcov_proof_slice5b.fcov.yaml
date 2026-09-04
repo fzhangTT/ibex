@@ -1,4 +1,4 @@
-# gen_fcov_proof_slice5b.fcov.yaml: fcov-expectation proof of T-205 Slice A (gen_mul_timing_cg): the coverpoint bins the lock-step run of gen_muldiv_directed.S hits under the default (short) bus regimes; build ai, fresh vdb
+# gen_fcov_proof_slice5b.fcov.yaml: fcov-expectation proof of T-205 Slice A (gen_mul_timing_cg): the coverpoint bins the lock-step run of gen_muldiv_directed.S hits under the default (short) bus regimes; build b2, fresh vdb
 test: gen_fcov_proof_slice5b
 owner: tb-infra
 bins:

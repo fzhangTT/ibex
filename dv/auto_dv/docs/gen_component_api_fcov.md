@@ -90,8 +90,8 @@ it by longest match with backtracking or takes the plan's explicit tuple). Bin n
 plan bins differing from the CSV bins of a coverpoint, a cross bin that does not split into its components, a cross without a
 plan line, a group without a plan header (unit test `dv/auto_dv/tb/unit/gen_ut_fcov_codegen.py`); `--check` fails on a stale
 include. A `; ignore_bins x: reason` or `; ignore ...` clause at the end of a coverpoint line is not part of its bins, so a bin
-named only there needs no CSV row; a bin the line also lists before the clause is compared like any other (Slice-A-1 row in
-gen_critic_response_fcov.md). `IMPLEMENTED` in the renderer lists the groups whose samplers exist; a group renders only when it is sampled.
+named only there needs no CSV row, and a bin the line also lists before the clause leaves the comparison and renders nothing (it has
+no CSV row by design: the Slice-A-1 row in gen_critic_response_fcov.md; unit-test case, landing 11). `IMPLEMENTED` in the renderer lists the groups whose samplers exist; a group renders only when it is sampled.
 
 Sampler: `gen_isa_cov` (this package), a subscriber of the RVFI monitor beside the scoreboard, samples on every record with
 `rvfi_trap == 0` whose encoding the plan's condition names; RVFI reports a compressed instruction in its 16-bit form, so
@@ -245,8 +245,9 @@ Four groups of the round-0 order (gen_round0_covergroup_set.md ranks 37, 43, 44,
 plan / CSV mismatch of its cp_hazard bins). Rendered by the renderer with its widened plan grammar (wrapped bullets, `iff` clauses before
 the expression, expression-less coverpoints, `; ignore_bins` clauses, names-only bins and crosses, the prose form of the operand-only
 marker; unit-test cases for each; the 14 earlier renders are byte-identical). Sampled by gen_isa_cov:
-- gen_rvfi_record_cg (CG-RVFI-001), every record, from the record and its predecessor: cp_pc_delta on non-trap records (a trap's pc_wdata
-  is the vector, so the delta is na and cp_trap carries it; mret / dret / fence.i are `redirect_other`), cp_pc_continuity against the
+- gen_rvfi_record_cg (CG-RVFI-001), every record, from the record and its predecessor: cp_pc_delta on every record (a trap, mret, dret or fence.i record is
+  `redirect_other` by kind, the plan's rule; a trap record's pc_wdata is the next sequential address, never the vector, which appears as the
+  following record's pc_rdata under cp_pc_continuity), cp_pc_continuity against the
   previous record's pc_wdata (any discontinuity outside the five named causes is na: the rvfi protocol checker's error, not a bin),
   cp_valid_gap from the record cycles, cp_intr_kind from the intr flag with the NMI flags before the pending bits, cp_rd_source from the
   load decode, cp_order_step.first on order 1; the first record has no predecessor (continuity and gap na).
@@ -283,7 +284,7 @@ disables the misc never-high rule of double_fault_seen, `+gen_chk_double_fault=0
 its key-withheld variant; the multiply program under the same-cycle / min1 bus regimes (the clean deltas); the boot run with fetch
 enabled at the release (boot_to_req two). Not reached by any retained program and stated in the manifests: cp_next_dep.yes and
 cp_wb_busy.yes with their crosses (no program consumes a multiply's result on the next record or keeps a data access outstanding when a
-multiply enters ID), cp_boot_to_req_cycles.three, cp_hart_id.max / random (the hart id is 0 in every run), cp_pending other than none,
+multiply enters ID), cp_boot_to_req_cycles.three, cp_hart_id.max / random (the hart id is 0 in every run), the key-withheld run's zero read-backs (cp_bit8_readback.zero, cp_rvfi_ext_key_valid.zero, cp_event.key_req / key_valid_change, cr_key's zero tuples: the key arrives before the program's reads and the core requests none), cp_pending other than none,
 cp_first_event other than first_instr_retire, cp_key_req_context other than reset_inval, cp_icache_en_readback_in_debug, the
 key_delay `delayed` class, and the unreachable-by-construction bins named above.
 Counters: FCOV_QUERY 13 (records), 14 (multiplies), 15 (reset samples), 16 (security events); referee lines for the four groups; the

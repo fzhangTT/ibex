@@ -150,10 +150,10 @@ module gen_tb_top import ibex_pkg::*; import gen_tb_pkg::*; #(
 
   // ---- icache RAM models, one per way for tags and data (step 1c) -------------------------------
   for (genvar w = 0; w < IC_NUM_WAYS; w++) begin : g_icram
-    gen_icache_ram #(.Width(TagSizeECC), .Depth(IC_NUM_LINES), .Name($sformatf("tag%0d", w))) u_tag (
+    gen_icache_ram #(.Width(TagSizeECC), .Depth(IC_NUM_LINES), .Name($sformatf("tag%0d", w)), .Ways(IC_NUM_WAYS), .Way(w), .IsTag(1'b1)) u_tag (
       .clk(clk), .rst_n(rst_n), .req(ic_tag_req[w]), .write(ic_tag_write), .addr(ic_tag_addr),
       .wdata(ic_tag_wdata), .rdata(ic_tag_rdata[w]));
-    gen_icache_ram #(.Width(LineSizeECC), .Depth(IC_NUM_LINES), .Name($sformatf("data%0d", w))) u_data (
+    gen_icache_ram #(.Width(LineSizeECC), .Depth(IC_NUM_LINES), .Name($sformatf("data%0d", w)), .Ways(IC_NUM_WAYS), .Way(w)) u_data (
       .clk(clk), .rst_n(rst_n), .req(ic_data_req[w]), .write(ic_data_write), .addr(ic_data_addr),
       .wdata(ic_data_wdata), .rdata(ic_data_rdata[w]));
   end

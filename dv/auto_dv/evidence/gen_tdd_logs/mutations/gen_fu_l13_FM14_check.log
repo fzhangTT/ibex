@@ -1,0 +1,10 @@
+# check of /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/l11_root/dv/auto_dv/evidence/gen_fcov_proof_slice5c.fcov.yaml (md5 1cc16dceeab53d72d6e764d8856e3be0) against /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/FM14/urg (urg text report of the mutant's catch run; build sources sha256: 7ad31f53e2025083); mutant FM14, 2026-09-04T02:19:22Z
+FCOV-EXPECTATION: gen_rst_boot_cg.cp_boot_addr.high = UNHIT (count=0)
+FCOV-EXPECTATION: gen_rst_boot_cg.cp_boot_low_byte.zero = HIT (count=1)
+FCOV-EXPECTATION: gen_rst_boot_cg.cp_fetch_en_at_release.off = HIT (count=1)
+FCOV-EXPECTATION: gen_rst_boot_cg.cp_pending.none = HIT (count=1)
+FCOV-EXPECTATION: gen_rst_boot_cg.cp_first_event.first_instr_retire = HIT (count=1)
+FCOV-EXPECTATION: gen_rst_boot_cg.cp_hart_id.zero = HIT (count=1)
+FCOV-EXPECTATION: gen_rst_boot_cg.cp_reset_kind.power_on = HIT (count=1)
+FCOV-EXPECTATION: gen_rst_boot_cg.cp_boot_to_req_cycles.more = HIT (count=1)
+FCOV-EXPECTATION: FAIL - 1 declared bin(s) not hit: gen_rst_boot_cg.cp_boot_addr.high

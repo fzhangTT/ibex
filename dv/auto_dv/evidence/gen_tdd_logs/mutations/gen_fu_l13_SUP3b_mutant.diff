@@ -1,0 +1,12 @@
+240c240
+<   assign u_rvfi_if.rs3_addr = rvfi_rs3_addr;   assign u_rvfi_if.rd_addr = rvfi_rd_addr;
+---
+>   assign u_rvfi_if.rs3_addr = rvfi_rs3_addr;   assign u_rvfi_if.rd_addr = (rvfi_valid && rvfi_order == 64'd18) ? 5'd0 : rvfi_rd_addr;   // MUT-SUP3
+242c242
+<   assign u_rvfi_if.rs3_rdata = rvfi_rs3_rdata; assign u_rvfi_if.rd_wdata = rvfi_rd_wdata;
+---
+>   assign u_rvfi_if.rs3_rdata = rvfi_rs3_rdata; assign u_rvfi_if.rd_wdata = (rvfi_valid && rvfi_order == 64'd18) ? 32'd0 : rvfi_rd_wdata;   // MUT-SUP3
+250c250
+<   assign u_rvfi_if.ext_rf_wr_suppress = rvfi_ext_rf_wr_suppress;
+---
+>   assign u_rvfi_if.ext_rf_wr_suppress = rvfi_ext_rf_wr_suppress | (rvfi_valid && rvfi_order == 64'd18);   // MUT-SUP3: a lying suppress on the clean c.lw of the second word

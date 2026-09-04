@@ -98,3 +98,22 @@ landing's gen_fcov_pkg.sv (8faf5e0d8b481186).
 
 A first FM15 form swapped bits 7 and 6; with both mixed bins hit by the program the swap is invisible to a bin checker, so the mutant
 drops one bit instead (recorded so that nobody re-tries the swap).
+
+## Landing 11: FM12-FM15 against the landing sources
+
+The landing-10 batch (fm_sliceA over an older mut_oot_fcov.sh) hashed gen_rvfi_pkg.sv as its canary (1d9e2f8d9e5927dd) and its ablation step
+crashed (mkablation.py built every mutant's ablation from any directory), so the landing-10 ablation checks were run by hand without a stamp
+and the mutant diffs were not retained (CM138-Ma-1 / Ma-2, tb_l11 M-1 / M-2). Re-run in landing 11 (fm_l11.sh): the mutant copies come from
+l11_root, the canary line hashes the mutated file's copy in the source tree (`dv/auto_dv/env/gen_fcov_pkg.sv sha256 51315dd2b793c8a2`), the
+mutation as applied is retained (gen_fu_l13_FM1x_mutant.diff), the checker runs on the slice's proof manifest and on its ablation manifest
+against the mutant's own urg report, and both check logs carry a stamp (manifest path and md5, report directory, build sha, mutant id).
+
+| id | catch (the checker on the proof manifest) | ablation (the manifest without the hidden bins) |
+|---|---|---|
+| FM12 (gen_rvfi_record_cg: plus4 classed as plus2) | FAIL: `1 declared bin(s) not hit: gen_rvfi_record_cg.cp_pc_delta.plus4` (gen_fu_l13_FM12_check.log; build e76e09cd462bb372) | PASS, all 29 declared bins hit (gen_fu_l13_FM12_ablation_check.log) |
+| FM13 (gen_mul_timing_cg: a load before the multiply classed as ALU) | FAIL: `cp_prev.load` not hit (gen_fu_l13_FM13_check.log; ce582876c7996cb2) | PASS, 13 bins (gen_fu_l13_FM13_ablation_check.log) |
+| FM14 (gen_rst_boot_cg: a high boot page classed as mid) | FAIL: `cp_boot_addr.high` not hit (gen_fu_l13_FM14_check.log; 7ad31f53e2025083) | PASS, 7 bins (gen_fu_l13_FM14_ablation_check.log) |
+| FM15 (gen_sec_ctrl_inputs_cg: the read-back drops double_fault_seen) | FAIL: `cp_bits67_readback.b6_1_b7_1, b6_0_b7_1` not hit (gen_fu_l13_FM15_check.log; e86e513b22de3b85) | PASS, 8 bins (gen_fu_l13_FM15_ablation_check.log) |
+
+The batch driver log is gen_fu_l13_oot_mutation_batch_fm_l11.log; the ablation manifests in evidence/ are the ones checked (identical to the
+mutant directories' copies).

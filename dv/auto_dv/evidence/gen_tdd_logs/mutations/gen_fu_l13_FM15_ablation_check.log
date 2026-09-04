@@ -1,0 +1,10 @@
+# check of /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/l11_root/dv/auto_dv/evidence/gen_fcov_proof_slice5d_fm15_ablation.fcov.yaml (md5 e18a976a88417c467d7588975c187c01) against /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/FM15/urg (urg text report of the mutant's catch run; build sources sha256: e86e513b22de3b85); mutant FM15, 2026-09-04T02:19:23Z
+FCOV-EXPECTATION: gen_sec_ctrl_inputs_cg.cp_event.fetch_en_change = HIT (count=1)
+FCOV-EXPECTATION: gen_sec_ctrl_inputs_cg.cp_event.cpuctrl_read = HIT (count=6)
+FCOV-EXPECTATION: gen_sec_ctrl_inputs_cg.cp_bit8_readback.one = HIT (count=6)
+FCOV-EXPECTATION: gen_sec_ctrl_inputs_cg.cp_bits67_readback.b6_1_b7_0 = HIT (count=2)
+FCOV-EXPECTATION: gen_sec_ctrl_inputs_cg.cp_bits67_readback.b6_0_b7_0 = HIT (count=4)
+FCOV-EXPECTATION: gen_sec_ctrl_inputs_cg.cp_fetch_en_val.on = HIT (count=1)
+FCOV-EXPECTATION: gen_sec_ctrl_inputs_cg.cp_key_delay.immediate = HIT (count=6)
+FCOV-EXPECTATION: gen_sec_ctrl_inputs_cg.cp_rvfi_ext_key_valid.one = HIT (count=6)
+FCOV-EXPECTATION: PASS - all 8 declared bins hit

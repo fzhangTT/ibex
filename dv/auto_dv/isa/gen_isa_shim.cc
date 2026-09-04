@@ -209,7 +209,9 @@ std::shared_ptr<gen_masked_csr_t> g_hpm_lo[GEN_MHPM_COUNTER_NUM], g_hpm_hi[GEN_M
 std::shared_ptr<gen_mcountinhibit_csr_t> g_mcountinhibit;   // Ibex's mcountinhibit (T-235); Spike's own stays 0 so its minstret keeps counting
 uint64_t g_inh = 0;              // retirements Spike counted that Ibex's minstret did not (IR held; the two write corners)
 int32_t  g_gap = 0;              // cycles between this record's retirement and the previous one's (1 = an instruction retired in the write cycle)
-bool     g_minstret_written = false, g_prev_minstret_written = false;   // this step's and the previous step's minstret / minstreth write
+bool     g_minstret_written = false, g_prev_minstret_written = false;
+class gen_minstret_proxy_t;
+static std::shared_ptr<gen_minstret_proxy_t> g_minstret_view;   // the scoreboard's uncounted retirements go here   // this step's and the previous step's minstret / minstreth write
 bool     g_in_step = false;      // a write from the TB (not an instruction) must not eat the next retirement's increment
 uint32_t g_boot = 0;
 uint32_t g_mcounteren_writable = 1;
@@ -234,19 +236,21 @@ class gen_minstret_proxy_t {   // the shared 64-bit view; the two CSR objects be
   explicit gen_minstret_proxy_t(wide_counter_csr_t_p spike) : spike_(spike) {}
   uint64_t read() const noexcept { return spike_->read() - g_inh; }
   void write_half(bool high, uint32_t v) noexcept {
-    const uint64_t cur = read(), pre = spike_->read();
+    const uint64_t cur = read();
     const uint64_t val = high ? ((uint64_t)v << 32) | (cur & 0xFFFFFFFFu) : (cur & ~(uint64_t)0xFFFFFFFFu) | v;
     g_inh = 0;
     // the corners need an instruction that retired in the write cycle (gap 1) and was counted: a writer retiring there was counted by
     // neither side (Spike's written flag, rtl/ibex_id_stage.sv:1213-1220), so nothing is lost after it
-    if (!(g_mcountinhibit && g_mcountinhibit->ir_inhibited()) && g_gap == 1 && !g_prev_minstret_written) {
+    // a TB write is no instruction: no retirement coincides with it, so neither corner applies to it
+    if (g_in_step && !(g_mcountinhibit && g_mcountinhibit->ir_inhibited()) && g_gap == 1 && !g_prev_minstret_written) {
       if (high) g_inh = 1;                                            // the h write reloads the low word with its pre-increment value
-      else if ((pre & 0xFFFFFFFFu) == 0) g_inh = (uint64_t)1 << 32;   // the carry of the wrapped low word reached Spike's high word, not Ibex's
+      else if ((cur & 0xFFFFFFFFu) == 0) g_inh = (uint64_t)1 << 32;   // Ibex's low word wrapped in the write cycle: the carry reached Spike's high word, not Ibex's
     }
     spike_->write((reg_t)val);
     if (!g_in_step) spike_->bump(0);   // Spike skips the increment after a write, meant for the writing instruction: not for a TB write
-    g_minstret_written = true;
+    if (g_in_step) g_minstret_written = true;   // only the program's writer makes the next step skip the corners
   }
+  void count_uncounted(uint64_t n) noexcept { spike_->bump((reg_t)n); }   // a retirement the model never stepped (a draft-B op the scoreboard executed itself)
  private:
   wide_counter_csr_t_p spike_;
 };
@@ -285,6 +289,7 @@ void legalize_after_reset() {
   gen_install_counter_holders(g_proc.get(), s, g_mcountinhibit);   // T-235 part R: mcountinhibit, mhpmcounter13..31, mhpmevent13..31
   {
     auto view = std::make_shared<gen_minstret_proxy_t>(s->minstret);
+    g_minstret_view = view;
     auto lo = std::make_shared<gen_minstret_half_csr_t>(g_proc.get(), CSR_MINSTRET, view, false);
     auto hi = std::make_shared<gen_minstret_half_csr_t>(g_proc.get(), CSR_MINSTRETH, view, true);
     s->csrmap[CSR_MINSTRET] = lo; s->csrmap[CSR_MINSTRETH] = hi;
@@ -706,6 +711,9 @@ void gen_isa_set_hpm(int32_t idx, uint32_t lo, uint32_t hi) {
 }
 void gen_isa_set_status(int32_t ic_scr_key_valid) { g_ic_scr_key_valid = ic_scr_key_valid != 0; }
 void gen_isa_set_retire_gap(int32_t gap) { g_gap = gap; }
+void gen_isa_count_retire(int32_t n) {
+  if (g_minstret_view && !(g_mcountinhibit && g_mcountinhibit->ir_inhibited())) g_minstret_view->count_uncounted((uint64_t)n);
+}
 void gen_isa_note_memory_write(uint32_t addr, uint32_t data, uint8_t be) {
   for (int k = 0; k < 4; k++) if (be & (1 << k)) mem_wr8(addr + k, (uint8_t)(data >> (8 * k)));
 }
