@@ -525,8 +525,8 @@ owners, a tier-check test that is not `measured: false`, a measured test whose p
 `+gen_chk_sva_b8` (LOG-067, knob name per LOG-076: the knob is for unmeasured B8 evidence runs only), a measured test that violates a
 `MEASURED_KNOB_CONDITIONS` row (LOG-077: icache ECC injection, tag-RAM or data-RAM rate at rare or frequent, with
 `+gen_chk_alert_minor` off, the table default counting as on), a plusarg token carrying whitespace
-(`TESTLIST_PLUSARG_RULE`: VCS converts a whitespace-carrying value to 0, so the entry would not mean what it
-reads), an `fcov_expectation_file` that is not null and not an existing file
+(`TESTLIST_PLUSARG_RULE` carries the reason; it is not restated here, so the two cannot drift apart),
+an `fcov_expectation_file` that is not null and not an existing file
 directly under `dv/auto_dv/fcov_expectations/`
 (the schema's manifest home, the one directory the covergroup-set and manifest tools read; a check-tier entry with a proof manifest under evidence uses null)
 or, for a measured entry, not named `<entry>.fcov.yaml` (validate_manifest needs the manifest's test, the file stem and the entry name

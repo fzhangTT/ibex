@@ -97,6 +97,10 @@ row cited it while it lived only in the gitignored work tree. It is the redirect
 never retyped: the merged testlist digest, the constant drift check, the eight flow self-tests, the loader entry
 count, the red-signature check, the excerpt tool self-test, and both testlist tools, followed by the eleven gate
 readings across the loader and the run path and the seven appended entries run through the run-path gate as authored.
+Three of its self-test lines report a failure and are expected: gen_flow_util at rc=2 with BAD=1 (build-input gate
+case 13), gen_serve_requests at rc=2 with BAD=1 (its case 12) and gen_mirror at rc=1 with ok=0. All three are
+git-dependent (git ls-files, a HEAD-to-HEAD delta, and a git archive of HEAD) and fail only because a detached
+archive carries no .git; on the tracked tree all three pass. The log is not an unexplained red.
 Two of its lines name absolute scratch paths: those are the throwaway output destinations the two testlist tools were
 given so they never write into evidence, and they are part of the commands' own output rather than added afterwards.
 The readings it carries are independently pinned by the committed self-tests, which is the alternative CR-F14-L-1
