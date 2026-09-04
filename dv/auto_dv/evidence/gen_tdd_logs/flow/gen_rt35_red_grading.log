@@ -1,0 +1,463 @@
+# rt35: a red fixture whose only failure is an unmet fcov expectation, graded where its evidence is
+#
+# WHAT THIS LOG ESTABLISHES. A red fixture exists to fail one declared way. When that way is an unmet functional
+# coverage expectation, the simulation PASSES by construction, so grading the fixture on its sim log calls the
+# checker dead before the check that fails it has run. This log shows the grading moved to where the evidence is,
+# in all four directions the change has, each direction a real run of one entry at one seed on one build with only
+# the fixture manifest or the invoking stage changing.
+#
+# WHAT IT DOES NOT ESTABLISH. The entry it uses is NOT committed: it lives only in the scratch source root named
+# below, as a copy of the committed gen_ut_lockstep_icache_ecc_tag_disabled with red_fixture and red_expect added.
+# So nothing here is a property of any commit's testlist. No committed entry has this shape at all: measured through
+# the loader on the committed testlist, 102 entries carry 22 red fixtures and 27 fcov manifests and ZERO carry both,
+# which is why the defect in PART C is latent rather than live. The two run directories of PART C are
+# scratchpad paths and are not durable; what is durable is this log.
+#
+# IDENTITY
+# date_utc            : 2026-09-04T17:27:34Z
+# host                : soc-l-11
+# clone HEAD          : 24104029bb29a191c6aada5ee72fa4f96da78da4   (at assembly; see the note below)
+# build outdir        : /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/runtime/out/l25_exercise_1430/build/gen_tb
+# build source root   : /proj_soc/user_dev/fzhang/ibex_dv_mirror_head/813994b3d483
+# entry               : gen_ut_lockstep_icache_ecc_fcov_red   (red_fixture: true, measured: false, tier check)
+# seed                : 1   (every direction; +ntb_random_seed=1 and RANDOM_SEED=1)
+# scratch source root : /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/rt35/root
+#   direction one     : /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/rt35/e1
+#   direction two     : /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/rt35/e2
+#   direction three   : /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/rt35/e3
+#   direction four    : /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/rt35/e4   (the fixed flow)
+#   PART C control    : /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/rt35/e5   (the flow before this fix)
+#   positive control  : /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/rt35/e6   (the committed sibling entry)
+#
+# THE BUILD, BY THE FLOW'S OWN FILELIST DIGEST, RECOMPUTED HERE AND NOT COPIED FROM THE MANIFEST:
+#   build identity   b48479a3bc6f1d9f   (filelist_digest over gen_rtl.f + gen_tb.f, 117 sources)
+#   gen_build_identity.py exit status above: 0 means the recomputed digest equals the build manifest's own
+#   inputs.sources_sha256 first 16 hex. That key is the filelist digest over gen_rtl.f and gen_tb.f; it is NOT
+#   build_sources_sha256, which gen_tb_local.sh writes over a find of four source directories.
+#
+# THE CODE UNDER TEST (the working-tree files this touch hands, hashed after the last edit). The runs in PART B
+# read the flow from the scratch source root, into which these same bytes were installed at the head of that run,
+# and the simulation comes from the prebuilt simv named above, so no run below reads the clone's HEAD as an input.
+# Where a HEAD is printed it is provenance, not a build input, and two stamps can differ because other roles commit
+# while this touch is in progress.
+#   e1f6734747bf  dv/auto_dv/flow/gen_verdict.py
+#   6d20a0b5dc32  dv/auto_dv/flow/gen_run.py
+#   0c495812d1ee  dv/auto_dv/flow/gen_flow_util.py
+#   57b934c34c91  dv/auto_dv/flow/gen_regress.py
+#   0789b7b5389d  dv/auto_dv/flow/gen_flow_const.py
+#   00e94d7c8cb6  dv/auto_dv/tools/gen_read_keyed.py
+#   c65b4f17f697  dv/auto_dv/tools/gen_compare_forms.py
+
+================================================================================
+PART A  the three fixture manifests, as each run itself recorded them
+================================================================================
+Each run copies the manifest it consumed into its own directory as fcov_manifest_used.yaml (gen_fcov.py:349) and
+records that copy's sha256 in result.yaml. The texts below are those copies, so they are what the runs read and not
+a later transcription. The fixture is one declared bin plus one anti-vacuity note; the writer builds the document as
+a dict and dumps it, because a hand-rolled fixture was malformed twice, once on a colon inside a note and once on
+line wrapping.
+
+--- /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/rt35/e1/fcov_manifest_used.yaml  (sha256 26948ce0f9e0)
+# DETECTOR-CONTROL FIXTURE, scratch source root only.
+test: gen_ut_lockstep_icache_ecc_fcov_red
+owner: runtime
+bins:
+- gen_ic_ecc_cg.cp_ram.data
+anti_vacuity:
+  gen_ic_ecc_cg.cp_ram.data: unreachable for this entry, which sets the tag-RAM ECC knob and no data-RAM knob
+
+--- /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/rt35/e2/fcov_manifest_used.yaml  (sha256 208a627414bc)
+# DETECTOR-CONTROL FIXTURE, scratch source root only.
+test: gen_ut_lockstep_icache_ecc_fcov_red
+owner: runtime
+bins:
+- gen_ic_ecc_cg.cp_beat.beat0
+anti_vacuity:
+  gen_ic_ecc_cg.cp_beat.beat0: also unreachable but a different bin than red_expect names, so undeclared
+
+--- /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/rt35/e3/fcov_manifest_used.yaml  (sha256 2436b2d4c028)
+# DETECTOR-CONTROL FIXTURE, scratch source root only.
+test: gen_ut_lockstep_icache_ecc_fcov_red
+owner: runtime
+bins:
+- gen_ic_ecc_cg.cp_ram.tag
+anti_vacuity:
+  gen_ic_ecc_cg.cp_ram.tag: reachable by this entry, so the designed failure never occurs
+
+--- the writer reproduces those bytes: the rebuilt direction-one fixture against the run's own copy
+cmp: identical
+
+================================================================================
+PART B  every verdict direction, run end to end
+================================================================================
+The whole run below is one script's output. Its own sections 1 to 3 are the standalone form, where gen_run
+itself runs the expectation check; its section 4 is the regression form, where gen_run does not and the
+regression's pre-merge pass does. Its sections 5 and 6 are the control and the positive control PART C reads.
+
+rt35 red-fixture grading: every direction, one build, one entry, one seed
+date_utc      : 2026-09-04T17:24:57Z
+host          : soc-l-11
+clone HEAD    : 24104029bb29a191c6aada5ee72fa4f96da78da4
+source root   : /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/rt35/root (archive of an earlier HEAD plus the fixture entry; its flow is swapped per section)
+build         : /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/runtime/out/l25_exercise_1430/build/gen_tb
+entry         : gen_ut_lockstep_icache_ecc_fcov_red (red_fixture: true, measured: false)
+sibling entry : gen_ut_lockstep_icache_ecc_tag_disabled (committed, not a red fixture)
+seed          : 1
+
+================================================================
+SECTION 0  the flow version under test
+================================================================
+FLOW VERSION INSTALLED IN THE SCRATCH SOURCE ROOT: fixed
+  6d20a0b5dc32  dv/auto_dv/flow/gen_run.py
+  e1f6734747bf  dv/auto_dv/flow/gen_verdict.py
+  0c495812d1ee  dv/auto_dv/flow/gen_flow_util.py
+  57b934c34c91  dv/auto_dv/flow/gen_regress.py
+  0789b7b5389d  dv/auto_dv/flow/gen_flow_const.py
+  00e94d7c8cb6  dv/auto_dv/tools/gen_read_keyed.py
+
+================================================================
+SECTION 1  direction one: the declared bin is unreachable and red_expect names it -> RED-OK
+================================================================
+wrote /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/rt35/root/dv/auto_dv/fcov_expectations/gen_ut_lockstep_icache_ecc_fcov_red.fcov.yaml bin=gen_ic_ecc_cg.cp_ram.data (reparsed equal)
+--- fixture in force, full text:
+    # DETECTOR-CONTROL FIXTURE, scratch source root only.
+    test: gen_ut_lockstep_icache_ecc_fcov_red
+    owner: runtime
+    bins:
+    - gen_ic_ecc_cg.cp_ram.data
+    anti_vacuity:
+      gen_ic_ecc_cg.cp_ram.data: unreachable for this entry, which sets the tag-RAM ECC knob and no data-RAM knob
+  gen_run exit status: 0
+  verdict         = RED-OK
+  reason          = red fixture failed as designed (red_expect matched): fcov expectation unmet: 1 declared bin(s) not hit ['gen_ic_ecc_cg.cp_ram.data']
+  evidence_line   = fcov expectation unmet: 1 declared bin(s) not hit ['gen_ic_ecc_cg.cp_ram.data']
+  red_pre_grading = {'verdict': 'PASS', 'reason': 'no collected failure mechanism; end marker and config banner present', 'evidence_line': None}
+  fcov_check      = status=UNHIT declared=1 hit=0 unmet_bins=['gen_ic_ecc_cg.cp_ram.data']
+  sim exit_code   = 0   (the simulation itself)
+
+================================================================
+SECTION 2  direction two: a DIFFERENT unreachable bin, so the failure is undeclared -> FAIL
+================================================================
+wrote /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/rt35/root/dv/auto_dv/fcov_expectations/gen_ut_lockstep_icache_ecc_fcov_red.fcov.yaml bin=gen_ic_ecc_cg.cp_beat.beat0 (reparsed equal)
+--- fixture in force, full text:
+    # DETECTOR-CONTROL FIXTURE, scratch source root only.
+    test: gen_ut_lockstep_icache_ecc_fcov_red
+    owner: runtime
+    bins:
+    - gen_ic_ecc_cg.cp_beat.beat0
+    anti_vacuity:
+      gen_ic_ecc_cg.cp_beat.beat0: also unreachable but a different bin than red_expect names, so undeclared
+  gen_run exit status: 2
+  verdict         = FAIL
+  reason          = red fixture failed for an undeclared reason: fcov expectation unmet: 1 declared bin(s) not hit ['gen_ic_ecc_cg.cp_beat.beat0']; red_expect 'fcov expectation unmet: [0-9]+ declared bin\\(s\\) not hit .*gen_ic_ecc_cg\\.cp_ram\\.data' does not match the evidence "fcov expectation unmet: 1 declared bin(s) not hit ['gen_ic_ecc_cg.cp_beat.beat0'"
+  evidence_line   = fcov expectation unmet: 1 declared bin(s) not hit ['gen_ic_ecc_cg.cp_beat.beat0']
+  red_pre_grading = {'verdict': 'PASS', 'reason': 'no collected failure mechanism; end marker and config banner present', 'evidence_line': None}
+  fcov_check      = status=UNHIT declared=1 hit=0 unmet_bins=['gen_ic_ecc_cg.cp_beat.beat0']
+  sim exit_code   = 0   (the simulation itself)
+
+================================================================
+SECTION 3  direction three: a REACHABLE bin, so the designed failure never occurs -> FAIL
+================================================================
+wrote /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/rt35/root/dv/auto_dv/fcov_expectations/gen_ut_lockstep_icache_ecc_fcov_red.fcov.yaml bin=gen_ic_ecc_cg.cp_ram.tag (reparsed equal)
+--- fixture in force, full text:
+    # DETECTOR-CONTROL FIXTURE, scratch source root only.
+    test: gen_ut_lockstep_icache_ecc_fcov_red
+    owner: runtime
+    bins:
+    - gen_ic_ecc_cg.cp_ram.tag
+    anti_vacuity:
+      gen_ic_ecc_cg.cp_ram.tag: reachable by this entry, so the designed failure never occurs
+  gen_run exit status: 2
+  verdict         = FAIL
+  reason          = red fixture passed unexpectedly: the failure it exists to show did not occur
+  evidence_line   = None
+  red_pre_grading = {'verdict': 'PASS', 'reason': 'no collected failure mechanism; end marker and config banner present', 'evidence_line': None}
+  fcov_check      = status=PASS declared=1 hit=1 unmet_bins=[]
+  sim exit_code   = 0   (the simulation itself)
+
+================================================================
+SECTION 4  direction four, the fixed flow: the regression shape, where gen_run does not check
+================================================================
+wrote /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/rt35/root/dv/auto_dv/fcov_expectations/gen_ut_lockstep_icache_ecc_fcov_red.fcov.yaml bin=gen_ic_ecc_cg.cp_ram.data (reparsed equal)
+--- fixture in force, full text:
+    # DETECTOR-CONTROL FIXTURE, scratch source root only.
+    test: gen_ut_lockstep_icache_ecc_fcov_red
+    owner: runtime
+    bins:
+    - gen_ic_ecc_cg.cp_ram.data
+    anti_vacuity:
+      gen_ic_ecc_cg.cp_ram.data: unreachable for this entry, which sets the tag-RAM ECC knob and no data-RAM knob
+--- gen_run with no --fcov-check, exactly as gen_regress.run_one invokes it:
+  gen_run exit status: 2
+  verdict         = NOT_RUN
+  reason          = red fixture judged on an fcov expectation that no stage of this run checked (no coverage vdb, or the check was not requested)
+  evidence_line   = None
+  red_pre_grading = {'verdict': 'PASS', 'reason': 'no collected failure mechanism; end marker and config banner present', 'evidence_line': None}
+  fcov_check      = None
+  sim exit_code   = 0   (the simulation itself)
+--- then the regression's own pre-merge pass, called on that record:
+PROBE flow_dir=/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/flow gen_regress.py=57b934c34c91 gen_run.py=6d20a0b5dc32
+BEFORE verdict='NOT_RUN' reason='red fixture judged on an fcov expectation that no stage of this run checked (no coverage vdb, or the check was not requested)' fcov_check=None result.yaml sha256[:12]=585813dcf72a
+AFTER  verdict='RED-OK' reason="red fixture failed as designed (red_expect matched): fcov expectation unmet: 1 declared bin(s) not hit ['gen_ic_ecc_cg.cp_ram.data']" result.yaml sha256[:12]=48d8e26b5c99
+AFTER  fcov_check.status=UNHIT declared=1 hit=0 unmet=['gen_ic_ecc_cg.cp_ram.data']
+result.yaml rewritten by post_fcov_checks: YES
+--- the record after the pass:
+  verdict         = RED-OK
+  reason          = red fixture failed as designed (red_expect matched): fcov expectation unmet: 1 declared bin(s) not hit ['gen_ic_ecc_cg.cp_ram.data']
+  evidence_line   = fcov expectation unmet: 1 declared bin(s) not hit ['gen_ic_ecc_cg.cp_ram.data']
+  red_pre_grading = {'verdict': 'PASS', 'reason': 'no collected failure mechanism; end marker and config banner present', 'evidence_line': None}
+  fcov_check      = status=UNHIT declared=1 hit=0 unmet_bins=['gen_ic_ecc_cg.cp_ram.data']
+  sim exit_code   = 0   (the simulation itself)
+
+================================================================
+SECTION 5  the same, on the flow as it stood BEFORE this fix (the control)
+================================================================
+FLOW VERSION INSTALLED IN THE SCRATCH SOURCE ROOT: prefix
+  0473c047ecd4  dv/auto_dv/flow/gen_run.py
+  e1f6734747bf  dv/auto_dv/flow/gen_verdict.py
+  5b65f7f8a0d8  dv/auto_dv/flow/gen_flow_util.py
+  af086ad01bb4  dv/auto_dv/flow/gen_regress.py
+  d16c8bcb7d03  dv/auto_dv/flow/gen_flow_const.py
+  d07114e6e774  dv/auto_dv/tools/gen_read_keyed.py
+--- gen_run with no --fcov-check:
+  gen_run exit status: 2
+  verdict         = FAIL
+  reason          = red fixture passed unexpectedly: the failure it exists to show did not occur
+  evidence_line   = None
+  red_pre_grading = None
+  fcov_check      = None
+  sim exit_code   = 0   (the simulation itself)
+--- then the regression's own pre-merge pass, from the pre-fix flow:
+PROBE flow_dir=/tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/rt35/root/dv/auto_dv/flow gen_regress.py=af086ad01bb4 gen_run.py=0473c047ecd4
+BEFORE verdict='FAIL' reason='red fixture passed unexpectedly: the failure it exists to show did not occur' fcov_check=None result.yaml sha256[:12]=fd92f3b97f83
+AFTER  verdict='FAIL' reason='red fixture passed unexpectedly: the failure it exists to show did not occur' result.yaml sha256[:12]=fd92f3b97f83
+AFTER  fcov_check.status=None declared=None hit=None unmet=None
+result.yaml rewritten by post_fcov_checks: NO
+--- the record after the pass:
+  verdict         = FAIL
+  reason          = red fixture passed unexpectedly: the failure it exists to show did not occur
+  evidence_line   = None
+  red_pre_grading = None
+  fcov_check      = None
+  sim exit_code   = 0   (the simulation itself)
+
+================================================================
+SECTION 6  positive control: the pre-fix pass is not inert, it acts on a run it admits
+================================================================
+--- a real PASS run of the committed sibling entry with its committed manifest, no --fcov-check:
+  gen_run exit status: 0
+  verdict         = PASS
+  reason          = no collected failure mechanism; end marker and config banner present
+  evidence_line   = None
+  red_pre_grading = None
+  fcov_check      = None
+  sim exit_code   = 0   (the simulation itself)
+--- the same pre-fix pre-merge pass on that record:
+PROBE flow_dir=/tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/rt35/root/dv/auto_dv/flow gen_regress.py=af086ad01bb4 gen_run.py=0473c047ecd4
+BEFORE verdict='PASS' reason='no collected failure mechanism; end marker and config banner present' fcov_check=None result.yaml sha256[:12]=257abc0b588b
+AFTER  verdict='PASS' reason='no collected failure mechanism; end marker and config banner present' result.yaml sha256[:12]=a39ae04eeef5
+AFTER  fcov_check.status=PASS declared=6 hit=6 unmet=[]
+result.yaml rewritten by post_fcov_checks: YES
+
+================================================================
+SECTION 7  the flow version restored, and the fixture left at direction one
+================================================================
+FLOW VERSION INSTALLED IN THE SCRATCH SOURCE ROOT: fixed
+  6d20a0b5dc32  dv/auto_dv/flow/gen_run.py
+  e1f6734747bf  dv/auto_dv/flow/gen_verdict.py
+  0c495812d1ee  dv/auto_dv/flow/gen_flow_util.py
+  57b934c34c91  dv/auto_dv/flow/gen_regress.py
+  0789b7b5389d  dv/auto_dv/flow/gen_flow_const.py
+  00e94d7c8cb6  dv/auto_dv/tools/gen_read_keyed.py
+wrote /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/rt35/root/dv/auto_dv/fcov_expectations/gen_ut_lockstep_icache_ecc_fcov_red.fcov.yaml bin=gen_ic_ecc_cg.cp_ram.data (reparsed equal)
+done: 2026-09-04T17:26:09Z
+
+================================================================================
+PART C  the defect this touch also fixes, and why it was latent
+================================================================================
+Read the run's own section 5 in PART B against its section 4. Same entry, same build, same seed, same fixture manifest; the
+only difference is the flow version, named by hash in each section's own header.
+
+  the flow before this fix   gen_run grades the fixture on a passing sim log and calls it FAIL "red fixture passed
+                             unexpectedly". The regression's pre-merge pass then SKIPS the run, because its gate
+                             admitted only PASS and XFAIL: its section 5 prints the same result.yaml hash before
+                             and after the pass, "rewritten: NO", and fcov_check still None. The check the fixture
+                             exists to fail never runs, so the entry fails every regression it appears in, for a
+                             reason that is not its declared one.
+  the fixed flow             gen_run parks the run as NOT_RUN naming the missing check and records the pre-grading
+                             verdict; the pre-merge pass admits it, runs the check (1 declared bin, 0 hit) and
+                             grades it RED-OK, and its section 4 prints the two differing result.yaml hashes with
+                             "rewritten: YES". Every hash in this paragraph is read from PART B rather than
+                             repeated here, so a re-run cannot leave the prose behind.
+
+The run's section 6 is the control that keeps the skip honest: the same pre-fix pre-merge pass, on a real PASS run of the
+committed sibling entry with its committed manifest, DID act, setting fcov status PASS over 6 declared and 6 hit
+bins and rewriting result.yaml. So the "NO" in its section 5 is a skip of that run, not an inert probe.
+
+The defect is latent, not live: no committed entry carries both red_fixture and an fcov manifest, so no entry in the
+tree changes verdict. The first entry to carry both would be the standing guard, and it would have failed the first
+regression that included it.
+
+WHY NOT_RUN RATHER THAN THE ACCUSING FAIL. When no stage checks the expectation, "red fixture passed unexpectedly"
+asserts the checker is dead on a run that has no evidence either way. NOT_RUN asserts only what happened. It is
+visible: the regression summary counts it and never folds it into the pass rate.
+
+================================================================================
+PART D  where the parked verdict can and cannot be seen
+================================================================================
+THE EXIT STATUS follows the final verdict, measured in PART B above: direction one exits 0 (RED-OK is a designed
+outcome), directions two, three and four exit 2.
+
+THE KEYED OUTPUT never reads a verdict at all. gen_read_keyed.py reads result.yaml's fcov_check and re-reads the urg
+report itself, and says so on every line it prints. Measured on three real run directories:
+
+--- gen_read_keyed.py /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/rt35/e1
+
+=== gen_ut_lockstep_icache_ecc_fcov_red ===
+  declared 1 | my reading agrees on 1, differs on 0, absent from my reading 0
+  the checker's own status line, NOT relied on above: UNHIT
+  bins no manifest declares, from the report alone: {'gen_ic_ecc_cg.cp_no_alert_case.masked_duplicate_copy': 0, 'gen_ic_ecc_cg.cp_no_alert_case.during_invalidation': 0}
+
+every declared bin agrees with this file's own reading of the report
+    tool exit status: 0
+--- gen_read_keyed.py /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/rt35/e4
+
+=== gen_ut_lockstep_icache_ecc_fcov_red ===
+  declared 1 | my reading agrees on 1, differs on 0, absent from my reading 0
+  the checker's own status line, NOT relied on above: UNHIT
+  bins no manifest declares, from the report alone: {'gen_ic_ecc_cg.cp_no_alert_case.masked_duplicate_copy': 0, 'gen_ic_ecc_cg.cp_no_alert_case.during_invalidation': 0}
+
+every declared bin agrees with this file's own reading of the report
+    tool exit status: 0
+--- gen_read_keyed.py /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/rt35/e5
+
+=== gen_ut_lockstep_icache_ecc_fcov_red ===
+  no derived report: fcov status None
+
+1 disagreement(s) between the checker and this file's reading
+    tool exit status: 1
+  The first directory is the standalone RED-OK, the second is the same verdict reached through the regression's
+  pre-merge pass, and the third is the pre-fix control. The first two agree line for line, so the keyed reading
+  does not depend on which stage ran the check. On the control, where the check never ran, the tool says "no
+  derived report: fcov status None" and exits 1 rather than reporting agreement, so the broken state of PART C
+  would have been caught here too.
+
+THE RESULTS MANIFEST is written from the same run records the pre-merge pass mutates in place. gen_regress calls
+post_fcov_checks at gen_regress.py:658 and then re-summarises and re-dumps the manifest from that same list at
+:709 (manifest.update with summarize(runs)) and :712, so the final manifest.yaml carries the graded verdict; the
+dump inside the run loop at :653 is a progress snapshot that :712 overwrites. The identifiers are given beside the
+line numbers because the numbers shift whenever this file grows. That ordering is a source-order statement, NOT a measurement: a real regression of
+this entry is not reachable, because gen_build refuses a bound source root that carries no head-mode mirror
+manifest (gen_build.py:181-189), and the alternatives were writing the fixture into a mirror head tree that is not
+mine or fabricating a mirror manifest for the scratch root. Instead the contract is pinned by the two gen_regress
+self-test cases in PART E, which fail against the committed gate.
+
+================================================================================
+PART E  the self-test cases, against the committed rule and against the fix
+================================================================================
+Each new case is run twice: once with the single rule it pins reverted to its committed form inside a detached
+archive, once with the fix. A case that passes both ways would pin nothing.
+
+rt35 reds: the new self-test cases against the committed rule and against the fix
+date_utc : 2026-09-04T17:23:59Z
+root     : /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/rt35/arch_a759752  (detached archive of the clone HEAD with the touched files copied in)
+
+================================================================
+RED 1  the pre-merge gate on the COMMITTED rule (verdict must be PASS or XFAIL)
+================================================================
+dv/auto_dv/flow/gen_regress.py reverted to the committed rule
+  cbd2189e9a25  gen_regress.py under test
+SELF-TEST BAD the pre-merge pass admits a parked deferred red instead of skipping it (verdict NOT_RUN, fcov status None)
+SELF-TEST BAD the manifest summary counts the verdict the pre-merge pass left, not the parked one (not_run=1 not_run=1)
+SELF-TEST: FAIL
+  self-test exit: 2
+
+================================================================
+GREEN 1  the same two cases with the gate widened
+================================================================
+dv/auto_dv/flow/gen_regress.py reverted back to the fixed rule
+  57b934c34c91  gen_regress.py under test
+SELF-TEST ok  the pre-merge pass admits a parked deferred red instead of skipping it (verdict FAIL, fcov status PROTOCOL_ERROR)
+SELF-TEST ok  the manifest summary counts the verdict the pre-merge pass left, not the parked one (fail=1 not_run=0)
+SELF-TEST: PASS
+  self-test exit: 0
+
+================================================================
+RED 2  the unchecked-fixture verdict on the COMMITTED rule (grade it, accusing the checker)
+================================================================
+dv/auto_dv/flow/gen_run.py reverted to the committed rule
+  2fb2ebe79cdb  gen_run.py under test
+SELF-TEST BAD a deferred red no stage checked is NOT_RUN, not a dead-checker FAIL (got FAIL)
+SELF-TEST ok  a deferred red that DID collect its declared failure is still graded on that evidence (got RED-OK)
+SELF-TEST ok  a deferred red that failed some other way is undeclared, never NOT_RUN (got FAIL)
+SELF-TEST: FAIL
+  self-test exit: 2
+
+================================================================
+GREEN 2  the same three cases with NOT_RUN for an unchecked fixture
+================================================================
+dv/auto_dv/flow/gen_run.py reverted back to the fixed rule
+  6d20a0b5dc32  gen_run.py under test
+SELF-TEST ok  a deferred red no stage checked is NOT_RUN, not a dead-checker FAIL (got NOT_RUN)
+SELF-TEST ok  a deferred red that DID collect its declared failure is still graded on that evidence (got RED-OK)
+SELF-TEST ok  a deferred red that failed some other way is undeclared, never NOT_RUN (got FAIL)
+SELF-TEST: PASS
+  self-test exit: 0
+
+================================================================
+RED 3  the predicate's four cases against a flow that has no such predicate
+================================================================
+NOT CONSTRUCTED: red_grading_deferred does not exist in the committed flow, so its four cases cannot run
+against it at all (NameError, not a BAD line). The predicate is pinned by the two cases above, which fail
+with it present and the rules committed.
+
+done: 2026-09-04T17:24:00Z
+
+================================================================================
+PART F  why this log is retained under gen_tdd_logs/flow, and what happens if it is not
+================================================================================
+The standing guard's own failing log must be retained here, under gen_tdd_logs/flow, and never under
+gen_tdd_logs/lockstep with the family's gen_{group}_red1_stdout naming. The reason is measured, not predicted.
+
+Both loader gates were CALLED on the entry, not read:
+
+entry               : gen_ut_lockstep_icache_ecc_fcov_red
+red_fixture         : True
+fcov_expectation_file: dv/auto_dv/fcov_expectations/gen_ut_lockstep_icache_ecc_fcov_red.fcov.yaml
+red_expect          : fcov expectation unmet: [0-9]+ declared bin\(s\) not hit .*gen_ic_ecc_cg\.cp_ram\.data
+red_grading_deferred: True  (called, not read)
+
+GATE 1  the loader accepted the entry: load_testlist returned 103 entries with it present
+        (a refusal is a SystemExit from load_testlist, so reaching this line IS the measurement)
+
+GATE 2  red_log_for('gen_ut_lockstep_icache_ecc_fcov_red') -> log=None sim=None harness_prefix=None
+        red_signature_check -> None
+        so the retained-log replay has nothing to replay and refuses nothing
+
+GATE 3  the fire_id policy fires only on a red_expect naming 'GEN_TEST_FAIL' without 'fire_':
+        red_expect contains 'GEN_TEST_FAIL': False
+        red_expect contains 'fire_': False
+
+Neither gate refuses the entry as things stand. Now the trap, measured by putting a copy of direction one's own
+failing stdout at the lockstep family's path inside the SCRATCH root and asking the loader again:
+
+ERROR: /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/rt35/root/dv/auto_dv/flow/gen_testlist.yaml: test gen_ut_lockstep_icache_ecc_fcov_red: red_expect 'fcov expectation unmet: [0-9]+ declared bin\\(s\\) not hit .*gen_ic_ecc_cg\\.cp_ram\\.data' refused: no collected evidence line in the retained pinned-red log (gen_lockstep_icache_ecc_fcov_red1_stdout.log: harness ''; verdict FAIL: red fixture failed for an undeclared reason: unexplained exit code 1 with clean log; no collected evidence line for red_)
+probe exit status: 1
+
+So the refusal is the LOADER's, not a warning: with the log at that path every flow command that reads the testlist
+dies on it. The replay cannot see the failure because the failure's evidence is the expectation checker's reason and
+not a line in the simulation's stdout, and the message that comes out reads like a stale signature, which is not
+what is wrong. Recorded here rather than coded around: the retention location is the fix.
+
+The trap was reverted at once, and the same command run a third time to show the tree is as it was:
+
+GATE 1  the loader accepted the entry: load_testlist returned 103 entries with it present
+        (a refusal is a SystemExit from load_testlist, so reaching this line IS the measurement)
+
+GATE 2  red_log_for('gen_ut_lockstep_icache_ecc_fcov_red') -> log=None sim=None harness_prefix=None
+        red_signature_check -> None
+        so the retained-log replay has nothing to replay and refuses nothing
+
+probe exit status: 0
+
+assembled: 2026-09-04T17:27:37Z

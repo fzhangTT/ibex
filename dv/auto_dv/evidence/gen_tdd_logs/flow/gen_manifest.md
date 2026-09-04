@@ -178,6 +178,19 @@ parser would prove nothing. Three sections: the self-test on a fabricated report
 and an absent key are each observed; the four wrong-call paths with exit codes captured directly rather than through
 a pipe; and the tool run against all nine runs of the exercising run, agreeing on all 78 declared bins.
 
+gen_rt35_red_grading.log retains every direction of the red-fixture grading once its declared failure is an unmet
+fcov expectation. The point of the log is that three of its four directions are the ones that make the first worth
+anything: an unreachable declared bin whose name red_expect carries gives RED-OK; a DIFFERENT unreachable bin gives
+FAIL for an undeclared reason; a reachable bin, so the check passes, gives FAIL for a fixture that passed
+unexpectedly. The fourth direction is the regression shape, where gen_run runs no check and the pre-merge pass does,
+and it carries its own control: on the flow before this touch the pre-merge pass SKIPPED the parked run and left
+result.yaml byte-identical, so the entry would have failed every regression for a reason that is not its declared
+one, and a positive control on a real PASS run of the committed sibling shows that pass acting on a run it admits.
+The fixture entry is not committed and no committed entry has its shape, measured as 0 of 102 entries carrying both
+red_fixture and an fcov manifest, so the defect was latent. The log also measures why it must live here: with the
+same failing stdout retained under the lockstep family's naming instead, load_testlist REFUSES the entry outright,
+because the replay cannot see a failure whose evidence is the expectation checker's reason.
+
 | evidence path | source | bytes | md5 |
 |---|---|---|---|
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_gate_rule_red.log | dv/auto_dv/work/runtime/gate_rule_red.log | 926 | 78b72aae6509d2776a43c9314808b01b |
@@ -206,3 +219,4 @@ a pipe; and the tool run against all nine runs of the exercising run, agreeing o
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_cr26_build_identity_selftest.log | (runtime scratchpad) rt34a/gen_cr26_build_identity_selftest.log | 2160 | 3e7d97e63d49aa7a94ccfeff362e8f08 |
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_l25_fcov_detector_control_red.log | (runtime scratchpad) rt34/gen_l25_fcov_detector_control_red.log | 2552 | 662543da2c628e465cef8d88b694886c |
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_read_keyed_selftest.log | (runtime scratchpad) rt34/gen_read_keyed_selftest.log | 2579 | 487794e0876c31e11941a50ffce5b146 |
+| dv/auto_dv/evidence/gen_tdd_logs/flow/gen_rt35_red_grading.log | (runtime scratchpad) rt35/gen_rt35_red_grading.log | 31785 | acc9a35cb98beebf104e6cb77ebc05ac |

@@ -17,6 +17,8 @@ import sys
 from pathlib import Path
 
 USAGE = "usage: gen_read_keyed.py <run-dir> [<run-dir> ...] | --self-test"
+# The coverage plan is the authority for these names; they filter one display line, so a rename shows up as an
+# owed bin the report stops naming rather than as a wrong count.
 OWED_SUFFIXES = ("during_invalidation", "masked_duplicate_copy")
 
 
@@ -48,6 +50,11 @@ def parse_report(grpinfo: Path) -> dict:
             continue
         if re.match(r"^(Covered bins|Uncovered bins|Bins)\s*$", line):
             in_bins, cols = True, None
+            continue
+        # The checker's own reset set: an Excluded/Illegal bins table after a covered one must not be read as more
+        # of that coverpoint, or its rows inflate the listing and a name shared with a declared bin reads as agreement.
+        if re.match(r"^(Excluded/Illegal bins|Variables for)", line):
+            in_bins, cols = False, None
             continue
         if re.match(r"^-{3,}\s*$", line) or not line.strip():
             continue
@@ -114,6 +121,12 @@ Bins
 NAME   COUNT AT LEAST
 only   3     1
 
+Excluded/Illegal bins
+
+NAME   COUNT AT LEAST
+hit_a  99    1
+bogus  42    1
+
 ----------
 """
 
@@ -137,6 +150,12 @@ def _self_test() -> None:
         cond = parsed == want
         ok &= cond
         print("SELF-TEST", "ok " if cond else "BAD", "the parser reads three bins including a Bins-titled table (%s)" % parsed)
+        # The fixture's Excluded/Illegal table carries a row named hit_a, the same name as a real bin of cp_a: if the
+        # table were absorbed, cp_a.hit_a would read 99 instead of 7 and a declared-bin miss could read as agreement.
+        cond = "gen_x_cg.cp_b.bogus" not in parsed and parsed.get("gen_x_cg.cp_a.hit_a") == 7
+        ok &= cond
+        print("SELF-TEST", "ok " if cond else "BAD",
+              "an Excluded/Illegal bins table is not absorbed and its name collision does not overwrite a real bin")
 
         cases = (("agreeing", {"gen_x_cg.cp_a.hit_a": {"state": "HIT", "count": "7"}}, 0),
                  ("a count mismatch", {"gen_x_cg.cp_a.hit_a": {"state": "HIT", "count": "99"}}, 1),

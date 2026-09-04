@@ -155,6 +155,37 @@ def apply_fcov_check(result: dict[str, Any], test: dict[str, Any], vdb: Path, se
         result["reason"] = fc["reason"]
 
 
+def fcov_check_and_grade(result: dict[str, Any], test: dict[str, Any], vdb: Path, seed: int, run_dir: Path) -> None:
+    """The fcov-expectation check, then the red grading of a fixture that check is the only judge of.
+
+    Every stage that can run the check grades through here (a standalone --fcov-check run and the regression's
+    pre-merge pass), so the two cannot disagree about when the fixture is judged. A stage that ran first may have
+    graded or parked the verdict; the grading restarts from the pre-grading verdict the run recorded, so a real
+    simulation failure still reads as undeclared instead of being regraded away.
+    """
+    pre = result.get("red_pre_grading")
+    if pre:
+        result.update(verdict=pre["verdict"], reason=pre["reason"], evidence_line=pre.get("evidence_line"))
+    apply_fcov_check(result, test, vdb, seed, run_dir)
+    if U.red_grading_deferred(test):
+        # The fcov reason is the only evidence such a failure has; red_expect is matched against it.
+        if result["verdict"] == C.VERDICT_FAIL and not result.get("evidence_line"):
+            result["evidence_line"] = result["reason"]
+        graded = V.grade_red_fixture(dict(result), test.get("red_expect"))
+        result.update(verdict=graded["verdict"], reason=graded["reason"])
+
+
+def finalize_deferred_red(result: dict[str, Any], test: dict[str, Any]) -> None:
+    """A deferred red no stage of this run could check. Calling it a dead checker would be a claim the run has no
+    evidence for either way, so a run that collected nothing is NOT_RUN naming the missing check; one that collected
+    a failure is graded on that evidence, which is what any other red fixture gets."""
+    if result["verdict"] in (C.VERDICT_PASS, C.VERDICT_XFAIL):
+        result.update(verdict=C.VERDICT_NOT_RUN, reason=C.REASON_DEFERRED_RED_UNCHECKED)
+    else:
+        graded = V.grade_red_fixture(dict(result), test.get("red_expect"))
+        result.update(verdict=graded["verdict"], reason=graded["reason"])
+
+
 def export_check(res: dict[str, Any], build: dict[str, Any], argv: list[str], run_dir: Path) -> tuple[list[str] | None, Path | None]:
     """Export header cross-check (ruling 2026-09-03) on a decided verdict: a run whose argv names an export file must
     have written it with a header whose sources= set equals the build manifest's DECLARED set (the codegen's active
@@ -272,6 +303,27 @@ def self_test() -> int:
         ok &= cond
         print("SELF-TEST", "ok " if cond else "BAD", f"measured_refusal {label}: {got}")
     U.remove_selftest_tree(root)
+    # A deferred red no stage could check: an accusation needs evidence, so a run that collected nothing is NOT_RUN.
+    red_t = {"red_fixture": True, "fcov_expectation_file": "x.fcov.yaml", "red_expect": r"declared bin\(s\) not hit"}
+    r_unchecked = {"verdict": C.VERDICT_PASS, "reason": "no collected failure mechanism"}
+    finalize_deferred_red(r_unchecked, red_t)
+    cond = r_unchecked["verdict"] == C.VERDICT_NOT_RUN and "no stage of this run checked" in r_unchecked["reason"]
+    ok &= cond
+    print("SELF-TEST", "ok " if cond else "BAD",
+          f"a deferred red no stage checked is NOT_RUN, not a dead-checker FAIL (got {r_unchecked['verdict']})")
+    r_collected = {"verdict": C.VERDICT_FAIL, "reason": "UVM_FATAL seen",
+                   "evidence_line": "fcov expectation unmet: 2 declared bin(s) not hit ['a.b.c']"}
+    finalize_deferred_red(r_collected, red_t)
+    cond = r_collected["verdict"] == C.VERDICT_RED_OK
+    ok &= cond
+    print("SELF-TEST", "ok " if cond else "BAD",
+          f"a deferred red that DID collect its declared failure is still graded on that evidence (got {r_collected['verdict']})")
+    r_other = {"verdict": C.VERDICT_FAIL, "reason": "simulator crashed", "evidence_line": "Segmentation fault"}
+    finalize_deferred_red(r_other, red_t)
+    cond = r_other["verdict"] == C.VERDICT_FAIL and "undeclared reason" in r_other["reason"]
+    ok &= cond
+    print("SELF-TEST", "ok " if cond else "BAD",
+          f"a deferred red that failed some other way is undeclared, never NOT_RUN (got {r_other['verdict']})")
     print("SELF-TEST:", "PASS" if ok else "FAIL")
     return 0 if ok else 2
 
@@ -401,9 +453,14 @@ def main() -> int:
             timed_out = True
 
     sim_log = run_dir / C.SIM_LOG
+    # A red fixture whose failure is an unmet fcov expectation has a PASSING sim log by construction, so grading it
+    # here would call it a dead checker before the check that fails it has run. Such an entry is graded after the
+    # fcov check instead; every other red fixture is graded here exactly as before.
+    red_fixture = bool(test.get("red_fixture"))
+    defer_red = U.red_grading_deferred(test)
     res = V.decide(sim_log, pass_marker, timed_out, bool(test.get("expected_fail")), rc,
                    extra_logs=[run_dir / C.SIM_STDOUT_LOG], build_config=build["build_config"],
-                   stderr_logs=[run_dir / C.LSF_ERR, run_log], red_fixture=bool(test.get("red_fixture")),
+                   stderr_logs=[run_dir / C.LSF_ERR, run_log], red_fixture=red_fixture and not defer_red,
                    red_expect=test.get("red_expect"))
     if lsf and lsf.get("killed_reason") and res["verdict"] == C.VERDICT_PASS:
         res.update(verdict=C.VERDICT_FAIL, reason=f"LSF job killed: {lsf['killed_reason']}")
@@ -420,6 +477,7 @@ def main() -> int:
         "vdb": str(cov_vdb) if cov_vdb else None, "cm_name": cm_name(test["name"], seed) if cov_vdb else None,
         "waves": str(run_dir / C.WAVES_FSDB) if (run_dir / C.WAVES_FSDB).exists()
         else (str(run_dir / C.WAVES_VPD) if (run_dir / C.WAVES_VPD).exists() else None),
+        "evidence_line": res.get("evidence_line"),
         "uvm_counts": res["uvm_counts"], "cocotb_summary": res["cocotb_summary"],
         "slow_total": U.slow_total([run_dir / C.SIM_STDOUT_LOG, sim_log]),
         "finish_seen": res["finish_seen"], "marker_seen": res["marker_seen"], "pass_marker": pass_marker,
@@ -433,9 +491,15 @@ def main() -> int:
         "cocotb_module": test.get("cocotb_module"), "mirror": mirror_used, "program": program_rec,
         "testlist": {"path": str(a.testlist.resolve()), "sha256": U.sha256_file(a.testlist)},
     }
+    if defer_red:
+        # What a later stage regrades from when this run cannot check the expectation itself.
+        result["red_pre_grading"] = {"verdict": result["verdict"], "reason": result["reason"],
+                                     "evidence_line": result.get("evidence_line")}
     if a.fcov_check and cov_vdb and test.get("fcov_expectation_file"):
         # Standalone run = single writer to the vdb, so the per-test slice is readable now.
-        apply_fcov_check(result, test, cov_vdb, seed, run_dir)
+        fcov_check_and_grade(result, test, cov_vdb, seed, run_dir)
+    elif defer_red:
+        finalize_deferred_red(result, test)
     U.dump_yaml(result, run_dir / C.RESULT_YAML)
     with run_log.open("a", encoding="utf-8") as lf:
         lf.write(f"GEN_RUN_VERDICT {result['verdict']} reason={result['reason']} wall_s={result['wall_s']} "

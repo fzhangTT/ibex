@@ -181,6 +181,21 @@ gen_run.py --build-dir DIR --test NAME --seed N --run-dir DIR [--cov-dir VDB | -
   loader refuses a red_expect that matches the empty string), any other FAIL stays FAIL ("red fixture failed for
   an undeclared reason": a broken fixture or environment is not the designed failure), PASS becomes
   FAIL ("red fixture passed unexpectedly": the checker it proves is dead); a TIMEOUT stays TIMEOUT.
+  A red fixture whose declared failure is an unmet fcov expectation is the one case the sim log cannot judge, since
+  such a run passes by construction: `gen_flow_util.red_grading_deferred(test)` is true for an entry carrying both
+  `red_fixture` and an `fcov_expectation_file`, and for it the grading moves to `gen_run.fcov_check_and_grade`,
+  which runs the expectation check and then matches `red_expect` against the checker's own reason as the evidence
+  line. Every stage that can run that check grades through that one function (a standalone `--fcov-check` run and
+  `gen_regress.post_fcov_checks`), so the two cannot disagree about when the fixture is judged; the record carries
+  `red_pre_grading`, the verdict before any red grading, and the later stage regrades from it, so a genuine
+  simulation failure still reads as undeclared rather than being regraded away. When NO stage checks the
+  expectation (no coverage vdb, or the check not requested) `gen_run.finalize_deferred_red` reports NOT_RUN with
+  `gen_flow_const.REASON_DEFERRED_RED_UNCHECKED` rather than calling the checker dead, because that accusation
+  would rest on a run with no evidence either way; a run that DID collect a failure is graded on that evidence as
+  any other red fixture is. Retain such a fixture's failing log under `gen_tdd_logs/flow`, never under
+  `gen_tdd_logs/lockstep` with the family's `gen_{group}_red1_stdout` naming: the loader would then replay it,
+  the replay cannot see a failure whose evidence is the checker's reason, and `load_testlist` refuses the entry
+  with a message that reads like a stale signature.
   RED-OK is never a regression failure and never coverage: the loader requires `measured: false` and a
   valid `red_expect` on such an entry and refuses `expected_fail` beside it. Failure reasons locate the
   evidence line as `<mechanism> at <file>:<line>` in the file that holds it (sim.log or the stdout
@@ -700,6 +715,13 @@ the bins no manifest declares (which only a direct reading finds). `--self-test`
 proof is `gen_tdd_logs/flow/gen_read_keyed_selftest.log`. Use it on the first run of any newly bound group: a
 verdict line says the check ran, and two independent readings of one report say what it found.
 
+Comparing two run forms: `dv/auto_dv/tools/gen_compare_forms.py --isolated ROOT --shared ROOT [--entries a,b]`
+compares an entry set's declared bins between a run alone in its own vdb and the same run in a shared one, and
+reads each report's own `tests.txt` for the test count rather than assuming the flow delivered isolation. It exits 1
+on any differing bin, any verdict difference, or any report holding other than one test, and `--self-test` pins
+those cases including the trap that the shared directory is named exactly, since these entry names are prefixes of
+one another and a glob picks a sibling.
+
 Manifest: `dv/auto_dv/fcov_expectations/<test>.fcov.yaml` (the standing home of
 `dv/auto_dv/contract/README.md`), named in the test's `fcov_expectation_file`:
 
@@ -737,7 +759,10 @@ counts) stay as they are and are ignored by the checker. One more urg form the c
 hit coverpoint is HIT rather than MISSING-FROM-REPORT (the one edit made to variable sections; everything else and
 the original report stay byte for byte), and calls `ci/check_fcov_expectations.py --manifest <file> --report-dir <derived>`.
 In a regression `gen_regress.post_fcov_checks` runs it after every writer to the shared vdb has finished; a
-standalone `gen_run.py --fcov-check` runs it right away (single writer). Result: `result.yaml: fcov_check` with
+standalone `gen_run.py --fcov-check` runs it right away (single writer). That pass admits a PASS or XFAIL run, and
+also any run whose entry is `red_grading_deferred`, whatever verdict `gen_run` parked it with: the pass is the only
+stage that can produce such a fixture's declared failure, so a verdict-only gate would skip it and leave the entry
+failing for a reason that is not its declared one. Result: `result.yaml: fcov_check` with
 status (PASS, UNHIT, PROTOCOL_ERROR, NO_MANIFEST), per-bin HIT/UNHIT/MISSING-FROM-REPORT with counts,
 `unmet_bins`, the notes, the checker log, `report_dir` and `derived_report_dir` (both retained in the run dir),
 `derived_grpinfo` (cross_sections, cross_tables, cross_rows rewritten) and `checker_mode`. A urg failure, a report
@@ -959,7 +984,9 @@ recomputes; `build_sources_sha256` in a run header is `gen_tb_local.sh`'s own di
 `dv/auto_dv/env`, `tb`, `isa` and `gen_tb`. The two cover different input sets, so they do not compare.
 `dv/auto_dv/tools/gen_build_identity.py` prints the first for a given `--root`, so it works on a detached archive as
 well as the clone, and `--expect <16 hex>` exits 1 on a mismatch so a hand-off can gate on it (`--self-test` proves
-its four exit paths; the retained proof is `gen_tdd_logs/flow/gen_cr26_build_identity_selftest.log`). The manifest
+five cases over three exit codes; the retained proof is `gen_tdd_logs/flow/gen_cr26_build_identity_selftest.log`,
+whose own header still reads "four exit paths" because a retained log's bytes are not edited after its manifest row
+is written, and CM205-Info-1 is answered by fixing the phrasing everywhere a reader can still be told). The manifest
 field's scope is also stated in `gen_build_input_gate_rule.md`; the owner decision was to leave both keys as they
 are, since the collision was in prose rather than in the schema.
 

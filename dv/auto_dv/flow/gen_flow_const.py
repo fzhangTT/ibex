@@ -50,6 +50,8 @@ RED_CHECK_EXIT_STALE = 3    # --check-red-signatures: no refusal, but stale reta
 RED_STALE_ALLOWLIST: dict[str, tuple[str, str]] = {}   # empty: every retained pinned-red log is RED-OK at HEAD
 RED_STALE_TEXT = "stale: comparator row pending ({task})"
 RED_STALE_REFUSE = "retained pinned-red log does not come out RED-OK through the verdict (stale evidence: re-retain it at HEAD)"
+REASON_DEFERRED_RED_UNCHECKED = ("red fixture judged on an fcov expectation that no stage of this run checked "
+                                 "(no coverage vdb, or the check was not requested)")
 SOURCE_ROOT = Path(os.environ[ENV_SOURCE_ROOT]).resolve() if os.environ.get(ENV_SOURCE_ROOT) else REPO_ROOT
 SOURCE_MODE_HEAD = "head"
 SOURCE_MODE_WORKTREE = "worktree"

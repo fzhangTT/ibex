@@ -104,6 +104,30 @@ def crash_signature(paths: list[Path]) -> str | None:
     return None
 
 
+def grade_red_fixture(res: dict[str, Any], red_expect: str | None) -> dict[str, Any]:
+    """Grade a red fixture's already-decided result. Called by decide_lines for a failure the sim log collected, and
+    again after the fcov-expectation check for a failure that has no sim-log line by construction: a declared-but-unhit
+    bin fails a run whose simulation passed, so the reason is the only evidence there is.
+
+    Only a FAIL whose evidence matches red_expect is the designed outcome (RED-OK); any other FAIL is a broken
+    fixture or environment; PASS means the checker it proves is dead; a TIMEOUT is not the designed failure.
+    """
+    if res["verdict"] == C.VERDICT_FAIL:
+        evidence = res.get("evidence_line") or ""
+        if not evidence:
+            # No collected line (exit code, crash signature, missing marker or banner): never the designed failure.
+            res.update(verdict=C.VERDICT_FAIL, reason=f"red fixture failed for an undeclared reason: {res['reason']}; "
+                       "no collected evidence line for red_expect to match")
+        elif red_expect and re.search(red_expect, evidence):
+            res.update(verdict=C.VERDICT_RED_OK, reason=f"red fixture failed as designed (red_expect matched): {res['reason']}")
+        else:
+            res.update(verdict=C.VERDICT_FAIL, reason=f"red fixture failed for an undeclared reason: {res['reason']}; "
+                       f"red_expect {red_expect!r} does not match the evidence {evidence[:80]!r}")
+    elif res["verdict"] == C.VERDICT_PASS:
+        res.update(verdict=C.VERDICT_FAIL, reason="red fixture passed unexpectedly: the failure it exists to show did not occur")
+    return res
+
+
 def decide_lines(lines: list[str], pass_marker: str | None, timed_out: bool, rc: int | None,
                  build_config: str, stderr_lines: list[str], sim_log_present: bool = True,
                  expected_fail: bool = False, banner_lines: list[str] | None = None,
@@ -133,22 +157,7 @@ def decide_lines(lines: list[str], pass_marker: str | None, timed_out: bool, rc:
         elif res["verdict"] == C.VERDICT_PASS:
             res.update(verdict=C.VERDICT_FAIL, reason="unexpected PASS of an expected-fail test")
     if red_fixture:
-        # A fixture exists to show one declared failure: only a FAIL whose collected evidence line matches
-        # red_expect is the designed outcome (RED-OK); any other FAIL is a broken fixture or environment;
-        # PASS means the checker it proves is dead; a TIMEOUT is not the designed failure and stays TIMEOUT.
-        if res["verdict"] == C.VERDICT_FAIL:
-            evidence = res.get("evidence_line") or ""
-            if not evidence:
-                # No collected line (exit code, crash signature, missing marker or banner): never the designed failure.
-                res.update(verdict=C.VERDICT_FAIL, reason=f"red fixture failed for an undeclared reason: {res['reason']}; "
-                           "no collected evidence line for red_expect to match")
-            elif red_expect and re.search(red_expect, evidence):
-                res.update(verdict=C.VERDICT_RED_OK, reason=f"red fixture failed as designed (red_expect matched): {res['reason']}")
-            else:
-                res.update(verdict=C.VERDICT_FAIL, reason=f"red fixture failed for an undeclared reason: {res['reason']}; "
-                           f"red_expect {red_expect!r} does not match the evidence {evidence[:80]!r}")
-        elif res["verdict"] == C.VERDICT_PASS:
-            res.update(verdict=C.VERDICT_FAIL, reason="red fixture passed unexpectedly: the failure it exists to show did not occur")
+        res = grade_red_fixture(res, red_expect)
     return res
 
 
@@ -253,6 +262,22 @@ def self_test() -> int:
         flag = "ok " if got == want else "BAD"
         ok &= got == want
         print(f"SELF-TEST {flag} {name}: want {want} got {got}")
+    # A red fixture whose only failure is an unmet fcov expectation: the sim log PASSES by construction, so the
+    # reason is the only evidence. Graded through grade_red_fixture directly, which is how gen_run reaches it after
+    # the fcov check.
+    fcov_reason = "fcov expectation unmet: 1 declared bin(s) not hit ['gen_ic_ecc_cg.cp_ram.data']"
+    fcov_sig = r"fcov expectation unmet: [0-9]+ declared bin\(s\) not hit .*gen_ic_ecc_cg\.cp_ram\.data"
+    r_ok = grade_red_fixture({"verdict": C.VERDICT_FAIL, "reason": fcov_reason, "evidence_line": fcov_reason}, fcov_sig)
+    cond = r_ok["verdict"] == C.VERDICT_RED_OK
+    ok &= cond
+    print("SELF-TEST", "ok " if cond else "BAD",
+          f"an fcov-unmet red fixture grades RED-OK when red_expect matches its reason (got {r_ok['verdict']})")
+    other = "fcov expectation unverifiable: per-test isolation not confirmed"
+    r_no = grade_red_fixture({"verdict": C.VERDICT_FAIL, "reason": other, "evidence_line": other}, fcov_sig)
+    cond = r_no["verdict"] == C.VERDICT_FAIL and "undeclared reason" in r_no["reason"]
+    ok &= cond
+    print("SELF-TEST", "ok " if cond else "BAD",
+          f"a red fixture failing a DIFFERENT way is not RED-OK (got {r_no['verdict']})")
     # Red fixtures (testlist red_fixture: true): FAIL is the designed outcome, PASS is a dead checker.
     # red_expect is matched against the FIRST collected evidence line (here the Fatal: line, not GEN_SMOKE_FAIL).
     red_fail = decide_lines(B + REAL_FATAL, "GEN_SMOKE_PASS", False, 0, "opentitan", [], True, red_fixture=True,

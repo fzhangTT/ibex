@@ -142,20 +142,24 @@ def run_one(t: dict[str, Any], seed: int, build: dict[str, Any], outdir: Path, a
 def post_fcov_checks(runs: list[dict[str, Any]], testlist: dict[str, Any], outdir: Path) -> None:
     """Per-test, pre-merge (trust triad rule 3), only after every writer to the vdb has finished:
     each PASS/XFAIL run with a manifest is checked on its own vdb slice; unmet or unverifiable
-    expectations turn the run into FAIL with the distinct reason."""
+    expectations turn the run into FAIL with the distinct reason.
+
+    A red fixture the expectation is the only judge of is admitted whatever verdict it arrived with: this pass is the
+    only stage that can produce its failure, and gen_run has already parked it for exactly that reason."""
     for r in runs:
         t = U.test_by_name(testlist, r["test"])
         if not (t.get("fcov_expectation_file") and r.get("vdb")):
             continue
-        if r["verdict"] not in (C.VERDICT_PASS, C.VERDICT_XFAIL):
+        if r["verdict"] not in (C.VERDICT_PASS, C.VERDICT_XFAIL) and not U.red_grading_deferred(t):
             continue
-        RUN.apply_fcov_check(r, t, Path(r["vdb"]), int(r["seed"]), Path(r["run_dir"]))
+        RUN.fcov_check_and_grade(r, t, Path(r["vdb"]), int(r["seed"]), Path(r["run_dir"]))
         res_path = Path(r["result_yaml"])
         if res_path.is_file():
             stored = U.load_yaml(res_path)
             stored["fcov_check"] = r["fcov_check"]
             stored["verdict"] = r["verdict"]
             stored["reason"] = r["reason"]
+            stored["evidence_line"] = r.get("evidence_line")
             U.dump_yaml(stored, res_path)
 
 
@@ -431,6 +435,67 @@ def self_test() -> int:
                 and r_res["pruned_artifacts"] == [] and summary_r["files_pruned"] == 1 and summary_r["runs_planned"] == 3
                 and summary_r["applies"] is True)
         ok &= cond; print("SELF-TEST", "ok " if cond else "BAD", f"prune_exports on disk: file removed and recorded, absent file recorded as empty list: {summary_r['files_pruned']} pruned of {summary_r['runs_planned']} planned")
+    # The pre-merge pass must ADMIT a red fixture it is the only judge of, whatever verdict gen_run parked it with,
+    # and the records it mutates are the ones the manifest summary is built from.
+    import tempfile as _tf
+    with _tf.TemporaryDirectory(prefix="gen_regress_deferred_", dir=C.selftest_tmp()) as td:
+        d = Path(td)
+        (d / "gen_dr").mkdir()
+        tl_dr = {"tests": [{"name": "gen_dr", "tier": "check", "owner": "runtime", "red_fixture": True,
+                            "red_expect": r"declared bin\(s\) not hit", "measured": False,
+                            "fcov_expectation_file": "dv/auto_dv/fcov_expectations/gen_dr.fcov.yaml"}]}
+        parked = {"test": "gen_dr", "seed": 1, "verdict": C.VERDICT_NOT_RUN,
+                  "reason": C.REASON_DEFERRED_RED_UNCHECKED, "measured": False,
+                  "red_pre_grading": {"verdict": C.VERDICT_PASS, "reason": "no collected failure mechanism",
+                                      "evidence_line": None},
+                  "vdb": str(d / "absent.vdb"), "run_dir": str(d / "gen_dr"),
+                  "result_yaml": str(d / "gen_dr" / "result.yaml")}
+        U.dump_yaml(dict(parked), d / "gen_dr" / "result.yaml")
+        runs_dr = [dict(parked)]
+        post_fcov_checks(runs_dr, tl_dr, d)
+        # The vdb is absent, so the check cannot be verified; the point is that the run was JUDGED, not skipped.
+        cond = runs_dr[0]["verdict"] != C.VERDICT_NOT_RUN and bool((runs_dr[0].get("fcov_check") or {}).get("status"))
+        ok &= cond
+        print("SELF-TEST", "ok " if cond else "BAD",
+              "the pre-merge pass admits a parked deferred red instead of skipping it "
+              f"(verdict {runs_dr[0]['verdict']}, fcov status {(runs_dr[0].get('fcov_check') or {}).get('status')})")
+        sm_dr = summarize(runs_dr)
+        cond = sm_dr[runs_dr[0]["verdict"].lower()] == 1 and sm_dr[C.VERDICT_NOT_RUN.lower()] == 0
+        ok &= cond
+        print("SELF-TEST", "ok " if cond else "BAD",
+              "the manifest summary counts the verdict the pre-merge pass left, not the parked one "
+              f"({runs_dr[0]['verdict'].lower()}={sm_dr[runs_dr[0]['verdict'].lower()]} "
+              f"not_run={sm_dr[C.VERDICT_NOT_RUN.lower()]})")
+        # A deferred red no stage could check is NOT_RUN, and NOT_RUN is neither a pass nor a red-ok: it is counted
+        # on its own, stays out of the good count, and remains in the pass-rate denominator so it cannot read green.
+        sm_nr = summarize([{"test": "gen_dr", "verdict": C.VERDICT_NOT_RUN},
+                           {"test": "gen_p", "verdict": C.VERDICT_PASS}])
+        cond = (sm_nr[C.VERDICT_NOT_RUN.lower()] == 1 and sm_nr[C.VERDICT_PASS.lower()] == 1
+                and sm_nr["red_ok"] == 0 and sm_nr["planned"] == 2 and sm_nr["pass_rate_pct"] == 50.0)
+        ok &= cond
+        print("SELF-TEST", "ok " if cond else "BAD",
+              "an unchecked deferred red counts as NOT_RUN, never as a pass or a red-ok, and stays in the pass-rate "
+              f"denominator (not_run={sm_nr[C.VERDICT_NOT_RUN.lower()]} pass={sm_nr[C.VERDICT_PASS.lower()]} "
+              f"red_ok={sm_nr['red_ok']} rate={sm_nr['pass_rate_pct']})")
+        # A deferred red that DID collect a simulation failure must be regraded from that failure, not from a clean
+        # slate: the pre-merge pass restores the pre-grading verdict, so a real crash still reads as undeclared.
+        (d / "gen_dr2").mkdir()
+        tl_dr2 = {"tests": [dict(tl_dr["tests"][0], name="gen_dr2")]}
+        crashed = {"test": "gen_dr2", "seed": 1, "verdict": C.VERDICT_NOT_RUN,
+                   "reason": C.REASON_DEFERRED_RED_UNCHECKED, "measured": False,
+                   "red_pre_grading": {"verdict": C.VERDICT_FAIL, "reason": "sv_fatal at sim.log:41",
+                                       "evidence_line": "Fatal: assertion failure in the bus agent"},
+                   "vdb": str(d / "absent.vdb"), "run_dir": str(d / "gen_dr2"),
+                   "result_yaml": str(d / "gen_dr2" / "result.yaml")}
+        U.dump_yaml(dict(crashed), d / "gen_dr2" / "result.yaml")
+        runs_c = [dict(crashed)]
+        post_fcov_checks(runs_c, tl_dr2, d)
+        cond = (runs_c[0]["verdict"] == C.VERDICT_FAIL and "undeclared reason" in runs_c[0]["reason"]
+                and "sv_fatal at sim.log:41" in runs_c[0]["reason"])
+        ok &= cond
+        print("SELF-TEST", "ok " if cond else "BAD",
+              "a deferred red carrying a real simulation failure is regraded from it and reads undeclared, with the "
+              f"collected reason kept (verdict {runs_c[0]['verdict']}, reason {runs_c[0]['reason'][:80]!r})")
     print("SELF-TEST:", "PASS" if ok else "FAIL")
     return 0 if ok else 2
 

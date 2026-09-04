@@ -955,6 +955,16 @@ def self_test() -> int:
     cond = problems == [] and len(noninput_list_sha256()) == 64
     ok &= cond
     print("SELF-TEST", "ok " if cond else "BAD", f"build-input gate case 13: every listed non-input is tracked and each glob class matches a tracked file ({problems}); list sha256 {noninput_list_sha256()[:12]}")
+    # A red fixture graded on an fcov expectation rather than on its sim log: the predicate every stage reads.
+    for flags, want, label in (
+            ({"red_fixture": True, "fcov_expectation_file": "x.fcov.yaml"}, True, "a red fixture naming a manifest is deferred"),
+            ({"red_fixture": True, "fcov_expectation_file": None}, False, "a red fixture with no manifest is graded on its sim log"),
+            ({"red_fixture": False, "fcov_expectation_file": "x.fcov.yaml"}, False, "a plain entry with a manifest is not a red fixture"),
+            ({}, False, "a plain entry is neither")):
+        got = red_grading_deferred(flags)
+        cond = got is want
+        ok &= cond
+        print("SELF-TEST", "ok " if cond else "BAD", f"red_grading_deferred: {label} (got {got})")
     print("SELF-TEST:", "PASS" if ok else "FAIL")
     return 0 if ok else 2
 
@@ -1042,6 +1052,13 @@ def red_group(test_name: str) -> str:
             group = group[len(pre):]
             break
     return group[: -len(C.RED_TEST_SUFFIX)] if group.endswith(C.RED_TEST_SUFFIX) else group
+
+
+def red_grading_deferred(test: dict[str, Any]) -> bool:
+    """A red fixture whose declared failure is an unmet fcov expectation: its simulation passes by construction, so
+    the verdict is decided by the expectation check and never by the sim log. Read by every stage that can run that
+    check, so no two of them disagree about when the fixture is judged."""
+    return bool(test.get("red_fixture")) and bool(test.get("fcov_expectation_file"))
 
 
 def red_log_for(test_name: str) -> tuple[Path | None, Path | None, str | None]:
