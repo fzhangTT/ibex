@@ -115,6 +115,14 @@ Nothing here is a tree edit. The re-scope itself waits for the round record and 
 
 ## Corrigenda (2026-09-04, added after the round's fcov waves; nothing above this line changed)
 
+Round naming, because this file's name and prose say round 1 while the flow does not. The team calls this
+measurement round 1 in prose; the flow indexes it as its measured round 0. Both names sit in the record
+together rather than one replacing the other: gen_rounds.yaml carries a single entry with round 0,
+regress_tag round_1, regress_outdir regress_round_1 and evidence_dir dv/auto_dv/evidence/gen_round_0.
+There is no gen_round_1 directory. Three similarly-named evidence directories are NOT this measurement:
+gen_round_0_dryrun, gen_round_0_probe and gen_round_0_rebaseline, the last being the older unmeasured
+baseline.
+
 1. The bit-8 half of item 5 needs no owner ruling. Section "gen_test_rst_boot, 2 stable" says both boundary
    values need an owner decision on drivability. For cp_bit8_readback.zero the cause is nameable from the TB
    and from the test's own check: bit 8 of cpuctrlsts is the registered ic_scr_key_valid_i
