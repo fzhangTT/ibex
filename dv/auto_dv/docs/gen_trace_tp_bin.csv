@@ -12410,7 +12410,6 @@ TP-IC-043,CG-IC-006,cr_bits_x_rate,double_frequent,0
 TP-IC-043,CG-IC-006,cr_bits_x_rate,single_frequent,0
 TP-IC-044,CG-IC-006,cp_no_alert_case,disabled_cache,0
 TP-IC-044,CG-IC-006,cp_no_alert_case,during_invalidation,0
-TP-IC-044,CG-IC-006,cp_no_alert_case,masked_duplicate_copy,0
 TP-IC-044,CG-IC-006,cp_no_alert_case,uninitialised_data_ram,0
 TP-IC-044,CG-IC-006,cp_no_alert_case,unused_way_data,0
 TP-IC-045,CG-IC-001,cp_port_contention,deferred_1,0
@@ -23606,6 +23605,7 @@ TP-RVFI-040,CG-RVFI-003,cp_rf_wr_suppress,no,0
 TP-RVFI-040,CG-SEC-002,cp_first_beat_rd_written,yes,0
 TP-RVFI-040,CG-SEC-002,cp_half,first,0
 TP-RVFI-040,CG-SEC-002,cr_load_half,load_first_no,0
+TP-SEC-001,CG-IC-006,cp_no_alert_case,masked_duplicate_copy,0
 TP-SEC-001,CG-SEC-001,cp_alert,minor,0
 TP-SEC-001,CG-SEC-001,cp_event,alert_minor,0
 TP-SEC-001,CG-SEC-001,cp_event,inject,0

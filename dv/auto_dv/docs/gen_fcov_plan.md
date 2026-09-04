@@ -2,7 +2,7 @@
 
 Deliverable 3 (DV_prompt.txt Section 11): the definition of every functional-coverage bin (not the
 implementation; TB Infra implements covergroups in the gen_ namespace from this plan). Owner: dv-lead.
-Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in), generated 2026-09-04 06:37 UTC from dv/auto_dv/work/dv-lead/parts6/fcov_*.md.
+Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in), generated 2026-09-04 07:08 UTC from dv/auto_dv/work/dv-lead/parts6/fcov_*.md.
 
 Build configuration: `opentitan` (ibex_configs.yaml): BaseIsa=RV32IorCHERIoT (CHERIoT mode excluded
 by owner ruling), RV32E=0, RV32M=RV32MSingleCycle, RV32B=RV32BOTEarlGrey, RV32ZC=RV32ZcaZcbZcmp,
@@ -176,7 +176,7 @@ the count.
 | CG-DMEM-009 | cp_gnt_regime | gen_dmem_load_data, gen_dmem_proto_basic, gen_dmem_proto_basic_info |
 | CG-FE-004 | cp_dummy_seen | gen_fe_backpressure |
 | CG-IC-002 | cp_key_knob | gen_ic_inval, gen_ic_regime |
-| CG-IC-006 | cp_knob | gen_ic_ecc, gen_ic_regime, gen_ic_replace_info |
+| CG-IC-006 | cp_knob | gen_ic_ecc, gen_ic_regime, gen_ic_replace_info, gen_sec_alert_inject_icache |
 | CG-IC-008 | cp_instr_mix | gen_ic_enable, gen_ic_inval, gen_ic_regime |
 | CG-IC-008 | cp_imem_regime | gen_ic_enable, gen_ic_inval, gen_ic_regime |
 | CG-IC-008 | cp_ecc_knob | gen_ic_enable, gen_ic_inval, gen_ic_regime |
@@ -4798,11 +4798,11 @@ bug-candidate behaviour carry the bug tie (B16 in CG-DMEM-007).
   - cp_bits iff injected = flipped bits: bins single{1}, double{2}
   - cp_way iff injected: bins way0{0}, way1{1}
   - cp_beat iff data = corrupted 39-bit beat: bins beat0{0}, beat1{1}
-  - cp_alert_pulses iff injected on a valid hit lookup whose line is valid in one way only =
-    alert_minor_o pulses for this injection: bins one{1}; ignore_bins zero{0}, many{[2:$]}:
-    gen_chk_alerts failure. The duplicate-copy case leaves the qualifier because a clearing flip in
-    one of two valid copies owes no pulse (WP12-F2) and samples
-    cp_no_alert_case.masked_duplicate_copy instead
+  - cp_alert_pulses iff the injection owes a pulse (a valid hit lookup, and where the line is valid
+    in two ways a flip that rose in the un-tweaked word the mux ORs) = alert_minor_o pulses for this
+    injection: bins one{1}; ignore_bins zero{0}, many{[2:$]}: gen_chk_alerts failure. Qualifying on
+    owing keeps the visible duplicate case in the bin, since it owes and receives a pulse, and
+    leaves out only the masked case, which samples cp_no_alert_case.masked_duplicate_copy instead
   - cp_inval_ways iff alerted = ways written invalid in the next cycle: bins all_ways{tag error},
     hit_way_only{data error}
   - cp_refetch iff alerted: bins yes{1: the lookup was served from the bus afterwards}
@@ -4816,9 +4816,11 @@ bug-candidate behaviour carry the bug tie (B16 in CG-DMEM-007).
     masked_duplicate_copy{a data flip clearing a bit in one of two valid copies of the line, restored
     by the OR of the hit-data mux, rtl/ibex_icache.sv:507-514}
   - cp_multiway_mismatch (informational, TP-IC-038 only) iff both ways valid with the same tag and
-    differing data: bins alert_or_wrong{1: alert_minor_o or a wrong rvfi_insn, the outcome when the
-    difference sets a bit the other copy holds clear}, masked{1: no alert and the fetched word
-    correct, the outcome when the difference only clears bits, since the mux ORs the matching ways}
+    differing data: bins alert_or_wrong{1: alert_minor_o, a wrong rvfi_insn or a stale-but-valid
+    word, the outcomes when the copies are two independently written codewords}, masked{1: no alert
+    and the fetched word correct, reachable only where one copy is a corrupted image of the other
+    and the flip cleared a bit of the un-tweaked word the mux ORs, which is the injection path and
+    not this item's stimulus}
   - cp_knob iff injected = knob:icache_ecc_err_rate (cross operand only): values none, rare,
     frequent
 - Crosses:
@@ -4834,7 +4836,7 @@ bug-candidate behaviour carry the bug tie (B16 in CG-DMEM-007).
     single_frequent{single,frequent}, double_frequent{double,frequent}; ignore_bins single|double x
     none: no injection under the none regime
 - Adopted (riscv-dv): none
-- TP items: TP-IC-035, TP-IC-036, TP-IC-037, TP-IC-038, TP-IC-042, TP-IC-043, TP-IC-044, TP-IC-049, TP-IC-056
+- TP items: TP-IC-035, TP-IC-036, TP-IC-037, TP-IC-038, TP-IC-042, TP-IC-043, TP-IC-044, TP-IC-049, TP-IC-056, TP-SEC-001
 ### CG-IC-007: gen_cg_ic_busy_throttle
 - Features: F-IC-029, F-IC-038, F-IC-043, F-IC-044
 - Sample: (a) core_busy_o transitions; (b) each sequential grant (not a redirect target); (c) each
