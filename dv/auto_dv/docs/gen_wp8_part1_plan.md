@@ -414,7 +414,13 @@ classifier fault is a failing run and not only a failing offline check.
   present-but-unbound files. The Runtime Manager's landing-25 merge, commit 28c8c0b, commits all nine bindings, so
   each entry names its own manifest and a future run of that entry is gated by it. No run of these entries through
   the flow has happened yet, so no declared bin has been enforced by a run; the counts below come from local runs of
-  each entry's program and plusarg set. A group manifest was
+  each entry's program and plusarg set. ALL NINE ARE EXERCISABLE unmeasured: the flow's refusal keys on the measured
+  flag alone and never on coverage (dv/auto_dv/flow/gen_run.py:193 takes a coverage argument, the clause at :204 reads
+  "if measured and debug_only", and its docstring records the widening, since a measured run feeds the credit report
+  whether coverage is on or not), which the Runtime Manager and I each evaluated on all nine entries: zero refusals
+  unmeasured with coverage on, and exactly the four probe-carrying entries refused when the flag is forced. What the
+  probe knob does cost is PROMOTION, not this run: _data, _data_two, _both and _far_data cannot become measured
+  entries while gen_probe_ic_lookup stays in their plusargs, which is the case P6 exists for. A group manifest was
   tried first and cannot work: the expectation check validates the manifest's test against the ENTRY NAME before it
   reads coverage, so one manifest naming one test fails every entry with a protocol error before the covergroup is
   read, and no merged check across entries exists. Per-entry is also the better shape, because a declared-but-unhit
