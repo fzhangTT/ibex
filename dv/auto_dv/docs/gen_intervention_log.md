@@ -2052,3 +2052,11 @@ accepts 103 entries, the seven read None and leave the manifest-naming set, mani
 still the only deferred-shape entry, the other 96 entries and the non-tests keys yaml-equal). The Test Writer re-derives
 the DV Lead's table from the manifests and gen_fcov_groups.svh as an independent check. The DV Lead's round-1 request
 counts eight checked and eight counted-only measured entries.
+
+Addendum (19:31Z, Test Writer's independent re-derivation): all seven figures agree exactly with a second derivation
+through the checker's own parser over the 27 manifest-naming entries. Two further entries, both measured false and in the
+targeted tier (so absent from the check-tier dry run), name manifests that are entirely on unbuilt covergroups:
+gen_test_pmp_mseccfg 77 of 77 and gen_test_pmp_lock 50 of 50. An unmeasured entry's manifest is consumed by the expectation
+check (the gen_test_pmc_ctrl precedent), so round 1's full tier would fail both. Ruling extended: nine entries are detached
+for round 1 (the seven above plus these two), 758 declared bins on unbuilt covergroups over 27 manifest-naming entries;
+manifests naming entries 27 -> 18; the measured count of the request is unchanged (eight checked, eight counted-only).
