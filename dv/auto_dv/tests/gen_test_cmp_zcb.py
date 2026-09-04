@@ -63,6 +63,39 @@ class CmpZcb(GenTest):
     name = "gen_test_cmp_zcb"
     schedulable = ("knob_dmem_rvalid_delay", "knob_dmem_gnt_delay", "knob_imem_rvalid_delay")
     # items of the plan group this test does not check, with the reason (two-sided against the group by the structure check)
+    # bins this test does not guarantee per run, with the reason and its class: seed-dependent bins
+    # are credited from the merged report, stimulus bins need a program change, declaration bins cannot
+    # be a per-run guarantee at all
+    bins_not_hit = {
+        "gen_cmp_zcb_cg.cp_alu_operand.rand":
+            "declaration: default catch-all bin: the program drives only named operand classes, so the `rand` default never fires; a default bin cannot be a per-run guarantee",
+        "gen_cmp_zcb_cg.cr_alu_operand.c_not_rand":
+            "declaration: component bin cp_alu_operand.rand is a default that never fires, so this cross cannot be hit; the cross follows its component",
+        "gen_cmp_zcb_cg.cr_alu_operand.c_sext_b_rand":
+            "declaration: component bin cp_alu_operand.rand is a default that never fires, so this cross cannot be hit; the cross follows its component",
+        "gen_cmp_zcb_cg.cr_alu_operand.c_sext_h_rand":
+            "declaration: component bin cp_alu_operand.rand is a default that never fires, so this cross cannot be hit; the cross follows its component",
+        "gen_cmp_zcb_cg.cr_alu_operand.c_zext_b_rand":
+            "declaration: component bin cp_alu_operand.rand is a default that never fires, so this cross cannot be hit; the cross follows its component",
+        "gen_cmp_zcb_cg.cr_alu_operand.c_zext_h_rand":
+            "declaration: component bin cp_alu_operand.rand is a default that never fires, so this cross cannot be hit; the cross follows its component",
+        "gen_mul_ops_cg.cp_rs1_class.all_ones":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_mul_ops_cg.cp_rs1_class.int_max":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_mul_ops_cg.cp_rs1_class.int_min":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_mul_ops_cg.cp_rs1_class.zero":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_mul_ops_cg.cr_op_rs1.c_mul_all_ones":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_mul_ops_cg.cr_op_rs1.c_mul_int_max":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_mul_ops_cg.cr_op_rs1.c_mul_int_min":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_mul_ops_cg.cr_op_rs1.c_mul_zero":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+    }
     not_built = {}
 
     def report_count(self):

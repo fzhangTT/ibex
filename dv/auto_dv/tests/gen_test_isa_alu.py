@@ -142,8 +142,88 @@ class IsaAlu(GenTest):
     # items of the plan group this test does not check, with the reason (two-sided against the group by the structure check)
     # bins of built items this test cannot hit until WP-9 lands (code windows at address 0 and the top page)
     bins_not_hit = {
-        "gen_isa_lui_auipc_cg.cp_pc_region.high": "needs WP-9: no executable code in the top page",
-        "gen_isa_lui_auipc_cg.cp_pc_region.low": "needs WP-9: no executable code below 0x1000",
+        "gen_isa_alu_reg_cg.cr_slt_boundary.slt_all_ones_int_max":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_isa_alu_reg_cg.cr_slt_boundary.slt_int_max_all_ones":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_isa_alu_reg_cg.cr_slt_boundary.slt_int_min_zero":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_isa_alu_reg_cg.cr_slt_boundary.sltu_all_ones_int_max":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_isa_alu_reg_cg.cr_slt_boundary.sltu_all_ones_int_min":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_isa_alu_reg_cg.cr_slt_boundary.sltu_all_ones_zero":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_isa_alu_reg_cg.cr_slt_boundary.sltu_int_max_one":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_isa_alu_reg_cg.cr_slt_boundary.sltu_int_min_all_ones":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_isa_alu_reg_cg.cr_slt_boundary.sltu_one_int_max":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_isa_alu_reg_cg.cr_slt_boundary.sltu_one_int_min":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_isa_alu_reg_cg.cr_slt_boundary.sltu_one_zero":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_isa_alu_reg_cg.cr_slt_boundary.sltu_zero_int_max":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_isa_alu_reg_cg.cr_slt_boundary.sltu_zero_int_min":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_isa_hint_x0_cg.cr_writer_read.bit_1cyc_rs1_zero":
+            "stimulus: the program never places this writer class immediately before a retirement that reads x0 through the named operand (cp_x0_read samples the next retirement, so the pair must be adjacent)",
+        "gen_isa_hint_x0_cg.cr_writer_read.bit_1cyc_rs2_zero":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_isa_hint_x0_cg.cr_writer_read.bit_2cyc_none":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_isa_hint_x0_cg.cr_writer_read.bit_2cyc_rs1_zero":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_isa_hint_x0_cg.cr_writer_read.bit_2cyc_rs2_zero":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_isa_hint_x0_cg.cr_writer_read.cmp_hint_none":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_isa_hint_x0_cg.cr_writer_read.cmp_hint_rs1_zero":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_isa_hint_x0_cg.cr_writer_read.cmp_hint_rs2_zero":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_isa_hint_x0_cg.cr_writer_read.csrr_rs2_zero":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_isa_hint_x0_cg.cr_writer_read.div_rem_none":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_isa_hint_x0_cg.cr_writer_read.div_rem_rs1_zero":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_isa_hint_x0_cg.cr_writer_read.div_rem_rs2_zero":
+            "stimulus: the program never places this writer class immediately before a retirement that reads x0 through the named operand (cp_x0_read samples the next retirement, so the pair must be adjacent)",
+        "gen_isa_hint_x0_cg.cr_writer_read.jal_rs1_zero":
+            "stimulus: the program never places this writer class immediately before a retirement that reads x0 through the named operand (cp_x0_read samples the next retirement, so the pair must be adjacent)",
+        "gen_isa_hint_x0_cg.cr_writer_read.jal_rs2_zero":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_isa_hint_x0_cg.cr_writer_read.jalr_none":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_isa_hint_x0_cg.cr_writer_read.jalr_rs1_zero":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_isa_hint_x0_cg.cr_writer_read.jalr_rs2_zero":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_isa_hint_x0_cg.cr_writer_read.load_none":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_isa_hint_x0_cg.cr_writer_read.load_rs1_zero":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_isa_hint_x0_cg.cr_writer_read.load_rs2_zero":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_isa_hint_x0_cg.cr_writer_read.mul_none":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_isa_hint_x0_cg.cr_writer_read.mul_rs1_zero":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_isa_hint_x0_cg.cr_writer_read.mul_rs2_zero":
+            "stimulus: the program never places this writer class immediately before a retirement that reads x0 through the named operand (cp_x0_read samples the next retirement, so the pair must be adjacent)",
+        "gen_isa_hint_x0_cg.cr_writer_read.mulh_rs1_zero":
+            "stimulus: the program never places this writer class immediately before a retirement that reads x0 through the named operand (cp_x0_read samples the next retirement, so the pair must be adjacent)",
+        "gen_isa_hint_x0_cg.cr_writer_read.mulh_rs2_zero":
+            "stimulus: the program never places this writer class immediately before a retirement that reads x0 through the named operand (cp_x0_read samples the next retirement, so the pair must be adjacent)",
+        "gen_isa_hint_x0_cg.cr_writer_read.shift_rs2_zero":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_isa_lui_auipc_cg.cp_pc_region.high":
+            "needs WP-9: no executable code in the top page",
+        "gen_isa_lui_auipc_cg.cp_pc_region.low":
+            "needs WP-9: no executable code below 0x1000",
     }
     not_built = {}
 

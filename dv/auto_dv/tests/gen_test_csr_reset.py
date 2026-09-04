@@ -146,19 +146,22 @@ class CsrReset(GenTest):
     not_built = {}
     # the debug-mode bins of TP-CSR-108: a built item whose precondition (a debug entry) this program never applies
     bins_not_hit = {
-        "gen_csr_reset_read_cg.cp_dbg.dbg": "needs a debug entry: no debug ROM in this program and the debug regime is not scheduled (TP-CSR-108 Notes, rule (g))",
-        "gen_csr_reset_read_cg.cr_dbg_reset.dcsr_dbg": "needs a debug entry: no debug ROM in this program and the debug regime is not scheduled (TP-CSR-108 Notes, rule (g))",
-        "gen_csr_reset_read_cg.cr_dbg_reset.dpc_dbg": "needs a debug entry: no debug ROM in this program and the debug regime is not scheduled (TP-CSR-108 Notes, rule (g))",
-        "gen_csr_reset_read_cg.cr_dbg_reset.dscratch0_dbg": "needs a debug entry: no debug ROM in this program and the debug regime is not scheduled (TP-CSR-108 Notes, rule (g))",
-        "gen_csr_reset_read_cg.cr_dbg_reset.dscratch1_dbg": "needs a debug entry: no debug ROM in this program and the debug regime is not scheduled (TP-CSR-108 Notes, rule (g))",
-        "gen_csr_reset_read_cg.cp_csr.dcsr": "needs a debug entry: no debug ROM in this program and the debug regime is not scheduled (TP-CSR-108 Notes, rule (g))",
-        "gen_csr_reset_read_cg.cp_csr.dpc": "needs a debug entry: no debug ROM in this program and the debug regime is not scheduled (TP-CSR-108 Notes, rule (g))",
-        "gen_csr_reset_read_cg.cp_csr.dscratch0": "needs a debug entry: no debug ROM in this program and the debug regime is not scheduled (TP-CSR-108 Notes, rule (g))",
-        "gen_csr_reset_read_cg.cp_csr.dscratch1": "needs a debug entry: no debug ROM in this program and the debug regime is not scheduled (TP-CSR-108 Notes, rule (g))",
-        "gen_csr_debug_csr_cg.cp_csr.dcsr": "needs a debug entry: no debug ROM in this program and the debug regime is not scheduled (TP-CSR-108 Notes, rule (g))",
-        "gen_csr_debug_csr_cg.cp_trap.ok": "needs a debug entry: no debug ROM in this program and the debug regime is not scheduled (TP-CSR-108 Notes, rule (g))",
-        "gen_csr_debug_csr_cg.cp_dbg.dbg": "needs a debug entry: no debug ROM in this program and the debug regime is not scheduled (TP-CSR-108 Notes, rule (g))",
-        "gen_csr_debug_csr_cg.cr_csr_dbg_trap.dcsr_dbg_ok": "needs a debug entry: no debug ROM in this program and the debug regime is not scheduled (TP-CSR-108 Notes, rule (g))",
+        "gen_csr_debug_csr_cg.cp_csr.dcsr":
+            "needs a debug entry: no debug ROM in this program and the debug regime is not scheduled (TP-CSR-108 Notes, rule (g))",
+        "gen_csr_debug_csr_cg.cp_dbg.dbg":
+            "needs a debug entry: no debug ROM in this program and the debug regime is not scheduled (TP-CSR-108 Notes, rule (g))",
+        "gen_csr_debug_csr_cg.cp_trap.ok":
+            "needs a debug entry: no debug ROM in this program and the debug regime is not scheduled (TP-CSR-108 Notes, rule (g))",
+        "gen_csr_debug_csr_cg.cr_csr_dbg_trap.dcsr_dbg_ok":
+            "needs a debug entry: no debug ROM in this program and the debug regime is not scheduled (TP-CSR-108 Notes, rule (g))",
+        "gen_csr_reset_read_cg.cr_dbg_reset.dcsr_dbg":
+            "needs a debug entry: no debug ROM in this program and the debug regime is not scheduled (TP-CSR-108 Notes, rule (g))",
+        "gen_csr_reset_read_cg.cr_dbg_reset.dpc_dbg":
+            "needs a debug entry: no debug ROM in this program and the debug regime is not scheduled (TP-CSR-108 Notes, rule (g))",
+        "gen_csr_reset_read_cg.cr_dbg_reset.dscratch0_dbg":
+            "needs a debug entry: no debug ROM in this program and the debug regime is not scheduled (TP-CSR-108 Notes, rule (g))",
+        "gen_csr_reset_read_cg.cr_dbg_reset.dscratch1_dbg":
+            "needs a debug entry: no debug ROM in this program and the debug regime is not scheduled (TP-CSR-108 Notes, rule (g))",
     }
 
     def report_count(self):

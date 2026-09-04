@@ -116,6 +116,43 @@ class IsaCti(GenTest):
     name = "gen_test_isa_cti"
     schedulable = lib.TIMING_ONLY_KNOBS
     # Items of the plan group this test does not check, with the missing component (two-sided against the group).
+    # bins this test does not guarantee per run, with the reason and its class: seed-dependent bins
+    # are credited from the merged report, stimulus bins need a program change, declaration bins cannot
+    # be a per-run guarantee at all
+    bins_not_hit = {
+        "gen_isa_branch_cg.cp_op.c_beqz":
+            "stimulus: the program emits no compressed branch: gen_isa_cti_prog.py generates the 32-bit forms only",
+        "gen_isa_branch_cg.cp_op.c_bnez":
+            "stimulus: the program emits no compressed branch: gen_isa_cti_prog.py generates the 32-bit forms only",
+        "gen_isa_branch_cg.cr_op_align.c_beqz_half":
+            "stimulus: depends on a compressed branch, which the program does not emit",
+        "gen_isa_branch_cg.cr_op_align.c_bnez_half":
+            "stimulus: depends on a compressed branch, which the program does not emit",
+        "gen_isa_branch_cg.cr_op_taken_cmp.c_beqz_no_intmin_zero":
+            "stimulus: depends on a compressed branch, which the program does not emit",
+        "gen_isa_branch_cg.cr_op_taken_cmp.c_beqz_no_ones_zero":
+            "stimulus: depends on a compressed branch, which the program does not emit",
+        "gen_isa_branch_cg.cr_op_taken_cmp.c_beqz_no_slt_ugt":
+            "stimulus: depends on a compressed branch, which the program does not emit",
+        "gen_isa_branch_cg.cr_op_taken_cmp.c_beqz_yes_equal":
+            "stimulus: depends on a compressed branch, which the program does not emit",
+        "gen_isa_branch_cg.cr_op_taken_cmp.c_bnez_no_equal":
+            "stimulus: depends on a compressed branch, which the program does not emit",
+        "gen_isa_branch_cg.cr_op_taken_cmp.c_bnez_yes_intmin_zero":
+            "stimulus: depends on a compressed branch, which the program does not emit",
+        "gen_isa_branch_cg.cr_op_taken_cmp.c_bnez_yes_ones_zero":
+            "stimulus: depends on a compressed branch, which the program does not emit",
+        "gen_isa_branch_cg.cr_op_taken_cmp.c_bnez_yes_slt_ugt":
+            "stimulus: depends on a compressed branch, which the program does not emit",
+        "gen_isa_jump_cg.cp_jalr_rs1.x0":
+            "stimulus: the program emits no jalr with rs1 = x0",
+        "gen_isa_jump_cg.cr_jalr_rs1_imm.x0_max_pos":
+            "stimulus: depends on jalr with rs1 = x0, which the program does not emit",
+        "gen_isa_jump_cg.cr_jalr_rs1_imm.x0_min_neg":
+            "stimulus: depends on jalr with rs1 = x0, which the program does not emit",
+        "gen_isa_jump_cg.cr_jalr_rs1_imm.x0_zero":
+            "stimulus: depends on jalr with rs1 = x0, which the program does not emit",
+    }
     not_built = {
         "TP-ISA-016": "needs WP-9: executable code windows at address 0 and the top page for the jal wrap and extremes, and an irq-agent command to break the self-loop",
         "TP-ISA-022": "needs WP-9: executable code windows at address 0 and the top page for the jalr wrap and rs1 = x0 targets",

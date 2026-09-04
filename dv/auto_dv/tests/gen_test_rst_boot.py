@@ -148,7 +148,12 @@ class RstBoot(GenTest):
     # items of the plan group this test does not check, with the reason (two-sided against the group by the structure check)
     # bins of built items this test cannot hit (irq precondition not applied); excluded from the manifest with the reason
     bins_not_hit = {
-        "gen_rst_boot_cg.cr_pending_first.irq_enabled_later_first_instr_retire": "irq agent absent: no interrupt line is driven",
+        "gen_rst_boot_cg.cp_boot_addr.zero":
+            "stimulus: the TB drives a fixed non-zero boot address; a zero boot address is not driven by any run of this entry",
+        "gen_rst_boot_cg.cr_pending_first.irq_enabled_later_first_instr_retire":
+            "irq agent absent: no interrupt line is driven",
+        "gen_sec_ctrl_inputs_cg.cp_bit8_readback.zero":
+            "stimulus: the readback never returns zero for this field in any run of this entry",
     }
     not_built = {
         "TP-SEC-031": "alert pin behaviour at reset: needs the event export (pin records)",

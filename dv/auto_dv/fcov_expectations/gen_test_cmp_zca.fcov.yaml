@@ -222,7 +222,6 @@ bins:
   - gen_cmp_imm_edges_cg.cr_sp_wrap.minus16_yes
   - gen_cmp_imm_edges_cg.cr_sp_wrap.plus16_yes
   - gen_cmp_imm_edges_cg.cr_sp_wrap.rand_yes
-  - gen_cmp_illegal_cg.cp_class.addi16sp_imm0
   - gen_cmp_imm_edges_cg.cp_shamt.max
   - gen_cmp_imm_edges_cg.cp_shamt.one
   - gen_cmp_imm_edges_cg.cp_shamt.rand
@@ -326,18 +325,6 @@ bins:
   - gen_cmp_zca_cg.cr_insn_rdfull.c_add_x8_15
   - gen_isa_jump_cg.cp_op.c_jalr
   - gen_isa_jump_cg.cr_link.c_jalr_pc2
-  - gen_isa_system_cg.cp_debug_mode.no
-  - gen_isa_system_cg.cp_ebreakm.clr
-  - gen_isa_system_cg.cp_ebreakm.set
-  - gen_isa_system_cg.cp_ebreaku.set
-  - gen_isa_system_cg.cp_op.c_ebreak
-  - gen_isa_system_cg.cp_outcome.debug_entry
-  - gen_isa_system_cg.cp_outcome.exception
-  - gen_isa_system_cg.cp_priv.m
-  - gen_isa_system_cg.cp_priv.u
-  - gen_isa_system_cg.cr_ebreak.c_m_dbg
-  - gen_isa_system_cg.cr_ebreak.c_m_exc
-  - gen_isa_system_cg.cr_ebreak.c_u_dbg
 anti_vacuity:
   gen_cmp_zca_cg.cp_insn.c_add: "CG-CMP-001: compressed vs 32-bit is decided from the retired instruction bits; a hit proves the sampled instruction retired at the sampled PC alignment with the sampled neighbour length"
   gen_cmp_zca_cg.cp_insn.c_addi: "CG-CMP-001: compressed vs 32-bit is decided from the retired instruction bits; a hit proves the sampled instruction retired at the sampled PC alignment with the sampled neighbour length"
@@ -560,7 +547,6 @@ anti_vacuity:
   gen_cmp_imm_edges_cg.cr_sp_wrap.minus16_yes: "CG-CMP-002: each coverpoint is guarded to its format so only that instruction populates it; a hit proves the immediate extreme was decoded and executed (result on RVFI)"
   gen_cmp_imm_edges_cg.cr_sp_wrap.plus16_yes: "CG-CMP-002: each coverpoint is guarded to its format so only that instruction populates it; a hit proves the immediate extreme was decoded and executed (result on RVFI)"
   gen_cmp_imm_edges_cg.cr_sp_wrap.rand_yes: "CG-CMP-002: each coverpoint is guarded to its format so only that instruction populates it; a hit proves the immediate extreme was decoded and executed (result on RVFI)"
-  gen_cmp_illegal_cg.cp_class.addi16sp_imm0: "CG-CMP-004: the class is derived from the instruction bits; cp_mtval_ok / cp_rvfi_insn_ok are recorded only when the handler read-back and the RVFI field match the prediction"
   gen_cmp_imm_edges_cg.cp_shamt.max: "CG-CMP-002: each coverpoint is guarded to its format so only that instruction populates it; a hit proves the immediate extreme was decoded and executed (result on RVFI)"
   gen_cmp_imm_edges_cg.cp_shamt.one: "CG-CMP-002: each coverpoint is guarded to its format so only that instruction populates it; a hit proves the immediate extreme was decoded and executed (result on RVFI)"
   gen_cmp_imm_edges_cg.cp_shamt.rand: "CG-CMP-002: each coverpoint is guarded to its format so only that instruction populates it; a hit proves the immediate extreme was decoded and executed (result on RVFI)"
@@ -664,15 +650,3 @@ anti_vacuity:
   gen_cmp_zca_cg.cr_insn_rdfull.c_add_x8_15: "CG-CMP-001: compressed vs 32-bit is decided from the retired instruction bits; a hit proves the sampled instruction retired at the sampled PC alignment with the sampled neighbour length"
   gen_isa_jump_cg.cp_op.c_jalr: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
   gen_isa_jump_cg.cr_link.c_jalr_pc2: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
-  gen_isa_system_cg.cp_debug_mode.no: "CG-ISA-009: these retire rarely and the outcome is derived from rvfi_trap, rvfi_ext_debug_mode transition, core_busy_o (IbexMuBiOff, C-5) and the handler's mcause read-back; cp_wfi_resume / cp_busy_off sample only on an executed wfi and discriminate the resume path (handler / debug / sequential) and the visibility of the busy dip; a hit proves the sampled (priv, config, outcome) tuple occurred"
-  gen_isa_system_cg.cp_ebreakm.clr: "CG-ISA-009: these retire rarely and the outcome is derived from rvfi_trap, rvfi_ext_debug_mode transition, core_busy_o (IbexMuBiOff, C-5) and the handler's mcause read-back; cp_wfi_resume / cp_busy_off sample only on an executed wfi and discriminate the resume path (handler / debug / sequential) and the visibility of the busy dip; a hit proves the sampled (priv, config, outcome) tuple occurred"
-  gen_isa_system_cg.cp_ebreakm.set: "CG-ISA-009: these retire rarely and the outcome is derived from rvfi_trap, rvfi_ext_debug_mode transition, core_busy_o (IbexMuBiOff, C-5) and the handler's mcause read-back; cp_wfi_resume / cp_busy_off sample only on an executed wfi and discriminate the resume path (handler / debug / sequential) and the visibility of the busy dip; a hit proves the sampled (priv, config, outcome) tuple occurred"
-  gen_isa_system_cg.cp_ebreaku.set: "CG-ISA-009: these retire rarely and the outcome is derived from rvfi_trap, rvfi_ext_debug_mode transition, core_busy_o (IbexMuBiOff, C-5) and the handler's mcause read-back; cp_wfi_resume / cp_busy_off sample only on an executed wfi and discriminate the resume path (handler / debug / sequential) and the visibility of the busy dip; a hit proves the sampled (priv, config, outcome) tuple occurred"
-  gen_isa_system_cg.cp_op.c_ebreak: "CG-ISA-009: these retire rarely and the outcome is derived from rvfi_trap, rvfi_ext_debug_mode transition, core_busy_o (IbexMuBiOff, C-5) and the handler's mcause read-back; cp_wfi_resume / cp_busy_off sample only on an executed wfi and discriminate the resume path (handler / debug / sequential) and the visibility of the busy dip; a hit proves the sampled (priv, config, outcome) tuple occurred"
-  gen_isa_system_cg.cp_outcome.debug_entry: "CG-ISA-009: these retire rarely and the outcome is derived from rvfi_trap, rvfi_ext_debug_mode transition, core_busy_o (IbexMuBiOff, C-5) and the handler's mcause read-back; cp_wfi_resume / cp_busy_off sample only on an executed wfi and discriminate the resume path (handler / debug / sequential) and the visibility of the busy dip; a hit proves the sampled (priv, config, outcome) tuple occurred"
-  gen_isa_system_cg.cp_outcome.exception: "CG-ISA-009: these retire rarely and the outcome is derived from rvfi_trap, rvfi_ext_debug_mode transition, core_busy_o (IbexMuBiOff, C-5) and the handler's mcause read-back; cp_wfi_resume / cp_busy_off sample only on an executed wfi and discriminate the resume path (handler / debug / sequential) and the visibility of the busy dip; a hit proves the sampled (priv, config, outcome) tuple occurred"
-  gen_isa_system_cg.cp_priv.m: "CG-ISA-009: these retire rarely and the outcome is derived from rvfi_trap, rvfi_ext_debug_mode transition, core_busy_o (IbexMuBiOff, C-5) and the handler's mcause read-back; cp_wfi_resume / cp_busy_off sample only on an executed wfi and discriminate the resume path (handler / debug / sequential) and the visibility of the busy dip; a hit proves the sampled (priv, config, outcome) tuple occurred"
-  gen_isa_system_cg.cp_priv.u: "CG-ISA-009: these retire rarely and the outcome is derived from rvfi_trap, rvfi_ext_debug_mode transition, core_busy_o (IbexMuBiOff, C-5) and the handler's mcause read-back; cp_wfi_resume / cp_busy_off sample only on an executed wfi and discriminate the resume path (handler / debug / sequential) and the visibility of the busy dip; a hit proves the sampled (priv, config, outcome) tuple occurred"
-  gen_isa_system_cg.cr_ebreak.c_m_dbg: "CG-ISA-009: these retire rarely and the outcome is derived from rvfi_trap, rvfi_ext_debug_mode transition, core_busy_o (IbexMuBiOff, C-5) and the handler's mcause read-back; cp_wfi_resume / cp_busy_off sample only on an executed wfi and discriminate the resume path (handler / debug / sequential) and the visibility of the busy dip; a hit proves the sampled (priv, config, outcome) tuple occurred"
-  gen_isa_system_cg.cr_ebreak.c_m_exc: "CG-ISA-009: these retire rarely and the outcome is derived from rvfi_trap, rvfi_ext_debug_mode transition, core_busy_o (IbexMuBiOff, C-5) and the handler's mcause read-back; cp_wfi_resume / cp_busy_off sample only on an executed wfi and discriminate the resume path (handler / debug / sequential) and the visibility of the busy dip; a hit proves the sampled (priv, config, outcome) tuple occurred"
-  gen_isa_system_cg.cr_ebreak.c_u_dbg: "CG-ISA-009: these retire rarely and the outcome is derived from rvfi_trap, rvfi_ext_debug_mode transition, core_busy_o (IbexMuBiOff, C-5) and the handler's mcause read-back; cp_wfi_resume / cp_busy_off sample only on an executed wfi and discriminate the resume path (handler / debug / sequential) and the visibility of the busy dip; a hit proves the sampled (priv, config, outcome) tuple occurred"

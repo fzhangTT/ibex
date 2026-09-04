@@ -100,6 +100,305 @@ class CmpZcmpBasic(GenTest):
     # The items' Knobs lines (dmem/imem rvalid and gnt delay regimes), all timing-only.
     schedulable = ("knob_dmem_rvalid_delay", "knob_dmem_gnt_delay", "knob_imem_rvalid_delay", "knob_imem_gnt_delay")
     # items of the plan group this test does not check, with the reason (two-sided against the group by the structure check)
+    # bins this test does not guarantee per run, with the reason and its class: seed-dependent bins
+    # are credited from the merged report, stimulus bins need a program change, declaration bins cannot
+    # be a per-run guarantee at all
+    bins_not_hit = {
+        "gen_cmp_zcmp_hazard_cg.cp_hazard.popret_ra_deferred":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_cmp_zcmp_hazard_cg.cp_rlist_class.r15":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_cmp_zcmp_hazard_cg.cr_ft_kind.popret_ft_cm_cm_mva01s":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_cmp_zcmp_hazard_cg.cr_ft_kind.popret_ft_cm_cm_mvsa01":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_cmp_zcmp_hazard_cg.cr_ft_kind.popret_ft_cm_cm_pop":
+            "stimulus: the program does not generate this first-then instruction pair",
+        "gen_cmp_zcmp_hazard_cg.cr_ft_kind.popret_ft_cm_cm_popret":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_cmp_zcmp_hazard_cg.cr_ft_kind.popret_ft_cm_cm_popretz":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_cmp_zcmp_hazard_cg.cr_ft_kind.popretz_ft_cm_cm_mva01s":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_cmp_zcmp_hazard_cg.cr_ft_kind.popretz_ft_cm_cm_mvsa01":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_cmp_zcmp_hazard_cg.cr_ft_kind.popretz_ft_cm_cm_popret":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_cmp_zcmp_hazard_cg.cr_ft_kind.popretz_ft_cm_cm_popretz":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_cmp_zcmp_hazard_cg.cr_ft_kind.popretz_ft_cm_cm_push":
+            "stimulus: the program does not generate this first-then instruction pair",
+        "gen_cmp_zcmp_hazard_cg.cr_hazard_delay.load_pushed_reg_then_push_long":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_cmp_zcmp_hazard_cg.cr_hazard_delay.load_pushed_reg_then_push_min1":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_cmp_zcmp_hazard_cg.cr_hazard_delay.load_pushed_reg_then_push_short":
+            "stimulus: the program does not generate this hazard shape at this delay",
+        "gen_cmp_zcmp_hazard_cg.cr_hazard_delay.load_then_mva01s_long":
+            "stimulus: the program does not generate this hazard shape at this delay",
+        "gen_cmp_zcmp_hazard_cg.cr_hazard_delay.load_then_mva01s_min1":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_cmp_zcmp_hazard_cg.cr_hazard_delay.load_then_mva01s_short":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_cmp_zcmp_hazard_cg.cr_hazard_delay.popret_ra_deferred_long":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_cmp_zcmp_hazard_cg.cr_hazard_delay.popret_ra_deferred_short":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_cmp_zcmp_hazard_cg.cr_hazard_delay.store_same_slot_then_pop_long":
+            "stimulus: the program does not generate this hazard shape at this delay",
+        "gen_cmp_zcmp_hazard_cg.cr_hazard_delay.store_same_slot_then_pop_min1":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_cmp_zcmp_hazard_cg.cr_hazard_delay.store_same_slot_then_pop_short":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_cmp_zcmp_hazard_cg.cr_hazard_delay.write_pushed_reg_then_push_long":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_cmp_zcmp_hazard_cg.cr_hazard_delay.write_pushed_reg_then_push_min1":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_cmp_zcmp_hazard_cg.cr_hazard_delay.write_pushed_reg_then_push_short":
+            "stimulus: the program does not generate this hazard shape at this delay",
+        "gen_cmp_zcmp_hazard_cg.cr_hazard_rlist.load_pushed_reg_then_push_r15":
+            "stimulus: the program does not generate this hazard shape with this rlist",
+        "gen_cmp_zcmp_hazard_cg.cr_hazard_rlist.load_pushed_reg_then_push_r4":
+            "stimulus: the program does not generate this hazard shape with this rlist",
+        "gen_cmp_zcmp_hazard_cg.cr_hazard_rlist.store_same_slot_then_pop_r15":
+            "stimulus: the program does not generate this hazard shape with this rlist",
+        "gen_cmp_zcmp_hazard_cg.cr_hazard_rlist.store_same_slot_then_pop_r4":
+            "stimulus: the program does not generate this hazard shape with this rlist",
+        "gen_cmp_zcmp_hazard_cg.cr_hazard_rlist.write_pushed_reg_then_push_r15":
+            "stimulus: the program does not generate this hazard shape with this rlist",
+        "gen_cmp_zcmp_hazard_cg.cr_hazard_rlist.write_pushed_reg_then_push_r4":
+            "stimulus: the program does not generate this hazard shape with this rlist",
+        "gen_cmp_zcmp_mv_cg.cr_insn_hazard.cm_mvsa01_load_prev":
+            "stimulus: the program does not generate this move-instruction hazard shape",
+        "gen_cmp_zcmp_pushpop_cg.cp_ret_align.odd":
+            "stimulus: the program keeps the stack pointer even, so an odd return alignment is not generated",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_delay.cm_pop_long":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_delay.cm_pop_min1":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_delay.cm_pop_mixed":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_delay.cm_pop_short":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_delay.cm_popret_long":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_delay.cm_popret_min1":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_delay.cm_popret_mixed":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_delay.cm_popret_short":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_delay.cm_popretz_long":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_delay.cm_popretz_min1":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_delay.cm_popretz_mixed":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_delay.cm_popretz_short":
+            "stimulus: the program does not generate this instruction with this delay class",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_delay.cm_push_long":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_delay.cm_push_min1":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_delay.cm_push_mixed":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_delay.cm_push_short":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r10_s0":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r10_s1":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r10_s2":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r10_s3":
+            "stimulus: the program draws a subset of the rlist and spimm space per run, so this combination of the full product is not generated",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r11_s0":
+            "stimulus: the program draws a subset of the rlist and spimm space per run, so this combination of the full product is not generated",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r11_s1":
+            "stimulus: the program draws a subset of the rlist and spimm space per run, so this combination of the full product is not generated",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r11_s2":
+            "stimulus: the program draws a subset of the rlist and spimm space per run, so this combination of the full product is not generated",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r11_s3":
+            "stimulus: the program draws a subset of the rlist and spimm space per run, so this combination of the full product is not generated",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r12_s0":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r12_s1":
+            "stimulus: the program draws a subset of the rlist and spimm space per run, so this combination of the full product is not generated",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r12_s2":
+            "stimulus: the program draws a subset of the rlist and spimm space per run, so this combination of the full product is not generated",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r12_s3":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r13_s0":
+            "stimulus: the program draws a subset of the rlist and spimm space per run, so this combination of the full product is not generated",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r13_s1":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r13_s2":
+            "stimulus: the program draws a subset of the rlist and spimm space per run, so this combination of the full product is not generated",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r13_s3":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r14_s0":
+            "stimulus: the program draws a subset of the rlist and spimm space per run, so this combination of the full product is not generated",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r14_s1":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r14_s2":
+            "stimulus: the program draws a subset of the rlist and spimm space per run, so this combination of the full product is not generated",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r14_s3":
+            "stimulus: the program draws a subset of the rlist and spimm space per run, so this combination of the full product is not generated",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r15_s0":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r15_s1":
+            "stimulus: the program draws a subset of the rlist and spimm space per run, so this combination of the full product is not generated",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r15_s2":
+            "stimulus: the program draws a subset of the rlist and spimm space per run, so this combination of the full product is not generated",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r15_s3":
+            "stimulus: the program draws a subset of the rlist and spimm space per run, so this combination of the full product is not generated",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r4_s0":
+            "stimulus: the program draws a subset of the rlist and spimm space per run, so this combination of the full product is not generated",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r4_s2":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r4_s3":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r5_s0":
+            "stimulus: the program draws a subset of the rlist and spimm space per run, so this combination of the full product is not generated",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r5_s1":
+            "stimulus: the program draws a subset of the rlist and spimm space per run, so this combination of the full product is not generated",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r5_s2":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r5_s3":
+            "stimulus: the program draws a subset of the rlist and spimm space per run, so this combination of the full product is not generated",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r6_s0":
+            "stimulus: the program draws a subset of the rlist and spimm space per run, so this combination of the full product is not generated",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r6_s1":
+            "stimulus: the program draws a subset of the rlist and spimm space per run, so this combination of the full product is not generated",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r6_s2":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r6_s3":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r7_s0":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r7_s1":
+            "stimulus: the program draws a subset of the rlist and spimm space per run, so this combination of the full product is not generated",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r7_s2":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r7_s3":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r8_s0":
+            "stimulus: the program draws a subset of the rlist and spimm space per run, so this combination of the full product is not generated",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r8_s1":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r8_s2":
+            "stimulus: the program draws a subset of the rlist and spimm space per run, so this combination of the full product is not generated",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r8_s3":
+            "stimulus: the program draws a subset of the rlist and spimm space per run, so this combination of the full product is not generated",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r9_s0":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r9_s1":
+            "stimulus: the program draws a subset of the rlist and spimm space per run, so this combination of the full product is not generated",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r9_s2":
+            "stimulus: the program draws a subset of the rlist and spimm space per run, so this combination of the full product is not generated",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r9_s3":
+            "stimulus: the program draws a subset of the rlist and spimm space per run, so this combination of the full product is not generated",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r10_s0":
+            "stimulus: the program draws a subset of the rlist and spimm space per run, so this combination of the full product is not generated",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r10_s1":
+            "stimulus: the program draws a subset of the rlist and spimm space per run, so this combination of the full product is not generated",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r10_s2":
+            "stimulus: the program draws a subset of the rlist and spimm space per run, so this combination of the full product is not generated",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r10_s3":
+            "stimulus: the program draws a subset of the rlist and spimm space per run, so this combination of the full product is not generated",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r11_s0":
+            "stimulus: the program draws a subset of the rlist and spimm space per run, so this combination of the full product is not generated",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r11_s1":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r11_s2":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r11_s3":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r12_s0":
+            "stimulus: the program draws a subset of the rlist and spimm space per run, so this combination of the full product is not generated",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r12_s1":
+            "stimulus: the program draws a subset of the rlist and spimm space per run, so this combination of the full product is not generated",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r12_s2":
+            "stimulus: the program draws a subset of the rlist and spimm space per run, so this combination of the full product is not generated",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r12_s3":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r13_s0":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r13_s1":
+            "stimulus: the program draws a subset of the rlist and spimm space per run, so this combination of the full product is not generated",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r13_s2":
+            "stimulus: the program draws a subset of the rlist and spimm space per run, so this combination of the full product is not generated",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r13_s3":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r14_s0":
+            "stimulus: the program draws a subset of the rlist and spimm space per run, so this combination of the full product is not generated",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r14_s1":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r14_s2":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r14_s3":
+            "stimulus: the program draws a subset of the rlist and spimm space per run, so this combination of the full product is not generated",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r15_s0":
+            "stimulus: the program draws a subset of the rlist and spimm space per run, so this combination of the full product is not generated",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r15_s1":
+            "stimulus: the program draws a subset of the rlist and spimm space per run, so this combination of the full product is not generated",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r15_s2":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r15_s3":
+            "stimulus: the program draws a subset of the rlist and spimm space per run, so this combination of the full product is not generated",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r4_s0":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r4_s1":
+            "stimulus: the program draws a subset of the rlist and spimm space per run, so this combination of the full product is not generated",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r4_s2":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r4_s3":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r5_s0":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r5_s1":
+            "stimulus: the program draws a subset of the rlist and spimm space per run, so this combination of the full product is not generated",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r5_s2":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r5_s3":
+            "stimulus: the program draws a subset of the rlist and spimm space per run, so this combination of the full product is not generated",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r6_s0":
+            "stimulus: the program draws a subset of the rlist and spimm space per run, so this combination of the full product is not generated",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r6_s1":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r6_s2":
+            "stimulus: the program draws a subset of the rlist and spimm space per run, so this combination of the full product is not generated",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r6_s3":
+            "stimulus: the program draws a subset of the rlist and spimm space per run, so this combination of the full product is not generated",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r7_s0":
+            "stimulus: the program draws a subset of the rlist and spimm space per run, so this combination of the full product is not generated",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r7_s1":
+            "stimulus: the program draws a subset of the rlist and spimm space per run, so this combination of the full product is not generated",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r7_s2":
+            "stimulus: the program draws a subset of the rlist and spimm space per run, so this combination of the full product is not generated",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r7_s3":
+            "stimulus: the program draws a subset of the rlist and spimm space per run, so this combination of the full product is not generated",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r8_s0":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r8_s1":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r8_s2":
+            "stimulus: the program draws a subset of the rlist and spimm space per run, so this combination of the full product is not generated",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r8_s3":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r9_s0":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r9_s1":
+            "stimulus: the program draws a subset of the rlist and spimm space per run, so this combination of the full product is not generated",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r9_s2":
+            "stimulus: the program draws a subset of the rlist and spimm space per run, so this combination of the full product is not generated",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popretz_r9_s3":
+            "stimulus: the program draws a subset of the rlist and spimm space per run, so this combination of the full product is not generated",
+        "gen_cmp_zcmp_pushpop_cg.cr_ret_align.cm_popret_odd":
+            "stimulus: depends on an odd return alignment, which the program does not generate",
+        "gen_cmp_zcmp_pushpop_cg.cr_ret_align.cm_popretz_odd":
+            "stimulus: depends on an odd return alignment, which the program does not generate",
+    }
     not_built = {
         "TP-CMP-068": "needs writable low addresses and the bus records of the event export",
     }

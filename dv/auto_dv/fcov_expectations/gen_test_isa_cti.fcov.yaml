@@ -2,6 +2,22 @@
 # not_built TP-ISA-022: needs WP-9: executable code windows at address 0 and the top page for the jalr wrap and rs1 = x0 targets
 # not_built TP-ISA-024: timing clause: bus records / RVFI cycle, event export
 # not_built TP-ISA-026: needs WP-9: text near address 0 for the branch wrap and an irq-agent command to break the self-loop; the offset-extreme clause alone would declare bins the test cannot hit
+# not_hit gen_isa_branch_cg.cp_op.c_beqz: stimulus: the program emits no compressed branch: gen_isa_cti_prog.py generates the 32-bit forms only
+# not_hit gen_isa_branch_cg.cp_op.c_bnez: stimulus: the program emits no compressed branch: gen_isa_cti_prog.py generates the 32-bit forms only
+# not_hit gen_isa_branch_cg.cr_op_align.c_beqz_half: stimulus: depends on a compressed branch, which the program does not emit
+# not_hit gen_isa_branch_cg.cr_op_align.c_bnez_half: stimulus: depends on a compressed branch, which the program does not emit
+# not_hit gen_isa_branch_cg.cr_op_taken_cmp.c_beqz_no_intmin_zero: stimulus: depends on a compressed branch, which the program does not emit
+# not_hit gen_isa_branch_cg.cr_op_taken_cmp.c_beqz_no_ones_zero: stimulus: depends on a compressed branch, which the program does not emit
+# not_hit gen_isa_branch_cg.cr_op_taken_cmp.c_beqz_no_slt_ugt: stimulus: depends on a compressed branch, which the program does not emit
+# not_hit gen_isa_branch_cg.cr_op_taken_cmp.c_beqz_yes_equal: stimulus: depends on a compressed branch, which the program does not emit
+# not_hit gen_isa_branch_cg.cr_op_taken_cmp.c_bnez_no_equal: stimulus: depends on a compressed branch, which the program does not emit
+# not_hit gen_isa_branch_cg.cr_op_taken_cmp.c_bnez_yes_intmin_zero: stimulus: depends on a compressed branch, which the program does not emit
+# not_hit gen_isa_branch_cg.cr_op_taken_cmp.c_bnez_yes_ones_zero: stimulus: depends on a compressed branch, which the program does not emit
+# not_hit gen_isa_branch_cg.cr_op_taken_cmp.c_bnez_yes_slt_ugt: stimulus: depends on a compressed branch, which the program does not emit
+# not_hit gen_isa_jump_cg.cp_jalr_rs1.x0: stimulus: the program emits no jalr with rs1 = x0
+# not_hit gen_isa_jump_cg.cr_jalr_rs1_imm.x0_max_pos: stimulus: depends on jalr with rs1 = x0, which the program does not emit
+# not_hit gen_isa_jump_cg.cr_jalr_rs1_imm.x0_min_neg: stimulus: depends on jalr with rs1 = x0, which the program does not emit
+# not_hit gen_isa_jump_cg.cr_jalr_rs1_imm.x0_zero: stimulus: depends on jalr with rs1 = x0, which the program does not emit
 test: gen_test_isa_cti
 owner: test-writer
 bins:
@@ -45,16 +61,12 @@ bins:
   - gen_isa_jump_cg.cp_jalr_imm.min_neg
   - gen_isa_jump_cg.cp_jalr_imm.zero
   - gen_isa_jump_cg.cp_jalr_rs1.eq_rd
-  - gen_isa_jump_cg.cp_jalr_rs1.x0
   - gen_isa_jump_cg.cr_jalr_rs1_imm.eq_rd_max_pos
   - gen_isa_jump_cg.cr_jalr_rs1_imm.eq_rd_min_neg
   - gen_isa_jump_cg.cr_jalr_rs1_imm.eq_rd_zero
   - gen_isa_jump_cg.cr_jalr_rs1_imm.other_max_pos
   - gen_isa_jump_cg.cr_jalr_rs1_imm.other_min_neg
   - gen_isa_jump_cg.cr_jalr_rs1_imm.other_zero
-  - gen_isa_jump_cg.cr_jalr_rs1_imm.x0_max_pos
-  - gen_isa_jump_cg.cr_jalr_rs1_imm.x0_min_neg
-  - gen_isa_jump_cg.cr_jalr_rs1_imm.x0_zero
   - gen_isa_jump_cg.cp_jalr_imm.odd
   - gen_isa_jump_cg.cp_op.c_jr
   - gen_isa_jump_cg.cp_target_odd.yes
@@ -187,24 +199,12 @@ bins:
   - gen_isa_branch_cg.cr_wrap.blt_no
   - gen_isa_branch_cg.cr_wrap.bltu_no
   - gen_isa_branch_cg.cr_wrap.bne_no
-  - gen_isa_branch_cg.cp_op.c_beqz
-  - gen_isa_branch_cg.cp_op.c_bnez
-  - gen_isa_branch_cg.cr_op_taken_cmp.c_beqz_no_intmin_zero
-  - gen_isa_branch_cg.cr_op_taken_cmp.c_beqz_no_ones_zero
-  - gen_isa_branch_cg.cr_op_taken_cmp.c_beqz_no_slt_ugt
-  - gen_isa_branch_cg.cr_op_taken_cmp.c_beqz_yes_equal
-  - gen_isa_branch_cg.cr_op_taken_cmp.c_bnez_no_equal
-  - gen_isa_branch_cg.cr_op_taken_cmp.c_bnez_yes_intmin_zero
-  - gen_isa_branch_cg.cr_op_taken_cmp.c_bnez_yes_ones_zero
-  - gen_isa_branch_cg.cr_op_taken_cmp.c_bnez_yes_slt_ugt
   - gen_isa_jump_cg.cp_op.c_j
   - gen_isa_jump_cg.cr_op_align.c_j_half
   - gen_isa_jump_cg.cr_op_align.c_jal_half
   - gen_isa_jump_cg.cr_op_align.c_jalr_half
   - gen_isa_jump_cg.cr_op_align.c_jr_half
   - gen_isa_jump_cg.cr_op_align.jalr_half
-  - gen_isa_branch_cg.cr_op_align.c_beqz_half
-  - gen_isa_branch_cg.cr_op_align.c_bnez_half
 anti_vacuity:
   gen_isa_jump_cg.cp_jal_off.neg_rand: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
   gen_isa_jump_cg.cp_jal_off.pos_rand: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
@@ -246,16 +246,12 @@ anti_vacuity:
   gen_isa_jump_cg.cp_jalr_imm.min_neg: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
   gen_isa_jump_cg.cp_jalr_imm.zero: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
   gen_isa_jump_cg.cp_jalr_rs1.eq_rd: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
-  gen_isa_jump_cg.cp_jalr_rs1.x0: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
   gen_isa_jump_cg.cr_jalr_rs1_imm.eq_rd_max_pos: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
   gen_isa_jump_cg.cr_jalr_rs1_imm.eq_rd_min_neg: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
   gen_isa_jump_cg.cr_jalr_rs1_imm.eq_rd_zero: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
   gen_isa_jump_cg.cr_jalr_rs1_imm.other_max_pos: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
   gen_isa_jump_cg.cr_jalr_rs1_imm.other_min_neg: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
   gen_isa_jump_cg.cr_jalr_rs1_imm.other_zero: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
-  gen_isa_jump_cg.cr_jalr_rs1_imm.x0_max_pos: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
-  gen_isa_jump_cg.cr_jalr_rs1_imm.x0_min_neg: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
-  gen_isa_jump_cg.cr_jalr_rs1_imm.x0_zero: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
   gen_isa_jump_cg.cp_jalr_imm.odd: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
   gen_isa_jump_cg.cp_op.c_jr: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
   gen_isa_jump_cg.cp_target_odd.yes: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
@@ -388,21 +384,9 @@ anti_vacuity:
   gen_isa_branch_cg.cr_wrap.blt_no: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
   gen_isa_branch_cg.cr_wrap.bltu_no: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
   gen_isa_branch_cg.cr_wrap.bne_no: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
-  gen_isa_branch_cg.cp_op.c_beqz: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
-  gen_isa_branch_cg.cp_op.c_bnez: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
-  gen_isa_branch_cg.cr_op_taken_cmp.c_beqz_no_intmin_zero: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
-  gen_isa_branch_cg.cr_op_taken_cmp.c_beqz_no_ones_zero: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
-  gen_isa_branch_cg.cr_op_taken_cmp.c_beqz_no_slt_ugt: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
-  gen_isa_branch_cg.cr_op_taken_cmp.c_beqz_yes_equal: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
-  gen_isa_branch_cg.cr_op_taken_cmp.c_bnez_no_equal: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
-  gen_isa_branch_cg.cr_op_taken_cmp.c_bnez_yes_intmin_zero: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
-  gen_isa_branch_cg.cr_op_taken_cmp.c_bnez_yes_ones_zero: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
-  gen_isa_branch_cg.cr_op_taken_cmp.c_bnez_yes_slt_ugt: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
   gen_isa_jump_cg.cp_op.c_j: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
   gen_isa_jump_cg.cr_op_align.c_j_half: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
   gen_isa_jump_cg.cr_op_align.c_jal_half: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
   gen_isa_jump_cg.cr_op_align.c_jalr_half: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
   gen_isa_jump_cg.cr_op_align.c_jr_half: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
   gen_isa_jump_cg.cr_op_align.jalr_half: "CG-ISA-006: jumps are a small fraction of retirements; a hit proves a jump retired with the sampled offset/target class and (pc_wdata) redirect"
-  gen_isa_branch_cg.cr_op_align.c_beqz_half: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"
-  gen_isa_branch_cg.cr_op_align.c_bnez_half: "CG-ISA-007: branches are a subset of retirements; taken is derived from rvfi_pc_wdata != pc + len, so a hit proves the sampled outcome actually happened"

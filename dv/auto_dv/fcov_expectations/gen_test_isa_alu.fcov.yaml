@@ -1,3 +1,42 @@
+# not_hit gen_isa_alu_reg_cg.cr_slt_boundary.slt_all_ones_int_max: seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_isa_alu_reg_cg.cr_slt_boundary.slt_int_max_all_ones: seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_isa_alu_reg_cg.cr_slt_boundary.slt_int_min_zero: seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_isa_alu_reg_cg.cr_slt_boundary.sltu_all_ones_int_max: seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_isa_alu_reg_cg.cr_slt_boundary.sltu_all_ones_int_min: seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_isa_alu_reg_cg.cr_slt_boundary.sltu_all_ones_zero: seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_isa_alu_reg_cg.cr_slt_boundary.sltu_int_max_one: seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_isa_alu_reg_cg.cr_slt_boundary.sltu_int_min_all_ones: seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_isa_alu_reg_cg.cr_slt_boundary.sltu_one_int_max: seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_isa_alu_reg_cg.cr_slt_boundary.sltu_one_int_min: seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_isa_alu_reg_cg.cr_slt_boundary.sltu_one_zero: seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_isa_alu_reg_cg.cr_slt_boundary.sltu_zero_int_max: seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_isa_alu_reg_cg.cr_slt_boundary.sltu_zero_int_min: seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_isa_hint_x0_cg.cr_writer_read.bit_1cyc_rs1_zero: stimulus: the program never places this writer class immediately before a retirement that reads x0 through the named operand (cp_x0_read samples the next retirement, so the pair must be adjacent)
+# not_hit gen_isa_hint_x0_cg.cr_writer_read.bit_1cyc_rs2_zero: seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_isa_hint_x0_cg.cr_writer_read.bit_2cyc_none: seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_isa_hint_x0_cg.cr_writer_read.bit_2cyc_rs1_zero: seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_isa_hint_x0_cg.cr_writer_read.bit_2cyc_rs2_zero: seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_isa_hint_x0_cg.cr_writer_read.cmp_hint_none: seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_isa_hint_x0_cg.cr_writer_read.cmp_hint_rs1_zero: seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_isa_hint_x0_cg.cr_writer_read.cmp_hint_rs2_zero: seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_isa_hint_x0_cg.cr_writer_read.csrr_rs2_zero: seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_isa_hint_x0_cg.cr_writer_read.div_rem_none: seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_isa_hint_x0_cg.cr_writer_read.div_rem_rs1_zero: seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_isa_hint_x0_cg.cr_writer_read.div_rem_rs2_zero: stimulus: the program never places this writer class immediately before a retirement that reads x0 through the named operand (cp_x0_read samples the next retirement, so the pair must be adjacent)
+# not_hit gen_isa_hint_x0_cg.cr_writer_read.jal_rs1_zero: stimulus: the program never places this writer class immediately before a retirement that reads x0 through the named operand (cp_x0_read samples the next retirement, so the pair must be adjacent)
+# not_hit gen_isa_hint_x0_cg.cr_writer_read.jal_rs2_zero: seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_isa_hint_x0_cg.cr_writer_read.jalr_none: seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_isa_hint_x0_cg.cr_writer_read.jalr_rs1_zero: seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_isa_hint_x0_cg.cr_writer_read.jalr_rs2_zero: seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_isa_hint_x0_cg.cr_writer_read.load_none: seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_isa_hint_x0_cg.cr_writer_read.load_rs1_zero: seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_isa_hint_x0_cg.cr_writer_read.load_rs2_zero: seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_isa_hint_x0_cg.cr_writer_read.mul_none: seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_isa_hint_x0_cg.cr_writer_read.mul_rs1_zero: seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_isa_hint_x0_cg.cr_writer_read.mul_rs2_zero: stimulus: the program never places this writer class immediately before a retirement that reads x0 through the named operand (cp_x0_read samples the next retirement, so the pair must be adjacent)
+# not_hit gen_isa_hint_x0_cg.cr_writer_read.mulh_rs1_zero: stimulus: the program never places this writer class immediately before a retirement that reads x0 through the named operand (cp_x0_read samples the next retirement, so the pair must be adjacent)
+# not_hit gen_isa_hint_x0_cg.cr_writer_read.mulh_rs2_zero: stimulus: the program never places this writer class immediately before a retirement that reads x0 through the named operand (cp_x0_read samples the next retirement, so the pair must be adjacent)
+# not_hit gen_isa_hint_x0_cg.cr_writer_read.shift_rs2_zero: seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
 # not_hit gen_isa_lui_auipc_cg.cp_pc_region.high: needs WP-9: no executable code in the top page
 # not_hit gen_isa_lui_auipc_cg.cp_pc_region.low: needs WP-9: no executable code below 0x1000
 test: gen_test_isa_alu
@@ -450,13 +489,11 @@ bins:
   - gen_isa_alu_reg_cg.cr_op_eq.sub_yes
   - gen_isa_alu_reg_cg.cr_op_eq.xor_yes
   - gen_isa_alu_reg_cg.cr_slt_boundary.slt_all_ones_all_ones
-  - gen_isa_alu_reg_cg.cr_slt_boundary.slt_all_ones_int_max
   - gen_isa_alu_reg_cg.cr_slt_boundary.slt_all_ones_int_min
   - gen_isa_alu_reg_cg.cr_slt_boundary.slt_all_ones_neg_rand
   - gen_isa_alu_reg_cg.cr_slt_boundary.slt_all_ones_one
   - gen_isa_alu_reg_cg.cr_slt_boundary.slt_all_ones_pos_rand
   - gen_isa_alu_reg_cg.cr_slt_boundary.slt_all_ones_zero
-  - gen_isa_alu_reg_cg.cr_slt_boundary.slt_int_max_all_ones
   - gen_isa_alu_reg_cg.cr_slt_boundary.slt_int_max_int_max
   - gen_isa_alu_reg_cg.cr_slt_boundary.slt_int_max_int_min
   - gen_isa_alu_reg_cg.cr_slt_boundary.slt_int_max_neg_rand
@@ -469,7 +506,6 @@ bins:
   - gen_isa_alu_reg_cg.cr_slt_boundary.slt_int_min_neg_rand
   - gen_isa_alu_reg_cg.cr_slt_boundary.slt_int_min_one
   - gen_isa_alu_reg_cg.cr_slt_boundary.slt_int_min_pos_rand
-  - gen_isa_alu_reg_cg.cr_slt_boundary.slt_int_min_zero
   - gen_isa_alu_reg_cg.cr_slt_boundary.slt_neg_rand_all_ones
   - gen_isa_alu_reg_cg.cr_slt_boundary.slt_neg_rand_int_max
   - gen_isa_alu_reg_cg.cr_slt_boundary.slt_neg_rand_int_min
@@ -499,20 +535,15 @@ bins:
   - gen_isa_alu_reg_cg.cr_slt_boundary.slt_zero_pos_rand
   - gen_isa_alu_reg_cg.cr_slt_boundary.slt_zero_zero
   - gen_isa_alu_reg_cg.cr_slt_boundary.sltu_all_ones_all_ones
-  - gen_isa_alu_reg_cg.cr_slt_boundary.sltu_all_ones_int_max
-  - gen_isa_alu_reg_cg.cr_slt_boundary.sltu_all_ones_int_min
   - gen_isa_alu_reg_cg.cr_slt_boundary.sltu_all_ones_neg_rand
   - gen_isa_alu_reg_cg.cr_slt_boundary.sltu_all_ones_one
   - gen_isa_alu_reg_cg.cr_slt_boundary.sltu_all_ones_pos_rand
-  - gen_isa_alu_reg_cg.cr_slt_boundary.sltu_all_ones_zero
   - gen_isa_alu_reg_cg.cr_slt_boundary.sltu_int_max_all_ones
   - gen_isa_alu_reg_cg.cr_slt_boundary.sltu_int_max_int_max
   - gen_isa_alu_reg_cg.cr_slt_boundary.sltu_int_max_int_min
   - gen_isa_alu_reg_cg.cr_slt_boundary.sltu_int_max_neg_rand
-  - gen_isa_alu_reg_cg.cr_slt_boundary.sltu_int_max_one
   - gen_isa_alu_reg_cg.cr_slt_boundary.sltu_int_max_pos_rand
   - gen_isa_alu_reg_cg.cr_slt_boundary.sltu_int_max_zero
-  - gen_isa_alu_reg_cg.cr_slt_boundary.sltu_int_min_all_ones
   - gen_isa_alu_reg_cg.cr_slt_boundary.sltu_int_min_int_max
   - gen_isa_alu_reg_cg.cr_slt_boundary.sltu_int_min_int_min
   - gen_isa_alu_reg_cg.cr_slt_boundary.sltu_int_min_neg_rand
@@ -527,12 +558,9 @@ bins:
   - gen_isa_alu_reg_cg.cr_slt_boundary.sltu_neg_rand_pos_rand
   - gen_isa_alu_reg_cg.cr_slt_boundary.sltu_neg_rand_zero
   - gen_isa_alu_reg_cg.cr_slt_boundary.sltu_one_all_ones
-  - gen_isa_alu_reg_cg.cr_slt_boundary.sltu_one_int_max
-  - gen_isa_alu_reg_cg.cr_slt_boundary.sltu_one_int_min
   - gen_isa_alu_reg_cg.cr_slt_boundary.sltu_one_neg_rand
   - gen_isa_alu_reg_cg.cr_slt_boundary.sltu_one_one
   - gen_isa_alu_reg_cg.cr_slt_boundary.sltu_one_pos_rand
-  - gen_isa_alu_reg_cg.cr_slt_boundary.sltu_one_zero
   - gen_isa_alu_reg_cg.cr_slt_boundary.sltu_pos_rand_all_ones
   - gen_isa_alu_reg_cg.cr_slt_boundary.sltu_pos_rand_int_max
   - gen_isa_alu_reg_cg.cr_slt_boundary.sltu_pos_rand_int_min
@@ -541,8 +569,6 @@ bins:
   - gen_isa_alu_reg_cg.cr_slt_boundary.sltu_pos_rand_pos_rand
   - gen_isa_alu_reg_cg.cr_slt_boundary.sltu_pos_rand_zero
   - gen_isa_alu_reg_cg.cr_slt_boundary.sltu_zero_all_ones
-  - gen_isa_alu_reg_cg.cr_slt_boundary.sltu_zero_int_max
-  - gen_isa_alu_reg_cg.cr_slt_boundary.sltu_zero_int_min
   - gen_isa_alu_reg_cg.cr_slt_boundary.sltu_zero_neg_rand
   - gen_isa_alu_reg_cg.cr_slt_boundary.sltu_zero_one
   - gen_isa_alu_reg_cg.cr_slt_boundary.sltu_zero_pos_rand
@@ -570,41 +596,15 @@ bins:
   - gen_isa_hint_x0_cg.cr_writer_read.alu_reg_rs1_zero
   - gen_isa_hint_x0_cg.cr_writer_read.alu_reg_rs2_zero
   - gen_isa_hint_x0_cg.cr_writer_read.bit_1cyc_none
-  - gen_isa_hint_x0_cg.cr_writer_read.bit_1cyc_rs1_zero
-  - gen_isa_hint_x0_cg.cr_writer_read.bit_1cyc_rs2_zero
-  - gen_isa_hint_x0_cg.cr_writer_read.bit_2cyc_none
-  - gen_isa_hint_x0_cg.cr_writer_read.bit_2cyc_rs1_zero
-  - gen_isa_hint_x0_cg.cr_writer_read.bit_2cyc_rs2_zero
-  - gen_isa_hint_x0_cg.cr_writer_read.cmp_hint_none
-  - gen_isa_hint_x0_cg.cr_writer_read.cmp_hint_rs1_zero
-  - gen_isa_hint_x0_cg.cr_writer_read.cmp_hint_rs2_zero
   - gen_isa_hint_x0_cg.cr_writer_read.csrr_none
   - gen_isa_hint_x0_cg.cr_writer_read.csrr_rs1_zero
-  - gen_isa_hint_x0_cg.cr_writer_read.csrr_rs2_zero
-  - gen_isa_hint_x0_cg.cr_writer_read.div_rem_none
-  - gen_isa_hint_x0_cg.cr_writer_read.div_rem_rs1_zero
-  - gen_isa_hint_x0_cg.cr_writer_read.div_rem_rs2_zero
   - gen_isa_hint_x0_cg.cr_writer_read.jal_none
-  - gen_isa_hint_x0_cg.cr_writer_read.jal_rs1_zero
-  - gen_isa_hint_x0_cg.cr_writer_read.jal_rs2_zero
-  - gen_isa_hint_x0_cg.cr_writer_read.jalr_none
-  - gen_isa_hint_x0_cg.cr_writer_read.jalr_rs1_zero
-  - gen_isa_hint_x0_cg.cr_writer_read.jalr_rs2_zero
-  - gen_isa_hint_x0_cg.cr_writer_read.load_none
-  - gen_isa_hint_x0_cg.cr_writer_read.load_rs1_zero
-  - gen_isa_hint_x0_cg.cr_writer_read.load_rs2_zero
   - gen_isa_hint_x0_cg.cr_writer_read.lui_auipc_none
   - gen_isa_hint_x0_cg.cr_writer_read.lui_auipc_rs1_zero
   - gen_isa_hint_x0_cg.cr_writer_read.lui_auipc_rs2_zero
-  - gen_isa_hint_x0_cg.cr_writer_read.mul_none
-  - gen_isa_hint_x0_cg.cr_writer_read.mul_rs1_zero
-  - gen_isa_hint_x0_cg.cr_writer_read.mul_rs2_zero
   - gen_isa_hint_x0_cg.cr_writer_read.mulh_none
-  - gen_isa_hint_x0_cg.cr_writer_read.mulh_rs1_zero
-  - gen_isa_hint_x0_cg.cr_writer_read.mulh_rs2_zero
   - gen_isa_hint_x0_cg.cr_writer_read.shift_none
   - gen_isa_hint_x0_cg.cr_writer_read.shift_rs1_zero
-  - gen_isa_hint_x0_cg.cr_writer_read.shift_rs2_zero
 anti_vacuity:
   gen_isa_alu_imm_cg.cp_addi_wrap.none: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
   gen_isa_alu_imm_cg.cp_imm_class.max_pos: "CG-ISA-001: rvfi_valid is a subset of cycles and the funct3 guard excludes shifts, loads, and every other class; a hit proves an I-type ALU op retired with the sampled operand/immediate class"
@@ -1053,13 +1053,11 @@ anti_vacuity:
   gen_isa_alu_reg_cg.cr_op_eq.sub_yes: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
   gen_isa_alu_reg_cg.cr_op_eq.xor_yes: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
   gen_isa_alu_reg_cg.cr_slt_boundary.slt_all_ones_all_ones: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
-  gen_isa_alu_reg_cg.cr_slt_boundary.slt_all_ones_int_max: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
   gen_isa_alu_reg_cg.cr_slt_boundary.slt_all_ones_int_min: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
   gen_isa_alu_reg_cg.cr_slt_boundary.slt_all_ones_neg_rand: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
   gen_isa_alu_reg_cg.cr_slt_boundary.slt_all_ones_one: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
   gen_isa_alu_reg_cg.cr_slt_boundary.slt_all_ones_pos_rand: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
   gen_isa_alu_reg_cg.cr_slt_boundary.slt_all_ones_zero: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
-  gen_isa_alu_reg_cg.cr_slt_boundary.slt_int_max_all_ones: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
   gen_isa_alu_reg_cg.cr_slt_boundary.slt_int_max_int_max: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
   gen_isa_alu_reg_cg.cr_slt_boundary.slt_int_max_int_min: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
   gen_isa_alu_reg_cg.cr_slt_boundary.slt_int_max_neg_rand: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
@@ -1072,7 +1070,6 @@ anti_vacuity:
   gen_isa_alu_reg_cg.cr_slt_boundary.slt_int_min_neg_rand: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
   gen_isa_alu_reg_cg.cr_slt_boundary.slt_int_min_one: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
   gen_isa_alu_reg_cg.cr_slt_boundary.slt_int_min_pos_rand: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
-  gen_isa_alu_reg_cg.cr_slt_boundary.slt_int_min_zero: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
   gen_isa_alu_reg_cg.cr_slt_boundary.slt_neg_rand_all_ones: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
   gen_isa_alu_reg_cg.cr_slt_boundary.slt_neg_rand_int_max: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
   gen_isa_alu_reg_cg.cr_slt_boundary.slt_neg_rand_int_min: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
@@ -1102,20 +1099,15 @@ anti_vacuity:
   gen_isa_alu_reg_cg.cr_slt_boundary.slt_zero_pos_rand: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
   gen_isa_alu_reg_cg.cr_slt_boundary.slt_zero_zero: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
   gen_isa_alu_reg_cg.cr_slt_boundary.sltu_all_ones_all_ones: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
-  gen_isa_alu_reg_cg.cr_slt_boundary.sltu_all_ones_int_max: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
-  gen_isa_alu_reg_cg.cr_slt_boundary.sltu_all_ones_int_min: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
   gen_isa_alu_reg_cg.cr_slt_boundary.sltu_all_ones_neg_rand: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
   gen_isa_alu_reg_cg.cr_slt_boundary.sltu_all_ones_one: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
   gen_isa_alu_reg_cg.cr_slt_boundary.sltu_all_ones_pos_rand: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
-  gen_isa_alu_reg_cg.cr_slt_boundary.sltu_all_ones_zero: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
   gen_isa_alu_reg_cg.cr_slt_boundary.sltu_int_max_all_ones: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
   gen_isa_alu_reg_cg.cr_slt_boundary.sltu_int_max_int_max: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
   gen_isa_alu_reg_cg.cr_slt_boundary.sltu_int_max_int_min: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
   gen_isa_alu_reg_cg.cr_slt_boundary.sltu_int_max_neg_rand: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
-  gen_isa_alu_reg_cg.cr_slt_boundary.sltu_int_max_one: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
   gen_isa_alu_reg_cg.cr_slt_boundary.sltu_int_max_pos_rand: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
   gen_isa_alu_reg_cg.cr_slt_boundary.sltu_int_max_zero: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
-  gen_isa_alu_reg_cg.cr_slt_boundary.sltu_int_min_all_ones: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
   gen_isa_alu_reg_cg.cr_slt_boundary.sltu_int_min_int_max: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
   gen_isa_alu_reg_cg.cr_slt_boundary.sltu_int_min_int_min: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
   gen_isa_alu_reg_cg.cr_slt_boundary.sltu_int_min_neg_rand: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
@@ -1130,12 +1122,9 @@ anti_vacuity:
   gen_isa_alu_reg_cg.cr_slt_boundary.sltu_neg_rand_pos_rand: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
   gen_isa_alu_reg_cg.cr_slt_boundary.sltu_neg_rand_zero: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
   gen_isa_alu_reg_cg.cr_slt_boundary.sltu_one_all_ones: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
-  gen_isa_alu_reg_cg.cr_slt_boundary.sltu_one_int_max: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
-  gen_isa_alu_reg_cg.cr_slt_boundary.sltu_one_int_min: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
   gen_isa_alu_reg_cg.cr_slt_boundary.sltu_one_neg_rand: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
   gen_isa_alu_reg_cg.cr_slt_boundary.sltu_one_one: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
   gen_isa_alu_reg_cg.cr_slt_boundary.sltu_one_pos_rand: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
-  gen_isa_alu_reg_cg.cr_slt_boundary.sltu_one_zero: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
   gen_isa_alu_reg_cg.cr_slt_boundary.sltu_pos_rand_all_ones: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
   gen_isa_alu_reg_cg.cr_slt_boundary.sltu_pos_rand_int_max: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
   gen_isa_alu_reg_cg.cr_slt_boundary.sltu_pos_rand_int_min: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
@@ -1144,8 +1133,6 @@ anti_vacuity:
   gen_isa_alu_reg_cg.cr_slt_boundary.sltu_pos_rand_pos_rand: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
   gen_isa_alu_reg_cg.cr_slt_boundary.sltu_pos_rand_zero: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
   gen_isa_alu_reg_cg.cr_slt_boundary.sltu_zero_all_ones: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
-  gen_isa_alu_reg_cg.cr_slt_boundary.sltu_zero_int_max: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
-  gen_isa_alu_reg_cg.cr_slt_boundary.sltu_zero_int_min: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
   gen_isa_alu_reg_cg.cr_slt_boundary.sltu_zero_neg_rand: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
   gen_isa_alu_reg_cg.cr_slt_boundary.sltu_zero_one: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
   gen_isa_alu_reg_cg.cr_slt_boundary.sltu_zero_pos_rand: "CG-ISA-002: excludes shifts (funct3 001/101), M (funct7 0000001) and Zb* funct7 values; a hit proves an R-type base ALU op retired with the sampled operand classes"
@@ -1173,38 +1160,12 @@ anti_vacuity:
   gen_isa_hint_x0_cg.cr_writer_read.alu_reg_rs1_zero: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
   gen_isa_hint_x0_cg.cr_writer_read.alu_reg_rs2_zero: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
   gen_isa_hint_x0_cg.cr_writer_read.bit_1cyc_none: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
-  gen_isa_hint_x0_cg.cr_writer_read.bit_1cyc_rs1_zero: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
-  gen_isa_hint_x0_cg.cr_writer_read.bit_1cyc_rs2_zero: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
-  gen_isa_hint_x0_cg.cr_writer_read.bit_2cyc_none: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
-  gen_isa_hint_x0_cg.cr_writer_read.bit_2cyc_rs1_zero: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
-  gen_isa_hint_x0_cg.cr_writer_read.bit_2cyc_rs2_zero: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
-  gen_isa_hint_x0_cg.cr_writer_read.cmp_hint_none: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
-  gen_isa_hint_x0_cg.cr_writer_read.cmp_hint_rs1_zero: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
-  gen_isa_hint_x0_cg.cr_writer_read.cmp_hint_rs2_zero: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
   gen_isa_hint_x0_cg.cr_writer_read.csrr_none: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
   gen_isa_hint_x0_cg.cr_writer_read.csrr_rs1_zero: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
-  gen_isa_hint_x0_cg.cr_writer_read.csrr_rs2_zero: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
-  gen_isa_hint_x0_cg.cr_writer_read.div_rem_none: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
-  gen_isa_hint_x0_cg.cr_writer_read.div_rem_rs1_zero: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
-  gen_isa_hint_x0_cg.cr_writer_read.div_rem_rs2_zero: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
   gen_isa_hint_x0_cg.cr_writer_read.jal_none: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
-  gen_isa_hint_x0_cg.cr_writer_read.jal_rs1_zero: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
-  gen_isa_hint_x0_cg.cr_writer_read.jal_rs2_zero: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
-  gen_isa_hint_x0_cg.cr_writer_read.jalr_none: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
-  gen_isa_hint_x0_cg.cr_writer_read.jalr_rs1_zero: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
-  gen_isa_hint_x0_cg.cr_writer_read.jalr_rs2_zero: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
-  gen_isa_hint_x0_cg.cr_writer_read.load_none: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
-  gen_isa_hint_x0_cg.cr_writer_read.load_rs1_zero: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
-  gen_isa_hint_x0_cg.cr_writer_read.load_rs2_zero: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
   gen_isa_hint_x0_cg.cr_writer_read.lui_auipc_none: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
   gen_isa_hint_x0_cg.cr_writer_read.lui_auipc_rs1_zero: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
   gen_isa_hint_x0_cg.cr_writer_read.lui_auipc_rs2_zero: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
-  gen_isa_hint_x0_cg.cr_writer_read.mul_none: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
-  gen_isa_hint_x0_cg.cr_writer_read.mul_rs1_zero: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
-  gen_isa_hint_x0_cg.cr_writer_read.mul_rs2_zero: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
   gen_isa_hint_x0_cg.cr_writer_read.mulh_none: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
-  gen_isa_hint_x0_cg.cr_writer_read.mulh_rs1_zero: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
-  gen_isa_hint_x0_cg.cr_writer_read.mulh_rs2_zero: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
   gen_isa_hint_x0_cg.cr_writer_read.shift_none: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
   gen_isa_hint_x0_cg.cr_writer_read.shift_rs1_zero: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"
-  gen_isa_hint_x0_cg.cr_writer_read.shift_rs2_zero: "CG-ISA-005: most retirements have rd != 0 or are stores/branches; a hit proves an x0-destination instruction retired and (via cp_x0_read) that a later read of x0 returned 0"

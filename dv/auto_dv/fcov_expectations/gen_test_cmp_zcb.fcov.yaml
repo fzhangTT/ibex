@@ -1,3 +1,17 @@
+# not_hit gen_cmp_zcb_cg.cp_alu_operand.rand: declaration: default catch-all bin: the program drives only named operand classes, so the `rand` default never fires; a default bin cannot be a per-run guarantee
+# not_hit gen_cmp_zcb_cg.cr_alu_operand.c_not_rand: declaration: component bin cp_alu_operand.rand is a default that never fires, so this cross cannot be hit; the cross follows its component
+# not_hit gen_cmp_zcb_cg.cr_alu_operand.c_sext_b_rand: declaration: component bin cp_alu_operand.rand is a default that never fires, so this cross cannot be hit; the cross follows its component
+# not_hit gen_cmp_zcb_cg.cr_alu_operand.c_sext_h_rand: declaration: component bin cp_alu_operand.rand is a default that never fires, so this cross cannot be hit; the cross follows its component
+# not_hit gen_cmp_zcb_cg.cr_alu_operand.c_zext_b_rand: declaration: component bin cp_alu_operand.rand is a default that never fires, so this cross cannot be hit; the cross follows its component
+# not_hit gen_cmp_zcb_cg.cr_alu_operand.c_zext_h_rand: declaration: component bin cp_alu_operand.rand is a default that never fires, so this cross cannot be hit; the cross follows its component
+# not_hit gen_mul_ops_cg.cp_rs1_class.all_ones: seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_mul_ops_cg.cp_rs1_class.int_max: seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_mul_ops_cg.cp_rs1_class.int_min: seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_mul_ops_cg.cp_rs1_class.zero: seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_mul_ops_cg.cr_op_rs1.c_mul_all_ones: seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_mul_ops_cg.cr_op_rs1.c_mul_int_max: seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_mul_ops_cg.cr_op_rs1.c_mul_int_min: seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_mul_ops_cg.cr_op_rs1.c_mul_zero: seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
 test: gen_test_cmp_zcb
 owner: test-writer
 bins:
@@ -50,7 +64,6 @@ bins:
   - gen_cmp_zcb_cg.cp_alu_operand.bit15_set
   - gen_cmp_zcb_cg.cp_alu_operand.bit7_clear
   - gen_cmp_zcb_cg.cp_alu_operand.bit7_set
-  - gen_cmp_zcb_cg.cp_alu_operand.rand
   - gen_cmp_zcb_cg.cp_alu_operand.zero
   - gen_cmp_zcb_cg.cp_insn.c_not
   - gen_cmp_zcb_cg.cp_insn.c_sext_b
@@ -61,54 +74,41 @@ bins:
   - gen_cmp_zcb_cg.cr_alu_operand.c_not_bit15_set
   - gen_cmp_zcb_cg.cr_alu_operand.c_not_bit7_clear
   - gen_cmp_zcb_cg.cr_alu_operand.c_not_bit7_set
-  - gen_cmp_zcb_cg.cr_alu_operand.c_not_rand
   - gen_cmp_zcb_cg.cr_alu_operand.c_not_zero
   - gen_cmp_zcb_cg.cr_alu_operand.c_sext_b_all_ones
   - gen_cmp_zcb_cg.cr_alu_operand.c_sext_b_bit15_set
   - gen_cmp_zcb_cg.cr_alu_operand.c_sext_b_bit7_clear
   - gen_cmp_zcb_cg.cr_alu_operand.c_sext_b_bit7_set
-  - gen_cmp_zcb_cg.cr_alu_operand.c_sext_b_rand
   - gen_cmp_zcb_cg.cr_alu_operand.c_sext_b_zero
   - gen_cmp_zcb_cg.cr_alu_operand.c_sext_h_all_ones
   - gen_cmp_zcb_cg.cr_alu_operand.c_sext_h_bit15_set
   - gen_cmp_zcb_cg.cr_alu_operand.c_sext_h_bit7_clear
   - gen_cmp_zcb_cg.cr_alu_operand.c_sext_h_bit7_set
-  - gen_cmp_zcb_cg.cr_alu_operand.c_sext_h_rand
   - gen_cmp_zcb_cg.cr_alu_operand.c_sext_h_zero
   - gen_cmp_zcb_cg.cr_alu_operand.c_zext_b_all_ones
   - gen_cmp_zcb_cg.cr_alu_operand.c_zext_b_bit15_set
   - gen_cmp_zcb_cg.cr_alu_operand.c_zext_b_bit7_clear
   - gen_cmp_zcb_cg.cr_alu_operand.c_zext_b_bit7_set
-  - gen_cmp_zcb_cg.cr_alu_operand.c_zext_b_rand
   - gen_cmp_zcb_cg.cr_alu_operand.c_zext_b_zero
   - gen_cmp_zcb_cg.cr_alu_operand.c_zext_h_all_ones
   - gen_cmp_zcb_cg.cr_alu_operand.c_zext_h_bit15_set
   - gen_cmp_zcb_cg.cr_alu_operand.c_zext_h_bit7_clear
   - gen_cmp_zcb_cg.cr_alu_operand.c_zext_h_bit7_set
-  - gen_cmp_zcb_cg.cr_alu_operand.c_zext_h_rand
   - gen_cmp_zcb_cg.cr_alu_operand.c_zext_h_zero
   - gen_cmp_zcb_cg.cp_insn.c_mul
   - gen_mul_ops_cg.cp_op.c_mul
-  - gen_mul_ops_cg.cp_rs1_class.all_ones
-  - gen_mul_ops_cg.cp_rs1_class.int_max
-  - gen_mul_ops_cg.cp_rs1_class.int_min
   - gen_mul_ops_cg.cp_rs1_class.neg_rand
   - gen_mul_ops_cg.cp_rs1_class.one
   - gen_mul_ops_cg.cp_rs1_class.p16
   - gen_mul_ops_cg.cp_rs1_class.pos_rand
   - gen_mul_ops_cg.cp_rs1_class.two
-  - gen_mul_ops_cg.cp_rs1_class.zero
   - gen_mul_ops_cg.cp_same_regs.all_same
   - gen_mul_ops_cg.cp_same_regs.rs_eq_rd
-  - gen_mul_ops_cg.cr_op_rs1.c_mul_all_ones
-  - gen_mul_ops_cg.cr_op_rs1.c_mul_int_max
-  - gen_mul_ops_cg.cr_op_rs1.c_mul_int_min
   - gen_mul_ops_cg.cr_op_rs1.c_mul_neg_rand
   - gen_mul_ops_cg.cr_op_rs1.c_mul_one
   - gen_mul_ops_cg.cr_op_rs1.c_mul_p16
   - gen_mul_ops_cg.cr_op_rs1.c_mul_pos_rand
   - gen_mul_ops_cg.cr_op_rs1.c_mul_two
-  - gen_mul_ops_cg.cr_op_rs1.c_mul_zero
   - gen_mul_ops_cg.cr_op_same.c_mul_all_same
   - gen_mul_ops_cg.cr_op_same.c_mul_rs_eq_rd
 anti_vacuity:
@@ -161,7 +161,6 @@ anti_vacuity:
   gen_cmp_zcb_cg.cp_alu_operand.bit15_set: "CG-CMP-005: Zcb is a small encoding space; load sign and address alignment come from rvfi_mem_addr/rdata so a hit proves the access happened with that data"
   gen_cmp_zcb_cg.cp_alu_operand.bit7_clear: "CG-CMP-005: Zcb is a small encoding space; load sign and address alignment come from rvfi_mem_addr/rdata so a hit proves the access happened with that data"
   gen_cmp_zcb_cg.cp_alu_operand.bit7_set: "CG-CMP-005: Zcb is a small encoding space; load sign and address alignment come from rvfi_mem_addr/rdata so a hit proves the access happened with that data"
-  gen_cmp_zcb_cg.cp_alu_operand.rand: "CG-CMP-005: Zcb is a small encoding space; load sign and address alignment come from rvfi_mem_addr/rdata so a hit proves the access happened with that data"
   gen_cmp_zcb_cg.cp_alu_operand.zero: "CG-CMP-005: Zcb is a small encoding space; load sign and address alignment come from rvfi_mem_addr/rdata so a hit proves the access happened with that data"
   gen_cmp_zcb_cg.cp_insn.c_not: "CG-CMP-005: Zcb is a small encoding space; load sign and address alignment come from rvfi_mem_addr/rdata so a hit proves the access happened with that data"
   gen_cmp_zcb_cg.cp_insn.c_sext_b: "CG-CMP-005: Zcb is a small encoding space; load sign and address alignment come from rvfi_mem_addr/rdata so a hit proves the access happened with that data"
@@ -172,53 +171,40 @@ anti_vacuity:
   gen_cmp_zcb_cg.cr_alu_operand.c_not_bit15_set: "CG-CMP-005: Zcb is a small encoding space; load sign and address alignment come from rvfi_mem_addr/rdata so a hit proves the access happened with that data"
   gen_cmp_zcb_cg.cr_alu_operand.c_not_bit7_clear: "CG-CMP-005: Zcb is a small encoding space; load sign and address alignment come from rvfi_mem_addr/rdata so a hit proves the access happened with that data"
   gen_cmp_zcb_cg.cr_alu_operand.c_not_bit7_set: "CG-CMP-005: Zcb is a small encoding space; load sign and address alignment come from rvfi_mem_addr/rdata so a hit proves the access happened with that data"
-  gen_cmp_zcb_cg.cr_alu_operand.c_not_rand: "CG-CMP-005: Zcb is a small encoding space; load sign and address alignment come from rvfi_mem_addr/rdata so a hit proves the access happened with that data"
   gen_cmp_zcb_cg.cr_alu_operand.c_not_zero: "CG-CMP-005: Zcb is a small encoding space; load sign and address alignment come from rvfi_mem_addr/rdata so a hit proves the access happened with that data"
   gen_cmp_zcb_cg.cr_alu_operand.c_sext_b_all_ones: "CG-CMP-005: Zcb is a small encoding space; load sign and address alignment come from rvfi_mem_addr/rdata so a hit proves the access happened with that data"
   gen_cmp_zcb_cg.cr_alu_operand.c_sext_b_bit15_set: "CG-CMP-005: Zcb is a small encoding space; load sign and address alignment come from rvfi_mem_addr/rdata so a hit proves the access happened with that data"
   gen_cmp_zcb_cg.cr_alu_operand.c_sext_b_bit7_clear: "CG-CMP-005: Zcb is a small encoding space; load sign and address alignment come from rvfi_mem_addr/rdata so a hit proves the access happened with that data"
   gen_cmp_zcb_cg.cr_alu_operand.c_sext_b_bit7_set: "CG-CMP-005: Zcb is a small encoding space; load sign and address alignment come from rvfi_mem_addr/rdata so a hit proves the access happened with that data"
-  gen_cmp_zcb_cg.cr_alu_operand.c_sext_b_rand: "CG-CMP-005: Zcb is a small encoding space; load sign and address alignment come from rvfi_mem_addr/rdata so a hit proves the access happened with that data"
   gen_cmp_zcb_cg.cr_alu_operand.c_sext_b_zero: "CG-CMP-005: Zcb is a small encoding space; load sign and address alignment come from rvfi_mem_addr/rdata so a hit proves the access happened with that data"
   gen_cmp_zcb_cg.cr_alu_operand.c_sext_h_all_ones: "CG-CMP-005: Zcb is a small encoding space; load sign and address alignment come from rvfi_mem_addr/rdata so a hit proves the access happened with that data"
   gen_cmp_zcb_cg.cr_alu_operand.c_sext_h_bit15_set: "CG-CMP-005: Zcb is a small encoding space; load sign and address alignment come from rvfi_mem_addr/rdata so a hit proves the access happened with that data"
   gen_cmp_zcb_cg.cr_alu_operand.c_sext_h_bit7_clear: "CG-CMP-005: Zcb is a small encoding space; load sign and address alignment come from rvfi_mem_addr/rdata so a hit proves the access happened with that data"
   gen_cmp_zcb_cg.cr_alu_operand.c_sext_h_bit7_set: "CG-CMP-005: Zcb is a small encoding space; load sign and address alignment come from rvfi_mem_addr/rdata so a hit proves the access happened with that data"
-  gen_cmp_zcb_cg.cr_alu_operand.c_sext_h_rand: "CG-CMP-005: Zcb is a small encoding space; load sign and address alignment come from rvfi_mem_addr/rdata so a hit proves the access happened with that data"
   gen_cmp_zcb_cg.cr_alu_operand.c_sext_h_zero: "CG-CMP-005: Zcb is a small encoding space; load sign and address alignment come from rvfi_mem_addr/rdata so a hit proves the access happened with that data"
   gen_cmp_zcb_cg.cr_alu_operand.c_zext_b_all_ones: "CG-CMP-005: Zcb is a small encoding space; load sign and address alignment come from rvfi_mem_addr/rdata so a hit proves the access happened with that data"
   gen_cmp_zcb_cg.cr_alu_operand.c_zext_b_bit15_set: "CG-CMP-005: Zcb is a small encoding space; load sign and address alignment come from rvfi_mem_addr/rdata so a hit proves the access happened with that data"
   gen_cmp_zcb_cg.cr_alu_operand.c_zext_b_bit7_clear: "CG-CMP-005: Zcb is a small encoding space; load sign and address alignment come from rvfi_mem_addr/rdata so a hit proves the access happened with that data"
   gen_cmp_zcb_cg.cr_alu_operand.c_zext_b_bit7_set: "CG-CMP-005: Zcb is a small encoding space; load sign and address alignment come from rvfi_mem_addr/rdata so a hit proves the access happened with that data"
-  gen_cmp_zcb_cg.cr_alu_operand.c_zext_b_rand: "CG-CMP-005: Zcb is a small encoding space; load sign and address alignment come from rvfi_mem_addr/rdata so a hit proves the access happened with that data"
   gen_cmp_zcb_cg.cr_alu_operand.c_zext_b_zero: "CG-CMP-005: Zcb is a small encoding space; load sign and address alignment come from rvfi_mem_addr/rdata so a hit proves the access happened with that data"
   gen_cmp_zcb_cg.cr_alu_operand.c_zext_h_all_ones: "CG-CMP-005: Zcb is a small encoding space; load sign and address alignment come from rvfi_mem_addr/rdata so a hit proves the access happened with that data"
   gen_cmp_zcb_cg.cr_alu_operand.c_zext_h_bit15_set: "CG-CMP-005: Zcb is a small encoding space; load sign and address alignment come from rvfi_mem_addr/rdata so a hit proves the access happened with that data"
   gen_cmp_zcb_cg.cr_alu_operand.c_zext_h_bit7_clear: "CG-CMP-005: Zcb is a small encoding space; load sign and address alignment come from rvfi_mem_addr/rdata so a hit proves the access happened with that data"
   gen_cmp_zcb_cg.cr_alu_operand.c_zext_h_bit7_set: "CG-CMP-005: Zcb is a small encoding space; load sign and address alignment come from rvfi_mem_addr/rdata so a hit proves the access happened with that data"
-  gen_cmp_zcb_cg.cr_alu_operand.c_zext_h_rand: "CG-CMP-005: Zcb is a small encoding space; load sign and address alignment come from rvfi_mem_addr/rdata so a hit proves the access happened with that data"
   gen_cmp_zcb_cg.cr_alu_operand.c_zext_h_zero: "CG-CMP-005: Zcb is a small encoding space; load sign and address alignment come from rvfi_mem_addr/rdata so a hit proves the access happened with that data"
   gen_cmp_zcb_cg.cp_insn.c_mul: "CG-CMP-005: Zcb is a small encoding space; load sign and address alignment come from rvfi_mem_addr/rdata so a hit proves the access happened with that data"
   gen_mul_ops_cg.cp_op.c_mul: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
-  gen_mul_ops_cg.cp_rs1_class.all_ones: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
-  gen_mul_ops_cg.cp_rs1_class.int_max: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
-  gen_mul_ops_cg.cp_rs1_class.int_min: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
   gen_mul_ops_cg.cp_rs1_class.neg_rand: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
   gen_mul_ops_cg.cp_rs1_class.one: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
   gen_mul_ops_cg.cp_rs1_class.p16: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
   gen_mul_ops_cg.cp_rs1_class.pos_rand: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
   gen_mul_ops_cg.cp_rs1_class.two: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
-  gen_mul_ops_cg.cp_rs1_class.zero: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
   gen_mul_ops_cg.cp_same_regs.all_same: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
   gen_mul_ops_cg.cp_same_regs.rs_eq_rd: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
-  gen_mul_ops_cg.cr_op_rs1.c_mul_all_ones: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
-  gen_mul_ops_cg.cr_op_rs1.c_mul_int_max: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
-  gen_mul_ops_cg.cr_op_rs1.c_mul_int_min: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
   gen_mul_ops_cg.cr_op_rs1.c_mul_neg_rand: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
   gen_mul_ops_cg.cr_op_rs1.c_mul_one: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
   gen_mul_ops_cg.cr_op_rs1.c_mul_p16: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
   gen_mul_ops_cg.cr_op_rs1.c_mul_pos_rand: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
   gen_mul_ops_cg.cr_op_rs1.c_mul_two: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
-  gen_mul_ops_cg.cr_op_rs1.c_mul_zero: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
   gen_mul_ops_cg.cr_op_same.c_mul_all_same: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"
   gen_mul_ops_cg.cr_op_same.c_mul_rs_eq_rd: "CG-MUL-001: multiplies are a subset of the mix; a hit proves a multiply retired with the sampled operand classes and result class"

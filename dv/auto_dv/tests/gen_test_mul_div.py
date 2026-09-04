@@ -102,6 +102,67 @@ class MulDiv(GenTest):
     name = "gen_test_mul_div"
     schedulable = lib.TIMING_ONLY_KNOBS
     # items of the plan group this test does not check, with the reason (two-sided against the group by the structure check)
+    # bins this test does not guarantee per run, with the reason and its class: seed-dependent bins
+    # are credited from the merged report, stimulus bins need a program change, declaration bins cannot
+    # be a per-run guarantee at all
+    bins_not_hit = {
+        "gen_div_ops_cg.cr_div0.div_zero_neg_rand":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_div_ops_cg.cr_div0.div_zero_pos_rand":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_div_ops_cg.cr_div0.div_zero_seven":
+            "stimulus: the program divides by zero only with dividend classes other than this one",
+        "gen_div_ops_cg.cr_div0.div_zero_two":
+            "stimulus: the program divides by zero only with dividend classes other than this one",
+        "gen_div_ops_cg.cr_div0.divu_zero_neg_rand":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_div_ops_cg.cr_div0.divu_zero_pos_rand":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_div_ops_cg.cr_div0.divu_zero_seven":
+            "stimulus: the program divides by zero only with dividend classes other than this one",
+        "gen_div_ops_cg.cr_div0.divu_zero_two":
+            "stimulus: the program divides by zero only with dividend classes other than this one",
+        "gen_div_ops_cg.cr_div0.rem_zero_neg_rand":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_div_ops_cg.cr_div0.rem_zero_pos_rand":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_div_ops_cg.cr_div0.rem_zero_seven":
+            "stimulus: the program divides by zero only with dividend classes other than this one",
+        "gen_div_ops_cg.cr_div0.rem_zero_two":
+            "stimulus: the program divides by zero only with dividend classes other than this one",
+        "gen_div_ops_cg.cr_div0.remu_zero_neg_rand":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_div_ops_cg.cr_div0.remu_zero_pos_rand":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_div_ops_cg.cr_div0.remu_zero_seven":
+            "stimulus: the program divides by zero only with dividend classes other than this one",
+        "gen_div_ops_cg.cr_div0.remu_zero_two":
+            "stimulus: the program divides by zero only with dividend classes other than this one",
+        "gen_div_ops_cg.cr_op_dividend.rem_two":
+            "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_div_timing_cg.cp_dit.on":
+            "stimulus: the entry never enables data-independent timing, so the on state is never sampled",
+        "gen_div_timing_cg.cr_op_div0.div_no_on":
+            "stimulus: depends on cp_dit.on, which the entry never enables",
+        "gen_div_timing_cg.cr_op_div0.div_yes_on":
+            "stimulus: depends on cp_dit.on, which the entry never enables",
+        "gen_div_timing_cg.cr_op_div0.divu_no_on":
+            "stimulus: depends on cp_dit.on, which the entry never enables",
+        "gen_div_timing_cg.cr_op_div0.divu_yes_on":
+            "stimulus: depends on cp_dit.on, which the entry never enables",
+        "gen_div_timing_cg.cr_op_div0.rem_no_on":
+            "stimulus: depends on cp_dit.on, which the entry never enables",
+        "gen_div_timing_cg.cr_op_div0.rem_yes_on":
+            "stimulus: depends on cp_dit.on, which the entry never enables",
+        "gen_div_timing_cg.cr_op_div0.remu_no_on":
+            "stimulus: depends on cp_dit.on, which the entry never enables",
+        "gen_div_timing_cg.cr_op_div0.remu_yes_on":
+            "stimulus: depends on cp_dit.on, which the entry never enables",
+        "gen_mul_ops_cg.cp_op.c_mul":
+            "stimulus: the program emits no compressed multiply",
+        "gen_mul_ops_cg.cr_op_rd_x0.c_mul_no":
+            "stimulus: depends on a compressed multiply, which the program does not emit",
+    }
     not_built = {"TP-MUL-012": "latency/cycle clause: RVFI cycle / bus records, event export",
                  "TP-MUL-022": "latency/cycle clause: RVFI cycle / bus records, event export"}
 
