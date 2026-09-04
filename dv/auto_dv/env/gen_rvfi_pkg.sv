@@ -146,6 +146,7 @@ package gen_rvfi_pkg;
           last_order = t.order; have_order = 1;
           if (t.ext_debug_mode && !dbg_mode_q) bvif.evt_dbg_entered = ~bvif.evt_dbg_entered;
           dbg_mode_q = t.ext_debug_mode;
+          bvif.evt_dbg_mode = t.ext_debug_mode;
           if (t.intr) bvif.evt_irq_taken = ~bvif.evt_irq_taken;
           ap.write(t);
           if (sink != null && sink.enabled) sink.write_record(gen_export_record_line(t, cfg.export_counters));

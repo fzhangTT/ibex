@@ -15,7 +15,8 @@ Drives `debug_req_i` with randomized timing and hold policies; the debug program
 `.debug_rom` section linked at DmHaltAddr (gen_link.ld; riscv-dv ROMs relocated by
 `dv/auto_dv/stim/gen_relocate_debug_rom.py`). AS BUILT (step 2b, T-090): `gen_agents_pkg::gen_dbg_driver` on
 `dv/auto_dv/tb/gen_dbg_if.sv` (instance `u_dbg_if`), acting at the falling edge: DBG_REQ (arg0 1 assert / 0 release, arg1
-hold policy 0 CYCLES(arg2) / 1 UNTIL_DEBUG_MODE (released on the next `evt_dbg_entered` edge) / 2 STICKY) and the
+hold policy 0 CYCLES(arg2) / 1 UNTIL_DEBUG_MODE (released once the core IS in debug mode, the `evt_dbg_mode`
+level) / 2 STICKY) and the
 regime engine for `knob_debug_req_regime` none / sparse / storm (means 5000 / 200 cycles from the yaml `regime_windows.dbg_event_mean`, read through the rendered `gen_regime_scalar`), switched at run time by
 REGIME_SET; every change is published as a `gen_irq_evt` (changed[0], level, cycle) for `gen_dbg_checker`.
 
@@ -38,8 +39,9 @@ generated ROM uses the program's kernel stack pointer (T-025 evidence Section 4)
 
 ## 4. Wave-level behaviour
 
-Level; UNTIL_DEBUG_MODE drops the line the cycle after `rvfi_ext_debug_mode` rises on a retired
-record (or after the `evt_dbg_entered` event).
+Level; UNTIL_DEBUG_MODE drops the line the cycle after a retired record shows `rvfi_ext_debug_mode` SET, which
+is a level and not an edge: a request asserted while the core is already in debug mode is released at once,
+because its condition is already true. Reading an entry edge here could hold the line for a whole run.
 
 ## 5. Checkers
 

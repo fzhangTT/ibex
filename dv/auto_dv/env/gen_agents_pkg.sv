@@ -709,15 +709,16 @@ package gen_agents_pkg;
       `uvm_info("GEN_DBG", {"knob_debug_req_regime <= ", value}, UVM_LOW)
     endfunction
     task run_phase(uvm_phase phase);
-      bit entered_q = bvif.evt_dbg_entered;
       forever begin
         @(negedge vif.clk);
         if (!vif.rst_n) continue;
         if (vif.req) begin
           if (hold_policy == 0) begin if (hold_left > 0) hold_left--; if (hold_left == 0) cmd(1'b0, 0, 0); end
-          else if (hold_policy == 1 && bvif.evt_dbg_entered != entered_q) cmd(1'b0, 0, 0);
+          // the hold means "until the core is in debug mode", so it tests the LEVEL: a request asserted while
+          // the core is already in debug gets no entry edge, which would hold the line for the rest of the run
+          // and leave the program unable to advance
+          else if (hold_policy == 1 && bvif.evt_dbg_mode) cmd(1'b0, 0, 0);
         end
-        entered_q = bvif.evt_dbg_entered;
         if (event_mean != 0 && !vif.req) begin
           if ($urandom_range(event_mean - 1, 0) == 0) cmd(1'b1, 1, 0);
         end

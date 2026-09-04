@@ -1016,3 +1016,44 @@ harness. Wiring it into a gate is worth doing and is not done here.
 Retained: gen_tdd_logs/mutations/gen_fu_l35_drain_cap_resize.log, whose first section is the fail-then-pass
 pair with the function's text on both sides of the change and the command that runs it, followed by the exact
 diff with both sha256 figures and the simulation pair, with a manifest row.
+
+## Landing 36: a livelock in the debug-request driver, found by a round-1 triage
+
+WHAT WAS WRONG. The autonomous storm request was gated on the request line being LOW and not on the core being
+outside debug mode, and it asserted with the UNTIL_DEBUG_MODE hold whose release watched a TOGGLE that flips only on
+a debug-mode ENTRY EDGE. A request asserted while the core was already in debug mode therefore could never be
+released: no fresh entry edge can occur, so the line stayed asserted for the rest of the run, the DUT correctly
+stayed in debug mode, and the program made no further progress. The driver was acting on a state it could not see:
+the bridge published only the entry toggle, and the debug interface carries only the request line.
+
+THE FIX publishes the level the scoreboard already tracks, as evt_dbg_mode beside the entry toggle, set from the
+same place that maintains dbg_mode_q, and the UNTIL_DEBUG_MODE release now tests that level. A request asserted
+while the core is already in debug has its condition satisfied on the spot and is released at the next negedge. The
+entry toggle is unchanged and its Python consumers keep working; the edge sampler the old release needed is removed
+rather than left dead. NO CONSTANT WAS ADDED: a cycle cap on the hold would have released the line without fixing
+the wrong-quantity bug and would have introduced a magic number, so that alternative was rejected.
+
+THE EVIDENCE, and the part that decides the class is that more time did not help. On the committed driver the last
+program record sits at cycle 1052 in all three runs, the round-1 run, its local reproduction, and one given sixteen
+times the wait; that last run bought 38888 more debug-ROM records and zero further program progress. While the line
+was held the DUT stayed in debug mode, which is exactly what a held debug request means, so the DUT is not
+implicated. The driver's own counters make the leak visible even where it did not bite: the seed-1 probe run that
+PASSED reports requests=39 releases=38, one request never released. After the fix both runs balance exactly.
+
+THE RED AND ITS GREEN are on one root with the flat tohost bound LEFT ALONE, so the pass is the program advancing
+and not a wider window: seed 700483392 goes from a hang to PASS, ending at cycle 10858 with its last program record
+at 10852, and the seed-1 control still passes. The bound itself is a real but separate finding, the same flat
+20000-cycle wait in six cocotb tests, and it lands on its own.
+
+THE IRQ DRIVER WAS AUDITED for the same hole and does not have it. Its UNTIL_TAKEN release keys on a recurring
+per-entry event rather than entry into a persistent state, its other policies are self-limiting or externally
+driven, and decisively a held interrupt line does not halt program progress. Both round-1 irq-storm entries pass
+with no error and nothing left asserted. Two caveats are recorded and not fixed, neither a hang: the irq regime
+engine is not gated on the line being low, so a fresh assert overwrites that line's hold policy; and UNTIL_ACK
+depends on the program reaching the ack handler.
+
+ONE LIMIT STATED: the level is derived from retired records, so it lags the hardware by the retirement latency,
+making a release a few cycles late rather than never. That is also why the assert is not additionally gated on the
+level, since a lagging level would still admit the occasional assert-while-in-debug and the release covers it.
+
+Retained: gen_tdd_logs/mutations/gen_fu_l36_dbg_driver_livelock.log, with a manifest row.

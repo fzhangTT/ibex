@@ -36,6 +36,9 @@ interface gen_bridge_if (
   logic        evt_irq_taken   = 1'b0;
   logic [4:0]  evt_irq_taken_cause = '0;   // the vector cause of the last interrupt entry (31 = NMI), written by the scoreboard
   logic        evt_dbg_entered = 1'b0;
+  logic        evt_dbg_mode    = 1'b0;   // debug-mode LEVEL from the retirement stream: a hold meaning "until the
+                                         // core is in debug mode" needs the state, since an entry edge cannot
+                                         // arrive for a request asserted while the core is already in debug
   logic        evt_eot_seen    = 1'b0;   // toggles on every end-of-test store (tohost or the EOT register)
   logic [31:0] evt_eot_code    = '0;     // the stored value (1 = pass by the riscv-dv/tohost convention)
   logic [15:0] evt_eot_count   = '0;

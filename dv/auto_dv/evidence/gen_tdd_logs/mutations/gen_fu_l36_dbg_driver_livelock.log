@@ -1,0 +1,107 @@
+# A TESTBENCH LIVELOCK IN THE DEBUG-REQUEST DRIVER: the request could be held for a whole run, and the program
+# could not advance while it was. Found triaging a round-1 dry-run failure of gen_ut_export_dbg_storm.
+#
+# THE DEFECT, with every gating term quoted from the sources this landing changes.
+#   The autonomous storm request is issued under this guard:
+#     gen_agents_pkg.sv   if (event_mean != 0 && !vif.req) begin
+#                           if ($urandom_range(event_mean - 1, 0) == 0) cmd(1'b1, 1, 0);
+#   so it is gated on THE LINE BEING LOW and NOT on the core being outside debug mode, and it asserts with hold
+#   policy 1, UNTIL_DEBUG_MODE. That policy's release read:
+#     gen_agents_pkg.sv   else if (hold_policy == 1 && bvif.evt_dbg_entered != entered_q) cmd(1'b0, 0, 0);
+#   and the flag it watches is a TOGGLE flipped only on a debug-mode ENTRY EDGE:
+#     gen_rvfi_pkg.sv     if (t.ext_debug_mode && !dbg_mode_q) bvif.evt_dbg_entered = ~bvif.evt_dbg_entered;
+#   So a request asserted while the core was ALREADY in debug mode could never be released: no fresh entry edge can
+#   occur, the toggle never flips, and the line stays asserted for the rest of the run. The DUT then correctly
+#   remains in debug mode, and the program makes no further progress.
+#
+# WHY IT IS A HOLE AND NOT A TUNING PROBLEM: the driver acted on a state it could not see. The interface published
+# only the entry toggle; there was no debug-mode LEVEL anywhere on the bridge, and the debug interface carries only
+# the request line. A policy that means "hold until the core is in debug mode" was implemented against an edge.
+#
+# THE FIX: publish the level the scoreboard already tracks and test it.
+#   gen_bridge_if.sv   a new evt_dbg_mode level beside the entry toggle
+#   gen_rvfi_pkg.sv    set from the same place that maintains dbg_mode_q
+#   gen_agents_pkg.sv  the UNTIL_DEBUG_MODE release now tests that level
+# A request asserted while the core is already in debug has its condition satisfied on the spot and is released at
+# the next negedge, so the case that used to hang now costs one cycle. The entry toggle is unchanged and its Python
+# consumers keep working. The edge sampler the old release needed is removed rather than left dead.
+# NO CONSTANT WAS ADDED. A cycle cap on the hold would have released the line without fixing the wrong-quantity bug
+# and would have introduced a magic number; that alternative was rejected.
+#
+# THE ONE LIMIT, STATED: the level is derived from RETIRED records, so it lags the hardware by the retirement
+# latency. That makes a release a few cycles late rather than never, which is the whole difference between a slow
+# release and a hang. It is also why the assert is NOT additionally gated on the level: gating a lagging level would
+# still admit the occasional assert-while-in-debug, and the release fix covers that case by construction.
+#
+# NOT A DUT FINDING, and the record stream says so rather than an argument: while the line was held the DUT stayed
+# in debug mode, which is exactly what a held debug request means.
+
+== 1. THE FAILURE, as the round-1 dry run produced it ==
+   Entry gen_ut_export_dbg_storm, seed 700483392, head-mode at 962d31f.
+$ command grep -a "AssertionError" LSF/sim_stdout.log | head -1
+                                                           AssertionError: GEN_UT_EXPORT: no tohost store (SimTimeoutError)
+   Zero UVM_ERROR and zero UVM_FATAL: the log's own severity counts read
+   so no checker fired; the run died on the test's own wait for the program's end-of-test store.
+
+== 2. THE PROGRAM STOPPED ADVANCING, and more time did not help ==
+   Records parsed from each run's own export, counting the debug-mode flag and the last program record:
+     LSF round-1, flat bound    records   4315  debug-mode   4044 ( 93.7%)  debug_req high   4040  last record  35924  LAST PROGRAM RECORD   1052
+     local repro, flat bound    records   4315  debug-mode   4044 ( 93.7%)  debug_req high   4040  last record  35924  LAST PROGRAM RECORD   1052
+     local, bound x16           records  39159  debug-mode  38888 ( 99.3%)  debug_req high  38884  last record 335921  LAST PROGRAM RECORD   1052
+     local, DRIVER FIXED        records   2025  debug-mode    106 (  5.2%)  debug_req high     53  last record  10852  LAST PROGRAM RECORD  10852
+   READING: on the committed driver the last program record is at cycle 1052 in ALL THREE runs, including the
+   one given sixteen times the wait. The extra time bought 38888 more debug-ROM records and ZERO program
+   progress, which is what makes this a livelock rather than a slow run or a tight bound.
+
+== 3. THE DRIVER'S OWN COUNTERS: the leak is visible even on a seed that PASSED ==
+   Requests against releases, from each run's own report line. The failing runs print none, because the
+   cocotb assertion aborts the test before the UVM report phase, which is itself worth knowing.
+   BEFORE, on the probe run at seed 1 that PASSED:
+     GEN_DBG] requests=39 releases=38
+     one request never released: it passed only because the program reached its store first.
+   AFTER, on the fixed driver:
+     seed 700483392: GEN_DBG] requests=54 releases=54
+     seed 1:         GEN_DBG] requests=46 releases=46
+     every request released, in both. The counts differ between runs because they are different builds and
+     different seeds; the invariant to read is requests EQUALS releases, not the absolute figures.
+
+== 4. THE RED AND ITS GREEN, on one root, with the tohost bound left ALONE ==
+   The flat 20000-cycle bound is unchanged in the fixed root, so a pass here is the program advancing and not
+   a wider window. That bound is a separate finding and a separate landing.
+   == THE FAILING SEED ON THE FIXED DRIVER (was: hang, last program record at cycle 1052)
+      seed 700483392: verdict PASS  TESTS=1 PASS=1 FAIL=0
+      
+      ended at cycle 10858
+      dbg driver: GEN_DBG] requests=54 releases=54
+      records 2025, debug-mode 106 (5.2%), LAST PROGRAM RECORD at cycle 10852
+   
+   == THE SEED-1 CONTROL (must be unchanged: it passed before)
+      seed 1: verdict PASS  TESTS=1 PASS=1 FAIL=0
+      
+      ended at cycle 10696
+      dbg driver: GEN_DBG] requests=46 releases=46
+      records 2024, debug-mode 88 (4.3%), LAST PROGRAM RECORD at cycle 10690
+   end 2026-09-04T18:59:08Z
+
+   AND THE RED IT REPLACES, the same seed on the committed driver, from the local reproduction:
+        verdict: FAIL
+        TESTS=1 PASS=0 FAIL=1
+        GEN_UT_EXPORT: no tohost store (SimTimeoutError)
+        ended at cycle: 35934
+
+== 5. THE IRQ DRIVER WAS AUDITED FOR THE SAME HOLE AND DOES NOT HAVE IT ==
+   Structural reason: its UNTIL_TAKEN release keys on evt_irq_taken toggling AND the entry's vector cause
+   naming the line, a RECURRING per-entry event rather than entry into a persistent state, so a later entry
+   always offers another release. Its other policies are self-limiting (a cycle countdown) or externally
+   driven (the irq-ack handler). And decisively, a held interrupt line does not halt program progress, whereas
+   debug mode does, so holding cannot starve the program the way the debug hole did.
+   EMPIRICAL CONTROL, both round-1 irq-storm entries, read from their own logs:
+     gen_ut_export_irq_storm: UVM_ERROR : 0  GEN_IRQ] events=833 releases=602 regime_events=231 final_levels=00000
+     gen_ut_lockstep_div_timing_irq: UVM_ERROR : 0  GEN_IRQ] events=605 releases=300 regime_events=250 final_levels=00000
+     Nothing left asserted at the end of either, and neither carries an error.
+   TWO CAVEATS RECORDED, NEITHER A HANG: the irq regime engine is not gated on the line being low, so a fresh
+   assert on an already-high line overwrites that line's hold policy and countdown; and UNTIL_ACK depends on
+   the program reaching the ack handler, so a program without one holds that line to the end. Both leave the
+   program running, which is why neither is fixed here.
+# END. Every figure above is read from a run's own artefacts by the command printed above it. The export
+# parsing takes the debug-mode flag and the cycle from the record's own fields.
