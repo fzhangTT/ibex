@@ -2310,3 +2310,37 @@ command: line or the banner, never from defines:.
   22:00:31Z, which was the Runtime Manager's report stamp and appears in no committed artifact; the manifest's value governs.
 - CM218-Info: the regenerated dashboard's round table carries "Gain vs prev (max pp) +26.27" against the probe_round0_fix2 regression and an
   unscoped Group column at 81.47; tool output, not a verdict; the ruled group definition reaches the dashboard with rt39.
+
+## LOG-094 - 2026-09-04 - Round-1 coverage report delivered to the owner (LOG-093); the team paused for the owner's review
+
+Delivered: the DV Lead's analysis dv/auto_dv/evidence/gen_round_0_coverage_analysis.md (v6b b176587, verdicted; final v6c 91360ab carrying the CR-41 corrections, the Critic's supplement on v6c pending), built on runtime-2's tables (702d3ba; the 102
+gated instance rows sum to the gate row on all six metrics), rtl-arch's pass 14 (98b643e) and the Critic's round verdict (8c83b3a); the Critic's
+verdict on the analysis is 82d47b6 (APPROVE on b176587, every figure re-derived; rows CR-41 L-1..L-5: the PMP row's round-2 reachability
+was wrong under P-07 since both PMP entries are measured false with every bin on an unrendered covergroup, the FSM column holds transitions
+only, cmp_zca is 17 not 20, modlist.txt and modinfo.txt were not retained in gen_round_0, the strict-load caveat travels with the adjusted
+row; L-1/L-2/L-3/L-5 folded into the analysis v6c, L-4 retained by runtime-2 as gen_modlist.txt.gz and gen_modinfo.txt.gz under gen_round_0). The owner report (Orchestrator, 22:49Z) quotes the gate row as measured beside the exclusion-adjusted
+gated row (line 3654/4359 vs 3654/4158, cond 6464/9624 vs 6464/9375, toggle 16877/25044 vs 16877/21102, fsm 38/86 vs 38/74, branch 1831/2428 vs
+1831/2363, assert 166/179 vs 166/176; covered counts unchanged; the adjusted row is the exclusion author's own strict load, runtime-2's re-load
+owed; the precheck dashboard carries the report-wide adjusted row, a different scope), the three group quantities with the gate not claimed, the
+ranked gap list (182 unbuilt covergroups / 758 declarations; ibex_pmp 1815 and ibex_cheriot_ex 2211 missed objects with no PMP or CHERIoT test
+measured and 531 of pass 14's 1424 entries the owner-ruled CHERIoT carve-out; the controller FSM 5/26 with no irq/debug/exception test; the LSU
+FSM 6/22; gen_ic_ecc_cg 1/40 with the knob never set; div/mul timing; the generator products; the CHERIoT register-file assertions), the 13 unhit
+assertions split 5 configuration / 2 structural (BranchPredictor=0) / 1 probe off by ruling / 5 genuine, the nine covergroups below 80 with a
+cause class each, the 41 re-scoped bins uncovered by anything, and the plan credit measured by the Critic (66 of 185 hosted plan items credited,
+50 unhit / 18 not fired / 51 unverified, PMP 31 of 31) with the round's acceptance under the form's Section 10 a REQUEST-CHANGES (CR-40 M-1,
+owner the DV Lead) closed by the regeneration at the round's commit and a recorded re-review. Correction carried from the Critic's CR-41 L-1:
+no PMP test can be measured yet, since zero gen_pmp covergroups are rendered and all three PMP entries are measured false with a null
+reference, so ibex_pmp's 1815 missed objects need a covergroup built (tb-infra) or the items re-planned before any test can be credited; the
+first analysis had called it a round-2 win. Retained for the analysis: modlist.txt and modinfo.txt gzipped under gen_round_0 (a6f811a).
+
+Pause: from the report until the owner's review lifts it, nothing forward hands. Queue behind the pause, in order: the DV Lead's regeneration of
+the credit report, promotion table and covergroup set at the round's commit (CR-40 M-1, the acceptance) and the form corrigendum v5f (CM218-M-1
+and L-2, CR-40 M-2); runtime-2's flow plan of four items for one pre-execution review (the group cell's single definition with the percent and
+its denominator emitted together and the content-dependent fallback removed; the build manifest's defines field; the dirty tracked-file LIST
+captured beside the flag at both the regression-start and the collect stamps, since the 21:54:27Z set is not recorded anywhere and the eight
+files named in LOG-092/093 are the collect-time set; the canary's sources_sha256 copied into the index entry, because the committed entry proves
+the round build's identity through gen_build_manifest_gen_tb.yaml and not that the canary shared it, an equality runtime-2 measured outside the
+record), then the mirror prune and rt37; rtl-arch's request to runtime-2 for the independent strict re-load of the pass-14 exclusion file;
+the Test Writer's generator fixes (twelve pack-family bins needing the form-table entry and the sweep as one change, six reasons re-classed with
+a measured rate, six sweep targets, cmp_zca's 22) and the per-run vs cumulative manifest semantics with the DV Lead; tb-infra's CR-36 L-1/L-2 and
+the five items frozen under LOG-085, whose freeze ends with this pause. Round 2 work built on the round's plan credit waits for CR-40 M-1.
