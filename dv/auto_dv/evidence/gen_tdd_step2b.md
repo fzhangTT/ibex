@@ -830,9 +830,11 @@ APPROVE, which lifted the gen_l14 merge gate), and both row sets are wording and
 - The allocation evidence is restored, which my own landing-15 retirement had cost. Retiring the earlier tag-write trace left WP12-F2's claim that the
   core allocates a second copy of a still-valid line after an ECC-correction refetch resting on RTL terms alone, with no observational evidence at all;
   the DV Lead worded its plan around that honestly and I owed it back. gen_fu_l16_trace17_tagwrite_history.log now carries the 322 tag writes at the
-  duplicate indices out of the trace run's 1564, the indices taken from gen_fu_l16_trace17_duplicate_copies.log rather than hard-coded, plus a
+  duplicate indices, the indices taken from gen_fu_l16_trace17_duplicate_copies.log rather than hard-coded, plus a
   reconstruction that carries each way's valid bit and tag forward: 16 episodes in which both ways held the same tag valid at one index, 13 at index 26
-  and 3 at index 27, each with its start and end cycle, the shared tag 00100000 and the way whose copy was added second. The 13 reproduces the figure
+  and 3 at index 27, each with its start and end cycle, the shared tag 00100000 and the way whose copy was added second. The run's own total of 1564 tag writes,
+  against which the 322 are a proportion, is counted from the trace session's stdout, which is scratch and not retained, so that total is not
+  checkable from the tree while the 322 lines are; the artifact's header says the same. The 13 reproduces the figure
   the plan had carried from the retired file, now on a build with its own compile log and per-file list; the 3 at the second index is evidence the old
   one-index filter could not see. All 16 added into way 0, and the artifact says in its own header to read that narrowly: one program at one seed
   evidences the direction of each episode it lists and NOT the way-selection policy, which needs the RTL selection terms or several programs and seeds.
