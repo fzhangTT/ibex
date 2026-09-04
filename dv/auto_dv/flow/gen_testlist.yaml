@@ -329,7 +329,8 @@ tests:
     measured: false
 
   - name: gen_test_rst_boot
-    description: 'TP-RST-003/006/007 reset and boot state read by software; per-seed program gen_rst_boot_prog.py stores 38 RAW observations (mtvec, mstatus, mie, 30 shuffled reset CSRs, U-mode trap mcause/mstatus/mepc after mret, pad result, unexpected-trap count) to the EOT register; fire_tp_rst_003/006/007 compare them with the plan and the TB facts; Round 1 (LOG-088): fcov_expectation_file detached (null) because the round-1 pre-flight, run at this entry''s own round seeds (1238152686, 1358026205, 1873547890), left 2 of the 8 bins its manifest declares unhit at every one of the three seeds (2 unmet per seed), so the expectation check fails the run at every seed; every declared bin is on a covergroup built at this commit, so this is a stimulus-or-declaration gap for the test owner and not a missing covergroup, the manifest stays committed and unchanged, and the reference returns when the gap is closed.'
+    description: TP-RST-003/006/007 reset and boot state read by software; per-seed program gen_rst_boot_prog.py stores 38 RAW observations (mtvec, mstatus, mie, 30 shuffled reset CSRs, U-mode trap mcause/mstatus/mepc
+      after mret, pad result, unexpected-trap count) to the EOT register; fire_tp_rst_003/006/007 compare them with the plan and the TB facts
     tier: smoke
     build: gen_tb
     uvm_test: gen_base_test
@@ -340,7 +341,7 @@ tests:
       seed: run
       extra_args: [--gcc-opts=-Idv/auto_dv/tests/gen_programs]
     seeds: 3
-    fcov_expectation_file: null
+    fcov_expectation_file: dv/auto_dv/fcov_expectations/gen_test_rst_boot.fcov.yaml
     timeout_s: 900
     owner: test-writer
     pass_marker: GEN_TEST_PASS
@@ -376,7 +377,7 @@ tests:
     measured: false
 
   - name: gen_test_csr_reset
-    description: 'CSR reset values at boot (TP-CSR-037, 105, 106, 107, 108, 109); per-seed program gen_csr_reset_prog.py reads every reset CSR in random order and reports raw read-backs; fire_tp_csr_037/105/106/107/108/109 compare them with spec/doc values (D4, D20 follow RTL); Round 1: fcov_expectation_file detached (null) because 68 of the 68 bins this test''s manifest declares are on covergroups that are not built at this commit (gen_csr_cpuctrlsts_cg, gen_csr_pmp_warl_cg, gen_csr_reset_read_cg, gen_csr_secureseed_cg, gen_csr_trigger_csr_cg, gen_prv_trap_vector_cg), so the expectation check fails the run at every seed; the manifest stays committed and unchanged, and the reference returns with the covergroup landing.'
+    description: 'CSR reset values at boot (TP-CSR-037, 105, 106, 107, 108, 109); per-seed program gen_csr_reset_prog.py reads every reset CSR in random order and reports raw read-backs; fire_tp_csr_037/105/106/107/108/109 compare them with spec/doc values (D4, D20 follow RTL); Round 1: fcov_expectation_file detached (null) because 68 of the 68 bins this test''s manifest declares are on covergroups that are not built at this commit (gen_csr_cpuctrlsts_cg, gen_csr_pmp_warl_cg, gen_csr_reset_read_cg, gen_csr_secureseed_cg, gen_csr_trigger_csr_cg, gen_prv_trap_vector_cg), so the expectation check fails the run at every seed; the manifest stays committed and unchanged, and the reference returns with the covergroup landing.; Round 1 (LOG-091): measured false because every bin this test''s manifest declares is on a covergroup not built at this commit, so the entry cannot carry a per-run expectation and its coverage is not credited to the measured merge; the reference stays null and both return with the covergroup landing.'
     tier: smoke
     build: gen_tb
     uvm_test: gen_base_test
@@ -395,7 +396,7 @@ tests:
     cocotb_module: dv.auto_dv.tests.gen_test_csr_reset
     expected_fail: false
     component: gen_tb_top
-    measured: true
+    measured: false
 
   - name: gen_test_csr_reset_red
     description: 'TDD red fixture of gen_test_csr_reset, pinned to TP-CSR-106 (generator --red --red-item TP-CSR-106): one TP-CSR-106 read is re-targeted to a CSR whose reset value differs, so exactly fire_tp_csr_106
@@ -423,7 +424,8 @@ tests:
     measured: false
 
   - name: gen_test_csr_access
-    description: 'group gen_csr_access TP-CSR-001/002/003/004/012 (TP-CSR-005 parked on the comparator''s mret isa_pc_next row); per-seed generated program stores every CSR op''s rd value and csrr read-back to the EOT register; fire_tp_csr_001/002/003/004/012 compare 926 report words with the Zicsr/WARL plan; Round 1: fcov_expectation_file detached (null) because 76 of the 80 bins this test''s manifest declares are on covergroups that are not built at this commit (gen_csr_access_class_cg, gen_csr_secureseed_cg, gen_csr_trap_handling_warl_cg, gen_csr_write_effect_cg), so the expectation check fails the run at every seed; the manifest stays committed and unchanged, and the reference returns with the covergroup landing.'
+    description: group gen_csr_access TP-CSR-001/002/003/004/012 (TP-CSR-005 parked on the comparator's mret isa_pc_next row); per-seed generated program stores every CSR op's rd value and csrr read-back
+      to the EOT register; fire_tp_csr_001/002/003/004/012 compare 926 report words with the Zicsr/WARL plan
     tier: smoke
     build: gen_tb
     uvm_test: gen_base_test
@@ -434,7 +436,7 @@ tests:
       seed: run
       extra_args: [--gcc-opts=-Idv/auto_dv/tests/gen_programs]
     seeds: 3
-    fcov_expectation_file: null
+    fcov_expectation_file: dv/auto_dv/fcov_expectations/gen_test_csr_access.fcov.yaml
     timeout_s: 900
     owner: test-writer
     pass_marker: GEN_TEST_PASS
@@ -470,7 +472,8 @@ tests:
     measured: false
 
   - name: gen_test_csr_trap_setup
-    description: 'group gen_csr_trap_setup items TP-CSR-023/024/025/027/028/029/030/035/036 (026, 031 blocked on the irq agent); per-seed generated program of randomized mstatus/mie/mtvec/mstatush/menvcfg writes with read-back report words, PMP-prologue U-mode mret/ecall rounds and aligned handler copies; fire_tp_csr_023..036 plus fire_program_integrity; Round 1: fcov_expectation_file detached (null) because 17 of the 168 bins this test''s manifest declares are on covergroups that are not built at this commit (gen_csr_reset_read_cg, gen_prv_transition_cg, gen_prv_trap_vector_cg), so the expectation check fails the run at every seed; the manifest stays committed and unchanged, and the reference returns with the covergroup landing.'
+    description: group gen_csr_trap_setup items TP-CSR-023/024/025/027/028/029/030/035/036 (026, 031 blocked on the irq agent); per-seed generated program of randomized mstatus/mie/mtvec/mstatush/menvcfg
+      writes with read-back report words, PMP-prologue U-mode mret/ecall rounds and aligned handler copies; fire_tp_csr_023..036 plus fire_program_integrity
     tier: smoke
     build: gen_tb
     uvm_test: gen_base_test
@@ -481,7 +484,7 @@ tests:
       seed: run
       extra_args: [--gcc-opts=-Idv/auto_dv/tests/gen_programs]
     seeds: 3
-    fcov_expectation_file: null
+    fcov_expectation_file: dv/auto_dv/fcov_expectations/gen_test_csr_trap_setup.fcov.yaml
     timeout_s: 900
     owner: test-writer
     pass_marker: GEN_TEST_PASS
@@ -517,7 +520,8 @@ tests:
     measured: false
 
   - name: gen_test_cmp_zcb
-    description: 'gen_cmp_zcb TP-CMP-034/036/038; per-seed Zcb program from gen_cmp_zcb_prog.py reporting RAW rd''/memory words; fire_tp_cmp_034 (Zcb loads/stores at every alignment and uimm), fire_tp_cmp_036 (five ALU forms over the operand mix), fire_tp_cmp_038 (c.mul low products over the rsd''/rs2'' sweep); Round 1 (LOG-088): fcov_expectation_file detached (null) because the round-1 pre-flight, run at this entry''s own round seeds (1056434660, 1591761896, 2076577225), left 6 of the 110 bins its manifest declares unhit at every one of the three seeds (8 to 10 unmet per seed), so the expectation check fails the run at every seed; every declared bin is on a covergroup built at this commit, so this is a stimulus-or-declaration gap for the test owner and not a missing covergroup, the manifest stays committed and unchanged, and the reference returns when the gap is closed.'
+    description: gen_cmp_zcb TP-CMP-034/036/038; per-seed Zcb program from gen_cmp_zcb_prog.py reporting RAW rd'/memory words; fire_tp_cmp_034 (Zcb loads/stores at every alignment and uimm), fire_tp_cmp_036
+      (five ALU forms over the operand mix), fire_tp_cmp_038 (c.mul low products over the rsd'/rs2' sweep)
     tier: smoke
     build: gen_tb
     uvm_test: gen_base_test
@@ -528,7 +532,7 @@ tests:
       seed: run
       extra_args: [--gcc-opts=-Idv/auto_dv/tests/gen_programs]
     seeds: 3
-    fcov_expectation_file: null
+    fcov_expectation_file: dv/auto_dv/fcov_expectations/gen_test_cmp_zcb.fcov.yaml
     timeout_s: 900
     owner: test-writer
     pass_marker: GEN_TEST_PASS
@@ -564,7 +568,8 @@ tests:
     measured: false
 
   - name: gen_test_cmp_zcmp_basic
-    description: 'Zcmp cm.push/pop/popret/popretz/mvsa01/mva01s architectural effects (TP-CMP-039..043, 045..050, 052, 053, 055, 066, 069, 073; TP-CMP-068 blocked); per-seed program gen_cmp_zcmp_basic_prog.py (all 48 rlist/spimm push and pop, all sreg pairs, hazards, back-to-back, fall-through cm.*), report-channel words vs the Zcmp-spec model; fire_tp_cmp_039..073; Round 1 (LOG-088): fcov_expectation_file detached (null) because the round-1 pre-flight, run at this entry''s own round seeds (395280870, 961426687, 979420815), left 74 of the 472 bins its manifest declares unhit at every one of the three seeds (112 to 119 unmet per seed), so the expectation check fails the run at every seed; every declared bin is on a covergroup built at this commit, so this is a stimulus-or-declaration gap for the test owner and not a missing covergroup, the manifest stays committed and unchanged, and the reference returns when the gap is closed.'
+    description: Zcmp cm.push/pop/popret/popretz/mvsa01/mva01s architectural effects (TP-CMP-039..043, 045..050, 052, 053, 055, 066, 069, 073; TP-CMP-068 blocked); per-seed program gen_cmp_zcmp_basic_prog.py
+      (all 48 rlist/spimm push and pop, all sreg pairs, hazards, back-to-back, fall-through cm.*), report-channel words vs the Zcmp-spec model; fire_tp_cmp_039..073
     tier: smoke
     build: gen_tb
     uvm_test: gen_base_test
@@ -575,7 +580,7 @@ tests:
       seed: run
       extra_args: [--gcc-opts=-Idv/auto_dv/tests/gen_programs]
     seeds: 3
-    fcov_expectation_file: null
+    fcov_expectation_file: dv/auto_dv/fcov_expectations/gen_test_cmp_zcmp_basic.fcov.yaml
     timeout_s: 900
     owner: test-writer
     pass_marker: GEN_TEST_PASS
@@ -611,7 +616,7 @@ tests:
     measured: false
 
   - name: gen_test_bit_draft
-    description: 'TP-BIT-016 grevi/gorci/grev/gorc (W9 controls, W1 operands, W3 upper bits) plus rev8/orc.b/brev8 from gen_bit_draft_prog.py; fire-checks every replayed rd against the Python grev32/gorc32 reference per op class, report count, retirement floor, pass code (TP-BIT-011/022..033 blocked on the shim''s C5.5 references); Round 1: fcov_expectation_file detached (null) because 15 of the 15 bins this test''s manifest declares are on covergroups that are not built at this commit (gen_bit_perm_cg), so the expectation check fails the run at every seed; the manifest stays committed and unchanged, and the reference returns with the covergroup landing.'
+    description: 'TP-BIT-016 grevi/gorci/grev/gorc (W9 controls, W1 operands, W3 upper bits) plus rev8/orc.b/brev8 from gen_bit_draft_prog.py; fire-checks every replayed rd against the Python grev32/gorc32 reference per op class, report count, retirement floor, pass code (TP-BIT-011/022..033 blocked on the shim''s C5.5 references); Round 1: fcov_expectation_file detached (null) because 15 of the 15 bins this test''s manifest declares are on covergroups that are not built at this commit (gen_bit_perm_cg), so the expectation check fails the run at every seed; the manifest stays committed and unchanged, and the reference returns with the covergroup landing.; Round 1 (LOG-091): measured false because every bin this test''s manifest declares is on a covergroup not built at this commit, so the entry cannot carry a per-run expectation and its coverage is not credited to the measured merge; the reference stays null and both return with the covergroup landing.'
     tier: targeted
     build: gen_tb
     uvm_test: gen_base_test
@@ -630,7 +635,7 @@ tests:
     cocotb_module: dv.auto_dv.tests.gen_test_bit_draft
     expected_fail: false
     component: gen_tb_top
-    measured: true
+    measured: false
 
   - name: gen_test_bit_draft_red
     description: 'TDD red fixture of gen_test_bit_draft, pinned to TP-BIT-016 (generator --red --red-item TP-BIT-016): one gorci immediate deviates while the plan keeps the true expectation, so exactly fire_tp_bit_016
@@ -658,7 +663,7 @@ tests:
     measured: false
 
   - name: gen_test_pmp_csr_warl
-    description: 'TP-PMP-001..008 PMP CSR WARL rules (pmpcfg packing, 32-bit pmpaddr, bits 6:5, RW=01 under MML=0/1, A modes with U-mode probes, RMW forms, U-mode access illegal); per-seed generated program; fire_tp_pmp_001..008 on the report channel; Round 1: fcov_expectation_file detached (null) because 266 of the 266 bins this test''s manifest declares are on covergroups that are not built at this commit (gen_pmp_access_verdict_cg, gen_pmp_addr_write_cg, gen_pmp_cfg_write_cg, gen_pmp_csr_access_cg, gen_pmp_mseccfg_cg), so the expectation check fails the run at every seed; the manifest stays committed and unchanged, and the reference returns with the covergroup landing.'
+    description: 'TP-PMP-001..008 PMP CSR WARL rules (pmpcfg packing, 32-bit pmpaddr, bits 6:5, RW=01 under MML=0/1, A modes with U-mode probes, RMW forms, U-mode access illegal); per-seed generated program; fire_tp_pmp_001..008 on the report channel; Round 1: fcov_expectation_file detached (null) because 266 of the 266 bins this test''s manifest declares are on covergroups that are not built at this commit (gen_pmp_access_verdict_cg, gen_pmp_addr_write_cg, gen_pmp_cfg_write_cg, gen_pmp_csr_access_cg, gen_pmp_mseccfg_cg), so the expectation check fails the run at every seed; the manifest stays committed and unchanged, and the reference returns with the covergroup landing.; Round 1 (LOG-091): measured false because every bin this test''s manifest declares is on a covergroup not built at this commit, so the entry cannot carry a per-run expectation and its coverage is not credited to the measured merge; the reference stays null and both return with the covergroup landing.'
     tier: smoke
     build: gen_tb
     uvm_test: gen_base_test
@@ -677,7 +682,7 @@ tests:
     cocotb_module: dv.auto_dv.tests.gen_test_pmp_csr_warl
     expected_fail: false
     component: gen_tb_top
-    measured: true
+    measured: false
 
   - name: gen_test_pmp_csr_warl_red
     description: 'TDD red fixture of gen_test_pmp_csr_warl, pinned to TP-PMP-001 (generator --red --red-item TP-PMP-001): one TP-PMP-001 pmpcfg byte is written with a flipped A field, so exactly fire_tp_pmp_001
@@ -730,7 +735,8 @@ tests:
     measured: false
 
   - name: gen_test_mul_div
-    description: 'Phase 1 batch 2: RV32M divide (TP-MUL-013..021, 026 built; 012, 022 not built: latency clauses): div/divu/rem/remu, explicit divide-by-zero and INT_MIN/-1 checks in signed and unsigned forms, decode forms; per-seed program gen_mul_div_prog.py; fire_tp_mul_013..026; Round 1 (LOG-088): fcov_expectation_file detached (null) because the round-1 pre-flight, run at this entry''s own round seeds (50212798, 77428537, 503515370), left 19 of the 224 bins its manifest declares unhit at every one of the three seeds (22 to 24 unmet per seed), so the expectation check fails the run at every seed; every declared bin is on a covergroup built at this commit, so this is a stimulus-or-declaration gap for the test owner and not a missing covergroup, the manifest stays committed and unchanged, and the reference returns when the gap is closed.'
+    description: 'Phase 1 batch 2: RV32M divide (TP-MUL-013..021, 026 built; 012, 022 not built: latency clauses): div/divu/rem/remu, explicit divide-by-zero and INT_MIN/-1 checks in signed and unsigned forms,
+      decode forms; per-seed program gen_mul_div_prog.py; fire_tp_mul_013..026'
     tier: smoke
     build: gen_tb
     uvm_test: gen_base_test
@@ -741,7 +747,7 @@ tests:
       seed: run
       extra_args: [--gcc-opts=-Idv/auto_dv/tests/gen_programs]
     seeds: 3
-    fcov_expectation_file: null
+    fcov_expectation_file: dv/auto_dv/fcov_expectations/gen_test_mul_div.fcov.yaml
     timeout_s: 900
     owner: test-writer
     pass_marker: GEN_TEST_PASS
@@ -824,7 +830,8 @@ tests:
     measured: false
 
   - name: gen_test_isa_cti
-    description: 'Phase 1 batch 2: RV32I control transfer (TP-ISA-015, 017, 018, 019, 020, 023, 027, 053 built; 016, 022, 026 not built: memory map; 024 not built: timing): landing markers, link values, branch outcome vectors, misaligned-address exception never raised; per-seed program gen_isa_cti_prog.py; fire_tp_isa_015..053; Round 1 (LOG-088): fcov_expectation_file detached (null) because the round-1 pre-flight, run at this entry''s own round seeds (292097225, 1477822385, 1722507662), left 16 of the 200 bins its manifest declares unhit at every one of the three seeds (16 unmet per seed), so the expectation check fails the run at every seed; every declared bin is on a covergroup built at this commit, so this is a stimulus-or-declaration gap for the test owner and not a missing covergroup, the manifest stays committed and unchanged, and the reference returns when the gap is closed.'
+    description: 'Phase 1 batch 2: RV32I control transfer (TP-ISA-015, 017, 018, 019, 020, 023, 027, 053 built; 016, 022, 026 not built: memory map; 024 not built: timing): landing markers, link values, branch
+      outcome vectors, misaligned-address exception never raised; per-seed program gen_isa_cti_prog.py; fire_tp_isa_015..053'
     tier: smoke
     build: gen_tb
     uvm_test: gen_base_test
@@ -835,7 +842,7 @@ tests:
       seed: run
       extra_args: [--gcc-opts=-Idv/auto_dv/tests/gen_programs]
     seeds: 3
-    fcov_expectation_file: null
+    fcov_expectation_file: dv/auto_dv/fcov_expectations/gen_test_isa_cti.fcov.yaml
     timeout_s: 900
     owner: test-writer
     pass_marker: GEN_TEST_PASS
@@ -918,7 +925,8 @@ tests:
     measured: false
 
   - name: gen_test_isa_alu
-    description: 'Phase 1 batch 2: RV32I ALU (TP-ISA-001..009, 052, all 10 built): I-type and R-type ops over operand classes, overflow wrap, comparison boundaries, lui/auipc extremes, HINT no-ops, writes to x0 discarded; per-seed program gen_isa_alu_prog.py; fire_tp_isa_001..052; Round 1 (LOG-088): fcov_expectation_file detached (null) because the round-1 pre-flight, run at this entry''s own round seeds (353815277, 548997994, 790849397), left 6 of the 602 bins its manifest declares unhit at every one of the three seeds (19 to 24 unmet per seed), so the expectation check fails the run at every seed; every declared bin is on a covergroup built at this commit, so this is a stimulus-or-declaration gap for the test owner and not a missing covergroup, the manifest stays committed and unchanged, and the reference returns when the gap is closed.'
+    description: 'Phase 1 batch 2: RV32I ALU (TP-ISA-001..009, 052, all 10 built): I-type and R-type ops over operand classes, overflow wrap, comparison boundaries, lui/auipc extremes, HINT no-ops, writes
+      to x0 discarded; per-seed program gen_isa_alu_prog.py; fire_tp_isa_001..052'
     tier: smoke
     build: gen_tb
     uvm_test: gen_base_test
@@ -929,7 +937,7 @@ tests:
       seed: run
       extra_args: [--gcc-opts=-Idv/auto_dv/tests/gen_programs]
     seeds: 3
-    fcov_expectation_file: null
+    fcov_expectation_file: dv/auto_dv/fcov_expectations/gen_test_isa_alu.fcov.yaml
     timeout_s: 900
     owner: test-writer
     pass_marker: GEN_TEST_PASS
@@ -965,7 +973,8 @@ tests:
     measured: false
 
   - name: gen_test_bit_ratified
-    description: 'Phase 1 batch 2: ratified bitmanip Zba/Zbb/Zbs/Zbc (TP-BIT-002..021, 038, 040 built; TP-BIT-001 not built: RVFI record fact): Python references from zb.adoc, exhaustive control floors, vacuous compares counted apart; per-seed program gen_bit_ratified_prog.py; fire_tp_bit_002..040; Round 1: fcov_expectation_file detached (null) because 176 of the 830 bins this test''s manifest declares are on covergroups that are not built at this commit (gen_bit_bfp_cg, gen_bit_clmul_crc_cg, gen_bit_decode_cg, gen_bit_perm_cg, gen_bit_rotate_shiftones_cg, gen_bit_ternary_cg, gen_bit_xperm_cg), so the expectation check fails the run at every seed; the manifest stays committed and unchanged, and the reference returns with the covergroup landing.'
+    description: 'Phase 1 batch 2: ratified bitmanip Zba/Zbb/Zbs/Zbc (TP-BIT-002..021, 038, 040 built; TP-BIT-001 not built: RVFI record fact): Python references from zb.adoc, exhaustive control floors, vacuous
+      compares counted apart; per-seed program gen_bit_ratified_prog.py; fire_tp_bit_002..040'
     tier: smoke
     build: gen_tb
     uvm_test: gen_base_test
@@ -976,7 +985,7 @@ tests:
       seed: run
       extra_args: [--gcc-opts=-Idv/auto_dv/tests/gen_programs]
     seeds: 3
-    fcov_expectation_file: null
+    fcov_expectation_file: dv/auto_dv/fcov_expectations/gen_test_bit_ratified.fcov.yaml
     timeout_s: 900
     owner: test-writer
     pass_marker: GEN_TEST_PASS
@@ -1013,7 +1022,8 @@ tests:
     measured: false
 
   - name: gen_test_cmp_zca
-    description: 'Phase 1 batch 2: Zca compressed forms versus their 32-bit forms (TP-CMP-001..033, all 21 items built): register and memory results, sp handling, jump and branch outcomes, link values, c.ebreak and illegal c.addi16sp through a returning handler; per-seed program gen_cmp_zca_prog.py; fire_tp_cmp_001..033; Round 1: fcov_expectation_file detached (null) because 13 of the 337 bins this test''s manifest declares are on covergroups that are not built at this commit (gen_cmp_illegal_cg, gen_isa_system_cg), so the expectation check fails the run at every seed; the manifest stays committed and unchanged, and the reference returns with the covergroup landing.'
+    description: 'Phase 1 batch 2: Zca compressed forms versus their 32-bit forms (TP-CMP-001..033, all 21 items built): register and memory results, sp handling, jump and branch outcomes, link values, c.ebreak
+      and illegal c.addi16sp through a returning handler; per-seed program gen_cmp_zca_prog.py; fire_tp_cmp_001..033'
     tier: smoke
     build: gen_tb
     uvm_test: gen_base_test
@@ -1024,7 +1034,7 @@ tests:
       seed: run
       extra_args: [--gcc-opts=-Idv/auto_dv/tests/gen_programs]
     seeds: 3
-    fcov_expectation_file: null
+    fcov_expectation_file: dv/auto_dv/fcov_expectations/gen_test_cmp_zca.fcov.yaml
     timeout_s: 900
     owner: test-writer
     pass_marker: GEN_TEST_PASS
