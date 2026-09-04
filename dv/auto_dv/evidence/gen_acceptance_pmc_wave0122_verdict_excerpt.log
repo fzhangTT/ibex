@@ -3,7 +3,7 @@
 # run's result.yaml, sim.log and sim_stdout.log under the out root (site storage). Lines are copied, long lines truncated as marked.
 requester: runtime   purpose: 1   scope_decision: direct regression pmc_accept_0122   status: done
 request tests: ['gen_test_pmc_ctrl', 'gen_test_pmc_ctrl_pin_off', 'gen_test_pmc_ctrl_red']   seeds: per entry   coverage: False
-received_utc: 2026-09-04T01:22:29Z   finished_utc: 2026-09-04T01:24:25Z   regress_rc: None
+received_utc: 2026-09-04T01:22:29Z   finished_utc: 2026-09-04T01:24:25Z   regress_rc: n/a (per-build rc: gen_tb 0)
 pinned_sha: 86b8aa059fd599edd5b873fa6049fc9677d43720   canary_sha: None   canary_decision: source mode head
 batch_record (work tree): /proj_soc/user_dev/fzhang/ibex_dv_out/regress_pmc_accept_0122/regress.log
 regress_outdir: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_pmc_accept_0122

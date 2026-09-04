@@ -1869,3 +1869,148 @@ tests:
     expected_fail: false
     component: gen_tb_top
     measured: false
+
+  - name: gen_ut_lockstep_cpuctrl
+    description: "lock-step run of gen_cpuctrl_directed.S (cpuctrlsts read-backs around a nested exception; the misc double_fault rule off for the deliberate double fault)"
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0, +gen_ut_boot_retire=40, +gen_chk_double_fault=0]
+    program: {directed: [dv/auto_dv/stim/gen_directed/gen_cpuctrl_directed.S], seed: 1}
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 600
+    owner: tb-infra
+    pass_marker: GEN_UT_LOCKSTEP_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_fcov_pkg
+    measured: false
+  - name: gen_ut_lockstep_icache_en
+    description: "lock-step run of gen_icache_en_directed.S (the instruction cache enabled and exercised, the scramble key immediate)"
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0, +gen_ut_boot_retire=300]
+    program: {directed: [dv/auto_dv/stim/gen_directed/gen_icache_en_directed.S], seed: 1}
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 600
+    owner: tb-infra
+    pass_marker: GEN_UT_LOCKSTEP_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_fcov_pkg
+    measured: false
+  - name: gen_ut_lockstep_icache_ecc
+    description: "lock-step run of gen_icache_ecc_directed.S with the tag-RAM ECC injection at rate frequent (alert_minor_o expected within GEN_ICACHE_ECC_WINDOW of every qualified injection; the window SVA and the misc monitor's two halves)"
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0, +gen_ut_boot_retire=3000, +gen_knob_icache_ecc_err_rate=frequent]
+    program: {directed: [dv/auto_dv/stim/gen_directed/gen_icache_ecc_directed.S], seed: 1}
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 900
+    owner: tb-infra
+    pass_marker: GEN_UT_LOCKSTEP_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_misc_monitor
+    measured: false
+  - name: gen_ut_intg_span
+    description: "gen_intg_span_directed.S with two integrity corruptions armed on the spanning load's buffer (both words consumed by the T-183 gate; the internal-NMI mtval of a misaligned load)"
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0, +gen_ut_boot_retire=30, +gen_export_file=gen_export.txt]
+    program: {directed: [dv/auto_dv/stim/gen_directed/gen_intg_span_directed.S], seed: 1}
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 600
+    owner: tb-infra
+    pass_marker: GEN_UT_INTG_SPAN_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_intg_span
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_scoreboard
+    measured: false
+  - name: gen_ut_irq_nmi_long
+    description: "gen_nmi_long_directed.S with the NMI raised through the bridge and the external line raised inside its 41-record handler (the irq checker keeps the expectation through NMI mode and judges it after the mret)"
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0, +gen_ut_boot_retire=200, +gen_export_file=gen_export.txt]
+    program: {directed: [dv/auto_dv/stim/gen_directed/gen_nmi_long_directed.S], seed: 1}
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 600
+    owner: tb-infra
+    pass_marker: GEN_UT_IRQ_NMI_LONG_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_irq_nmi_long
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_irq_checker
+    measured: false
+  - name: gen_ut_lockstep_minstret_draftb
+    description: "lock-step run of gen_minstret_draftb_directed.S (a minstreth write right after a draft-B op, then minstret reads: the model counts the draft-B retirement and takes the write corner)"
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0, +gen_ut_boot_retire=20]
+    program: {directed: [dv/auto_dv/stim/gen_directed/gen_minstret_draftb_directed.S], seed: 1}
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 600
+    owner: tb-infra
+    pass_marker: GEN_UT_LOCKSTEP_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_isa_shim
+    measured: false
+  - name: gen_ut_lockstep_minstret_zcmp
+    description: "lock-step run of gen_minstret_zcmp_directed.S (a minstreth write right after a Zcmp sequence, then minstret reads)"
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0, +gen_ut_boot_retire=40]
+    program: {directed: [dv/auto_dv/stim/gen_directed/gen_minstret_zcmp_directed.S], seed: 1}
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 600
+    owner: tb-infra
+    pass_marker: GEN_UT_LOCKSTEP_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_isa_shim
+    measured: false
+  - name: gen_ut_boot_fe1
+    description: "the Zc image booted with fetch enabled at the reset release (one plusarg value; the gen_rst_boot_cg boot_to_req two proof, gen_fcov_proof_slice5c2)"
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=1, +gen_ut_boot_retire=200]
+    program: {directed: [dv/auto_dv/stim/gen_directed/gen_zc_directed.S], seed: 1}
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 600
+    owner: tb-infra
+    pass_marker: GEN_UT_BOOT_FE1_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_boot_fe1
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_fcov_pkg
+    measured: false

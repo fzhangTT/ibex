@@ -112,7 +112,17 @@ def regress_coverage(manifest: dict) -> bool | None:
     return None
 
 
-LABEL_RE = re.compile(r"^[A-Za-z0-9_]+$")   # a hyphen would be split off by excerpt_name (the request-name form)
+LABEL_RE = re.compile(r"[A-Za-z0-9_]+")   # fullmatch: a hyphen would be split off by excerpt_name, a trailing newline is not a label
+
+
+def regress_rc_echo(manifest: dict):
+    """The regression's own rc when it records one, else the per-build rcs (gen_regress records rc per build)."""
+    if manifest.get("rc") is not None:
+        return manifest["rc"]
+    builds = manifest.get("builds")
+    if isinstance(builds, dict) and builds:
+        return "n/a (per-build rc: " + ", ".join(f"{k} {v.get('rc')}" for k, v in builds.items()) + ")"
+    return "n/a (no build record)"
 
 
 def regress_as_request(manifest: dict, label: str) -> dict:
@@ -123,7 +133,7 @@ def regress_as_request(manifest: dict, label: str) -> dict:
             "scope_decision": f"direct regression {manifest.get('tag') or label}", "status": manifest.get("status"),
             "request_echo": {"tests": sorted({r.get("test") for r in manifest.get("runs") or []}), "seeds": "per entry",
                              "coverage": regress_coverage(manifest)},
-            "received_utc": manifest.get("started_utc"), "finished_utc": manifest.get("finished_utc"), "regress_rc": manifest.get("rc"),
+            "received_utc": manifest.get("started_utc"), "finished_utc": manifest.get("finished_utc"), "regress_rc": regress_rc_echo(manifest),
             "server_mirror_sync": {"pinned_sha": src.get("head_sha"), "canary_sha": manifest.get("canary_sha"), "canary_decision": f"source mode {src.get('mode')}",
                                    "batch_record": manifest.get("regress_log")},
             "regress_outdir": manifest.get("outdir"), "regress_cmd": manifest.get("regress_cmd") or f"gen_regress.py --tag {manifest.get('tag')}",
@@ -185,10 +195,11 @@ def self_test() -> int:
     reg_noscope = {k: v for k, v in reg.items() if k != "scope"}; reg_noscope["builds"] = {"gen_tb": {"cov_metrics": "line+cond"}}
     reg_bare = {k: v for k, v in reg.items() if k != "scope"}
     got_cov = (regress_coverage(reg_cov), regress_coverage(reg_nocov), regress_coverage(reg_noscope), regress_coverage(reg_bare))
-    cond = got_cov == (True, False, True, None) and "regress_rc: None" in rtext and "status: done" in rtext
-    ok &= cond; print("SELF-TEST", "ok " if cond else "BAD", f"regression coverage echo from scope.coverage, else cov_metrics, else None (CM142-L-1): {got_cov}; status is not printed under the rc label (CM142-I-1)")
-    cond = bool(LABEL_RE.match("wave0122")) and not LABEL_RE.match("wave-0122") and not LABEL_RE.match("")
-    ok &= cond; print("SELF-TEST", "ok " if cond else "BAD", "a --label with a hyphen is rejected (CM142-I-2)")
+    cond = got_cov == (True, False, True, None) and "regress_rc: n/a (no build record)" in rtext and "status: done" in rtext \
+        and regress_rc_echo(dict(reg, builds={"gen_tb": {"rc": 0}})) == "n/a (per-build rc: gen_tb 0)" and regress_rc_echo(dict(reg, rc=3)) == 3
+    ok &= cond; print("SELF-TEST", "ok " if cond else "BAD", f"regression coverage echo from scope.coverage, else cov_metrics, else None (CM142-L-1): {got_cov}; the rc label echoes the regression's rc, else the per-build rcs, never the status (CM142-I-1, CM144-I-1)")
+    cond = bool(LABEL_RE.fullmatch("wave0122")) and not LABEL_RE.fullmatch("wave-0122") and not LABEL_RE.fullmatch("") and not LABEL_RE.fullmatch("wave0122\n")
+    ok &= cond; print("SELF-TEST", "ok " if cond else "BAD", "a --label with a hyphen or a trailing newline is rejected (CM142-I-2, CM144-I-2)")
     cond = str(d).startswith(str(tmp_root))
     ok &= cond; print("SELF-TEST", "ok " if cond else "BAD", f"the self-test scratch lives under the flow's selftest root (CM142-I-3): {tmp_root}")
     exact, crlf, missing = d / "exact.log", d / "crlf.log", d / "missing.log"
@@ -216,7 +227,7 @@ def main() -> int:
         ap.error("--request or --regress is required")
     if a.regress and not a.label:
         ap.error("--regress needs --label")
-    if a.label and not LABEL_RE.match(a.label):
+    if a.label and not LABEL_RE.fullmatch(a.label):
         ap.error(f"--label {a.label!r}: letters, digits and underscores only (a hyphen would be split off the file name)")
     rc = 0
     sources = [(req, None) for req in a.request] + ([(f"regress-{a.label}", a.regress)] if a.regress else [])
