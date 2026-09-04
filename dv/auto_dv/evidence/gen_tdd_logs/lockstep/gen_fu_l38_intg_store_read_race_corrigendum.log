@@ -1,0 +1,45 @@
+# gen_fu_l38_intg_store_read_race_corrigendum.log -- landing 40b, records-only (TB Infra, 2026-09-04)
+#
+# WHAT THIS IS. A corrigendum beside gen_fu_l38_intg_store_read_race.log, which is committed at 4814 bytes and
+# md5 e82be08b1164a2ead5504e5684756b21 and STAYS CLOSED at those bytes; a committed retained log is never
+# reopened. It answers CR-37-L-2, raised on that log's line 34, and lives here rather than in landing 40's own log
+# so that a reader who finds the corrected log finds its correction next to it.
+# RECORDS ONLY: no run and no build stands behind this file; no gate identity exists for it and none is claimed.
+# PATHS: $S is this session's scratchpad; $S/l33/l40_digest.sh <root> is the recipe tool used below.
+#
+# ================ WHAT LINE 34 SAYS, AND WHAT IS TRUE ================
+# $ sed -n '34p' dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_fu_l38_intg_store_read_race.log
+#   ONE BUILD serves both sides, since only a Python test file differs: sources sha256 (dv/auto_dv env, tb, isa, gen_tb): 50981c82f49d7574
+# The figure is right and its SCOPE was not stated. It is the local runner's find-digest over the tree the landing
+# was developed on, df1d8c5, and therefore the compile-time identity of the one simv that served the red and the
+# green. It is NOT the digest of the landing's own commit, so a reader recomputing the recipe over 9baf3f9 gets a
+# different value and would read a mismatch where there is none. Both figures, measured here:
+# $ for sha in df1d8c5 9baf3f9 ; do git archive $sha | tar -x -C $S/l33/dig/$sha ; bash $S/l33/l40_digest.sh $S/l33/dig/$sha ; done
+#   50981c82f49d7574  files=77  root=archive of df1d8c5
+#   034f4e4f2905cb72  files=77  root=archive of 9baf3f9
+# So: 50981c82f49d7574 is the pre-fix tree at df1d8c5 and the simv's compile-time figure; 034f4e4f2905cb72 is the
+# source set at the landing's commit 9baf3f9, which is what the fixed test's own tree reads. The recipe includes
+# dv/auto_dv/gen_tb/*.py, which is why a Python-only change moves it at all. Neither figure is wrong and the log's
+# claim that one build served both sides still stands: the simv was built once, before either run.
+#
+# ================ THE OCCURRENCE-COUNT CONTROL IS A RUN-TIME FIGURE ONLY ================
+# $ command grep -n 'QUIESCE_CYCLES occurrence' dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_fu_l38_intg_store_read_race.log
+#   39:      QUIESCE_CYCLES occurrences in the test: 0
+#   45:      QUIESCE_CYCLES occurrences in the test: 2
+#   61:   The QUIESCE_CYCLES occurrence counts printed above are the control on the experiment itself: 0 in the root
+# Those two counts, 0 before and 2 after, were printed from the test file at the moment each side ran, and they do
+# prove that the two runs used different test bytes. What they cannot do is let a later reader reconstruct either
+# side from disk: the root was patched IN PLACE between the runs, so its pre-fix state is gone and the file now
+# carries the fixed text. The control is therefore a run-time figure and not a durable artefact, exactly as
+# CR-37-L-2 says.
+# WHAT REPLACES IT, from landing 40 on: name the source-set digest of BOTH sides, keep the md5 of each side's test
+# file measured against the clone's committed bytes, and keep an archive of the base so the pre-fix source set can
+# be recomputed rather than remembered. Landing 40's log does all three, and its predicate landed from the same
+# tool that patched the root, so the proven bytes and the landed bytes are one file.
+#
+# ================ WHAT STILL STANDS IN THE CORRECTED LOG ================
+# Everything else: the mechanism (the interface's non-blocking edge counter against the comparator's blocking
+# write), the probe's uniform one-record offset over all 31 records, the red at seed 2062654708 with 30 against
+# 31, the green at the same seed with 31 and 31, and the control seed. Only the digest's scope and the status of
+# the occurrence-count control are corrected, and the corrected log's bytes are untouched.
+# END. Every figure above is produced by the command printed above its block.

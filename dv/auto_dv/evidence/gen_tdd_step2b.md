@@ -1210,3 +1210,5 @@ cross-check, so those two runs are not evidence about the loop, and the log says
 
 Retained: gen_tdd_logs/lockstep/gen_fu_l40_pair_sample_quiesce.log, which also answers CR-37-L-2 by measuring the
 four source-set digests behind landings 38 and 40 with the local runner's own recipe. One manifest row.
+
+Landing 40b puts the correction where a reader of the corrected log will find it: gen_tdd_logs/lockstep/gen_fu_l38_intg_store_read_race_corrigendum.log, beside the landing-38 log and with its own manifest row, answering CR-37-L-2 by naming both source-set figures and by saying plainly that the occurrence-count control in that log is a run-time figure only. The landing-38 log itself stays closed at its committed bytes.
