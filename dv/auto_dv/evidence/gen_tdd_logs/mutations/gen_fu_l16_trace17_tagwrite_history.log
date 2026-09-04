@@ -1,12 +1,16 @@
 # The tag-write history at the indices where a line was valid in both ways at once, from the landing-15 trace
 # session (scratch mut_root/TRACE17, the TRACE displays on the landing build, one-region program prog_icache_ecc).
-# This is the observational evidence for WP12-F2's allocation claim: the core allocates a second copy of a line
-# that is still valid in the other way after an ECC-correction refetch, because each fill captures its way in the
-# IC1 cycle of its own lookup while the correction's invalidation write lands later, and no comparator in the
-# module compares the captured fill addresses (rtl/ibex_icache.sv). Read a way's line as valid=1 until a later
-# write at the same index and way sets valid=0.
+# WHAT THIS FILE EVIDENCES: that a line was valid in both ways at one index at the same time, and which way's copy
+# was added second. Nothing more. Read a way's line as valid=1 until a later write at the same index and way sets
+# valid=0.
+# WHAT IT DOES NOT EVIDENCE: the cause. That the second copy is allocated after an ECC-correction refetch, because
+# each fill captures its way in the IC1 cycle of its own lookup while the correction's invalidation write lands
+# later and no comparator compares the captured fill addresses, is DERIVED from rtl/ibex_icache.sv:534-535 and
+# :590-592, not measured here. The writes below are CONSISTENT with that account (one way valid=0 before each
+# episode, a two-way valid=0 ending it), which is consistency and not causation.
 # Indices 26, 27, taken from gen_fu_l16_trace17_duplicate_copies.log rather than hard-coded. 322 tag-write lines at
-# those indices of 1564 in the run; counted by python from the run's own ICTRACE tagwrite lines.
+# those indices. The run's total of 1564 tag-write lines is counted from the trace session's stdout, which is scratch
+# and NOT retained, so that total is not checkable from the tree; the 322 lines below are.
 #
 # Reconstructed from the writes below, by carrying each way's valid bit and tag forward: 16 episodes in
 # which both ways held the SAME tag valid at one index, 13 at index 26, 3 at index 27.

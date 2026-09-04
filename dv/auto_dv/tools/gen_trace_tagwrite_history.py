@@ -1,14 +1,28 @@
-"""gen_trace_tagwrite_history.py <landing root> <scratch root>: retain the tag-write history at the duplicate indices from the landing-15 trace
-session, so the WP12-F2 allocation claim (the core allocates a second copy of a still-valid line after an ECC-correction
-refetch) rests on observed evidence again. The earlier tag-write trace was retired with landing 15 because its build had
-no per-file sources list; this one comes from the trace session on the landing build, which retains both.
+"""gen_trace_tagwrite_history.py <landing root> <scratch root> [--from-artifact]: retain the tag-write history at the
+indices where a cache line was valid in both ways at once, and reconstruct the coexistence episodes from it.
 
-The indices are taken from the retained duplicate-copies artifact rather than hard-coded, so the filter follows the
-evidence instead of a remembered number. Appends or replaces one manifest row."""
+The indices come from the retained duplicate-copies artifact rather than a literal, so the filter follows the evidence
+rather than a remembered number. With --from-artifact the episode block is re-derived from the raw writes inside the
+already-retained artifact, so a reader of the tree can reproduce the reconstruction without the scratch trace session.
+Appends or replaces one manifest row."""
 import hashlib
 import pathlib
 import re
 import sys
+USAGE = "usage: gen_trace_tagwrite_history.py <landing root> <scratch root>"
+
+
+def _usage(msg=None):
+    """A wrong call is answered, not crashed: the tools are read by reviewers who have not seen them before."""
+    if msg:
+        print(msg)
+    print(USAGE)
+    sys.exit(2)
+
+
+if len(sys.argv) < 3 or sys.argv[1] in ("-h", "--help"):
+    _usage()
+
 
 ROOT = pathlib.Path(sys.argv[1])
 S = pathlib.Path(sys.argv[2])   # the scratch root holding the trace session
@@ -25,8 +39,8 @@ def die(msg):
     sys.exit(1)
 
 
-if not SRC.exists():
-    die("the trace run's stdout is gone; the artifact cannot be rebuilt from anything else: %s" % SRC)
+FROM_ARTIFACT = "--from-artifact" in sys.argv
+
 if not DUP.exists():
     die("the duplicate-copies artifact is missing, so the indices cannot be derived: %s" % DUP)
 
@@ -34,23 +48,45 @@ idx = sorted({int(m) for m in re.findall(r"index=(\d+)", DUP.read_text(errors="r
 if not idx:
     die("no index= field in the duplicate-copies artifact")
 
-lines = SRC.read_text(errors="replace").splitlines()
-tw = [l for l in lines if "ICTRACE tagwrite" in l]
-keep = [l for l in tw if any(re.search(r"index=%d " % i, l) for i in idx)]
+if FROM_ARTIFACT:
+    # Reproduce the reconstruction from the tree alone: the retained artifact already carries every raw write the
+    # episode block is derived from. The run's own total cannot be recounted from it, so it is carried forward from
+    # the recorded header rather than invented.
+    if not DST.exists():
+        die("--from-artifact needs the retained artifact to read: %s" % DST)
+    prev = DST.read_text(errors="replace").splitlines()
+    keep = [l for l in prev if "ICTRACE tagwrite" in l and not l.startswith("#")]
+    if not keep:
+        die("the retained artifact holds no raw tag-write lines to re-derive from: %s" % DST)
+    m = re.search(r"total of (\d+) tag-write lines", "\n".join(l for l in prev if l.startswith("#")))
+    if not m:
+        die("the retained artifact's header does not record the run's tag-write total")
+    tw = [None] * int(m.group(1))
+else:
+    if not SRC.exists():
+        die("the trace run's stdout is gone; re-run with --from-artifact to re-derive from the retained artifact: %s" % SRC)
+    lines = SRC.read_text(errors="replace").splitlines()
+    tw = [l for l in lines if "ICTRACE tagwrite" in l]
+    keep = [l for l in tw if any(re.search(r"index=%d " % i, l) for i in idx)]
 if not keep:
     die("no tag-write line at the duplicate indices %s" % idx)
 
 head = [
     "# The tag-write history at the indices where a line was valid in both ways at once, from the landing-15 trace",
     "# session (scratch mut_root/TRACE17, the TRACE displays on the landing build, one-region program prog_icache_ecc).",
-    "# This is the observational evidence for WP12-F2's allocation claim: the core allocates a second copy of a line",
-    "# that is still valid in the other way after an ECC-correction refetch, because each fill captures its way in the",
-    "# IC1 cycle of its own lookup while the correction's invalidation write lands later, and no comparator in the",
-    "# module compares the captured fill addresses (rtl/ibex_icache.sv). Read a way's line as valid=1 until a later",
-    "# write at the same index and way sets valid=0.",
+    "# WHAT THIS FILE EVIDENCES: that a line was valid in both ways at one index at the same time, and which way's copy",
+    "# was added second. Nothing more. Read a way's line as valid=1 until a later write at the same index and way sets",
+    "# valid=0.",
+    "# WHAT IT DOES NOT EVIDENCE: the cause. That the second copy is allocated after an ECC-correction refetch, because",
+    "# each fill captures its way in the IC1 cycle of its own lookup while the correction's invalidation write lands",
+    "# later and no comparator compares the captured fill addresses, is DERIVED from rtl/ibex_icache.sv:534-535 and",
+    "# :590-592, not measured here. The writes below are CONSISTENT with that account (one way valid=0 before each",
+    "# episode, a two-way valid=0 ending it), which is consistency and not causation.",
     "# Indices %s, taken from gen_fu_l16_trace17_duplicate_copies.log rather than hard-coded. %d tag-write lines at"
     % (", ".join(str(i) for i in idx), len(keep)),
-    "# those indices of %d in the run; counted by python from the run's own ICTRACE tagwrite lines." % len(tw),
+    "# those indices. The run's total of %d tag-write lines is counted from the trace session's stdout, which is scratch"
+    % len(tw),
+    "# and NOT retained, so that total is not checkable from the tree; the %d lines below are." % len(keep),
 ]
 # Reconstruct the valid state per way so the file evidences its own claim instead of asking the reader to replay
 # 322 writes: list every interval in which both ways held the same tag valid at one index.

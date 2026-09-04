@@ -1,4 +1,4 @@
-"""gen_l15_figures.py <landing root>: every landing-15 record figure re-derived from the RETAINED files, so no number in
+"""gen_icache_ecc_figures.py <landing root>: every landing-15 record figure re-derived from the RETAINED files, so no number in
 the record is retyped from a run directory or from a review. Reads the retained excerpts' GEN_MISC summary line (kept
 whole by this pass) and the retained mutant verdicts and excerpt headers. Prints JSON plus a markdown digest, and fails
 loud on a field it cannot find or an arithmetic identity that does not hold."""
@@ -6,6 +6,20 @@ import json
 import pathlib
 import re
 import sys
+USAGE = "usage: gen_icache_ecc_figures.py <landing root>"
+
+
+def _usage(msg=None):
+    """A wrong call is answered, not crashed: the tools are read by reviewers who have not seen them before."""
+    if msg:
+        print(msg)
+    print(USAGE)
+    sys.exit(2)
+
+
+if len(sys.argv) < 2 or sys.argv[1] in ("-h", "--help"):
+    _usage()
+
 
 ROOT = pathlib.Path(sys.argv[1])
 L = ROOT / "dv/auto_dv/evidence/gen_tdd_logs"
