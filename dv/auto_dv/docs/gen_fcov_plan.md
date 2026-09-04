@@ -2,7 +2,7 @@
 
 Deliverable 3 (DV_prompt.txt Section 11): the definition of every functional-coverage bin (not the
 implementation; TB Infra implements covergroups in the gen_ namespace from this plan). Owner: dv-lead.
-Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in), generated 2026-09-04 13:14 UTC from dv/auto_dv/work/dv-lead/parts6/fcov_*.md. Part-file names in this document (tp_<area>.md, fcov_<area>.md, gen_part_<area>.md, trace_*_<area>.csv and the README_*_BRIEF.md briefs) are this plan set's own gitignored sources, named as provenance: the content they hold is in the corresponding area of gen_test_plan.md, gen_fcov_plan.md or gen_feature_list.md, and the bug and doc-defect number series they define are in gen_bug_log.md. No claim in this document rests on opening one. Three rtl-arch notes this plan set cites are committed references, not work files: dv/auto_dv/evidence/gen_multdiv_bound_props.md (the MD-n bound properties and covers), dv/auto_dv/evidence/gen_bug_reproducer_specs.md (the reproducer recipes behind the bug log) and dv/auto_dv/evidence/gen_interface_inventory.md (the numbered driver and protocol rules); citations name them by basename and resolve there.
+Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in), generated 2026-09-04 14:16 UTC from dv/auto_dv/work/dv-lead/parts6/fcov_*.md. Part-file names in this document (tp_<area>.md, fcov_<area>.md, gen_part_<area>.md, trace_*_<area>.csv and the README_*_BRIEF.md briefs) are this plan set's own gitignored sources, named as provenance: the content they hold is in the corresponding area of gen_test_plan.md, gen_fcov_plan.md or gen_feature_list.md, and the bug and doc-defect number series they define are in gen_bug_log.md. No claim in this document rests on opening one. Three rtl-arch notes this plan set cites are committed references, not work files: dv/auto_dv/evidence/gen_multdiv_bound_props.md (the MD-n bound properties and covers), dv/auto_dv/evidence/gen_bug_reproducer_specs.md (the reproducer recipes behind the bug log) and dv/auto_dv/evidence/gen_interface_inventory.md (the numbered driver and protocol rules); citations name them by basename and resolve there.
 
 Build configuration: `opentitan` (ibex_configs.yaml): BaseIsa=RV32IorCHERIoT (CHERIoT mode excluded
 by owner ruling), RV32E=0, RV32M=RV32MSingleCycle, RV32B=RV32BOTEarlGrey, RV32ZC=RV32ZcaZcbZcmp,
@@ -73,7 +73,7 @@ ibex_pkg; compiled with +define+RVFI; cheriot_enable_i tied IbexMuBiOff inside t
   components (gen_mul_ops_cg.cr_extremes.c_mul_all_ones_neg_rand), which is how Runtime's derived report keys them (T-215); the plan,
   the CSV and the manifests use that form. Bin names that are SystemVerilog keywords (xor, or, and, byte, default, event, medium,
   program, rand, repeat, signed, small, time, unsigned, xnor) render as escaped identifiers in SV and urg reports them plainly, so the
-  manifests keep them as written. Owner item Q-017 records that ci/check_fcov_expectations.py itself lacks cross support, and LOG-084c rules how a cross-bin claim earns evidence: manifests MAY claim cross bins, a claim is evidence only when checked through the flow's derived report or an equivalent derivation, and a direct invocation of ci/check_fcov_expectations.py on a raw urg report is not evidence for a cross bin and is a trap for any direct caller. The flow's path is the derived one: under LOG-054 dv/auto_dv/flow/gen_fcov.py derives a variable-form report beside the original, in which each cross section becomes a variable section whose rows are the component tuple joined with "_", calls the checker with --report-dir on that report, and refuses a derived report in which two tuples derive one name, since the checker would sum their counts. LOG-084's interim ban on claiming a cross bin is superseded.
+  manifests keep them as written. Owner item Q-017 records that ci/check_fcov_expectations.py itself lacks cross support, and LOG-084c rules how a cross-bin claim earns evidence: manifests MAY claim cross bins, a claim is evidence only when VERIFIED through the flow's derived report or an equivalent derivation, and a direct invocation of ci/check_fcov_expectations.py on a raw urg report is not evidence for a cross bin and is a trap for any direct caller. The flow's path is the derived one: under LOG-054 dv/auto_dv/flow/gen_fcov.py derives a variable-form report beside the original, in which each cross section becomes a variable section whose rows are the component tuple joined with "_", calls the checker with --report-dir on that report, and refuses a derived report in which two tuples derive one name, since the checker would sum their counts. LOG-084's interim ban on claiming a cross bin is superseded.
 - Knob defaults and class windows: the static knob defaults are the TB defaults recorded in
   dv/auto_dv/tb/gen_tb_knobs.yaml (imem/dmem latency short/short, irq_regime quiet, irq_line_mix single);
   they govern only runs without a layer-3 schedule (bring-up, unit tests). Every measured run draws its
@@ -4851,7 +4851,8 @@ bug-candidate behaviour carry the bug tie (B16 in CG-DMEM-007).
     the OR of tag_match_ic1, the same per-way predicate the mux gates on (tag_hit_ic1 =
     |tag_match_ic1, rtl/ibex_icache.sv:504). When a way matches,
     the never-written way is not among them, since the match compares the valid bit as the comparison's
-    top bit (== {1'b1, lookup_addr_ic1[...]}, :499, with tag_invalid_ic1 its inverse at :501) and only a
+    top bit (== {1'b1, lookup_addr_ic1[...]}, :499-500, the comparison
+    starting on :499 and the literal on :500, with tag_invalid_ic1 its inverse at :501) and only a
     fill sets it; its data is therefore excluded from hit_data_ecc_ic1 by the mux (:507-514) and never
     reaches the decoder, which decodes the mux output alone (:568-573). When no way matches, tag_hit_ic1
     is zero and the data-ECC term at :585 is masked outright. Either way the read is quiet without being
@@ -4913,9 +4914,15 @@ bug-candidate behaviour carry the bug tie (B16 in CG-DMEM-007).
   pruned; these become hittable when part 2 lands, so the dilution is correct and temporary). Part 1 covers 29 bins and part 2 the
   remaining 8 (cp_inval_ways 2, cp_refetch 1, cp_lookups_blocked_next 1, cp_multiway_mismatch 2,
   cr_ram_x_inval 2). WHAT DECLARES PART 1's BINS IS NINE PER-ENTRY MANIFESTS, one per
-  WP-8 icache ECC testlist entry, each declaring only the bins its own entry can hit. The union
-  reachable today is 15 of 15 across nine entries; the nine manifests declare the robust subset of 13
-  bins, robust meaning a structural bound or a measured count of at least 30 in that entry's own run;
+  WP-8 icache ECC testlist entry, each declaring only the bins its own entry can hit. All nine
+  manifests and all nine entries are COMMITTED: the manifests with tb-infra's landing 25 at 1bbf0a0,
+  which deleted the group manifest, and the ninth entry with Runtime's merge at 28c8c0b, which also
+  repointed the eight existing entries at their own manifests, so nine is both the entry count and the
+  manifest count and the flow validates each manifest against its own entry. The union
+  reachable today is 15 of 15 across those nine entries; the nine manifests declare the robust subset of 13
+  bins, robust meaning a structural bound or a measured count of at least 30 in that entry's own run,
+  and that declaration is now checkable rather than promised: the nine committed files declare exactly
+  13 distinct coverpoint-bin pairs between them, and neither owed bin in any of the nine;
   OWED are two bins, both thinly hit and closing on one route, a seed sweep at
   coverage closure: cp_no_alert_case.during_invalidation (10, 9, 22) and
   cp_no_alert_case.masked_duplicate_copy (4, 2, 14). Separately and NOT owed, two per-entry exclusions
@@ -4926,13 +4933,13 @@ bug-candidate behaviour carry the bug tie (B16 in CG-DMEM-007).
   tag-injection knob against a program that never enables the cache and hits it 864 times, so that bin
   closes structurally rather than marginally. A single group manifest cannot serve these, since the flow
   checks a manifest per entry, validates its test against the entry name before reading coverage and
-  fails a partial hit, with no merged mode; the group manifest retires when the nine land. So 29 is the plan's part-1 bin count and not any one manifest's declaration. Until
-  then tb-infra's group manifest is committed and unreferenced, so it appears in the covergroup set's list
-  of committed manifests not named by the committed testlist; its route out of that list is RETIREMENT when
-  the nine per-entry manifests land, not the arrival of testlist entries of its own. Per
+  fails a partial hit, with no merged mode; tb-infra's group manifest RETIRED with landing 25, which deleted it. So 29 is the plan's part-1 bin count and not any one manifest's declaration. BOTH routes
+  out of the covergroup set's extra-manifest list have now been taken, one by each side of this ruling:
+  the group manifest left by RETIREMENT and the nine left by ENTERING the ranking when Runtime's merge
+  named them, so that list is empty and CG-IC-006 is ranked with the 13 bins its manifests declare. Per
   LOG-084c the owed key is not a ban but a pending check: manifests may claim cross bins, and such a claim
-  is evidence once it is checked through the flow's derived report, so the owed key retires when the part-1
-  cross bins are checked that way. Both figures count coverpoint-bin
+  is evidence once it is VERIFIED through the flow's derived report, so the owed key retires when the part-1
+  cross bins are verified that way. Both figures count coverpoint-bin
   PAIRS, which is the unit a manifest names as covergroup.coverpoint.bin: three coverpoints of this
   group share the bin name yes, so a distinct-name count would lose two, AND that shared name is the
   false-pass vector LOG-084 names, since the checker attributes a cross bin's count to the group's
