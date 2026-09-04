@@ -69,8 +69,10 @@ CROSS_SAMPLE_TBINFRA = CROSS_SAMPLE.parent / "gen_grpinfo_cross_sample_tbinfra.t
 
 
 def manifest_path(test: dict[str, Any]) -> Path | None:
+    """The manifest under the source root the run binds to (the loader checks existence there; in head mode that is the
+    pinned tree, not the clone the flow code runs from)."""
     f = test.get("fcov_expectation_file")
-    return (C.REPO_ROOT / f).resolve() if f else None
+    return (C.SOURCE_ROOT / f).resolve() if f else None
 
 
 def validate_manifest(path: Path, test_name: str | None = None) -> tuple[dict[str, Any] | None, list[str]]:

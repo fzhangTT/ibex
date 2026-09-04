@@ -376,6 +376,13 @@ def self_test() -> int:
     print("SELF-TEST", "ok " if cond else "BAD", f"nested gated trees detected, siblings and prefix-only names accepted: {n1} {n2} {n3}")
     import tempfile
     import yaml as _y
+
+    def other_manifest(test_name: str) -> str:
+        """A committed manifest in the home whose stem is not test_name (the self-test's group-manifest stand-in)."""
+        home = C.FCOV_EXPECT_DIR.relative_to(C.SOURCE_ROOT).as_posix()
+        names = sorted(p.name for p in C.FCOV_EXPECT_DIR.glob(f"*{C.FCOV_MANIFEST_SUFFIX}") if p.name != f"{test_name}{C.FCOV_MANIFEST_SUFFIX}")
+        return f"{home}/{names[0]}"
+
     with tempfile.TemporaryDirectory(prefix="gen_flow_util_selftest_", dir=C.selftest_tmp()) as td:
         t = load_yaml(C.TESTLIST_YAML)
         t["builds"]["gen_smoke"]["cov_trees"] = ["u_dut.u_ibex_core", "u_dut.u_ibex_core.cs_registers_i"]
@@ -428,15 +435,15 @@ def self_test() -> int:
                 ("a measured entry turning on the B8 probe knob (LOG-067)",
                  lambda d: d["tests"][0].update(measured=True, tier="smoke", plusargs=d["tests"][0]["plusargs"] + [f"+{C.PLUSARG_CHK_SVA_B8}=1"]),
                  "LOG-067"),
-                ("an fcov_expectation_file outside dv/auto_dv/fcov_expectations (CM153-L-1: the evidence directory is outside the mirrored set)",
+                ("an fcov_expectation_file outside dv/auto_dv/fcov_expectations (CM153-L-1: the schema's manifest home)",
                  lambda d: d["tests"][0].update(measured=False, tier=C.CHECK_TIER, fcov_expectation_file="dv/auto_dv/evidence/gen_fcov_proof_slice5e.fcov.yaml"),
-                 "fcov_expectation_file"),
+                 "is outside"),
                 ("an fcov_expectation_file naming a missing file (CM153-L-1)",
                  lambda d: d["tests"][0].update(measured=False, tier=C.CHECK_TIER, fcov_expectation_file="dv/auto_dv/fcov_expectations/gen_no_such_test.fcov.yaml"),
-                 "fcov_expectation_file"),
+                 "does not exist under"),
                 ("a measured entry whose fcov_expectation_file stem is another test's (CM153-L-1, validate_manifest needs test == stem == entry)",
-                 lambda d: d["tests"][0].update(measured=True, tier="smoke", fcov_expectation_file="dv/auto_dv/fcov_expectations/gen_test_pmc_ctrl.fcov.yaml"),
-                 "fcov_expectation_file"),
+                 lambda d: d["tests"][0].update(measured=True, tier="smoke", fcov_expectation_file=other_manifest(d["tests"][0]["name"])),
+                 "must be"),
                 ("a measured entry with icache ECC injection on and the alert_minor row off (LOG-077)",
                  lambda d: d["tests"][0].update(measured=True, tier="smoke", plusargs=d["tests"][0]["plusargs"] + [f"+{C.PLUSARG_KNOB_ICACHE_ECC_ERR_RATE}=rare", f"+{C.PLUSARG_CHK_ALERT_MINOR}=0"]),
                  "LOG-077")):
@@ -465,10 +472,10 @@ def self_test() -> int:
             cond = False
         ok &= cond
         print("SELF-TEST", "ok " if cond else "BAD", "load_testlist accepts an unmeasured entry that turns the B8 probe knob on (B8 evidence runs stay possible)")
-        # CM153-L-1, the positive side: an unmeasured entry may name a group manifest in the manifest home (the committed
-        # gen_test_pmc_ctrl_pin_off form), and null is always fine.
-        for label, upd in (("an unmeasured entry naming a group manifest in dv/auto_dv/fcov_expectations loads",
-                            dict(measured=False, tier=C.CHECK_TIER, fcov_expectation_file="dv/auto_dv/fcov_expectations/gen_test_pmc_ctrl.fcov.yaml")),
+        # CM153-L-1, the positive side: an unmeasured entry may name another test's manifest in the manifest home (the committed
+        # gen_test_pmc_ctrl_pin_off form, taken here from a listing of the home rather than one named file), and null is always fine.
+        for label, upd in (("an unmeasured entry naming another test's manifest in dv/auto_dv/fcov_expectations loads",
+                            dict(measured=False, tier=C.CHECK_TIER, fcov_expectation_file=other_manifest(load_yaml(C.TESTLIST_YAML)["tests"][0]["name"]))),
                            ("a null fcov_expectation_file loads", dict(fcov_expectation_file=None))):
             t5 = load_yaml(C.TESTLIST_YAML)
             t5["tests"][0].update(upd)
@@ -1366,7 +1373,7 @@ def load_testlist(path: Path = C.TESTLIST_YAML) -> dict[str, Any]:
             home = C.FCOV_EXPECT_DIR.relative_to(C.SOURCE_ROOT).as_posix()
             fp = Path(str(fcov))
             if fp.parent.as_posix() != home:
-                die(f"{path}: test {t['name']} fcov_expectation_file {fcov} is outside {home}/ (the manifest home, the only mirrored place a head-mode run reads; a check-tier entry with a proof manifest uses null)")
+                die(f"{path}: test {t['name']} fcov_expectation_file {fcov} is outside {home}/ (the schema's manifest home, the one directory the covergroup-set and manifest tools read; a check-tier entry with a proof manifest elsewhere uses null)")
             if not (C.SOURCE_ROOT / fp).is_file():
                 die(f"{path}: test {t['name']} fcov_expectation_file {fcov} does not exist under the source root")
             if t.get("measured", True) and fp.name != f"{t['name']}{C.FCOV_MANIFEST_SUFFIX}":

@@ -22,7 +22,8 @@
 #   program                optional program step before the run (gen_runtime_api.md 7e): exactly one of
 #                          riscv_dv_test | directed: [<clone-relative .S>...] | generator: <clone-relative
 #                          per-seed script> (+ generator_args), with seed: run | <int>, extra_args, spike_check
-#   fcov_expectation_file  dv/auto_dv/fcov_expectations/<name>.fcov.yaml or null
+#   fcov_expectation_file  dv/auto_dv/fcov_expectations/<name>.fcov.yaml (a measured entry), a manifest in that directory
+#                          (an unmeasured entry may name its group's), or null; the loader refuses any other value
 #   timeout_s              per-run wall-clock budget of the simulation process
 #   owner                  role slug
 #   pass_marker            log line that proves the end of test was reached (null = "$finish")
