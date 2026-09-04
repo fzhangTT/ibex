@@ -2213,3 +2213,58 @@ gen_regress.py:16. The DV Lead ruling (gen_p07_manifest_semantics_ruling.md), th
 bins_not_hit worklist, cited above at work-directory paths, are being committed as evidence files so the record holds them.
 
 Corrigendum (22:0xZ, review of 1b65f86..4a00702): six test modules carry a NON-EMPTY bins_not_hit at 04870ee (gen_test_pmp_mseccfg.py has an empty dict), not seven; the DV Lead ruling and the bins_not_hit worklist are committed as evidence at 0dfac95 (gen_p07_manifest_semantics_ruling.md, gen_bins_not_hit_worklist.md), the Critic P-07 note at 755e813.
+
+## LOG-092 - 2026-09-04 - Round 1 (the first measured coverage run) complete and clean; indexed by the flow as measured round 0
+
+Dispatched 21:54:21Z from the pinned HEAD 4a0070285557a2a7dfb50cea9390597143b984b0 (the request form commit) with a head-mode canary
+(identity bc0cd7778e382b13; gate rc 0 against the pin, rc 2 against a wrong sha), gen_round.py --round 1 --base-seed 20260904
+--canary-build ..., no --seeds, no --no-coverage, no --repro: 19 entries / 53 runs, 12 measured entries at 36 runs all checked against
+2895 declared bins (8685 bin checks), 7 unmeasured entries at 17 runs. Result from the regression manifest (status done 22:00:28Z):
+53 PASS / 0 fail / 0 xfail / 0 timeout / 0 not_run; fcov checked 36 / met 36 / unmet 0 / unverifiable 0; merge ok (urg rc 0); wall
+362.9 s; LSF 53 jobs, 308.4 cpu-s. Coverage, two rows with their scopes: the gate row (the two gated trees per the Section 5 ruling)
+line 83.83, cond 67.17, toggle 67.39, fsm 44.19, branch 75.41, assert 92.74, group: three quantities, each named with its scope, none claimed to satisfy the group gate.
+81.47 = 3477/4268 is URG's report-wide bin ratio over all 26 covergroups including the witness ledger gen_wit_cycle_clause_cg at 0 of 220;
+gen_round_summary.md and the gen_rounds.yaml round-0 entry carry it in the gate row with the tool's text 'bins >= 80 (traceability not
+checked here)', quoted as the tool's output, not a verdict. 78.29 is gen_cov_report's weight-averaged mean of the 25 covergroup scores with
+the ledger excluded by SV name, with no bin denominator of its own; gen_regress_manifest.yaml carries it in gate_row.group beside the
+3477/4268 ratio that does not produce it. 85.89 = 3477/4048 is bins excluding the ledger's 220 clauses, the quantity the criterion's words
+name, reported by no artifact. Two defects, confirmed in the code at 4a00702 by runtime-2, the DV Lead and the Critic: gen_cov_report.py:138-140
+pairs the weight-averaged percent with URG's bin ratio in one row and falls back to the URG total when no ledger row exists, so one field
+carries different quantities across runs; gen_round.py:106-109 overwrites that cell and its ratio with the report-wide totals. Two committed
+artifacts of one run therefore reach opposite answers against the 80.0 threshold (gen_flow_const.py:514). RULING: the group gate is not
+claimed passed for round 1 (both bin figures clear 80, the weight-averaged one does not; the claim is withheld rather than asserted on a
+disputed basis); the collected files stay byte-identical to the collect's output; the fix is rt39, owner runtime-2, a plan for pre-execution
+review with a red (one definition per cell, the percent emitted with the denominator that produced it, the content-dependent fallback removed,
+the ledger-excluded bin ratio reported explicitly); which quantity the plan's 'bins >= 80' criterion tests is a DV Lead plan statement folded
+into rt39's review (the DV Lead's reading: a bin percentage with the ledger's non-coverage clauses out of the denominator); the stored round-0
+group figure is restated under the ruled definition when rt39 lands, so no round-to-round group delta mixes two rules; info scope u_dut score 71.25; the report-wide dashboard row score 72.64, line 83.91, cond 67.18, toggle 67.15, branch 75.49,
+assert 89.11, group 81.47.
+
+Numbering: gen_round refused "round 1" ("does not follow the index (next round is 0)"): the flow numbers measured rounds from zero and
+the index's rounds list was empty (the earlier gen_round_0_* directories are dry runs and a refused probe filed under dry_runs). Ruling:
+the measurement is indexed as the flow's measured round 0 by a collect-only invocation (gen_round.py --round 0 --collect
+<regress_round_1>; no regression, no canary pin); the team's name "round 1" stays in prose with this mapping stated in every record;
+no flow change. The collect ran 22:06:02Z and wrote dv/auto_dv/evidence/gen_round_0 (21 files), the round-0 entry of gen_rounds.yaml
+(git_head 4a0070285557a2a7dfb50cea9390597143b984b0, regress_tag round_1, verdict clean; git_dirty_tracked_files true because the DV Lead's
+and the Test Writer's records files were dirty at collect time, none a build input) and a regenerated gen_dashboard.md; committed at
+d29d5db (23 files: the 21 under gen_round_0, gen_rounds.yaml, gen_dashboard.md; hashes verified on a detached archive of
+9ed9e08 and byte-compared to the tree). The eight gzip copies of the full exclusion files are the tool's generated data, not authored text;
+the ASCII rule covers what the team writes. The request form's final corrigendum v5e is e00b3ee (base 9ed9e08): the naming mapping,
+Section 12 with the outcome and the three group quantities, the four CM217 Mediums. Three names now exist for related things and every
+record that uses one states the mapping: the team's round 1, the flow's round_0 (regress_tag round_1), and the older round_0_rebaseline,
+which is the unmeasured baseline.
+
+What round 1 measures and what it does not: every credited run carried an enforced per-run claim (the 12 checked entries' manifests
+re-scoped in two bins_not_hit iterations proven by a 36/36 re-flight at the round's seeds); 13 of 15 measured entries had been detached
+and then restored with corrected manifests (LOG-086/088 superseded by LOG-090/091); the 66 bins excluded in iteration 2 are unhit by
+their own entry at all three seeds, 25 hit by other entries in the merged run and 41 unhit by anything, so the round leaves those 41
+uncovered and no re-scope is claimed to have covered a bin; 758 declarations on unbuilt covergroups left through plan marks (five entries'
+manifests removed, three of them going measured false); the reason classes are 46 stimulus / 20 seed-dependent after the Test Writer's
+40-seed audit (five causes confirmed with controls, the mie_msb reason corrected). Round 2 levers: per-entry seeds where bins remain
+unhit; generator fixes for the stable stimulus gaps, which the Test Writer's 40-seed probe (scratch, nothing handed) re-shapes after the
+mie_msb move: 46 stimulus / 20 seed-dependent / 1 legacy across three modules; the 24 in gen_test_bit_ratified split into 6 misclassified
+(the shape is produced at 1 to 8 seeds in 40, so the reason changes, not the generator), 12 in the pack family with one structural cause
+(pack, packh, packu live only in the generator's rd=x0 probe table; whether those twelve declarations belong to gen_test_bit_draft is a
+DV Lead plan call that decides if a generator change is needed at all) and 6 sweep targets never produced in 40 seeds; gen_test_cmp_zca's
+22 are one cause plus two singletons; building the unbuilt covergroups; rt39; the per-run vs cumulative manifest semantics follow-up; the
+frozen TB items (LOG-085) lift when the round record is reviewed.
