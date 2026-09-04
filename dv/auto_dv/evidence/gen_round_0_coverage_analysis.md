@@ -91,7 +91,7 @@ gated scope. It appears here because it is in the report and a reader will see i
 Source: cov/report/modlist.txt FSM column. Five modules carry FSM coverage and they account for the whole
 38/86: the gate's worst metric is concentrated, not diffuse.
 
-| module | states+transitions covered | missed |
+| module | transitions covered | transitions missed |
 |---|---|---|
 | ibex_controller | 5/26 | 21 |
 | ibex_load_store_unit | 6/22 | 16 |
@@ -163,14 +163,14 @@ each module's misses a given test would actually reach, and I say so rather than
 | # | gap | expected gain | owner | reachable in round 2 |
 |---|---|---|---|---|
 | 1 | 182 unbuilt covergroups, 758 declarations | caps the whole functional axis | tb-infra | partly: each one built is measurable at once |
-| 2 | ibex_pmp: no PMP test in the measured set | 1815 missed objects | test-writer | yes: two PMP entries exist, unmeasured |
+| 2 | ibex_pmp: no PMP test can be MEASURED yet, see below | 1815 missed objects | tb-infra then test-writer | NO, blocked by P-07 |
 | 3 | ibex_cheriot_ex: MOSTLY OUT OF SCOPE, see Section 5 | 2211 missed, most carved out | rtl-arch (ruled) | n/a |
 | 4 | controller FSM 5/26: no irq/debug/exception test | 21 of 86 FSM, plus controller line/branch | test-writer | yes: an irq and a debug entry |
 | 5 | LSU FSM 6/22 | 16 FSM objects | test-writer | yes: error-response and misaligned shapes |
 | 6 | gen_ic_ecc_cg 1/40: the ECC knob is never set | 39 bins | runtime + test-writer | yes, with the LOG-077 alert checker on |
 | 7 | gen_div_timing_cg 44/122 and gen_mul_timing_cg 33/80 | 125 bins | test-writer | yes: DIT and writeback-busy shapes |
-| 8 | op x register-relationship product (12+5 bins) | 17 bins | test-writer (generator) | yes: table entry and sweep are one change |
-| 9 | compressed-branch and successor sequencing | 55 in isa_branch, 20 in cmp_zca | test-writer (generator) | yes |
+| 8 | op x register-relationship product, 12 pack + 5 same-register bins | 17 bins | test-writer (generator) | yes: table entry and sweep are one change |
+| 9 | compressed-branch and successor sequencing | 55 in isa_branch, 17 in cmp_zca | test-writer (generator) | yes |
 | 10 | the 3 CHERIoT register-file assertions | 3 assertions | test-writer | no: needs capability addressing |
 
 ## 4b. The plan-credit gap, which no coverage percentage shows
@@ -181,9 +181,16 @@ question from the percentages above and a harsher one: it asks how much of the P
 how much of the RTL the stimulus touched. A reader who sees line at 83.83 and stops has not seen that under
 two fifths of the hosted plan items are credited.
 
-THE REGENERATION IS MINE. Section 10 of the round-1 request makes the credit report and the promotion table
-regenerated at the round's commit part of acceptance, the tools are mine, and it has not been done: it is the
-first item I take up when the pause lifts. Cite the Critic's file by path once it is committed.
+THE REGENERATION IS MINE AND IT IS A GATE, not a chore. Section 10 of the round-1 request makes the credit
+report, the promotion table and the covergroup set regenerated at the round's commit part of acceptance; the
+tools are mine; and it has not been done. The Critic's round verdict,
+dv/auto_dv/evidence/gen_critic_round1_record.md at 8c83b3a, is REQUEST-CHANGES on 4a00702..de1ccf3 confined to
+exactly that acceptance (CR-40 M-1), with the DV Lead named as owner. It closes when the regeneration lands at
+the round's commit and a recorded re-review passes, and it is the first item I take up when the pause lifts.
+
+TWO FIGURES FROM THE CRITIC'S PROBE bound that work and are theirs rather than mine: the promotion table at 20
+entries, and the covergroup set at 25 covergroups, 2864 bins and 22 manifests regenerated at the round's
+commit. I re-derive both when I run the regeneration, and the round record carries mine at that point.
 
 ## 5. What these numbers do NOT mean
 
@@ -197,6 +204,17 @@ tier is guard-proven dead lines, decoder 150, if_stage 85, load_store_unit 59, c
 compressed_decoder 33, id_stage 11, core 2, register_file_ff 2, dead from the build configuration rather than
 from missing stimulus. AND AN ENTRY COUNT IS NOT A COVERAGE IMPACT: rtl-arch's own join says 105 entries are
 no-ops and 84 effective, so quoting 1424 as impact would overstate it by an order of magnitude.
+
+ITEM 2 OF THE RANKED LIST IS BLOCKED BY THE POLICY THIS ROUND IS BUILT ON, and it would be the easiest thing
+in this document to misread as a quick win. Not one gen_pmp covergroup is rendered in gen_fcov_groups.svh: the
+count is zero. All three PMP entries, gen_test_pmp_csr_warl, gen_test_pmp_mseccfg and gen_test_pmp_lock, read
+measured false with a null manifest reference, because every bin their items own sits on a covergroup that
+does not exist. Under P-07 a measured entry on smoke or targeted must carry a manifest, a manifest may not
+declare a bin of a covergroup that does not exist, and an entry that can declare nothing cannot be measured at
+all. So ibex_pmp's 1815 missed objects are NOT reachable by simply measuring the entries that exist: a gen_pmp
+covergroup has to be built, or those items re-planned onto built ones, before any PMP test can be measured.
+That makes item 2 tb-infra's before it is the Test Writer's, and it is the same structural gap as the 182
+unbuilt covergroups rather than a separate one.
 
 THREE OF THE 13 UNHIT ASSERTIONS AND TWO CONFIGURATION CLASSES CANNOT BE FIXED BY STIMULUS at this build: the
 mispredict pair is structurally absent with BranchPredictor=0, the dummy-instruction set needs the feature
