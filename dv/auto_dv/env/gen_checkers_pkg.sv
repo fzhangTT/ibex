@@ -30,7 +30,7 @@ package gen_checkers_pkg;
     uvm_analysis_imp_state #(gen_model_state, gen_irq_checker) imp_state;
     uvm_analysis_imp_evt   #(gen_irq_evt, gen_irq_checker)     imp_evt;
     gen_export_sink sink;   // E misc irq_entry lines: per-entry priority decidability for the fire checks (CM25-L-3)
-    int unsigned never_taken = 0, eor_open = 0;
+    int unsigned eor_open = 0;
     // model mie history: (effective DUT cycle, value); the compare of cycle c uses the last entry <= c
     typedef struct { int unsigned eff_cycle; logic [31:0] mie; } mie_upd_t;
     mie_upd_t mie_hist [$];
@@ -267,8 +267,8 @@ package gen_checkers_pkg;
           eor_open++;
         end
       end
-      `uvm_info("GEN_IRQ_CHK", $sformatf("irq_pending cycles checked=%0d mismatches=%0d; entries=%0d nmi=%0d (internal %0d, accepted on announced corruptions) cause checked=%0d mismatches=%0d priority undecidable=%0d bound failures=%0d expectations released=%0d open expectations=%0d nmi_internal bound failures=%0d never taken=%0d open after the drain=%0d",
-                checked_cycles, pending_mismatch, entries_seen, nmi_seen, nmi_internal_entries, cause_checked, cause_mismatch, priority_undecidable, expect_fail, expect_released, expects.size(), nmi_internal_fail, never_taken, eor_open), UVM_LOW)
+      `uvm_info("GEN_IRQ_CHK", $sformatf("irq_pending cycles checked=%0d mismatches=%0d; entries=%0d nmi=%0d (internal %0d, accepted on announced corruptions) cause checked=%0d mismatches=%0d priority undecidable=%0d bound failures=%0d expectations released=%0d open expectations=%0d nmi_internal bound failures=%0d open after the drain=%0d",
+                checked_cycles, pending_mismatch, entries_seen, nmi_seen, nmi_internal_entries, cause_checked, cause_mismatch, priority_undecidable, expect_fail, expect_released, expects.size(), nmi_internal_fail, eor_open), UVM_LOW)
     endfunction
   endclass
 

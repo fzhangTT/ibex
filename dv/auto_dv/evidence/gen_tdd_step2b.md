@@ -877,3 +877,24 @@ The mutation-proof and the blast-radius spread are in gen_mut_step2b.md and the 
 gen_tdd_logs/mutations/gen_fu_l31_irq_drain.log. What the landing does NOT establish is recorded there too: a line
 starved while the core retires nothing is reported open, and judging it needs a cap rule with its own red, which this
 landing does not carry, so that residual is OWED rather than closed.
+
+## Landing 31's correction (CR-31 and CM208): the drain waits bound PLUS ONE
+
+RESOLUTION, stated here as CM208-Medium-1 asks: the drain waited for exactly GEN_IRQ_ENTRY_BOUND_RECORDS records while
+the in-run judge needs age GREATER than the bound, so an expectation stamped at the last stimulus record reached age
+== bound on the final drain record, was never judged, and left as "open after the drain" with no error. The drain now
+waits bound PLUS ONE and its own line says so. The alternative, judging >= at the drain's end, was not taken: the
+drain length was the thing that was wrong, and a second comparison in a second place is how the pair drifted apart in
+the first place.
+
+On the corrected sources (build e674e6339b5bea85) seed 7 of lockstep_irq_storm_nmi PASSES with zero irq_entry errors,
+its own line reading "drain: 18 records in 126 cycles (bound 17 records plus one, cap 193 cycles ...)" and "open after
+the drain=0".
+
+NOT MEASURED, AND SAID PLAINLY: no fixture whose expectation reaches age EXACTLY the bound was constructed, so the fix
+is reasoned from the comparison operators with the seed-7 run as its NON-DISCRIMINATING check, its age being 19 so it
+passes under both drains. A discriminating fixture needs a withheld line whose last raise lands on the finish-request
+record; it is OWED.
+
+Retained: gen_tdd_logs/mutations/gen_fu_l31b_drain_corrections.log, with the mutation-proof's corrected identities,
+the cap-move demonstration for CM208-Info-1 and the two wider plusarg values that starved the run instead.

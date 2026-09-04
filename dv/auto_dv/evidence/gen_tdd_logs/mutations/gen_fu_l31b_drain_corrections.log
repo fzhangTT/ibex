@@ -1,0 +1,61 @@
+# Landing 31 SUPPLEMENT: the corrections for CR-31 and CM208. The committed gen_fu_l31_irq_drain.log is NOT edited;
+# every figure it got wrong is corrected here and every new run is here.
+# PROVENANCE. The corrected sources are one tree state; identities as the committer's gate recomputes them:
+#   build identity     e674e6339b5bea85   (this landing's corrected sources, one build after the last source edit)
+#   its local figure   the compile log of the root below reports its own "sources sha256", which is the LOCAL
+#                      runner's find-digest over env/tb/isa/gen_tb and NOT the gate digest; the two are different
+#                      functions over different input sets and both appear labelled wherever either is quoted
+#   base identity      c1189fdc15a85844   (prior build, landing 31's own; its local compile figure is
+#                      64f9aee6f60d7c84 from wit/l31a/compile.log, a different function over a different
+#                      input set and never the gate's number)
+#   mutant root's own identity: d02bca6ca353117f   (the corrected sources WITH MUT-NT2's fault applied;
+#                      not a claim about this landing's build, which is the defect CM208-Low-2 named)
+# Root: an out-of-tree copy of git archive HEAD, so the uncommitted NMI knob is excluded.
+
+== 1. CR-31-L-2 and CM208-Medium-1: the drain's off-by-one ==
+   THE DEFECT, in the reviewers' terms and confirmed here: the drain waited for exactly
+   GEN_IRQ_ENTRY_BOUND_RECORDS records while the in-run judge needs age GREATER than the bound, and an expectation
+   stamped at the last stimulus record reaches age == bound on the final drain record, so it was never judged and
+   left as eor_open with no error. That is the withheld-at-the-end case escaping through the rule built to catch it.
+   THE FIX: the drain now waits bound PLUS ONE (gen_env_pkg.sv, the while condition reading <=), and its own line
+   says "bound 17 records plus one". The alternative remedy, judging >= at the drain's end, was not taken: it would
+   put a second comparison in a second place, and the drain length is the thing that was wrong.
+   THE TDD PAIR ON THE CORRECTED SOURCES:
+     seed 7, lockstep_irq_storm_nmi: PASS
+     | drain: 18 records in 126 cycles (bound 17 records plus one, cap 193 cycles from the effective bus maxima i 3/4 d 3/4)
+     | open after the drain=0
+   NOT MEASURED, AND SAID PLAINLY: no fixture whose expectation reaches age EXACTLY the bound was constructed, so
+   this fix is reasoned from the comparison operators and from the reviewers' reading of them, with the seed-7 run
+   as its NON-DISCRIMINATING check (its age is 19, so it passes under both drains). A discriminating fixture would
+   need a withheld line whose last raise lands on the finish-request record; it is owed.
+
+== 2. CR-31-L-1 and CM208-Low-1: the dead counter ==
+   never_taken was declared, printed and never incremented after the drain landed, so its zero was structural. It is
+   removed from the declaration, the format string and the argument list; the summary now ends "open after the
+   drain=%0d", which is the count that is actually maintained.
+
+== 3. CR-31-M-1 and CM208-Low-2: the mutation-proof's identity ==
+   WHAT WAS WRONG: the committed log labels 3d8e81ccd20737c7 three ways, which cannot all be true of a contents
+   digest, and no applied diff was retained.
+   WHAT 3d8e81ccd20737c7 IS: the gate digest of the OLD mutant root taken AFTER MUT-NT2's fault was applied. The
+   committed log's line 37, which calls it the ablation's identity "before the fault", is WRONG; the ablation root
+   before the fault had the landing build's digest c1189fdc15a85844.
+   THE CORRECTED PAIR, each identity measured on its own side of the fault:
+     ablation root, measured BEFORE the fault : e674e6339b5bea85   PASS
+     mutant root,   measured AFTER  the fault : d02bca6ca353117f   FAIL
+     gen_tb_top.sv baseline 736a8d8099339024 -> mutated 9a55bbd4103febd7
+   THE APPLIED DIFF IS NOW RETAINED beside this log as gen_fu_l31b_MUTNT2_mutant.diff, following the
+   gen_fu_l13_*_mutant.diff convention, and gen_mut_step2b.md's landing-31 section cites it.
+
+== 4. CM208-Info-1: the cap's boundary, demonstrated by the run-time path ==
+   No SV unit case exercises gen_irq_drain_cap_cycles, and that omission is recorded rather than hidden. What is
+   demonstrated instead is the whole path, config plumbing included, by moving a plusarg and reading the cap the run
+   itself reports:
+     default config      cap 193 cycles, effective maxima i 3/4 d 3/4   ((4+3+2)*17+40)
+     +gen_ibus_rvalid_max=6
+     | drain: 18 records in 147 cycles (bound 17 records plus one, cap 227 cycles from the effective bus maxima i 3/6 d 3/4)
+     | ibus: ibus gnt=1..3(short) rvalid=2..6(short)
+   227 is (6+3+2)*17+40, so the plusarg moved the effective maximum and the cap followed it at run time.
+   TWO WIDER VALUES WERE TRIED FIRST AND FAILED, which is why the demonstration uses 6: at rvalid_max 200 and 12 the
+   run fails before the drain (the cocotb test itself fails, the slow instruction bus starving the retire target)
+   rather than exercising the cap. A widened bus starves the RUN before it stretches the DRAIN.

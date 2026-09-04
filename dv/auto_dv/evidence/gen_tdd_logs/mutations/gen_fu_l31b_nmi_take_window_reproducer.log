@@ -1,0 +1,50 @@
+# Reproducer for the sva_rvfi_irq_valid_exclusive firings: the window shape of the timed-NMI knob
+# Retained because rtl-arch's ruling record (gen_rvfi_irq_valid_exclusive_ruling.md) reads these runs, and
+# they lived only under dv/auto_dv/work/tb-infra/wit/l32a, which is not a retained path.
+# THE SHAPE: gen_knob_nmi_after_irq_delay = window, armed on the BRIDGE'S TAKEN EVENT, delay swept 1..8 per event.
+#   The committed knob arms on the RAISE of a non-NMI line, as its own knob-table description states, so this
+#   shape is reproduced by applying dv/auto_dv/work/tb-infra/gen_nmi_take_trigger.diff (sha256 first 12 8f54baec0b00),
+#   two hunks in gen_irq_driver::run_phase moving the arm from the regime-event branch to the take-detection branch.
+# THE BUILD: dv/auto_dv/work/tb-infra/wit/l32a, whose own compile log reports "sources sha256: cc08c9729184adc5".
+#   That figure is the local runner's own, NOT the committer's gate digest; the shape was never committed, so no
+#   gate identity exists for it and none is claimed.
+# The run's own header, verbatim:
+#   # run irq_nmi_window: 2026-09-04T16:18:35Z host=soc-l-11 seed=1 module=dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep build_sources_sha256=cc08c9729184adc5 plusargs=[+gen_mem_image=/tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/irqp/prog.vmem +gen_mem_image_crc32=8e882c5b +gen_mem_image_words=156 +gen_boot_addr=80000000 +gen_tohost_addr=800002d0 +gen_ut_boot_retire=2500 +gen_knob_irq_regime=storm +gen_knob_irq_line_mix=multi +gen_knob_nmi_after_irq_delay=window +gen_fetch_en_at_reset=0]
+
+== 1. every firing, from the run's own sim.log ==
+   gen_protocol_props.sv:299 gen_tb_top.u_dut.gen_protocol_props_i.sva_rvfi_irq_valid_exclusive started at 3655000ps failed at 3655000ps
+   gen_protocol_props.sv:299 gen_tb_top.u_dut.gen_protocol_props_i.sva_rvfi_irq_valid_exclusive started at 12465000ps failed at 12465000ps
+   gen_protocol_props.sv:299 gen_tb_top.u_dut.gen_protocol_props_i.sva_rvfi_irq_valid_exclusive started at 27845000ps failed at 27845000ps
+   gen_protocol_props.sv:299 gen_tb_top.u_dut.gen_protocol_props_i.sva_rvfi_irq_valid_exclusive started at 42115000ps failed at 42115000ps
+   gen_protocol_props.sv:299 gen_tb_top.u_dut.gen_protocol_props_i.sva_rvfi_irq_valid_exclusive started at 46885000ps failed at 46885000ps
+   gen_protocol_props.sv:299 gen_tb_top.u_dut.gen_protocol_props_i.sva_rvfi_irq_valid_exclusive started at 67155000ps failed at 67155000ps
+   gen_protocol_props.sv:299 gen_tb_top.u_dut.gen_protocol_props_i.sva_rvfi_irq_valid_exclusive started at 116275000ps failed at 116275000ps
+   gen_protocol_props.sv:299 gen_tb_top.u_dut.gen_protocol_props_i.sva_rvfi_irq_valid_exclusive started at 137685000ps failed at 137685000ps
+   gen_protocol_props.sv:299 gen_tb_top.u_dut.gen_protocol_props_i.sva_rvfi_irq_valid_exclusive started at 156075000ps failed at 156075000ps
+   gen_protocol_props.sv:299 gen_tb_top.u_dut.gen_protocol_props_i.sva_rvfi_irq_valid_exclusive started at 165945000ps failed at 165945000ps
+   gen_protocol_props.sv:299 gen_tb_top.u_dut.gen_protocol_props_i.sva_rvfi_irq_valid_exclusive started at 180805000ps failed at 180805000ps
+   firings: 11
+
+== 2. the UVM error lines, from the run's own stdout ==
+   365500
+   1246500
+   2784500
+   4211500
+   4688500
+   6715500
+   11627500
+   13768500
+   15607500
+   16594500
+   18080500
+   errors: 11, cycles: 361, 1242, 2780, 4207, 4684, 6711, 11623, 13764, 15603, 16590, 18076
+   The error count equals the firing count, so this property is the only failing mechanism in the run
+   (rtl-arch's observation, re-derived here from the same two files).
+
+== 3. what this run does and does not show ==
+   Shows: the DUT asserts rvfi_ext_irq_valid in a cycle where rvfi_valid is also high, the offending term of
+   every firing being the (!rvfi_valid) half, so the flag is not spurious and a retirement really is coincident.
+   Does not show: the cycle-level detail (which instruction's writeback completed, whether the four-cycle offset
+   from the notification pulse holds). No waveform was dumped by this build: the local runner compiles
+   -debug_access+pp and has no dump option. A shape-matched wave was produced separately in a scratch root with
+   -debug_access+all and the flow's gen_dump.tcl, reproducing eleven firings and the same first cycle.

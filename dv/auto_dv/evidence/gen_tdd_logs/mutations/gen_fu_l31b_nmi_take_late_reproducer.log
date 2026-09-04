@@ -1,0 +1,78 @@
+# Reproducer for the sva_rvfi_irq_valid_exclusive firings: the late shape of the timed-NMI knob
+# Retained because rtl-arch's ruling record (gen_rvfi_irq_valid_exclusive_ruling.md) reads these runs, and
+# they lived only under dv/auto_dv/work/tb-infra/wit/l32a, which is not a retained path.
+# THE SHAPE: gen_knob_nmi_after_irq_delay = late, armed on the BRIDGE'S TAKEN EVENT, delay swept 1..8 per event.
+#   The committed knob arms on the RAISE of a non-NMI line, as its own knob-table description states, so this
+#   shape is reproduced by applying dv/auto_dv/work/tb-infra/gen_nmi_take_trigger.diff (sha256 first 12 8f54baec0b00),
+#   two hunks in gen_irq_driver::run_phase moving the arm from the regime-event branch to the take-detection branch.
+# THE BUILD: dv/auto_dv/work/tb-infra/wit/l32a, whose own compile log reports "sources sha256: cc08c9729184adc5".
+#   That figure is the local runner's own, NOT the committer's gate digest; the shape was never committed, so no
+#   gate identity exists for it and none is claimed.
+# The run's own header, verbatim:
+#   # run irq_nmi_late: 2026-09-04T16:16:34Z host=soc-l-11 seed=1 module=dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep build_sources_sha256=cc08c9729184adc5 plusargs=[+gen_mem_image=/tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/irqp/prog.vmem +gen_mem_image_crc32=8e882c5b +gen_mem_image_words=156 +gen_boot_addr=80000000 +gen_tohost_addr=800002d0 +gen_ut_boot_retire=2500 +gen_knob_irq_regime=storm +gen_knob_irq_line_mix=multi +gen_knob_nmi_after_irq_delay=late +gen_fetch_en_at_reset=0]
+
+== 1. every firing, from the run's own sim.log ==
+   gen_protocol_props.sv:299 gen_tb_top.u_dut.gen_protocol_props_i.sva_rvfi_irq_valid_exclusive started at 2815000ps failed at 2815000ps
+   gen_protocol_props.sv:299 gen_tb_top.u_dut.gen_protocol_props_i.sva_rvfi_irq_valid_exclusive started at 21845000ps failed at 21845000ps
+   gen_protocol_props.sv:299 gen_tb_top.u_dut.gen_protocol_props_i.sva_rvfi_irq_valid_exclusive started at 26275000ps failed at 26275000ps
+   gen_protocol_props.sv:299 gen_tb_top.u_dut.gen_protocol_props_i.sva_rvfi_irq_valid_exclusive started at 34585000ps failed at 34585000ps
+   gen_protocol_props.sv:299 gen_tb_top.u_dut.gen_protocol_props_i.sva_rvfi_irq_valid_exclusive started at 37645000ps failed at 37645000ps
+   gen_protocol_props.sv:299 gen_tb_top.u_dut.gen_protocol_props_i.sva_rvfi_irq_valid_exclusive started at 38615000ps failed at 38615000ps
+   gen_protocol_props.sv:299 gen_tb_top.u_dut.gen_protocol_props_i.sva_rvfi_irq_valid_exclusive started at 39595000ps failed at 39595000ps
+   gen_protocol_props.sv:299 gen_tb_top.u_dut.gen_protocol_props_i.sva_rvfi_irq_valid_exclusive started at 53355000ps failed at 53355000ps
+   gen_protocol_props.sv:299 gen_tb_top.u_dut.gen_protocol_props_i.sva_rvfi_irq_valid_exclusive started at 53765000ps failed at 53765000ps
+   gen_protocol_props.sv:299 gen_tb_top.u_dut.gen_protocol_props_i.sva_rvfi_irq_valid_exclusive started at 66055000ps failed at 66055000ps
+   gen_protocol_props.sv:299 gen_tb_top.u_dut.gen_protocol_props_i.sva_rvfi_irq_valid_exclusive started at 82145000ps failed at 82145000ps
+   gen_protocol_props.sv:299 gen_tb_top.u_dut.gen_protocol_props_i.sva_rvfi_irq_valid_exclusive started at 91935000ps failed at 91935000ps
+   gen_protocol_props.sv:299 gen_tb_top.u_dut.gen_protocol_props_i.sva_rvfi_irq_valid_exclusive started at 110515000ps failed at 110515000ps
+   gen_protocol_props.sv:299 gen_tb_top.u_dut.gen_protocol_props_i.sva_rvfi_irq_valid_exclusive started at 112275000ps failed at 112275000ps
+   gen_protocol_props.sv:299 gen_tb_top.u_dut.gen_protocol_props_i.sva_rvfi_irq_valid_exclusive started at 113625000ps failed at 113625000ps
+   gen_protocol_props.sv:299 gen_tb_top.u_dut.gen_protocol_props_i.sva_rvfi_irq_valid_exclusive started at 123605000ps failed at 123605000ps
+   gen_protocol_props.sv:299 gen_tb_top.u_dut.gen_protocol_props_i.sva_rvfi_irq_valid_exclusive started at 139505000ps failed at 139505000ps
+   gen_protocol_props.sv:299 gen_tb_top.u_dut.gen_protocol_props_i.sva_rvfi_irq_valid_exclusive started at 148995000ps failed at 148995000ps
+   gen_protocol_props.sv:299 gen_tb_top.u_dut.gen_protocol_props_i.sva_rvfi_irq_valid_exclusive started at 156235000ps failed at 156235000ps
+   gen_protocol_props.sv:299 gen_tb_top.u_dut.gen_protocol_props_i.sva_rvfi_irq_valid_exclusive started at 157775000ps failed at 157775000ps
+   gen_protocol_props.sv:299 gen_tb_top.u_dut.gen_protocol_props_i.sva_rvfi_irq_valid_exclusive started at 166995000ps failed at 166995000ps
+   gen_protocol_props.sv:299 gen_tb_top.u_dut.gen_protocol_props_i.sva_rvfi_irq_valid_exclusive started at 190215000ps failed at 190215000ps
+   gen_protocol_props.sv:299 gen_tb_top.u_dut.gen_protocol_props_i.sva_rvfi_irq_valid_exclusive started at 192665000ps failed at 192665000ps
+   gen_protocol_props.sv:299 gen_tb_top.u_dut.gen_protocol_props_i.sva_rvfi_irq_valid_exclusive started at 202645000ps failed at 202645000ps
+   gen_protocol_props.sv:299 gen_tb_top.u_dut.gen_protocol_props_i.sva_rvfi_irq_valid_exclusive started at 212535000ps failed at 212535000ps
+   firings: 25
+
+== 2. the UVM error lines, from the run's own stdout ==
+   281500
+   2184500
+   2627500
+   3458500
+   3764500
+   3861500
+   3959500
+   5335500
+   5376500
+   6605500
+   8214500
+   9193500
+   11051500
+   11227500
+   11362500
+   12360500
+   13950500
+   14899500
+   15623500
+   15777500
+   16699500
+   19021500
+   19266500
+   20264500
+   21253500
+   errors: 25, cycles: 277, 2180, 2623, 3454, 3760, 3857, 3955, 5331, 5372, 6601, 8210, 9189, 11047, 11223, 11358, 12356, 13946, 14895, 15619, 15773, 16695, 19017, 19262, 20260, 21249
+   The error count equals the firing count, so this property is the only failing mechanism in the run
+   (rtl-arch's observation, re-derived here from the same two files).
+
+== 3. what this run does and does not show ==
+   Shows: the DUT asserts rvfi_ext_irq_valid in a cycle where rvfi_valid is also high, the offending term of
+   every firing being the (!rvfi_valid) half, so the flag is not spurious and a retirement really is coincident.
+   Does not show: the cycle-level detail (which instruction's writeback completed, whether the four-cycle offset
+   from the notification pulse holds). No waveform was dumped by this build: the local runner compiles
+   -debug_access+pp and has no dump option. A shape-matched wave was produced separately in a scratch root with
+   -debug_access+all and the flow's gen_dump.tcl, reproducing eleven firings and the same first cycle.

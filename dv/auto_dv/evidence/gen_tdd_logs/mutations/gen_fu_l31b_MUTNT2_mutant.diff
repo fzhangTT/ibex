@@ -1,0 +1,12 @@
+--- /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/l31fix_gen_tb_top.pristine.sv	2026-09-04 12:29:18.699511385 -0400
++++ /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/l31fix_root/dv/auto_dv/tb/gen_tb_top.sv	2026-09-04 12:29:18.754511760 -0400
+@@ -169,7 +169,8 @@
+   gen_irq_if u_irq_if (.clk(clk), .rst_n(rst_n));
+   assign irq_software = u_irq_if.sw;
+   assign irq_timer    = u_irq_if.timer;
+-  assign irq_external = u_irq_if.ext;
++  // MUT-NT2: the DUT stops seeing the external line while the driver holds it
++  assign irq_external = (u_bridge_if.evt_retired_count >= 32'd3572) ? 1'b0 : u_irq_if.ext;
+   assign irq_fast     = u_irq_if.fast;
+   assign irq_nm       = u_irq_if.nm;
+   assign u_irq_if.pending = irq_pending;

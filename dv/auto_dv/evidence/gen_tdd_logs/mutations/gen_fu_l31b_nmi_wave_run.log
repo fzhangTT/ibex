@@ -1,0 +1,43 @@
+# The wave run for rtl-arch's cycle confirmation: the take-triggered timed-NMI window shape, dumped
+# THE SHAPE, and the sweep matters: gen_knob_nmi_after_irq_delay = window with the delay swept 1..8 per event,
+#   armed on the BRIDGE'S TAKEN EVENT. The committed knob arms on the RAISE, per its own knob-table description,
+#   so this shape is reproduced with dv/auto_dv/work/tb-infra/gen_nmi_take_trigger.diff (sha256 first 12 8f54baec0b00).
+#   THE FIRST ATTEMPT AT THIS WAVE USED A 1..17 SWEEP AND GAVE 28 FIRINGS, not the 11 of the run rtl-arch read:
+#   the sweep had been widened after that build. Restoring 1..8 reproduced 11 firings and the same first cycle,
+#   so the sweep width is the first thing to check if a firing count ever differs.
+# THE BUILD: an out-of-tree root of a shape that was NEVER COMMITTED, so no gate identity of a committed build
+#   applies to it and none is claimed. Its own figures, for reproduction only: the compile log reports
+#   "sources sha256: d71984c246000108" (the local runner's find-digest) and the root's own filelist_digest is
+#   2bae046d70476d78, which is that root's number and not this landing's. Compiled -debug_access+all (the scratch copy of gen_tb_local.sh; the
+#   committed runner compiles -debug_access+pp and has NO dump option), run with -ucli -do against the flow's
+#   own gen_dump.tcl rendered for gen_tb_top and u_dut: fsdbDumpvars 0 +all plus fsdbDumpSVA on the DUT scope.
+# THE WAVE ITSELF IS NOT RETAINED AND IS NOT DURABLE:
+#   /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/wave_root/out8/irq_nmi_window/waves.fsdb
+#   2501858 bytes, md5 44730e24c59e75c97cfe5e2ad13eb6f1. It lives in a scratchpad, which is purged; this log is the durable record of the run,
+#   and a citable wave needs a flow run under a retained path.
+# The run's own header, verbatim:
+#   # run irq_nmi_window: 2026-09-04T16:39:08Z host=soc-l-11 seed=1 module=dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep build_sources_sha256=96697a6fee7025b4 plusargs=[+gen_mem_image=/tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/irqp/prog.vmem +gen_mem_image_crc32=8e882c5b +gen_mem_image_words=156 +gen_boot_addr=80000000 +gen_tohost_addr=800002d0 +gen_ut_boot_retire=2500 +gen_knob_irq_regime=storm +gen_knob_irq_line_mix=multi +gen_knob_nmi_after_irq_delay=window +gen_fetch_en_at_reset=0 -ucli -do /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/wave_root/dump.tcl]
+
+== 1. every firing, from the run's own sim.log ==
+   gen_protocol_props.sv:299 gen_tb_top.u_dut.gen_protocol_props_i.sva_rvfi_irq_valid_exclusive started at 3655000ps failed at 3655000ps
+   gen_protocol_props.sv:299 gen_tb_top.u_dut.gen_protocol_props_i.sva_rvfi_irq_valid_exclusive started at 12465000ps failed at 12465000ps
+   gen_protocol_props.sv:299 gen_tb_top.u_dut.gen_protocol_props_i.sva_rvfi_irq_valid_exclusive started at 27845000ps failed at 27845000ps
+   gen_protocol_props.sv:299 gen_tb_top.u_dut.gen_protocol_props_i.sva_rvfi_irq_valid_exclusive started at 42115000ps failed at 42115000ps
+   gen_protocol_props.sv:299 gen_tb_top.u_dut.gen_protocol_props_i.sva_rvfi_irq_valid_exclusive started at 46885000ps failed at 46885000ps
+   gen_protocol_props.sv:299 gen_tb_top.u_dut.gen_protocol_props_i.sva_rvfi_irq_valid_exclusive started at 67155000ps failed at 67155000ps
+   gen_protocol_props.sv:299 gen_tb_top.u_dut.gen_protocol_props_i.sva_rvfi_irq_valid_exclusive started at 116275000ps failed at 116275000ps
+   gen_protocol_props.sv:299 gen_tb_top.u_dut.gen_protocol_props_i.sva_rvfi_irq_valid_exclusive started at 137685000ps failed at 137685000ps
+   gen_protocol_props.sv:299 gen_tb_top.u_dut.gen_protocol_props_i.sva_rvfi_irq_valid_exclusive started at 156075000ps failed at 156075000ps
+   gen_protocol_props.sv:299 gen_tb_top.u_dut.gen_protocol_props_i.sva_rvfi_irq_valid_exclusive started at 165945000ps failed at 165945000ps
+   gen_protocol_props.sv:299 gen_tb_top.u_dut.gen_protocol_props_i.sva_rvfi_irq_valid_exclusive started at 180805000ps failed at 180805000ps
+   firings: 11, UVM errors for this property: 11, cycles: 361, 1242, 2780, 4207, 4684, 6711, 11623, 13764, 15603, 16590, 18076
+
+== 2. the match against the run rtl-arch read ==
+   Its figures: 11 firings, the first at 3655000 ps, cycle 361, the error count equal to the firing count.
+   This run: 11 firings, first at 3655000ps, cycle 361, 11 errors. Same seed, program and knob value.
+
+== 3. what the wave can settle, and what this log cannot ==
+   The dump is full hierarchy from time zero with SVA, so it carries rvfi_valid, rvfi_ext_irq_valid, the record
+   fields, both pipeline arrays in every element and the writeback terms: enough for rtl-arch's four steps,
+   including which alignment this run took. This log records only that the run happened and matched; the
+   cycle-level answer is rtl-arch's to publish from the wave.

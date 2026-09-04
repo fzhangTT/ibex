@@ -372,9 +372,11 @@ package gen_env_pkg;
       drain_cyc0 = vif.cycle_count;
       drain_cap  = gen_irq_drain_cap_cycles(env.ibus_agent.cfg.gnt_max, env.ibus_agent.cfg.rvalid_max,
                                             env.dbus_agent.cfg.gnt_max, env.dbus_agent.cfg.rvalid_max);
-      while ((vif.evt_retired_count - drain_rec0) < GEN_IRQ_ENTRY_BOUND_RECORDS
+      // bound PLUS ONE: the in-run rule judges age > GEN_IRQ_ENTRY_BOUND_RECORDS, so a line raised at the last
+      // stimulus record reaches age == bound and would end unjudged if the drain stopped at the bound itself
+      while ((vif.evt_retired_count - drain_rec0) <= GEN_IRQ_ENTRY_BOUND_RECORDS
              && (vif.cycle_count - drain_cyc0) < drain_cap) @(posedge vif.clk);
-      `uvm_info("GEN_BASE_TEST", $sformatf("drain: %0d records in %0d cycles (bound %0d records, cap %0d cycles from the effective bus maxima i %0d/%0d d %0d/%0d)",
+      `uvm_info("GEN_BASE_TEST", $sformatf("drain: %0d records in %0d cycles (bound %0d records plus one, cap %0d cycles from the effective bus maxima i %0d/%0d d %0d/%0d)",
                 vif.evt_retired_count - drain_rec0, vif.cycle_count - drain_cyc0, GEN_IRQ_ENTRY_BOUND_RECORDS, drain_cap,
                 env.ibus_agent.cfg.gnt_max, env.ibus_agent.cfg.rvalid_max, env.dbus_agent.cfg.gnt_max, env.dbus_agent.cfg.rvalid_max), UVM_LOW)
       phase.drop_objection(this, "gen_base_test: finish_req");

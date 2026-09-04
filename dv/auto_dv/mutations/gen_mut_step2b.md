@@ -297,3 +297,22 @@ with more the in-run rule fires first, which caps the window in records and ther
 need for such a rule by making the in-run bound reachable.
 
 Retained: gen_tdd_logs/mutations/gen_fu_l31_irq_drain.log.
+
+## Landing 31's correction: MUT-NT2 re-run with its diff retained and its identities measured
+
+CR-31-M-1 and CM208-Low-2 were right on both halves. The applied diff was not retained, and the committed log labelled
+3d8e81ccd20737c7 three ways, which cannot all be true of a contents digest.
+
+WHAT THAT KEY IS: the gate digest of the OLD mutant root, taken AFTER MUT-NT2's fault was applied. The committed log's
+claim that it is the ablation's identity "before the fault" is wrong; before the fault that root carried the landing
+build's digest.
+
+THE CORRECTED PAIR on the drain-corrected sources, each identity measured on its own side of the fault:
+
+| id | mutation | vehicle | roots | catch | ablation |
+|---|---|---|---|---|---|
+| MUT-NT2 (re-run, corrected drain) | gen_tb_top.sv: irq_external withheld from the DUT once 3572 records have retired while the driver holds it | gen_ut_lockstep on the irq storm image, storm / multi, seed 3, row irq_entry | ablation e674e6339b5bea85 measured BEFORE the fault, mutant d02bca6ca353117f measured AFTER it; gen_tb_top.sv 736a8d8099339024 -> 9a55bbd4103febd7 | FAIL (UVM_ERROR 1): `lines 00004 raised at cycle 22574 (order 3700) not taken within 17 records (now order 3718, mie 7fff0888 mstatus 00000088)` | PASS (0) |
+
+THE APPLIED DIFF IS RETAINED as gen_tdd_logs/mutations/gen_fu_l31b_MUTNT2_mutant.diff, following the
+gen_fu_l13_*_mutant.diff convention, so the mutated hash and the root digest are reproducible from the record rather
+than from my say-so.
