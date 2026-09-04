@@ -1236,3 +1236,8 @@ CM215-Low-4 in the same touch: the pasted comment is one full text in gen_ut_int
 the other two tests.
 
 Retained: gen_tdd_logs/lockstep/gen_fu_l40c_quiesce_exhaustion.log. One manifest row.
+
+Landing 40d retains the mutation itself (CR-38 L-1): gen_tdd_logs/mutations/gen_fu_l40_MUTRETSKEW1_mutant.diff, the
+one-line fault in gen_bridge_if.sv that both landing 40 and landing 40c ran, with its manifest row carrying the base
+and mutated digests measured from the files and the fact that it applies cleanly to an archive of the tree it was cut
+from. The two landing logs stay closed at their committed bytes; the row is where a reader now finds the fault.

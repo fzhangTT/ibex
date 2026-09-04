@@ -1,0 +1,11 @@
+--- a/dv/auto_dv/tb/gen_bridge_if.sv
++++ b/dv/auto_dv/tb/gen_bridge_if.sv
+@@ -58,7 +58,7 @@
+       evt_retired_count <= '0;
+     end else begin
+       cycle_count <= cycle_count + 32'd1;
+-      if (rvfi_valid) evt_retired_count <= evt_retired_count + 32'd1;
++      if (rvfi_valid) evt_retired_count <= evt_retired_count + ((evt_retired_count == 32'd10) ? 32'd2 : 32'd1);   // MUT-RETSKEW1
+     end
+   end
+ 
