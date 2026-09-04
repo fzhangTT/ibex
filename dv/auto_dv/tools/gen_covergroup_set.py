@@ -99,7 +99,8 @@ manifests declare it); bins under a manifest's "# not_hit" header are excluded a
 covergroup it references exists (a missing covergroup makes the per-test URG report lack the group, LOG-046), so the column "manifests
 completed at this rank" names the manifests that become fully verifiable once the covergroups ranked 1..N exist. The ledger covergroup
 {LEDGER_PLAN} (gen_wit_cycle_clause_cg, T-179) is marked; its bins are witness bins, excluded from the score by name. Plan anchors are the
-gen_fcov_plan.md headers (file:line). Covergroups without a plan header: {len(unknown)} ({', '.join(unknown) or 'none'}).
+gen_fcov_plan.md headers (file:line). Covergroups without a plan header, counted over the {len(rows)} ranked here and not
+plan-wide: {len(unknown)} ({', '.join(unknown) or 'none'}).
 
 Totals: {len(rows)} covergroups, {total_bins} distinct referenced bins, {len(entries) - len(outside)} manifests: {declared_total} declarations in total, of which
 {dup_decl} are duplicate declarations of a bin another manifest also declares ({multi} distinct bins are declared by more than one manifest); a further

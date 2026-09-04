@@ -2,7 +2,7 @@
 
 Deliverable 3 (DV_prompt.txt Section 11): the definition of every functional-coverage bin (not the
 implementation; TB Infra implements covergroups in the gen_ namespace from this plan). Owner: dv-lead.
-Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in), generated 2026-09-04 10:19 UTC from dv/auto_dv/work/dv-lead/parts6/fcov_*.md. Part-file names in this document (tp_<area>.md, fcov_<area>.md, gen_part_<area>.md, trace_*_<area>.csv and the README_*_BRIEF.md briefs) are this plan set's own gitignored sources, named as provenance: the content they hold is in the corresponding area of gen_test_plan.md, gen_fcov_plan.md or gen_feature_list.md, and the bug and doc-defect number series they define are in gen_bug_log.md. No claim in this document rests on opening one. Three rtl-arch notes this plan set cites are committed references, not work files: dv/auto_dv/evidence/gen_multdiv_bound_props.md (the MD-n bound properties and covers), dv/auto_dv/evidence/gen_bug_reproducer_specs.md (the reproducer recipes behind the bug log) and dv/auto_dv/evidence/gen_interface_inventory.md (the numbered driver and protocol rules); citations name them by basename and resolve there.
+Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in), generated 2026-09-04 10:48 UTC from dv/auto_dv/work/dv-lead/parts6/fcov_*.md. Part-file names in this document (tp_<area>.md, fcov_<area>.md, gen_part_<area>.md, trace_*_<area>.csv and the README_*_BRIEF.md briefs) are this plan set's own gitignored sources, named as provenance: the content they hold is in the corresponding area of gen_test_plan.md, gen_fcov_plan.md or gen_feature_list.md, and the bug and doc-defect number series they define are in gen_bug_log.md. No claim in this document rests on opening one. Three rtl-arch notes this plan set cites are committed references, not work files: dv/auto_dv/evidence/gen_multdiv_bound_props.md (the MD-n bound properties and covers), dv/auto_dv/evidence/gen_bug_reproducer_specs.md (the reproducer recipes behind the bug log) and dv/auto_dv/evidence/gen_interface_inventory.md (the numbered driver and protocol rules); citations name them by basename and resolve there.
 
 Build configuration: `opentitan` (ibex_configs.yaml): BaseIsa=RV32IorCHERIoT (CHERIoT mode excluded
 by owner ruling), RV32E=0, RV32M=RV32MSingleCycle, RV32B=RV32BOTEarlGrey, RV32ZC=RV32ZcaZcbZcmp,
@@ -4827,7 +4827,10 @@ bug-candidate behaviour carry the bug tie (B16 in CG-DMEM-007).
   - cp_refetch iff alerted: bins yes{1: the lookup was served from the bus afterwards}
   - cp_major_nmi_quiet iff injected: bins yes{1: alert_major_internal_o and alert_major_bus_o stayed
     low in every cycle of the injection window, a persistent level counting as not quiet, and
-    rvfi_ext_nmi_int carried no set flag on any retirement inside the retirement window}
+    rvfi_ext_nmi_int carried no set flag on any retirement inside the retirement window}. Not claimed
+    where the two windows disagree: a sample closing before any retirement has been seen samples -1
+    rather than yes, since an early closure, a probe-on evidence run where form (a) decides at once,
+    cannot record a quiet that no retirement window supports. In practice this is a measured-run bin
   - cp_lookups_blocked_next iff alerted: bins yes{1: no lookup read on any port in the ECC write
     cycle; a data-port WRITE of ECC(0) in that cycle is legal, rtl/ibex_icache.sv:280, 1000-1011}
   - cp_no_alert_case iff the corruption or read must not alert: bins unused_way_data{data of the
@@ -4871,9 +4874,13 @@ bug-candidate behaviour carry the bug tie (B16 in CG-DMEM-007).
 - Build split, WP-8 (part 1 samples what the announced injection can supply; part 2 the rest): the
   renderer's implemented list is per COVERGROUP, so entering CG-IC-006 renders all 12 coverpoints in
   plan order and all 4 crosses; measured from the committed renderer against this plan, 24 coverpoint
-  bins and 16 cross bins, every coverpoint carrying its ignore_bins na clause. Part 1 samples eight
-  coverpoints and three crosses and passes -1 for the four part-2 coverpoints and for the cross whose
-  operand is one of them, so their real bins stay at 0 per cent BY INTENT: owned, declared by no
+  bins and 16 cross bins, every coverpoint carrying its ignore_bins na clause. Part 1 samples the eight
+  coverpoints it can and passes -1 for the four part-2 coverpoints. A cross takes no argument of its
+  own: the rendered declaration is "with function sample(int v_cp_...)", one argument per coverpoint
+  and none per cross, with option.cross_auto_bin_max = 0 so a cross carries exactly the CSV's named
+  bins. So the three part-1 crosses are filled by their component coverpoints, and cr_ram_x_inval is
+  excluded because its component cp_inval_ways sits in ignore_bins na, not because anything passes it
+  a -1. The part-2 real bins stay at 0 per cent BY INTENT: owned, declared by no
   manifest, hidden by no ignore_bins (docs/dv/dv_principles.md:101-102, a coverpoint may be built
   before stimulus can hit it and 0 per cent marks intent, while only genuinely unhittable bins are
   pruned; these become hittable when part 2 lands, so the dilution is correct and temporary). Part 1
@@ -5186,7 +5193,8 @@ candidates). Conventions applied by fix brief 2 (Critic pre-review S-3/S-4/S-5/S
     remu_off, mul_on, mul_off, mulh_on, mulh_off, mulhsu_on, mulhsu_off, mulhu_on, mulhu_off
 - Adopted (riscv-dv): none
 - TP items: TP-DIT-004, TP-DIT-005, TP-DIT-006
-### CG-DIT-004: gen_cg_dit_dummy_insert (P1; probe-gated, not in manifest until the probe register carries P1)
+### CG-DIT-004: gen_cg_dit_dummy_insert
+- Probe gate: P1; probe-gated, not in manifest until the probe register carries P1
 - Features: F-DIT-009, F-DIT-011, F-DIT-012, F-DIT-013, F-DIT-015, F-DIT-016, F-DIT-017, F-DIT-018, F-DIT-019, F-DIT-020, F-DIT-021, F-DIT-022, F-DIT-023, F-DIT-024, F-DIT-027, F-DIT-028, F-DIT-029, F-DIT-030, F-RVFI-024, F-DIT-003
 - Sample: (a) insert: rising edge of the wrapper-internal net dummy_instr_id_o while the IF/ID
   register is written; (b) window_close: the close of a test-defined measurement window (>= 200
