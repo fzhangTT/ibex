@@ -122,7 +122,7 @@ Totals: {len(rows)} covergroups, {total_bins} distinct referenced bins, {len(ent
             cg_txt = '; '.join(cg + ' (' + str(n) + ')' for cg, n in sorted(cgs.items()))
             new_txt = '; '.join(cg + ' (' + plan_of_impl.get(cg, 'UNKNOWN') + ', ' + anchor.get(plan_of_impl.get(cg), '-').split(' ')[0] + ')' for cg in new) or 'none'
             mt += '| ' + name + ' | ' + str(nb) + ' | ' + str(nh) + ' | ' + cg_txt + ' | ' + new_txt + ' |\n'
-        mt += "\nThese enter the ranking the moment their testlist entries are committed (a staged entry is not an input of this file).\n"
+        mt += "\nAn extra manifest leaves this list by one of two routes, and which route applies is a plan statement rather than something this tool derives: it ENTERS the ranking when its testlist entries are committed (a staged entry is not an input of this file), or it is RETIRED rather than ever being referenced when a ruling replaces it with per-entry manifests. The covergroup's record in gen_fcov_plan.md names the route for each manifest listed here.\n"
     else:
         mt += "None: every committed manifest is named by the committed testlist.\n"
     mt += "\n## Entries whose manifest lies outside the manifest home (not read, not counted)\n\n"
