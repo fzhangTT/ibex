@@ -10,6 +10,11 @@
 #   unmutated build  dv/auto_dv/work/tb-infra/wit/L25b
 #   produced         2026-09-04T13:24:03Z
 # Lines are read from each run's own files, ASCII-normalised per the retention convention.
+#   PER ROOT, TWO IDENTITIES OF THE SAME KIND. A mutated root's line reads BASE identity, the digest of the tree
+#   it was built from, followed by that root's OWN filelist_digest, which differs by construction; the root's own
+#   figure is recomputed by reconstructing the mutated file from the diff logged below and accepting it only
+#   when it reproduces the logged mutated hash. The GREEN root carries no mutation, so its own digest IS the
+#   base and its line stays labelled gate identity.
 #
 # THE SELF-TEST BASELINE. On the unmutated build the run reports "self-test: 148 cases, 0 failures", of which
 # SEVENTEEN are CG-IC-006's (eleven classifier, two routing, four window boundary). The review row asked for a
@@ -21,8 +26,15 @@
 # fail the run. Both faults are invisible to any expectation file: a wrongly ROUTED event and a wrongly SIZED window
 # give a wrong value or a wrongly hit bin, and a manifest fails only an UNHIT declared bin.
 
+root: GREEN   (no mutation, the control; run ut_isa_cov_zc of the unmutated build)
+  gate identity: b48479a3bc6f1d9f      local compile figure: f80e2c719e16b73c
+  simulation verdict: PASS
+  self-test summary, the run's own line: self-test: 148 cases, 0 failures
+  no mutation applied: every file is this build's committed source, so there is no baseline/mutated pair
+  run directory: dv/auto_dv/work/tb-infra/wit/L25b/ut_isa_cov_zc
+
 root: UNINITQ   (the never-written report routed into gen_icram_events::q instead of its own queue)
-  gate identity: b48479a3bc6f1d9f      local compile figure: e936dcb33bd1f4d1
+  base identity: b48479a3bc6f1d9f      root's own identity: 6ce5351e5daef0bc      local compile figure: e936dcb33bd1f4d1
   simulation verdict: FAIL
   self-test summary, the run's own line: self-test: 148 cases, 2 failures
   mutation identity, baseline from a pristine copy taken before any mutation:
@@ -43,7 +55,7 @@ root: UNINITQ   (the never-written report routed into gen_icram_events::q instea
   | UVM_ERROR dv/auto_dv/env/gen_fcov_pkg.sv(1925) @ 310500: uvm_test_top.env.isa_cov [GEN_FCOV_UT] a never-written report lands in the bypass queue: int'(gen_icram_events::uq.size()) - u0 0 expected 1
 
 root: UNINITQ_ABL   (the same fault with the two routing cases removed)
-  gate identity: b48479a3bc6f1d9f      local compile figure: 85c48699c0620aeb
+  base identity: b48479a3bc6f1d9f      root's own identity: 4952cd34d2c337f6      local compile figure: 85c48699c0620aeb
   simulation verdict: PASS
   self-test summary, the run's own line: self-test: 146 cases, 0 failures
   mutation identity, baseline from a pristine copy taken before any mutation:
@@ -74,7 +86,7 @@ root: UNINITQ_ABL   (the same fault with the two routing cases removed)
   | (none)
 
 root: WINSHORT   (the window arithmetic one cycle short)
-  gate identity: b48479a3bc6f1d9f      local compile figure: ccc60959e20d4ae4
+  base identity: b48479a3bc6f1d9f      root's own identity: 34e7dd5af004e920      local compile figure: ccc60959e20d4ae4
   simulation verdict: FAIL
   self-test summary, the run's own line: self-test: 148 cases, 1 failures
   mutation identity, baseline from a pristine copy taken before any mutation:
@@ -92,7 +104,7 @@ root: WINSHORT   (the window arithmetic one cycle short)
   | UVM_ERROR dv/auto_dv/env/gen_fcov_pkg.sv(1928) @ 310500: uvm_test_top.env.isa_cov [GEN_FCOV_UT] window: the LAST cycle of the window is inside: gen_ic_in_window(102, 100, 2) 0 expected 1
 
 root: WINSHORT_ABL   (the same fault with the four boundary cases removed)
-  gate identity: b48479a3bc6f1d9f      local compile figure: 90a4c1bcc015785c
+  base identity: b48479a3bc6f1d9f      root's own identity: 3944a159f6f6e5e3      local compile figure: 90a4c1bcc015785c
   simulation verdict: PASS
   self-test summary, the run's own line: self-test: 144 cases, 0 failures
   mutation identity, baseline from a pristine copy taken before any mutation:

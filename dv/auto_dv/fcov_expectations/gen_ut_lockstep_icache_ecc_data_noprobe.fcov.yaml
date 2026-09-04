@@ -1,10 +1,13 @@
 # CG-IC-006 part 1, the bins THIS entry can hit: data-RAM injection at the frequent rate, probe off, so form (b) judges.
-# Derived from the entry's own plusargs and confirmed by a run of the entry ALONE in its own output directory, so
-# no other run's coverage contributed. Robust means a structural bound or a measured count of at least 30 in that
+# Derived from the entry's own plusargs and confirmed by a run of that program and plusarg set ALONE in its own
+# output directory through the local runner, so no other run's coverage contributed. "This entry's own run" in
+# the notes below means that run; no run of this entry through the flow has happened yet. Robust means a structural bound or a measured count of at least 30 in that
 # run; the count is in each note. Nine such manifests, one per WP-8 icache ECC entry, and their union is the
 # part-1 reachable set of 15 minus the two bins no entry hits robustly.
 #
 # Nothing excluded: every bin this entry reaches is robust in its own run.
+# Group-wide, two bins are declared in NO manifest and close on a seed sweep at coverage closure:
+# during_invalidation and masked_duplicate_copy.
 test: gen_ut_lockstep_icache_ecc_data_noprobe
 owner: tb-infra
 bins:

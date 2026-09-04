@@ -10,10 +10,23 @@
 #   unmutated build  dv/auto_dv/work/tb-infra/wit/L25b
 #   produced         2026-09-04T13:24:03Z
 # Lines are read from each run's own files, ASCII-normalised per the retention convention.
+#   PER ROOT, TWO IDENTITIES OF THE SAME KIND. A mutated root's line reads BASE identity, the digest of the tree
+#   it was built from, followed by that root's OWN filelist_digest, which differs by construction; the root's own
+#   figure is recomputed by reconstructing the mutated file from the diff logged below and accepting it only
+#   when it reproduces the logged mutated hash. The GREEN root carries no mutation, so its own digest IS the
+#   base and its line stays labelled gate identity.
+#   NO SELF-TEST LINE APPEARS IN THIS FILE and none is added: the covergroup self-test runs in the isa-cov test,
+#   not in the lockstep runs these three roots use, which was checked on two lockstep runs of this build (zero
+#   occurrences) against the isa-cov run of the same build (one). The self-test baseline is retained in
+#   gen_fu_l24_wp8_ut_muts.log's GREEN root, where the line is the run's own.
 #
 # READ THE DISCRIMINATION, NOT THE EXIT CODE. All three runs pass in simulation and the checker exits 2 in all three,
 # because ONE run cannot hit every declared bin of the group manifest. The evidence is the named bin's transition from
 # HIT to UNHIT, and the statistic that says WHICH half of the mechanism the mutation removed.
+#   THE MANIFEST THESE RUNS READ is dv/auto_dv/fcov_expectations/gen_cg_ic_ecc_part1.fcov.yaml, the 15-bin group
+#   manifest, which landing 25 deletes; its content at the parent commit is what the exit code and the five
+#   unhit names below refer to. What the same control would read against the entry's per-entry manifest is NOT
+#   claimed here: no run has measured that, and the discrimination this file evidences does not depend on it.
 
 root: GREEN   (no mutation, the control)
   gate identity: b48479a3bc6f1d9f      local compile figure: f80e2c719e16b73c
@@ -23,7 +36,7 @@ root: GREEN   (no mutation, the control)
   | FCOV-EXPECTATION: FAIL - 5 declared bin(s) not hit: gen_ic_ecc_cg.cp_ram.tag, gen_ic_ecc_cg.cp_bits.double, gen_ic_ecc_cg.cp_no_alert_case.disabled_cache, gen_ic_ecc_cg.cp_no_alert_case.during_invalidation, gen_ic_ecc_cg.cp_no_alert_case.masked_duplicate_copy
 
 root: UNINITALL   (the written flag set for every line at init, so no read is ever never-written)
-  gate identity: b48479a3bc6f1d9f      local compile figure: 464a9af8084b5066
+  base identity: b48479a3bc6f1d9f      root's own identity: 0cef864e4ded9a27      local compile figure: 464a9af8084b5066
   simulation verdict: PASS
   | uninitialised data reads reported=0 sampled=0 skipped(injection 0, alert 0) dropped=0
   mutation identity, baseline from a pristine copy taken before any mutation:
@@ -41,7 +54,7 @@ root: UNINITALL   (the written flag set for every line at init, so no read is ev
   | FCOV-EXPECTATION: FAIL - 6 declared bin(s) not hit: gen_ic_ecc_cg.cp_ram.tag, gen_ic_ecc_cg.cp_bits.double, gen_ic_ecc_cg.cp_no_alert_case.disabled_cache, gen_ic_ecc_cg.cp_no_alert_case.during_invalidation, gen_ic_ecc_cg.cp_no_alert_case.uninitialised_data_ram, gen_ic_ecc_cg.cp_no_alert_case.masked_duplicate_copy
 
 root: UNINITDRAIN   (both drain calls removed, so events are queued and never classified)
-  gate identity: b48479a3bc6f1d9f      local compile figure: 8f7f0e1e5f08a383
+  base identity: b48479a3bc6f1d9f      root's own identity: 079a2867330a422e      local compile figure: 8f7f0e1e5f08a383
   simulation verdict: PASS
   | uninitialised data reads reported=37 sampled=0 skipped(injection 0, alert 0) dropped=0
   mutation identity, baseline from a pristine copy taken before any mutation:

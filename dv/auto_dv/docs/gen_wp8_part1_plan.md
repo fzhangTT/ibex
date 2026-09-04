@@ -408,7 +408,13 @@ classifier fault is a failing run and not only a failing offline check.
   is the bus one under an announced corruption. The gap is named here so the mutation table says what it does not
   cover.
 - fcov-expectation. NINE PER-ENTRY MANIFESTS, one per WP-8 icache ECC testlist entry, each stem equal to its entry
-  name, each declaring only the bins its own entry can hit with an anti-vacuity note per bin. A group manifest was
+  name, each declaring only the bins its own entry can hit with an anti-vacuity note per bin. DECLARED AND BOUND,
+  NOT YET EXERCISED. At the landing itself nothing enforced them: the flow binds a manifest only through the entry's
+  fcov_expectation_file, every WP-8 entry still carried null there, and the sweep's 27 OK counted these nine as
+  present-but-unbound files. The Runtime Manager's landing-25 merge, commit 28c8c0b, commits all nine bindings, so
+  each entry names its own manifest and a future run of that entry is gated by it. No run of these entries through
+  the flow has happened yet, so no declared bin has been enforced by a run; the counts below come from local runs of
+  each entry's program and plusarg set. A group manifest was
   tried first and cannot work: the expectation check validates the manifest's test against the ENTRY NAME before it
   reads coverage, so one manifest naming one test fails every entry with a protocol error before the covergroup is
   read, and no merged check across entries exists. Per-entry is also the better shape, because a declared-but-unhit
@@ -419,8 +425,10 @@ classifier fault is a failing run and not only a failing offline check.
   (10, 9, 22) and cp_no_alert_case.masked_duplicate_copy (4, 2, 14). Separately and NOT owed, two per-entry exclusions
   live in the manifest headers rather than here, since the bin is robust elsewhere and thin only on those entries:
   cp_no_alert_case.uninitialised_data_ram on the two far-program entries (9, 9) and cp_alert_pulses.one on the far
-  probe-off entry (27). The counts are measured per entry in its own output directory, so no run's coverage
-  contributed to another's. cp_knob's three rendered bins are in no manifest, since they have no CSV rows, and the
+  probe-off entry (27). The counts are measured per entry in its own output directory through the local
+  runner at that entry's own program and plusarg set, never through the flow, so no run's coverage contributed to
+  another's. One entry's first measurement carried a plusarg its testlist entry does not, the lookup probe; it was
+  re-measured with the probe absent and all fifteen bin counts came out identical. cp_knob's three rendered bins are in no manifest, since they have no CSV rows, and the
   four part-2 coverpoints appear in NO manifest.
   The ninth entry is what makes the union complete. There is no knob for the cache enable, it comes from the program
   writing cpuctrlsts, and the ECC directed program enables it in its first instructions, so none of the other eight
