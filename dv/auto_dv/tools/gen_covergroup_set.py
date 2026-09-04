@@ -12,8 +12,11 @@ complete.
 Usage: gen_covergroup_set.py [--testlist F] [--fcov-dir D] [--fcov-plan F] [--md OUT.md] [--csv OUT.csv] [--plan-sha SHA]
 
 --fcov-dir D redirects every manifest the tool reads, the testlist-named ones by basename and the extra scan, so a rehearsal directory
-stands in for the tree; a named manifest whose testlist path is outside the manifest home (FCOV_HOME) refuses. The header names the
-override directory and the printed regeneration command carries it.
+stands in for the tree. A named manifest whose testlist path is outside the manifest home (FCOV_HOME) is a proof manifest kept as
+evidence, not a promotion manifest: the tool lists the entry (neither read nor counted) when the entry is unmeasured and outside the
+testlist's fcov_manifest_required_tiers, and refuses with a non-zero exit when the entry is measured or in a required tier (measured
+defaults to true, as the testlist schema and the loader read it). The header names the override directory and the printed regeneration
+command carries it.
 """
 import re, csv, sys, argparse, pathlib, collections, hashlib, yaml
 R = pathlib.Path(__file__).resolve()
@@ -51,8 +54,8 @@ def main():
     for e in sorted(entries, key=lambda e: e['name']):
         rel = pathlib.Path(e['fcov_expectation_file'])
         if rel.parent != home_rel:
-            if e.get('measured') or e.get('tier') in required_tiers: sys.exit(f"{e['name']}: manifest {rel} is outside {home_rel} and the entry is measured or in a required tier ({e.get('tier')}, measured {e.get('measured')}): refused")
-            outside.append((e['name'], str(rel), e.get('tier'), e.get('measured'))); continue   # an unmeasured check-tier entry's proof manifest: reported below, neither read nor counted
+            if e.get('measured', True) or e.get('tier') in required_tiers: sys.exit(f"{e['name']}: manifest {rel} is outside {home_rel} and the entry is measured or in a required tier ({e.get('tier')}, measured {e.get('measured', True)}): refused")   # absent measured reads true, the schema default
+            outside.append((e['name'], str(rel), e.get('tier'), e.get('measured', True))); continue   # any unmeasured entry outside the required tiers: reported below, neither read nor counted
         p = pathlib.Path(a.fcov_dir) / rel.name   # named manifests are read from --fcov-dir too, so a rehearsal dir stands in for the tree
         if not p.exists(): sys.exit(f'{e["name"]}: manifest {p} missing')
         txt = p.read_text(); nh = set(re.findall(r'^# not_hit (\S+):', txt, re.M)); dig.update(txt.encode()); nh_all |= nh
@@ -61,7 +64,7 @@ def main():
         for b in bins:
             cg, cp, bn = b.split('.', 2)
             per_cg[cg]['bins'].add(f'{cp}.{bn}'); per_cg[cg]['cps'][cp].add(bn); per_cg[cg]['manifests'][e['name']] += 1; cgs[cg] += 1; declarers[b].add(e['name'])
-        per_man[e['name']] = {'bins': len(bins), 'not_hit': len(nh), 'cgs': cgs, 'tier': e.get('tier'), 'measured': e.get('measured')}
+        per_man[e['name']] = {'bins': len(bins), 'not_hit': len(nh), 'cgs': cgs, 'tier': e.get('tier'), 'measured': e.get('measured', True)}
     named = {pathlib.Path(e['fcov_expectation_file']).name for e in entries}
     extra = []
     for p in sorted(pathlib.Path(a.fcov_dir).glob('*.fcov.yaml')):
