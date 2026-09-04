@@ -330,7 +330,8 @@ write-corner fixes of its review, CM123), build out_head18, the held
 draft's test and generator copied in, the docstring's dependency paragraph replaced by the statement of what the shim models and what it
 leaves unmodelled (the hazard variant of the high-word write corner, dummy instructions under the counters knob, neither relied on here),
 the manifest re-rendered on HEAD's plan (204 declared bins, one not_built header for TP-PMC-057, eighteen not_hit; gen_test_pmc_ctrl.fcov.yaml
-193caa85e484); test 388b15850e47, generator e7893d97218c. Images built
+193caa85e484 and test 388b15850e47 as landed at aa43c5b, c3f77460af5d and 0383702cd933 after the CM141 corrections below, whose runs the Runs
+paragraph retains); generator e7893d97218c. Images built
 from that export with gen_program.py --directed --gcc-opts=-Idv/auto_dv/tests/gen_programs: seed 1 words 6581 crc32 0xe4448e4a, seed 2
 6517 / 0x9ee34d68, seed 3 6533 / 0xbe52ad89 (the pin-off program is the same text, the pin changes only the expectations).
 Runs: seeds 1, 2, 3 PASS with UVM_ERROR 0 and GEN_TEST_BINS n=204, all 13 fire checks ok (gen_pmc_ctrl_t235_s1_stdout.log md5
@@ -343,9 +344,12 @@ a171385f78f4d4ffe5e812fcf51cbf59). So the three asks of Section 6 are answered o
 mcountinhibit read-backs (the mask) and the 31 minstret rows all compare clean in these runs. The reds of the other eleven items were
 verified in Section 6 on out_head14 and are not re-run here; the fire checks are unchanged: the held draft's test (sha256 29d9b8c79e2b, the file
 under work/test-writer/batch3/gen_pmc_ctrl/verified_h14/) and the committed test differ only in the docstring (the dependency paragraph replaced
-here, the pin-off manifest statement and the plan anchor's commit id corrected under CM141), no code line differs; the committed test is
-0383702cd933 and its runs above were re-done on out_head18 with that text, so their headers name it.
-Staged entries (dv/auto_dv/work/test-writer/gen_testlist_entries.yaml, sha256 9c8aed00c141): gen_test_pmc_ctrl (tier check, 3 seeds,
+here, the pin-off manifest statement and the plan anchor's commit id corrected under CM141), one comment and the two not_hit reason strings of
+bins_not_hit (which feed the rendered header); no fire-check or expectation code differs. The committed test is 0383702cd933 and its runs above
+were re-done against the out_head18 build with that text as the Python root (a detached-archive copy of HEAD with the corrected test), so their
+headers name it.
+Staged entries (dv/auto_dv/work/test-writer/gen_testlist_entries.yaml, sha256 9c8aed00c141 as handed, 32fd0a2d0b3f after the pin-off argument
+was quoted for YAML and its description corrected under CM141; merged into the testlist at c0d12f4 and bb3a0a6): gen_test_pmc_ctrl (tier check, 3 seeds,
 measured false until the PMC covergroups are built), gen_test_pmc_ctrl_pin_off (tier check, 1 seed, --pin off with the pin plusarg) and
 gen_test_pmc_ctrl_red (pinned to TP-PMC-022, red_expect on fire_tp_pmc_022, matched against the retained pinned red's harness line); the
 library self-test passes in the staged form. Verified from a detached archive of HEAD with the group overlaid
