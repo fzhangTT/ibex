@@ -12390,6 +12390,7 @@ TP-IC-037,CG-IC-006,cp_lookups_blocked_next,yes,0
 TP-IC-037,CG-WIT-001,cp_clause,w_tp_ic_037,0
 TP-IC-038,CG-IC-003,cp_two_ways_same_tag,yes,0
 TP-IC-038,CG-IC-006,cp_multiway_mismatch,alert_or_wrong,0
+TP-IC-038,CG-IC-006,cp_multiway_mismatch,masked,0
 TP-IC-039,CG-IC-004,cp_beat_delays,both_slow,0
 TP-IC-039,CG-IC-004,cp_beat_delays,first_slow,0
 TP-IC-039,CG-IC-004,cp_beat_delays,second_slow,0
@@ -12409,6 +12410,7 @@ TP-IC-043,CG-IC-006,cr_bits_x_rate,double_frequent,0
 TP-IC-043,CG-IC-006,cr_bits_x_rate,single_frequent,0
 TP-IC-044,CG-IC-006,cp_no_alert_case,disabled_cache,0
 TP-IC-044,CG-IC-006,cp_no_alert_case,during_invalidation,0
+TP-IC-044,CG-IC-006,cp_no_alert_case,masked_duplicate_copy,0
 TP-IC-044,CG-IC-006,cp_no_alert_case,uninitialised_data_ram,0
 TP-IC-044,CG-IC-006,cp_no_alert_case,unused_way_data,0
 TP-IC-045,CG-IC-001,cp_port_contention,deferred_1,0

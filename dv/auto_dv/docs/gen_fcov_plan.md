@@ -2,7 +2,7 @@
 
 Deliverable 3 (DV_prompt.txt Section 11): the definition of every functional-coverage bin (not the
 implementation; TB Infra implements covergroups in the gen_ namespace from this plan). Owner: dv-lead.
-Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in), generated 2026-09-04 05:23 UTC from dv/auto_dv/work/dv-lead/parts6/fcov_*.md.
+Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in), generated 2026-09-04 06:25 UTC from dv/auto_dv/work/dv-lead/parts6/fcov_*.md.
 
 Build configuration: `opentitan` (ibex_configs.yaml): BaseIsa=RV32IorCHERIoT (CHERIoT mode excluded
 by owner ruling), RV32E=0, RV32M=RV32MSingleCycle, RV32B=RV32BOTEarlGrey, RV32ZC=RV32ZcaZcbZcmp,
@@ -200,7 +200,7 @@ the count.
 | Metric | Value |
 |---|---|
 | Covergroups (spec-derived and adopted; the ledger CG-WIT-001 is counted separately) | 207 |
-| Distinct bins referenced by TP items (spec-derived and adopted) | 15827 |
+| Distinct bins referenced by TP items (spec-derived and adopted) | 15829 |
 | Witnessed-clause ledger bins (CG-WIT-001; outside the score, the bin total and traceability condition 2) | 220 |
 | Adopted bins (riscv-dv, counted separately) | 49 |
 | ACTIVE features with >= 1 bin | 705 |
@@ -4798,8 +4798,11 @@ bug-candidate behaviour carry the bug tie (B16 in CG-DMEM-007).
   - cp_bits iff injected = flipped bits: bins single{1}, double{2}
   - cp_way iff injected: bins way0{0}, way1{1}
   - cp_beat iff data = corrupted 39-bit beat: bins beat0{0}, beat1{1}
-  - cp_alert_pulses iff injected on a valid hit lookup = alert_minor_o pulses for this injection:
-    bins one{1}; ignore_bins zero{0}, many{[2:$]}: gen_chk_alerts failure
+  - cp_alert_pulses iff injected on a valid hit lookup whose line is valid in one way only =
+    alert_minor_o pulses for this injection: bins one{1}; ignore_bins zero{0}, many{[2:$]}:
+    gen_chk_alerts failure. The duplicate-copy case leaves the qualifier because a clearing flip in
+    one of two valid copies owes no pulse (WP12-F2) and samples
+    cp_no_alert_case.masked_duplicate_copy instead
   - cp_inval_ways iff alerted = ways written invalid in the next cycle: bins all_ways{tag error},
     hit_way_only{data error}
   - cp_refetch iff alerted: bins yes{1: the lookup was served from the bus afterwards}
@@ -4809,9 +4812,13 @@ bug-candidate behaviour carry the bug tie (B16 in CG-DMEM-007).
     cycle; a data-port WRITE of ECC(0) in that cycle is legal, rtl/ibex_icache.sv:280, 1000-1011}
   - cp_no_alert_case iff the corruption or read must not alert: bins unused_way_data{data of the
     non-hitting way}, disabled_cache{icache_enable == 0}, during_invalidation{sweep running},
-    uninitialised_data_ram{never-written data line read, no injection}
+    uninitialised_data_ram{never-written data line read, no injection},
+    masked_duplicate_copy{a data flip clearing a bit in one of two valid copies of the line, restored
+    by the OR of the hit-data mux, rtl/ibex_icache.sv:507-514}
   - cp_multiway_mismatch (informational, TP-IC-038 only) iff both ways valid with the same tag and
-    differing data: bins alert_or_wrong{1: alert_minor_o or a wrong rvfi_insn}
+    differing data: bins alert_or_wrong{1: alert_minor_o or a wrong rvfi_insn, the outcome when the
+    difference sets a bit the other copy holds clear}, masked{1: no alert and the fetched word
+    correct, the outcome when the difference only clears bits, since the mux ORs the matching ways}
   - cp_knob iff injected = knob:icache_ecc_err_rate (cross operand only): values none, rare,
     frequent
 - Crosses:
@@ -4915,11 +4922,13 @@ bug-candidate behaviour carry the bug tie (B16 in CG-DMEM-007).
 - Bug-tied bins (credit an open bug candidate, owned by the expected-fail item TP-DMEM-064): 3
   (CG-DMEM-007.cp_rf_suppressed.no_b16, cr_pattern_x_we.first_only_load,
   cr_class_x_we_x_beat.single_load_first; B16)
-- Informational bins (excluded from the closure measure): 8 (CG-IMEM-007.cp_unsolicited_rvalid_case 3,
-  CG-DMEM-009.cp_unsolicited_rvalid_case 3, CG-DMEM-006.cp_b14_records 1, CG-IC-006.cp_multiway_mismatch 1)
+- Informational bins (excluded from the closure measure): 9 (CG-IMEM-007.cp_unsolicited_rvalid_case 3,
+  CG-DMEM-009.cp_unsolicited_rvalid_case 3, CG-DMEM-006.cp_b14_records 1, CG-IC-006.cp_multiway_mismatch 2)
 - Probe-gated bins (not in any manifest): 1 (CG-FE-004.cp_dummy_seen.yes)
-- Bins referenced by trace_tp_bin_mem_fetch_icache.csv: 1035 distinct bins in 1161 rows;
-  every closure bin above is owned by at least one TP item (no orphans, Critic M-04)
+- Bins referenced by trace_tp_bin_mem_fetch_icache.csv: every closure bin above is owned by at least
+  one TP item (no orphans, Critic M-04). No bin or row count is re-typed here: gen_trace_check.py
+  reports the ownership counts and gen_round0_covergroup_set.md carries the per-covergroup bin totals
+  from the plan itself, so one generated artifact stays the single source of truth
 
 ## Probe candidates
 
