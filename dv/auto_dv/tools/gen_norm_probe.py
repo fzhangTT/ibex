@@ -27,7 +27,6 @@ import re
 import sys
 
 USAGE = "usage: gen_norm_probe.py [--root <tree>] [--group CG-XXX-nnn] [--self-test]"
-REL_PLAN = "dv/auto_dv/docs/gen_fcov_plan.md"
 REL_CODEGEN = "dv/auto_dv/tb/gen_fcov_codegen.py"
 
 
@@ -50,11 +49,26 @@ def load_loader(root: pathlib.Path):
     return mod
 
 
-def plan_bullets(root: pathlib.Path):
+def joined_lines(text):
+    """The plan as the loader parses it: a bullet wrapping over indented lines is one logical line.
+
+    Mirrors gen_fcov_codegen.load_plan's own joining. Reading first physical lines instead would test a wrapped
+    line's tuple arity against half of it.
+    """
+    out = []
+    for raw in text.splitlines():
+        if out and raw.startswith("    ") and not raw.lstrip().startswith("- ") and raw.strip():
+            out[-1] = out[-1].rstrip() + " " + raw.strip()
+        else:
+            out.append(raw)
+    return out
+
+
+def plan_bullets(root: pathlib.Path, rel_plan):
     """(group, name, line) for every coverpoint and cross bullet, in file order."""
     out = []
     cur = None
-    for line in (root / REL_PLAN).read_text().splitlines():
+    for line in joined_lines((root / rel_plan).read_text()):
         head = re.match(r"^### (CG-[A-Z]+-\d{3}): gen_cg_[a-z0-9_]+\s*$", line)
         if head:
             cur = head.group(1)
@@ -98,12 +112,12 @@ def classify(name: str, line: str) -> tuple[str, str]:
 def refusals(root, want=None):
     """group -> [(name, kind, detail, line)] for bullets the loader captured nothing for.
 
-    Unannotated on purpose: a reviewer runs this from a bare archive of a commit, where no virtualenv exists and the
-    interpreter is the site python, so the tool avoids syntax newer than the oldest one it may meet."""
+    No 3.10-only syntax anywhere in this file: a reviewer runs it from a bare archive of a commit, where no
+    virtualenv exists and the interpreter is the site python, so the tool keeps to syntax the oldest one accepts."""
     mod = load_loader(root)
     captured = mod.load_plan(root)
     found: dict[str, list] = {}
-    for group, name, line in plan_bullets(root):
+    for group, name, line in plan_bullets(root, mod.REL_PLAN):
         if want and group != want:
             continue
         cap = captured.get(group, {"cps": {}, "crosses": {}})
@@ -116,16 +130,23 @@ def refusals(root, want=None):
     return found
 
 
-def self_test() -> int:
-    """A fabricated plan with one bullet of every outcome, plus an all-parsing negative control."""
+def self_test(from_tree) -> int:
+    """A fabricated plan with one bullet of every outcome, plus an all-parsing negative control.
+
+    The renderer is copied from the tree the caller pointed at, so --self-test --root exercises that tree's loader
+    rather than the clone's.
+    """
     import shutil
     import tempfile
+    src = pathlib.Path(from_tree) / REL_CODEGEN
+    if not src.is_file():
+        _usage("no renderer under %s" % from_tree)
     root = pathlib.Path(tempfile.mkdtemp(prefix="gen_norm_probe_selftest_"))
     ok = True
     try:
         (root / "dv/auto_dv/docs").mkdir(parents=True)
         (root / "dv/auto_dv/tb").mkdir(parents=True)
-        shutil.copy(pathlib.Path(__file__).resolve().parents[3] / REL_CODEGEN, root / REL_CODEGEN)
+        shutil.copy(src, root / REL_CODEGEN)
         plan = [
             "### CG-TST-001: gen_cg_probe_selftest",
             "- Coverpoints:",
@@ -142,10 +163,12 @@ def self_test() -> int:
             "  - cr_scope = cp_a x cp_b (one only, enumerated): bins sc1{one 1}, sc2{two 2}",
             "  - cr_guard = cp_a x cp_b iff (a_valid || b_valid): bins g1{one 1}",
             "  - cr_note_iff = cp_a x cp_b (one only, via the iff on cp_b): bins ni1{one 1}",
+            "  - cr_wrapped = cp_a(one) x cp_b: bins w1{one 1},",
+            "    w2{2}",
             "  - cr_odd: a cross with no component list at all",
             "",
         ]
-        (root / REL_PLAN).write_text("\n".join(plan), encoding="ascii")
+        (root / "dv/auto_dv/docs/gen_fcov_plan.md").write_text("\n".join(plan), encoding="ascii")
         got = refusals(root)
         rows = {name: (kind, detail) for name, kind, detail, _ in got.get("CG-TST-001", [])}
 
@@ -177,9 +200,11 @@ def self_test() -> int:
              rows.get("cr_guard", ("", ""))[0] == "guard")
         case("a trailing note that merely mentions iff is scope, not a guard",
              rows.get("cr_note_iff", ("", ""))[0] == "scope")
+        case("a WRAPPED marker line is judged on the whole bullet, so its short tuple needs rule 2",
+             rows.get("cr_wrapped") == ("marker", "rules 1 and 2"))
 
         # negative control: a plan whose every bullet parses reports nothing at all
-        (root / REL_PLAN).write_text("\n".join([
+        (root / "dv/auto_dv/docs/gen_fcov_plan.md").write_text("\n".join([
             "### CG-TST-002: gen_cg_probe_clean",
             "  - cp_a = a value: bins one{1}",
             "  - cr_ok = cp_a x cp_a: bins both{one one}",
@@ -195,13 +220,15 @@ def self_test() -> int:
 
 root = pathlib.Path(__file__).resolve().parents[3]
 want = None
+selftest = False
 args = sys.argv[1:]
 while args:
     a = args.pop(0)
     if a in ("-h", "--help"):
-        _usage()
+        print(USAGE)
+        sys.exit(0)
     elif a == "--self-test":
-        sys.exit(self_test())
+        selftest = True
     elif a == "--root":
         if not args:
             _usage("--root needs a value")
@@ -212,6 +239,9 @@ while args:
         want = args.pop(0)
     else:
         _usage("unknown argument: %s" % a)
+
+if selftest:
+    sys.exit(self_test(root))
 
 found = refusals(root, want)
 counts: dict[str, int] = {}

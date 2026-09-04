@@ -416,9 +416,13 @@ classifier fault is a failing run and not only a failing offline check.
   unmeasured with coverage on, from the committed tree at 813994b at build identity b48479a3bc6f1d9f, one fresh
   output directory and coverage database per entry: nine of nine PASS and 78 of 78 declared bins HIT, per entry 7,
   10, 10, 7, 10, 11, 9, 8 and 6. The Runtime Manager read them with its own parser of the coverage report and
-  cross-checked bin by bin against the expectation checker's keyed output rather than reading a verdict line, and its
-  earlier shared-root run of the same nine agreed on every verdict and every bin, which settles the flow's per-entry
-  isolation by measurement. So every declared bin here has now been enforced by a run and none read unhit. The run's
+  cross-checked bin by bin against the expectation checker's keyed output rather than reading a verdict line. Its
+  earlier shared-root run of the same nine is a cross-check on the isolation, and this plan over-claimed it: when the
+  run log committed, that per-bin agreement rested on two entries of the nine. The corrigendum log,
+  gen_l25_fcov_exercised_corrigendum.log at aaff8f5, measures it on all nine, 78 declared bins compared and 78
+  identical in both forms with eighteen reports each holding exactly one test, so the isolation is settled by
+  measurement now and cited rather than asserted. So every declared bin here has now been enforced by a run and
+  none read unhit. The run's
   record is dv/auto_dv/evidence/gen_tdd_logs/flow/gen_l25_fcov_exercised.log, committed at 8f265b2, which carries the
   verdicts, the per-entry keyed reading and the owed-bin table. The counts in the notes remain the local figures; the
   counts that record reports as NUMBERS are the six owed-bin figures, and those agree with the local ones exactly, so
