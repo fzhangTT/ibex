@@ -249,6 +249,8 @@ package gen_tb_pkg;
   parameter int unsigned GEN_ICRAM_UNINIT_Q_DEPTH_PY = 512;  // rendered from rtl/ibex_pkg.sv (icram_lines_x_ways)
   parameter int unsigned GEN_ICACHE_RETIRE_WINDOW = 64;  // cycles after a data-RAM ECC injection within which the misc monitor waits for the retirement that reveals the lookup tag through its pc (form b, the measured-run judge: the first retirement whose pc index equals the injected index); an injection with no such retirement is reported unjudged (a squashed speculative lookup)
   parameter int unsigned GEN_IRQ_ENTRY_BOUND_RECORDS = 17;  // records between a pin edge and the interrupt entry, worst case WB + ID + 16 Zcmp micro-ops (v3 T-051 2.6)
+  parameter int unsigned GEN_IRQ_DRAIN_RECORD_OVERHEAD_CYCLES = 2;  // cycles a record costs beyond its bus waits: the pipeline's own fetch-to-retire stages, the WB and ID pair the record bound is derived from
+  parameter int unsigned GEN_IRQ_DRAIN_MARGIN_CYCLES = 40;  // margin on the interrupt-entry drain cap: the finish handshake and the last record's write-back after the drain's final retirement
   parameter int unsigned GEN_DBG_ENTRY_BOUND_RECORDS = 17;  // records between debug_req_i and the debug entry, same derivation (v3 T-051 2.6)
   parameter int unsigned GEN_CLK_PERIOD_NS = 10;  // TB clock period (gen_tb_top ClkHalfPeriodNs = 5); Python converts cycle budgets to ns with it
   parameter int unsigned GEN_MEM_READBACK_WORDS_DEFAULT = 64;  // default MEM_PEEK read-back sample size (+gen_mem_readback_words)
@@ -541,6 +543,18 @@ package gen_tb_pkg;
   endfunction
   parameter logic [31:0] GEN_BOOT_ADDR_DEFAULT = 32'h8000_0000;  // literal twin of GEN_MM_BOOT_ADDR_DEFAULT (regex readers: gen_program.py, gen_smoke_run.sh)
   // GEN_KNOBS_END
+
+  // The interrupt-entry drain's cycle cap, COMPUTED from a run's effective bus maxima rather than frozen: the four
+  // gen_{i,d}bus_{gnt,rvalid}_max plusargs overwrite the regime windows with only a lower clamp, so a constant taken
+  // from the defaults would be wrong for any run that widens one. Worst legitimate per-record cost is the slower
+  // bus's grant plus response wait plus the pipeline's own stages, times the entry bound, plus the margin.
+  function automatic int unsigned gen_irq_drain_cap_cycles(int unsigned i_gnt_max, int unsigned i_rvalid_max,
+                                                           int unsigned d_gnt_max, int unsigned d_rvalid_max);
+    int unsigned ibus_cost = i_gnt_max + i_rvalid_max;
+    int unsigned dbus_cost = d_gnt_max + d_rvalid_max;
+    int unsigned per_record = (ibus_cost > dbus_cost ? ibus_cost : dbus_cost) + GEN_IRQ_DRAIN_RECORD_OVERHEAD_CYCLES;
+    return per_record * GEN_IRQ_ENTRY_BOUND_RECORDS + GEN_IRQ_DRAIN_MARGIN_CYCLES;
+  endfunction
 
   // Below the knobs region because the generator emits functions from its own templates and not from the yaml: this is
   // the window arithmetic all three CG-IC-006 window queries share, in one place so its boundary is unit-testable. A

@@ -275,3 +275,25 @@ consecutive lookups share a tag; the alignment histogram retained in landing 15 
 invalid, so the pulse's window held no candidate that owed or excused it. DATAMISS
 and DATAWAY appear three times each: one mutation, proved on two programs with the probe off and once with it on, in three separate out-of-tree roots
 so no run overwrites another.
+
+## Landing 31: the interrupt-entry drain, and what it does to MUT-NT2
+
+The end-of-run records-only irq_entry error is RETIRED and the run is drained by GEN_IRQ_ENTRY_BOUND_RECORDS records
+after the last stimulus, capped in cycles, so the in-run bound is the single judge.
+
+| id | mutation | vehicle | build sha256 | catch (the named check alone) | ablation |
+|---|---|---|---|---|---|
+| MUT-NT2 (re-run) | gen_tb_top.sv: irq_external withheld from the DUT once 3572 records have retired while the driver holds it (the combinational form; the flopped one trips VCS's initializer-driver check) | gen_ut_lockstep on the irq storm image, storm / multi, seed 3, row irq_entry | root 3d8e81ccd20737c7 on the landing build c1189fdc15a85844 (baseline 736a8d8099339024, mutated 84524c5d5e90222c) | FAIL (UVM_ERROR 1): `lines 00004 raised at cycle 22574 (order 3700) not taken within 17 records (now order 3718, mie 7fff0888 mstatus 00000088)` | PASS (0) |
+
+THE MESSAGE CHANGED AND THAT IS THE EVIDENCE. The retained catch of this same fault read "still held and enabled at
+the end of the run, never taken (last order 3710)", the end-of-run rule, at record age 10 inside the 17-record bound.
+The drain carries the run to order 3718, so the bound expires and the IN-RUN rule judges it: same line, same raise
+cycle 22574, same order 3700, different judge. Any record that cites MUT-NT2's message must cite the new one.
+
+Why the fault could not be reproduced as a cycle-age rule instead: a derived cycle bound is 193 at the regime
+defaults (see the retained log's section 4) while this fault's line is held about 159 cycles, so no sound cycle bound
+sits below it; and an end-of-run catch requires the withholding to begin fewer than 17 records before the end, since
+with more the in-run rule fires first, which caps the window in records and therefore in cycles. The drain removes the
+need for such a rule by making the in-run bound reachable.
+
+Retained: gen_tdd_logs/mutations/gen_fu_l31_irq_drain.log.

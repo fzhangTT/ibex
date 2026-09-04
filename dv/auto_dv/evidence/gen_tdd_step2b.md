@@ -859,3 +859,21 @@ APPROVE, which lifted the gen_l14 merge gate), and both row sets are wording and
 - One reading recorded so a split is not mistaken for a defect (CR-16 I-3): MUT-ICE-WAY on the far program probe-off fires the no-announced-injection
   site once because the announcement moved to a way that was invalid, leaving the pulse's window with no candidate that owed or excused it.
 - Rows folded: CM179 m-1 to m-5 and its no-finding note on the retirement accounting; CR-16 L-1 to L-5 and I-1 to I-3.
+
+## Landing 31: the interrupt-entry drain (TDD pair)
+
+RED, on the committed sources (build b48479a3bc6f1d9f): seed 7 of lockstep_irq_storm_nmi FAILS with
+`irq_entry ... lines 10000 raised at cycle 17359 (order 3184) still held and enabled at the end of the run, never
+taken (last order 3186)`. The line was held 2 cycles at the finish request and about 6 at the end, taken from one
+clock (the raise stamp, the env's own "finish_req seen at cycle 17361" line, and the report at 173655 ns which is
+cycle 17365.5 at GEN_CLK_PERIOD_NS = 10). The DUT was never late; the run stopped. One seed in 24 swept.
+
+GREEN, on the landing sources (build c1189fdc15a85844): the same row and seed PASS with zero irq_entry errors, the
+run's own line reading `drain: 17 records in 120 cycles (bound 17 records, cap 193 cycles from the effective bus
+maxima i 3/4 d 3/4)` and the checker reporting `never taken=0 open after the drain=0`. The expectation RESOLVED during
+the drain rather than being suppressed: the line was taken once the DUT had its allowance.
+
+The mutation-proof and the blast-radius spread are in gen_mut_step2b.md and the retained log
+gen_tdd_logs/mutations/gen_fu_l31_irq_drain.log. What the landing does NOT establish is recorded there too: a line
+starved while the core retires nothing is reported open, and judging it needs a cap rule with its own red, which this
+landing does not carry, so that residual is OWED rather than closed.

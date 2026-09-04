@@ -1,0 +1,79 @@
+# Landing 31: the interrupt-entry DRAIN, its TDD pair and the re-run of MUT-NT2's fault
+# The end-of-run records-only error is RETIRED. The run is now held open after the last stimulus for
+# GEN_IRQ_ENTRY_BOUND_RECORDS records, capped in cycles, so the in-run bound is the single judge; what survives the
+# drain is reported open, because at the end of a run a withheld line and a not-yet-taken line are
+# indistinguishable.
+# PROVENANCE. Two builds, each from one tree state, identities as the committer's gate recomputes them:
+#   pre-fix build   b48479a3bc6f1d9f   (prior build, the committed sources before this landing)
+#   landing build   c1189fdc15a85844   (this landing's sources, one build after the last source edit)
+#   mutant root     3d8e81ccd20737c7   (the landing sources with MUT-NT2's fault, out of tree)
+# Lines below are read from each run's own files.
+
+== 1. THE TDD PAIR, the false failure this landing removes ==
+root: PRE-FIX seed 7, lockstep_irq_storm_nmi
+  base identity: b48479a3bc6f1d9f   (prior build)
+  simulation verdict: FAIL
+  the run's own error line:
+  | UVM_ERROR dv/auto_dv/env/gen_checkers_pkg.sv(266) @ 17365500: uvm_test_top.env.irq_chk [irq_entry] lines 10000 raised at cycle 17359 (order 3184) still held and enabled at the end of the run, never taken (last order 3186)
+  the checker's own counters: never taken=1
+  ages from ONE clock, stamps not counts: raised at cycle 17359; the env's own line "finish_req seen at cycle
+  17361"; the report at 173655 ns, which is cycle 17365.5 at GEN_CLK_PERIOD_NS=10. So the line was held 2 cycles
+  at the finish request and about 6 at the end: the DUT was never late, the run stopped.
+
+root: DRAINED seed 7, the same row on the landing build
+  base identity: c1189fdc15a85844
+  simulation verdict: PASS
+  irq_entry errors: 0
+  | drain: 17 records in 120 cycles (bound 17 records, cap 193 cycles from the effective bus maxima i 3/4 d 3/4)
+  | never taken=0 open after the drain=0
+  The expectation RESOLVED during the drain rather than being suppressed: open after the drain reads 0, so the
+  line was taken once the DUT had its allowance.
+
+== 2. THE MUTATION-PROOF: MUT-NT2's fault re-run against the drained build ==
+# MUT-NT2 (gen_mut_step2b.md) is the retained starvation catch: irq_external withheld from the DUT while the driver
+# holds it. Its retained catch fired the END-OF-RUN rule at record age 10. With the drain the same fault ages past
+# the 17-record bound and the IN-RUN rule fires instead, so the catch survives and ITS MESSAGE CHANGES.
+root: ABLATION, the landing sources with no fault, seed 3, lockstep_irq_storm
+  root's own identity: 3d8e81ccd20737c7 before the fault was applied (the same sources as the landing build)
+  simulation verdict: PASS
+  irq_entry errors: 0
+  | drain: 17 records in 104 cycles (bound 17 records, cap 193 cycles from the effective bus maxima i 3/4 d 3/4)
+
+root: MUT-NT2 re-run, seed 3, lockstep_irq_storm
+  base identity: c1189fdc15a85844      root's own identity: 3d8e81ccd20737c7
+  mutation: gen_tb_top.sv, irq_external withheld from the DUT once 3572 records have retired, the driver holding it
+    baseline sha256 first 16: 736a8d8099339024
+    mutated  sha256 first 16: 84524c5d5e90222c
+  simulation verdict: FAIL
+  the run's own error line:
+  | irq_entry] lines 00004 raised at cycle 22574 (order 3700) not taken within 17 records (now order 3718, mie 7fff0888 mstatus 00000088)
+  | drain: 17 records in 103 cycles (bound 17 records, cap 193 cycles from the effective bus maxima i 3/4 d 3/4)
+  THE MESSAGE CHANGE IS THE POINT: the retained catch read "still held and enabled at the end of the run, never
+  taken"; the same fault now reads "not taken within 17 records", the in-run wording, on the same line, the same
+  raise cycle 22574 and the same order 3700. The drain carried the run to order 3718, so the bound expired and the
+  in-run rule judged it.
+
+== 3. BLAST RADIUS: the drain lengthens every run's tail, so a spread of other rows was re-run ==
+   lockstep_zc          PASS   17 records in 110 cycles
+   ut_witness           PASS   17 records in 32 cycles
+   boot_zc              PASS   17 records in 115 cycles
+   lockstep_zcmp        PASS   17 records in 117 cycles
+   ut_isa_cov_zc        PASS   17 records in 34 cycles
+   lockstep_irq_storm   PASS   17 records in 157 cycles
+   Every drain completed on RECORDS, none on the cycle cap; the busiest row used 157 cycles of the 193 the
+   effective config allows, so the margin is doing real work rather than hiding a cap hit.
+
+== 4. THE CAP AND ITS DERIVATION ==
+   The cap is COMPUTED AT RUN TIME by gen_irq_drain_cap_cycles (gen_tb_pkg.sv, below the generated region) from the
+   effective gen_bus_cfg of both buses after their clamps, because the four gen_{i,d}bus_{gnt,rvalid}_max plusargs
+   overwrite the regime windows with only a lower clamp: a constant from the defaults would be wrong for any run
+   that widens one. Formula: max over the two buses of (gnt_max + rvalid_max), plus
+   GEN_IRQ_DRAIN_RECORD_OVERHEAD_CYCLES = 2 for the pipeline's own stages, times GEN_IRQ_ENTRY_BOUND_RECORDS = 17,
+   plus GEN_IRQ_DRAIN_MARGIN_CYCLES = 40 for the finish handshake and the last write-back. At the regime defaults
+   the runs above report i 3/4 and d 3/4, so (4+3+2)*17+40 = 193.
+
+== 5. WHAT THIS LANDING DOES NOT ESTABLISH ==
+   A line starved while the core retires NOTHING is still not judged: the drain's cap ends such a run and the
+   expectation is reported open. Judging it needs a cap-rule (fail at the cap when no record retired during the
+   drain) with its own red from a fault that stalls retirement, which this landing does not carry. The residual is
+   therefore OWED, not closed.

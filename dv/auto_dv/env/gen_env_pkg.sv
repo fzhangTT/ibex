@@ -359,11 +359,24 @@ package gen_env_pkg;
     endfunction
 
     task run_phase(uvm_phase phase);
+      int unsigned drain_rec0, drain_cyc0, drain_cap;
       phase.raise_objection(this, "gen_base_test: waiting for finish_req");
       @(posedge vif.finish_req);
       while (vif.stim_active) @(posedge vif.clk);   // Python's checks complete before we conclude
       `uvm_info("GEN_BASE_TEST", $sformatf("finish_req seen at cycle %0d, commands consumed %0d, retired %0d",
                 vif.cycle_count, vif.cmds_consumed, vif.evt_retired_count), UVM_LOW)
+      // The entry checkers judge in RECORDS, so a line raised in a run's last records has no time to be taken and an
+      // end-of-run verdict on it would be a guess. The drain gives the DUT its full allowance after the last
+      // stimulus, so the in-run bound is the only judge; the cycle cap ends a run whose core stops retiring.
+      drain_rec0 = vif.evt_retired_count;
+      drain_cyc0 = vif.cycle_count;
+      drain_cap  = gen_irq_drain_cap_cycles(env.ibus_agent.cfg.gnt_max, env.ibus_agent.cfg.rvalid_max,
+                                            env.dbus_agent.cfg.gnt_max, env.dbus_agent.cfg.rvalid_max);
+      while ((vif.evt_retired_count - drain_rec0) < GEN_IRQ_ENTRY_BOUND_RECORDS
+             && (vif.cycle_count - drain_cyc0) < drain_cap) @(posedge vif.clk);
+      `uvm_info("GEN_BASE_TEST", $sformatf("drain: %0d records in %0d cycles (bound %0d records, cap %0d cycles from the effective bus maxima i %0d/%0d d %0d/%0d)",
+                vif.evt_retired_count - drain_rec0, vif.cycle_count - drain_cyc0, GEN_IRQ_ENTRY_BOUND_RECORDS, drain_cap,
+                env.ibus_agent.cfg.gnt_max, env.ibus_agent.cfg.rvalid_max, env.dbus_agent.cfg.gnt_max, env.dbus_agent.cfg.rvalid_max), UVM_LOW)
       phase.drop_objection(this, "gen_base_test: finish_req");
     endtask
 
