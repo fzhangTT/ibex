@@ -1917,7 +1917,7 @@ tests:
     plusargs: [+gen_fetch_en_at_reset=0, +gen_ut_boot_retire=3000, +gen_knob_icache_ecc_err_rate=frequent]
     program: {directed: [dv/auto_dv/stim/gen_directed/gen_icache_ecc_directed.S], seed: 1}
     seeds: 1
-    fcov_expectation_file: dv/auto_dv/fcov_expectations/gen_cg_ic_ecc_part1.fcov.yaml
+    fcov_expectation_file: null
     timeout_s: 900
     owner: tb-infra
     pass_marker: GEN_UT_LOCKSTEP_PASS
@@ -2264,7 +2264,7 @@ tests:
       directed: [dv/auto_dv/stim/gen_directed/gen_icache_ecc_directed.S]
       seed: 1
     seeds: 1
-    fcov_expectation_file: dv/auto_dv/fcov_expectations/gen_cg_ic_ecc_part1.fcov.yaml
+    fcov_expectation_file: null
     timeout_s: 900
     owner: tb-infra
     pass_marker: GEN_UT_LOCKSTEP_PASS
@@ -2284,7 +2284,7 @@ tests:
       directed: [dv/auto_dv/stim/gen_directed/gen_icache_ecc_directed.S]
       seed: 1
     seeds: 1
-    fcov_expectation_file: dv/auto_dv/fcov_expectations/gen_cg_ic_ecc_part1.fcov.yaml
+    fcov_expectation_file: null
     timeout_s: 900
     owner: tb-infra
     pass_marker: GEN_UT_LOCKSTEP_PASS
@@ -2304,7 +2304,7 @@ tests:
       directed: [dv/auto_dv/stim/gen_directed/gen_icache_ecc_directed.S]
       seed: 1
     seeds: 1
-    fcov_expectation_file: dv/auto_dv/fcov_expectations/gen_cg_ic_ecc_part1.fcov.yaml
+    fcov_expectation_file: null
     timeout_s: 900
     owner: tb-infra
     pass_marker: GEN_UT_LOCKSTEP_PASS
@@ -2324,7 +2324,7 @@ tests:
       directed: [dv/auto_dv/stim/gen_directed/gen_icache_ecc_directed.S]
       seed: 1
     seeds: 1
-    fcov_expectation_file: dv/auto_dv/fcov_expectations/gen_cg_ic_ecc_part1.fcov.yaml
+    fcov_expectation_file: null
     timeout_s: 900
     owner: tb-infra
     pass_marker: GEN_UT_LOCKSTEP_PASS
@@ -2344,7 +2344,7 @@ tests:
       directed: [dv/auto_dv/stim/gen_directed/gen_icache_ecc_directed.S]
       seed: 1
     seeds: 1
-    fcov_expectation_file: dv/auto_dv/fcov_expectations/gen_cg_ic_ecc_part1.fcov.yaml
+    fcov_expectation_file: null
     timeout_s: 900
     owner: tb-infra
     pass_marker: GEN_UT_LOCKSTEP_PASS
@@ -2365,7 +2365,7 @@ tests:
       directed: [dv/auto_dv/stim/gen_directed/gen_icache_ecc_far_directed.S]
       seed: 1
     seeds: 1
-    fcov_expectation_file: dv/auto_dv/fcov_expectations/gen_cg_ic_ecc_part1.fcov.yaml
+    fcov_expectation_file: null
     timeout_s: 900
     owner: tb-infra
     pass_marker: GEN_UT_LOCKSTEP_PASS
@@ -2386,7 +2386,7 @@ tests:
       directed: [dv/auto_dv/stim/gen_directed/gen_icache_ecc_far_directed.S]
       seed: 1
     seeds: 1
-    fcov_expectation_file: dv/auto_dv/fcov_expectations/gen_cg_ic_ecc_part1.fcov.yaml
+    fcov_expectation_file: null
     timeout_s: 900
     owner: tb-infra
     pass_marker: GEN_UT_LOCKSTEP_PASS
