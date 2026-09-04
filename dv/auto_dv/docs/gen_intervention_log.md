@@ -1974,3 +1974,29 @@ render. One prediction carries a named check for when gen_pmp_cfg_write_cg rende
 cp_wr_mode. The false-fail figure stands unchanged and remains the whole problem: 3001 of 4169 committed declarations
 are cross bins the checker never keys. Runtime's retained report came from tb-infra's uncommitted w23 build (its
 provenance is being added to the log header under a HOLD); the parser defect is independent of that provenance.
+
+## LOG-084c - 2026-09-04 - Correction: the flow's measured path already keys cross bins (LOG-054); the defect is confined to direct invocation of the ci checker on a raw urg report
+
+Found by the DV Lead at 11:55Z while fixing a review row that sent it to the fcov plan's Section 0 rule, whose older
+citation (owner item Q-017) led to the mechanism; verified by the Orchestrator in dv/auto_dv/flow/gen_fcov.py: under
+LOG-054 the flow derives a variable-form grpinfo.txt beside the original (each "Summary for Cross <cr>" section becomes
+a variable section whose rows are the component tuple joined with "_", the manifests' cross-bin names; variable sections
+copied unchanged; DERIVED_REPORT_DIRNAME urgReport_variable_form) and calls ci/check_fcov_expectations.py with
+--report-dir on that derived report (CHECKER_MODE at :60, derive_variable_form at :235, the call at :136); it refuses a
+derived report in which two tuples derive the same name, since the checker would sum their counts (COLLISION_REFUSE).
+
+Consequences. On the flow's measured path cross bins are keyed and neither LOG-084 consequence applies: no cross bin
+reads as missing and no cross count lands on a trailing coverpoint, because cross rows arrive as variable sections of
+their own. LOG-084's defect is real for a DIRECT invocation of the ci checker on a raw urg report, which is what
+tb-infra did locally for its part-1 reds and what Runtime's and the Test Writer's measurements exercised. The figure
+"3001 of 4169 committed declarations can never be keyed" (LOG-084a) is true of the raw path and false of the flow; the
+committed manifests' cross entries are evidence-bearing on the flow path. Option (c) of LOG-084, retiring cross bins
+from manifests, would discard a mechanism that already works and is withdrawn.
+
+Interim ruling revised (Orchestrator, 12:02Z): manifests may claim cross bins; a cross-bin claim is evidence only when
+checked through the flow's derived report (or an equivalent derivation); a direct invocation of ci/check_fcov_expectations.py
+on a raw urg report is not evidence for a cross bin and is a trap for any direct caller. tb-infra's part-1 manifest
+stays at 15 declared and 14 owed as landed at f0723d6; the owed key retires in a later touch once the part-1 cross bins
+are checked through the derived path. Runtime's API note (17bb791) is rescoped in its next touch to the direct raw-report
+path. The owner decision narrows to whether ci/check_fcov_expectations.py should parse cross sections itself so a direct
+call cannot mislead; the flow does not depend on it.
