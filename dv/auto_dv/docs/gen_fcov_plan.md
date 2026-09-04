@@ -2,7 +2,7 @@
 
 Deliverable 3 (DV_prompt.txt Section 11): the definition of every functional-coverage bin (not the
 implementation; TB Infra implements covergroups in the gen_ namespace from this plan). Owner: dv-lead.
-Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in), generated 2026-09-04 11:33 UTC from dv/auto_dv/work/dv-lead/parts6/fcov_*.md. Part-file names in this document (tp_<area>.md, fcov_<area>.md, gen_part_<area>.md, trace_*_<area>.csv and the README_*_BRIEF.md briefs) are this plan set's own gitignored sources, named as provenance: the content they hold is in the corresponding area of gen_test_plan.md, gen_fcov_plan.md or gen_feature_list.md, and the bug and doc-defect number series they define are in gen_bug_log.md. No claim in this document rests on opening one. Three rtl-arch notes this plan set cites are committed references, not work files: dv/auto_dv/evidence/gen_multdiv_bound_props.md (the MD-n bound properties and covers), dv/auto_dv/evidence/gen_bug_reproducer_specs.md (the reproducer recipes behind the bug log) and dv/auto_dv/evidence/gen_interface_inventory.md (the numbered driver and protocol rules); citations name them by basename and resolve there.
+Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in), generated 2026-09-04 12:18 UTC from dv/auto_dv/work/dv-lead/parts6/fcov_*.md. Part-file names in this document (tp_<area>.md, fcov_<area>.md, gen_part_<area>.md, trace_*_<area>.csv and the README_*_BRIEF.md briefs) are this plan set's own gitignored sources, named as provenance: the content they hold is in the corresponding area of gen_test_plan.md, gen_fcov_plan.md or gen_feature_list.md, and the bug and doc-defect number series they define are in gen_bug_log.md. No claim in this document rests on opening one. Three rtl-arch notes this plan set cites are committed references, not work files: dv/auto_dv/evidence/gen_multdiv_bound_props.md (the MD-n bound properties and covers), dv/auto_dv/evidence/gen_bug_reproducer_specs.md (the reproducer recipes behind the bug log) and dv/auto_dv/evidence/gen_interface_inventory.md (the numbered driver and protocol rules); citations name them by basename and resolve there.
 
 Build configuration: `opentitan` (ibex_configs.yaml): BaseIsa=RV32IorCHERIoT (CHERIoT mode excluded
 by owner ruling), RV32E=0, RV32M=RV32MSingleCycle, RV32B=RV32BOTEarlGrey, RV32ZC=RV32ZcaZcbZcmp,
@@ -73,7 +73,7 @@ ibex_pkg; compiled with +define+RVFI; cheriot_enable_i tied IbexMuBiOff inside t
   components (gen_mul_ops_cg.cr_extremes.c_mul_all_ones_neg_rand), which is how Runtime's derived report keys them (T-215); the plan,
   the CSV and the manifests use that form. Bin names that are SystemVerilog keywords (xor, or, and, byte, default, event, medium,
   program, rand, repeat, signed, small, time, unsigned, xnor) render as escaped identifiers in SV and urg reports them plainly, so the
-  manifests keep them as written. Owner item Q-017 records that ci/check_fcov_expectations.py itself lacks cross support.
+  manifests keep them as written. Owner item Q-017 records that ci/check_fcov_expectations.py itself lacks cross support, and LOG-084c rules how a cross-bin claim earns evidence: manifests MAY claim cross bins, a claim is evidence only when checked through the flow's derived report or an equivalent derivation, and a direct invocation of ci/check_fcov_expectations.py on a raw urg report is not evidence for a cross bin and is a trap for any direct caller. The flow's path is the derived one: under LOG-054 dv/auto_dv/flow/gen_fcov.py derives a variable-form report beside the original, in which each cross section becomes a variable section whose rows are the component tuple joined with "_", calls the checker with --report-dir on that report, and refuses a derived report in which two tuples derive one name, since the checker would sum their counts. LOG-084's interim ban on claiming a cross bin is superseded.
 - Knob defaults and class windows: the static knob defaults are the TB defaults recorded in
   dv/auto_dv/tb/gen_tb_knobs.yaml (imem/dmem latency short/short, irq_regime quiet, irq_line_mix single);
   they govern only runs without a layer-3 schedule (bring-up, unit tests). Every measured run draws its
@@ -282,12 +282,6 @@ Conventions
   TP item lists `cr_x.auto` and also explicit bins of one of the cross's coverpoints, the
   expansion is restricted to those bins of that coverpoint (the item's own stimulus scope).
   "iff" gives the per-coverpoint sampling guard. How a cross bin is reached, since the mechanism is
-  easy to state wrongly: the rendered covergroup takes ONE sample argument per coverpoint and NONE per
-  cross ("with function sample(int v_cp_...)"), and `option.cross_auto_bin_max = 0` leaves a cross with
-  exactly the CSV's named bins, so a cross tuple is reached only through its component coverpoints'
-  values and is excluded when any component's value lands in that component's `ignore_bins na`. Nothing
-  passes a cross a value of its own. Diagnostically: a cross bin unhit while its component bins are hit
-  is a component-value problem, not a cross-declaration one. How a cross bin is reached, since the mechanism is
   easy to state wrongly: the rendered covergroup takes ONE sample argument per coverpoint and NONE per
   cross ("with function sample(int v_cp_...)"), and `option.cross_auto_bin_max = 0` leaves a cross with
   exactly the CSV's named bins, so a cross tuple is reached only through its component coverpoints'
@@ -4842,7 +4836,7 @@ bug-candidate behaviour carry the bug tie (B16 in CG-DMEM-007).
     rvfi_ext_nmi_int carried no set flag on any retirement inside the retirement window}. Not claimed
     where the two windows disagree: a sample closing before any retirement has been seen samples -1
     rather than yes, since an early closure, a probe-on evidence run where form (a) decides at once,
-    cannot record a quiet that no retirement window supports. In practice this is a measured-run bin..
+    cannot record a quiet that no retirement window supports. In practice this is a measured-run bin.
   - cp_lookups_blocked_next iff alerted: bins yes{1: no lookup read on any port in the ECC write
     cycle; a data-port WRITE of ECC(0) in that cycle is legal, rtl/ibex_icache.sv:280, 1000-1011}
   - cp_no_alert_case iff the corruption or read must not alert: bins unused_way_data{data of the
@@ -4897,10 +4891,12 @@ bug-candidate behaviour carry the bug tie (B16 in CG-DMEM-007).
   before stimulus can hit it and 0 per cent marks intent, while only genuinely unhittable bins are
   pruned; these become hittable when part 2 lands, so the dilution is correct and temporary). Part 1 covers 29 bins and part 2 the
   remaining 8 (cp_inval_ways 2, cp_refetch 1, cp_lookups_blocked_next 1, cp_multiway_mismatch 2,
-  cr_ram_x_inval 2). WHAT PART 1's MANIFEST MAY DECLARE IS NARROWER, per the LOG-084 interim ruling:
-  the 15 coverpoint bins now, with the 14 part-1 cross bins (cr_ram_x_bits_x_way 8, cr_data_x_beat 2,
-  cr_bits_x_rate 4) recorded as OWED until the shared expectation checker parses a cross heading, so
-  29 is the plan's part-1 bin count and not a manifest declaration. Both figures count coverpoint-bin
+  cr_ram_x_inval 2). WHAT PART 1's MANIFEST DECLARES IS NARROWER TODAY: the 15
+  coverpoint bins, with the 14 part-1 cross bins (cr_ram_x_bits_x_way 8, cr_data_x_beat 2, cr_bits_x_rate 4)
+  recorded as OWED as landed, so 29 is the plan's part-1 bin count and not a manifest declaration. Per
+  LOG-084c the owed key is not a ban but a pending check: manifests may claim cross bins, and such a claim
+  is evidence once it is checked through the flow's derived report, so the owed key retires when the part-1
+  cross bins are checked that way. Both figures count coverpoint-bin
   PAIRS, which is the unit a manifest names as covergroup.coverpoint.bin: three coverpoints of this
   group share the bin name yes, so a distinct-name count would lose two, AND that shared name is the
   false-pass vector LOG-084 names, since the checker attributes a cross bin's count to the group's
