@@ -1,0 +1,37 @@
+# gen_read_keyed.py: the independent reading landed as a tool, with its exit paths proven
+# CM204-Low-2: the exercised leg's independent reading rested on a scratch file, so the evidence was not
+# reproducible from the committed record. Same class as the earlier row about a check living outside the tree.
+# The parser here is NOT the checker's code and NOT gen_fcov's, deliberately: an independent reading of the same
+# report is the whole point, and a second copy of the checker's parser would prove nothing.
+# The self-test fabricates a report and three result files, so agreement, a count mismatch and a key absent from
+# the report are each OBSERVED rather than reasoned about. Synthetic for the same reason as the identity tool's:
+# a test pinned to a real run's counts would fail whenever the stimulus changes.
+== 1. --self-test ==
+   command: python3 dv/auto_dv/tools/gen_read_keyed.py --self-test
+   SELF-TEST ok  the parser reads three bins including a Bins-titled table ({'gen_x_cg.cp_a.hit_a': 7, 'gen_x_cg.cp_a.hit_b': 0, 'gen_x_cg.cp_b.only': 3})
+   SELF-TEST ok  agreeing gives rc 0 (want 0)
+   SELF-TEST ok  a count mismatch gives rc 1 (want 1)
+   SELF-TEST ok  a key absent from the report gives rc 1 (want 1)
+   SELF-TEST ok  a run with no derived report gives rc 1 (want 1)
+   SELF-TEST: PASS
+   rc=0 (want 0)
+
+== 2. the exit paths, each captured DIRECTLY and never through a pipe ==
+   no argument                     rc=2 (want 2)
+   unknown argument                rc=2 (want 2)
+   --self-test with another arg    rc=2 (want 2)
+   a directory with no result.yaml rc=2 (want 2)
+
+== 3. against the real nine runs of the exercising run, which is what CM204-Low-2 is about ==
+   command: gen_read_keyed.py <the nine isolated run dirs>
+     declared 7 | my reading agrees on 7, differs on 0, absent from my reading 0
+     declared 10 | my reading agrees on 10, differs on 0, absent from my reading 0
+     declared 10 | my reading agrees on 10, differs on 0, absent from my reading 0
+     declared 7 | my reading agrees on 7, differs on 0, absent from my reading 0
+     declared 10 | my reading agrees on 10, differs on 0, absent from my reading 0
+     declared 11 | my reading agrees on 11, differs on 0, absent from my reading 0
+     declared 9 | my reading agrees on 9, differs on 0, absent from my reading 0
+     declared 8 | my reading agrees on 8, differs on 0, absent from my reading 0
+     declared 6 | my reading agrees on 6, differs on 0, absent from my reading 0
+   every declared bin agrees with this file's own reading of the report
+   rc=0 (want 0)

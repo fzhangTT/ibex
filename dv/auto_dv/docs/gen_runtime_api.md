@@ -693,6 +693,13 @@ variable section whose rows carry the component tuple joined with `_`, which is 
 The self-test drives the real checker on both forms of the same report to hold that difference in place. So a
 manifest may claim cross bins on this path, and the raw-report invocation is the one to keep them out of.
 
+Reading the result rather than trusting it: `dv/auto_dv/tools/gen_read_keyed.py <run-dir> ...` parses the urg
+report the checker was pointed at with its own parser, neither the checker's nor this module's, and compares the
+checker's keyed output bin by bin, printing any count that differs, any declared key absent from the report, and
+the bins no manifest declares (which only a direct reading finds). `--self-test` proves its paths; the retained
+proof is `gen_tdd_logs/flow/gen_read_keyed_selftest.log`. Use it on the first run of any newly bound group: a
+verdict line says the check ran, and two independent readings of one report say what it found.
+
 Manifest: `dv/auto_dv/fcov_expectations/<test>.fcov.yaml` (the standing home of
 `dv/auto_dv/contract/README.md`), named in the test's `fcov_expectation_file`:
 

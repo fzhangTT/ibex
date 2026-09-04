@@ -164,6 +164,20 @@ digest moves with every RTL or TB edit and a self-test pinned to the clone's val
 commit. Section 2 repeats the four paths on the real tree and records a mistake worth keeping: its first draft piped
 each run through tail, so it read rc 0 for the mismatch and the bad call, since a pipeline reports its last stage.
 
+gen_l25_fcov_detector_control_red.log is the detector control the exercised log said it lacked: that log records
+that no entry declared a bin it missed, so the FAILING direction of the fcov-expectation leg was unexercised, and a
+green run of a checking mechanism is not evidence the mechanism can fail. The fixture lives in a scratch source root,
+never the committed manifest, and the bin it declares is unreachable by construction from the entry's own plusargs
+rather than merely unhit. Its discriminating pair is the point: the same entry, build and seed passes at 6 of 6 with
+the committed manifest and fails with the fixture, and the simulation passes in both, so the failure is the checking
+mechanism alone. The build reuse is justified in the header by a diff showing zero build inputs moved.
+
+gen_read_keyed_selftest.log retains the exit paths of gen_read_keyed.py, the independent reading landed as a tool for
+CM204-Low-2. Its parser is deliberately neither the checker's nor gen_fcov's, because a second copy of the checker's
+parser would prove nothing. Three sections: the self-test on a fabricated report where agreement, a count mismatch
+and an absent key are each observed; the four wrong-call paths with exit codes captured directly rather than through
+a pipe; and the tool run against all nine runs of the exercising run, agreeing on all 78 declared bins.
+
 | evidence path | source | bytes | md5 |
 |---|---|---|---|
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_gate_rule_red.log | dv/auto_dv/work/runtime/gate_rule_red.log | 926 | 78b72aae6509d2776a43c9314808b01b |
@@ -190,3 +204,5 @@ each run through tail, so it read rc 0 for the mismatch and the bad call, since 
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_l25_fcov_exercised.log | (runtime scratchpad) rt33/gen_l25_fcov_exercised.log | 8866 | d7ebcb05197e73e149655108a5c96ac3 |
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_l25_fcov_exercised_corrigendum.log | (runtime scratchpad) rt34a/gen_l25_fcov_exercised_corrigendum.log | 10240 | d9fadbf3e1e6dd7a6807fc704c4906b0 |
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_cr26_build_identity_selftest.log | (runtime scratchpad) rt34a/gen_cr26_build_identity_selftest.log | 2160 | 3e7d97e63d49aa7a94ccfeff362e8f08 |
+| dv/auto_dv/evidence/gen_tdd_logs/flow/gen_l25_fcov_detector_control_red.log | (runtime scratchpad) rt34/gen_l25_fcov_detector_control_red.log | 2552 | 662543da2c628e465cef8d88b694886c |
+| dv/auto_dv/evidence/gen_tdd_logs/flow/gen_read_keyed_selftest.log | (runtime scratchpad) rt34/gen_read_keyed_selftest.log | 2579 | 487794e0876c31e11941a50ffce5b146 |

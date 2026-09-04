@@ -1,0 +1,32 @@
+# DETECTOR CONTROL for gen_l25_fcov_exercised.log: a declared-but-unhit bin does fail the run
+# That log states what it does not establish: no entry in the exercising run declared a bin it missed, so the
+# FAILING direction of the fcov-expectation leg was unexercised. A green run of a checking mechanism is not
+# evidence that the mechanism can fail. This is that evidence.
+# The committed manifest is NOT touched. The fixture lives in a scratch source root: an archive of HEAD with one
+# manifest's bins replaced, so the stem and the manifest's own test field still equal the entry name and the loader
+# accepts the entry unchanged.
+# Build reuse, justified rather than assumed: the run uses the build compiled at 813994b for the exercising run,
+# and `git diff --name-only 813994b..HEAD` over dv/auto_dv/tb, env, isa, gen_tb and rtl returns ZERO files, so no
+# build input moved between that build and this head. Build identity b48479a3bc6f1d9f.
+# Entry: gen_ut_lockstep_icache_ecc_tag_disabled, seed 1, coverage enabled, unmeasured by its own flag.
+== 1. why the declared bin cannot be hit, from the entry's own plusargs ==
+   plusargs: ['+gen_fetch_en_at_reset=0', '+gen_ut_boot_retire=3000', '+gen_knob_icache_ecc_err_rate=frequent']
+   That is the TAG-RAM injection knob. No data-RAM knob is set, so no data-RAM injection occurs and
+   gen_ic_ecc_cg.cp_ram.data cannot be sampled by this entry. The fixture declares exactly that bin.
+   Structural, not marginal: it is not a bin this run happened to miss, it is one the run cannot reach.
+
+== 2. the failing run ==
+   command: gen_run.py --build-dir <the exercising run's build> --test gen_ut_lockstep_icache_ecc_tag_disabled
+            --seed 1 --run-dir <scratch> --cov-dir <scratch>/cov/x.vdb --fcov-check   (run from the scratch root)
+   verdict     : FAIL
+   reason      : fcov expectation unmet: 1 declared bin(s) not hit ['gen_ic_ecc_cg.cp_ram.data']
+   fcov status : UNHIT | declared 1 | hit 0
+   unmet_bins  : ['gen_ic_ecc_cg.cp_ram.data']
+   the bin      : {'gen_ic_ecc_cg.cp_ram.data': {'state': 'UNHIT', 'count': '0'}}
+   process exit : 2
+
+== 3. the discriminating pair: the same entry, build and seed with its COMMITTED manifest ==
+   verdict     : PASS | fcov status PASS | declared 6 hit 6
+   So the ONLY difference between PASS and FAIL is the declared bin set. The simulation passed in both:
+   this run saw its pass marker and reported no UVM error, and the failure comes from the expectation
+   check alone, which is what makes it a detector control rather than a broken run.
