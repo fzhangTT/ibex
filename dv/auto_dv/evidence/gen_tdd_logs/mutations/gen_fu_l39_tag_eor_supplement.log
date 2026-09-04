@@ -1,0 +1,70 @@
+# SUPPLEMENT to gen_fu_l37_tag_eor_corrigendum.log (committed 726682a, md5 467980032e371c2e332a3e1c1e5cc242).
+# That corrigendum is RETAINED and stays closed. This carries the two CR-35 rows that arrived after it was
+# committed: L-2, the mutation's applied diff, and M-1, the excused-miss red.
+# WHY A SUPPLEMENT: landing 39 committed at 20:13:33Z and I edited the corrigendum at 20:19Z on rows that arrived
+# after the hand-off, before the confirmation reached me. Its committed bytes were restored from the commit and
+# verified, and the added text lives here. Same lesson as the landing-36 supplement records: after a hand-off a
+# listed file changes only after a withdrawal is acknowledged.
+#
+# ================ CR-35-L-2: the mutation's applied diff is retained ================
+# The landing-37 log cites gen_tb_top.sv 736a8d8099339024 before MUT-ALERTSUP and 85b50e1343c65af1 after, and the
+# diff was not in the tree, so neither figure could be reproduced. It is retained as
+# gen_fu_l39_MUTALERTSUP_mutant.diff with its own manifest row, in the gen_fu_l13 convention. Both digests below are
+# measured from the files, and the diff is shown to apply to a detached archive of the commit.
+#
+# ================ CR-35-M-1: the excused-miss red is NOT CONSTRUCTIBLE, and now by MEASUREMENT ================
+# The row asks for a genuine missing alert that landing 37's predicate would excuse and landing 39's fails: an
+# injection with no retirement at or after it whose window nonetheless closes before the last observed cycle. That
+# needs the TAIL, last observed cycle minus last retirement, to EXCEED GEN_ICACHE_ECC_WINDOW, which is 2.
+# THE TAIL IS EXACTLY 2, measured rather than inferred. A scratch probe printing misc.cycle at the misc monitor's
+# report phase, one $display and nothing else, reports the last observed cycle as 21480, against a last retirement
+# of 21478 read from the same run's export. The earlier corrigendum could only bound it at "at most 2" from the
+# allowance's own verdict; this measures it.
+# SO THE WINDOW IS EMPTY BY EXACTLY ONE CYCLE: the case needs an injection cycle c with c > 21478 and c + 2 <= 21480,
+# which is c <= 21478. Contradiction. One more observed cycle in the tail and the case would exist.
+# AND IT IS NOT A PROPERTY OF ONE SEED: six seeds show the interrupt checker's checked-cycle count sitting exactly
+# one below the last retirement in every run, so the observing window closes at the last retirement in all of them.
+# WHY THE TAIL WAS NOT LENGTHENED TO MANUFACTURE THE CASE: extending the settle until the window fits would be
+# building the fixture to fit the rule, the failure mode this whole sequence has been about. The negative is reported
+# with its figures for the Critic to judge.
+
+== CR-35-L-2's measurements ==
+$ diff -u <(git show 726682a:dv/auto_dv/tb/gen_tb_top.sv) <the mutated root>/dv/auto_dv/tb/gen_tb_top.sv
+   --- a/dv/auto_dv/tb/gen_tb_top.sv
+   +++ b/dv/auto_dv/tb/gen_tb_top.sv
+   @@ -176,7 +176,9 @@
+      gen_dbg_if u_dbg_if (.clk(clk), .rst_n(rst_n));
+      assign debug_req = u_dbg_if.req;
+      gen_misc_if u_misc_if (.clk(clk), .rst_n(rst_n));
+   -  assign u_misc_if.alert_minor          = alert_minor;
+   +  int unsigned mutsup_at = 32'hffff_ffff;
+   +  initial void'($value$plusargs("mutsup_at=%d", mutsup_at));
+   +  assign u_misc_if.alert_minor          = (u_bridge_if.evt_retired_count >= mutsup_at) ? 1'b0 : alert_minor;
+      assign u_misc_if.alert_major_internal = alert_major_internal;
+      assign u_misc_if.alert_major_bus      = alert_major_bus;
+      assign u_misc_if.double_fault_seen    = double_fault_seen;
+$ sha256 of each file, first 16, and git apply --check against a detached archive of the commit
+   baseline sha256 first16 at 726682a: 736a8d8099339024  (the log cites 736a8d8099339024)
+   mutated  sha256 first16           : 85b50e1343c65af1  (the log cites 85b50e1343c65af1)
+   git apply --check on that archive, rc: 0 (clean)
+
+== CR-35-M-1's measurement: the last observed cycle, from the probe ==
+$ one $display of misc.cycle at the misc monitor report phase, then the run
+   MCPROBE last_observed_cycle=21480
+   last retirement cycle: 21478
+   ecc injections judged=906 qualified=894 missing=0 unobservable=1
+$ python3 -c "the two conditions on an injection cycle c"
+   last observed cycle 21480, last retirement 21478, window 2, so the TAIL is 2
+   the case needs c > 21478 and c + 2 <= 21480, i.e. c <= 21478
+   21478 is not greater than 21478, so no c exists: EMPTY, and by exactly one cycle
+
+== the six-seed relation, from the earlier sweep ==
+     seed  508609593: last_retire=21478  cycles_checked=21477  tail=-1  unobservable=1  errors_at=[]
+     seed          1: last_retire=21744  cycles_checked=21743  tail=-1  unobservable=0  errors_at=[]
+     seed          2: last_retire=21644  cycles_checked=21643  tail=-1  unobservable=0  errors_at=[]
+     seed          3: last_retire=21551  cycles_checked=21550  tail=-1  unobservable=0  errors_at=[]
+     seed          4: last_retire=21830  cycles_checked=21829  tail=-1  unobservable=0  errors_at=[]
+     seed          5: last_retire=21507  cycles_checked=21506  tail=-1  unobservable=0  errors_at=[]
+   The tail= column of that sweep script naively subtracts a COUNT from a cycle index and is MEANINGLESS; the
+   lines are kept because they are the script's own output. The tail figure that counts is the probe's above.
+# END. Every figure is read by the command printed above it.

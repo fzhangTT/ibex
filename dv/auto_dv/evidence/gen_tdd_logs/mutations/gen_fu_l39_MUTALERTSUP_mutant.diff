@@ -1,0 +1,13 @@
+--- a/dv/auto_dv/tb/gen_tb_top.sv
++++ b/dv/auto_dv/tb/gen_tb_top.sv
+@@ -176,7 +176,9 @@
+   gen_dbg_if u_dbg_if (.clk(clk), .rst_n(rst_n));
+   assign debug_req = u_dbg_if.req;
+   gen_misc_if u_misc_if (.clk(clk), .rst_n(rst_n));
+-  assign u_misc_if.alert_minor          = alert_minor;
++  int unsigned mutsup_at = 32'hffff_ffff;
++  initial void'($value$plusargs("mutsup_at=%d", mutsup_at));
++  assign u_misc_if.alert_minor          = (u_bridge_if.evt_retired_count >= mutsup_at) ? 1'b0 : alert_minor;
+   assign u_misc_if.alert_major_internal = alert_major_internal;
+   assign u_misc_if.alert_major_bus      = alert_major_bus;
+   assign u_misc_if.double_fault_seen    = double_fault_seen;

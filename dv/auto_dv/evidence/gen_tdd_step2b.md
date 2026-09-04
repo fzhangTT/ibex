@@ -1164,5 +1164,16 @@ two-sided red cannot catch that. Both sides passed because the proxy happened to
 sample. A red proves a rule fires and stays silent where it should; only tracing the gating terms proves it is keyed
 on the right quantity, and I stated a DUT behaviour without tracing them.
 
-Retained: gen_tdd_logs/mutations/gen_fu_l39_tag_eor_observability.log, with a manifest row, and
-gen_fu_l37_tag_eor_corrigendum.log, which also answers CM213 Low-1 and Low-2 and leaves both corrected logs closed.
+CR-35-M-1 ASKED FOR A RED THE OLD PREDICATE WOULD HAVE EXCUSED, and it is not constructible on this entry, by
+measurement. The case needs the tail, last observed cycle minus last retirement, to exceed the alert window of
+two cycles. A probe printing misc.cycle at the report phase gives the last observed cycle as 21480 against a
+last retirement of 21478, so the tail is exactly two and the case misses by exactly one cycle. Six seeds show the same
+relation: the checked-cycle count is the last retirement minus one in every run, so the observing window closes
+at the last retirement. The tail was NOT lengthened to manufacture the case, because building the fixture to fit
+the rule is the failure mode this sequence has been about; the negative is reported with its figures instead.
+
+Retained: gen_tdd_logs/mutations/gen_fu_l39_tag_eor_observability.log; gen_fu_l37_tag_eor_corrigendum.log, whose
+five parts also answer CM213 Low-1 and Low-2 and CR-35 L-2 and M-1 while leaving both corrected logs closed; and
+gen_fu_l39_MUTALERTSUP_mutant.diff, the applied fault the red cites, both landing in 39b with
+gen_fu_l39_tag_eor_supplement.log, which carries the CR-35 rows that arrived after the corrigendum was
+committed and the probe's measured tail. Each with a manifest row.
