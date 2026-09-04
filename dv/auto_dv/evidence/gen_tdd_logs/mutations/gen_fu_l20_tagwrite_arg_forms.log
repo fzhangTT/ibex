@@ -1,20 +1,59 @@
-# gen_trace_tagwrite_history.py argument handling, one row per call form, produced by running each form.
-# The tool accepts exactly the two forms its usage line describes; every other form prints the usage line and
-# exits 2. A third argument was previously accepted and then ignored, which is worse than refusing it: the
-# caller believes the scratch root they passed is being read.
+# gen_trace_tagwrite_history.py argument handling, one block per call form, with EVERY line the form prints.
+# Each block's lines are read from the file that run's stdout and stderr were redirected into; none is retyped.
+# The runs are in a detached archive of b88b270 (git archive HEAD | tar -x), with the scratch root the kept
+# TRACE17 trace session, so the two accepted forms write inside the archive and not in the shared tree.
 #
-# form                                                            exit  first line of output
-(none)                                                           2     usage: gen_trace_tagwrite_history.py <landing root> (<scratch root> | 
-<landing root>                                                   2     usage: gen_trace_tagwrite_history.py <landing root> (<scratch root> | 
-<landing root> --from-artifact                                   0     indices [26, 27], 322 of 1564 tag-write lines kept
-<landing root> <scratch root>                                    0     indices [26, 27], 322 of 1564 tag-write lines kept
-<landing root> <scratch root> --from-artifact                    2     usage: gen_trace_tagwrite_history.py <landing root> (<scratch root> | 
-<landing root> --from-artifact <scratch root>                    2     usage: gen_trace_tagwrite_history.py <landing root> (<scratch root> | 
+# The tool accepts exactly the two forms its usage line describes. Every other form exits 2. A third argument
+# was previously accepted and then ignored, which is worse than refusing it: the caller believes the scratch
+# root they passed is being read. Two refusal shapes: the no-argument form prints the usage line alone, while
+# a form with the wrong argument COUNT prints the refusal message first and the usage line second, because
+# _usage() takes the message as an optional argument and prints it before the usage line.
 #
-# Regeneration is byte-identical across both accepted forms: the retained artifact's md5 is a7702922e3b65efc56b340e6ee2b1348
-# before this table's runs and a7702922e3b65efc56b340e6ee2b1348 after, so neither accepted form alters what it reproduces.
+# CORRECTED HERE (Critic tb_l20 row CR-20-L-1, and wider than that row states): the earlier version of this
+# file carried one column headed "first line of output" whose values were each form's LAST line. Under that
+# header five of the six rows named the wrong line: the three wrong-count forms print the message first, and
+# the two accepted forms print the retained-file line first and the indices line second. Only the no-argument
+# form, whose output is one line, was right either way. The exit codes and the accept-or-refuse split were
+# right in that version, and are unchanged here. Values were also truncated mid-word at a fixed width; the
+# blocks below are untruncated, which is why this file is blocks rather than a table.
+
+form: (none)
+  exit 2
+  | usage: gen_trace_tagwrite_history.py <landing root> (<scratch root> | --from-artifact)
+
+form: <landing root>
+  exit 2
+  | exactly one of a scratch root or --from-artifact follows the landing root
+  | usage: gen_trace_tagwrite_history.py <landing root> (<scratch root> | --from-artifact)
+
+form: <landing root> --from-artifact
+  exit 0
+  | retained dv/auto_dv/evidence/gen_tdd_logs/mutations/gen_fu_l16_trace17_tagwrite_history.log (24188 bytes, md5 a7702922e3b65efc56b340e6ee2b1348); manifest row replaced
+  | indices [26, 27], 322 of 1564 tag-write lines kept
+
+form: <landing root> <scratch root>
+  exit 0
+  | retained dv/auto_dv/evidence/gen_tdd_logs/mutations/gen_fu_l16_trace17_tagwrite_history.log (24188 bytes, md5 a7702922e3b65efc56b340e6ee2b1348); manifest row replaced
+  | indices [26, 27], 322 of 1564 tag-write lines kept
+
+form: <landing root> <scratch root> --from-artifact
+  exit 2
+  | exactly one of a scratch root or --from-artifact follows the landing root
+  | usage: gen_trace_tagwrite_history.py <landing root> (<scratch root> | --from-artifact)
+
+form: <landing root> --from-artifact <scratch root>
+  exit 2
+  | exactly one of a scratch root or --from-artifact follows the landing root
+  | usage: gen_trace_tagwrite_history.py <landing root> (<scratch root> | --from-artifact)
+
+# Regeneration is byte-identical across both accepted forms: the retained artifact
+# gen_fu_l16_trace17_tagwrite_history.log has md5 a7702922e3b65efc56b340e6ee2b1348 in the archive before the two runs,
+# after the --from-artifact run and after the scratch-root run, so neither accepted form alters what it
+# reproduces. Both runs report the same size and md5 in their own first line above.
 #
 # The self-check refuses an artifact carrying a tag-write line outside the indices the duplicate-copies
-# artifact names. Reproduced by appending one index-30 line to a copy and re-running the mode:
-exit 1: REFUSED: the retained artifact holds 1 tag-write line outside the indices [26, 27] the duplicate-copies artifa
-# The copy is restored afterwards; the artifact's md5 is a7702922e3b65efc56b340e6ee2b1348 again.
+# artifact names. Reproduced by appending to the archive's copy one ICTRACE tagwrite line whose index= field
+# was rewritten to 30, then re-running the --from-artifact mode. Its whole output, one line, exit 1:
+  | REFUSED: the retained artifact holds 1 tag-write line outside the indices [26, 27] the duplicate-copies artifact names
+# The copy was then restored from a pristine control taken before the append, and its md5 is a7702922e3b65efc56b340e6ee2b1348
+# again. The refusal path prints no usage line: it is the die() path, which exits 1, not 2.
