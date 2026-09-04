@@ -121,7 +121,7 @@ def regress_rc_echo(manifest: dict):
         return manifest["rc"]
     builds = manifest.get("builds")
     if isinstance(builds, dict) and builds:
-        return "n/a (per-build rc: " + ", ".join(f"{k} {v.get('rc')}" for k, v in builds.items()) + ")"
+        return "n/a (per-build rc: " + ", ".join(f"{k} {v.get('rc') if isinstance(v, dict) else '?'}" for k, v in builds.items()) + ")"
     return "n/a (no build record)"
 
 
@@ -196,7 +196,8 @@ def self_test() -> int:
     reg_bare = {k: v for k, v in reg.items() if k != "scope"}
     got_cov = (regress_coverage(reg_cov), regress_coverage(reg_nocov), regress_coverage(reg_noscope), regress_coverage(reg_bare))
     cond = got_cov == (True, False, True, None) and "regress_rc: n/a (no build record)" in rtext and "status: done" in rtext \
-        and regress_rc_echo(dict(reg, builds={"gen_tb": {"rc": 0}})) == "n/a (per-build rc: gen_tb 0)" and regress_rc_echo(dict(reg, rc=3)) == 3
+        and regress_rc_echo(dict(reg, builds={"gen_tb": {"rc": 0}})) == "n/a (per-build rc: gen_tb 0)" and regress_rc_echo(dict(reg, rc=3)) == 3 \
+        and regress_rc_echo(dict(reg, builds={"gen_tb": "hand-made"})) == "n/a (per-build rc: gen_tb ?)" and regress_rc_echo(dict(reg, builds=["not", "a", "dict"])) == "n/a (no build record)"
     ok &= cond; print("SELF-TEST", "ok " if cond else "BAD", f"regression coverage echo from scope.coverage, else cov_metrics, else None (CM142-L-1): {got_cov}; the rc label echoes the regression's rc, else the per-build rcs, never the status (CM142-I-1, CM144-I-1)")
     cond = bool(LABEL_RE.fullmatch("wave0122")) and not LABEL_RE.fullmatch("wave-0122") and not LABEL_RE.fullmatch("") and not LABEL_RE.fullmatch("wave0122\n")
     ok &= cond; print("SELF-TEST", "ok " if cond else "BAD", "a --label with a hyphen or a trailing newline is rejected (CM142-I-2, CM144-I-2)")

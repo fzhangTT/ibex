@@ -205,6 +205,10 @@ gen_run.py --build-dir DIR --test NAME --seed N --run-dir DIR [--cov-dir VDB | -
   An operator `--plusarg` replaces a same-name testlist plusarg (VCS honours the first occurrence).
   The B8 probe knob `+gen_chk_sva_b8` on in the effective plusargs (entry plus operator) of a measured run, with or without
   coverage, is refused the same way (NOT_RUN naming `B8_PROBE_RULE`, LOG-067): the operator path is guarded like the entry.
+  So is a measured run that violates a `MEASURED_KNOB_CONDITIONS` row (LOG-077, plan-owner ruling Q-018): today's one row says
+  icache ECC injection (`+gen_knob_icache_ecc_err_rate` rare or frequent) counts for the plan only with gen_chk_alerts' alert_minor
+  row on (`+gen_chk_alert_minor`; the knob table's default counts as on, an explicit 0 refuses); the trigger and the required knob
+  are read from the effective plusargs, else from the rendered knob table's defaults (`gen_flow_util.measured_knob_condition_refusal`).
 - `--waves`: needs a `--waves` build; renders `gen_dump.tcl` into the run dir (FSDB with
   `$VERDI_HOME`, else VPD) and adds `-ucli -do dump.tcl`. Templates are rendered by
   `gen_flow_util.render_fields` (token replacement, Tcl braces untouched); `python3 gen_flow_util.py
@@ -502,7 +506,9 @@ optional `pass_marker`, `feature_groups`, `cocotb_module`, `expected_fail`, `com
 `measured`, `program` (Section 7e).
 `gen_flow_util.load_testlist` rejects unknown keys, unknown builds, non-gen_ names, bad tiers and
 owners, a tier-check test that is not `measured: false`, a measured test whose plusargs turn on the B8 probe knob
-`+gen_chk_sva_b8` (LOG-067, knob name per LOG-076: the knob is for unmeasured B8 evidence runs only), and any plusarg whose name is neither a
+`+gen_chk_sva_b8` (LOG-067, knob name per LOG-076: the knob is for unmeasured B8 evidence runs only), a measured test that violates a
+`MEASURED_KNOB_CONDITIONS` row (LOG-077: icache ECC injection at rare or frequent with `+gen_chk_alert_minor` off, the table default
+counting as on), and any plusarg whose name is neither a
 `PLUSARG_*` constant of `dv/auto_dv/tb/gen_tb_pkg.sv` nor a simulator/UVM plusarg (Critic P-06).
 `gen_build.py`, `gen_run.py` and `gen_regress.py` each call `gen_flow_util.require_sv_constants()` first thing in `main()` (the SV/Python constants check); `gen_serve_requests.py` and `gen_dashboard.py` do not compile or run anything and rely on those three. The Test Writer adds test entries; TB Infra adds build entries; both through the runtime
 owner (one owner per file).

@@ -164,12 +164,16 @@ BUILD_CONFIG = "opentitan"
 PLUSARG_BUILD_CONFIG = "gen_build_config"
 PLUSARG_SMOKE_CYCLES = "gen_smoke_cycles"
 PLUSARG_CHK_SVA_B8 = "gen_chk_sva_b8"   # the B8 probe assertion knob (LOG-067, name per LOG-076): B8 evidence runs only
+PLUSARG_KNOB_ICACHE_ECC_ERR_RATE = "gen_knob_icache_ecc_err_rate"   # icache tag-RAM ECC injection regime (none / rare / frequent)
+PLUSARG_CHK_ALERT_MINOR = "gen_chk_alert_minor"                      # gen_chk_alerts' alert_minor row enable
 BANNER_TAG = "GEN_CONFIG_BANNER"
 # name in gen_tb_pkg.sv -> value here
 SV_SHARED_CONSTANTS = {
     "PLUSARG_BUILD_CONFIG": PLUSARG_BUILD_CONFIG,
     "PLUSARG_SMOKE_CYCLES": PLUSARG_SMOKE_CYCLES,
     "PLUSARG_CHK_SVA_B8": PLUSARG_CHK_SVA_B8,
+    "PLUSARG_KNOB_ICACHE_ECC_ERR_RATE": PLUSARG_KNOB_ICACHE_ECC_ERR_RATE,
+    "PLUSARG_CHK_ALERT_MINOR": PLUSARG_CHK_ALERT_MINOR,
     "GEN_BANNER_TAG": BANNER_TAG,
 }
 
@@ -440,6 +444,16 @@ B8_PROBE_RULE = (f"LOG-067 (name per LOG-076): the B8 probe assertion knob {B8_P
                  "unmeasured B8 evidence runs; a measured entry that sets it is refused at load, a measured run whose effective plusargs "
                  "(entry plus operator) turn it on is refused before it starts, and a canary build whose knob table or probe source "
                  "defaults it on (or records no default) refuses measured dispatch")
+# LOG-077 (plan-owner ruling Q-018): a measured run whose effective plusargs, or the knob table's default, set a trigger knob to
+# one of the listed values counts for the plan only with the required knob on (a plusarg, or the table default); the loader
+# refuses such an entry and gen_run refuses such a run before the job, operator plusargs included. One row today; a later
+# condition of the same shape is a row, not a rule.
+MEASURED_KNOB_CONDITIONS = (
+    {"trigger": PLUSARG_KNOB_ICACHE_ECC_ERR_RATE, "values": ("rare", "frequent"), "requires": PLUSARG_CHK_ALERT_MINOR,
+     "rule": (f"LOG-077 (Q-018): icache ECC injection (+{PLUSARG_KNOB_ICACHE_ECC_ERR_RATE} rare or frequent) is measured stimulus "
+              f"only with gen_chk_alerts' alert_minor row on (+{PLUSARG_CHK_ALERT_MINOR}; the knob table default counts as on); "
+              "a measured run with the rate on and the row off is refused: turn the row on or run it unmeasured")},
+)
 ROUND_EXIT_REFUSED = 2
 # Collected failure mechanisms scanned in sim.log (name, regex). Order = report priority.
 FAIL_PATTERNS = (

@@ -1,0 +1,24 @@
+# TDD red for the LOG-077 enforcement: constants and helpers in place, measured_knob_condition_refusal a stub returning None, no loader or gen_run rule; the refuse cases print BAD, the positive cases pass
+Fri Sep  4 02:59:07 UTC 2026
+## gen_flow_const.py --check
+CONST-CHECK: PASS
+## gen_flow_util.py --self-test
+SELF-TEST BAD load_testlist refuses a measured entry with icache ECC injection on and the alert_minor row off (LOG-077) (message names 'LOG-077')
+SELF-TEST ok  load_testlist: a measured entry with the ECC rate rare and the alert_minor row at its default loads
+SELF-TEST ok  load_testlist: an unmeasured entry with the ECC rate frequent and the row off loads (evidence run)
+SELF-TEST BAD measured_knob_condition_refusal (LOG-077) rate rare with the alert_minor row off refuses: None
+SELF-TEST ok  measured_knob_condition_refusal (LOG-077) rate frequent with the row at its table default (1) runs: None
+SELF-TEST ok  measured_knob_condition_refusal (LOG-077) rate rare with the row explicitly on runs: None
+SELF-TEST ok  measured_knob_condition_refusal (LOG-077) rate none with the row off runs (not triggered): None
+SELF-TEST ok  measured_knob_condition_refusal (LOG-077) no rate plusarg (table default none) with the row off runs: None
+SELF-TEST BAD measured_knob_condition_refusal (LOG-077) a table default of 0 for the row (fabricated) refuses an entry that leaves it unmentioned: None
+SELF-TEST BAD measured_knob_condition_refusal (LOG-077) a table default of frequent (fabricated) triggers the condition: None
+SELF-TEST ok  knob_default_by_plusarg from the rendered table: rate none, row 1, unknown None
+SELF-TEST: FAIL
+rc=2
+## gen_run.py --self-test
+SELF-TEST BAD measured_refusal LOG-077: the operator turning the alert_minor row off on a measured ECC-injection run refuses: None
+SELF-TEST ok  measured_refusal LOG-077: an operator rate frequent with the row at its table default runs: None
+SELF-TEST ok  measured_refusal LOG-077: the same unmeasured, row off, runs (evidence run): None
+SELF-TEST: FAIL
+rc=2

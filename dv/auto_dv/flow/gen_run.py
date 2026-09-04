@@ -191,10 +191,10 @@ def effective_plusargs(test: dict[str, Any], extra_plusargs: list[str]) -> list[
 
 
 def measured_refusal(test: dict[str, Any], extra_plusargs: list[str], testlist: dict[str, Any], measured: bool, coverage: bool) -> str | None:
-    """The reason a run must not start, or None: a debug-only knob in a measured coverage run (tb-arch P6), or the B8
-    probe knob on in any measured run (LOG-067), both judged on the effective plusargs (operator values included, so the
-    operator path is guarded like the entry; plusarg_enabled counts the bare form and =00 as on, stricter than the
-    probe's =%d parse)."""
+    """The reason a run must not start, or None: a debug-only knob in a measured coverage run (tb-arch P6), the B8
+    probe knob on in any measured run (LOG-067), or a MEASURED_KNOB_CONDITIONS row violated in a measured run (LOG-077),
+    all judged on the effective plusargs (operator values included, so the operator path is guarded like the entry;
+    plusarg_enabled counts the bare form and =00 as on, stricter than the probe's =%d parse)."""
     eff = effective_plusargs(test, extra_plusargs)
     debug_only = [n for n in (testlist.get("debug_only_plusargs") or []) if U.plusarg_enabled(eff, n)]
     if measured and coverage and debug_only:
@@ -202,6 +202,10 @@ def measured_refusal(test: dict[str, Any], extra_plusargs: list[str], testlist: 
                 "run it unmeasured (measured: false or --measured no)")
     if measured and U.plusarg_enabled(eff, C.PLUSARG_CHK_SVA_B8):
         return f"+{C.PLUSARG_CHK_SVA_B8} on in a measured run; {C.B8_PROBE_RULE}; run it unmeasured (--measured no)"
+    if measured:
+        why = U.measured_knob_condition_refusal(eff)
+        if why:
+            return f"measured run with {why}; run it unmeasured (--measured no)"
     return None
 
 
@@ -246,7 +250,10 @@ def self_test() -> int:
             ("LOG-067: the bare +gen_chk_sva_b8 counts as on", [f"+{C.PLUSARG_CHK_SVA_B8}"], [], True, True, "LOG-067"),
             ("LOG-067: the entry's B8 plusarg on an unmeasured run runs (B8 evidence)", [], [b8], False, True, None),
             ("LOG-067: an operator =0 replaces the entry's =1, the measured run runs", [f"+{C.PLUSARG_CHK_SVA_B8}=0"], [b8], True, True, None),
-            ("clean measured coverage run runs", [], [], True, True, None)):
+            ("clean measured coverage run runs", [], [], True, True, None),
+            ("LOG-077: the operator turning the alert_minor row off on a measured ECC-injection run refuses", [f"+{C.PLUSARG_CHK_ALERT_MINOR}=0"], [f"+{C.PLUSARG_KNOB_ICACHE_ECC_ERR_RATE}=frequent"], True, True, "LOG-077"),
+            ("LOG-077: an operator rate frequent with the row at its table default runs", [f"+{C.PLUSARG_KNOB_ICACHE_ECC_ERR_RATE}=frequent"], [], True, True, None),
+            ("LOG-077: the same unmeasured, row off, runs (evidence run)", [f"+{C.PLUSARG_KNOB_ICACHE_ECC_ERR_RATE}=frequent", f"+{C.PLUSARG_CHK_ALERT_MINOR}=0"], [], False, True, None)):
         got = measured_refusal(dict(entry, plusargs=entry["plusargs"] + entry_extra), extra, tl, measured, coverage)
         cond = (got is None) if want is None else (got is not None and want in got)
         ok &= cond

@@ -427,7 +427,10 @@ def self_test() -> int:
                 ("debug_only_plusargs missing a knob marked debug_only", lambda d: d.__setitem__("debug_only_plusargs", d["debug_only_plusargs"][:-1])),
                 ("a measured entry turning on the B8 probe knob (LOG-067)",
                  lambda d: d["tests"][0].update(measured=True, tier="smoke", plusargs=d["tests"][0]["plusargs"] + [f"+{C.PLUSARG_CHK_SVA_B8}=1"]),
-                 "LOG-067")):
+                 "LOG-067"),
+                ("a measured entry with icache ECC injection on and the alert_minor row off (LOG-077)",
+                 lambda d: d["tests"][0].update(measured=True, tier="smoke", plusargs=d["tests"][0]["plusargs"] + [f"+{C.PLUSARG_KNOB_ICACHE_ECC_ERR_RATE}=rare", f"+{C.PLUSARG_CHK_ALERT_MINOR}=0"]),
+                 "LOG-077")):
             t2 = load_yaml(C.TESTLIST_YAML)
             mutate(t2)
             f = Path(td) / "testlist_bad.yaml"
@@ -453,6 +456,22 @@ def self_test() -> int:
             cond = False
         ok &= cond
         print("SELF-TEST", "ok " if cond else "BAD", "load_testlist accepts an unmeasured entry that turns the B8 probe knob on (B8 evidence runs stay possible)")
+        # LOG-077, the positive side: the row at its table default, or the run unmeasured, loads.
+        for label, upd in (("a measured entry with the ECC rate rare and the alert_minor row at its default loads",
+                            dict(measured=True, tier="smoke", plusargs=t3["tests"][0]["plusargs"][:1] + [f"+{C.PLUSARG_KNOB_ICACHE_ECC_ERR_RATE}=rare"])),
+                           ("an unmeasured entry with the ECC rate frequent and the row off loads (evidence run)",
+                            dict(measured=False, tier=C.CHECK_TIER, plusargs=t3["tests"][0]["plusargs"][:1] + [f"+{C.PLUSARG_KNOB_ICACHE_ECC_ERR_RATE}=frequent", f"+{C.PLUSARG_CHK_ALERT_MINOR}=0"]))):
+            t4 = load_yaml(C.TESTLIST_YAML)
+            t4["tests"][0].update(upd)
+            f4 = Path(td) / "testlist_log077_ok.yaml"
+            f4.write_text(_y.safe_dump(t4, sort_keys=False), encoding="utf-8")
+            try:
+                load_testlist(f4)
+                cond = True
+            except SystemExit:
+                cond = False
+            ok &= cond
+            print("SELF-TEST", "ok " if cond else "BAD", f"load_testlist: {label}")
         # The positive side of the policy: a fire_ id in the signature is accepted.
         t3 = load_yaml(C.TESTLIST_YAML); t3["red_expect_policy"] = ["fire_id"]
         for t in t3["tests"]:
@@ -733,6 +752,22 @@ def self_test() -> int:
     cond_f = facts is not None and C.B8_PROBE_KNOB_DEFAULT_KEY in facts and C.B8_PROBE_SV_DEFAULT_KEY in facts and facts[C.COVERGROUPS_DECLARED_KEY] is True
     ok &= cond_f
     print("SELF-TEST", "ok " if cond_f else "BAD", f"canary_build_facts records the two B8 probe facts beside covergroups_declared (CM140-L-3): {[k for k in facts if k.startswith('b8_')] if facts else None}")
+    rate, row = C.PLUSARG_KNOB_ICACHE_ECC_ERR_RATE, C.PLUSARG_CHK_ALERT_MINOR
+    for pas, defaults, want_refuse, label in (
+            ([f"+{rate}=rare", f"+{row}=0"], None, True, "rate rare with the alert_minor row off refuses"),
+            ([f"+{rate}=frequent"], None, False, "rate frequent with the row at its table default (1) runs"),
+            ([f"+{rate}=rare", f"+{row}=1"], None, False, "rate rare with the row explicitly on runs"),
+            ([f"+{rate}=none", f"+{row}=0"], None, False, "rate none with the row off runs (not triggered)"),
+            ([f"+{row}=0"], None, False, "no rate plusarg (table default none) with the row off runs"),
+            ([f"+{rate}=frequent"], {row: 0}, True, "a table default of 0 for the row (fabricated) refuses an entry that leaves it unmentioned"),
+            ([f"+{row}=0"], {rate: "frequent"}, True, "a table default of frequent (fabricated) triggers the condition")):
+        got = measured_knob_condition_refusal(pas, defaults)
+        cond = (got is not None and "LOG-077" in got) if want_refuse else got is None
+        ok &= cond
+        print("SELF-TEST", "ok " if cond else "BAD", f"measured_knob_condition_refusal (LOG-077) {label}: {(got or 'None')[:80]}")
+    cond = knob_default_by_plusarg(rate) == "none" and knob_default_by_plusarg(row) == 1 and knob_default_by_plusarg("gen_no_such_plusarg") is None
+    ok &= cond
+    print("SELF-TEST", "ok " if cond else "BAD", f"knob_default_by_plusarg from the rendered table: rate none, row 1, unknown None")
     svd = Path(tempfile.mkdtemp(prefix="gen_b8sv_selftest_", dir=C.selftest_tmp()))
     (svd / "on.sv").write_text("module p;\n  bit en = 1'b1;\nendmodule\n"); (svd / "off.sv").write_text("module p;\n  bit en = 1'b0;\nendmodule\n"); (svd / "none.sv").write_text("module p; endmodule\n")
     got_sv = (b8_probe_sv_default_on(svd / "on.sv"), b8_probe_sv_default_on(svd / "off.sv"), b8_probe_sv_default_on(svd / "none.sv"), b8_probe_sv_default_on(svd / "missing.sv"), b8_probe_sv_default_on())
@@ -1139,6 +1174,48 @@ def debug_only_from_knobs() -> set[str]:
     return {p["plusarg"] for p in knobs.PLUSARGS.values() if p.get("debug_only")}
 
 
+def knob_default_by_plusarg(plusarg: str):
+    """The rendered knob table's default of the knob whose plusarg is `plusarg`, None when no knob carries it (read from the
+    source tree the process binds to, as the other knob-table readers do)."""
+    import importlib
+    if str(C.SOURCE_ROOT) not in sys.path:
+        sys.path.insert(0, str(C.SOURCE_ROOT))
+    try:
+        knobs = importlib.import_module(C.KNOBS_MODULE)
+    except ModuleNotFoundError as e:
+        die(f"{C.KNOBS_MODULE} is not importable ({e}); the rendered knob table is the origin of knob defaults")
+    require_under_source_root(knobs, C.KNOBS_MODULE)
+    for entry in knobs.PLUSARGS.values():
+        if entry.get("plusarg") == plusarg:
+            return entry.get("default")
+    return None
+
+
+def effective_knob_value(plusargs: list[str], plusarg: str, defaults: dict[str, Any] | None = None) -> str | None:
+    """The value a run gives `plusarg`: the plusarg's value (a bare +name counts as 1), else the knob table's default
+    (`defaults` overrides the table for self-tests), as a string; None when neither names it."""
+    for pa in plusargs:
+        if plusarg_name(pa) == plusarg:
+            return pa.split("=", 1)[1].strip() if "=" in pa else "1"
+    d = (defaults or {}).get(plusarg, knob_default_by_plusarg(plusarg)) if defaults is None or plusarg not in defaults else defaults[plusarg]
+    return None if d is None else str(d)
+
+
+def measured_knob_condition_refusal(plusargs: list[str], defaults: dict[str, Any] | None = None) -> str | None:
+    """The MEASURED_KNOB_CONDITIONS row a measured run with these effective plusargs violates (its rule text with the
+    values seen), or None. The trigger value and the required knob come from the plusargs, else from the knob table's
+    default; a required knob is on when present with no value or a value other than 0."""
+    for cond in C.MEASURED_KNOB_CONDITIONS:
+        trig = effective_knob_value(plusargs, cond["trigger"], defaults)
+        if trig not in cond["values"]:
+            continue
+        req = effective_knob_value(plusargs, cond["requires"], defaults)
+        if req is not None and req.strip() not in ("0", ""):
+            continue
+        return f"+{cond['trigger']}={trig} with +{cond['requires']}={'absent' if req is None else req}; {cond['rule']}"
+    return None
+
+
 def knob_default_on(knob: str) -> bool | None:
     """The rendered knob table's default of `knob` as a truth value, None when the table has no such knob: the build
     manifest fact behind the LOG-067 measured-dispatch refusal (read from the source tree the build binds to)."""
@@ -1219,6 +1296,10 @@ def load_testlist(path: Path = C.TESTLIST_YAML) -> dict[str, Any]:
             die(f"{path}: test {t['name']} is tier {C.CHECK_TIER} and must be measured: false (Critic R-01)")
         if t.get("measured", True) and plusarg_enabled(t.get("plusargs") or [], C.PLUSARG_CHK_SVA_B8):
             die(f"{path}: test {t['name']} is measured and turns on +{C.PLUSARG_CHK_SVA_B8}; {C.B8_PROBE_RULE}")
+        if t.get("measured", True):
+            why = measured_knob_condition_refusal(t.get("plusargs") or [])
+            if why:
+                die(f"{path}: test {t['name']} is measured with {why}")
         if t.get("red_fixture"):
             if t.get("expected_fail"):
                 die(f"{path}: test {t['name']}: red_fixture and expected_fail are exclusive (a fixture is not an RTL-bug candidate)")

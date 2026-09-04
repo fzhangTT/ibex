@@ -21,6 +21,9 @@ without the implementation, not that the cases discriminate a missing refusal fr
 gen_b8_probe_refusal_red2.log is the TDD red of the CM136 follow-up: the gen_run cases run against the factored measured_refusal
 before the LOG-067 rule was added to it and print BAD for the three B8 cases while the P6 cases pass (a discriminating red); the
 util, serve and round cases of the same touch are again missing-constant crashes (B8_PROBE_SV_DEFAULT_KEY, CANARY_REFUSED_B8_PROBE).
+gen_log077_red.log is the TDD red of the LOG-077 enforcement (plan-owner ruling Q-018): the constants, the knob-table helpers and
+the cases in place, measured_knob_condition_refusal a stub returning None and no loader or gen_run rule; the five refuse cases print
+BAD while the positive cases and the const check pass, a discriminating red; then the rule was written and all cases pass.
 
 | evidence path | source | bytes | md5 |
 |---|---|---|---|
@@ -29,3 +32,4 @@ util, serve and round cases of the same touch are again missing-constant crashes
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_t235_install_verification.diff | dv/auto_dv/work/runtime/t235/scratch/gen_isa_shim_install_verification.diff | 1733 | 426d1881834219787850d7acd9e47338 |
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_b8_probe_refusal_red.log | dv/auto_dv/work/runtime/b8_probe_refusal_red.log | 669 | 79c2e3e5ad16318c78ea72c156e17b02 |
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_b8_probe_refusal_red2.log | dv/auto_dv/work/runtime/b8_probe_refusal_red2.log | 2231 | d9c707ba179d81930b8edb06f3440db0 |
+| dv/auto_dv/evidence/gen_tdd_logs/flow/gen_log077_red.log | dv/auto_dv/work/runtime/log077_red.log | 2027 | f6a061ae1b4f3a7f9ff24004975ecafb |
