@@ -680,14 +680,18 @@ at its committed bytes.
 
 ## 7c. fcov-expectation wiring (trust triad rule 3; gen_fcov.py, ci/check_fcov_expectations.py)
 
-KNOWN LIMITATION of the checker this path calls (LOG-084; the file is the owner's and is not edited here). Its
-grpinfo parser recognises the per-coverpoint heading and not the per-cross one, so a cross heading never updates the
-current coverpoint and only clears the in-bins flag. Two consequences, both measured on a real report and retained as
-`gen_tdd_logs/flow/gen_log084_cross_parse.log`: no emitted key ever carries a cross name, so a manifest declaring
-`<cg>.<cross>.<bin>` always reads unhit and fails; and a cross's bins are keyed under the group's last-seen
-coverpoint, so a declared coverpoint bin can read as hit on a cross bin's count. The interim ruling is that no
-manifest may claim a cross bin until the owner rules. Until then, read this path's keyed output against the urg
-report rather than trusting its verdict on a group that has crosses.
+KNOWN LIMITATION of `ci/check_fcov_expectations.py` WHEN IT IS CALLED DIRECTLY ON A RAW urg REPORT (LOG-084,
+rescoped by LOG-084c; the file is the owner's and is not edited here). Its grpinfo parser recognises the
+per-coverpoint heading and not the per-cross one, so a cross heading never updates the current coverpoint and only
+clears the in-bins flag. Two consequences, both measured on a real raw report and retained as
+`gen_tdd_logs/flow/gen_log084_cross_parse.log`: no emitted key carries a cross name, so a manifest declaring
+`<cg>.<cross>.<bin>` reads unhit however well the cross is covered; and a cross's bins are keyed under the group's
+last-seen coverpoint, so a declared coverpoint bin can read as hit on a cross bin's count.
+NEITHER CONSEQUENCE REACHES THIS PATH, because the flow never calls the checker on a raw report: it calls it with
+`--report-dir` on the variable-form report derived under LOG-054, described below, where each cross section is a
+variable section whose rows carry the component tuple joined with `_`, which is how the manifests name cross bins.
+The self-test drives the real checker on both forms of the same report to hold that difference in place. So a
+manifest may claim cross bins on this path, and the raw-report invocation is the one to keep them out of.
 
 Manifest: `dv/auto_dv/fcov_expectations/<test>.fcov.yaml` (the standing home of
 `dv/auto_dv/contract/README.md`), named in the test's `fcov_expectation_file`:
