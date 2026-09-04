@@ -2144,3 +2144,24 @@ updated. The 13 detached entries then receive the key with their LOG-086/LOG-088
 HEAD is announced. Rejected: correcting the 13 manifests first (Test Writer stimulus and declaration work, hours, and the
 per-run vs cumulative semantics ruling first); dispatching without a record. If the Critic finds the key a relaxation of P-07
 rather than an extension, the question goes to the owner and round 1 waits for the answer.
+
+## LOG-090 - 2026-09-04 - DV Lead ruling adopted: an fcov manifest declares per-run guarantees; the detaches were the wrong instrument
+
+Ruling (DV Lead, dv/auto_dv/work/dv-lead/gen_p07_manifest_semantics_ruling.md, derived by calling gen_regress.fcov_policy_failures
+at d1f6019: 39 of 53 planned runs flip to FAIL over the 13 detached measured entries): a manifest declares what the test guarantees
+PER RUN, because the flow's check is per run and that is the only reading its enforcement supports. A bin hit at some seeds and not
+others does not belong in the declared set; it stays PLANNED in the traceability and is credited from the merged report when any
+run hits it. A bin hit at no seed is a stimulus or declaration defect (the 123 stable bins of the pre-flight), not a semantics
+question. A cumulative expectation is a different artefact needing a cumulative check; it is Runtime's frozen change and not a
+prerequisite. A manifest is rendered from the plan (the group's items' bins under the fcov plan's Section 0 exclusion rules), so
+an over-declared manifest is a plan defect, and detaching the reference (LOG-086, LOG-088) deleted the intent statement instead of
+correcting it, which is why the failure only moved from the expectation check to the policy. The correct instruments exist and need
+no flow change: plan-side "not in manifest" marks on the coverpoints of unbuilt covergroups (honoured by the manifest generator),
+and per-test bins_not_hit exclusions with a reason per bin (nine committed tests use it; gen_test_rst_boot.py:150-152). Guard rail:
+a measured entry must keep a non-empty guaranteed set; the checker returns unverifiable, not PASS, on a manifest declaring no bins.
+
+Adopted by the Orchestrator as the semantics of record and as the end state for the 13 entries (LOG-086 and LOG-088 are to be
+superseded by corrected manifests, not extended). The measured-false fallback (a six-run measured round) is rejected as a rehearsal,
+not the owner's first measurement. Open, decided by the Critic's P-07 verdict: whether round 1 may run first on runtime-2's rt38
+deferral key (LOG-089) with the corrected manifests following for round 2, or must wait for the corrected manifests. The DV Lead
+holds P-07 absolute; if the Critic agrees, rt38 is shelved and the schedule cost goes to the owner as a question.
