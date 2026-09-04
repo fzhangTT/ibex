@@ -1,8 +1,8 @@
 # DV feature list - Ibex core, opentitan configuration
 
 Deliverable 1 (DV_prompt.txt Section 11). Version 2 (promoted from the T-002 draft after the Critic's
-verdict v1, dv/auto_dv/work/critic/gen_critic_feature_list_v1.md, findings C-02..C-26 addressed).
-Owner: dv-lead. Generated 2026-09-04 07:44 UTC from the area parts under dv/auto_dv/work/dv-lead/parts/. Part-file names in this document (tp_<area>.md, fcov_<area>.md, gen_part_<area>.md, trace_*_<area>.csv and the README_*_BRIEF.md briefs) are this plan set's own gitignored sources, named as provenance: the content they hold is in the corresponding area of gen_test_plan.md, gen_fcov_plan.md or gen_feature_list.md, and the bug and doc-defect number series they define are in gen_bug_log.md. No claim in this document rests on opening one.
+verdict v1, dv/auto_dv/docs/gen_critic_feature_list_v1.md, findings C-02..C-26 addressed).
+Owner: dv-lead. Generated 2026-09-04 08:28 UTC from the area parts under dv/auto_dv/work/dv-lead/parts/. Part-file names in this document (tp_<area>.md, fcov_<area>.md, gen_part_<area>.md, trace_*_<area>.csv and the README_*_BRIEF.md briefs) are this plan set's own gitignored sources, named as provenance: the content they hold is in the corresponding area of gen_test_plan.md, gen_fcov_plan.md or gen_feature_list.md, and the bug and doc-defect number series they define are in gen_bug_log.md. No claim in this document rests on opening one. Three rtl-arch notes this plan set cites are committed references, not work files: dv/auto_dv/evidence/gen_multdiv_bound_props.md (the MD-n bound properties and covers), dv/auto_dv/evidence/gen_bug_reproducer_specs.md (the reproducer recipes behind the bug log) and dv/auto_dv/evidence/gen_interface_inventory.md (the numbered driver and protocol rules); citations name them by basename and resolve there.
 
 Build configuration: `opentitan` (ibex_configs.yaml): BaseIsa=RV32IorCHERIoT (CHERIoT mode excluded
 by owner ruling), RV32E=0, RV32M=RV32MSingleCycle, RV32B=RV32BOTEarlGrey, RV32ZC=RV32ZcaZcbZcmp,
@@ -1095,7 +1095,7 @@ Conventions used below:
   rtl/ibex_id_stage.sv:1014-1016 (outstanding_memory_access), rtl/ibex_id_stage.sv:1059-1062
   (instr_executing), rtl/ibex_id_stage.sv:976 (multdiv_ready_id = ready_wb), rtl/ibex_wb_stage.sv:185,
   rtl/ibex_multdiv_fast.sv:98, :216, :235 (mult_hold, unreachable while enabled) | fact-check:
-  dv/auto_dv/work/rtl-arch/gen_tp_parts_rtl_factcheck.md X-12; gen_multdiv_bound_props.md Section 1
+  rtl-arch T-053 X-12; gen_multdiv_bound_props.md Section 1
 - Edge: yes, of F-MUL-003
 - Status: ACTIVE
 - Notes: mechanism corrected by rtl-arch T-053 (X-12): the former "result held by mult_hold" statement
@@ -1244,7 +1244,7 @@ Conventions used below:
   load precedes the divide (the dbus monitor supplies W)
 - Config: cpuctrlsts.data_ind_timing (fast path only when 0)
 - Source: RTL-defined: rtl/ibex_id_stage.sv:733-734, :1014-1016, :1059-1062, :976; rtl/ibex_multdiv_fast.sv:99,
-  :514-520 (div_hold, unreachable while enabled) | fact-check: gen_tp_parts_rtl_factcheck.md X-12;
+  :514-520 (div_hold, unreachable while enabled) | fact-check: rtl-arch T-053 X-12;
   gen_multdiv_bound_props.md MD-1..MD-3
 - Edge: yes, of F-MUL-012
 - Status: ACTIVE
@@ -1786,7 +1786,7 @@ Conventions used below:
   micro-op's record delta 1 + W when the response was late (dbus monitor)
 - Config: none
 - Source: RTL-defined: rtl/ibex_id_stage.sv:1059-1062, rtl/ibex_id_stage.sv:1109-1120 (:1117-1118 no load
-  forwarding), rtl/ibex_compressed_decoder.sv:765-772 | fact-check: gen_tp_parts_rtl_factcheck.md
+  forwarding), rtl/ibex_compressed_decoder.sv:765-772 | fact-check: rtl-arch T-053
   TP-CMP-049 (UNREACHABLE-PRECONDITION corrected)
 - Edge: yes, of F-CMP-047
 - Status: ACTIVE
@@ -2456,7 +2456,7 @@ Conventions used below:
 - Observable at: RVFI rvfi_rd_wdata
 - Config: none
 - Source: RTL-defined: rtl/ibex_alu.sv:859-881, rtl/ibex_alu.sv:932-938, rtl/ibex_alu.sv:1247-1248
-  (^ (operand_a >> 8 / 16)) | fact-check: gen_tp_parts_rtl_factcheck.md TP-BIT-033
+  (^ (operand_a >> 8 / 16)) | fact-check: rtl-arch T-053 TP-BIT-033
 - Edge: yes, of F-BIT-032
 - Status: ACTIVE
 - Notes: corrected by rtl-arch T-053 (X-23): the former "crc32.b ignores rs1[31:8]" statement was wrong.
@@ -2548,7 +2548,7 @@ Conventions used below:
   (exit on multicycle_done & ready_wb_i, reached after the access completed),
   rtl/ibex_id_stage.sv:1012, rtl/ibex_id_stage.sv:1130-1133, rtl/ibex_alu.sv:1235-1239 and
   rtl/ibex_alu.sv:1252-1256 (imd_val_we only in the first cycle) | fact-check:
-  gen_tp_parts_rtl_factcheck.md X-12 (TP-BIT-043) | map: gen_hierarchy_map.md H-I1
+  rtl-arch T-053 X-12 (TP-BIT-043) | map: gen_hierarchy_map.md H-I1
 - Edge: yes, of F-BIT-012
 - Status: ACTIVE
 - Notes: Added for Critic C-09 item 4 (H-I1); mechanism corrected by rtl-arch T-053 (X-12): the former
@@ -6066,7 +6066,7 @@ exception_interrupts.rst "Interrupts" lines 52-57 states them).
 - Status: ACTIVE
 - Notes: rvfi_intr is not asserted for exception handlers (rtl/ibex_core.sv:2408 checks EXC_PC_IRQ
   only); the TB must not use it to detect exception entry. The TB never locates the decision cycle
-  from rvfi_ext_irq_valid (the earlier N + 1 / N + 3 offsets were wrong; gen_arch_v2_rtl_factcheck.md
+  from rvfi_ext_irq_valid (the earlier N + 1 / N + 3 offsets were wrong; rtl-arch's architecture fact-check
   2.1 corrected to N + 4, level); TP-IRQ-061 asserts rise == N + 4 and the absent case.
 
 ### F-IRQ-058: mepc for interrupts after a control-flow change
@@ -9448,7 +9448,7 @@ outcome differs. Generate arms: the opentitan config sets BaseIsa = BaseIsaRV32I
 (ibex_configs.yaml:42), so the elaborated arms are g_pmp_addr_gate (rtl/ibex_core.sv:1589-1593)
 and gen_memcap_rd (rtl/ibex_load_store_unit.sv:701-709); citations below name those arms.
 
-Fact-check fold (README_FIX3_BRIEF.md; rtl-arch T-053, gen_tp_parts_rtl_factcheck.md Sections 1 and
+Fact-check fold (README_FIX3_BRIEF.md; rtl-arch T-053, Sections 1 and
 3.mem_a / 3.mem_b): the What / Observable / Notes of F-IMEM-021/022/023/024/028, F-DMEM-027/028/030/031/
 041/044/045/046, F-FE-004/005/010/012/014/017/021/022/023/025 and F-IC-004/006/007/016/020/021/022/038/
 042/043 are corrected to the RTL as verified there, and the "RTL-defined behaviour" list is extended.
@@ -9864,7 +9864,7 @@ WAIT_RVALID_MIS, WAIT_GNT, WAIT_RVALID_MIS_GNTS_DONE, CTX_WAIT_GNT1, CTX_WAIT_GN
   the memory image (shift case); alert_major_bus_o (bad-SECDED case)
 - Config: none
 - Source: RTL-defined: rtl/ibex_icache.sv:851-852, 947-950, 962-964, 1306-1335 (assertion block,
-  no rvalid property); rtl/ibex_if_stage.sv:282 | rtl-arch MEM-19 (gen_behaviour_summaries.md) |
+  no rvalid property); rtl/ibex_if_stage.sv:282 | rtl-arch MEM-19 |
   doc: doc/03_reference/load_store_unit.rst:93 (Protocol step 3: exactly one rvalid per request; by
   reference from instruction_fetch.rst:86-87)
 - Edge: no
@@ -11358,13 +11358,16 @@ WAIT_RVALID_MIS, WAIT_GNT, WAIT_RVALID_MIS_GNTS_DONE, CTX_WAIT_GNT1, CTX_WAIT_GN
   so two fills of one line both write. With IC_NUM_WAYS = 2 (rtl/ibex_pkg.sv:401), and while the other
   way is invalid at the erroring lookup, the two selections differ exactly when the erroring copy
   sits in way 0, because allocation takes the lowest invalid way whenever any way is invalid and the
-  round-robin pointer otherwise (rtl/ibex_icache.sv:534-535). That direction was corroborated by a
-  tag-write trace that landing 15 retired, and the retained set records no tag writes, so the claim
-  now rests on the RTL alone and no case count is quoted for it. What the retained evidence does show
-  is that the masking precondition is not index-specific: 20 announced injections met the
-  two-way-valid equal-tag condition at two indices on build w18
-  (dv/auto_dv/evidence/gen_tdd_logs/mutations/gen_fu_l16_trace17_duplicate_copies.log, 17 at index 26
-  and 3 at index 27, counted from the run's own trace lines). When the other way instead holds a valid
+  round-robin pointer otherwise (rtl/ibex_icache.sv:534-535). Landing 16 put the observation back on
+  retained evidence after landing 15 retired the earlier trace: the tag-write history at the duplicated
+  indices (dv/auto_dv/evidence/gen_tdd_logs/mutations/gen_fu_l16_trace17_tagwrite_history.log)
+  reconstructs 16 coexistence episodes, 13 at index 26 and 3 at index 27, each with its start and end
+  cycle, its shared tag and the way whose copy was added second, and all 16 added into way 0. That
+  aggregate is read narrowly as the artifact's own header directs: it evidences the direction of each
+  episode it lists, not the way-selection policy, which stays the RTL terms above, since it is one
+  program at one seed. The masking precondition is also not index-specific: 20 announced injections met
+  the two-way-valid equal-tag condition at those two indices
+  (gen_fu_l16_trace17_duplicate_copies.log). When the other way instead holds a valid
   different line, the first fill takes round_robin_way_q and the copies differ when that pointer is not
   the erroring way. The
   copies then differ either from self-modifying code without fence.i (a software constraint per doc)
@@ -12592,7 +12595,7 @@ the remaining citations were spot-checked with grep -n / cat -n.
   latency); core_busy_o = On from the first cycle (ctrl_busy defaults to 1).
 - Config: fetch_enable_i must be On for the first request (F-RST-013).
 - Source: RTL-defined: rtl/ibex_controller.sv:540-596,623-646,1017-1020,1030-1032;
-  rtl/ibex_pkg.sv:290-302; gen_behaviour_summaries.md CTRL-03
+  rtl/ibex_pkg.sv:290-302; rtl-arch's behaviour summaries CTRL-03
 - Edge: no
 - Status: ACTIVE
 - Notes: Critic C-06 correction (v1 said FIRST_FETCH lasts until the first instruction is accepted
@@ -13119,7 +13122,7 @@ ports exist only when the RVFI macro is defined (RISCV_FORMAL or RVFI, rtl/ibex_
 - Notes: Checkers count marker rising edges (at most one per interrupt entry) and accept an entry
   without a marker whose handler first record carries the captured state (TP-RVFI-019); the
   predicted marker offset from the last pre-interrupt record's rvfi_valid is 3 cycles
-  (GEN_RVFI_IRQ_MARKER_OFFSET, pinned at bring-up; gen_arch_v2_rtl_factcheck.md 2.1 corrected from
+  (GEN_RVFI_IRQ_MARKER_OFFSET, pinned at bring-up; rtl-arch's architecture fact-check 2.1 corrected from
   N+3 to N+4 for the decision-to-port offset).
 
 ### F-RVFI-017: rvfi_ext_pre_mip / post_mip bit layout and sampling points
@@ -13351,7 +13354,7 @@ ports exist only when the RVFI macro is defined (RISCV_FORMAL or RVFI, rtl/ibex_
   rvfi_order value.
 - Config: none.
 - Source: RTL-defined: rtl/ibex_wb_stage.sv:183,220,305-306,310; rtl/ibex_core.sv:2339-2377;
-  gen_behaviour_summaries.md EX-09; gen_hierarchy_map.md P10
+  rtl-arch's behaviour summaries EX-09; gen_hierarchy_map.md P10
 - Edge: no
 - Status: ACTIVE
 - Notes: NEW for Critic C-09 item 7 (P10). The one-hot property itself is an RTL assertion

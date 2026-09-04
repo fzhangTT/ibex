@@ -2,7 +2,7 @@
 
 Deliverable 3 (DV_prompt.txt Section 11): the definition of every functional-coverage bin (not the
 implementation; TB Infra implements covergroups in the gen_ namespace from this plan). Owner: dv-lead.
-Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in), generated 2026-09-04 07:44 UTC from dv/auto_dv/work/dv-lead/parts6/fcov_*.md. Part-file names in this document (tp_<area>.md, fcov_<area>.md, gen_part_<area>.md, trace_*_<area>.csv and the README_*_BRIEF.md briefs) are this plan set's own gitignored sources, named as provenance: the content they hold is in the corresponding area of gen_test_plan.md, gen_fcov_plan.md or gen_feature_list.md, and the bug and doc-defect number series they define are in gen_bug_log.md. No claim in this document rests on opening one.
+Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in), generated 2026-09-04 08:28 UTC from dv/auto_dv/work/dv-lead/parts6/fcov_*.md. Part-file names in this document (tp_<area>.md, fcov_<area>.md, gen_part_<area>.md, trace_*_<area>.csv and the README_*_BRIEF.md briefs) are this plan set's own gitignored sources, named as provenance: the content they hold is in the corresponding area of gen_test_plan.md, gen_fcov_plan.md or gen_feature_list.md, and the bug and doc-defect number series they define are in gen_bug_log.md. No claim in this document rests on opening one. Three rtl-arch notes this plan set cites are committed references, not work files: dv/auto_dv/evidence/gen_multdiv_bound_props.md (the MD-n bound properties and covers), dv/auto_dv/evidence/gen_bug_reproducer_specs.md (the reproducer recipes behind the bug log) and dv/auto_dv/evidence/gen_interface_inventory.md (the numbered driver and protocol rules); citations name them by basename and resolve there.
 
 Build configuration: `opentitan` (ibex_configs.yaml): BaseIsa=RV32IorCHERIoT (CHERIoT mode excluded
 by owner ruling), RV32E=0, RV32M=RV32MSingleCycle, RV32B=RV32BOTEarlGrey, RV32ZC=RV32ZcaZcbZcmp,
@@ -298,7 +298,8 @@ Conventions
   bit 31 clear, neg_rand = any other value with bit 31 set.
 - Counts derive from ibex_pkg / decoder tables: Zcmp rlist 4..15 and spimm 0..3 come from
   rtl/ibex_compressed_decoder.sv cm_stack_adj_base/cm_rlist_top_reg; the legal Zb* mnemonic
-  list is the ENC table (dv/auto_dv/docs/gen_rv32b_otearlgrey_encodings.md, the promoted reference); micro-op
+  list is the encoding tables of dv/auto_dv/docs/gen_rv32b_otearlgrey_encodings.md, the promoted reference (its
+  register-register, register-immediate and compressed-Zcb sections; the monitor's ENC table derives from them); micro-op
   index range 0..15 is the popretz maximum (13 loads + addi + li + ret). Performance-counter
   events are the hardwired map of rtl/ibex_cs_registers.sv:1585-1597 (mhpmcounter7 = NumJumps,
   8 = NumBranches, 9 = NumBranchesTaken; the mhpmevent selectors are read-only, :1600-1617) and
@@ -3605,7 +3606,7 @@ fixes: F-IMEM-001..032, F-DMEM-001..051, F-FE-001..025, F-IC-001..048; 129 ACTIV
 FOLDED; ALIAS/FOLDED IDs may still appear in Features lists, traceability resolves them to the
 canonical ID). Companion of tp_mem_fetch_icache.md. Revision 2 folds the Critic pre-review
 (gen_critic_fcov_drafts_prereview_v1.md, S-3/S-5/S-7/S-8/S-12/S-14, M-02/M-04) per README_FIX2_BRIEF.md;
-revision 3 folds rtl-arch's RTL fact-check (T-053, gen_tp_parts_rtl_factcheck.md Sections 1 and 3.mem_a /
+revision 3 folds rtl-arch's RTL fact-check (T-053, Sections 1 and 3.mem_a /
 3.mem_b) and the round-2 review residuals per README_FIX3_BRIEF.md (the C-n conventions are stated once in
 tp_mem_fetch_icache.md's header).
 Every covergroup lives in the gen_ namespace and samples from the DUT boundary, the memory/RAM/key

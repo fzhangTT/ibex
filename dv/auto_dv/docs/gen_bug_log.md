@@ -1,9 +1,9 @@
 # Bug log - Ibex core, opentitan configuration
 
-Part-file names in this document (tp_<area>.md, fcov_<area>.md, gen_part_<area>.md, trace_*_<area>.csv and the README_*_BRIEF.md briefs) are this plan set's own gitignored sources, named as provenance: the content they hold is in the corresponding area of gen_test_plan.md, gen_fcov_plan.md or gen_feature_list.md, and the bug and doc-defect number series they define are in gen_bug_log.md. No claim in this document rests on opening one.
+Part-file names in this document (tp_<area>.md, fcov_<area>.md, gen_part_<area>.md, trace_*_<area>.csv and the README_*_BRIEF.md briefs) are this plan set's own gitignored sources, named as provenance: the content they hold is in the corresponding area of gen_test_plan.md, gen_fcov_plan.md or gen_feature_list.md, and the bug and doc-defect number series they define are in gen_bug_log.md. No claim in this document rests on opening one. Three rtl-arch notes this plan set cites are committed references, not work files: dv/auto_dv/evidence/gen_multdiv_bound_props.md (the MD-n bound properties and covers), dv/auto_dv/evidence/gen_bug_reproducer_specs.md (the reproducer recipes behind the bug log) and dv/auto_dv/evidence/gen_interface_inventory.md (the numbered driver and protocol rules); citations name them by basename and resolve there.
 
 Deliverable 7 (DV_prompt.txt Section 11). Owner: dv-lead; entries are opened by the DV Lead from the
-feature list / reading report and rtl-arch's behaviour summaries (gen_behaviour_summaries.md Part A
+feature list / reading report and rtl-arch's behaviour summaries (Part A
 BUG-01..05, kept as aliases). Version 1, 2026-09-03 06:58 UTC. Every entry is a CANDIDATE until a committed
 reproducer log exists (status "candidate, reproducer pending"); DV never modifies RTL; a candidate is
 removed from the pass gate only through a recorded owner ruling (DV_prompt.txt Section 10; owner

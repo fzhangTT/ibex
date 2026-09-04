@@ -8,7 +8,7 @@
 | DUT | `gen_dut_top` = `ibex_core` + `ibex_register_file_ff` per the DV_prompt Section 2 ruling and Q-002 (revised); instances `u_ibex_core`, `u_register_file`; `cheriot_enable_i` tied `IbexMuBiOff`, register-file `test_en_i` tied 0; bus data ports literal 39 bits (integrity in [38:32]); `+define+RVFI` |
 | Document owner | DV Lead (adopts, edits, rules, signs off) |
 | Component sections owner | TB Infra (Section 6, `dv/auto_dv/work/tb-infra/gen_tb_arch_component_sections.md` version 3 at its T-068 revision, sha256 prefix de5bc9573c84255b; Section 9, `dv/auto_dv/docs/gen_rvfi_export_addendum.md` version 4c, sha256 prefix e2822b1bdd62c9ba) |
-| Status | adopted by DV Lead 2026-09-03 12:14 UTC (v1g: Section 9 re-embedded from TB Infra's aligned addendum version 4c at 50256f0 (32 exact event rows incl. icram lookup/tag_write/fill_write; Section 9 with WITNESS_IDS/GEN_WIT_IDS from gen_trace_witness_ids.csv, flow-rendered +gen_witness_ids, GEN_WITNESS_FOREIGN, digest guard, gen_wit_cycle_clause_cg with option.weight 0, epilogue issue point); v1f embedded the d0c0d15 text with five open items; committed copy dv/auto_dv/docs/gen_rvfi_export_addendum.md, sha256 prefix f510177cda02a0c6; the Orchestrator's replan verdict: dv/auto_dv/reviews/2026-09-03-claude-replan-gen_rvfi_export_addendum-r5.md (APPROVE-WITH-CHANGES on the version 4c text at d0c0d15; its D1, D2 and D6 are closed by the aligned Section 9 committed as 50256f0)); v1e embedded version 2a; v1d re-embedded the component sections at their T-068 revision, sha256 prefix de5bc9573c84255b; v1b folded the lows of the cross-model re-review dv/auto_dv/reviews/2026-09-03-claude-replan-gen_tb_architecture.md (APPROVE-WITH-CHANGES) and of the Critic's part 2 (dv/auto_dv/docs/gen_critic_tb_architecture_v2.md, APPROVE)). Document APPROVED by both reviewers (LOG-012). Part-file names in this document (tp_<area>.md, fcov_<area>.md, gen_part_<area>.md, trace_*_<area>.csv and the README_*_BRIEF.md briefs) are the plan set's own gitignored sources, named as provenance: the content they hold is in the corresponding area of gen_test_plan.md, gen_fcov_plan.md or gen_feature_list.md, and the bug and doc-defect number series they define are in gen_bug_log.md. No claim in this document rests on opening one. Work notes of other roles named here are cited as provenance of folded or embedded content, except where a promotion is recorded; responses: dv/auto_dv/evidence/gen_critic_response_tb_architecture_v1.md |
+| Status | adopted by DV Lead 2026-09-03 12:14 UTC (v1g: Section 9 re-embedded from TB Infra's aligned addendum version 4c at 50256f0 (32 exact event rows incl. icram lookup/tag_write/fill_write; Section 9 with WITNESS_IDS/GEN_WIT_IDS from gen_trace_witness_ids.csv, flow-rendered +gen_witness_ids, GEN_WITNESS_FOREIGN, digest guard, gen_wit_cycle_clause_cg with option.weight 0, epilogue issue point); v1f embedded the d0c0d15 text with five open items; committed copy dv/auto_dv/docs/gen_rvfi_export_addendum.md, sha256 prefix f510177cda02a0c6; the Orchestrator's replan verdict: dv/auto_dv/reviews/2026-09-03-claude-replan-gen_rvfi_export_addendum-r5.md (APPROVE-WITH-CHANGES on the version 4c text at d0c0d15; its D1, D2 and D6 are closed by the aligned Section 9 committed as 50256f0)); v1e embedded version 2a; v1d re-embedded the component sections at their T-068 revision, sha256 prefix de5bc9573c84255b; v1b folded the lows of the cross-model re-review dv/auto_dv/reviews/2026-09-03-claude-replan-gen_tb_architecture.md (APPROVE-WITH-CHANGES) and of the Critic's part 2 (dv/auto_dv/docs/gen_critic_tb_architecture_v2.md, APPROVE)). Document APPROVED by both reviewers (LOG-012). Part-file names in this document (tp_<area>.md, fcov_<area>.md, gen_part_<area>.md, trace_*_<area>.csv and the README_*_BRIEF.md briefs) are the plan set's own gitignored sources, named as provenance: the content they hold is in the corresponding area of gen_test_plan.md, gen_fcov_plan.md or gen_feature_list.md, and the bug and doc-defect number series they define are in gen_bug_log.md. No claim in this document rests on opening one. Three rtl-arch notes this plan set cites are committed references, not work files: dv/auto_dv/evidence/gen_multdiv_bound_props.md (the MD-n bound properties and covers), dv/auto_dv/evidence/gen_bug_reproducer_specs.md (the reproducer recipes behind the bug log) and dv/auto_dv/evidence/gen_interface_inventory.md (the numbered driver and protocol rules); citations name them by basename and resolve there. Work notes of other roles named here are cited as provenance of folded or embedded content, except where a promotion is recorded; responses: dv/auto_dv/evidence/gen_critic_response_tb_architecture_v1.md |
 | Governing documents | `DV_prompt.txt`, `docs/dv/FENCE.md` (wins), `docs/dv/SIM_RECIPE.md`, `docs/dv/TB_CONTRACT.md`, `docs/dv/dv_principles.md`; flow contract for testlist entries, expected_fail, tiers, fcov manifests and run requests: `dv/auto_dv/docs/gen_runtime_api.md` |
 | Inputs | `dv/auto_dv/work/tb-infra/gen_tb_scoping_notes.md` (Phase 0 step 3, superseded passages marked inline), `dv/auto_dv/work/rtl-arch/gen_answers_tb_infra.md`, `dv/auto_dv/docs/gen_probe_register.md` v2, `dv/auto_dv/docs/gen_intervention_log.md`, `dv/auto_dv/docs/gen_critic_tb_arch_components_v1.md`, `dv/auto_dv/evidence/gen_critic_tb_arch_components_v2.md` (APPROVE with conditions), `dv/auto_dv/docs/gen_critic_tb_architecture_v2.md`, `dv/auto_dv/reviews/2026-09-03-claude-replan-gen_tb_architecture.md`, `dv/auto_dv/reviews/2026-09-03-claude-plan-gen_tb_arch_component_sections.md` |
 
@@ -266,7 +266,10 @@ name plus seed (SIM_RECIPE Section 5). Section C9.
 
 ## 6. Component API sections (TB Infra, version 3 revised, included verbatim)
 
-The text below is `dv/auto_dv/work/tb-infra/gen_tb_arch_component_sections.md` in full at its T-068 revision
+The text below is tb-infra's component-sections note in full at its T-068 revision, and quoting that hash FREEZES
+the source: an edit to the work file makes this document's hash claim false while it still reads as verified, so the
+note is not edited while this quotation stands, and a revision arrives by regenerating and re-hashing here
+(`dv/auto_dv/work/tb-infra/gen_tb_arch_component_sections.md`)
 (sha256 prefix de5bc9573c84255b; C9 no longer names the retired knob forms and C4.8 uses the single ECC-window anchor;
 the bus regime windows now live in gen_tb_knobs.yaml `regime_windows`: rvalid min1 = 1, short = 2..4, long = 5..32,
 random = 1..32; gnt same_cycle 0, short 1..3, long 4..32, random 0..32, aligned with the coverage plan's bins); only
@@ -284,17 +287,19 @@ sections.md`, five mediums and the lows, marked "(v2, XM-n)") and rtl-arch's T-0
 (`gen_cover_props_draft.sv`, `gen_unreachability_evidence.md` 5.2). The per-finding disposition of
 both reviews is `dv/auto_dv/evidence/gen_critic_response_tb_arch.md`. Changes against v1 are
 marked "(v2)" in the text. Version 3 (2026-09-03, after the Critic's v2 APPROVE, no re-review
-required by the Orchestrator) folds rtl-arch's RTL fact-check `dv/auto_dv/work/rtl-arch/
-gen_arch_v2_rtl_factcheck.md` Section 4 (marks "(v3, T-051-n)") and the Critic's v2 residuals
+required by the Orchestrator) folds rtl-arch's architecture RTL fact-check, Section 4 (marks "(v3, T-051-n)") and the Critic's v2 residuals
 N-01, N-02, N-04, plus the second link test (`gen_t046_spike_linktest2.md`, marks "(link test 2)").
 
 For the DV Lead to fold into `dv/auto_dv/docs/gen_tb_architecture.md` (DV Lead owns the document;
 tb-infra owns these sections). Written for the Critic and the cross-model reviewer to judge
-feasibility: interfaces, timing, failure paths. Sources: `dv/auto_dv/work/rtl-arch/
-gen_answers_tb_infra.md` (AN), `gen_interface_inventory.md` (II), `gen_behaviour_summaries.md`
-(BS), `gen_rv32b_otearlgrey_encodings.md` (ENC); `dv/auto_dv/work/dv-lead/gen_reading_report.md`
-Section 7 (RR); `dv/auto_dv/work/tb-infra/gen_tb_scoping_notes.md` (SN, with the T-014
-corrections folded in); as-built wrapper `dv/auto_dv/tb/gen_dut_top.sv` and
+feasibility: interfaces, timing, failure paths. Sources, with the tags the sections below cite:
+rtl-arch's answers to TB Infra (AN) and its interface inventory (II), both rtl-arch work records;
+rtl-arch's behaviour summaries (BS), whose facts the feature list carries with their RTL citations;
+the promoted encodings reference `dv/auto_dv/docs/gen_rv32b_otearlgrey_encodings.md` (ENC); the DV
+Lead's reading report (RR), superseded by `dv/auto_dv/docs/gen_feature_list.md`; and, for agents and
+knobs (SN), the committed component API documents `dv/auto_dv/docs/gen_component_api_env_knobs.md`
+and the per-agent ones, which superseded tb-infra's scoping notes; as-built wrapper
+`dv/auto_dv/tb/gen_dut_top.sv` and
 `dv/auto_dv/docs/gen_component_api_dut_top.md`. Build configuration: `opentitan`. ASCII only.
 UNVERIFIED marks a claim from RTL or tool-source reading that bring-up must confirm.
 
@@ -779,7 +784,7 @@ public `state.csrmap` (processor.h:90) (v2, A-16, XM-I1; no RVFI intercept); the
 throws illegal-instruction, matching Ibex (v2, A-17).
 
 (v2, A-16) Prerequisite before shim coding, DONE: the second link test
-(`dv/auto_dv/work/tb-infra/gen_spike_linktest2.cc`, 98/98 checks, `out_linktest2/linktest2.log`,
+(tb-infra's second Spike link test, 98/98 checks, `out_linktest2/linktest2.log`,
 evidence `dv/auto_dv/evidence/gen_t046_spike_linktest2.md`) demonstrates `gen_mie_csr_t` taking a fast interrupt
 with Ibex's priority (retired 0, then 1), custom CSRs through `extension_t::get_csrs`, `wfi` /
 `in_wfi`, `halt_request` entry and `dret`, a tdata1 write from debug mode and an execute-address
@@ -1129,7 +1134,7 @@ mirror is the applied default).
   pinned by directed tests; F-RVFI-010 and F-RVFI-032 rulings from rtl-arch; B1 re-verification by
   rtl-arch. Removed from this list in v2: model byte order on misaligned store faults (A-15) and the
   `mie` write mask (A-14), both now decided by verified facts.
-- Second link test (A-16): DONE (`gen_spike_linktest2.cc`, 98/98); grevi/gorci non-alias decode
+- Second link test (A-16): DONE (98/98); grevi/gorci non-alias decode
   remains to be checked in the shim's first unit test.
 
 ## 7. Open questions and rulings as they stand in `dv/auto_dv/docs/gen_intervention_log.md`
@@ -1189,7 +1194,7 @@ component sections file, not this document, and the DV Lead re-adopts.
    fact-check row 48): the comparator expects the WB error's trap record now and the killed ID
    instruction's own record after the handler; one record would re-open it.
 
-### 8.2 Corrections from rtl-arch's RTL fact-check (gen_arch_v2_rtl_factcheck.md Section 4) that TB Infra applies to Section 6 and the C4.8 exactness table
+### 8.2 Corrections from rtl-arch's architecture RTL fact-check (Section 4) that TB Infra applies to Section 6 and the C4.8 exactness table
 1. `core_busy` (row 29): the one-cycle Off dip after WFI is a `ctrl_busy` fact; `core_busy_o` also
    carries `if_busy` (outstanding fetch beats, icache invalidation) and `lsu_busy`. Rule: in WAIT_SLEEP
    `core_busy_o == Off` iff no instruction-bus beat is outstanding, no invalidation is active and the
