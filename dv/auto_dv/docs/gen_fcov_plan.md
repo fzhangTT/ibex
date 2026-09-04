@@ -2,7 +2,7 @@
 
 Deliverable 3 (DV_prompt.txt Section 11): the definition of every functional-coverage bin (not the
 implementation; TB Infra implements covergroups in the gen_ namespace from this plan). Owner: dv-lead.
-Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in), generated 2026-09-04 09:03 UTC from dv/auto_dv/work/dv-lead/parts6/fcov_*.md. Part-file names in this document (tp_<area>.md, fcov_<area>.md, gen_part_<area>.md, trace_*_<area>.csv and the README_*_BRIEF.md briefs) are this plan set's own gitignored sources, named as provenance: the content they hold is in the corresponding area of gen_test_plan.md, gen_fcov_plan.md or gen_feature_list.md, and the bug and doc-defect number series they define are in gen_bug_log.md. No claim in this document rests on opening one. Three rtl-arch notes this plan set cites are committed references, not work files: dv/auto_dv/evidence/gen_multdiv_bound_props.md (the MD-n bound properties and covers), dv/auto_dv/evidence/gen_bug_reproducer_specs.md (the reproducer recipes behind the bug log) and dv/auto_dv/evidence/gen_interface_inventory.md (the numbered driver and protocol rules); citations name them by basename and resolve there.
+Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in), generated 2026-09-04 10:19 UTC from dv/auto_dv/work/dv-lead/parts6/fcov_*.md. Part-file names in this document (tp_<area>.md, fcov_<area>.md, gen_part_<area>.md, trace_*_<area>.csv and the README_*_BRIEF.md briefs) are this plan set's own gitignored sources, named as provenance: the content they hold is in the corresponding area of gen_test_plan.md, gen_fcov_plan.md or gen_feature_list.md, and the bug and doc-defect number series they define are in gen_bug_log.md. No claim in this document rests on opening one. Three rtl-arch notes this plan set cites are committed references, not work files: dv/auto_dv/evidence/gen_multdiv_bound_props.md (the MD-n bound properties and covers), dv/auto_dv/evidence/gen_bug_reproducer_specs.md (the reproducer recipes behind the bug log) and dv/auto_dv/evidence/gen_interface_inventory.md (the numbered driver and protocol rules); citations name them by basename and resolve there.
 
 Build configuration: `opentitan` (ibex_configs.yaml): BaseIsa=RV32IorCHERIoT (CHERIoT mode excluded
 by owner ruling), RV32E=0, RV32M=RV32MSingleCycle, RV32B=RV32BOTEarlGrey, RV32ZC=RV32ZcaZcbZcmp,
@@ -4788,12 +4788,30 @@ bug-candidate behaviour carry the bug tie (B16 in CG-DMEM-007).
 - TP items: TP-FE-022, TP-IC-029, TP-IC-030, TP-IC-031, TP-IC-032, TP-IC-033, TP-IC-048, TP-IC-057, TP-IMEM-038
 ### CG-IC-006: gen_cg_ic_ecc
 - Features: F-IC-030, F-IC-031, F-IC-032, F-IC-033, F-IC-034, F-IC-035, F-IC-042
-- Sample: each injected RAM read corruption (gen_icache_ram_model record), or each lookup that read
-  a never-written (uninitialised) data RAM line, closed by the DUT's reaction (alert_minor_o pulse
-  and the following tag write) or by its absence; condition: injected or uninitialised read;
-  anti-vacuity: only injections and uninitialised reads sample; a hit proves gen_chk_icache /
+- Sample: each injected RAM read corruption (gen_icache_ram_model record), or each CHECKED lookup
+  that read a never-written (uninitialised) data RAM line, closed by the DUT's reaction
+  (alert_minor_o pulse and the following tag write) or by its absence; condition: injected, or an
+  uninitialised read on a lookup the DUT checks. Checked is lookup_actual_ic0 = lookup_grant_ic0 and
+  icache_enable_i and not inval_block_cache (rtl/ibex_icache.sv:266, lookup_grant_ic0 = lookup_req_ic0
+  at :262), while the READ itself is data_req_ic0 = lookup_req_ic0 or fill_req_ic0 (:280), so every
+  lookup reads both ways whether or not the access is checked and an unchecked read is not a no-alert
+  case. Never-written is a written flag the TB keeps per data-RAM LINE of a way, not per word: the model's
+  data instance is Width(LineSizeECC) by Depth(IC_NUM_LINES) per way (gen_tb_top.sv:156) and its write
+  port carries one whole entry, so no sub-line write exists to distinguish, which makes it 256 lines a
+  way and 512 in this build (IC_SIZE_BYTES 4096 / IC_NUM_WAYS 2 / IC_LINE_BYTES 8, rtl/ibex_pkg.sv:400-405).
+  It is set on every write, the sweep's and the ECC correction's encoded-zero data writes included, which
+  land only in cycles where a lookup or fill request coincides (data_write_ic0 = tag_write_ic0 at :283
+  while data_req_ic0 is lookup_req_ic0 or fill_req_ic0 at :280), and never cleared by reset or
+  invalidation, since neither the RAM contents nor the model's array lose their contents there. Which
+  lines stay never-written is therefore stimulus-dependent, which is a DUT property and not a TB
+  artefact. The sample is the FIRST checked read of a never-written line of a way, at most 512 in a run;
+  anti-vacuity: only injections and checked uninitialised reads sample; a hit proves gen_chk_icache /
   gen_chk_alerts verified alert, invalidation and refetch. The quiet-major/NMI bin is qualified per
-  injection (the stimulus that could have raised them).
+  injection (the stimulus that could have raised them), per signal: the two major-alert outputs are
+  levels judged over the injection window, while rvfi_ext_nmi_int is a per-retirement RVFI flag
+  (rtl/ibex_core.sv:1830, staged to RVFI_STAGES) and is judged over the retirement window
+  GEN_ICACHE_RETIRE_WINDOW = 64 (dv/auto_dv/tb/gen_tb_pkg.sv:248), not the 2-cycle ECC window, where
+  it could never be seen.
 - Coverpoints:
   - cp_ram iff injected: bins tag{ic_tag_rdata_i corrupted}, data{ic_data_rdata_i corrupted}
   - cp_bits iff injected = flipped bits: bins single{1}, double{2}
@@ -4807,26 +4825,38 @@ bug-candidate behaviour carry the bug tie (B16 in CG-DMEM-007).
   - cp_inval_ways iff alerted = ways written invalid in the next cycle: bins all_ways{tag error},
     hit_way_only{data error}
   - cp_refetch iff alerted: bins yes{1: the lookup was served from the bus afterwards}
-  - cp_major_nmi_quiet iff injected: bins yes{1: alert_major_internal_o, alert_major_bus_o and
-    rvfi_ext_nmi_int stayed low over the injection window}
+  - cp_major_nmi_quiet iff injected: bins yes{1: alert_major_internal_o and alert_major_bus_o stayed
+    low in every cycle of the injection window, a persistent level counting as not quiet, and
+    rvfi_ext_nmi_int carried no set flag on any retirement inside the retirement window}
   - cp_lookups_blocked_next iff alerted: bins yes{1: no lookup read on any port in the ECC write
     cycle; a data-port WRITE of ECC(0) in that cycle is legal, rtl/ibex_icache.sv:280, 1000-1011}
   - cp_no_alert_case iff the corruption or read must not alert: bins unused_way_data{data of the
     non-hitting way}, disabled_cache{icache_enable == 0}, during_invalidation{sweep running},
     uninitialised_data_ram{never-written data line read, no injection},
     masked_duplicate_copy{a data flip clearing a bit in one of two valid copies of the line, restored
-    by the OR of the hit-data mux, rtl/ibex_icache.sv:507-514}
-  - cp_multiway_mismatch (informational, TP-IC-038 only) iff both ways valid with the same tag and
-    differing data: bins alert_or_wrong{1: alert_minor_o, a wrong rvfi_insn, or a word that is
+    by the OR of the hit-data mux, rtl/ibex_icache.sv:507-514}. Precedence where several reasons hold:
+    disabled_cache and then during_invalidation first, because icache_enable_i and inval_block_cache
+    are terms of lookup_actual_ic0 itself (:266) and mask the DUT's check whatever else is true. The
+    classifier does not read those two signals: it decides the bin from the TB's proxy
+    gen_icram_events::qualified_at (gen_tb_pkg.sv:577-581), which takes the enable as the scoreboard last
+    saw it written in a record and the sweep as its own all-ways tag writes, each with a grace window,
+    because the TB sees both states late. The precedence order is the same on either reading; then the
+    hit-way pair, which are mutually exclusive by their own conditions, unused_way_data when the
+    corruption is not in the hitting way and masked_duplicate_copy when it is and the mux OR restores
+    the bit; then uninitialised_data_ram, reachable only with no injection at all. The order matters
+    because unwritten-word reads occur with the cache disabled and during the sweep, so without it the
+    uninitialised bin would absorb both
+  - cp_multiway_mismatch iff both ways valid with the same tag and differing data (informational,
+    TP-IC-038 only): bins alert_or_wrong{1: alert_minor_o, a wrong rvfi_insn, or a word that is
     stale because the OR matched the pre-store copy: the outcomes when the copies are two independently
     written codewords}, masked{1: no alert
     and the fetched word correct, reachable only where one copy is a corrupted image of the other
     and the flip cleared a bit of the un-tweaked word the mux ORs, which is the injection path and
     not this item's stimulus}
-  - cp_knob iff injected = knob:icache_ecc_err_rate (cross operand only): values none, rare,
+  - cp_knob iff injected = knob:icache_ecc_err_rate (cross operand only): bins none, rare,
     frequent
 - Crosses:
-  - cr_ram_x_bits_x_way = cp_ram x cp_bits x cp_way, 8 bins: tag_single_way0{tag,single,way0},
+  - cr_ram_x_bits_x_way = cp_ram x cp_bits x cp_way: bins tag_single_way0{tag,single,way0},
     tag_single_way1{tag,single,way1}, tag_double_way0{tag,double,way0}, tag_double_way1{tag,double,
     way1}, data_single_way0{data,single,way0}, data_single_way1{data,single,way1},
     data_double_way0{data,double,way0}, data_double_way1{data,double,way1}
@@ -4838,6 +4868,23 @@ bug-candidate behaviour carry the bug tie (B16 in CG-DMEM-007).
     single_frequent{single,frequent}, double_frequent{double,frequent}; ignore_bins single|double x
     none: no injection under the none regime
 - Adopted (riscv-dv): none
+- Build split, WP-8 (part 1 samples what the announced injection can supply; part 2 the rest): the
+  renderer's implemented list is per COVERGROUP, so entering CG-IC-006 renders all 12 coverpoints in
+  plan order and all 4 crosses; measured from the committed renderer against this plan, 24 coverpoint
+  bins and 16 cross bins, every coverpoint carrying its ignore_bins na clause. Part 1 samples eight
+  coverpoints and three crosses and passes -1 for the four part-2 coverpoints and for the cross whose
+  operand is one of them, so their real bins stay at 0 per cent BY INTENT: owned, declared by no
+  manifest, hidden by no ignore_bins (docs/dv/dv_principles.md:101-102, a coverpoint may be built
+  before stimulus can hit it and 0 per cent marks intent, while only genuinely unhittable bins are
+  pruned; these become hittable when part 2 lands, so the dilution is correct and temporary). Part 1
+  declares 29 bins and part 2 the remaining 8 (cp_inval_ways 2, cp_refetch 1,
+  cp_lookups_blocked_next 1, cp_multiway_mismatch 2, cr_ram_x_inval 2). Both figures count
+  coverpoint-bin PAIRS, which is the unit a manifest names as covergroup.coverpoint.bin: three
+  coverpoints share the bin name yes, so a distinct-name count would lose two. cp_knob's three
+  rendered bins have no traceability rows and are namable in no manifest, which is why 29 is not the
+  render's 24 plus 16. The eight-and-four split is the state after part 1 builds two of the six
+  observations and was first sized six-and-six by observability alone, so it is a statement about a
+  moment rather than a constant of the covergroup
 - TP items: TP-IC-035, TP-IC-036, TP-IC-037, TP-IC-038, TP-IC-042, TP-IC-043, TP-IC-044, TP-IC-049, TP-IC-056, TP-SEC-001
 ### CG-IC-007: gen_cg_ic_busy_throttle
 - Features: F-IC-029, F-IC-038, F-IC-043, F-IC-044

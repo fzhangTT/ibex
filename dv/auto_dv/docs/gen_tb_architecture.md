@@ -1324,7 +1324,10 @@ finish() epilogue. The five items v1f listed as open are closed; everything in S
 Re-embedded by the DV Lead 2026-09-03 12:14 UTC. The text below is the committed `dv/auto_dv/docs/gen_rvfi_export_addendum.md`
 (sha256 prefix f510177cda02a0c6), heading depth shifted by one level. The hash pins WHAT WAS QUOTED and nothing more:
 if the source moves, this quotation does not follow it and becomes a quotation of a superseded revision rather than a
-false claim, and a revision arrives only by re-quoting and re-hashing here. The status and owed sentences inside the
+false claim, and a revision arrives only by re-quoting and re-hashing here. That has since happened:
+the committed addendum is version 4d at cbadb7f (sha256 prefix 1a0a67d411668363), while this section
+quotes the text at 50256f0, which the addendum's own version history labels 4c.1, so Section 9 is a
+quotation of a superseded revision until it is re-quoted. The status and owed sentences inside the
 quotation are the source's own, dated to the quoted revision rather than read as current, and this document neither
 edits them nor treats them as its own claims. The Orchestrator's gate verdict on this version:
 dv/auto_dv/reviews/2026-09-03-claude-replan-gen_rvfi_export_addendum-r5.md (APPROVE-WITH-CHANGES on the version 4c text at d0c0d15; its D1, D2 and D6 are closed by the aligned Section 9 committed as 50256f0). TB Infra owns the component; the Test Writer is the consumer; the plan's witness protocol
