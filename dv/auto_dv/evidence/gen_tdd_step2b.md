@@ -936,16 +936,41 @@ gen_tb_pkg.sv in the shared tree carries the uncommitted NMI knob whose hand-off
 re-review, so the file cannot be handed without landing the gated knob with it. Its red is a unit case on the
 function, which also closes the omission CM208-Info-1 recorded.
 
-THE AGE-17 FIXTURE: ONE ATTEMPT, MEASURED, STILL OWED (CM209-Info-1). MUT-BND2 withholds every maskable line once a
-record count is reached, so a raise in the last stimulus records cannot be satisfied. Three builds and 53 runs (48
-thresholds at seed 3, four seeds at one threshold) produced 111 probe survivor lines with ages 8 to 15, stepping by
-two within a run, and never 16 or 17. At single-record granularity across the crossing the surviving age stays 15
-while the bound-failure count rises, so the case goes straight from a surviving age-15 expectation to a judged one.
-The reason the axis cannot reach the bound is that the threshold moves the finish request with it, preserving the
-phase between the last withheld raise and the finish record, and three of four seeds at one threshold left no
-survivor at all. The route for the next attempt is a directed program raising a line on the finish-request record.
-The fix therefore still rests on the comparison operators with the seed-7 run as its non-discriminating check, and
-the retirement-stall residual stays open behind the fixture.
+THE AGE-17 FIXTURE: ONE ATTEMPT, MEASURED, STILL OWED (CM209-Info-1). CORRECTED IN LANDING 34, and the correction
+is mine: the figures this paragraph first carried, three builds and 53 runs with 111 survivor lines at ages 8 to 15,
+described only the nine runs this instance added, and the 111 came from a raw grep over one root rather than from
+the attempt's own summariser. The whole attempt, re-derived by calling that summariser on every run directory of
+the three roots, is 195 runs over six build names and three faults, of which 9 are this instance's, giving 90
+survivor entries across 48 runs with ages 1 to 15. The direction of the finding is unchanged: the maximum survivor
+age over every run is 15, no entry reaches 16 or 17, and ZERO seeds differ in bound-failure count between the two
+drains, which is the signal the fixture needs.
+
+THE FAULTS. MUT-NT2 withholds one line once a record count is reached; MUT-BND1 withholds every maskable line from
+the finish request onward; MUT-BND2 does the same with its onset read from a plusarg, which is the only one of the
+three that frees the raise phase from the finish request. Its 47 onset values collapse to 25 DISTINCT outcomes,
+because an onset falling in a gap between raise events changes nothing, so the free-phase sample is 25 and zero
+hits over it BOUNDS NOTHING. The case is not claimed unreachable.
+
+THREE MEASUREMENTS THAT STAND ON THEIR OWN. First, the boot-retire plusarg is not a lever: the same build and seed
+at 2490 and 2500 give the identical finish request at record 3710, the same 18-record drain, the same 3728 records
+and the same single failure, so the fixture's original plan of steering the finish point cannot work. Second, the
+rule's stamp source and the counter the drain measures are ONE number: a creation probe printed both at all 251
+expectation creations of one run, every one at offset 0, which closes the only way the correction's plus-one could
+have been the wrong size. Third, why the boundary stayed empty: in the run read, the finish request retired on
+record 3686 while the raises either side sit on 3679 and 3689, a miss by three records, and the six raises near the
+end are 227, 26, 44, 5 and 83 cycles apart against 5.27 cycles per record, so a raise falls inside any one named
+record only a fraction of the time. That is why a seed or onset sweep is the wrong instrument.
+
+THE CONSTRUCTION THAT WOULD WORK, NAMED AND NOT BUILT: the boundary needs a raise inside the finish request's own
+record, which no sweep controls, but a stimulus-side trigger does. The interrupt driver already arms a timed action
+on an observed event, the machinery the timed-NMI knob uses, so a driver hook raising one withheld maskable line on
+the finish request itself places the stamp BY CONSTRUCTION rather than by luck. That is TB work with its own trust
+triad, not a mutant, and it is OWED. Until it exists the fix rests on the comparison operators with the seed-7 run
+as its non-discriminating check, and the retirement-stall residual stays open behind the fixture.
 
 Retained: gen_tdd_logs/mutations/gen_fu_l31b_nmi_wave_run_corrigendum.log,
-gen_fu_l31b_drain_corrections_corrigendum.log and gen_fu_l33_drain_cap_resize.log, each with a manifest row.
+gen_fu_l31b_drain_corrections_corrigendum.log and gen_fu_l33_drain_cap_resize.log in landing 33, and
+gen_fu_l33_age17_attempt.log in landing 34, each with a manifest row. The attempt log carries every one of the 195
+runs as a row produced by the attempt's own summariser from that run's run_header.txt, stdout.log and verdict.txt,
+the digests of all six scratch builds with the statement that no gate identity applies to any of them, and the two
+probe builds marked as measurement aids from which no claim about the drain is read.

@@ -1,0 +1,336 @@
+# THE AGE-17 DISCRIMINATING FIXTURE: ONE ATTEMPT, NOT CONSTRUCTED, and what was measured instead.
+#
+# WHY THIS LOG EXISTS. CR-31-L-2 and CM208-Medium-1 asked for a fixture that discriminates the interrupt-entry
+# drain's off-by-one: a run in which an expectation is stamped on the finish request's OWN record. The corrected
+# drain (bound PLUS ONE) reaches age bound+1 on its last record and the in-run rule fires; the pre-correction drain
+# (exactly the bound) stops one record earlier, leaves age == bound, and reports the expectation open with no error.
+# Landing 32 answered the row from the comparison operators and said plainly that no such fixture was built.
+# CM209-Info-1 asked for one attempt or a statement that it is owed. This is the attempt.
+#
+# WHAT IS CLAIMED. The fixture is NOT CONSTRUCTED. No run here produced an expectation stamped on the finish
+# request's own record, and no run separates the two drains by a bound failure. Two things ARE measured and are
+# claimed as measurements: (a) the rule's stamp source and the counter the drain measures are the same number at
+# every one of 251 expectation creations in one run, so the correction's plus-one is exactly one record in the
+# rule's own units and not one record of a skewed counter; (b) the reason the boundary stayed empty, which is that
+# raise events near a run's end are tens of cycles apart while a record retires about every 5.3 cycles, so the
+# finish request's own record usually falls in a gap between raises.
+#
+# WHAT IS NOT CLAIMED. Not that the age-exactly-bound case is unreachable, and not that this sample is large. Only
+# the fault-C sweep frees the raise phase from the finish request, and its onset values collapse to far fewer
+# distinct outcomes than onsets, so the free-phase sample is small and zero hits over it bounds nothing. The case is
+# reachable by construction, which section 7 names and does not build. The off-by-one fix therefore still rests on
+# the comparison operators, with the landing-32 seed-7 run as its non-discriminating check.
+#
+# PROVENANCE OF THIS RECORD, stated because it matters. The attempt was run by the earlier instance of this role;
+# this instance added nine runs (the five single-record thresholds across the crossing and four seeds at one
+# threshold, the run names carrying an x) and AUTHORED THIS LOG. Every figure below was re-derived by this instance
+# from the run artefacts with the commands shown, not copied from the earlier draft. The earlier draft's own
+# summary sentence gave 85 runs and 79 counted survivors; those two counts DO NOT REPRODUCE and are superseded by
+# the measured values printed below. Every other figure of that draft reproduced exactly, including the 43 onsets
+# collapsing to 22 distinct outcomes, fault B's ceiling of 14, the offset-zero result and the raise spacing.
+#
+# THE BUILDS. Every build is a SCRATCH build of a mutated tree that was never committed, so no gate identity (the
+# flow's filelist_digest over gen_rtl.f plus gen_tb.f) applies to any of them and none is claimed. Each figure is
+# the build's own local runner digest, printed by its compile log as "sources sha256" over dv/auto_dv env, tb, isa
+# and gen_tb. Every root is a detached "git archive HEAD" of the committed tree with the fault applied on top.
+#   Fault A = MUT-NT2 (irq_external withheld once 3572 records have retired), base a68c021:
+#       committed drain (bound plus one)            5137b1536b415deb   table name "new"
+#       pre-correction drain (exactly the bound)    67dd4d0f3211a706   table name "old"
+#   Fault B = MUT-BND1 (every maskable line withheld from the finish request onward), base 2410402:
+#       committed drain                             f54b78ebcae677e2   table name "bnew"
+#       pre-correction drain + survivor-age probe   7d01913742957474   table name "boldi"
+#   Fault C = MUT-BND2 (the same withholding, onset read from +mutbnd_at), base 2410402:
+#       committed drain                             9f42cb9ff0d19851   table name "dnew"
+#       pre-correction drain                        1339052279e22532   table name "dold"
+#       pre-correction drain + survivor-age probe   3711a763aa7722b1   table name "doldi"
+#       pre-correction drain + creation probe       98a7df6c0fceb8da   table name "doldp"
+#   THE TWO PROBE BUILDS ARE MEASUREMENT AIDS, NOT EVIDENCE ABOUT THE FIX: they add one uvm_info to the checker and
+#   nothing else, and any claim about the drain itself is read from an unprobed build.
+#   All runs use the irqp program, the storm regime with the multi line mix, and +gen_chk_irq_pending=0 so the entry
+#   rule is the only judge: withholding a raised line also makes the pending checker mismatch, and its errors would
+#   drown the one count under test. Every other checker is on.
+#   TWO LOOP FACTS WORTH KEEPING. A mutant plusarg must not begin with gen_, because the TB's own guard fatals on
+#   unknown gen_ names against the knob table (gen_env_pkg.sv); one build was discarded to that and none of its runs
+#   appears here. And the interrupt checker's summary prints "bound failures" twice, once plain and once prefixed
+#   nmi_internal, so the summariser takes the first match only.
+
+== 0. THE RUN SET, re-derived ==
+$ python3 age17_summarise.py <the nine build directories> | wc -l
+   rows: 195
+$ python3 (histogram over those rows)
+   total runs: 195   of which added by this instance: 9
+   per build: bnew=42  boldi=13  doldi=52  doldp=1  new=57  old=30
+   runs reporting at least one survivor: 48   survivor entries: 90
+   survivor age histogram (age:count): 1:12 2:4 3:4 4:3 5:4 6:1 7:12 8:3 9:6 10:2 11:4 12:5 13:13 14:11 15:6
+   min age 1   MAX AGE 15   entries at 16 or 17: 0
+   fault C onset values: 47   DISTINCT OUTCOMES: 25
+   fault B runs: 55   survivor entries: 28   max age: 14  (its onset IS the finish request, so its ceiling sits one record lower)
+   READING: the max age over every survivor of every run is 15 and no entry reaches 16 or 17, which is the
+   boundary the fixture needs. The onset count against the distinct-outcome count is the honest sample size:
+   an onset that falls in a gap between raise events changes nothing, so many onsets give one outcome.
+
+== 1. THE FINISH POINT IS NOT A LEVER: +gen_ut_boot_retire does not move the finish request ==
+   Same build (fault A, committed drain), same seed, two boot-retire values. The program ends on its own
+   tohost write, so the plusarg is an upper bound this program never reaches. The fixture's original plan,
+   steering the finish point with this plusarg, cannot work.
+   new    k2490          seed   3 onset          - boot_retire 2490 FAIL finish  3710 drained 18 records  3728 boundfail   1 open  0 ages [-] fired_at [3718]
+   new    k2500          seed   3 onset          - boot_retire 2500 FAIL finish  3710 drained 18 records  3728 boundfail   1 open  0 ages [-] fired_at [3718]
+
+== 2. THE OFFSET-ZERO MEASUREMENT: the rule's stamp source and the drain's counter are one number ==
+   The rule ages an expectation as st.order minus order_at, with order_at the last record the checker has
+   processed (gen_checkers_pkg.sv). The drain measures vif.evt_retired_count, the bridge counter
+   (gen_env_pkg.sv). If those differed at a raise, the corrected drain's extra record would not be one record
+   in the rule's own units. The creation probe prints both at every creation:
+$ command grep -ac "PROBE create" doldp/s3t3596/stdout.log
+   251
+$ command grep -ao "PROBE create .*offset -\?[0-9]*" ... | grep -o "offset -\?[0-9]*$" | sort | uniq -c
+       251 offset 0
+   So the two are the same number at every creation in this run, and the plus-one is exactly one record of
+   the rule's own clock. This closes the one way the correction's size could have been wrong.
+
+== 3. WHY THE BOUNDARY STAYED EMPTY, measured on fault C, seed 3, onset 3596 ==
+$ command grep -ao "finish_req seen at cycle [0-9]*, commands consumed [0-9]*, retired [0-9]*" ... | head -1
+   finish_req seen at cycle 22472, commands consumed 65, retired 3686
+$ command grep -ao "PROBE create .*raise cycle .*offset -\?[0-9]*" ... | tail -6
+   PROBE create lines 24140 raise cycle 22189: stamp last_st.order 3629, bridge evt_retired_count 3629, offset 0
+   PROBE create lines 20200 raise cycle 22416: stamp last_st.order 3674, bridge evt_retired_count 3674, offset 0
+   PROBE create lines 02008 raise cycle 22442: stamp last_st.order 3679, bridge evt_retired_count 3679, offset 0
+   PROBE create lines 00012 raise cycle 22486: stamp last_st.order 3689, bridge evt_retired_count 3689, offset 0
+   PROBE create lines 00940 raise cycle 22491: stamp last_st.order 3690, bridge evt_retired_count 3690, offset 0
+   PROBE create lines 20006 raise cycle 22574: stamp last_st.order 3702, bridge evt_retired_count 3702, offset 0
+$ python3 (the gaps and the record rate from those six lines)
+   raise records: 3629, 3674, 3679, 3689, 3690, 3702
+   raise cycles:  22189, 22416, 22442, 22486, 22491, 22574
+   gaps in cycles between consecutive raises: 227, 26, 44, 5, 83
+   cycles per record over that span: (22574-22189)/(3702-3629) = 5.27
+   the finish request retired on record 3686; the raises either side are on 3679 and 3689, a miss by 3
+   The survivors of that run, from the probe's own lines:
+   PROBE survivor lines 00012 nmi 0 order_at 3689 last order 3703 age 14
+   PROBE survivor lines 00940 nmi 0 order_at 3690 last order 3703 age 13
+   PROBE survivor lines 20006 nmi 0 order_at 3702 last order 3703 age 1
+   Their stamps are 3689, 3690 and 3702 against the pre-correction drain's last record, giving 14, 13 and 1.
+   An age of 17 needs a stamp on record 3686 itself. Nothing was stamped there, so no expectation could reach
+   the bound. A raise falls inside any one named record only a fraction of the time, which is why a seed or
+   onset sweep is the wrong instrument for this boundary.
+
+== 4. WHAT THE TWO DRAINS DID, side by side ==
+   Fault A ran on both drains. No seed differs in its bound-failure count. Three seeds differ in the OPPOSITE
+   direction: the committed drain's extra record admits one more late raise, so it reports one MORE survivor,
+   which is not the boundary. Fault B's onset IS the finish request, so it cannot reach the boundary at all.
+$ python3 (pair the fault-A rows by seed and compare bound failures)
+   seeds on the committed drain: 55   also on the pre-correction drain: 30
+   seeds whose BOUND-FAILURE count differs between the drains: 0  []
+   seeds whose OPEN count differs: 3  ['13', '18', '26']
+     seed 13: committed bf=1 open=1   pre-correction bf=1 open=0
+     seed 18: committed bf=0 open=1   pre-correction bf=0 open=0
+     seed 26: committed bf=0 open=1   pre-correction bf=0 open=0
+   READING: zero seeds differ in the bound-failure count, which is the signal the fixture needs. The open-count
+   differences run the other way and are the extra record admitting a later raise, not the boundary.
+
+== 5. WHAT IS OWED, AND THE CONSTRUCTION A LATER ATTEMPT SHOULD BUILD ==
+   The boundary needs a raise event inside the finish request's own record, which no sweep controls. A
+   stimulus-side trigger does control it: the interrupt driver already arms a timed action on an observed
+   event, the mechanism the timed-NMI knob uses. A driver hook that raises one maskable line on the finish
+   request itself, on a line the DUT cannot take because it is withheld, places the stamp on the finish record
+   BY CONSTRUCTION rather than by luck. That is TB work with its own trust triad, not a mutant, and it is NOT
+   BUILT here. Until it exists the off-by-one correction rests on the operators, and the retirement-stall
+   residual stays open behind it.
+
+== 6. EVERY RUN, one row each, produced by age17_summarise.py from each run's own artefacts ==
+new    k2490          seed   3 onset          - boot_retire 2490 FAIL finish  3710 drained 18 records  3728 boundfail   1 open  0 ages [-] fired_at [3718]
+new    k2500          seed   3 onset          - boot_retire 2500 FAIL finish  3710 drained 18 records  3728 boundfail   1 open  0 ages [-] fired_at [3718]
+new    s10nopend      seed  10 onset          - boot_retire 2500 PASS finish  3629 drained 18 records  3647 boundfail   0 open  0 ages [-] fired_at [-]
+new    s11nopend      seed  11 onset          - boot_retire 2500 FAIL finish  3744 drained 18 records  3762 boundfail   2 open  0 ages [-] fired_at [3661,3683]
+new    s12nopend      seed  12 onset          - boot_retire 2500 PASS finish  3629 drained 18 records  3647 boundfail   0 open  2 ages [-] fired_at [-]
+new    s13nopend      seed  13 onset          - boot_retire 2500 FAIL finish  3663 drained 18 records  3681 boundfail   1 open  1 ages [-] fired_at [3654]
+new    s14nopend      seed  14 onset          - boot_retire 2500 PASS finish  3564 drained 18 records  3582 boundfail   0 open  2 ages [-] fired_at [-]
+new    s15nopend      seed  15 onset          - boot_retire 2500 PASS finish  3534 drained 18 records  3552 boundfail   0 open  1 ages [-] fired_at [-]
+new    s16nopend      seed  16 onset          - boot_retire 2500 PASS finish  3633 drained 18 records  3651 boundfail   0 open  0 ages [-] fired_at [-]
+new    s17nopend      seed  17 onset          - boot_retire 2500 PASS finish  3554 drained 18 records  3572 boundfail   0 open  1 ages [-] fired_at [-]
+new    s18nopend      seed  18 onset          - boot_retire 2500 PASS finish  3659 drained 18 records  3677 boundfail   0 open  1 ages [-] fired_at [-]
+new    s19nopend      seed  19 onset          - boot_retire 2500 PASS finish  3546 drained 18 records  3564 boundfail   0 open  0 ages [-] fired_at [-]
+new    s1nopend       seed   1 onset          - boot_retire 2500 PASS finish  3588 drained 18 records  3606 boundfail   0 open  2 ages [-] fired_at [-]
+new    s20nopend      seed  20 onset          - boot_retire 2500 PASS finish  3604 drained 18 records  3622 boundfail   0 open  0 ages [-] fired_at [-]
+new    s21nopend      seed  21 onset          - boot_retire 2500 PASS finish  3563 drained 18 records  3581 boundfail   0 open  0 ages [-] fired_at [-]
+new    s22nopend      seed  22 onset          - boot_retire 2500 PASS finish  3580 drained 18 records  3598 boundfail   0 open  0 ages [-] fired_at [-]
+new    s23nopend      seed  23 onset          - boot_retire 2500 PASS finish  3523 drained 18 records  3541 boundfail   0 open  0 ages [-] fired_at [-]
+new    s24nopend      seed  24 onset          - boot_retire 2500 PASS finish  3571 drained 18 records  3589 boundfail   0 open  0 ages [-] fired_at [-]
+new    s25nopend      seed  25 onset          - boot_retire 2500 FAIL finish  3688 drained 18 records  3706 boundfail   2 open  0 ages [-] fired_at [3624,3667]
+new    s26nopend      seed  26 onset          - boot_retire 2500 PASS finish  3587 drained 18 records  3605 boundfail   0 open  1 ages [-] fired_at [-]
+new    s27nopend      seed  27 onset          - boot_retire 2500 PASS finish  3579 drained 18 records  3597 boundfail   0 open  0 ages [-] fired_at [-]
+new    s28nopend      seed  28 onset          - boot_retire 2500 PASS finish  3648 drained 18 records  3666 boundfail   0 open  1 ages [-] fired_at [-]
+new    s29nopend      seed  29 onset          - boot_retire 2500 PASS finish  3686 drained 18 records  3704 boundfail   0 open  1 ages [-] fired_at [-]
+new    s2nopend       seed   2 onset          - boot_retire 2500 PASS finish  3607 drained 18 records  3625 boundfail   0 open  1 ages [-] fired_at [-]
+new    s30nopend      seed  30 onset          - boot_retire 2500 PASS finish  3594 drained 18 records  3612 boundfail   0 open  0 ages [-] fired_at [-]
+new    s31nopend      seed  31 onset          - boot_retire 2500 PASS finish  3472 drained 18 records  3490 boundfail   0 open  0 ages [-] fired_at [-]
+new    s32nopend      seed  32 onset          - boot_retire 2500 PASS finish  3486 drained 18 records  3504 boundfail   0 open  1 ages [-] fired_at [-]
+new    s33nopend      seed  33 onset          - boot_retire 2500 PASS finish  3564 drained 18 records  3582 boundfail   0 open  0 ages [-] fired_at [-]
+new    s34nopend      seed  34 onset          - boot_retire 2500 PASS finish  3523 drained 18 records  3541 boundfail   0 open  0 ages [-] fired_at [-]
+new    s35nopend      seed  35 onset          - boot_retire 2500 PASS finish  3547 drained 18 records  3565 boundfail   0 open  0 ages [-] fired_at [-]
+new    s36nopend      seed  36 onset          - boot_retire 2500 PASS finish  3615 drained 18 records  3633 boundfail   0 open  1 ages [-] fired_at [-]
+new    s37nopend      seed  37 onset          - boot_retire 2500 PASS finish  3638 drained 18 records  3656 boundfail   0 open  0 ages [-] fired_at [-]
+new    s38nopend      seed  38 onset          - boot_retire 2500 PASS finish  3506 drained 18 records  3524 boundfail   0 open  0 ages [-] fired_at [-]
+new    s39nopend      seed  39 onset          - boot_retire 2500 PASS finish  3576 drained 18 records  3594 boundfail   0 open  0 ages [-] fired_at [-]
+new    s3nopend       seed   3 onset          - boot_retire 2500 FAIL finish  3710 drained 18 records  3728 boundfail   1 open  0 ages [-] fired_at [3718]
+new    s40nopend      seed  40 onset          - boot_retire 2500 PASS finish  3608 drained 18 records  3626 boundfail   0 open  0 ages [-] fired_at [-]
+new    s41nopend      seed  41 onset          - boot_retire 2500 PASS finish  3622 drained 18 records  3640 boundfail   0 open  0 ages [-] fired_at [-]
+new    s42nopend      seed  42 onset          - boot_retire 2500 PASS finish  3600 drained 18 records  3618 boundfail   0 open  0 ages [-] fired_at [-]
+new    s43nopend      seed  43 onset          - boot_retire 2500 FAIL finish  3627 drained 18 records  3645 boundfail   1 open  1 ages [-] fired_at [3635]
+new    s44nopend      seed  44 onset          - boot_retire 2500 PASS finish  3584 drained 18 records  3602 boundfail   0 open  1 ages [-] fired_at [-]
+new    s45nopend      seed  45 onset          - boot_retire 2500 PASS finish  3565 drained 18 records  3583 boundfail   0 open  0 ages [-] fired_at [-]
+new    s46nopend      seed  46 onset          - boot_retire 2500 PASS finish  3598 drained 18 records  3616 boundfail   0 open  0 ages [-] fired_at [-]
+new    s47nopend      seed  47 onset          - boot_retire 2500 PASS finish  3613 drained 18 records  3631 boundfail   0 open  0 ages [-] fired_at [-]
+new    s48nopend      seed  48 onset          - boot_retire 2500 PASS finish  3604 drained 18 records  3622 boundfail   0 open  0 ages [-] fired_at [-]
+new    s49nopend      seed  49 onset          - boot_retire 2500 PASS finish  3592 drained 18 records  3610 boundfail   0 open  1 ages [-] fired_at [-]
+new    s4nopend       seed   4 onset          - boot_retire 2500 PASS finish  3608 drained 18 records  3626 boundfail   0 open  0 ages [-] fired_at [-]
+new    s50nopend      seed  50 onset          - boot_retire 2500 PASS finish  3606 drained 18 records  3624 boundfail   0 open  0 ages [-] fired_at [-]
+new    s51nopend      seed  51 onset          - boot_retire 2500 PASS finish  3594 drained 18 records  3612 boundfail   0 open  0 ages [-] fired_at [-]
+new    s52nopend      seed  52 onset          - boot_retire 2500 PASS finish  3572 drained 18 records  3590 boundfail   0 open  1 ages [-] fired_at [-]
+new    s53nopend      seed  53 onset          - boot_retire 2500 PASS finish  3606 drained 18 records  3624 boundfail   0 open  1 ages [-] fired_at [-]
+new    s54nopend      seed  54 onset          - boot_retire 2500 PASS finish  3577 drained 18 records  3595 boundfail   0 open  1 ages [-] fired_at [-]
+new    s55nopend      seed  55 onset          - boot_retire 2500 PASS finish  3530 drained 18 records  3548 boundfail   0 open  0 ages [-] fired_at [-]
+new    s5nopend       seed   5 onset          - boot_retire 2500 PASS finish  3573 drained 18 records  3591 boundfail   0 open  0 ages [-] fired_at [-]
+new    s6nopend       seed   6 onset          - boot_retire 2500 FAIL finish  3654 drained 18 records  3672 boundfail   1 open  1 ages [-] fired_at [3656]
+new    s7nopend       seed   7 onset          - boot_retire 2500 FAIL finish  3676 drained 18 records  3694 boundfail   1 open  0 ages [-] fired_at [3651]
+new    s8nopend       seed   8 onset          - boot_retire 2500 PASS finish  3647 drained 18 records  3665 boundfail   0 open  1 ages [-] fired_at [-]
+new    s9nopend       seed   9 onset          - boot_retire 2500 PASS finish  3593 drained 18 records  3611 boundfail   0 open  0 ages [-] fired_at [-]
+old    s10nopend      seed  10 onset          - boot_retire 2500 PASS finish  3629 drained 17 records  3646 boundfail   0 open  0 ages [-] fired_at [-]
+old    s11nopend      seed  11 onset          - boot_retire 2500 FAIL finish  3744 drained 17 records  3761 boundfail   2 open  0 ages [-] fired_at [3661,3683]
+old    s12nopend      seed  12 onset          - boot_retire 2500 PASS finish  3629 drained 17 records  3646 boundfail   0 open  2 ages [-] fired_at [-]
+old    s13nopend      seed  13 onset          - boot_retire 2500 FAIL finish  3663 drained 17 records  3680 boundfail   1 open  0 ages [-] fired_at [3654]
+old    s14nopend      seed  14 onset          - boot_retire 2500 PASS finish  3564 drained 17 records  3581 boundfail   0 open  2 ages [-] fired_at [-]
+old    s15nopend      seed  15 onset          - boot_retire 2500 PASS finish  3534 drained 17 records  3551 boundfail   0 open  1 ages [-] fired_at [-]
+old    s16nopend      seed  16 onset          - boot_retire 2500 PASS finish  3633 drained 17 records  3650 boundfail   0 open  0 ages [-] fired_at [-]
+old    s17nopend      seed  17 onset          - boot_retire 2500 PASS finish  3554 drained 17 records  3571 boundfail   0 open  1 ages [-] fired_at [-]
+old    s18nopend      seed  18 onset          - boot_retire 2500 PASS finish  3659 drained 17 records  3676 boundfail   0 open  0 ages [-] fired_at [-]
+old    s19nopend      seed  19 onset          - boot_retire 2500 PASS finish  3546 drained 17 records  3563 boundfail   0 open  0 ages [-] fired_at [-]
+old    s1nopend       seed   1 onset          - boot_retire 2500 PASS finish  3588 drained 17 records  3605 boundfail   0 open  2 ages [-] fired_at [-]
+old    s20nopend      seed  20 onset          - boot_retire 2500 PASS finish  3604 drained 17 records  3621 boundfail   0 open  0 ages [-] fired_at [-]
+old    s21nopend      seed  21 onset          - boot_retire 2500 PASS finish  3563 drained 17 records  3580 boundfail   0 open  0 ages [-] fired_at [-]
+old    s22nopend      seed  22 onset          - boot_retire 2500 PASS finish  3580 drained 17 records  3597 boundfail   0 open  0 ages [-] fired_at [-]
+old    s23nopend      seed  23 onset          - boot_retire 2500 PASS finish  3523 drained 17 records  3540 boundfail   0 open  0 ages [-] fired_at [-]
+old    s24nopend      seed  24 onset          - boot_retire 2500 PASS finish  3571 drained 17 records  3588 boundfail   0 open  0 ages [-] fired_at [-]
+old    s25nopend      seed  25 onset          - boot_retire 2500 FAIL finish  3688 drained 17 records  3705 boundfail   2 open  0 ages [-] fired_at [3624,3667]
+old    s26nopend      seed  26 onset          - boot_retire 2500 PASS finish  3587 drained 17 records  3604 boundfail   0 open  0 ages [-] fired_at [-]
+old    s27nopend      seed  27 onset          - boot_retire 2500 PASS finish  3579 drained 17 records  3596 boundfail   0 open  0 ages [-] fired_at [-]
+old    s28nopend      seed  28 onset          - boot_retire 2500 PASS finish  3648 drained 17 records  3665 boundfail   0 open  1 ages [-] fired_at [-]
+old    s29nopend      seed  29 onset          - boot_retire 2500 PASS finish  3686 drained 17 records  3703 boundfail   0 open  1 ages [-] fired_at [-]
+old    s2nopend       seed   2 onset          - boot_retire 2500 PASS finish  3607 drained 17 records  3624 boundfail   0 open  1 ages [-] fired_at [-]
+old    s30nopend      seed  30 onset          - boot_retire 2500 PASS finish  3594 drained 17 records  3611 boundfail   0 open  0 ages [-] fired_at [-]
+old    s3nopend       seed   3 onset          - boot_retire 2500 FAIL finish  3710 drained 17 records  3727 boundfail   1 open  0 ages [-] fired_at [3718]
+old    s4nopend       seed   4 onset          - boot_retire 2500 PASS finish  3608 drained 17 records  3625 boundfail   0 open  0 ages [-] fired_at [-]
+old    s5nopend       seed   5 onset          - boot_retire 2500 PASS finish  3573 drained 17 records  3590 boundfail   0 open  0 ages [-] fired_at [-]
+old    s6nopend       seed   6 onset          - boot_retire 2500 FAIL finish  3654 drained 17 records  3671 boundfail   1 open  1 ages [-] fired_at [3656]
+old    s7nopend       seed   7 onset          - boot_retire 2500 FAIL finish  3676 drained 17 records  3693 boundfail   1 open  0 ages [-] fired_at [3651]
+old    s8nopend       seed   8 onset          - boot_retire 2500 PASS finish  3647 drained 17 records  3664 boundfail   0 open  1 ages [-] fired_at [-]
+old    s9nopend       seed   9 onset          - boot_retire 2500 PASS finish  3593 drained 17 records  3610 boundfail   0 open  0 ages [-] fired_at [-]
+bnew   s10nopend      seed  10 onset          - boot_retire 2500 PASS finish  3629 drained 18 records  3647 boundfail   0 open  0 ages [-] fired_at [-]
+bnew   s11nopend      seed  11 onset          - boot_retire 2500 PASS finish  3746 drained 18 records  3764 boundfail   0 open  4 ages [-] fired_at [-]
+bnew   s12nopend      seed  12 onset          - boot_retire 2500 PASS finish  3629 drained 18 records  3647 boundfail   0 open  4 ages [-] fired_at [-]
+bnew   s13nopend      seed  13 onset          - boot_retire 2500 PASS finish  3664 drained 18 records  3682 boundfail   0 open  2 ages [-] fired_at [-]
+bnew   s14nopend      seed  14 onset          - boot_retire 2500 PASS finish  3564 drained 18 records  3582 boundfail   0 open  2 ages [-] fired_at [-]
+bnew   s15nopend      seed  15 onset          - boot_retire 2500 PASS finish  3534 drained 18 records  3552 boundfail   0 open  2 ages [-] fired_at [-]
+bnew   s16nopend      seed  16 onset          - boot_retire 2500 PASS finish  3633 drained 18 records  3651 boundfail   0 open  1 ages [-] fired_at [-]
+bnew   s17nopend      seed  17 onset          - boot_retire 2500 PASS finish  3554 drained 18 records  3572 boundfail   0 open  1 ages [-] fired_at [-]
+bnew   s18nopend      seed  18 onset          - boot_retire 2500 PASS finish  3659 drained 18 records  3677 boundfail   0 open  2 ages [-] fired_at [-]
+bnew   s19nopend      seed  19 onset          - boot_retire 2500 PASS finish  3546 drained 18 records  3564 boundfail   0 open  2 ages [-] fired_at [-]
+bnew   s1nopend       seed   1 onset          - boot_retire 2500 PASS finish  3588 drained 18 records  3606 boundfail   0 open  4 ages [-] fired_at [-]
+bnew   s20nopend      seed  20 onset          - boot_retire 2500 PASS finish  3604 drained 18 records  3622 boundfail   0 open  0 ages [-] fired_at [-]
+bnew   s21nopend      seed  21 onset          - boot_retire 2500 PASS finish  3563 drained 18 records  3581 boundfail   0 open  0 ages [-] fired_at [-]
+bnew   s22nopend      seed  22 onset          - boot_retire 2500 PASS finish  3580 drained 18 records  3598 boundfail   0 open  1 ages [-] fired_at [-]
+bnew   s23nopend      seed  23 onset          - boot_retire 2500 PASS finish  3523 drained 18 records  3541 boundfail   0 open  0 ages [-] fired_at [-]
+bnew   s24nopend      seed  24 onset          - boot_retire 2500 PASS finish  3571 drained 18 records  3589 boundfail   0 open  1 ages [-] fired_at [-]
+bnew   s25nopend      seed  25 onset          - boot_retire 2500 PASS finish  3690 drained 18 records  3708 boundfail   0 open  0 ages [-] fired_at [-]
+bnew   s26nopend      seed  26 onset          - boot_retire 2500 PASS finish  3587 drained 18 records  3605 boundfail   0 open  2 ages [-] fired_at [-]
+bnew   s27nopend      seed  27 onset          - boot_retire 2500 PASS finish  3579 drained 18 records  3597 boundfail   0 open  0 ages [-] fired_at [-]
+bnew   s28nopend      seed  28 onset          - boot_retire 2500 PASS finish  3648 drained 18 records  3666 boundfail   0 open  2 ages [-] fired_at [-]
+bnew   s29nopend      seed  29 onset          - boot_retire 2500 PASS finish  3686 drained 18 records  3704 boundfail   0 open  1 ages [-] fired_at [-]
+bnew   s2nopend       seed   2 onset          - boot_retire 2500 PASS finish  3607 drained 18 records  3625 boundfail   0 open  1 ages [-] fired_at [-]
+bnew   s30nopend      seed  30 onset          - boot_retire 2500 PASS finish  3594 drained 18 records  3612 boundfail   0 open  3 ages [-] fired_at [-]
+bnew   s31nopend      seed  31 onset          - boot_retire 2500 PASS finish  3472 drained 18 records  3490 boundfail   0 open  0 ages [-] fired_at [-]
+bnew   s32nopend      seed  32 onset          - boot_retire 2500 PASS finish  3486 drained 18 records  3504 boundfail   0 open  1 ages [-] fired_at [-]
+bnew   s33nopend      seed  33 onset          - boot_retire 2500 PASS finish  3564 drained 18 records  3582 boundfail   0 open  2 ages [-] fired_at [-]
+bnew   s34nopend      seed  34 onset          - boot_retire 2500 PASS finish  3523 drained 18 records  3541 boundfail   0 open  1 ages [-] fired_at [-]
+bnew   s35nopend      seed  35 onset          - boot_retire 2500 PASS finish  3547 drained 18 records  3565 boundfail   0 open  1 ages [-] fired_at [-]
+bnew   s36nopend      seed  36 onset          - boot_retire 2500 PASS finish  3615 drained 18 records  3633 boundfail   0 open  2 ages [-] fired_at [-]
+bnew   s37nopend      seed  37 onset          - boot_retire 2500 PASS finish  3638 drained 18 records  3656 boundfail   0 open  2 ages [-] fired_at [-]
+bnew   s38nopend      seed  38 onset          - boot_retire 2500 PASS finish  3506 drained 18 records  3524 boundfail   0 open  0 ages [-] fired_at [-]
+bnew   s39nopend      seed  39 onset          - boot_retire 2500 PASS finish  3576 drained 18 records  3594 boundfail   0 open  0 ages [-] fired_at [-]
+bnew   s3nopend       seed   3 onset          - boot_retire 2500 PASS finish  3711 drained 18 records  3729 boundfail   0 open  0 ages [-] fired_at [-]
+bnew   s40nopend      seed  40 onset          - boot_retire 2500 PASS finish  3608 drained 18 records  3626 boundfail   0 open  3 ages [-] fired_at [-]
+bnew   s41nopend      seed  41 onset          - boot_retire 2500 PASS finish  3622 drained 18 records  3640 boundfail   0 open  0 ages [-] fired_at [-]
+bnew   s42nopend      seed  42 onset          - boot_retire 2500 PASS finish  3600 drained 18 records  3618 boundfail   0 open  2 ages [-] fired_at [-]
+bnew   s4nopend       seed   4 onset          - boot_retire 2500 PASS finish  3608 drained 18 records  3626 boundfail   0 open  1 ages [-] fired_at [-]
+bnew   s5nopend       seed   5 onset          - boot_retire 2500 PASS finish  3573 drained 18 records  3591 boundfail   0 open  0 ages [-] fired_at [-]
+bnew   s6nopend       seed   6 onset          - boot_retire 2500 PASS finish  3655 drained 18 records  3673 boundfail   0 open  2 ages [-] fired_at [-]
+bnew   s7nopend       seed   7 onset          - boot_retire 2500 PASS finish  3677 drained 18 records  3695 boundfail   0 open  0 ages [-] fired_at [-]
+bnew   s8nopend       seed   8 onset          - boot_retire 2500 PASS finish  3647 drained 18 records  3665 boundfail   0 open  4 ages [-] fired_at [-]
+bnew   s9nopend       seed   9 onset          - boot_retire 2500 PASS finish  3593 drained 18 records  3611 boundfail   0 open  0 ages [-] fired_at [-]
+boldi  s1             seed   1 onset          - boot_retire 2500 PASS finish  3588 drained 17 records  3605 boundfail   0 open  4 ages [14,13,9,5] fired_at [-]
+boldi  s11            seed  11 onset          - boot_retire 2500 PASS finish  3746 drained 17 records  3763 boundfail   0 open  4 ages [13,10,9,1] fired_at [-]
+boldi  s12            seed  12 onset          - boot_retire 2500 PASS finish  3629 drained 17 records  3646 boundfail   0 open  4 ages [9,3,2,1] fired_at [-]
+boldi  s13            seed  13 onset          - boot_retire 2500 PASS finish  3664 drained 17 records  3681 boundfail   0 open  1 ages [12] fired_at [-]
+boldi  s14            seed  14 onset          - boot_retire 2500 PASS finish  3564 drained 17 records  3581 boundfail   0 open  2 ages [3,2] fired_at [-]
+boldi  s15            seed  15 onset          - boot_retire 2500 PASS finish  3534 drained 17 records  3551 boundfail   0 open  1 ages [2] fired_at [-]
+boldi  s16            seed  16 onset          - boot_retire 2500 PASS finish  3633 drained 17 records  3650 boundfail   0 open  1 ages [7] fired_at [-]
+boldi  s17            seed  17 onset          - boot_retire 2500 PASS finish  3554 drained 17 records  3571 boundfail   0 open  1 ages [1] fired_at [-]
+boldi  s18            seed  18 onset          - boot_retire 2500 PASS finish  3659 drained 17 records  3676 boundfail   0 open  2 ages [14,8] fired_at [-]
+boldi  s2             seed   2 onset          - boot_retire 2500 PASS finish  3607 drained 17 records  3624 boundfail   0 open  1 ages [1] fired_at [-]
+boldi  s4             seed   4 onset          - boot_retire 2500 PASS finish  3608 drained 17 records  3625 boundfail   0 open  1 ages [8] fired_at [-]
+boldi  s6             seed   6 onset          - boot_retire 2500 PASS finish  3655 drained 17 records  3672 boundfail   0 open  2 ages [12,11] fired_at [-]
+boldi  s8             seed   8 onset          - boot_retire 2500 PASS finish  3647 drained 17 records  3664 boundfail   0 open  4 ages [14,14,5,4] fired_at [-]
+doldi  s1x3418        seed   1 onset       3418 boot_retire 2500 FAIL finish  3574 drained 17 records  3591 boundfail   5 open  0 ages [-] fired_at [3444,3512,3534,3558,3568]
+doldi  s2x3418        seed   2 onset       3418 boot_retire 2500 FAIL finish  3589 drained 17 records  3606 boundfail   7 open  0 ages [-] fired_at [3503,3521,3539,3552,3566,3583,3606]
+doldi  s3t3400        seed   3 onset       3400 boot_retire 2500 FAIL finish  3624 drained 17 records  3641 boundfail  18 open  3 ages [9,7,5] fired_at [3422,3438,3439,3448,3460,3471,3482,3536,3559,3564,3566,3568,3579,3612,3616,3624,3632,3638]
+doldi  s3t3404        seed   3 onset       3404 boot_retire 2500 FAIL finish  3624 drained 17 records  3641 boundfail  18 open  3 ages [9,7,5] fired_at [3422,3438,3439,3448,3460,3471,3482,3536,3559,3564,3566,3568,3579,3612,3616,3624,3632,3638]
+doldi  s3t3410        seed   3 onset       3410 boot_retire 2500 FAIL finish  3628 drained 17 records  3645 boundfail  17 open  3 ages [14,12,10] fired_at [3433,3434,3444,3456,3467,3478,3532,3555,3560,3562,3564,3575,3608,3612,3620,3628,3634]
+doldi  s3t3416        seed   3 onset       3416 boot_retire 2500 FAIL finish  3629 drained 17 records  3646 boundfail  17 open  3 ages [15,13,11] fired_at [3435,3436,3443,3455,3466,3477,3531,3554,3559,3561,3563,3574,3607,3611,3619,3627,3633]
+doldi  s3t3420        seed   3 onset       3420 boot_retire 2500 FAIL finish  3632 drained 17 records  3649 boundfail  19 open  1 ages [15] fired_at [3438,3439,3440,3452,3463,3474,3528,3551,3556,3558,3560,3571,3604,3608,3616,3624,3630,3644,3648]
+doldi  s3t3422        seed   3 onset       3422 boot_retire 2500 FAIL finish  3634 drained 17 records  3651 boundfail  18 open  0 ages [-] fired_at [3440,3450,3461,3472,3526,3549,3554,3556,3558,3569,3602,3606,3614,3622,3628,3642,3645,3649]
+doldi  s3t3428        seed   3 onset       3428 boot_retire 2500 FAIL finish  3636 drained 17 records  3653 boundfail  17 open  0 ages [-] fired_at [3448,3459,3470,3524,3547,3552,3554,3556,3567,3600,3604,3612,3620,3626,3640,3643,3646]
+doldi  s3t3434        seed   3 onset       3434 boot_retire 2500 FAIL finish  3640 drained 17 records  3657 boundfail  16 open  0 ages [-] fired_at [3455,3466,3520,3543,3548,3550,3552,3563,3596,3600,3608,3616,3622,3636,3639,3642]
+doldi  s3t3440        seed   3 onset       3440 boot_retire 2500 FAIL finish  3642 drained 17 records  3659 boundfail  16 open  1 ages [1] fired_at [3458,3464,3518,3541,3546,3548,3550,3561,3594,3598,3606,3614,3620,3634,3637,3640]
+doldi  s3t3446        seed   3 onset       3446 boot_retire 2500 FAIL finish  3646 drained 17 records  3663 boundfail  15 open  1 ages [6] fired_at [3464,3514,3537,3542,3544,3546,3557,3590,3594,3602,3610,3616,3630,3633,3636]
+doldi  s3t3452        seed   3 onset       3452 boot_retire 2500 FAIL finish  3647 drained 17 records  3664 boundfail  14 open  1 ages [7] fired_at [3513,3536,3541,3543,3545,3556,3589,3593,3601,3609,3615,3629,3632,3635]
+doldi  s3t3458        seed   3 onset       3458 boot_retire 2500 FAIL finish  3647 drained 17 records  3664 boundfail  14 open  1 ages [7] fired_at [3513,3536,3541,3543,3545,3556,3589,3593,3601,3609,3615,3629,3632,3635]
+doldi  s3t3460        seed   3 onset       3460 boot_retire 2500 FAIL finish  3647 drained 17 records  3664 boundfail  14 open  1 ages [7] fired_at [3513,3536,3541,3543,3545,3556,3589,3593,3601,3609,3615,3629,3632,3635]
+doldi  s3t3464        seed   3 onset       3464 boot_retire 2500 FAIL finish  3647 drained 17 records  3664 boundfail  14 open  1 ages [7] fired_at [3513,3536,3541,3543,3545,3556,3589,3593,3601,3609,3615,3629,3632,3635]
+doldi  s3t3470        seed   3 onset       3470 boot_retire 2500 FAIL finish  3647 drained 17 records  3664 boundfail  14 open  1 ages [7] fired_at [3513,3536,3541,3543,3545,3556,3589,3593,3601,3609,3615,3629,3632,3635]
+doldi  s3t3476        seed   3 onset       3476 boot_retire 2500 FAIL finish  3647 drained 17 records  3664 boundfail  14 open  1 ages [7] fired_at [3513,3536,3541,3543,3545,3556,3589,3593,3601,3609,3615,3629,3632,3635]
+doldi  s3t3480        seed   3 onset       3480 boot_retire 2500 FAIL finish  3647 drained 17 records  3664 boundfail  14 open  1 ages [7] fired_at [3513,3536,3541,3543,3545,3556,3589,3593,3601,3609,3615,3629,3632,3635]
+doldi  s3t3486        seed   3 onset       3486 boot_retire 2500 FAIL finish  3647 drained 17 records  3664 boundfail  14 open  1 ages [7] fired_at [3513,3536,3541,3543,3545,3556,3589,3593,3601,3609,3615,3629,3632,3635]
+doldi  s3t3492        seed   3 onset       3492 boot_retire 2500 FAIL finish  3647 drained 17 records  3664 boundfail  14 open  1 ages [7] fired_at [3513,3536,3541,3543,3545,3556,3589,3593,3601,3609,3615,3629,3632,3635]
+doldi  s3t3498        seed   3 onset       3498 boot_retire 2500 FAIL finish  3650 drained 17 records  3667 boundfail  14 open  1 ages [12] fired_at [3516,3533,3538,3540,3542,3553,3586,3590,3598,3606,3612,3626,3629,3632]
+doldi  s3t3500        seed   3 onset       3500 boot_retire 2500 FAIL finish  3651 drained 17 records  3668 boundfail  13 open  1 ages [13] fired_at [3532,3537,3539,3541,3552,3585,3589,3597,3605,3611,3625,3628,3631]
+doldi  s3t3504        seed   3 onset       3504 boot_retire 2500 FAIL finish  3651 drained 17 records  3668 boundfail  13 open  1 ages [13] fired_at [3532,3537,3539,3541,3552,3585,3589,3597,3605,3611,3625,3628,3631]
+doldi  s3t3510        seed   3 onset       3510 boot_retire 2500 FAIL finish  3651 drained 17 records  3668 boundfail  13 open  1 ages [13] fired_at [3532,3537,3539,3541,3552,3585,3589,3597,3605,3611,3625,3628,3631]
+doldi  s3t3516        seed   3 onset       3516 boot_retire 2500 FAIL finish  3653 drained 17 records  3670 boundfail  14 open  1 ages [3] fired_at [3534,3535,3536,3537,3548,3581,3585,3593,3601,3607,3621,3624,3627,3669]
+doldi  s3t3520        seed   3 onset       3520 boot_retire 2500 FAIL finish  3657 drained 17 records  3674 boundfail  13 open  1 ages [8] fired_at [3538,3539,3540,3544,3577,3581,3589,3597,3603,3617,3620,3623,3664]
+doldi  s3t3526        seed   3 onset       3526 boot_retire 2500 FAIL finish  3663 drained 17 records  3680 boundfail  11 open  0 ages [-] fired_at [3544,3571,3575,3583,3591,3597,3611,3614,3617,3658,3680]
+doldi  s3t3532        seed   3 onset       3532 boot_retire 2500 FAIL finish  3664 drained 17 records  3681 boundfail  10 open  0 ages [-] fired_at [3568,3572,3580,3588,3594,3608,3611,3614,3655,3675]
+doldi  s3t3540        seed   3 onset       3540 boot_retire 2500 FAIL finish  3664 drained 17 records  3681 boundfail  10 open  0 ages [-] fired_at [3568,3572,3580,3588,3594,3608,3611,3614,3655,3675]
+doldi  s3t3546        seed   3 onset       3546 boot_retire 2500 FAIL finish  3664 drained 17 records  3681 boundfail  10 open  0 ages [-] fired_at [3568,3572,3580,3588,3594,3608,3611,3614,3655,3675]
+doldi  s3t3552        seed   3 onset       3552 boot_retire 2500 FAIL finish  3666 drained 17 records  3683 boundfail  10 open  0 ages [-] fired_at [3570,3571,3577,3584,3590,3604,3607,3610,3651,3671]
+doldi  s3t3560        seed   3 onset       3560 boot_retire 2500 FAIL finish  3674 drained 17 records  3691 boundfail   7 open  1 ages [4] fired_at [3578,3581,3596,3599,3602,3643,3663]
+doldi  s3t3566        seed   3 onset       3566 boot_retire 2500 FAIL finish  3679 drained 17 records  3696 boundfail   5 open  4 ages [13,9,2,1] fired_at [3589,3592,3595,3636,3656]
+doldi  s3t3572        seed   3 onset       3572 boot_retire 2500 FAIL finish  3680 drained 17 records  3697 boundfail   5 open  4 ages [15,11,4,3] fired_at [3590,3591,3594,3635,3655]
+doldi  s3t3578        seed   3 onset       3578 boot_retire 2500 FAIL finish  3686 drained 17 records  3703 boundfail   4 open  3 ages [14,13,1] fired_at [3627,3647,3692,3697]
+doldi  s3t3584        seed   3 onset       3584 boot_retire 2500 FAIL finish  3686 drained 17 records  3703 boundfail   4 open  3 ages [14,13,1] fired_at [3627,3647,3692,3697]
+doldi  s3t3590        seed   3 onset       3590 boot_retire 2500 FAIL finish  3686 drained 17 records  3703 boundfail   4 open  3 ages [14,13,1] fired_at [3627,3647,3692,3697]
+doldi  s3t3596        seed   3 onset       3596 boot_retire 2500 FAIL finish  3686 drained 17 records  3703 boundfail   4 open  3 ages [14,13,1] fired_at [3627,3647,3692,3697]
+doldi  s3t3700        seed   3 onset       3700 boot_retire 2500 PASS finish  3711 drained 17 records  3728 boundfail   0 open  0 ages [-] fired_at [-]
+doldi  s3t3705        seed   3 onset       3705 boot_retire 2500 PASS finish  3711 drained 17 records  3728 boundfail   0 open  0 ages [-] fired_at [-]
+doldi  s3t3708        seed   3 onset       3708 boot_retire 2500 PASS finish  3711 drained 17 records  3728 boundfail   0 open  0 ages [-] fired_at [-]
+doldi  s3t3710        seed   3 onset       3710 boot_retire 2500 PASS finish  3711 drained 17 records  3728 boundfail   0 open  0 ages [-] fired_at [-]
+doldi  s3t3712        seed   3 onset       3712 boot_retire 2500 PASS finish  3711 drained 17 records  3728 boundfail   0 open  0 ages [-] fired_at [-]
+doldi  s3t4294967295  seed   3 onset 4294967295 boot_retire 2500 PASS finish  3711 drained 17 records  3728 boundfail   0 open  0 ages [-] fired_at [-]
+doldi  s3x3417        seed   3 onset       3417 boot_retire 2500 FAIL finish  3629 drained 17 records  3646 boundfail  17 open  3 ages [15,13,11] fired_at [3435,3436,3443,3455,3466,3477,3531,3554,3559,3561,3563,3574,3607,3611,3619,3627,3633]
+doldi  s3x3418        seed   3 onset       3418 boot_retire 2500 FAIL finish  3630 drained 17 records  3647 boundfail  18 open  2 ages [15,12] fired_at [3436,3437,3442,3454,3465,3476,3530,3553,3558,3560,3562,3573,3606,3610,3618,3626,3632,3647]
+doldi  s3x3419        seed   3 onset       3419 boot_retire 2500 FAIL finish  3631 drained 17 records  3648 boundfail  19 open  1 ages [14] fired_at [3437,3438,3440,3453,3464,3475,3529,3552,3557,3559,3561,3572,3605,3609,3617,3625,3631,3646,3648]
+doldi  s3x3420        seed   3 onset       3420 boot_retire 2500 FAIL finish  3632 drained 17 records  3649 boundfail  19 open  1 ages [15] fired_at [3438,3439,3440,3452,3463,3474,3528,3551,3556,3558,3560,3571,3604,3608,3616,3624,3630,3644,3648]
+doldi  s3x3421        seed   3 onset       3421 boot_retire 2500 FAIL finish  3633 drained 17 records  3650 boundfail  18 open  0 ages [-] fired_at [3439,3451,3462,3473,3527,3550,3555,3557,3559,3570,3603,3607,3615,3623,3629,3643,3646,3650]
+doldi  s4x3418        seed   4 onset       3418 boot_retire 2500 FAIL finish  3568 drained 17 records  3585 boundfail  10 open  1 ages [1] fired_at [3456,3465,3466,3469,3491,3502,3506,3526,3549,3576]
+doldi  s5x3418        seed   5 onset       3418 boot_retire 2500 FAIL finish  3552 drained 17 records  3569 boundfail   6 open  0 ages [-] fired_at [3436,3441,3459,3473,3493,3563]
+doldp  s3t3596        seed   3 onset       3596 boot_retire 2500 FAIL finish  3686 drained 17 records  3703 boundfail   4 open  3 ages [14,13,1] fired_at [3627,3647,3692,3697]
+# END. The row producer is age17_summarise.py, which reads run_header.txt, stdout.log and verdict.txt per run
+# directory; no row was typed. Build names in column one map to the digests in the header block.
