@@ -1,7 +1,7 @@
 # gen_cmp_imm_edges_directed.S: the immediate extremes of gen_cmp_imm_edges_cg (CG-CMP-002): c.addi4spn, c.lw / c.sw,
 # c.lwsp / c.swsp, c.addi / c.li / c.andi, c.lui, c.addi16sp (with the stack pointer crossing zero both ways), the three
 # compressed shifts, c.j to +2046 and -2048, c.beqz / c.bnez to +254 and -256 and to themselves (not taken), c.jal and c.jalr
-# for the link. The c.j to itself is a loop and is not reached. The lock-step model checks every result. 1 to tohost at the end.
+# for the link. The lock-step model checks every result. 1 to tohost at the end; the spin after it retires as a c.j to itself.
 .macro j32 label
 .option push
 .option norvc

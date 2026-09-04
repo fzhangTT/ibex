@@ -56,7 +56,8 @@ schema_version: 1
 #     generic signature would accept any fixture failure); the loader refuses the file otherwise.
 #     Non-harness signatures (the UVM_ERROR class of gen_ut_lockstep_forced_red) are outside it.
 fcov_manifest_required_tiers: [smoke, targeted]
-debug_only_plusargs: [gen_dbg_csr_probe, gen_rvfi_trace, gen_isa_string, gen_isa_log, gen_sb_trace, gen_export_flush_every]
+debug_only_plusargs: [gen_dbg_csr_probe, gen_rvfi_trace, gen_isa_string, gen_isa_log, gen_sb_trace, gen_export_flush_every,
+  gen_probe_ic_lookup]
 red_expect_policy: [fire_id]
 
 builds:

@@ -332,7 +332,9 @@ M-extension branch:
   offset; cp_pc_region zero page below 0x100, high from 0xFFFFF000; cp_link_len rd_wdata - pc_rdata for a nonzero rd.
 - gen_div_timing_cg (`dt_sample` at the divide, `dt_flush` at the next record): the multiply group's rules for the previous retirement's
   cycle as the ID-entry approximation, the deferred start (`cp_wb_defer`: an access granted before it whose response came after it) and the
-  fetch stall; cp_delta iff neither (2, 37, other); cp_dit from cpuctrlsts.data_ind_timing tracked from the CSR write records as
+  fetch stall; cp_delta iff neither (2, 37, other); the "not the first retirement after reset" guard of both timing groups reads a flag
+  set by the first record and never cleared, so it honours the initial reset only (a mid-run reset regime, when it lands, clears the
+  neighbour state on the reset event); cp_dit from cpuctrlsts.data_ind_timing tracked from the CSR write records as
   icache_enable is (`dit_tracked`, GEN_CPUCTRLSTS_DATA_IND_TIMING_BIT); cp_div0 from rs2_rdata; cp_event_mid the first asserted edge of an
   interrupt line, the NMI line or debug_req_i strictly inside (previous retirement, divide retirement), from the irq and debug drivers'
   events (`write_irqe`, `write_dbge`; the same cycle base as the records); cp_prev load_dep (the record before is a load writing rs1 or rs2),
@@ -346,11 +348,12 @@ M-extension branch:
   equal and a different base), gen_cmp_imm_edges_directed.S (the c.j and c.beqz / c.bnez extremes laid out with fillers, the stack pointer
   crossing zero both ways for every c.addi16sp class), gen_div_timing_directed.S (a prev / next matrix per op under data-independent timing
   off and on, then two long runs of divides for the event regimes) under the default bus regimes, the long regimes, the irq storm with NMIs
-  and the debug-request storm.
+  and the sparse debug-request regime (the storm does not let the program finish inside the test's wait).
 - Not reached and stated in the manifests: the program window at 0x80000080 (gen_link.ld) leaves cp_pc_region low / zero_page / high, the
   auipc and jump wraps (cr_auipc_pc wrap tuples, cr_op_wrap yes, cr_zero_page_bwd), the 1 MB jal offsets and an x0 base (cp_jalr_rs1.x0 and its
-  cross: the target would be an unmapped fetch, a memory-model error) unreachable; a jump to itself (cp_jal_off.self, cp_cj_off.self) is a
-  loop; cp_wb_defer.yes and its cross for the same reason as the multiply's cp_wb_busy.yes (the ID-entry approximation); the debug and NMI
-  events under data-independent timing on that the storms did not land (cr_event_div0_dit) and the irq latency above 37 (cp_irq_latency.gt37).
+  cross: the target would be an unmapped fetch, a memory-model error) unreachable; cp_wb_defer.yes and its cross for the same reason as the
+  multiply's cp_wb_busy.yes (the ID-entry approximation); the debug and NMI events under data-independent timing on that the storms did not
+  land (cr_event_div0_dit). The self bins (cp_jal_off.self, cp_cj_off.self) are hit by each program's end-of-test spin, which retires as a
+  self jump until the test ends, and cp_irq_latency.gt37 by the irq storm.
 - Counters: FCOV_QUERY 18 (lui / auipc), 19 (x0 writers), 20 (jumps), 21 (divides timed), 22 (Zca immediates); 45 classifier rows in the
   vector table (129 cases in all).

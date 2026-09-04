@@ -1,8 +1,9 @@
 # gen_isa_jump_directed.S: the jumps of gen_isa_jump_cg (CG-ISA-006): jal with every link class forward and backward, jalr
 # with the immediate zero, 2047, -2048, odd, positive and negative even, from a base equal to and different from the link
 # register, with even and odd targets, c.j / c.jal / c.jr / c.jalr, each op landing on a word-aligned and on a half-aligned
-# target. The 1 MB offsets, the jump to itself, an x0 base, the zero page and the high region and a wrap of the address space
-# are not reachable from the program window at 0x80000080 (an unmapped fetch is a memory-model error). 1 to tohost at the end.
+# target. The 1 MB offsets, an x0 base, the zero page and the high region and a wrap of the address space are not
+# reachable from the program window at 0x80000080 (an unmapped fetch is a memory-model error). 1 to tohost at the end; the spin
+# after it retires as a jal to itself.
 .macro cj label
 .option push
 .option rvc

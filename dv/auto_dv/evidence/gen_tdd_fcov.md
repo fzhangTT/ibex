@@ -318,12 +318,16 @@ Slice-A-1 row); 19 covergroups, 722 coverpoint and 2860 cross bins rendered on p
 ## 10. Slice B (landing 13): gen_isa_lui_auipc_cg, gen_isa_hint_x0_cg, gen_isa_jump_cg, gen_div_timing_cg, gen_cmp_imm_edges_cg
 
 Build sb3 (sb_root = the committed landing 12 at ba3799b plus this slice and the CM148 items of gen_tdd_step2b.md Section 15; sources
-98518617fecfcf64, the per-file list gen_fu_l15_sources_sha256_sb2.txt). The five groups render from plan v3l unchanged: 24 covergroups, 892
+98518617fecfcf64, the per-file list gen_fu_l15_sources_sha256_sb3.txt). The five groups render from plan v3l unchanged: 24 covergroups, 892
 coverpoint and 3116 cross bins, --check up to date, both codegen unit tests PASS (gen_fu_l15_ut_fcov_codegen.log, gen_fu_l15_ut_knobs_codegen.log).
 The samplers and their rules: gen_component_api_fcov.md, "Slice B".
 - Red first: on the landing-12 build the five groups do not exist. Each program was run on that build (b12x, fresh vdb) and the landing's
-  manifest checked against its report: every declared bin MISSING-FROM-REPORT, 13 / 42 / 29 / 46 / 24 bins (gen_fu_l15_slice6*_red_check_b12x.log
-  with the reports gen_fu_l15_urg_b12x_*). The unit test carries 45 Slice B classifier rows (129 cases in all, 0 failures on sb3:
+  manifest checked against its report: every declared bin MISSING-FROM-REPORT, 13 / 42 / 29 / 46 / 24 bins (gen_fu_l15_slice6*_red_check_b12x.log,
+  stamped in landing 14 with the manifest, report and build, with the reports gen_fu_l15_urg_b12x_* and their urg commands). The lui, hint and
+  jump reds ran the committed programs' images (crc c2902e02 / 36e063ab / 8efa1ef3); the imm red ran an earlier image of its program
+  (crc bce0125e, 1376 words; the committed one is 9febc33b, 1380) and the divt red likewise (fac56381, 240 words; committed d1988ff5, 328), the
+  sp-wrap and the second divide loop having been added after those runs: the red does not depend on the program, since the groups are absent
+  from the report whatever it executes. The unit test carries 45 Slice B classifier rows (129 cases in all, 0 failures on sb3:
   gen_fu_l15_ut_isa_cov_zc_*).
 - gen_lui_auipc_directed.S (gen_fcov_proof_slice6a.fcov.yaml): 13 coverpoint bins, every one reachable from the program window; crosses
   cr_op_imm 10 / 10, cr_op_rd_x0 4 / 4, cr_auipc_pc 2 / 4 (the wrap tuples are not reachable).
@@ -332,19 +336,22 @@ The samplers and their rules: gen_component_api_fcov.md, "Slice B".
 - gen_isa_jump_directed.S (slice6c): 29 coverpoint bins; crosses cr_link 4 / 4, cr_op_align 12 / 12, cr_odd 3 / 3, cr_jalr_rs1_imm 12 / 18
   (the x0 base is not reachable), cr_op_wrap 6 / 10 (no wrap is reachable), cr_jal_off_rd 9 / 20 (the 1 MB offsets and the jump to itself),
   cr_zero_page_bwd 0 / 1; 46 / 68 in all.
-- gen_cmp_imm_edges_directed.S (slice6d): 46 coverpoint bins (cp_cj_off.self is a loop); crosses cr_ci 17 / 17, cr_shift 9 / 9,
+- gen_cmp_imm_edges_directed.S (slice6d): 46 coverpoint bins (cp_cj_off.self is hit by the end-of-test spin, `j spin`, which retires as a
+  self jump until the test ends); crosses cr_ci 17 / 17, cr_shift 9 / 9,
   cr_sp_wrap 10 / 10 (the stack pointer crossing zero for every c.addi16sp class); 36 / 36.
 - gen_div_timing_directed.S under four regimes: default (slice6e, 24 bins; cr_dit_div0_delta 4 / 4, cr_op_div0 16 / 16, cr_prev_op 20 / 20,
   cr_next_op 16 / 16, cr_op_wb_defer 4 / 8, the event crosses 4 / 16 and 0 / 12 with no event), the long bus regimes (slice6e2, 24 bins: the
   deferred start is not seen for the same reason as the multiply's cp_wb_busy, and the fetch stall class is), the irq storm with NMIs (slice6e3,
-  28 bins: cp_event_mid irq and nmi, cp_irq_latency le37; cr_op_event 12 / 16, cr_event_div0_dit 8 / 12, cr_next_op 15 / 16), the sparse
+  28 bins: cp_event_mid irq and nmi, cp_irq_latency le37 and gt37; cr_op_event 12 / 16, cr_event_div0_dit 8 / 12, cr_next_op 15 / 16), the sparse
   debug-request regime (slice6e4, 25 bins: cp_event_mid debug_req; cr_op_event 6 / 16, cr_event_div0_dit 2 / 12). The debug-request storm
   does not let the program reach its end-of-test store inside gen_ut_lockstep's wait (the debug ROM's records dominate; two attempts, not
   retained), so the sparse regime carries the debug event. Every check PASS on sb3 (gen_fu_l15_slice6*_check.log, the urg reports and commands
   beside them). The notes are derived from the plan's Sample bullets with the unowned-bin marking.
-- Not reached and stated in the manifests: cp_pc_region low / zero_page / high, the auipc and jump wraps, cp_jal_off self / max_fwd / max_bwd,
-  cp_cj_off.self, cp_jalr_rs1.x0 (the program window at 0x80000080 and the unmapped-fetch error), cp_wb_defer.yes with its cross,
-  cp_irq_latency.gt37, the mid-op debug and NMI events under data-independent timing on that the regimes did not land.
+- Not reached and stated in the manifests: cp_pc_region low / zero_page / high, the auipc and jump wraps, cp_jal_off max_fwd / max_bwd,
+  cp_jalr_rs1.x0 (the program window at 0x80000080 and the unmapped-fetch error), cp_wb_defer.yes with its cross, the mid-op debug and NMI
+  events under data-independent timing on that the regimes did not land. Hit where the first record said otherwise (CM165-L-1): the self
+  bins cp_jal_off.self and cp_cj_off.self by each program's end-of-test spin (`j spin` retires as a self jump until the test ends; slice6c
+  count 19, slice6d 22), cp_irq_latency.gt37 by the irq storm (slice6e3 count 35).
 - Mutants FM17..FM21 (gen_mut_fcov.md, landing-13 table): one classifier boundary per group; each checker FAILS on the one hidden bin alone
   and the ablation manifest PASSES on the same report; checks stamped, the mutation as applied retained (gen_fu_l15_FM*_mutant.diff).
 - The hazard group's store_same_slot_then_pop window (the landing-12 review's M-1 and the Critic's tb_l13 M-1; the plan owner's ruling in

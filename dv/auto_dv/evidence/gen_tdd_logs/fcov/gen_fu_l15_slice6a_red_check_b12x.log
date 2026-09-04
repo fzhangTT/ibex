@@ -1,3 +1,4 @@
+# check of dv/auto_dv/evidence/gen_fcov_proof_slice6a.fcov.yaml (md5 7f8aeb628791774c93357040ba6c9f76) against /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/l12_rehearsal/dv/auto_dv/work/tb-infra/wit/fcov/urg_lockstep_lui (urg text report of the build-b12x run lockstep_lui, the landing-12 build without the Slice B samplers: the red; build sources sha256: 57e0518a803da03b); 2026-09-04T04:55:58Z
 FCOV-EXPECTATION: gen_isa_lui_auipc_cg.cp_op.auipc = MISSING-FROM-REPORT (count=n/a)
 FCOV-EXPECTATION: gen_isa_lui_auipc_cg.cp_op.lui = MISSING-FROM-REPORT (count=n/a)
 FCOV-EXPECTATION: gen_isa_lui_auipc_cg.cp_imm20.rand = MISSING-FROM-REPORT (count=n/a)

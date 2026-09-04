@@ -612,7 +612,7 @@ landing-10 code ran on b0 / b0h (the landing-10 sources with the hook; gen_fu_l1
 ## 15. Landing 13: the deferred CM148 items (the grace rule, the shim comments, the store half of the raw-address rule)
 
 Build sb3 (sb_root = the committed landing 12 at ba3799b plus Slice B and these items; sources 98518617fecfcf64, the per-file list
-gen_fu_l15_sources_sha256_sb2.txt).
+gen_fu_l15_sources_sha256_sb3.txt).
 - CM148-L-2, the grace rule. The misc monitor's ECC qualification opened GEN_ICACHE_ECC_GRACE_CYCLES after every all-ways tag write, which is
   the invalidation sweep's write pattern but also an ECC correction's (rtl/ibex_icache.sv:591 invalidates every way after a tag error). Now a
   sweep write is recognised by its pattern: an all-ways write at index 0, or at the index after the previous all-ways write one cycle later
@@ -638,4 +638,107 @@ gen_fu_l15_sources_sha256_sb2.txt).
   and compile logs (gen_fu_l15_sources_sha256_b0.txt, _b0h_, gen_fu_l15_compile_b0.log, _b0h_), b2r likewise (gen_fu_l15_sources_sha256_b2r.txt,
   gen_fu_l15_compile_b2r.log) with the MUT-WIN mutation as compiled (gen_fu_l15_MUT-WIN_mutant.diff); the mutant reds nt3_b0 and sup3c_b0 were
   built in copies since rebuilt for their landing-11 forms, so their lists are gone, and the FSDB behind L11-F3 was not retained: both stay
-  narrated. Every proof check log of this landing carries a stamp line.
+  narrated. Every proof and re-check log of this landing carries a stamp line; the five red checks against the landing-12 build got theirs in landing 14 (re-taken against the same reports).
+
+## 16. Landing 14: WP-12, the data-RAM ECC injection hook, the hit judgement (forms a and b), two-bit flips, the far program
+
+Build w16 (wp12_root = the committed landing 13 at 3bf3d6b plus this landing's edits; sources de983a8e68063c27, the per-file list
+gen_fu_l16_sources_sha256_w16.txt). Every retained header of this landing names w16 or a mutant build on its sources (build_sources_sha256 in the
+header; the mutant copies differ from w16 in the mutated file only, gen_fu_l16_<mutant>_mutant.diff), except the runs kept as the evidence of fixes
+and of a finding, named below with their build: two of w11, one of w14, and the two of the TRACE copy of the w6 sources (its own build sha in its
+headers).
+- The hook as built (gen_icache_ram.sv, IsTag = 0). A data RAM read is corrupted at the rate of knob_icache_data_ecc_err_rate (rare / frequent,
+  regime_windows.rate_per_mille; default none) with one or, under knob_icache_ecc_bits = two, two distinct positions inside one 39-bit beat (the tag
+  path takes the bits knob too); every instance draws from its own xorshift stream (finding WP12-F1 below). The announcement (kind inject_data)
+  carries cycle, way, index, the beat, the bit count, qualified, every way's stored valid bit and tag at the read, and whether a flipped bit rose in
+  the data word the DUT sees. The stored words are tweaked (SecureIbex = 1): gen_icram_events keeps a tag shadow of every tag write (the reset sweep
+  and the ECC-correction writes included) and un-tweaks by index (rtl/ibex_icache.sv:388-403: the index at bit offsets 0 and 14 of the 28-bit word); a
+  data flip needs no un-tweak (a flipped bit stays flipped through the XOR), and the duplicate-copy visibility (below) is computed on the un-tweaked
+  data word, stored bit XOR the line-address tweak of the way's own tag (:329-348). The data word written beside an invalidation or correction tag
+  write lands under the zero tweak in a way that write invalidates (CM169-L-2), so no judgement ever un-tweaks it; the API doc states it.
+- The judge (gen_checkers_pkg.sv misc monitor, the data half of the alert_minor row). The DUT checks data ECC only on the way the lookup hit
+  (rtl/ibex_icache.sv:499-511, :585), and the hit is not decidable from the TB's stored tags alone (lookup_addr_ic1 is internal). Two forms derive the
+  lookup tag: (a) the P9 read-only probe of lookup_addr_ic1 (gen_ic_lookup_probe.sv bound in gen_binds.sv, knob probe_ic_lookup, default off and
+  debug_only under LOG-079, so the P6 refusal keeps it out of measured runs; the tag of cycle c + 1 belongs to the RAM read at c) and (b) the
+  retirement stream (the measured-run form): the first retirement after the read whose pc line index is the injected index reveals the tag through its
+  pc, provided it and every retirement between are sequential flow; with a control-flow discontinuity among them the association is ambiguous and the
+  injection unjudged (no failure, no cp_alert_pulses sample), as it is when no such retirement arrives within GEN_ICACHE_RETIRE_WINDOW = 64 cycles (a
+  squashed speculative lookup) or the run ends first (reported as pending). Verdicts: the injected way is the hit way of a qualified lookup = owes one
+  pulse within GEN_ICACHE_ECC_WINDOW; another way, a miss or an invalid way = owes none and excuses none (an invalid way is decided without any tag:
+  the always-on rule); the line in several ways at once (finding WP12-F2) = owes a pulse only if a flipped bit rose. Pulse attribution (plan v3x,
+  CM169-L-1 / CM170 as built): a pulse's window is the GEN_ICACHE_ECC_WINDOW cycles before it, the read's own cycle excluded (the check is in IC1; a
+  later injection in the pulse's cycle must not take the credit, which shifted 11 pulses of build w14 to latencies 0 and 2:
+  gen_fu_l16_w14_ecc_data_freq_*); a pulse whose window holds a valid-way data injection without a verdict yet is held until every injection in its
+  window has one (every data pulse is, the probe on or off: the probe's tag for the pulse's cycle is published in that cycle, so the verdict comes
+  with the judgement a few cycles later), then credited to the nearest injection in the window that owes it and has none yet (a qualified tag
+  injection, or a data injection judged the hit way), else to the nearest one that excuses it (an unqualified tag injection, or a data injection left
+  unjudged): the tag half's attribution is extended the same way, so an unqualified injection in a grace window never takes a qualified one's pulse
+  (the DV Lead's corner, not seen in any run); the injections of one cycle share the credit (a tag and a data injection of one lookup share one pulse,
+  as tag injections did); a none-owed verdict never consumes a pulse, and a pulse fails the run only when nothing in its window owes or excuses it. An
+  owed injection's missing verdict waits while a held pulse lies in its window; at the end of the run the injections still without a verdict are
+  unjudged (reported as pending), the held pulses attributed and the owed ones closed. The ambiguity interval is GEN_ICACHE_ECC_WINDOW of the
+  injection's read (CM169-I-1: the window inside which its pulse would be attributed). Both verdicts and the hit way are written back into the
+  announcement; the summary counts judged / hit_way / other_or_invalid_way (other valid way) / unjudged (ambiguous, pending at the end) / missing /
+  other_way_pulses / duplicate copies visible and masked, and the a/b agreement where both judged, with (b)'s retirement latency.
+- Measured on w16, program gen_icache_ecc_directed.S (one 2 KB tag region), seed 1, rate frequent, probe on (gen_fu_l16_ecc_data_freq_*): 904 data
+  injections judged, 494 the hit way, 410 another or an invalid way, 0 unjudged (350 ambiguous for form (b), which form (a) decided), 0 missing, 0
+  pulses nobody owed, 494 pulses, 0 mismatches; duplicate copies 16 visible / 4 masked; forms a and b both judged 554 and agreed on all 554, (b)'s
+  latency 7..16. The same with the probe off (gen_fu_l16_ecc_data_freq_noprobe_*): (b) judges 148 hit-way and 406 other-way injections, 350 unjudged,
+  0 missing, 0 unowed pulses, 494 pulses. Two bits per flip, probe on (gen_fu_l16_ecc_data_two_*): 899 judged, 436 / 463, 0 / 0 errors, 434 pulses
+  (two owed injections of one cycle shared a pulse twice), a/b 583 / 583, duplicates 20 / 2. Tag and data at once, probe on
+  (gen_fu_l16_ecc_both_freq_*): 925 tag injections (912 qualified, 0 missing) and 902 data injections (445 hit way), 1309 pulses, 0 mismatches, a/b
+  575 / 575, duplicates 19 / 14. Rate rare (gen_fu_l16_ecc_data_rare_*): 27 judged, 14 / 13, 14 pulses, a/b 20 / 20. The tag half on this build:
+  gen_fu_l16_ecc_tag_freq_probe_* and gen_fu_l16_green_h1_ecc_freq_* (925 judged, 915 qualified, 906 pulses, latencies 0 / 906 / 0, the same numbers
+  with and without the probe), gen_fu_l16_ecc_tag_two_* (940 / 931 / 916, two bits per flip). Sampler self-test 131 cases (gen_fu_l16_ut_isa_cov_zc_*,
+  the two CM165-L-3 rows added), the plain icache-enable run green (gen_fu_l16_lockstep_icache_en_*).
+- The far program gen_icache_ecc_far_directed.S (new): two bodies placed exactly 2 KB apart (body_a 0x80001000, body_b 0x80001800; the loop at
+  0x80000800), so indices 0..6 hold the bodies' lines under two tags and indices 0..3 a third (the loop's): after the first iteration an aliased index
+  holds a valid line in both ways and a data injection on either way meets a real hit-way decision, which the one-region program never produces (its
+  other-way verdicts are all invalid ways or duplicate copies: other valid way 0). Measured (gen_fu_l16_ecc_far_data_freq_*): 619 judged, 180 hit way,
+  438 other (165 a valid way that lost the compare), 1 unjudged (the injection pending when the run ended), 0 / 0 errors, 180 pulses; a/b both 174,
+  agree 174; probe off (gen_fu_l16_ecc_far_data_noprobe_*): 27 / 147 judged, 445 unjudged (the jump every 14 instructions makes most associations
+  ambiguous), 0 / 0; tag and data (gen_fu_l16_ecc_far_both_freq_*): 598 tag injections (583 qualified, 0 missing), 613 data (172 hit way, 2 pending at
+  the end), 742 pulses, a/b 185 / 185.
+- Alignment measured. On the one-region program the probe's tag is 00100000 in 20448 of 20509 cycles (00000000 before the first lookup): at every one
+  of the 904 injections the tag of cycle c + 2 equals the tag of c + 1, so the ALIGN mutation (the tag of the wrong cycle) is silent there, and the
+  (a)/(b) agreement cannot separate the cycles either. The far program changes the tag at every jump; there the ALIGN mutation is caught (below) and
+  forms (a) and (b) still agree on every double-judged injection, so the probe's value at c + 1 is the tag the DUT compared for the read at c (the
+  binds API doc states both).
+- Form (b)'s mis-association, found by the far program and fixed. The rule of the w11 build ("the first retirement after the read whose index matches,
+  provided no discontinuity retired between") accepted a jump retiring just after the read as the revealing retirement: the loop's `jal body_a` / `jal
+  body_b` (index 1, the loop's tag) retire one or two cycles after the target's line-1 read and share its index, so (b) read the loop's tag for a body
+  lookup: 32 of 243 double-judged injections disagreed with the probe and the probe-off run failed 30 times (12 missing, 18 unowed pulses; build w11,
+  gen_fu_l16_w11_ecc_far_data_freq_* and gen_fu_l16_w11_ecc_far_data_noprobe_*, driver lines in gen_fu_l16_driver_runs_w11.log). The rule now requires
+  the revealing retirement itself to be sequential flow (a jump, trap, interrupt entry or return retiring after the read may have been fetched before
+  it); on w16 the disagreements are 0 on every run and (b)'s minimum latency is 4 (it was 1 on w11: a retirement one cycle after the read cannot be
+  the instruction it fetched).
+- Red first and the mutants (gen_mut_step2b.md, the landing-14 section; every ablation PASS with 0 errors): RED0 (red first): 988 errors, 494 `without
+  an announced ECC injection`, 494 `missing within`; MUT-ICE-DATA-ANN (the pulse-without-injection half): 494 errors, 494 `without an announced ECC
+  injection`; MUT-ICE-DATA-MISS (the missing-pulse half): 483 errors, 483 `missing within`; MUT-ICE-WAY (the hit judgement excuses the wrong way): 830
+  errors, 453 `without an announced ECC injection`, 377 `missing within`; MUT-BITS (two bits per flip): 930 errors, 930 `missing within`; MUT-ALIGN
+  (the alignment of the probe): 13 errors, 13 `every ECC injection in its window was judged not to owe it` (the true hit way judged from the wrong
+  cycle's tag). The counts are the checker's own UVM_ERROR totals from the retained verdicts.
+- Finding WP12-F1 (a TB defect, fixed here). Both RAM instances of a kind drew their injection decisions and positions from the shared $urandom
+  stream, so every injection came as a pair (both ways, the same cycle, the same position) and the DATAWAY mutation (the announcement names the other
+  way) was invisible. Each instance now seeds its own xorshift stream from $urandom and its way. The tag-half numbers of landings 11 and 13 were
+  pair-counted (870 injections for 436 pulses); on this build the same program gives 925 injections, 915 qualified, 906 pulses (9 cycles in which both
+  ways injected by chance). TP-SEC-001's quoted numbers are the pair-counted ones.
+- Finding WP12-F2 (a DUT corner, for the plan owner and rtl-arch). After an ECC-correction refetch the DUT allocated a second copy of a line that was
+  still valid in the other way: both ways held the same tag valid at one index until both were invalidated together (gen_fu_l16_TRACE_index26.log:
+  every tag write and data injection at index 26 of the trace copy of build w6). The hit-data mux ORs the matching ways' un-tweaked words
+  (rtl/ibex_icache.sv:507-513), so a flip that clears a data bit in one copy is restored by the other (no error, the fetched word correct) and a flip
+  that sets one is visible: the judge owes a pulse for the visible case only, and the summary counts both (16 / 4 on ecc_data_freq). The correction
+  after a data error invalidates the tag_match ways (:591-592), so the duplicate lives until then.
+- Finding WP12-F3 (a TB defect, twice; the L11-F3 pattern). A block-local variable with an initializer inside an always block is static and keeps its
+  first value: the flip mask (build w7: every data flip at one position, 593 duplicate cases "visible") and the line address of the un-tweak (build
+  w9: the visibility computed with one stale tweak, 12 false unowed pulses). Both are now declared without an initializer and assigned per read; the
+  RAM model's header says why.
+- Items folded. CM165 L-1 (the self / gt37 bins hit), L-2 (sb2 named sb3), L-3 (hx_rs_field for c.lui, the two sampler rows) and I-1 (the have_last
+  guard) with the CR-14 rows (gen_tdd_fcov.md Section 10, gen_critic_response_fcov.md); CM169 L-1, L-2 and I-1 as built (above); the five landing-13
+  red checks re-stamped against their b12x reports (Section 15). The P9 row of gen_probe_register.md is APPROVED under LOG-079; Q-019 (a read-only
+  probe feeding a checker in a measured run) is the owner's, so the probe-on entries of gen_l14_testlist_entries.yaml stay unmeasured and the noprobe
+  entries are the measured-run candidates. CG-IC-006's sampler is not in this landing (the IC components follow WP-8).
+- Retention (gen_fu_l16_*): the build identity, the thirteen evidence runs (header, verdict, excerpt each), RED0 and the five mutants (compile log,
+  diff, catch and ablation runs), the TRACE copy of the w6 sources (compile log, diff, its catch and ablation runs, the index-26 filter: the evidence
+  of finding WP12-F2), the three superseded-build runs, the two program ties, the drivers' logs (the w16 runs and mutants, the w11 runs, the trace
+  run).

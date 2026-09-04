@@ -1,0 +1,11 @@
+--- /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/wp12_root/dv/auto_dv/env/gen_checkers_pkg.sv	2026-09-04 01:54:59.634553339 -0400
++++ /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/ALIGN/dv/auto_dv/env/gen_checkers_pkg.sv	2026-09-04 02:01:35.668178647 -0400
+@@ -571,7 +571,7 @@
+       logic [31:0] tag;
+       if (!gen_icram_events::probe_on) return -2;
+       if (!e.valid_w[e.way]) return 0;
+-      if (!gen_icram_events::lookup_tag_at(e.cycle + 1, tag)) return -1;
++      if (!gen_icram_events::lookup_tag_at(e.cycle + 2, tag)) return -1;   // ALIGN: the tag of the wrong cycle
+       gen_icram_events::q_set_hit(e.cycle, e.way, hit_way_of(e, tag));
+       return data_verdict_of(e, tag);
+     endfunction

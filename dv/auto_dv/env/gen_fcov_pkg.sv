@@ -1182,7 +1182,7 @@ package gen_fcov_pkg;
       end
       case (i[1:0])
         2'b00: return i[15:13] inside {3'b000, 3'b010, 3'b110};                        // c.addi4spn (sp), c.lw / c.sw (rs1')
-        2'b01: return i[15:13] inside {3'b000, 3'b010, 3'b011, 3'b100, 3'b110, 3'b111};   // c.addi (rd), c.li (x0), c.lui / c.addi16sp, the ALU forms, c.beqz / c.bnez
+        2'b01: return i[15:13] inside {3'b000, 3'b010, 3'b100, 3'b110, 3'b111} || (i[15:13] == 3'b011 && i[11:7] == 5'd2);   // c.addi (rd), c.li (x0), c.addi16sp (sp; c.lui has none), the ALU forms, c.beqz / c.bnez
         default: return i[15:13] inside {3'b000, 3'b010, 3'b100, 3'b110};                 // c.slli (rd), c.lwsp / c.swsp (sp), c.jr / c.jalr / c.mv (x0) / c.add, c.swsp
       endcase
     endfunction
@@ -1209,7 +1209,7 @@ package gen_fcov_pkg;
         2'b01: begin
           if (i[15:13] == 3'b010) return 0;                                                       // c.li reads x0
           if (i[15:13] inside {3'b100, 3'b110, 3'b111}) return 8 + int'(i[9:7]);                  // rs1'
-          return int'(i[11:7]);                                                                   // c.addi (c.nop reads x0), c.lui / c.addi16sp
+          return int'(i[11:7]);                                                                   // c.addi (c.nop reads x0), c.addi16sp (sp)
         end
         default: begin
           if (i[15:13] inside {3'b010, 3'b110}) return 2;                                          // c.lwsp / c.swsp
@@ -1810,6 +1810,8 @@ package gen_fcov_pkg;
       `GEN_FCOV_UT("c.mv names x0 as rs1", hx_rs_field(32'h0000_8286, 0), 0)
       `GEN_FCOV_UT("c.beqz compares against x0 (rs2)", hx_rs_field(32'h0000_c001, 1), 0)
       `GEN_FCOV_UT("jal has no rs1", hx_rs_field(32'h0000_00ef, 0), -1)
+      `GEN_FCOV_UT("c.lui a0, 1 names no rs1", hx_rs_field(32'h0000_6505, 0), -1)
+      `GEN_FCOV_UT("c.addi16sp names sp", hx_rs_field(32'h0000_7139, 0), 2)
       `GEN_FCOV_UT("add t0, x0, t1 names x0 as rs1", hx_rs_field(32'h0060_02b3, 0), 0)
       `GEN_FCOV_UT("add t0, t1, x0 names x0 as rs2", hx_rs_field(32'h0003_02b3, 1), 0)
       `GEN_FCOV_UT("lui has neither rs1 nor rs2", hx_rs_field(32'h0000_12b7, 0) * 10 + hx_rs_field(32'h0000_12b7, 1), -11)

@@ -12,8 +12,8 @@ bind gen_dut_top gen_protocol_props #(
   .ibus_intg_corrupt_i (gen_tb_top.u_ibus_if.intg_corrupt),
   .dbus_intg_corrupt_i (gen_tb_top.u_dbus_if.intg_corrupt)
 );
-// The B8 probe (LOG-067: a probe bind behind a knob, off by default): the only bind that reads DUT internals, the dummy insertion
-// and the Zcmp expansion FSM of ibex_if_stage; it drives nothing.
+// The B8 probe (LOG-067: a probe bind behind a knob, off by default): a bind that reads DUT internals, the dummy insertion
+// and the Zcmp expansion FSM of ibex_if_stage; it drives nothing. The P9 probe below is the only other one.
 bind ibex_if_stage gen_b8_probe gen_b8_probe_i (
   .clk_i        (clk_i),
   .rst_ni       (rst_ni),
@@ -21,4 +21,11 @@ bind ibex_if_stage gen_b8_probe gen_b8_probe_i (
   .dummy_i      (gen_dummy_instr.insert_dummy_instr),
   .fsm_stable_i (compressed_decoder_i.cm_state_d == compressed_decoder_i.cm_state_q && compressed_decoder_i.cm_rlist_d == compressed_decoder_i.cm_rlist_q &&
                  compressed_decoder_i.cm_sp_offset_d == compressed_decoder_i.cm_sp_offset_q)
+);
+// The lookup-tag probe (P9, LOG-079: a read-only probe bind behind a knob, off by default, debug only): the icache's registered
+// lookup tag, so the misc monitor can derive the hit way for a data-RAM ECC injection from the TB's own tag RAM contents; it drives nothing.
+bind ibex_icache gen_ic_lookup_probe #(.TagW(ADDR_W - IC_INDEX_HI - 1)) gen_ic_lookup_probe_i (
+  .clk_i        (clk_i),
+  .rst_ni       (rst_ni),
+  .lookup_tag_i (lookup_addr_ic1)
 );

@@ -1,0 +1,11 @@
+--- /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/wp12_root/dv/auto_dv/env/gen_checkers_pkg.sv	2026-09-04 01:54:59.634553339 -0400
++++ /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/RED0/dv/auto_dv/env/gen_checkers_pkg.sv	2026-09-04 01:58:33.577982851 -0400
+@@ -641,7 +641,7 @@
+           announced = 1;
+           if (gen_icram_events::q[i].qualified) begin if (lat < best_lat) begin best_lat = lat; best = i; end end
+           else if (lat < unj_lat) begin unj_lat = lat; best_unj = i; end
+-        end else if (gen_icram_events::q[i].kind == "inject_data" && gen_icram_events::q[i].valid_w[gen_icram_events::q[i].way]) begin
++        end else if (0) begin   // RED0: the monitor before the data half: a data injection excuses no pulse
+           announced = 1;
+           if (data_verdict_now(i) == 1) begin if (lat < best_lat) begin best_lat = lat; best = i; end end
+           else if (data_verdict_now(i) < 0 && lat < unj_lat) begin unj_lat = lat; best_unj = i; end

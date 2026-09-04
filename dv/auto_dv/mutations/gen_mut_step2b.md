@@ -208,3 +208,20 @@ Hidden referees inert: every catch run carries +gen_chk_all=0 and the named chec
 MUT-SUP3 catch without it reported nothing and is not retained).
 
 Rule for these rows (the Critic's tb_l12 L-3): a build sha in a mutant row is copied from the retained run header (build_sources_sha256) or the compile log, never typed; a firing count is the assertion's or the checker's own count, never a grep over its name.
+
+## Landing 14 mutants (WP-12: the data-RAM ECC hook and the hit judgement; builds on the w16 sources)
+
+Provenance: six copies of wp12_root (the landing sources, build w16 de983a8e68063c27) with one mutation each, applied out of tree by
+mut_oot_fcov.sh (the source tree's copy of the mutated file read back unchanged after the runs); the mutations as applied are
+gen_fu_l16_<mutant>_mutant.diff and each copy's compile log gen_fu_l16_<mutant>_oot_compile.log. Every catch run carries +gen_chk_all=0 and
++gen_chk_alert_minor=1; the ablation runs the same mutant with every check off. The ALIGN mutation is silent on gen_icache_ecc_directed.S (one
+2 KB tag region: the tag of the wrong cycle equals the right one at every injection, 0 errors either way) and is caught on the far program only.
+
+| Mutant | Mutation | Run and rows | Build (sources sha256, from the run header) | Catch | Ablation |
+|---|---|---|---|---|---|
+| RED0 | the monitor before the data half (gen_checkers_pkg.sv: the pulse attribution ignores every data injection) | gen_ut_lockstep on gen_icache_ecc_directed.S, data rate frequent, probe on, row alert_minor (+gen_chk_all=0 +gen_chk_alert_minor=1) | d1d9020eb7b548a6 (red0_w16) | FAIL (UVM_ERROR 988): 494 `without an announced ECC injection`, 494 `missing within` (gen_fu_l16_RED0_catch_ecc_data_freq_*) | PASS (0) gen_fu_l16_RED0_ablate_ecc_data_freq_* |
+| MUT-ICE-DATA-ANN | gen_icache_ram.sv: the data RAM corrupts a read but does not announce it | gen_ut_lockstep on gen_icache_ecc_directed.S, data rate frequent, probe on, row alert_minor (+gen_chk_all=0 +gen_chk_alert_minor=1) | 7d89695d799dc0b9 (dataann_w16) | FAIL (UVM_ERROR 494): 494 `without an announced ECC injection` (gen_fu_l16_DATAANN_catch_ecc_data_freq_*) | PASS (0) gen_fu_l16_DATAANN_ablate_ecc_data_freq_* |
+| MUT-ICE-DATA-MISS | gen_icache_ram.sv: the data RAM announces a corruption but returns the clean word | gen_ut_lockstep on gen_icache_ecc_directed.S, data rate frequent, probe on, row alert_minor (+gen_chk_all=0 +gen_chk_alert_minor=1) | 1961cbb8fdbb2913 (datamiss_w16) | FAIL (UVM_ERROR 483): 483 `missing within` (gen_fu_l16_DATAMISS_catch_ecc_data_freq_*) | PASS (0) gen_fu_l16_DATAMISS_ablate_ecc_data_freq_* |
+| MUT-ICE-WAY | gen_icache_ram.sv: the announcement names the other way | gen_ut_lockstep on gen_icache_ecc_directed.S, data rate frequent, probe on, row alert_minor (+gen_chk_all=0 +gen_chk_alert_minor=1) | 97a589a799b81066 (dataway_w16) | FAIL (UVM_ERROR 830): 453 `without an announced ECC injection`, 377 `missing within` (gen_fu_l16_DATAWAY_catch_ecc_data_freq_*) | PASS (0) gen_fu_l16_DATAWAY_ablate_ecc_data_freq_* |
+| MUT-BITS | gen_icache_ram.sv: the second flip of a two-bit injection lands on the first position (no corruption) | gen_ut_lockstep on gen_icache_ecc_directed.S, tag rate frequent, two bits, row alert_minor (+gen_chk_all=0 +gen_chk_alert_minor=1) | 21b77abf9c06b6f8 (bits_w16) | FAIL (UVM_ERROR 930): 930 `missing within` (gen_fu_l16_BITS_catch_ecc_tag_two_*) | PASS (0) gen_fu_l16_BITS_ablate_ecc_tag_two_* |
+| MUT-ALIGN | gen_checkers_pkg.sv: form (a) reads the probe's tag of cycle c + 2 instead of c + 1 | gen_ut_lockstep on gen_icache_ecc_far_directed.S, data rate frequent, probe on, row alert_minor (+gen_chk_all=0 +gen_chk_alert_minor=1) | da54df85425870e4 (align_w16) | FAIL (UVM_ERROR 13): 13 `every ECC injection in its window was judged not to owe it` (the true hit way judged from the wrong cycle's tag) (gen_fu_l16_ALIGN_catch_ecc_far_data_freq_*) | PASS (0) gen_fu_l16_ALIGN_ablate_ecc_far_data_freq_* |

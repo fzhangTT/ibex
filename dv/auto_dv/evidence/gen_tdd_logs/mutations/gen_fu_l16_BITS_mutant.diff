@@ -1,0 +1,11 @@
+--- /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/wp12_root/dv/auto_dv/tb/gen_icache_ram.sv	2026-09-04 01:34:24.918379975 -0400
++++ /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/BITS/dv/auto_dv/tb/gen_icache_ram.sv	2026-09-04 02:01:03.364968247 -0400
+@@ -65,7 +65,7 @@
+   function automatic logic [Width-1:0] inject_mask(int unsigned bits, int unsigned span, output int unsigned first_pos);
+     logic [Width-1:0] m = '0; int unsigned p1 = rnd(Width), base, p2;
+     m[p1] = 1'b1; first_pos = p1; base = (p1 / span) * span;
+-    if (bits > 1) begin p2 = base + ((p1 - base) + 1 + rnd(span - 1)) % span; m[p2] = 1'b1; end
++    if (bits > 1) begin p2 = p1; m[p2] = m[p2] ^ 1'b1; end   // BITS: the second flip lands on the first position: no corruption
+     return m;
+   endfunction
+ 

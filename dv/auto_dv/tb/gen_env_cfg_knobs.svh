@@ -153,6 +153,10 @@
   bit knob_scr_key_delay_set = 1'b0;
   string knob_icache_ecc_err_rate = "none";
   bit knob_icache_ecc_err_rate_set = 1'b0;
+  string knob_icache_data_ecc_err_rate = "none";
+  bit knob_icache_data_ecc_err_rate_set = 1'b0;
+  string knob_icache_ecc_bits = "one";
+  bit knob_icache_ecc_bits_set = 1'b0;
   string knob_fetch_enable_regime = "always_on";
   bit knob_fetch_enable_regime_set = 1'b0;
   string knob_mcounteren_writable = "on";
@@ -189,6 +193,8 @@
   bit chk_sva_rvfi_set = 1'b0;
   bit chk_sva_b8 = 1'b0;
   bit chk_sva_b8_set = 1'b0;
+  bit probe_ic_lookup = 1'b0;
+  bit probe_ic_lookup_set = 1'b0;
   bit chk_sva_rvalid_legal = 1'b1;
   bit chk_sva_rvalid_legal_set = 1'b0;
   bit chk_dbus_proto = 1'b1;
@@ -357,6 +363,8 @@
     if ($value$plusargs({PLUSARG_KNOB_DEBUG_REQ_REGIME, "=%s"}, s)) begin knob_debug_req_regime = s; knob_debug_req_regime_set = 1'b1; end
     if ($value$plusargs({PLUSARG_KNOB_SCR_KEY_DELAY, "=%s"}, s)) begin knob_scr_key_delay = s; knob_scr_key_delay_set = 1'b1; end
     if ($value$plusargs({PLUSARG_KNOB_ICACHE_ECC_ERR_RATE, "=%s"}, s)) begin knob_icache_ecc_err_rate = s; knob_icache_ecc_err_rate_set = 1'b1; end
+    if ($value$plusargs({PLUSARG_KNOB_ICACHE_DATA_ECC_ERR_RATE, "=%s"}, s)) begin knob_icache_data_ecc_err_rate = s; knob_icache_data_ecc_err_rate_set = 1'b1; end
+    if ($value$plusargs({PLUSARG_KNOB_ICACHE_ECC_BITS, "=%s"}, s)) begin knob_icache_ecc_bits = s; knob_icache_ecc_bits_set = 1'b1; end
     if ($value$plusargs({PLUSARG_KNOB_FETCH_ENABLE_REGIME, "=%s"}, s)) begin knob_fetch_enable_regime = s; knob_fetch_enable_regime_set = 1'b1; end
     if ($value$plusargs({PLUSARG_KNOB_MCOUNTEREN_WRITABLE, "=%s"}, s)) begin knob_mcounteren_writable = s; knob_mcounteren_writable_set = 1'b1; end
     if ($value$plusargs({PLUSARG_KNOB_INSTR_MIX, "=%s"}, s)) begin knob_instr_mix = s; knob_instr_mix_set = 1'b1; end
@@ -375,6 +383,7 @@
     if ($value$plusargs({PLUSARG_CHK_SVA_ALERT, "=%d"}, u)) begin chk_sva_alert = (u != 0); chk_sva_alert_set = 1'b1; end
     if ($value$plusargs({PLUSARG_CHK_SVA_RVFI, "=%d"}, u)) begin chk_sva_rvfi = (u != 0); chk_sva_rvfi_set = 1'b1; end
     if ($value$plusargs({PLUSARG_CHK_SVA_B8, "=%d"}, u)) begin chk_sva_b8 = (u != 0); chk_sva_b8_set = 1'b1; end
+    if ($value$plusargs({PLUSARG_PROBE_IC_LOOKUP, "=%d"}, u)) begin probe_ic_lookup = (u != 0); probe_ic_lookup_set = 1'b1; end
     if ($value$plusargs({PLUSARG_CHK_SVA_RVALID_LEGAL, "=%d"}, u)) begin chk_sva_rvalid_legal = (u != 0); chk_sva_rvalid_legal_set = 1'b1; end
     if ($value$plusargs({PLUSARG_CHK_DBUS_PROTO, "=%d"}, u)) begin chk_dbus_proto = (u != 0); chk_dbus_proto_set = 1'b1; end
     if ($value$plusargs({PLUSARG_CHK_DBUS_OUTSTANDING, "=%d"}, u)) begin chk_dbus_outstanding = (u != 0); chk_dbus_outstanding_set = 1'b1; end
@@ -442,6 +451,8 @@
     if (!gen_str_in_csv(knob_debug_req_regime, GEN_ENUM_KNOB_DEBUG_REQ_REGIME_VALUES)) begin msg = {"+", PLUSARG_KNOB_DEBUG_REQ_REGIME, "=", knob_debug_req_regime, " not in ", GEN_ENUM_KNOB_DEBUG_REQ_REGIME_VALUES}; return 1'b0; end
     if (!gen_str_in_csv(knob_scr_key_delay, GEN_ENUM_KNOB_SCR_KEY_DELAY_VALUES)) begin msg = {"+", PLUSARG_KNOB_SCR_KEY_DELAY, "=", knob_scr_key_delay, " not in ", GEN_ENUM_KNOB_SCR_KEY_DELAY_VALUES}; return 1'b0; end
     if (!gen_str_in_csv(knob_icache_ecc_err_rate, GEN_ENUM_KNOB_ICACHE_ECC_ERR_RATE_VALUES)) begin msg = {"+", PLUSARG_KNOB_ICACHE_ECC_ERR_RATE, "=", knob_icache_ecc_err_rate, " not in ", GEN_ENUM_KNOB_ICACHE_ECC_ERR_RATE_VALUES}; return 1'b0; end
+    if (!gen_str_in_csv(knob_icache_data_ecc_err_rate, GEN_ENUM_KNOB_ICACHE_DATA_ECC_ERR_RATE_VALUES)) begin msg = {"+", PLUSARG_KNOB_ICACHE_DATA_ECC_ERR_RATE, "=", knob_icache_data_ecc_err_rate, " not in ", GEN_ENUM_KNOB_ICACHE_DATA_ECC_ERR_RATE_VALUES}; return 1'b0; end
+    if (!gen_str_in_csv(knob_icache_ecc_bits, GEN_ENUM_KNOB_ICACHE_ECC_BITS_VALUES)) begin msg = {"+", PLUSARG_KNOB_ICACHE_ECC_BITS, "=", knob_icache_ecc_bits, " not in ", GEN_ENUM_KNOB_ICACHE_ECC_BITS_VALUES}; return 1'b0; end
     if (!gen_str_in_csv(knob_fetch_enable_regime, GEN_ENUM_KNOB_FETCH_ENABLE_REGIME_VALUES)) begin msg = {"+", PLUSARG_KNOB_FETCH_ENABLE_REGIME, "=", knob_fetch_enable_regime, " not in ", GEN_ENUM_KNOB_FETCH_ENABLE_REGIME_VALUES}; return 1'b0; end
     if (!gen_str_in_csv(knob_mcounteren_writable, GEN_ENUM_KNOB_MCOUNTEREN_WRITABLE_VALUES)) begin msg = {"+", PLUSARG_KNOB_MCOUNTEREN_WRITABLE, "=", knob_mcounteren_writable, " not in ", GEN_ENUM_KNOB_MCOUNTEREN_WRITABLE_VALUES}; return 1'b0; end
     if (!gen_str_in_csv(knob_instr_mix, GEN_ENUM_KNOB_INSTR_MIX_VALUES)) begin msg = {"+", PLUSARG_KNOB_INSTR_MIX, "=", knob_instr_mix, " not in ", GEN_ENUM_KNOB_INSTR_MIX_VALUES}; return 1'b0; end
@@ -469,6 +480,8 @@
     if (knob_debug_req_regime_set) c++;
     if (knob_scr_key_delay_set) c++;
     if (knob_icache_ecc_err_rate_set) c++;
+    if (knob_icache_data_ecc_err_rate_set) c++;
+    if (knob_icache_ecc_bits_set) c++;
     if (knob_fetch_enable_regime_set) c++;
     if (knob_mcounteren_writable_set) c++;
     if (knob_instr_mix_set) c++;

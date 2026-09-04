@@ -84,6 +84,8 @@ package gen_tb_pkg;
   parameter string PLUSARG_KNOB_DEBUG_REQ_REGIME = "gen_knob_debug_req_regime";  // enum, default none: debug_req_i event rate
   parameter string PLUSARG_KNOB_SCR_KEY_DELAY = "gen_knob_scr_key_delay";  // enum, default immediate: scramble-key response regime
   parameter string PLUSARG_KNOB_ICACHE_ECC_ERR_RATE = "gen_knob_icache_ecc_err_rate";  // enum, default none: icache tag-RAM ECC injection regime (rates: regime_windows.rate_per_mille): the tag RAM models flip one bit of a lookup read at the rate and announce it through gen_icram_events; the misc monitor expects alert_minor_o within GEN_ICACHE_ECC_WINDOW of every qualified injection
+  parameter string PLUSARG_KNOB_ICACHE_DATA_ECC_ERR_RATE = "gen_knob_icache_data_ecc_err_rate";  // enum, default none: icache data-RAM ECC injection regime (rates: regime_windows.rate_per_mille): the data RAM models flip bits of a lookup read at the rate and announce it through gen_icram_events with the injected way's stored tag state; the misc monitor owes a pulse only when the way was valid and, with the P9 lookup probe on, the way the lookup hit
+  parameter string PLUSARG_KNOB_ICACHE_ECC_BITS = "gen_knob_icache_ecc_bits";  // enum, default one: bits flipped per icache ECC injection on both RAM kinds: one, or two distinct positions (a detected two-bit error alerts and invalidates as a one-bit error does)
   parameter string PLUSARG_KNOB_FETCH_ENABLE_REGIME = "gen_knob_fetch_enable_regime";  // enum, default always_on: fetch_enable_i regime
   parameter string PLUSARG_KNOB_MCOUNTEREN_WRITABLE = "gen_knob_mcounteren_writable";  // enum, default on: mcounteren_writable_i encoding
   parameter string PLUSARG_KNOB_INSTR_MIX = "gen_knob_instr_mix";  // enum, default mixed: program-side instruction mix (region marker)
@@ -102,6 +104,7 @@ package gen_tb_pkg;
   parameter string PLUSARG_CHK_SVA_ALERT = "gen_chk_sva_alert";  // bool, default 1: protocol SVA group enable, gen_binds.sv (gen_protocol_props ids sva_alert_*)
   parameter string PLUSARG_CHK_SVA_RVFI = "gen_chk_sva_rvfi";  // bool, default 1: protocol SVA group enable, gen_binds.sv (gen_protocol_props ids sva_rvfi_*)
   parameter string PLUSARG_CHK_SVA_B8 = "gen_chk_sva_b8";  // bool, default 0: the B8 probe assertion sva_b8_dummy_in_expansion (gen_b8_probe.sv bound into ibex_if_stage, LOG-067): off by default because the DUT fails it on every dummy insertion inside a Zcmp expansion; the reproducer runs enable it
+  parameter string PLUSARG_PROBE_IC_LOOKUP = "gen_probe_ic_lookup";  // bool, default 0 [debug-only]: the P9 probe (docs/gen_probe_register.md, LOG-079): gen_ic_lookup_probe.sv bound into ibex_icache publishes the lookup tag the DUT compares, so the misc monitor derives the hit way for data-RAM ECC injections; read-only, off by default, debug only (never in a measured run)
   parameter string PLUSARG_CHK_SVA_RVALID_LEGAL = "gen_chk_sva_rvalid_legal";  // bool, default 1: TB self-check enable (stimulus legality)
   parameter string PLUSARG_CHK_DBUS_PROTO = "gen_chk_dbus_proto";  // bool, default 1: checker enable
   parameter string PLUSARG_CHK_DBUS_OUTSTANDING = "gen_chk_dbus_outstanding";  // bool, default 1: checker enable
@@ -184,6 +187,10 @@ package gen_tb_pkg;
   parameter string GEN_ENUM_KNOB_SCR_KEY_DELAY_DEFAULT = "immediate";
   parameter string GEN_ENUM_KNOB_ICACHE_ECC_ERR_RATE_VALUES = "none,rare,frequent";
   parameter string GEN_ENUM_KNOB_ICACHE_ECC_ERR_RATE_DEFAULT = "none";
+  parameter string GEN_ENUM_KNOB_ICACHE_DATA_ECC_ERR_RATE_VALUES = "none,rare,frequent";
+  parameter string GEN_ENUM_KNOB_ICACHE_DATA_ECC_ERR_RATE_DEFAULT = "none";
+  parameter string GEN_ENUM_KNOB_ICACHE_ECC_BITS_VALUES = "one,two";
+  parameter string GEN_ENUM_KNOB_ICACHE_ECC_BITS_DEFAULT = "one";
   parameter string GEN_ENUM_KNOB_FETCH_ENABLE_REGIME_VALUES = "always_on,toggling";
   parameter string GEN_ENUM_KNOB_FETCH_ENABLE_REGIME_DEFAULT = "always_on";
   parameter string GEN_ENUM_KNOB_MCOUNTEREN_WRITABLE_VALUES = "on,off,invalid";
@@ -238,6 +245,7 @@ package gen_tb_pkg;
   parameter int unsigned GEN_RVFI_ID_EXIT_OFFSET = 2;  // cycles from ID exit (rvfi_ext_mcycle sample point, rtl/ibex_core.sv:2102) to the record, plus the WB wait for loads/stores (v3 T-051 2.2)
   parameter int unsigned GEN_ICACHE_ECC_WINDOW = 2;  // alert_minor_o within 1..2 cycles counted from the lookup request that returns corrupted data (the RAM read lands one cycle after the request, the alert one cycle after the check): 1 is the latency observed on every retained injection run (gen_tdd_step2b.md Section 14, every pulse at 1), 2 the declared bound, not observed; no run had alert_minor_o high before the injection hook existed; the misc checker and the protocol SVA use the same value
   parameter int unsigned GEN_ICACHE_ECC_GRACE_CYCLES = 16;  // cycles after a cpuctrlsts.icache_enable write record or after the last invalidation-sweep tag write during which a tag-RAM ECC injection is not owed an alert_minor_o pulse: a lookup made while the cache is disabled or invalidating reads the tag RAM but is not checked (rtl/ibex_icache.sv:266), and the TB learns both states late (the write from its record, the sweep from its all-ways tag writes)
+  parameter int unsigned GEN_ICACHE_RETIRE_WINDOW = 64;  // cycles after a data-RAM ECC injection within which the misc monitor waits for the retirement that reveals the lookup tag through its pc (form b, the measured-run judge: the first retirement whose pc index equals the injected index); an injection with no such retirement is reported unjudged (a squashed speculative lookup)
   parameter int unsigned GEN_IRQ_ENTRY_BOUND_RECORDS = 17;  // records between a pin edge and the interrupt entry, worst case WB + ID + 16 Zcmp micro-ops (v3 T-051 2.6)
   parameter int unsigned GEN_DBG_ENTRY_BOUND_RECORDS = 17;  // records between debug_req_i and the debug entry, same derivation (v3 T-051 2.6)
   parameter int unsigned GEN_CLK_PERIOD_NS = 10;  // TB clock period (gen_tb_top ClkHalfPeriodNs = 5); Python converts cycle budgets to ns with it
@@ -349,11 +357,13 @@ package gen_tb_pkg;
   parameter int GEN_KNOB_ID_DEBUG_REQ_REGIME = 12;
   parameter int GEN_KNOB_ID_SCR_KEY_DELAY = 13;
   parameter int GEN_KNOB_ID_ICACHE_ECC_ERR_RATE = 14;
-  parameter int GEN_KNOB_ID_FETCH_ENABLE_REGIME = 15;
-  parameter int GEN_KNOB_ID_MCOUNTEREN_WRITABLE = 16;
-  parameter int GEN_KNOB_ID_INSTR_MIX = 17;
-  parameter int GEN_KNOB_ID_PRIV_REGIME = 18;
-  parameter int GEN_KNOB_ID_PMP_REGIME = 19;
+  parameter int GEN_KNOB_ID_ICACHE_DATA_ECC_ERR_RATE = 15;
+  parameter int GEN_KNOB_ID_ICACHE_ECC_BITS = 16;
+  parameter int GEN_KNOB_ID_FETCH_ENABLE_REGIME = 17;
+  parameter int GEN_KNOB_ID_MCOUNTEREN_WRITABLE = 18;
+  parameter int GEN_KNOB_ID_INSTR_MIX = 19;
+  parameter int GEN_KNOB_ID_PRIV_REGIME = 20;
+  parameter int GEN_KNOB_ID_PMP_REGIME = 21;
   function automatic string gen_knob_name(int id);
     case (id)
       0: return "knob_imem_gnt_delay";
@@ -371,11 +381,13 @@ package gen_tb_pkg;
       12: return "knob_debug_req_regime";
       13: return "knob_scr_key_delay";
       14: return "knob_icache_ecc_err_rate";
-      15: return "knob_fetch_enable_regime";
-      16: return "knob_mcounteren_writable";
-      17: return "knob_instr_mix";
-      18: return "knob_priv_regime";
-      19: return "knob_pmp_regime";
+      15: return "knob_icache_data_ecc_err_rate";
+      16: return "knob_icache_ecc_bits";
+      17: return "knob_fetch_enable_regime";
+      18: return "knob_mcounteren_writable";
+      19: return "knob_instr_mix";
+      20: return "knob_priv_regime";
+      21: return "knob_pmp_regime";
       default: return "";
     endcase
   endfunction
@@ -399,9 +411,11 @@ package gen_tb_pkg;
       14: return "none";
       15: return "none";
       16: return "none";
-      17: return "program";
-      18: return "program";
+      17: return "none";
+      18: return "none";
       19: return "program";
+      20: return "program";
+      21: return "program";
       default: return "";
     endcase
   endfunction
@@ -428,11 +442,13 @@ package gen_tb_pkg;
       12: case (idx) 0: return "none"; 1: return "sparse"; 2: return "storm"; default: return ""; endcase
       13: case (idx) 0: return "immediate"; 1: return "delayed"; 2: return "withheld_then_valid"; default: return ""; endcase
       14: case (idx) 0: return "none"; 1: return "rare"; 2: return "frequent"; default: return ""; endcase
-      15: case (idx) 0: return "always_on"; 1: return "toggling"; default: return ""; endcase
-      16: case (idx) 0: return "on"; 1: return "off"; 2: return "invalid"; default: return ""; endcase
-      17: case (idx) 0: return "isa_only"; 1: return "m_heavy"; 2: return "compressed_heavy"; 3: return "bitmanip_heavy"; 4: return "csr_heavy"; 5: return "ls_heavy"; 6: return "branch_heavy"; 7: return "mixed"; default: return ""; endcase
-      18: case (idx) 0: return "m_only"; 1: return "u_heavy"; 2: return "alternating"; default: return ""; endcase
-      19: case (idx) 0: return "off"; 1: return "sparse"; 2: return "dense"; 3: return "mml_on"; default: return ""; endcase
+      15: case (idx) 0: return "none"; 1: return "rare"; 2: return "frequent"; default: return ""; endcase
+      16: case (idx) 0: return "one"; 1: return "two"; default: return ""; endcase
+      17: case (idx) 0: return "always_on"; 1: return "toggling"; default: return ""; endcase
+      18: case (idx) 0: return "on"; 1: return "off"; 2: return "invalid"; default: return ""; endcase
+      19: case (idx) 0: return "isa_only"; 1: return "m_heavy"; 2: return "compressed_heavy"; 3: return "bitmanip_heavy"; 4: return "csr_heavy"; 5: return "ls_heavy"; 6: return "branch_heavy"; 7: return "mixed"; default: return ""; endcase
+      20: case (idx) 0: return "m_only"; 1: return "u_heavy"; 2: return "alternating"; default: return ""; endcase
+      21: case (idx) 0: return "off"; 1: return "sparse"; 2: return "dense"; 3: return "mml_on"; default: return ""; endcase
       default: return "";
     endcase
   endfunction
@@ -510,14 +526,14 @@ package gen_tb_pkg;
   // Every legal +gen_* plusarg name; gen_base_test fatals on any other +gen_* argument (A-23).
   function automatic bit gen_is_known_plusarg(string name);
     case (name)
-      "gen_build_config", "gen_smoke_cycles", "gen_smoke_intg_flip", "gen_dbg_csr_probe", "gen_mem_image", "gen_mem_image_crc32", "gen_mem_image_words", "gen_mem_readback_words", "gen_tohost_addr", "gen_mem_unmapped_ok", "gen_boot_addr", "gen_hart_id", "gen_alive_timeout", "gen_finish_timeout", "gen_regime_sched", "gen_rvfi_trace", "gen_fcov_en", "gen_icram_init", "gen_fetch_en_at_reset", "gen_key_reset_valid", "gen_sb_trace", "gen_isa_pc_next_mask_b13", "gen_isa_string", "gen_isa_log", "gen_export_file", "gen_export_counters", "gen_export_sources", "gen_export_flush_every", "gen_ut_boot_retire", "gen_ut_fcov_query", "gen_ut_fcov_expect", "gen_ut_rows_set", "gen_ibus_gnt_min", "gen_ibus_gnt_max", "gen_ibus_rvalid_min", "gen_ibus_rvalid_max", "gen_ibus_max_outstanding", "gen_ibus_err_rate", "gen_ibus_intg_err_rate", "gen_ibus_intg_bits", "gen_ibus_err_window", "gen_dbus_gnt_min", "gen_dbus_gnt_max", "gen_dbus_rvalid_min", "gen_dbus_rvalid_max", "gen_dbus_max_outstanding", "gen_dbus_err_rate", "gen_dbus_intg_err_rate", "gen_dbus_intg_bits", "gen_dbus_err_window", "gen_dbus_err_half", "gen_dbus_err_store_perform", "gen_key_delay_min", "gen_key_delay_max", "gen_key_never_cycles", "gen_irq_min_gap", "gen_irq_hold_min", "gen_irq_hold_max", "gen_dbg_hold_min", "gen_dbg_hold_max", "gen_knob_imem_gnt_delay", "gen_knob_imem_rvalid_delay", "gen_knob_imem_err_rate", "gen_knob_imem_intg_err_rate", "gen_knob_imem_outstanding_cap", "gen_knob_dmem_gnt_delay", "gen_knob_dmem_rvalid_delay", "gen_knob_dmem_err_rate", "gen_knob_dmem_intg_err_rate", "gen_knob_irq_regime", "gen_knob_irq_line_mix", "gen_knob_irq_hold", "gen_knob_debug_req_regime", "gen_knob_scr_key_delay", "gen_knob_icache_ecc_err_rate", "gen_knob_fetch_enable_regime", "gen_knob_mcounteren_writable", "gen_knob_instr_mix", "gen_knob_priv_regime", "gen_knob_pmp_regime", "gen_chk_all", "gen_chk_ibus_proto", "gen_chk_ibus_outstanding", "gen_chk_sva_st", "gen_chk_sva_ibus", "gen_chk_sva_dbus", "gen_chk_sva_icram", "gen_chk_sva_scrkey", "gen_chk_sva_irq", "gen_chk_sva_dbg", "gen_chk_sva_alert", "gen_chk_sva_rvfi", "gen_chk_sva_b8", "gen_chk_sva_rvalid_legal", "gen_chk_dbus_proto", "gen_chk_dbus_outstanding", "gen_chk_dbus_split", "gen_chk_dbus_store_intg", "gen_chk_icram_write_ecc", "gen_chk_icram_inval_sweep", "gen_chk_icram_ecc_response", "gen_chk_scrkey_proto", "gen_chk_alert_minor", "gen_chk_alert_bus", "gen_chk_alert_internal", "gen_chk_crash_dump", "gen_chk_double_fault", "gen_chk_core_busy", "gen_chk_data_tag_quiet", "gen_chk_fetch_en", "gen_chk_irq_pending", "gen_chk_irq_entry", "gen_chk_irq_masked", "gen_chk_nmi_entry", "gen_chk_nmi_internal", "gen_chk_dbg_entry", "gen_chk_dbg_exc", "gen_chk_dbg_masked", "gen_chk_dbg_dret", "gen_chk_dbg_trigger", "gen_chk_ctr_mcycle", "gen_chk_ctr_minstret", "gen_chk_ctr_hpm_exact", "gen_chk_ctr_hpm_bound", "gen_chk_pmp_data", "gen_chk_pmp_fetch", "gen_chk_isa", "gen_chk_isa_pc", "gen_chk_isa_insn", "gen_chk_isa_trap", "gen_chk_isa_rd", "gen_chk_isa_mem", "gen_chk_isa_prv", "gen_chk_isa_pc_next", "gen_chk_isa_csr", "gen_chk_rvfi_proto", "gen_chk_t022_never", "gen_chk_bridge_accounting": return 1'b1;
+      "gen_build_config", "gen_smoke_cycles", "gen_smoke_intg_flip", "gen_dbg_csr_probe", "gen_mem_image", "gen_mem_image_crc32", "gen_mem_image_words", "gen_mem_readback_words", "gen_tohost_addr", "gen_mem_unmapped_ok", "gen_boot_addr", "gen_hart_id", "gen_alive_timeout", "gen_finish_timeout", "gen_regime_sched", "gen_rvfi_trace", "gen_fcov_en", "gen_icram_init", "gen_fetch_en_at_reset", "gen_key_reset_valid", "gen_sb_trace", "gen_isa_pc_next_mask_b13", "gen_isa_string", "gen_isa_log", "gen_export_file", "gen_export_counters", "gen_export_sources", "gen_export_flush_every", "gen_ut_boot_retire", "gen_ut_fcov_query", "gen_ut_fcov_expect", "gen_ut_rows_set", "gen_ibus_gnt_min", "gen_ibus_gnt_max", "gen_ibus_rvalid_min", "gen_ibus_rvalid_max", "gen_ibus_max_outstanding", "gen_ibus_err_rate", "gen_ibus_intg_err_rate", "gen_ibus_intg_bits", "gen_ibus_err_window", "gen_dbus_gnt_min", "gen_dbus_gnt_max", "gen_dbus_rvalid_min", "gen_dbus_rvalid_max", "gen_dbus_max_outstanding", "gen_dbus_err_rate", "gen_dbus_intg_err_rate", "gen_dbus_intg_bits", "gen_dbus_err_window", "gen_dbus_err_half", "gen_dbus_err_store_perform", "gen_key_delay_min", "gen_key_delay_max", "gen_key_never_cycles", "gen_irq_min_gap", "gen_irq_hold_min", "gen_irq_hold_max", "gen_dbg_hold_min", "gen_dbg_hold_max", "gen_knob_imem_gnt_delay", "gen_knob_imem_rvalid_delay", "gen_knob_imem_err_rate", "gen_knob_imem_intg_err_rate", "gen_knob_imem_outstanding_cap", "gen_knob_dmem_gnt_delay", "gen_knob_dmem_rvalid_delay", "gen_knob_dmem_err_rate", "gen_knob_dmem_intg_err_rate", "gen_knob_irq_regime", "gen_knob_irq_line_mix", "gen_knob_irq_hold", "gen_knob_debug_req_regime", "gen_knob_scr_key_delay", "gen_knob_icache_ecc_err_rate", "gen_knob_icache_data_ecc_err_rate", "gen_knob_icache_ecc_bits", "gen_knob_fetch_enable_regime", "gen_knob_mcounteren_writable", "gen_knob_instr_mix", "gen_knob_priv_regime", "gen_knob_pmp_regime", "gen_chk_all", "gen_chk_ibus_proto", "gen_chk_ibus_outstanding", "gen_chk_sva_st", "gen_chk_sva_ibus", "gen_chk_sva_dbus", "gen_chk_sva_icram", "gen_chk_sva_scrkey", "gen_chk_sva_irq", "gen_chk_sva_dbg", "gen_chk_sva_alert", "gen_chk_sva_rvfi", "gen_chk_sva_b8", "gen_probe_ic_lookup", "gen_chk_sva_rvalid_legal", "gen_chk_dbus_proto", "gen_chk_dbus_outstanding", "gen_chk_dbus_split", "gen_chk_dbus_store_intg", "gen_chk_icram_write_ecc", "gen_chk_icram_inval_sweep", "gen_chk_icram_ecc_response", "gen_chk_scrkey_proto", "gen_chk_alert_minor", "gen_chk_alert_bus", "gen_chk_alert_internal", "gen_chk_crash_dump", "gen_chk_double_fault", "gen_chk_core_busy", "gen_chk_data_tag_quiet", "gen_chk_fetch_en", "gen_chk_irq_pending", "gen_chk_irq_entry", "gen_chk_irq_masked", "gen_chk_nmi_entry", "gen_chk_nmi_internal", "gen_chk_dbg_entry", "gen_chk_dbg_exc", "gen_chk_dbg_masked", "gen_chk_dbg_dret", "gen_chk_dbg_trigger", "gen_chk_ctr_mcycle", "gen_chk_ctr_minstret", "gen_chk_ctr_hpm_exact", "gen_chk_ctr_hpm_bound", "gen_chk_pmp_data", "gen_chk_pmp_fetch", "gen_chk_isa", "gen_chk_isa_pc", "gen_chk_isa_insn", "gen_chk_isa_trap", "gen_chk_isa_rd", "gen_chk_isa_mem", "gen_chk_isa_prv", "gen_chk_isa_pc_next", "gen_chk_isa_csr", "gen_chk_rvfi_proto", "gen_chk_t022_never", "gen_chk_bridge_accounting": return 1'b1;
       default: return 1'b0;
     endcase
   endfunction
   // A bool knob needs an explicit =0/=1 (a bare +gen_<bool> would otherwise be a silent no-op).
   function automatic bit gen_is_bool_plusarg(string name);
     case (name)
-      "gen_dbg_csr_probe", "gen_mem_unmapped_ok", "gen_rvfi_trace", "gen_fcov_en", "gen_fetch_en_at_reset", "gen_key_reset_valid", "gen_sb_trace", "gen_isa_pc_next_mask_b13", "gen_export_counters", "gen_dbus_err_store_perform", "gen_chk_all", "gen_chk_ibus_proto", "gen_chk_ibus_outstanding", "gen_chk_sva_st", "gen_chk_sva_ibus", "gen_chk_sva_dbus", "gen_chk_sva_icram", "gen_chk_sva_scrkey", "gen_chk_sva_irq", "gen_chk_sva_dbg", "gen_chk_sva_alert", "gen_chk_sva_rvfi", "gen_chk_sva_b8", "gen_chk_sva_rvalid_legal", "gen_chk_dbus_proto", "gen_chk_dbus_outstanding", "gen_chk_dbus_split", "gen_chk_dbus_store_intg", "gen_chk_icram_write_ecc", "gen_chk_icram_inval_sweep", "gen_chk_icram_ecc_response", "gen_chk_scrkey_proto", "gen_chk_alert_minor", "gen_chk_alert_bus", "gen_chk_alert_internal", "gen_chk_crash_dump", "gen_chk_double_fault", "gen_chk_core_busy", "gen_chk_data_tag_quiet", "gen_chk_fetch_en", "gen_chk_irq_pending", "gen_chk_irq_entry", "gen_chk_irq_masked", "gen_chk_nmi_entry", "gen_chk_nmi_internal", "gen_chk_dbg_entry", "gen_chk_dbg_exc", "gen_chk_dbg_masked", "gen_chk_dbg_dret", "gen_chk_dbg_trigger", "gen_chk_ctr_mcycle", "gen_chk_ctr_minstret", "gen_chk_ctr_hpm_exact", "gen_chk_ctr_hpm_bound", "gen_chk_pmp_data", "gen_chk_pmp_fetch", "gen_chk_isa", "gen_chk_isa_pc", "gen_chk_isa_insn", "gen_chk_isa_trap", "gen_chk_isa_rd", "gen_chk_isa_mem", "gen_chk_isa_prv", "gen_chk_isa_pc_next", "gen_chk_isa_csr", "gen_chk_rvfi_proto", "gen_chk_t022_never", "gen_chk_bridge_accounting": return 1'b1;
+      "gen_dbg_csr_probe", "gen_mem_unmapped_ok", "gen_rvfi_trace", "gen_fcov_en", "gen_fetch_en_at_reset", "gen_key_reset_valid", "gen_sb_trace", "gen_isa_pc_next_mask_b13", "gen_export_counters", "gen_dbus_err_store_perform", "gen_chk_all", "gen_chk_ibus_proto", "gen_chk_ibus_outstanding", "gen_chk_sva_st", "gen_chk_sva_ibus", "gen_chk_sva_dbus", "gen_chk_sva_icram", "gen_chk_sva_scrkey", "gen_chk_sva_irq", "gen_chk_sva_dbg", "gen_chk_sva_alert", "gen_chk_sva_rvfi", "gen_chk_sva_b8", "gen_probe_ic_lookup", "gen_chk_sva_rvalid_legal", "gen_chk_dbus_proto", "gen_chk_dbus_outstanding", "gen_chk_dbus_split", "gen_chk_dbus_store_intg", "gen_chk_icram_write_ecc", "gen_chk_icram_inval_sweep", "gen_chk_icram_ecc_response", "gen_chk_scrkey_proto", "gen_chk_alert_minor", "gen_chk_alert_bus", "gen_chk_alert_internal", "gen_chk_crash_dump", "gen_chk_double_fault", "gen_chk_core_busy", "gen_chk_data_tag_quiet", "gen_chk_fetch_en", "gen_chk_irq_pending", "gen_chk_irq_entry", "gen_chk_irq_masked", "gen_chk_nmi_entry", "gen_chk_nmi_internal", "gen_chk_dbg_entry", "gen_chk_dbg_exc", "gen_chk_dbg_masked", "gen_chk_dbg_dret", "gen_chk_dbg_trigger", "gen_chk_ctr_mcycle", "gen_chk_ctr_minstret", "gen_chk_ctr_hpm_exact", "gen_chk_ctr_hpm_bound", "gen_chk_pmp_data", "gen_chk_pmp_fetch", "gen_chk_isa", "gen_chk_isa_pc", "gen_chk_isa_insn", "gen_chk_isa_trap", "gen_chk_isa_rd", "gen_chk_isa_mem", "gen_chk_isa_prv", "gen_chk_isa_pc_next", "gen_chk_isa_csr", "gen_chk_rvfi_proto", "gen_chk_t022_never", "gen_chk_bridge_accounting": return 1'b1;
       default: return 1'b0;
     endcase
   endfunction
@@ -530,18 +546,32 @@ package gen_tb_pkg;
   // cache is disabled or invalidating reads the tag RAM but is not checked (rtl/ibex_icache.sv:266), and the TB sees both
   // states late (the enable from its record, the sweep from its all-ways tag writes).
   class gen_icram_events;
-    typedef struct { int unsigned cycle; int unsigned way; int unsigned index; string kind; bit qualified; bit seen; bit judged; } evt_t;
+    // an injection: kind inject (tag RAM) or inject_data (data RAM), the beat and the bits of the flip, every way's stored valid bit and
+    // tag at the read (un-tweaked), and, once judged, the hit way and the verdicts (a: the P9 probe's tag; b: the retiring pc's tag)
+    typedef struct { int unsigned cycle; int unsigned way; int unsigned index; string kind; bit qualified; bit seen; bit judged;
+                     int unsigned beat; int unsigned bits; bit valid_w [GEN_IC_NUM_WAYS]; logic [31:0] tag_w [GEN_IC_NUM_WAYS];
+                     int hit_way; int verdict; int verdict_b; int unsigned pulse_cycle; bit rose; bit closed; } evt_t;   // rose: a flipped bit was 0 before (visible through the OR of duplicate copies)
     static evt_t q [$];
     static int unsigned inject_rate = 0;       // per mille per tag read, from knob_icache_ecc_err_rate (gen_env sets it; 0 = off)
     static int unsigned injected = 0;
+    static int unsigned inject_rate_data = 0;  // per mille per data read, from knob_icache_data_ecc_err_rate
+    static int unsigned inject_bits = 1;       // bits flipped per injection, from knob_icache_ecc_bits
+    static int unsigned injected_data = 0;
+    static logic [GEN_IC_TAG_ECC_W-1:0] tag_shadow [GEN_IC_NUM_WAYS][GEN_IC_NUM_LINES];   // the tag RAM contents as written (the DUT's tweaked words)
+    static bit probe_on = 0; static int unsigned lk_cyc [$]; static logic [31:0] lk_tag [$];   // the lookup tag per cycle from the P9 probe
     static bit          icache_en = 0;         // cpuctrlsts.icache_enable as last written (reset value 0), with the record's cycle
     static int unsigned icache_en_cycle = 0;
     static bit          inval_seen = 0;        // an invalidation-sweep write seen: all ways at index 0, then consecutive indices on consecutive cycles (rtl/ibex_icache.sv INVAL_CACHE)
     static int unsigned last_inval_cycle = 0;
     static int unsigned last_tag_write_cycle = 0, tag_writes_this_cycle = 0;
     static int unsigned last_allways_cycle = 0; static int last_allways_index = -1;   // the previous all-ways write: a sweep continues it, an ECC correction does not
-    static function void announce(int unsigned cycle, int unsigned way, int unsigned index, string kind, bit qualified = 1'b0);
-      q.push_back('{cycle, way, index, kind, qualified, 1'b0, 1'b0});
+    static function void announce(int unsigned cycle, int unsigned way, int unsigned index, string kind, bit qualified = 1'b0,
+                                  int unsigned beat = 0, int unsigned bits = 1, bit rose = 1'b1);
+      evt_t e;
+      e.cycle = cycle; e.way = way; e.index = index; e.kind = kind; e.qualified = qualified; e.seen = 1'b0; e.judged = 1'b0;
+      e.beat = beat; e.bits = bits; e.hit_way = -1; e.verdict = -2; e.verdict_b = -2; e.pulse_cycle = 0; e.rose = rose; e.closed = 1'b0;
+      for (int w = 0; w < GEN_IC_NUM_WAYS; w++) begin e.valid_w[w] = shadow_valid(w, index); e.tag_w[w] = shadow_tag(w, index); end
+      q.push_back(e);
       while (q.size() > 256) void'(q.pop_front());
     endfunction
     static function bit qualified_at(int unsigned cycle);
@@ -552,7 +582,32 @@ package gen_tb_pkg;
     static function void note_icache_en(bit en, int unsigned cycle);
       icache_en = en; icache_en_cycle = cycle;
     endfunction
-    static function void note_tag_write(int unsigned cycle, int unsigned ways, int unsigned index);   // called by every tag RAM on its write
+    // the DUT's tag tweak: the index at every beat's offset in the tag word (rtl/ibex_icache.sv gen_ecc_tag_tweak); stored words carry it
+    static function logic [GEN_IC_TAG_ECC_W-1:0] tag_tweak(int unsigned index);
+      logic [GEN_IC_TAG_ECC_W-1:0] t = '0;
+      for (int i = 0; i < IC_LINE_BEATS; i++) t |= GEN_IC_TAG_ECC_W'(index) << (i * (IC_INDEX_W + IC_TAG_ECC_SIZE));
+      return t;
+    endfunction
+    static function void note_tag_init(int unsigned way, int unsigned index, logic [GEN_IC_TAG_ECC_W-1:0] word); tag_shadow[way][index] = word; endfunction
+    static function bit shadow_valid(int unsigned way, int unsigned index);   // the stored valid bit, un-tweaked
+      logic [GEN_IC_TAG_ECC_W-1:0] w = tag_shadow[way][index] ^ tag_tweak(index); return w[IC_TAG_SIZE-1];
+    endfunction
+    static function logic [31:0] shadow_tag(int unsigned way, int unsigned index);   // the stored tag, un-tweaked
+      logic [GEN_IC_TAG_ECC_W-1:0] w = tag_shadow[way][index] ^ tag_tweak(index); return 32'(w[IC_TAG_SIZE-2:0]);
+    endfunction
+    static function void note_lookup(int unsigned cycle, logic [31:0] tag);   // the P9 probe: the tag compared in this cycle
+      probe_on = 1; lk_cyc.push_back(cycle); lk_tag.push_back(tag);
+      if (lk_cyc.size() > 128) begin void'(lk_cyc.pop_front()); void'(lk_tag.pop_front()); end
+    endfunction
+    static function void q_set_hit(int unsigned cycle, int unsigned way, int hit_way);   // the judged hit way written back to the announcement
+      foreach (q[i]) if (q[i].cycle == cycle && q[i].way == way && q[i].kind == "inject_data") q[i].hit_way = hit_way;
+    endfunction
+    static function bit lookup_tag_at(int unsigned cycle, output logic [31:0] tag);
+      foreach (lk_cyc[i]) if (lk_cyc[i] == cycle) begin tag = lk_tag[i]; return 1'b1; end
+      return 1'b0;
+    endfunction
+    static function void note_tag_write(int unsigned cycle, int unsigned ways, int unsigned index, int unsigned way, logic [GEN_IC_TAG_ECC_W-1:0] word);   // called by every tag RAM on its write
+      tag_shadow[way][index] = word;
       if (cycle != last_tag_write_cycle) begin last_tag_write_cycle = cycle; tag_writes_this_cycle = 0; end
       tag_writes_this_cycle++;
       if (tag_writes_this_cycle >= ways) begin   // an all-ways write: the sweep (index 0, or the index after the previous one a cycle later) or an ECC correction of one lookup
@@ -658,6 +713,7 @@ package gen_tb_pkg;
   // Cache RAM geometry the TB models must follow (ibex_pkg).
   parameter int unsigned GEN_IC_NUM_WAYS  = IC_NUM_WAYS;
   parameter int unsigned GEN_IC_NUM_LINES = IC_NUM_LINES;
+  parameter int unsigned GEN_IC_TAG_ECC_W = IC_TAG_SIZE + IC_TAG_ECC_SIZE;   // the tag RAM word: tag with its valid bit, then the ECC bits
   parameter int unsigned GEN_IC_INDEX_W   = IC_INDEX_W;
 
   // Membership of `s` in a comma-separated value list (enum knob validation, gen_env_cfg::validate).

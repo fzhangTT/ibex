@@ -1,3 +1,4 @@
+# check of dv/auto_dv/evidence/gen_fcov_proof_slice6d.fcov.yaml (md5 e3dc66d719ef9146cae814496ead48f4) against /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/l12_rehearsal/dv/auto_dv/work/tb-infra/wit/fcov/urg_lockstep_imm (urg text report of the build-b12x run lockstep_imm, the landing-12 build without the Slice B samplers: the red; build sources sha256: 57e0518a803da03b); 2026-09-04T04:55:59Z
 FCOV-EXPECTATION: gen_cmp_imm_edges_cg.cp_addi4spn_imm.rand = MISSING-FROM-REPORT (count=n/a)
 FCOV-EXPECTATION: gen_cmp_imm_edges_cg.cp_addi4spn_imm.max = MISSING-FROM-REPORT (count=n/a)
 FCOV-EXPECTATION: gen_cmp_imm_edges_cg.cp_addi4spn_imm.min = MISSING-FROM-REPORT (count=n/a)

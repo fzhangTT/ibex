@@ -1,0 +1,36 @@
+Running new bashrc
+Unloading: soc_tools version 1.0
+Unloading: git version 2.26.2
+Unloading: Bender version 0.28.1-tenstorrent8-mr_fixes
+Unloading: Python version 3.9
+Unloading: Perl version perl-5.36.0
+Loading:   soc_tools version 1.0
+Loading:   git version 2.26.2
+Loading:   Bender version 0.28.1-tenstorrent8-mr_fixes
+Loading:   Python version 3.9
+Loading:   Perl version perl-5.36.0
+RED0 applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/RED0/dv/auto_dv/env/gen_checkers_pkg.sv; original sha256 ee64c4f8212bbc1b
+RED0_catch_ecc_data_freq: verdict: FAIL reason: uvm_error at sim.log:33  UVM_ERROR :  988 first: UVM_ERROR dv/auto_dv/env/gen_checkers_pkg.sv(660) @ 290500: uvm_test_top.env.misc_mon [alert_minor] alert_minor_o high at cycle 284 without an announced ECC injection
+RED0_ablate_ecc_data_freq: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first: 
+RED0: build sources sha256: d1d9020eb7b548a6; source tree untouched: dv/auto_dv/env/gen_checkers_pkg.sv sha256 ee64c4f8212bbc1b (the mutated file's copy in the source tree, read after the runs)
+DATAANN applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/DATAANN/dv/auto_dv/tb/gen_icache_ram.sv; original sha256 ed2f15766dd7d225
+DATAANN_catch_ecc_data_freq: verdict: FAIL reason: uvm_error at sim.log:33  UVM_ERROR :  494 first: UVM_ERROR dv/auto_dv/env/gen_checkers_pkg.sv(660) @ 289500: uvm_test_top.env.misc_mon [alert_minor] alert_minor_o high at cycle 284 without an announced ECC injection
+DATAANN_ablate_ecc_data_freq: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first: 
+DATAANN: build sources sha256: 7d89695d799dc0b9; source tree untouched: dv/auto_dv/tb/gen_icache_ram.sv sha256 ed2f15766dd7d225 (the mutated file's copy in the source tree, read after the runs)
+DATAMISS applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/DATAMISS/dv/auto_dv/tb/gen_icache_ram.sv; original sha256 ed2f15766dd7d225
+DATAMISS_catch_ecc_data_freq: verdict: FAIL reason: uvm_error at sim.log:33  UVM_ERROR :  483 first: UVM_ERROR dv/auto_dv/env/gen_checkers_pkg.sv(687) @ 301500: uvm_test_top.env.misc_mon [alert_minor] alert_minor_o missing within 2 cycles of the data-RAM ECC injection at cycle 283 (way 0 index 27 beat 0, 1 bit(s)): the 
+DATAMISS_ablate_ecc_data_freq: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first: 
+DATAMISS: build sources sha256: 1961cbb8fdbb2913; source tree untouched: dv/auto_dv/tb/gen_icache_ram.sv sha256 ed2f15766dd7d225 (the mutated file's copy in the source tree, read after the runs)
+DATAWAY applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/DATAWAY/dv/auto_dv/tb/gen_icache_ram.sv; original sha256 ed2f15766dd7d225
+DATAWAY_catch_ecc_data_freq: verdict: FAIL reason: uvm_error at sim.log:33  UVM_ERROR :  830 first: UVM_ERROR dv/auto_dv/env/gen_checkers_pkg.sv(660) @ 289500: uvm_test_top.env.misc_mon [alert_minor] alert_minor_o high at cycle 284 without an announced ECC injection
+DATAWAY_ablate_ecc_data_freq: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first: 
+DATAWAY: build sources sha256: 97a589a799b81066; source tree untouched: dv/auto_dv/tb/gen_icache_ram.sv sha256 ed2f15766dd7d225 (the mutated file's copy in the source tree, read after the runs)
+BITS applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/BITS/dv/auto_dv/tb/gen_icache_ram.sv; original sha256 ed2f15766dd7d225
+BITS_catch_ecc_tag_two: verdict: FAIL reason: uvm_error at sim.log:33  UVM_ERROR :  930 first: UVM_ERROR dv/auto_dv/env/gen_checkers_pkg.sv(682) @ 358500: uvm_test_top.env.misc_mon [alert_minor] alert_minor_o missing within 2 cycles of the tag-RAM ECC injection at cycle 350 (way 0 index 45)
+BITS_ablate_ecc_tag_two: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first: 
+BITS: build sources sha256: 21b77abf9c06b6f8; source tree untouched: dv/auto_dv/tb/gen_icache_ram.sv sha256 ed2f15766dd7d225 (the mutated file's copy in the source tree, read after the runs)
+ALIGN applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/ALIGN/dv/auto_dv/env/gen_checkers_pkg.sv; original sha256 ee64c4f8212bbc1b
+ALIGN_catch_ecc_far_data_freq: verdict: FAIL reason: uvm_error at sim.log:33  UVM_ERROR :   13 first: UVM_ERROR dv/auto_dv/env/gen_checkers_pkg.sv(664) @ 1627500: uvm_test_top.env.misc_mon [alert_minor] alert_minor_o high at cycle 1620: every ECC injection in its window was judged not to owe it (a data injection on anoth
+ALIGN_ablate_ecc_far_data_freq: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first: 
+ALIGN: build sources sha256: da54df85425870e4; source tree untouched: dv/auto_dv/env/gen_checkers_pkg.sv sha256 ee64c4f8212bbc1b (the mutated file's copy in the source tree, read after the runs)
+MUTS_DONE

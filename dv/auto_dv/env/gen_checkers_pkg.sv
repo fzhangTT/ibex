@@ -342,6 +342,10 @@ package gen_checkers_pkg;
     int unsigned alert_bus_hits = 0, alert_bus_mismatch = 0, alert_internal_hits = 0, data_tag_hits = 0;
     int unsigned alert_minor_hits = 0, alert_minor_mismatch = 0;
     int unsigned alert_minor_injections = 0, alert_minor_qualified = 0, alert_minor_missing = 0;   // tag-RAM ECC injections judged
+    int unsigned data_injections = 0, data_hit_way = 0, data_other_way = 0, data_other_valid = 0, data_unjudged = 0, data_missing = 0, data_other_pulses = 0;   // data-RAM ECC injections judged; other_valid: a valid way that lost the compare to the other valid way
+    int unsigned ab_both = 0, ab_agree = 0, ab_disagree = 0, b_lat_min = 0, b_lat_max = 0, data_ambiguous = 0, data_dup_visible = 0, data_dup_masked = 0;   // duplicate copies of the line in two ways: the injection visible (a bit rose) or masked by the OR   // form (a) against form (b) where both judged; (b)'s retirement latency; (b)'s ambiguous associations
+    int unsigned held [$]; int unsigned held_pulses = 0;   // alert_minor pulses waiting for the verdicts of the data injections in their window
+    int unsigned rt_cyc [$]; logic [31:0] rt_pc [$]; bit rt_disc [$];   // the retirements (cycle, pc, a control-flow discontinuity) form (b) reads the lookup tag from
     int unsigned alert_minor_lat [GEN_ICACHE_ECC_WINDOW + 1];   // pulses by (pulse cycle - injection cycle): the window as measured
     gen_export_sink sink;   // E alert / misc lines: the levels at reset release, then every change
     bit ev_init = 0;
@@ -402,6 +406,9 @@ package gen_checkers_pkg;
       sink.register_row("misc", "crash_dump_exception_addr");
     endfunction
     function void write_state(gen_model_state st);
+      rt_cyc.push_back(st.cycle); rt_pc.push_back(st.pc_rdata);
+      rt_disc.push_back(st.is_trap || st.is_intr || st.is_mret || st.is_dret || (st.pc_after != st.pc_rdata + (st.insn[1:0] == 2'b11 ? 32'd4 : 32'd2)));   // the sequential run of lines ends here
+      if (rt_cyc.size() > 512) begin void'(rt_cyc.pop_front()); void'(rt_pc.pop_front()); void'(rt_disc.pop_front()); end
       // crash_dump_o.exception_pc / exception_addr mirror mepc / mtval (rtl/ibex_core.sv:1329-1330). At a record's posedge the
       // mirror shows the CSR before that edge: a trap saving at the record's own edge (load/store faults) is one record LATE, the
       // next record's CSR write (GEN_CSR_WRITE_TO_RVFI_OFFSET edges ahead of its record) can show one record EARLY; both are
@@ -481,37 +488,27 @@ package gen_checkers_pkg;
                          misc.cycle, misc.alert_major_bus, exp, ibus.rvalid, ibus.intg_corrupt, dbus.rvalid, dbus.intg_corrupt))
           end
         end
-        begin   // alert_minor: a pulse needs a tag-RAM ECC injection within GEN_ICACHE_ECC_WINDOW (one pulse per injection cycle: the
-                // ways read together share one check), and a qualified injection owes a pulse (gen_icram_events, the grace rules)
+        begin   // alert_minor: a pulse needs an ECC injection within GEN_ICACHE_ECC_WINDOW (one pulse per injection cycle: the ways read
+                // together share one check), and a qualified injection owes a pulse (gen_icram_events, the grace rules). A tag injection
+                // owes on any way; a data injection when its way was valid and the lookup hit it (the verdict comes with the P9 probe's tag
+                // at once, or with the retirement of the fetched instruction later); one on an invalid way excuses nothing
           if (misc.alert_minor) begin
-            int unsigned matched_cycle = 0; bit matched = 0;
             alert_minor_hits++;
-            foreach (gen_icram_events::q[i])
-              if (gen_icram_events::q[i].kind == "inject" && misc.cycle >= gen_icram_events::q[i].cycle &&
-                  misc.cycle - gen_icram_events::q[i].cycle <= GEN_ICACHE_ECC_WINDOW &&
-                  (matched ? gen_icram_events::q[i].cycle == matched_cycle : !gen_icram_events::q[i].seen)) begin
-                if (!matched) begin matched = 1; matched_cycle = gen_icram_events::q[i].cycle; alert_minor_lat[misc.cycle - matched_cycle]++; end
-                gen_icram_events::q[i].seen = 1;
-              end
-            if (!matched) begin
-              alert_minor_mismatch++;
-              if (gen_chk_en(cfg, cfg.chk_alert_minor, cfg.chk_alert_minor_set))
-                `uvm_error("alert_minor", $sformatf("alert_minor_o high at cycle %0d without an announced ECC injection", misc.cycle))
-            end
+            // attributed at once when every data injection in its window has a verdict, else held until they have (the verdict arrives with
+            // the retirement, after the pulse and possibly after the window)
+            if (pending_in_window(misc.cycle)) begin held.push_back(misc.cycle); held_pulses++; end
+            else attribute_pulse(misc.cycle);
           end
           foreach (gen_icram_events::q[i])
+            if (gen_icram_events::q[i].kind == "inject_data" && !gen_icram_events::q[i].judged && misc.cycle > gen_icram_events::q[i].cycle + GEN_ICACHE_ECC_WINDOW)
+              void'(judge_data(i));
+          foreach (gen_icram_events::q[i])
             if (gen_icram_events::q[i].kind == "inject" && !gen_icram_events::q[i].judged && misc.cycle > gen_icram_events::q[i].cycle + GEN_ICACHE_ECC_WINDOW) begin
-              gen_icram_events::q[i].judged = 1; alert_minor_injections++;
-              if (gen_icram_events::q[i].qualified) begin
-                alert_minor_qualified++;
-                if (!gen_icram_events::q[i].seen) begin
-                  alert_minor_missing++;
-                  if (gen_chk_en(cfg, cfg.chk_alert_minor, cfg.chk_alert_minor_set))
-                    `uvm_error("alert_minor", $sformatf("alert_minor_o missing within %0d cycles of the tag-RAM ECC injection at cycle %0d (way %0d index %0d)",
-                                                        GEN_ICACHE_ECC_WINDOW, gen_icram_events::q[i].cycle, gen_icram_events::q[i].way, gen_icram_events::q[i].index))
-                end
-              end
+              gen_icram_events::q[i].judged = 1; gen_icram_events::q[i].verdict = gen_icram_events::q[i].qualified; alert_minor_injections++;
+              if (gen_icram_events::q[i].qualified) alert_minor_qualified++;
             end
+          resolve_held(0);
+          close_owed(0);
         end
         begin   // fetch_enable_i: remember the cycle it left On; back On clears the window
           bit fe_on = (misc.fetch_enable == ibex_pkg::IbexMuBiOn);
@@ -526,11 +523,190 @@ package gen_checkers_pkg;
         end
       end
     endtask
+    // the hit way of a lookup at an index: the way whose stored {valid, tag} (at the read) equals {1, the lookup tag}; -1 for a miss
+    function int hit_way_of(gen_icram_events::evt_t e, logic [31:0] tag);
+      for (int w = 0; w < GEN_IC_NUM_WAYS; w++) if (e.valid_w[w] && e.tag_w[w] == tag) return w;
+      return -1;
+    endfunction
+    function int hit_count_of(gen_icram_events::evt_t e, logic [31:0] tag);   // more than one: the line sits in several ways and the DUT ORs their data (rtl/ibex_icache.sv:507-513)
+      int n = 0;
+      for (int w = 0; w < GEN_IC_NUM_WAYS; w++) if (e.valid_w[w] && e.tag_w[w] == tag) n++;
+      return n;
+    endfunction
+    // the verdict of a data injection on the injected way against the lookup tag: 1 owes a pulse, 0 owes none. One matching way: the
+    // injected way must be it. Several (duplicate copies): the injected way must be one of them and a flipped bit must have risen, since a
+    // bit cleared in one copy is restored by the OR of the others (the fetched word stays correct and no error is visible)
+    function int data_verdict_of(gen_icram_events::evt_t e, logic [31:0] tag);
+      int n = hit_count_of(e, tag);
+      if (n == 0 || !(e.valid_w[e.way] && e.tag_w[e.way] == tag)) return 0;
+      if (n == 1) return 1;
+      return e.rose ? 1 : 0;
+    endfunction
+    function bit data_dup_of(gen_icram_events::evt_t e);   // the judged lookup found the line in more than one way (counted once, at the judgement)
+      logic [31:0] tag; int unsigned lat; bit pending;
+      if (gen_icram_events::probe_on && gen_icram_events::lookup_tag_at(e.cycle + 1, tag)) return hit_count_of(e, tag) > 1 && e.valid_w[e.way] && e.tag_w[e.way] == tag;
+      if (tag_b(e, tag, lat, pending) == 1) return hit_count_of(e, tag) > 1 && e.valid_w[e.way] && e.tag_w[e.way] == tag;
+      return 0;
+    endfunction
+    // form (b)'s lookup tag: the pc of the first retirement after the read whose line index is the injected index, provided it and every
+    // retirement between are sequential flow: a jump, trap, interrupt entry or return retiring after the read may have been fetched before
+    // it (the far program's loop-line jumps share the bodies' indices under another tag), and after one the lookup may have been squashed.
+    // 1 = found (tag, latency), 0 = none yet (pending while inside GEN_ICACHE_RETIRE_WINDOW), -1 = ambiguous
+    function int tag_b(gen_icram_events::evt_t e, output logic [31:0] tag, output int unsigned lat, output bit pending);
+      pending = 0;
+      foreach (rt_cyc[k]) begin
+        if (rt_cyc[k] <= e.cycle) continue;
+        if (rt_disc[k]) return -1;
+        if (rt_pc[k][ibex_pkg::IC_INDEX_HI:ibex_pkg::IC_LINE_W] == e.index[ibex_pkg::IC_INDEX_W-1:0]) begin
+          tag = 32'(rt_pc[k][31:ibex_pkg::IC_INDEX_HI+1]); lat = rt_cyc[k] - e.cycle;
+          return 1;
+        end
+      end
+      pending = (misc.cycle <= e.cycle + GEN_ICACHE_RETIRE_WINDOW);
+      return 0;
+    endfunction
+    // form (a): the P9 probe's tag of the cycle after the read. 1 = the injected way is the hit way (owes a pulse), 0 = another way, a miss
+    // or an invalid way (owes none), -1 = no tag recorded for that cycle, -2 = the probe is off
+    function int verdict_a(gen_icram_events::evt_t e);
+      logic [31:0] tag;
+      if (!gen_icram_events::probe_on) return -2;
+      if (!e.valid_w[e.way]) return 0;
+      if (!gen_icram_events::lookup_tag_at(e.cycle + 1, tag)) return -1;
+      gen_icram_events::q_set_hit(e.cycle, e.way, hit_way_of(e, tag));
+      return data_verdict_of(e, tag);
+    endfunction
+    // form (b): the retirement tag_b finds judges the injection as the probe's tag would; -1 = unjudged (none yet: a squashed speculative
+    // lookup, or the run ended), -3 = ambiguous (a discontinuity retired first)
+    function int verdict_b(gen_icram_events::evt_t e, output bit pending);
+      logic [31:0] tag; int unsigned lat; int r;
+      pending = 0;
+      if (!e.valid_w[e.way]) return 0;
+      r = tag_b(e, tag, lat, pending);
+      if (r < 0) return -3;
+      if (r == 0) return -1;
+      if (b_lat_min == 0 || lat < b_lat_min) b_lat_min = lat;
+      if (lat > b_lat_max) b_lat_max = lat;
+      if (!gen_icram_events::probe_on) gen_icram_events::q_set_hit(e.cycle, e.way, hit_way_of(e, tag));
+      return data_verdict_of(e, tag);
+    endfunction
+    // the data injection's verdict once its window has passed: the probe's tag when the probe is on, else the retirement's; deferred (0)
+    // while form (b) still waits for the revealing retirement, since the agreement statistics need both
+    function bit judge_data(int i);
+      bit pending, dup; int va = verdict_a(gen_icram_events::q[i]), vb = verdict_b(gen_icram_events::q[i], pending), v;
+      if (vb == -1 && pending) return 0;
+      if (vb == -3) data_ambiguous++;      // a discontinuity retired first: (b) does not attribute a tag
+      v = (va >= 0) ? va : ((vb >= 0) ? vb : -1);   // the probe judges when it is on, the retirement otherwise; ambiguous or absent = unjudged
+      if (va >= 0 && vb >= 0) begin ab_both++; if (va == vb) ab_agree++; else ab_disagree++; end
+      gen_icram_events::q[i].judged = 1; gen_icram_events::q[i].verdict = v; gen_icram_events::q[i].verdict_b = vb; data_injections++;
+      dup = (v >= 0) && data_dup_of(gen_icram_events::q[i]);
+      if (dup) begin if (gen_icram_events::q[i].rose) data_dup_visible++; else data_dup_masked++; end
+      `uvm_info("GEN_MISC_ECC", $sformatf("data injection cycle %0d way %0d index %0d beat %0d bits %0d: valid %0b/%0b tags %08h/%08h, hit way %0d, verdict a %0d b %0d -> %0d, pulse seen %0b, qualified %0b",
+                                      gen_icram_events::q[i].cycle, gen_icram_events::q[i].way, gen_icram_events::q[i].index, gen_icram_events::q[i].beat, gen_icram_events::q[i].bits,
+                                      gen_icram_events::q[i].valid_w[0], gen_icram_events::q[i].valid_w[1], gen_icram_events::q[i].tag_w[0], gen_icram_events::q[i].tag_w[1],
+                                      gen_icram_events::q[i].hit_way, va, vb, v, gen_icram_events::q[i].seen, gen_icram_events::q[i].qualified), UVM_HIGH)
+      if (v < 0) data_unjudged++;
+      else if (v == 0) begin
+        data_other_way++;
+        if (!dup && gen_icram_events::q[i].valid_w[gen_icram_events::q[i].way] && gen_icram_events::q[i].hit_way >= 0 && gen_icram_events::q[i].hit_way != int'(gen_icram_events::q[i].way)) data_other_valid++;
+      end else data_hit_way++;
+      return 1;
+    endfunction
+    function int data_verdict_now(int i);   // a data injection's verdict as known now: the judged one, else the probe's (-2 off, -1 no tag)
+      return gen_icram_events::q[i].judged ? gen_icram_events::q[i].verdict : verdict_a(gen_icram_events::q[i]);
+    endfunction
+    // the window of a pulse at p: the injections 1..GEN_ICACHE_ECC_WINDOW cycles before it (the read's own cycle is excluded: the ECC check is
+    // in IC1, the cycle after the read, and a later injection at p must not take the credit)
+    // a valid-way data injection inside the window ending at p whose verdict is not known yet
+    function bit pending_in_window(int unsigned p);
+      foreach (gen_icram_events::q[i])
+        if (gen_icram_events::q[i].kind == "inject_data" && gen_icram_events::q[i].valid_w[gen_icram_events::q[i].way] && !gen_icram_events::q[i].judged &&
+            p > gen_icram_events::q[i].cycle && p - gen_icram_events::q[i].cycle <= GEN_ICACHE_ECC_WINDOW && data_verdict_now(i) < 0) return 1;
+      return 0;
+    endfunction
+    function bit held_in_window(int unsigned c);   // a held pulse inside the window of the injection at c
+      foreach (held[k]) if (held[k] > c && held[k] - c <= GEN_ICACHE_ECC_WINDOW) return 1;
+      return 0;
+    endfunction
+    // the pulse at p is credited to the nearest injection in its window that owes it and has none yet (a qualified tag injection, or a data
+    // injection judged the hit way), else to the nearest one that excuses it (an unqualified tag injection: its lookup ran unchecked; a data
+    // injection left unjudged); the injections of that cycle share the credit (the ways read together share one check). Nobody: a pulse without
+    // an announced injection, or one every injection of the window was judged not to owe
+    function void attribute_pulse(int unsigned p);
+      int best = -1, best_unj = -1; int unsigned best_lat = GEN_ICACHE_ECC_WINDOW + 1, unj_lat = GEN_ICACHE_ECC_WINDOW + 1; bit announced = 0;
+      foreach (gen_icram_events::q[i]) begin
+        int unsigned lat;
+        if (!(p > gen_icram_events::q[i].cycle && p - gen_icram_events::q[i].cycle <= GEN_ICACHE_ECC_WINDOW) || gen_icram_events::q[i].seen) continue;
+        lat = p - gen_icram_events::q[i].cycle;
+        if (gen_icram_events::q[i].kind == "inject") begin
+          announced = 1;
+          if (gen_icram_events::q[i].qualified) begin if (lat < best_lat) begin best_lat = lat; best = i; end end
+          else if (lat < unj_lat) begin unj_lat = lat; best_unj = i; end
+        end else if (gen_icram_events::q[i].kind == "inject_data" && gen_icram_events::q[i].valid_w[gen_icram_events::q[i].way]) begin
+          announced = 1;
+          if (data_verdict_now(i) == 1) begin if (lat < best_lat) begin best_lat = lat; best = i; end end
+          else if (data_verdict_now(i) < 0 && lat < unj_lat) begin unj_lat = lat; best_unj = i; end
+        end
+      end
+      if (best < 0) begin best = best_unj; best_lat = unj_lat; end
+      if (best >= 0) begin
+        alert_minor_lat[best_lat]++;
+        foreach (gen_icram_events::q[i])
+          if (gen_icram_events::q[i].cycle == gen_icram_events::q[best].cycle && !gen_icram_events::q[i].seen &&
+              (gen_icram_events::q[i].kind == "inject" || (gen_icram_events::q[i].kind == "inject_data" && gen_icram_events::q[i].valid_w[gen_icram_events::q[i].way] && data_verdict_now(i) != 0)))
+            begin gen_icram_events::q[i].seen = 1; gen_icram_events::q[i].pulse_cycle = p; end
+      end else if (!announced) begin
+        alert_minor_mismatch++;
+        if (gen_chk_en(cfg, cfg.chk_alert_minor, cfg.chk_alert_minor_set))
+          `uvm_error("alert_minor", $sformatf("alert_minor_o high at cycle %0d without an announced ECC injection", p))
+      end else begin
+        data_other_pulses++;
+        if (gen_chk_en(cfg, cfg.chk_alert_minor, cfg.chk_alert_minor_set))
+          `uvm_error("alert_minor", $sformatf("alert_minor_o high at cycle %0d: every ECC injection in its window was judged not to owe it (a data injection on another or an invalid way), so nothing announced this pulse", p))
+      end
+    endfunction
+    // held pulses are attributed once no injection in their window still waits for a verdict (all of them when the run ends)
+    function void resolve_held(bit final_pass);
+      int unsigned keep [$];
+      foreach (held[k]) if (final_pass || !pending_in_window(held[k])) attribute_pulse(held[k]); else keep.push_back(held[k]);
+      held = keep;
+    endfunction
+    // an owed injection without a pulse is missing once no held pulse lies in its window (its pulse may be among them)
+    function void close_owed(bit final_pass);
+      foreach (gen_icram_events::q[i]) begin
+        if (!gen_icram_events::q[i].judged || gen_icram_events::q[i].closed) continue;
+        if (!final_pass && held_in_window(gen_icram_events::q[i].cycle)) continue;
+        gen_icram_events::q[i].closed = 1;
+        if (gen_icram_events::q[i].kind == "inject" && gen_icram_events::q[i].qualified && !gen_icram_events::q[i].seen) begin
+          alert_minor_missing++;
+          if (gen_chk_en(cfg, cfg.chk_alert_minor, cfg.chk_alert_minor_set))
+            `uvm_error("alert_minor", $sformatf("alert_minor_o missing within %0d cycles of the tag-RAM ECC injection at cycle %0d (way %0d index %0d)",
+                                                GEN_ICACHE_ECC_WINDOW, gen_icram_events::q[i].cycle, gen_icram_events::q[i].way, gen_icram_events::q[i].index))
+        end else if (gen_icram_events::q[i].kind == "inject_data" && gen_icram_events::q[i].verdict == 1 && gen_icram_events::q[i].qualified && !gen_icram_events::q[i].seen) begin
+          data_missing++;
+          if (gen_chk_en(cfg, cfg.chk_alert_minor, cfg.chk_alert_minor_set))
+            `uvm_error("alert_minor", $sformatf("alert_minor_o missing within %0d cycles of the data-RAM ECC injection at cycle %0d (way %0d index %0d beat %0d, %0d bit(s)): the way the lookup hit",
+                                                GEN_ICACHE_ECC_WINDOW, gen_icram_events::q[i].cycle, gen_icram_events::q[i].way, gen_icram_events::q[i].index, gen_icram_events::q[i].beat, gen_icram_events::q[i].bits))
+        end
+      end
+    endfunction
     function void report_phase(uvm_phase phase);
+      int unsigned data_pending = 0;   // valid-way data injections the run ended before their verdict: unjudged, reported, never failed
+      foreach (gen_icram_events::q[i]) begin
+        if (gen_icram_events::q[i].judged) continue;
+        if (gen_icram_events::q[i].kind == "inject_data") begin
+          if (gen_icram_events::q[i].valid_w[gen_icram_events::q[i].way]) begin data_pending++; data_unjudged++; end else data_other_way++;
+          gen_icram_events::q[i].judged = 1; gen_icram_events::q[i].verdict = gen_icram_events::q[i].valid_w[gen_icram_events::q[i].way] ? -1 : 0; data_injections++;
+        end else if (gen_icram_events::q[i].kind == "inject") begin
+          gen_icram_events::q[i].judged = 1; gen_icram_events::q[i].verdict = gen_icram_events::q[i].qualified; alert_minor_injections++;
+          if (gen_icram_events::q[i].qualified) alert_minor_qualified++;
+        end
+      end
+      resolve_held(1);   // the run ends: the held pulses are attributed with the pending injections as unjudged, then the owed ones closed
+      close_owed(1);
       if (dfs_pulses > dfs_expected && gen_chk_en(cfg, cfg.chk_double_fault, cfg.chk_double_fault_set))
         `uvm_error("double_fault", $sformatf("%0d double_fault_seen_o pulses for %0d expected double faults", dfs_pulses, dfs_expected))
-      `uvm_info("GEN_MISC", $sformatf("alert_bus hits=%0d mismatches=%0d; alert_minor hits=%0d mismatches=%0d (ecc injections judged=%0d qualified=%0d missing=%0d, pulse latencies %p); alert_internal hits=%0d; data_tag hits=%0d; sync traps=%0d double faults expected=%0d pulses=%0d mismatches=%0d; crash_dump checked=%0d late=%0d early=%0d mismatches=%0d; fetch_en records after off=%0d late=%0d",
-                alert_bus_hits, alert_bus_mismatch, alert_minor_hits, alert_minor_mismatch, alert_minor_injections, alert_minor_qualified, alert_minor_missing, alert_minor_lat, alert_internal_hits, data_tag_hits, sync_traps, dfs_expected, dfs_pulses, dfs_mismatch, cd_checked, cd_late, cd_early, cd_mismatch, fe_records_after_off, fe_late_records), UVM_LOW)
+      `uvm_info("GEN_MISC", $sformatf("alert_bus hits=%0d mismatches=%0d; alert_minor hits=%0d mismatches=%0d (ecc injections judged=%0d qualified=%0d missing=%0d, pulse latencies %p; data injections judged=%0d hit_way=%0d other_or_invalid_way=%0d (other valid way %0d) unjudged=%0d (ambiguous %0d, pending at the end %0d) missing=%0d other_way_pulses=%0d held_pulses=%0d duplicate_copies visible=%0d masked=%0d; forms a/b both=%0d agree=%0d disagree=%0d, b latency %0d..%0d); alert_internal hits=%0d; data_tag hits=%0d; sync traps=%0d double faults expected=%0d pulses=%0d mismatches=%0d; crash_dump checked=%0d late=%0d early=%0d mismatches=%0d; fetch_en records after off=%0d late=%0d",
+                alert_bus_hits, alert_bus_mismatch, alert_minor_hits, alert_minor_mismatch, alert_minor_injections, alert_minor_qualified, alert_minor_missing, alert_minor_lat, data_injections, data_hit_way, data_other_way, data_other_valid, data_unjudged, data_ambiguous, data_pending, data_missing, data_other_pulses, held_pulses, data_dup_visible, data_dup_masked, ab_both, ab_agree, ab_disagree, b_lat_min, b_lat_max, alert_internal_hits, data_tag_hits, sync_traps, dfs_expected, dfs_pulses, dfs_mismatch, cd_checked, cd_late, cd_early, cd_mismatch, fe_records_after_off, fe_late_records), UVM_LOW)
     endfunction
   endclass
 endpackage

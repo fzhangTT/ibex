@@ -1,3 +1,4 @@
+# check of dv/auto_dv/evidence/gen_fcov_proof_slice6c.fcov.yaml (md5 cfa9827bc26d4d8f587be4fc09acc771) against /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/l12_rehearsal/dv/auto_dv/work/tb-infra/wit/fcov/urg_lockstep_jump (urg text report of the build-b12x run lockstep_jump, the landing-12 build without the Slice B samplers: the red; build sources sha256: 57e0518a803da03b); 2026-09-04T04:55:58Z
 FCOV-EXPECTATION: gen_isa_jump_cg.cp_op.c_jalr = MISSING-FROM-REPORT (count=n/a)
 FCOV-EXPECTATION: gen_isa_jump_cg.cp_op.c_jr = MISSING-FROM-REPORT (count=n/a)
 FCOV-EXPECTATION: gen_isa_jump_cg.cp_op.c_jal = MISSING-FROM-REPORT (count=n/a)

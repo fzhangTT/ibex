@@ -1,0 +1,1139 @@
+sources sha256 (dv/auto_dv env, tb, isa, gen_tb): 97a589a799b81066
+flow flags: -full64 -sverilog -ntb_opts uvm-1.2 +define+UVM +define+UVM_REGEX_NO_DPI -timescale=1ns/10ps -licqueue -CFLAGS --std=c99\ -fno-extended-identifiers -xlrm uniq_prior_final -lca -kdb -debug_access+pp +define+COCOTB_SIM
+dv/auto_dv/isa/gen_isa_shim.cc: In function -int gen_isa_step(gen_isa_step_t*)-:
+dv/auto_dv/isa/gen_isa_shim.cc:499:38: warning: narrowing conversion of -(long unsigned int)((mst & 128) >> ((unsigned int){anonymous}::kShiftMpie))- from -long unsigned int- to -uint32_t- {aka -unsigned int-} [-Wnarrowing]
+  499 |     g_mstack = {(mst & MSTATUS_MPIE) >> kShiftMpie, (mst & MSTATUS_MPP) >> kShiftMpp, csr(CSR_MEPC), csr(CSR_MCAUSE)};
+      |                 ~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~
+dv/auto_dv/isa/gen_isa_shim.cc:499:73: warning: narrowing conversion of -(long unsigned int)((mst & 6144) >> ((unsigned int){anonymous}::kShiftMpp))- from -long unsigned int- to -uint32_t- {aka -unsigned int-} [-Wnarrowing]
+  499 |     g_mstack = {(mst & MSTATUS_MPIE) >> kShiftMpie, (mst & MSTATUS_MPP) >> kShiftMpp, csr(CSR_MEPC), csr(CSR_MCAUSE)};
+      |                                                     ~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~
+dv/auto_dv/isa/gen_isa_shim.cc:515:47: warning: narrowing conversion of -(long unsigned int)((mst_pre & 128) >> ((unsigned int){anonymous}::kShiftMpie))- from -long unsigned int- to -uint32_t- {aka -unsigned int-} [-Wnarrowing]
+  515 |   mstack_t stack_pre{(mst_pre & MSTATUS_MPIE) >> kShiftMpie, (mst_pre & MSTATUS_MPP) >> kShiftMpp, csr(CSR_MEPC), csr(CSR_MCAUSE)};
+      |                      ~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~
+dv/auto_dv/isa/gen_isa_shim.cc:515:86: warning: narrowing conversion of -(long unsigned int)((mst_pre & 6144) >> ((unsigned int){anonymous}::kShiftMpp))- from -long unsigned int- to -uint32_t- {aka -unsigned int-} [-Wnarrowing]
+  515 |   mstack_t stack_pre{(mst_pre & MSTATUS_MPIE) >> kShiftMpie, (mst_pre & MSTATUS_MPP) >> kShiftMpp, csr(CSR_MEPC), csr(CSR_MCAUSE)};
+      |                                                              ~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~
+built /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/DATAWAY/out/lib/libgen_isa_shim.so
+                         Chronologic VCS (TM)
+       Version X-2025.06-SP2_Full64 -- Fri Sep  4 02:00:37 2026
+
+                    Copyright (c) 1991 - 2025 Synopsys, Inc.
+   This software and the associated documentation are proprietary to Synopsys,
+ Inc. This software may only be used in accordance with the terms and conditions
+ of a written license agreement with Synopsys, Inc. All other use, reproduction,
+   or distribution of this software is strictly prohibited.  Licensed Products
+     communicate with Synopsys servers for the purpose of providing software
+    updates, detecting software piracy and verifying that customers are using
+    Licensed Products in conformity with the applicable License Key for such
+  Licensed Products. Synopsys will use information gathered in connection with
+    this process to deliver software updates and pursue software pirates and
+                                   infringers.
+
+ Inclusivity & Diversity - Visit SolvNetPlus to read the "Synopsys Statement on
+            Inclusivity and Diversity" (Refer to article 000036315 at
+                        https://solvnetplus.synopsys.com)
+
+
+Warning-[LCA_FEATURES_ENABLED] Usage warning
+  LCA features enabled by '-lca' argument on the command line.  For more 
+  information regarding list of LCA features please refer to Chapter "LCA 
+  features" in the VCS Release Notes
+
+     -.--ns INFO     gpi                                ..mbed/gpi_embed.cpp:108  in set_program_name_in_venv        Using Python virtual environment interpreter at /localdev/fzhang/ws/ibex-challenge/.venv/bin/python
+     -.--ns INFO     gpi                                ../gpi/GpiCommon.cpp:101  in gpi_print_registered_impl       VPI registered
+
+Warning-[VPI-CT-NS] VPI function is not supported
+  The VPI function 'vpi_register_cb' is not supported in the compiler.
+  Please fix the code being referred to by the '-load' compile option.
+
+     -.--ns ERROR    gpi                                ..b/vpi/VpiCbHdl.cpp:72   in arm_callback                    VPI: Unable to register a callback handle for VPI type cbStartOfSimulation(11)
+
+Warning-[VPI-CT-NS] VPI function is not supported
+  The VPI function 'vpi_chk_error' is not supported in the compiler.
+  Please fix the code being referred to by the '-load' compile option.
+
+
+Warning-[VPI-CT-NS] VPI function is not supported
+  The VPI function 'vpi_register_cb' is not supported in the compiler.
+  Please fix the code being referred to by the '-load' compile option.
+
+     -.--ns ERROR    gpi                                ..b/vpi/VpiCbHdl.cpp:72   in arm_callback                    VPI: Unable to register a callback handle for VPI type cbEndOfSimulation(12)
+
+Warning-[VPI-CT-NS] VPI function is not supported
+  The VPI function 'vpi_chk_error' is not supported in the compiler.
+  Please fix the code being referred to by the '-load' compile option.
+
+Parsing design file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/uvm_pkg.sv'
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/uvm_macros.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/macros/uvm_version_defines.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/uvm_macros.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/macros/uvm_global_defines.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/uvm_macros.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/macros/snps_macros.svp'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/uvm_macros.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/macros/uvm_message_defines.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/uvm_macros.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/macros/uvm_phase_defines.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/uvm_macros.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/macros/uvm_object_defines.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/uvm_macros.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/macros/uvm_printer_defines.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/uvm_macros.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/macros/uvm_tlm_defines.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/tlm1/uvm_tlm_imps.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/macros/uvm_tlm_defines.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/uvm_macros.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/macros/uvm_sequence_defines.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/uvm_macros.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/macros/uvm_callback_defines.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/uvm_macros.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/macros/uvm_reg_defines.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/uvm_macros.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/macros/uvm_deprecated_defines.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/uvm_macros.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/uvm_pkg.sv'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/dpi/uvm_dpi.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/dpi/uvm_hdl.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/dpi/uvm_dpi.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/dpi/uvm_svcmd_dpi.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/dpi/uvm_dpi.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/dpi/uvm_regex.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/dpi/uvm_dpi.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/uvm_pkg.sv'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_coreservice.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_version.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_object_globals.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_misc.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_object.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_pool.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_queue.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_factory.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_registry.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_spell_chkr.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_resource.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_resource_specializations.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_resource_db.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_config_db.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_printer.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_comparer.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_packer.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_links.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_tr_database.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_tr_stream.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_recorder.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_event_callback.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_event.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_barrier.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_callback.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/uvm_macros.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_callback.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_report_message.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_report_catcher.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_report_server.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_report_handler.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_report_object.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_transaction.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_phase.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_domain.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_bottomup_phase.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_topdown_phase.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_task_phase.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_common_phases.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_runtime_phases.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_component.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_root.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_component.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_objection.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_heartbeat.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_globals.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_cmdline_processor.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_traversal.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_base.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/uvm_pkg.sv'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/dap/uvm_dap.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/dap/uvm_set_get_dap_base.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/dap/uvm_dap.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/dap/uvm_simple_lock_dap.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/dap/uvm_dap.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/dap/uvm_get_to_lock_dap.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/dap/uvm_dap.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/dap/uvm_set_before_get_dap.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/dap/uvm_dap.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/uvm_pkg.sv'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/tlm1/uvm_tlm.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/tlm1/uvm_tlm_ifs.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/tlm1/uvm_tlm.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/tlm1/uvm_sqr_ifs.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/tlm1/uvm_tlm.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_port_base.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/tlm1/uvm_tlm.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/tlm1/uvm_tlm_imps.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/tlm1/uvm_tlm.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/tlm1/uvm_imps.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/tlm1/uvm_tlm.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/tlm1/uvm_ports.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/tlm1/uvm_tlm.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/tlm1/uvm_exports.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/tlm1/uvm_tlm.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/tlm1/uvm_analysis_port.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/tlm1/uvm_tlm.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/tlm1/uvm_tlm_fifo_base.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/tlm1/uvm_tlm.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/tlm1/uvm_tlm_fifos.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/tlm1/uvm_tlm.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/tlm1/uvm_tlm_req_rsp.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/tlm1/uvm_tlm.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/tlm1/uvm_sqr_connections.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/tlm1/uvm_tlm.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/uvm_pkg.sv'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/comps/uvm_comps.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/comps/uvm_pair.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/comps/uvm_comps.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/comps/uvm_policies.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/comps/uvm_comps.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/comps/uvm_in_order_comparator.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/comps/uvm_comps.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/comps/uvm_algorithmic_comparator.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/comps/uvm_comps.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/comps/uvm_random_stimulus.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/comps/uvm_comps.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/comps/uvm_subscriber.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/comps/uvm_comps.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/comps/uvm_monitor.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/comps/uvm_comps.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/comps/uvm_driver.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/comps/uvm_comps.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/comps/uvm_push_driver.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/comps/uvm_comps.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/comps/uvm_scoreboard.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/comps/uvm_comps.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/comps/uvm_agent.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/comps/uvm_comps.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/comps/uvm_env.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/comps/uvm_comps.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/comps/uvm_test.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/comps/uvm_comps.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/uvm_pkg.sv'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/seq/uvm_seq.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/seq/uvm_sequence_item.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/seq/uvm_seq.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/seq/uvm_sequencer_base.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/seq/uvm_seq.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/seq/uvm_sequencer_analysis_fifo.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/seq/uvm_seq.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/seq/uvm_sequencer_param_base.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/seq/uvm_seq.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/seq/uvm_sequencer.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/seq/uvm_seq.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/seq/uvm_push_sequencer.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/seq/uvm_seq.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/seq/uvm_sequence_base.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/seq/uvm_seq.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/seq/uvm_sequence.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/seq/uvm_seq.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/seq/uvm_sequence_library.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/seq/uvm_seq.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/seq/uvm_sequence_builtin.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/seq/uvm_seq.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/uvm_pkg.sv'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/tlm2/uvm_tlm2.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/tlm2/uvm_tlm2_defines.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/tlm2/uvm_tlm2.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/tlm2/uvm_tlm2_time.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/tlm2/uvm_tlm2.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/tlm2/uvm_tlm2_generic_payload.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/tlm2/uvm_tlm2.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/tlm2/uvm_tlm2_ifs.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/tlm2/uvm_tlm2.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/tlm2/uvm_tlm2_imps.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/tlm2/uvm_tlm2.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/tlm2/uvm_tlm2_ports.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/tlm2/uvm_tlm2.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/tlm2/uvm_tlm2_exports.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/tlm2/uvm_tlm2.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/tlm2/uvm_tlm2_sockets_base.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/tlm2/uvm_tlm2.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/tlm2/uvm_tlm2_sockets.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/tlm2/uvm_tlm2.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/uvm_pkg.sv'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/reg/uvm_reg_model.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/reg/uvm_reg_item.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/reg/uvm_reg_model.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/reg/uvm_reg_adapter.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/reg/uvm_reg_model.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/reg/uvm_reg_predictor.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/reg/uvm_reg_model.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/reg/uvm_reg_sequence.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/reg/uvm_reg_model.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/reg/uvm_reg_cbs.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/reg/uvm_reg_model.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/reg/uvm_reg_backdoor.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/reg/uvm_reg_model.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/reg/uvm_reg_field.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/reg/uvm_reg_model.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/reg/uvm_vreg_field.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/reg/uvm_reg_model.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/reg/uvm_reg.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/reg/uvm_reg_model.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/reg/uvm_reg_indirect.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/reg/uvm_reg_model.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/reg/uvm_reg_fifo.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/reg/uvm_reg_model.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/reg/uvm_reg_file.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/reg/uvm_reg_model.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/reg/uvm_mem_mam.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/reg/uvm_reg_model.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/reg/uvm_vreg.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/reg/uvm_reg_model.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/reg/uvm_mem.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/reg/uvm_reg_model.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/reg/uvm_reg_map.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/reg/uvm_reg_model.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/reg/uvm_reg_block.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/reg/uvm_reg_model.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/reg/sequences/uvm_reg_hw_reset_seq.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/reg/uvm_reg_model.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/reg/sequences/uvm_reg_bit_bash_seq.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/reg/uvm_reg_model.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/reg/sequences/uvm_mem_walk_seq.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/reg/uvm_reg_model.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/reg/sequences/uvm_mem_access_seq.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/reg/uvm_reg_model.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/reg/sequences/uvm_reg_access_seq.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/reg/uvm_reg_model.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/reg/sequences/uvm_reg_mem_shared_access_seq.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/reg/uvm_reg_model.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/reg/sequences/uvm_reg_mem_built_in_seq.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/reg/uvm_reg_model.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/reg/sequences/uvm_reg_mem_hdl_paths_seq.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/reg/uvm_reg_model.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/reg/snps_uvm_reg_bank.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/reg/uvm_reg_model.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/uvm_pkg.sv'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/vcs/vcs_uvm_alt.sv'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/uvm_pkg.sv'.
+Parsing design file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/vcs/uvm_custom_install_vcs_recorder.sv'
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/vcs/msglog.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/vcs/uvm_custom_install_vcs_recorder.sv'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/vcs/uvm_msglog_report_server.sv'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/vcs/uvm_custom_install_vcs_recorder.sv'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/vcs/uvm_vcs_recorder.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/vcs/uvm_vcs_tr_database.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/vcs/uvm_vcs_tr_stream.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/vcs/uvm_vcs_tr_database.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/vcs/uvm_vcs_recorder.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/vcs/uvm_custom_install_vcs_recorder.sv'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/vcs/uvm_vcs_record_interface.sv'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/vcs/uvm_custom_install_vcs_recorder.sv'.
+Parsing design file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/verdi/uvm_custom_install_verdi_recorder.sv'
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/uvm_macros.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/verdi/uvm_custom_install_verdi_recorder.sv'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/verdi/uvm_verdi_recorder.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/verdi/uvm_verdi_pli_base.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/verdi/uvm_verdi_recorder.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/verdi/uvm_verdi_tr_database.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/verdi/uvm_verdi_tr_stream.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/verdi/uvm_verdi_tr_database.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/verdi/uvm_verdi_recorder.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/verdi/uvm_custom_install_verdi_recorder.sv'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/verdi/uvm_verdi_reg_map_recording.sv'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/verdi/uvm_custom_install_verdi_recorder.sv'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/verdi/uvm_verdi_message_catcher.svh'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/verdi/uvm_verdi_pli_base.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/verdi/uvm_verdi_message_catcher.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/verdi/uvm_custom_install_verdi_recorder.sv'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/verdi/uvm_verdi_factory.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/verdi/uvm_custom_install_verdi_recorder.sv'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/verdi/./dpi/uvm_verdi_dpi.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/verdi/uvm_custom_install_verdi_recorder.sv'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/verdi/uvm_verdi_reg_recording.sv'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/verdi/uvm_custom_install_verdi_recorder.sv'.
+Parsing included file '/tools_vendor/synopsys/verdi/X-2025.06-SP2/share/PLI/VCS/include/verdi_trans_recorder_dpi.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/verdi/uvm_custom_install_verdi_recorder.sv'.
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/verdi/uvm_verdi_pli.svh'.
+Back to file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/verdi/uvm_custom_install_verdi_recorder.sv'.
+Parsing design file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/verdi/uvm_custom_install_verdi_recorder.sv'
+Parsing design file 'rtl/ibex_pkg.sv'
+Parsing design file 'rtl/ibex_cheriot_pkg.sv'
+Parsing design file 'vendor/lowrisc_ip/ip/prim/rtl/prim_cipher_pkg.sv'
+Parsing design file 'vendor/lowrisc_ip/ip/prim_generic/rtl/prim_buf.sv'
+Parsing included file 'vendor/lowrisc_ip/ip/prim/rtl/prim_assert.sv'.
+Parsing included file 'vendor/lowrisc_ip/ip/prim/rtl/prim_assert_standard_macros.svh'.
+Back to file 'vendor/lowrisc_ip/ip/prim/rtl/prim_assert.sv'.
+Parsing included file 'vendor/lowrisc_ip/ip/prim/rtl/prim_assert_sec_cm.svh'.
+Back to file 'vendor/lowrisc_ip/ip/prim/rtl/prim_assert.sv'.
+Parsing included file 'vendor/lowrisc_ip/ip/prim/rtl/prim_flop_macros.sv'.
+Back to file 'vendor/lowrisc_ip/ip/prim/rtl/prim_assert.sv'.
+Back to file 'vendor/lowrisc_ip/ip/prim_generic/rtl/prim_buf.sv'.
+Parsing design file 'vendor/lowrisc_ip/ip/prim/rtl/prim_secded_pkg.sv'
+Parsing design file 'vendor/lowrisc_ip/ip/prim/rtl/prim_secded_22_16_dec.sv'
+Parsing design file 'vendor/lowrisc_ip/ip/prim/rtl/prim_secded_22_16_enc.sv'
+Parsing design file 'vendor/lowrisc_ip/ip/prim/rtl/prim_secded_28_22_dec.sv'
+Parsing design file 'vendor/lowrisc_ip/ip/prim/rtl/prim_secded_28_22_enc.sv'
+Parsing design file 'vendor/lowrisc_ip/ip/prim/rtl/prim_secded_39_32_dec.sv'
+Parsing design file 'vendor/lowrisc_ip/ip/prim/rtl/prim_secded_39_32_enc.sv'
+Parsing design file 'vendor/lowrisc_ip/ip/prim/rtl/prim_secded_64_57_dec.sv'
+Parsing design file 'vendor/lowrisc_ip/ip/prim/rtl/prim_secded_64_57_enc.sv'
+Parsing design file 'vendor/lowrisc_ip/ip/prim/rtl/prim_secded_72_64_dec.sv'
+Parsing design file 'vendor/lowrisc_ip/ip/prim/rtl/prim_secded_72_64_enc.sv'
+Parsing design file 'vendor/lowrisc_ip/ip/prim/rtl/prim_secded_hamming_22_16_dec.sv'
+Parsing design file 'vendor/lowrisc_ip/ip/prim/rtl/prim_secded_hamming_22_16_enc.sv'
+Parsing design file 'vendor/lowrisc_ip/ip/prim/rtl/prim_secded_hamming_39_32_dec.sv'
+Parsing design file 'vendor/lowrisc_ip/ip/prim/rtl/prim_secded_hamming_39_32_enc.sv'
+Parsing design file 'vendor/lowrisc_ip/ip/prim/rtl/prim_secded_hamming_72_64_dec.sv'
+Parsing design file 'vendor/lowrisc_ip/ip/prim/rtl/prim_secded_hamming_72_64_enc.sv'
+Parsing design file 'vendor/lowrisc_ip/ip/prim/rtl/prim_secded_hamming_76_68_dec.sv'
+Parsing design file 'vendor/lowrisc_ip/ip/prim/rtl/prim_secded_hamming_76_68_enc.sv'
+Parsing design file 'vendor/lowrisc_ip/ip/prim/rtl/prim_secded_inv_22_16_dec.sv'
+Parsing design file 'vendor/lowrisc_ip/ip/prim/rtl/prim_secded_inv_22_16_enc.sv'
+Parsing design file 'vendor/lowrisc_ip/ip/prim/rtl/prim_secded_inv_28_22_dec.sv'
+Parsing design file 'vendor/lowrisc_ip/ip/prim/rtl/prim_secded_inv_28_22_enc.sv'
+Parsing design file 'vendor/lowrisc_ip/ip/prim/rtl/prim_secded_inv_39_32_dec.sv'
+Parsing design file 'vendor/lowrisc_ip/ip/prim/rtl/prim_secded_inv_39_32_enc.sv'
+Parsing design file 'vendor/lowrisc_ip/ip/prim/rtl/prim_secded_inv_64_57_dec.sv'
+Parsing design file 'vendor/lowrisc_ip/ip/prim/rtl/prim_secded_inv_64_57_enc.sv'
+Parsing design file 'vendor/lowrisc_ip/ip/prim/rtl/prim_secded_inv_72_64_dec.sv'
+Parsing design file 'vendor/lowrisc_ip/ip/prim/rtl/prim_secded_inv_72_64_enc.sv'
+Parsing design file 'vendor/lowrisc_ip/ip/prim/rtl/prim_secded_inv_hamming_22_16_dec.sv'
+Parsing design file 'vendor/lowrisc_ip/ip/prim/rtl/prim_secded_inv_hamming_22_16_enc.sv'
+Parsing design file 'vendor/lowrisc_ip/ip/prim/rtl/prim_secded_inv_hamming_39_32_dec.sv'
+Parsing design file 'vendor/lowrisc_ip/ip/prim/rtl/prim_secded_inv_hamming_39_32_enc.sv'
+Parsing design file 'vendor/lowrisc_ip/ip/prim/rtl/prim_secded_inv_hamming_72_64_dec.sv'
+Parsing design file 'vendor/lowrisc_ip/ip/prim/rtl/prim_secded_inv_hamming_72_64_enc.sv'
+Parsing design file 'vendor/lowrisc_ip/ip/prim/rtl/prim_secded_inv_hamming_76_68_dec.sv'
+Parsing design file 'vendor/lowrisc_ip/ip/prim/rtl/prim_secded_inv_hamming_76_68_enc.sv'
+Parsing design file 'vendor/lowrisc_ip/ip/prim_generic/rtl/prim_clock_gating.sv'
+Parsing design file 'vendor/lowrisc_ip/ip/prim_generic/rtl/prim_flop.sv'
+Parsing included file 'vendor/lowrisc_ip/ip/prim/rtl/prim_assert.sv'.
+Back to file 'vendor/lowrisc_ip/ip/prim_generic/rtl/prim_flop.sv'.
+Parsing design file 'rtl/ibex_icache.sv'
+Parsing included file 'vendor/lowrisc_ip/ip/prim/rtl/prim_assert.sv'.
+Back to file 'rtl/ibex_icache.sv'.
+Parsing design file 'vendor/lowrisc_ip/ip/prim/rtl/prim_lfsr.sv'
+Parsing included file 'vendor/lowrisc_ip/ip/prim/rtl/prim_assert.sv'.
+Back to file 'vendor/lowrisc_ip/ip/prim/rtl/prim_lfsr.sv'.
+Parsing design file 'vendor/lowrisc_ip/ip/prim/rtl/prim_mubi_pkg.sv'
+Parsing included file 'vendor/lowrisc_ip/ip/prim/rtl/prim_assert.sv'.
+Back to file 'vendor/lowrisc_ip/ip/prim/rtl/prim_mubi_pkg.sv'.
+Parsing design file 'vendor/lowrisc_ip/ip/prim/rtl/prim_mubi4_sender.sv'
+Parsing included file 'vendor/lowrisc_ip/ip/prim/rtl/prim_assert.sv'.
+Back to file 'vendor/lowrisc_ip/ip/prim/rtl/prim_mubi4_sender.sv'.
+Parsing design file 'vendor/lowrisc_ip/ip/prim/rtl/prim_mubi4_sync.sv'
+Parsing included file 'vendor/lowrisc_ip/ip/prim/rtl/prim_assert.sv'.
+Back to file 'vendor/lowrisc_ip/ip/prim/rtl/prim_mubi4_sync.sv'.
+Parsing design file 'vendor/lowrisc_ip/ip/prim/rtl/prim_mubi4_dec.sv'
+Parsing included file 'vendor/lowrisc_ip/ip/prim/rtl/prim_assert.sv'.
+Back to file 'vendor/lowrisc_ip/ip/prim/rtl/prim_mubi4_dec.sv'.
+Parsing design file 'vendor/lowrisc_ip/ip/prim/rtl/prim_mubi8_sender.sv'
+Parsing included file 'vendor/lowrisc_ip/ip/prim/rtl/prim_assert.sv'.
+Back to file 'vendor/lowrisc_ip/ip/prim/rtl/prim_mubi8_sender.sv'.
+Parsing design file 'vendor/lowrisc_ip/ip/prim/rtl/prim_mubi8_sync.sv'
+Parsing included file 'vendor/lowrisc_ip/ip/prim/rtl/prim_assert.sv'.
+Back to file 'vendor/lowrisc_ip/ip/prim/rtl/prim_mubi8_sync.sv'.
+Parsing design file 'vendor/lowrisc_ip/ip/prim/rtl/prim_mubi8_dec.sv'
+Parsing included file 'vendor/lowrisc_ip/ip/prim/rtl/prim_assert.sv'.
+Back to file 'vendor/lowrisc_ip/ip/prim/rtl/prim_mubi8_dec.sv'.
+Parsing design file 'vendor/lowrisc_ip/ip/prim/rtl/prim_mubi12_sender.sv'
+Parsing included file 'vendor/lowrisc_ip/ip/prim/rtl/prim_assert.sv'.
+Back to file 'vendor/lowrisc_ip/ip/prim/rtl/prim_mubi12_sender.sv'.
+Parsing design file 'vendor/lowrisc_ip/ip/prim/rtl/prim_mubi12_sync.sv'
+Parsing included file 'vendor/lowrisc_ip/ip/prim/rtl/prim_assert.sv'.
+Back to file 'vendor/lowrisc_ip/ip/prim/rtl/prim_mubi12_sync.sv'.
+Parsing design file 'vendor/lowrisc_ip/ip/prim/rtl/prim_mubi12_dec.sv'
+Parsing included file 'vendor/lowrisc_ip/ip/prim/rtl/prim_assert.sv'.
+Back to file 'vendor/lowrisc_ip/ip/prim/rtl/prim_mubi12_dec.sv'.
+Parsing design file 'vendor/lowrisc_ip/ip/prim/rtl/prim_mubi16_sender.sv'
+Parsing included file 'vendor/lowrisc_ip/ip/prim/rtl/prim_assert.sv'.
+Back to file 'vendor/lowrisc_ip/ip/prim/rtl/prim_mubi16_sender.sv'.
+Parsing design file 'vendor/lowrisc_ip/ip/prim/rtl/prim_mubi16_sync.sv'
+Parsing included file 'vendor/lowrisc_ip/ip/prim/rtl/prim_assert.sv'.
+Back to file 'vendor/lowrisc_ip/ip/prim/rtl/prim_mubi16_sync.sv'.
+Parsing design file 'vendor/lowrisc_ip/ip/prim/rtl/prim_mubi16_dec.sv'
+Parsing included file 'vendor/lowrisc_ip/ip/prim/rtl/prim_assert.sv'.
+Back to file 'vendor/lowrisc_ip/ip/prim/rtl/prim_mubi16_dec.sv'.
+Parsing design file 'vendor/lowrisc_ip/ip/prim/rtl/prim_mubi20_sender.sv'
+Parsing included file 'vendor/lowrisc_ip/ip/prim/rtl/prim_assert.sv'.
+Back to file 'vendor/lowrisc_ip/ip/prim/rtl/prim_mubi20_sender.sv'.
+Parsing design file 'vendor/lowrisc_ip/ip/prim/rtl/prim_mubi20_sync.sv'
+Parsing included file 'vendor/lowrisc_ip/ip/prim/rtl/prim_assert.sv'.
+Back to file 'vendor/lowrisc_ip/ip/prim/rtl/prim_mubi20_sync.sv'.
+Parsing design file 'vendor/lowrisc_ip/ip/prim/rtl/prim_mubi20_dec.sv'
+Parsing included file 'vendor/lowrisc_ip/ip/prim/rtl/prim_assert.sv'.
+Back to file 'vendor/lowrisc_ip/ip/prim/rtl/prim_mubi20_dec.sv'.
+Parsing design file 'vendor/lowrisc_ip/ip/prim/rtl/prim_mubi24_sender.sv'
+Parsing included file 'vendor/lowrisc_ip/ip/prim/rtl/prim_assert.sv'.
+Back to file 'vendor/lowrisc_ip/ip/prim/rtl/prim_mubi24_sender.sv'.
+Parsing design file 'vendor/lowrisc_ip/ip/prim/rtl/prim_mubi24_sync.sv'
+Parsing included file 'vendor/lowrisc_ip/ip/prim/rtl/prim_assert.sv'.
+Back to file 'vendor/lowrisc_ip/ip/prim/rtl/prim_mubi24_sync.sv'.
+Parsing design file 'vendor/lowrisc_ip/ip/prim/rtl/prim_mubi24_dec.sv'
+Parsing included file 'vendor/lowrisc_ip/ip/prim/rtl/prim_assert.sv'.
+Back to file 'vendor/lowrisc_ip/ip/prim/rtl/prim_mubi24_dec.sv'.
+Parsing design file 'vendor/lowrisc_ip/ip/prim/rtl/prim_mubi28_sender.sv'
+Parsing included file 'vendor/lowrisc_ip/ip/prim/rtl/prim_assert.sv'.
+Back to file 'vendor/lowrisc_ip/ip/prim/rtl/prim_mubi28_sender.sv'.
+Parsing design file 'vendor/lowrisc_ip/ip/prim/rtl/prim_mubi28_sync.sv'
+Parsing included file 'vendor/lowrisc_ip/ip/prim/rtl/prim_assert.sv'.
+Back to file 'vendor/lowrisc_ip/ip/prim/rtl/prim_mubi28_sync.sv'.
+Parsing design file 'vendor/lowrisc_ip/ip/prim/rtl/prim_mubi28_dec.sv'
+Parsing included file 'vendor/lowrisc_ip/ip/prim/rtl/prim_assert.sv'.
+Back to file 'vendor/lowrisc_ip/ip/prim/rtl/prim_mubi28_dec.sv'.
+Parsing design file 'vendor/lowrisc_ip/ip/prim/rtl/prim_mubi32_sender.sv'
+Parsing included file 'vendor/lowrisc_ip/ip/prim/rtl/prim_assert.sv'.
+Back to file 'vendor/lowrisc_ip/ip/prim/rtl/prim_mubi32_sender.sv'.
+Parsing design file 'vendor/lowrisc_ip/ip/prim/rtl/prim_mubi32_sync.sv'
+Parsing included file 'vendor/lowrisc_ip/ip/prim/rtl/prim_assert.sv'.
+Back to file 'vendor/lowrisc_ip/ip/prim/rtl/prim_mubi32_sync.sv'.
+Parsing design file 'vendor/lowrisc_ip/ip/prim/rtl/prim_mubi32_dec.sv'
+Parsing included file 'vendor/lowrisc_ip/ip/prim/rtl/prim_assert.sv'.
+Back to file 'vendor/lowrisc_ip/ip/prim/rtl/prim_mubi32_dec.sv'.
+Parsing design file 'rtl/ibex_cheriot_ex.sv'
+Parsing design file 'rtl/ibex_alu.sv'
+Parsing design file 'rtl/ibex_branch_predict.sv'
+Parsing included file 'vendor/lowrisc_ip/ip/prim/rtl/prim_assert.sv'.
+Back to file 'rtl/ibex_branch_predict.sv'.
+Parsing design file 'rtl/ibex_compressed_decoder.sv'
+Parsing included file 'vendor/lowrisc_ip/ip/prim/rtl/prim_assert.sv'.
+Back to file 'rtl/ibex_compressed_decoder.sv'.
+Parsing design file 'rtl/ibex_controller.sv'
+Parsing included file 'vendor/lowrisc_ip/ip/prim/rtl/prim_assert.sv'.
+Back to file 'rtl/ibex_controller.sv'.
+Parsing included file 'vendor/lowrisc_ip/dv/sv/dv_utils/dv_fcov_macros.svh'.
+Back to file 'rtl/ibex_controller.sv'.
+Parsing design file 'rtl/ibex_cs_registers.sv'
+Parsing included file 'vendor/lowrisc_ip/ip/prim/rtl/prim_assert.sv'.
+Back to file 'rtl/ibex_cs_registers.sv'.
+Parsing design file 'rtl/ibex_csr.sv'
+Parsing included file 'vendor/lowrisc_ip/ip/prim/rtl/prim_assert.sv'.
+Back to file 'rtl/ibex_csr.sv'.
+Parsing design file 'rtl/ibex_counter.sv'
+Parsing design file 'rtl/ibex_decoder.sv'
+Parsing included file 'vendor/lowrisc_ip/ip/prim/rtl/prim_assert.sv'.
+Back to file 'rtl/ibex_decoder.sv'.
+Parsing design file 'rtl/ibex_ex_block.sv'
+Parsing design file 'rtl/ibex_fetch_fifo.sv'
+Parsing included file 'vendor/lowrisc_ip/ip/prim/rtl/prim_assert.sv'.
+Back to file 'rtl/ibex_fetch_fifo.sv'.
+Parsing design file 'rtl/ibex_id_stage.sv'
+Parsing included file 'vendor/lowrisc_ip/ip/prim/rtl/prim_assert.sv'.
+Back to file 'rtl/ibex_id_stage.sv'.
+Parsing included file 'vendor/lowrisc_ip/dv/sv/dv_utils/dv_fcov_macros.svh'.
+Back to file 'rtl/ibex_id_stage.sv'.
+Parsing design file 'rtl/ibex_if_stage.sv'
+Parsing included file 'vendor/lowrisc_ip/ip/prim/rtl/prim_assert.sv'.
+Back to file 'rtl/ibex_if_stage.sv'.
+Parsing included file 'vendor/lowrisc_ip/dv/sv/dv_utils/dv_fcov_macros.svh'.
+Back to file 'rtl/ibex_if_stage.sv'.
+Parsing design file 'rtl/ibex_load_store_unit.sv'
+Parsing included file 'vendor/lowrisc_ip/ip/prim/rtl/prim_assert.sv'.
+Back to file 'rtl/ibex_load_store_unit.sv'.
+Parsing included file 'vendor/lowrisc_ip/dv/sv/dv_utils/dv_fcov_macros.svh'.
+Back to file 'rtl/ibex_load_store_unit.sv'.
+Parsing design file 'rtl/ibex_multdiv_fast.sv'
+Parsing included file 'vendor/lowrisc_ip/ip/prim/rtl/prim_assert.sv'.
+Back to file 'rtl/ibex_multdiv_fast.sv'.
+Parsing design file 'rtl/ibex_multdiv_slow.sv'
+Parsing included file 'vendor/lowrisc_ip/ip/prim/rtl/prim_assert.sv'.
+Back to file 'rtl/ibex_multdiv_slow.sv'.
+Parsing design file 'rtl/ibex_prefetch_buffer.sv'
+Parsing design file 'rtl/ibex_pmp.sv'
+Parsing included file 'vendor/lowrisc_ip/dv/sv/dv_utils/dv_fcov_macros.svh'.
+Back to file 'rtl/ibex_pmp.sv'.
+Parsing design file 'rtl/ibex_wb_stage.sv'
+Parsing included file 'vendor/lowrisc_ip/ip/prim/rtl/prim_assert.sv'.
+Back to file 'rtl/ibex_wb_stage.sv'.
+Parsing included file 'vendor/lowrisc_ip/dv/sv/dv_utils/dv_fcov_macros.svh'.
+Back to file 'rtl/ibex_wb_stage.sv'.
+Parsing design file 'rtl/ibex_dummy_instr.sv'
+Parsing design file 'rtl/ibex_core.sv'
+Parsing included file 'vendor/lowrisc_ip/ip/prim/rtl/prim_assert.sv'.
+Back to file 'rtl/ibex_core.sv'.
+Parsing included file 'vendor/lowrisc_ip/dv/sv/dv_utils/dv_fcov_macros.svh'.
+Back to file 'rtl/ibex_core.sv'.
+Parsing design file 'rtl/ibex_register_file_ff.sv'
+Parsing included file 'vendor/lowrisc_ip/ip/prim/rtl/prim_assert.sv'.
+Back to file 'rtl/ibex_register_file_ff.sv'.
+Parsing design file 'dv/auto_dv/tb/gen_tb_pkg.sv'
+
+Warning-[DCTL] Decimal constant too large
+dv/auto_dv/tb/gen_tb_pkg.sv, 276
+  Decimal constant '2147483679' is too large as a 32bit signed constant, it 
+  should be smaller than 2147483648.
+  VCS is using converted signed value '-2147483617' instead.
+  To make it an unsigned constant, please use sized constant format.
+
+
+Warning-[DCTL] Decimal constant too large
+dv/auto_dv/tb/gen_tb_pkg.sv, 277
+  Decimal constant '4294967264' is too large as a 32bit signed constant, it 
+  should be smaller than 2147483648.
+  VCS is using converted signed value '-32' instead.
+  To make it an unsigned constant, please use sized constant format.
+
+Parsing design file 'dv/auto_dv/tb/gen_dut_top.sv'
+Parsing design file 'dv/auto_dv/tb/gen_protocol_props.sv'
+Parsing design file 'dv/auto_dv/tb/gen_b8_probe.sv'
+Parsing design file 'dv/auto_dv/tb/gen_ic_lookup_probe.sv'
+Parsing design file 'dv/auto_dv/tb/gen_binds.sv'
+Parsing design file 'dv/auto_dv/tb/gen_bridge_if.sv'
+Parsing design file 'dv/auto_dv/tb/gen_bus_if.sv'
+Parsing design file 'dv/auto_dv/tb/gen_scrkey_if.sv'
+Parsing design file 'dv/auto_dv/tb/gen_ctrl_if.sv'
+Parsing design file 'dv/auto_dv/tb/gen_icache_ram.sv'
+Parsing design file 'dv/auto_dv/tb/gen_rvfi_if.sv'
+Parsing design file 'dv/auto_dv/tb/gen_irq_if.sv'
+Parsing design file 'dv/auto_dv/tb/gen_dbg_if.sv'
+Parsing design file 'dv/auto_dv/tb/gen_misc_if.sv'
+Parsing design file 'dv/auto_dv/env/gen_cfg_pkg.sv'
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/uvm_macros.svh'.
+Back to file 'dv/auto_dv/env/gen_cfg_pkg.sv'.
+Parsing included file 'dv/auto_dv/tb/gen_env_cfg_knobs.svh'.
+Back to file 'dv/auto_dv/env/gen_cfg_pkg.sv'.
+Parsing design file 'dv/auto_dv/env/gen_export_pkg.sv'
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/uvm_macros.svh'.
+Back to file 'dv/auto_dv/env/gen_export_pkg.sv'.
+Parsing included file 'dv/auto_dv/env/gen_export_event_lines.svh'.
+Back to file 'dv/auto_dv/env/gen_export_pkg.sv'.
+Parsing design file 'dv/auto_dv/env/gen_mem_pkg.sv'
+Parsing design file 'dv/auto_dv/env/gen_agents_pkg.sv'
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/uvm_macros.svh'.
+Back to file 'dv/auto_dv/env/gen_agents_pkg.sv'.
+Parsing design file 'dv/auto_dv/isa/gen_isa_dpi_pkg.sv'
+Parsing design file 'dv/auto_dv/env/gen_rvfi_pkg.sv'
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/uvm_macros.svh'.
+Back to file 'dv/auto_dv/env/gen_rvfi_pkg.sv'.
+Parsing included file 'dv/auto_dv/env/gen_export_record_line.svh'.
+Back to file 'dv/auto_dv/env/gen_rvfi_pkg.sv'.
+Parsing design file 'dv/auto_dv/env/gen_fcov_pkg.sv'
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/uvm_macros.svh'.
+Back to file 'dv/auto_dv/env/gen_fcov_pkg.sv'.
+Parsing included file 'dv/auto_dv/env/gen_wit_bins.svh'.
+Back to file 'dv/auto_dv/env/gen_fcov_pkg.sv'.
+Parsing included file 'dv/auto_dv/env/gen_fcov_groups.svh'.
+Back to file 'dv/auto_dv/env/gen_fcov_pkg.sv'.
+Parsing design file 'dv/auto_dv/env/gen_checkers_pkg.sv'
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/uvm_macros.svh'.
+Back to file 'dv/auto_dv/env/gen_checkers_pkg.sv'.
+Parsing design file 'dv/auto_dv/env/gen_env_pkg.sv'
+Parsing included file '/tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/uvm_macros.svh'.
+Back to file 'dv/auto_dv/env/gen_env_pkg.sv'.
+Parsing design file 'dv/auto_dv/tb/gen_tb_top.sv'
+Top Level Modules:
+       uvm_custom_install_verdi_recording
+       gen_tb_top
+assign 0 /gen_tb_top/RV32E (global:"command line":0)
+assign 0 /gen_tb_top/u_dut/RV32E (global:"command line":0)
+assign 0 /gen_tb_top/u_dut/u_ibex_core/RV32E (global:"command line":0)
+assign 0 /gen_tb_top/u_dut/u_ibex_core/id_stage_i/RV32E (global:"command line":0)
+assign 0 /gen_tb_top/u_dut/u_ibex_core/id_stage_i/decoder_i/RV32E (global:"command line":0)
+assign 0 /gen_tb_top/u_dut/u_ibex_core/cs_registers_i/RV32E (global:"command line":0)
+assign 0 /gen_tb_top/u_dut/u_register_file/RV32E (global:"command line":0)
+assign 1 /gen_tb_top/BranchTargetALU (global:"command line":0)
+assign 1 /gen_tb_top/u_dut/BranchTargetALU (global:"command line":0)
+assign 1 /gen_tb_top/u_dut/u_ibex_core/BranchTargetALU (global:"command line":0)
+assign 1 /gen_tb_top/u_dut/u_ibex_core/id_stage_i/BranchTargetALU (global:"command line":0)
+assign 1 /gen_tb_top/u_dut/u_ibex_core/id_stage_i/decoder_i/BranchTargetALU (global:"command line":0)
+assign 1 /gen_tb_top/u_dut/u_ibex_core/ex_block_i/BranchTargetALU (global:"command line":0)
+assign 1 /gen_tb_top/WritebackStage (global:"command line":0)
+assign 1 /gen_tb_top/u_dut/WritebackStage (global:"command line":0)
+assign 1 /gen_tb_top/u_dut/u_ibex_core/WritebackStage (global:"command line":0)
+assign 1 /gen_tb_top/u_dut/u_ibex_core/id_stage_i/WritebackStage (global:"command line":0)
+assign 1 /gen_tb_top/u_dut/u_ibex_core/id_stage_i/controller_i/WritebackStage (global:"command line":0)
+assign 1 /gen_tb_top/u_dut/u_ibex_core/wb_stage_i/WritebackStage (global:"command line":0)
+assign 1 /gen_tb_top/u_dut/u_ibex_core/g_cheriot_ex/u_ibex_cheriot_ex/WritebackStage (global:"command line":0)
+assign 1 /gen_tb_top/ICache (global:"command line":0)
+assign 1 /gen_tb_top/u_dut/ICache (global:"command line":0)
+assign 1 /gen_tb_top/u_dut/u_ibex_core/ICache (global:"command line":0)
+assign 1 /gen_tb_top/u_dut/u_ibex_core/if_stage_i/ICache (global:"command line":0)
+assign 1 /gen_tb_top/u_dut/u_ibex_core/cs_registers_i/ICache (global:"command line":0)
+assign 1 /gen_tb_top/ICacheECC (global:"command line":0)
+assign 1 /gen_tb_top/u_dut/ICacheECC (global:"command line":0)
+assign 1 /gen_tb_top/u_dut/u_ibex_core/ICacheECC (global:"command line":0)
+assign 1 /gen_tb_top/u_dut/u_ibex_core/if_stage_i/ICacheECC (global:"command line":0)
+assign 1 /gen_tb_top/u_dut/u_ibex_core/if_stage_i/gen_icache/icache_i/ICacheECC (global:"command line":0)
+assign 1 /gen_tb_top/ICacheScramble (global:"command line":0)
+assign 1 /gen_tb_top/u_dut/ICacheScramble (global:"command line":0)
+assign 0 /gen_tb_top/BranchPredictor (global:"command line":0)
+assign 0 /gen_tb_top/u_dut/BranchPredictor (global:"command line":0)
+assign 0 /gen_tb_top/u_dut/u_ibex_core/BranchPredictor (global:"command line":0)
+assign 0 /gen_tb_top/u_dut/u_ibex_core/if_stage_i/BranchPredictor (global:"command line":0)
+assign 0 /gen_tb_top/u_dut/u_ibex_core/id_stage_i/BranchPredictor (global:"command line":0)
+assign 0 /gen_tb_top/u_dut/u_ibex_core/id_stage_i/controller_i/BranchPredictor (global:"command line":0)
+assign 1 /gen_tb_top/DbgTriggerEn (global:"command line":0)
+assign 1 /gen_tb_top/u_dut/DbgTriggerEn (global:"command line":0)
+assign 1 /gen_tb_top/u_dut/u_ibex_core/DbgTriggerEn (global:"command line":0)
+assign 1 /gen_tb_top/u_dut/u_ibex_core/cs_registers_i/DbgTriggerEn (global:"command line":0)
+assign 1 /gen_tb_top/SecureIbex (global:"command line":0)
+assign 1 /gen_tb_top/u_dut/SecureIbex (global:"command line":0)
+assign 1 /gen_tb_top/u_dut/u_ibex_core/SecureIbex (global:"command line":0)
+assign 1 /gen_tb_top/PMPEnable (global:"command line":0)
+assign 1 /gen_tb_top/u_dut/PMPEnable (global:"command line":0)
+assign 1 /gen_tb_top/u_dut/u_ibex_core/PMPEnable (global:"command line":0)
+assign 1 /gen_tb_top/u_dut/u_ibex_core/cs_registers_i/PMPEnable (global:"command line":0)
+assign 0 /gen_tb_top/PMPGranularity (global:"command line":0)
+assign 0 /gen_tb_top/u_dut/PMPGranularity (global:"command line":0)
+assign 0 /gen_tb_top/u_dut/u_ibex_core/PMPGranularity (global:"command line":0)
+assign 0 /gen_tb_top/u_dut/u_ibex_core/cs_registers_i/PMPGranularity (global:"command line":0)
+assign 0 /gen_tb_top/u_dut/u_ibex_core/g_pmp/pmp_i/PMPGranularity (global:"command line":0)
+assign 16 /gen_tb_top/PMPNumRegions (global:"command line":0)
+assign 16 /gen_tb_top/u_dut/PMPNumRegions (global:"command line":0)
+assign 16 /gen_tb_top/u_dut/u_ibex_core/PMPNumRegions (global:"command line":0)
+assign 16 /gen_tb_top/u_dut/u_ibex_core/cs_registers_i/PMPNumRegions (global:"command line":0)
+assign 16 /gen_tb_top/u_dut/u_ibex_core/g_pmp/pmp_i/PMPNumRegions (global:"command line":0)
+assign 10 /gen_tb_top/MHPMCounterNum (global:"command line":0)
+assign 10 /gen_tb_top/u_dut/MHPMCounterNum (global:"command line":0)
+assign 10 /gen_tb_top/u_dut/u_ibex_core/MHPMCounterNum (global:"command line":0)
+assign 10 /gen_tb_top/u_dut/u_ibex_core/cs_registers_i/MHPMCounterNum (global:"command line":0)
+assign 32 /gen_tb_top/MHPMCounterWidth (global:"command line":0)
+assign 32 /gen_tb_top/u_dut/MHPMCounterWidth (global:"command line":0)
+assign 32 /gen_tb_top/u_dut/u_ibex_core/MHPMCounterWidth (global:"command line":0)
+assign 32 /gen_tb_top/u_dut/u_ibex_core/cs_registers_i/MHPMCounterWidth (global:"command line":0)
+TimeScale is 1 ns / 10 ps
+
+Warning-[OSVF-NPVIUFPI] Obsolete SystemVerilog feature
+dv/auto_dv/env/gen_agents_pkg.sv, 199
+gen_bus_if
+  Non-parameterized virtual interface (dv/auto_dv/env/gen_agents_pkg.sv,199) 
+  is being used for parameterized interface (dv/auto_dv/tb/gen_bus_if.sv,6).
+
+
+Warning-[OSVF-NPVIUFPI] Obsolete SystemVerilog feature
+dv/auto_dv/env/gen_agents_pkg.sv, 234
+gen_bus_if
+  Non-parameterized virtual interface (dv/auto_dv/env/gen_agents_pkg.sv,234) 
+  is being used for parameterized interface (dv/auto_dv/tb/gen_bus_if.sv,6).
+
+
+Warning-[OSVF-NPVIUFPI] Obsolete SystemVerilog feature
+dv/auto_dv/env/gen_agents_pkg.sv, 373
+gen_bus_if
+  Non-parameterized virtual interface (dv/auto_dv/env/gen_agents_pkg.sv,373) 
+  is being used for parameterized interface (dv/auto_dv/tb/gen_bus_if.sv,6).
+
+
+Warning-[OSVF-NPVIUFPI] Obsolete SystemVerilog feature
+dv/auto_dv/env/gen_checkers_pkg.sv, 339
+gen_bus_if
+  Non-parameterized virtual interface (dv/auto_dv/env/gen_checkers_pkg.sv,339)
+  is being used for parameterized interface (dv/auto_dv/tb/gen_bus_if.sv,6).
+
+
+Warning-[OSVF-NPVIUFPI] Obsolete SystemVerilog feature
+dv/auto_dv/env/gen_checkers_pkg.sv, 339
+gen_bus_if
+  Non-parameterized virtual interface (dv/auto_dv/env/gen_checkers_pkg.sv,339)
+  is being used for parameterized interface (dv/auto_dv/tb/gen_bus_if.sv,6).
+
+
+Warning-[OSVF-NPVIUFPI] Obsolete SystemVerilog feature
+dv/auto_dv/env/gen_checkers_pkg.sv, 394
+gen_bus_if
+  Non-parameterized virtual interface (dv/auto_dv/env/gen_checkers_pkg.sv,394)
+  is being used for parameterized interface (dv/auto_dv/tb/gen_bus_if.sv,6).
+
+
+Warning-[OSVF-NPVIUFPI] Obsolete SystemVerilog feature
+dv/auto_dv/env/gen_checkers_pkg.sv, 395
+gen_bus_if
+  Non-parameterized virtual interface (dv/auto_dv/env/gen_checkers_pkg.sv,395)
+  is being used for parameterized interface (dv/auto_dv/tb/gen_bus_if.sv,6).
+
+
+Warning-[OSVF-NPVIUFPI] Obsolete SystemVerilog feature
+dv/auto_dv/tb/gen_tb_top.sv, 275
+gen_bus_if
+  Non-parameterized virtual interface (dv/auto_dv/tb/gen_tb_top.sv,275) is 
+  being used for parameterized interface (dv/auto_dv/tb/gen_bus_if.sv,6).
+
+
+Warning-[OSVF-NPVIUFPI] Obsolete SystemVerilog feature
+dv/auto_dv/tb/gen_tb_top.sv, 276
+gen_bus_if
+  Non-parameterized virtual interface (dv/auto_dv/tb/gen_tb_top.sv,276) is 
+  being used for parameterized interface (dv/auto_dv/tb/gen_bus_if.sv,6).
+
+
+Warning-[OSVF-NPVIUFPI] Obsolete SystemVerilog feature
+dv/auto_dv/tb/gen_tb_top.sv, 286
+gen_bus_if
+  Non-parameterized virtual interface (dv/auto_dv/tb/gen_tb_top.sv,286) is 
+  being used for parameterized interface (dv/auto_dv/tb/gen_bus_if.sv,6).
+
+
+Warning-[OSVF-NPVIUFPI] Obsolete SystemVerilog feature
+dv/auto_dv/tb/gen_tb_top.sv, 287
+gen_bus_if
+  Non-parameterized virtual interface (dv/auto_dv/tb/gen_tb_top.sv,287) is 
+  being used for parameterized interface (dv/auto_dv/tb/gen_bus_if.sv,6).
+
+
+Warning-[SIOB] Select index out of bounds
+rtl/ibex_core.sv, 2144
+"rvfi_stage_halt[(0 - 1)]"
+  The select index is out of declared bounds : [0:1].
+  In module instance : u_ibex_core 
+  In module : ibex_core.
+
+
+Warning-[SIOB] Select index out of bounds
+rtl/ibex_core.sv, 2145
+"rvfi_stage_trap[(0 - 1)]"
+  The select index is out of declared bounds : [0:1].
+  In module instance : u_ibex_core 
+  In module : ibex_core.
+
+
+Warning-[SIOB] Select index out of bounds
+rtl/ibex_core.sv, 2146
+"rvfi_stage_intr[(0 - 1)]"
+  The select index is out of declared bounds : [0:1].
+  In module instance : u_ibex_core 
+  In module : ibex_core.
+
+
+Warning-[SIOB] Select index out of bounds
+rtl/ibex_core.sv, 2147
+"rvfi_stage_order[(0 - 1)]"
+  The select index is out of declared bounds : [0:1].
+  In module instance : u_ibex_core 
+  In module : ibex_core.
+
+
+Warning-[SIOB] Select index out of bounds
+rtl/ibex_core.sv, 2148
+"rvfi_stage_insn[(0 - 1)]"
+  The select index is out of declared bounds : [0:1].
+  In module instance : u_ibex_core 
+  In module : ibex_core.
+
+
+Warning-[SIOB] Select index out of bounds
+rtl/ibex_core.sv, 2149
+"rvfi_stage_mode[(0 - 1)]"
+  The select index is out of declared bounds : [0:1].
+  In module instance : u_ibex_core 
+  In module : ibex_core.
+
+
+Warning-[SIOB] Select index out of bounds
+rtl/ibex_core.sv, 2150
+"rvfi_stage_ixl[(0 - 1)]"
+  The select index is out of declared bounds : [0:1].
+  In module instance : u_ibex_core 
+  In module : ibex_core.
+
+
+Warning-[SIOB] Select index out of bounds
+rtl/ibex_core.sv, 2151
+"rvfi_stage_rs1_addr[(0 - 1)]"
+  The select index is out of declared bounds : [0:1].
+  In module instance : u_ibex_core 
+  In module : ibex_core.
+
+
+Warning-[SIOB] Select index out of bounds
+rtl/ibex_core.sv, 2152
+"rvfi_stage_rs2_addr[(0 - 1)]"
+  The select index is out of declared bounds : [0:1].
+  In module instance : u_ibex_core 
+  In module : ibex_core.
+
+
+Warning-[SIOB] Select index out of bounds
+rtl/ibex_core.sv, 2153
+"rvfi_stage_rs3_addr[(0 - 1)]"
+  The select index is out of declared bounds : [0:1].
+  In module instance : u_ibex_core 
+  In module : ibex_core.
+
+
+Warning-[SIOB] Select index out of bounds
+rtl/ibex_core.sv, 2154
+"rvfi_stage_pc_rdata[(0 - 1)]"
+  The select index is out of declared bounds : [0:1].
+  In module instance : u_ibex_core 
+  In module : ibex_core.
+
+
+Warning-[SIOB] Select index out of bounds
+rtl/ibex_core.sv, 2155
+"rvfi_stage_pc_wdata[(0 - 1)]"
+  The select index is out of declared bounds : [0:1].
+  In module instance : u_ibex_core 
+  In module : ibex_core.
+
+
+Warning-[SIOB] Select index out of bounds
+rtl/ibex_core.sv, 2156
+"rvfi_stage_mem_rmask[(0 - 1)]"
+  The select index is out of declared bounds : [0:1].
+  In module instance : u_ibex_core 
+  In module : ibex_core.
+
+
+Warning-[SIOB] Select index out of bounds
+rtl/ibex_core.sv, 2157
+"rvfi_stage_mem_wmask[(0 - 1)]"
+  The select index is out of declared bounds : [0:1].
+  In module instance : u_ibex_core 
+  In module : ibex_core.
+
+
+Warning-[SIOB] Select index out of bounds
+rtl/ibex_core.sv, 2158
+"rvfi_stage_rs1_rdata[(0 - 1)]"
+  The select index is out of declared bounds : [0:1].
+  In module instance : u_ibex_core 
+  In module : ibex_core.
+
+
+Warning-[SIOB] Select index out of bounds
+rtl/ibex_core.sv, 2159
+"rvfi_stage_rs2_rdata[(0 - 1)]"
+  The select index is out of declared bounds : [0:1].
+  In module instance : u_ibex_core 
+  In module : ibex_core.
+
+
+Warning-[SIOB] Select index out of bounds
+rtl/ibex_core.sv, 2160
+"rvfi_stage_rs3_rdata[(0 - 1)]"
+  The select index is out of declared bounds : [0:1].
+  In module instance : u_ibex_core 
+  In module : ibex_core.
+
+
+Warning-[SIOB] Select index out of bounds
+rtl/ibex_core.sv, 2161
+"rvfi_stage_mem_wdata[(0 - 1)]"
+  The select index is out of declared bounds : [0:1].
+  In module instance : u_ibex_core 
+  In module : ibex_core.
+
+
+Warning-[SIOB] Select index out of bounds
+rtl/ibex_core.sv, 2162
+"rvfi_stage_mem_is_cap[(0 - 1)]"
+  The select index is out of declared bounds : [0:1].
+  In module instance : u_ibex_core 
+  In module : ibex_core.
+
+
+Warning-[SIOB] Select index out of bounds
+rtl/ibex_core.sv, 2163
+"rvfi_stage_mem_wcap[(0 - 1)]"
+  The select index is out of declared bounds : [0:1].
+  In module instance : u_ibex_core 
+  In module : ibex_core.
+
+
+Warning-[SIOB] Select index out of bounds
+rtl/ibex_core.sv, 2164
+"rvfi_stage_mem_addr[(0 - 1)]"
+  The select index is out of declared bounds : [0:1].
+  In module instance : u_ibex_core 
+  In module : ibex_core.
+
+
+Warning-[SIOB] Select index out of bounds
+rtl/ibex_core.sv, 2165
+"rvfi_stage_rs1_rcap[(0 - 1)]"
+  The select index is out of declared bounds : [0:1].
+  In module instance : u_ibex_core 
+  In module : ibex_core.
+
+
+Warning-[SIOB] Select index out of bounds
+rtl/ibex_core.sv, 2166
+"rvfi_stage_rs2_rcap[(0 - 1)]"
+  The select index is out of declared bounds : [0:1].
+  In module instance : u_ibex_core 
+  In module : ibex_core.
+
+
+Warning-[SIOB] Select index out of bounds
+rtl/ibex_core.sv, 2178
+"rvfi_ext_stage_debug_mode[(0 - 1)]"
+  The select index is out of declared bounds : [0:1].
+  In module instance : u_ibex_core 
+  In module : ibex_core.
+
+
+Warning-[SIOB] Select index out of bounds
+rtl/ibex_core.sv, 2179
+"rvfi_ext_stage_mcycle[(0 - 1)]"
+  The select index is out of declared bounds : [0:1].
+  In module instance : u_ibex_core 
+  In module : ibex_core.
+
+
+Warning-[SIOB] Select index out of bounds
+rtl/ibex_core.sv, 2180
+"rvfi_ext_stage_ic_scr_key_valid[(0 - 1)]"
+  The select index is out of declared bounds : [0:1].
+  In module instance : u_ibex_core 
+  In module : ibex_core.
+
+
+Warning-[SIOB] Select index out of bounds
+rtl/ibex_core.sv, 2181
+"rvfi_ext_stage_mhpmcounters[(0 - 1)]"
+  The select index is out of declared bounds : [0:1].
+  In module instance : u_ibex_core 
+  In module : ibex_core.
+
+
+Warning-[SIOB] Select index out of bounds
+rtl/ibex_core.sv, 2182
+"rvfi_ext_stage_mhpmcountersh[(0 - 1)]"
+  The select index is out of declared bounds : [0:1].
+  In module instance : u_ibex_core 
+  In module : ibex_core.
+
+
+Warning-[SIOB] Select index out of bounds
+rtl/ibex_core.sv, 2183
+"rvfi_ext_stage_expanded_insn_valid[(0 - 1)]"
+  The select index is out of declared bounds : [0:1].
+  In module instance : u_ibex_core 
+  In module : ibex_core.
+
+
+Warning-[SIOB] Select index out of bounds
+rtl/ibex_core.sv, 2184
+"rvfi_ext_stage_expanded_insn[(0 - 1)]"
+  The select index is out of declared bounds : [0:1].
+  In module instance : u_ibex_core 
+  In module : ibex_core.
+
+
+Warning-[SIOB] Select index out of bounds
+rtl/ibex_core.sv, 2185
+"rvfi_ext_stage_expanded_insn_last[(0 - 1)]"
+  The select index is out of declared bounds : [0:1].
+  In module instance : u_ibex_core 
+  In module : ibex_core.
+
+
+Warning-[SIOB] Select index out of bounds
+rtl/ibex_core.sv, 2194
+"rvfi_ext_stage_post_mip[(0 - 1)]"
+  The select index is out of declared bounds : [0:1].
+  In module instance : u_ibex_core 
+  In module : ibex_core.
+
+Starting vcs inline pass...
+56 modules and 0 UDP read.
+recompiling package vcs_paramclassrepository
+recompiling package _vcs_DPI_package
+recompiling package uvm_pkg
+recompiling package _vcs_msglog
+recompiling module uvm_custom_install_verdi_recording
+recompiling package ibex_pkg
+recompiling package ibex_cheriot_pkg
+recompiling package prim_cipher_pkg
+recompiling module prim_buf
+recompiling package prim_secded_pkg
+recompiling module prim_secded_inv_28_22_dec
+recompiling module prim_secded_inv_28_22_enc
+recompiling module prim_secded_inv_39_32_dec
+recompiling module prim_secded_inv_39_32_enc
+recompiling module ibex_icache
+recompiling package prim_mubi_pkg
+recompiling module ibex_cheriot_ex
+recompiling module ibex_alu
+recompiling module ibex_controller
+recompiling module ibex_cs_registers
+recompiling module ibex_csr
+recompiling module ibex_counter
+recompiling module ibex_decoder
+recompiling module ibex_ex_block
+recompiling module ibex_id_stage
+recompiling module ibex_if_stage
+recompiling module ibex_load_store_unit
+recompiling module ibex_multdiv_fast
+recompiling module ibex_pmp
+recompiling module ibex_wb_stage
+recompiling module ibex_dummy_instr
+recompiling module ibex_core
+recompiling package gen_tb_pkg
+recompiling module gen_dut_top
+recompiling module gen_protocol_props
+recompiling module gen_b8_probe
+recompiling module gen_ic_lookup_probe
+recompiling module gen_bridge_if
+recompiling module gen_bus_if
+recompiling module gen_scrkey_if
+recompiling module gen_ctrl_if
+recompiling module gen_icache_ram
+recompiling module gen_rvfi_if
+recompiling module gen_irq_if
+recompiling module gen_dbg_if
+recompiling module gen_misc_if
+recompiling package gen_cfg_pkg
+recompiling package gen_export_pkg
+recompiling package gen_mem_pkg
+recompiling package gen_agents_pkg
+50 of 56 modules done
+recompiling package gen_isa_dpi_pkg
+recompiling package gen_rvfi_pkg
+recompiling package gen_fcov_pkg
+recompiling package gen_checkers_pkg
+recompiling package gen_env_pkg
+recompiling module gen_tb_top
+All of 56 modules done
+rm -f _cuarc*.so _csrc*.so pre_vcsobj_*.so share_vcsobj_*.so
+cc1plus: warning: command-line option '-std=c99' is valid for C/ObjC but not for C++
+g++ -w  -pipe -DVCSMX -DUVM_DPI_DO_TYPE_CHECK -fPIC --std=c99 -fno-extended-identifiers -O -I/tools_vendor/synopsys/vcs/X-2025.06-SP2/include     -c /tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/dpi/uvm_dpi.cc
+cc1plus: warning: command-line option '-std=c99' is valid for C/ObjC but not for C++
+g++ -w  -pipe -DVCSMX -DUVM_DPI_DO_TYPE_CHECK -fPIC --std=c99 -fno-extended-identifiers -O -I/tools_vendor/synopsys/vcs/X-2025.06-SP2/include     -c /tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/verdi/dpi/uvm_verdi_dpi.cpp
+if [ -x /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/DATAWAY/out/vcs_simv ]; then chmod a-x /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/DATAWAY/out/vcs_simv; fi
+g++  -o /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/DATAWAY/out/vcs_simv      -Wl,--no-as-needed -L/tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/DATAWAY/out/lib -lgen_isa_shim -Wl,-rpath,/tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/DATAWAY/out/lib -Wl,-rpath-link,/tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/DATAWAY/tools/spike/lib -rdynamic  -Wl,-rpath='$ORIGIN'/vcs_simv.daidir -Wl,-rpath=./vcs_simv.daidir -Wl,-rpath=/tools_vendor/synopsys/vcs/X-2025.06-SP2/linux64/lib -L/tools_vendor/synopsys/vcs/X-2025.06-SP2/linux64/lib  -Wl,-rpath-link=./  /usr/lib64/libnuma.so.1 uvm_dpi.o uvm_verdi_dpi.o   objs/amcQw_d.o  _3725074_archive_1.so  SIM_l.o      rmapats_mop.o rmapats.o rmar.o rmar_nd.o  rmar_llvm_0_1.o rmar_llvm_0_0.o            -lvirsim -lerrorinf -lsnpsmalloc -lvfs      -lvcsnew -ldistsimclient -lsimprofile -lreader_common /tools_vendor/synopsys/vcs/X-2025.06-SP2/linux64/lib/libBA.a -luclinative /tools_vendor/synopsys/vcs/X-2025.06-SP2/linux64/lib/vcs_tls.o   -Wl,-whole-archive  -lvcsucli    -Wl,-no-whole-archive      ./../vcs_simv.daidir/vc_hdrs.o _vcs_pli_stub_.o   /tools_vendor/synopsys/vcs/X-2025.06-SP2/linux64/lib/vcs_save_restore_new.o /tools_vendor/synopsys/verdi/X-2025.06-SP2/share/PLI/VCS/LINUX64/pli.a -ldl -lm  -lc -lpthread -ldl 
+/tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/DATAWAY/out/vcs_simv up to date
+CPU time: 9.863 seconds to compile + .232 seconds to elab + .722 seconds to link
+Verdi KDB elaboration done and the database successfully generated
+vcs exit: 0

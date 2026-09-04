@@ -111,3 +111,15 @@ cycle, so bit k is the lookup read k+1 cycles before the sample: alerts 1..ICACH
 parameter default equals the yaml constant (2). The landing-9 slice `[ICACHE_ECC_WINDOW:1]` accepted 2..3 and rejected the latency the
 injection runs measure, exactly 1 (CM132-H-1; the red and the green in gen_tdd_step2b.md Section 14). The SVA layer header records the
 C10 exception of the B8 probe (LOG-067, LOG-076).
+
+## The lookup-tag probe (P9, LOG-079)
+
+The second and only other bind that reads DUT internals: `bind ibex_icache gen_ic_lookup_probe` publishes `lookup_addr_ic1`, the tag the icache
+compares in IC1 (the cycle after the tag RAM read), to `gen_icram_events::note_lookup` every cycle while `+gen_probe_ic_lookup=1`; the module
+drives nothing and holds no assertion. The misc monitor uses it for one purpose: the hit way of a data-RAM ECC injection (the way whose
+un-tweaked stored valid bit and tag equal {1, the published tag}), so a data injection on that way owes a pulse and one on another way
+excuses none. The knob is debug_only: the flow refuses a measured entry that sets it (the P6 refusal), so in measured runs the monitor judges
+data injections by form (b): the first retirement after the read whose pc index is the injected index reveals the lookup tag through its
+pc (GEN_ICACHE_RETIRE_WINDOW cycles), and an injection with no such retirement is reported unjudged (a squashed speculative lookup; it excuses
+a pulse); in probe-on evidence runs form (a) judges and form (b) runs beside it, the agreement counted in the summary. Probe register: P9. Alignment: the tag published in cycle c + 1 belongs to the RAM read announced at cycle c
+(gen_icram_events records both by the same cycle count); the measured value is in gen_tdd_step2b.md Section 16. The alignment is mutation-proof only under a stimulus whose consecutive lookups change tag: on gen_icache_ecc_directed.S (one 2 KB tag region) the tag of cycle c + 2 equals the tag of c + 1 at every injection and the ALIGN mutation is silent; gen_icache_ecc_far_directed.S alternates between two bodies 2 KB apart, so every jump changes the tag and the mutation is caught.

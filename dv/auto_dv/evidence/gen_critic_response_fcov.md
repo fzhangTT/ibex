@@ -196,3 +196,22 @@ Row ids CM119-<severity>-<n> follow the artifact's finding order (two mediums, f
 | CR-13-L-6 | (adopted) the slice5e3 sentence names the wrong missing bin | DONE (landing 13) | as CM150-L-1: cp_redirect_once.yes named, not reached in the same-cycle regime, the reason not established |
 | CR-13-L-7 | (adopted) the dead zp_addi_cycle state, the delay boundaries hand-encoded a third time, the pushpop class value passed as the hazard's | DONE (landing 13) | as CM150-L-3 / L-4: the state removed, one constant pair and one helper per group, hz_delay_of maps the pushpop class by name (the mixed class to no bin), zp_regs and zcmp_sreg read one list |
 | CR-13-L-8 | (adopted) the CM148-L-4 rationale named the .S files as build sources | DONE (landing 13) | as CM150-L-5: the rationale rests on scope; both halves rewritten in landing 13 |
+
+## The cross-model review of landing 13 (dv/auto_dv/reviews/2026-09-04-claude-diff-c4a5fd56-3bf3d6bf.md, APPROVE-WITH-CHANGES; rows CM165): answered by landing 14
+
+| id | finding (short) | status | as built |
+|---|---|---|---|
+| CM165-L-1 | the not-reached lists name cp_jal_off.self, cp_cj_off.self and cp_irq_latency.gt37 while the manifests declare them hit (19, 22, 35) | DONE (landing 14) | the end-of-test spin retires as a self jump until the test ends and the storm produced entries beyond 37 cycles: gen_tdd_fcov.md Section 10, gen_component_api_fcov.md and the two program headers say so and drop the three bins from the not-reached lists |
+| CM165-L-2 | the per-file list is named gen_fu_l15_sources_sha256_sb2.txt in two records; the retained file is _sb3 | DONE (landing 14) | both sites renamed |
+| CM165-L-3 | hx_rs_field returns rd as the rs1 of every quadrant-01 funct3 011 encoding, so c.lui x0 after an x0 writer would sample cp_x0_read.rs1_zero falsely | DONE (landing 14) | insn_has_rs1 admits funct3 011 only for c.addi16sp (rd = 2); two self-test rows (c.lui a0, 1 names no rs1; c.addi16sp names sp) |
+| CM165-I-1 | the "not the first retirement after reset" guard reads have_last, never cleared on a mid-run reset | DONE (landing 14, stated) | gen_component_api_fcov.md states beside cp_delta that the guard honours the initial reset only; the mid-run reset regime clears the neighbour state when it lands |
+
+## The Critic's tb_l14 on landing 13 (dv/auto_dv/docs/gen_critic_tb_l14.md, APPROVE; rows CR-14): answered by landing 14
+
+| id | finding (short) | status | as built |
+|---|---|---|---|
+| CR-14-L-1 | the not-reached prose and two program headers contradict the manifests (cp_jal_off.self 19, cp_cj_off.self 22, cp_irq_latency.gt37 35 hits); the slice6e3 sentence omits gt37 | DONE (landing 14) | as CM165-L-1; the slice6e3 sentence names le37 and gt37 |
+| CR-14-L-2 | the per-file list named sb2 where the file is sb3 | DONE (landing 14) | as CM165-L-2 |
+| CR-14-L-3 | the five red checks carry no stamp while the record says every check does; the b12x reports have no cmd file | DONE (landing 14) | the five reds re-taken against the same b12x reports with a stamp line (manifest md5, report, build 57e0518a803da03b); the reports' urg commands retained (gen_fu_l16_urg_b12x_*_cmd.txt); the record's claim names proofs, re-checks and reds |
+| CR-14-L-4 | the imm and divt reds ran earlier images than the committed programs | DONE (landing 14) | gen_tdd_fcov.md Section 10 names each red's image crc and word count beside the committed one and says why the red does not depend on the program |
+| CR-14-L-5 | the API doc names a debug-request storm where the sparse regime ran | DONE (landing 14) | the stimulus sentence says the sparse regime and why |
