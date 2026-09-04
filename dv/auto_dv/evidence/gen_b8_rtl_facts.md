@@ -164,8 +164,10 @@ executes. Not part of the B8 reproduction; listed because the same mechanism app
   3 registers, dut 2" and "model wrote x10/00000000, dut did not", the lost li a0, 0 of a popretz (CmPopZeroA0 case), while its
   x2 and load-address mismatches are the same +0x20 sp offset inherited from order 38 (the DUT's push at order 41 stored to
   800003cc), not a second loss. The x18 = 800003ff value itself is only in the unretained run named in section 3.
-- Assertion status: the TB-side assertion of section 6 is not built; LOG-067 rules it a probe bind behind a knob, tb-infra's
-  next touch.
+- Assertion status: built as dv/auto_dv/tb/gen_b8_probe.sv (sva_b8_dummy_in_expansion, :19-20), bound into ibex_if_stage by
+  dv/auto_dv/tb/gen_binds.sv:15-17 behind the knob chk_sva_b8 (default off; LOG-067, name ruled in LOG-076); retained reds with
+  the knob on: dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_fu_l10_b8_zcmp_dummy_on_* (35 firings on gen_zcmp_dummy_directed.S)
+  and gen_fu_l10_b8_zcmp_dummy_popret_on_* (59 firings on gen_zcmp_dummy_popret_directed.S), counts per the excerpt headers.
 
 ## 7. Anchors table
 

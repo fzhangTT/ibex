@@ -1,4 +1,4 @@
-# Response file: reviews of the B8 RTL facts note (dv/auto_dv/evidence/gen_b8_rtl_facts.md; commits 1eb2ede, 53e8468, 7d7be39, 76cd2e5, ae5e58a, 473d85d)
+# Response file: reviews of the B8 RTL facts note (dv/auto_dv/evidence/gen_b8_rtl_facts.md; commits 1eb2ede, 53e8468, 7d7be39, 76cd2e5, ae5e58a, 473d85d, 5b93f62, 54c82d4)
 
 Owner: rtl-arch. Created 2026-09-03T19:14Z ahead of the findings. Rows answer the cross-model reviews of 1eb2ede
 (gen_b8_rtl_facts.md, 140 lines, sha256 5abb0619b8391029), of 53e8468 (154 lines, sha256 eac6bc028e8574b5;
@@ -7,8 +7,11 @@ artifact dv/auto_dv/reviews/2026-09-03-claude-diff-cb173d93-53e84680.md, APPROVE
 APPROVE-WITH-CHANGES, committed d4b5933, CM68 rows), of 76cd2e5 (173 lines, 6283d7c2b1edec3e; artifact
 dv/auto_dv/reviews/2026-09-03-claude-diff-2ea81ac4-76cd2e56.md, APPROVE-WITH-CHANGES, committed 68253d5, CM69 rows), of
 ae5e58a (175 lines, b33a133f519f; artifact dv/auto_dv/reviews/2026-09-03-claude-diff-03c525ad-ae5e58ab.md,
-APPROVE-WITH-CHANGES, committed 3bbc9e9, CM73 rows) and of 473d85d (182 lines, af35620e393b; artifact
-dv/auto_dv/reviews/2026-09-03-claude-diff-6133c773-473d85df.md, APPROVE-WITH-CHANGES, committed 5cf028e, CM122 rows). Rule: every
+APPROVE-WITH-CHANGES, committed 3bbc9e9, CM73 rows) of 473d85d (182 lines, af35620e393b; artifact
+dv/auto_dv/reviews/2026-09-03-claude-diff-6133c773-473d85df.md, APPROVE-WITH-CHANGES, committed 5cf028e, CM122 rows), of
+5b93f62 (184 lines, a152cef4a6bf; artifact dv/auto_dv/reviews/2026-09-03-claude-diff-408c92f9-5b93f624.md,
+APPROVE-WITH-CHANGES, committed 9914207, CM124) and of 54c82d4 (184 lines, 34c2d940162d; artifact
+dv/auto_dv/reviews/2026-09-03-claude-diff-9914207a-54c82d45.md, APPROVE, committed b72e0c2, CM125). Rule: every
 finding gets one row with ADDRESSED or DISPUTED, the changed line in the note (location column: the reviewed
 copy's line numbers and the fixed copy's, the fixed copy being the work file at the hash in the Verdict column),
 and the RTL evidence; a change to
@@ -16,7 +19,7 @@ the note is reported with its new hash for promotion.
 
 ## 1. Findings (filled as they arrive)
 
-Row ids: CM59-n = cross-model review findings on 1eb2ede (5abb0619b8391029); CM64-n = on 53e8468 (eac6bc028e8574b5); CM68-n = on 7d7be39 (0eab3c5fb895abc2); CM69-n = on 76cd2e5 (6283d7c2b1edec3e); CM73-n = on ae5e58a (b33a133f519f); CM122-n = on 473d85d (af35620e393b).
+Row ids: CM59-n = cross-model review findings on 1eb2ede (5abb0619b8391029); CM64-n = on 53e8468 (eac6bc028e8574b5); CM68-n = on 7d7be39 (0eab3c5fb895abc2); CM69-n = on 76cd2e5 (6283d7c2b1edec3e); CM73-n = on ae5e58a (b33a133f519f); CM122-n = on 473d85d (af35620e393b); CM124-n = on 5b93f62 (a152cef4a6bf); CM125-n = on 54c82d4 (34c2d940162d).
 
 | # | Review | Finding (short) | Verdict | Evidence / action |
 |---|---|---|---|---|
@@ -45,7 +48,9 @@ Row ids: CM59-n = cross-model review findings on 1eb2ede (5abb0619b8391029); CM6
 
 ## 2. State
 
-- Work file dv/auto_dv/work/rtl-arch/gen_b8_rtl_facts.md at 34c2d940162d39a8: 184 lines, ASCII-only; the evidence copy is promoted by the Orchestrator at this hash. Verdict unchanged: architectural bug, expansion FSM advancing on an id_in_ready without the dummy stall.
+- Work file dv/auto_dv/work/rtl-arch/gen_b8_rtl_facts.md at e04ee810e43bcbff: 186 lines, ASCII-only; the evidence copy is promoted by the Orchestrator at this hash. Verdict unchanged: architectural bug, expansion FSM advancing on an id_in_ready without the dummy stall.
 - Non-review change at 6283d7c2b1edec3e: tb-infra's row mapping of the retained reproducer (27 rows, all in section-3 cases) corrected the x18 = 00000000 attribution (a lost s2 store at push rl8 read back faithfully by pop rl8, not the CmPopRetRa replay; 800003ff stays with its source named) and is summarised in section 6; the verdict is unchanged.
 - Non-review change at af35620e393b (landing 2c released it): section 3 and 6 cite the retained popret reproducer lockstep_zcmp_dummy_popret (evidence/gen_tdd_logs/lockstep/gen_fu_l7_lockstep_zcmp_dummy_popret_*), the landed dv/auto_dv/evidence/gen_b8_row_mapping.md replaces the pending marker, and the assertion status (not built, LOG-067 probe bind behind a knob) is stated; verdict unchanged.
 - CM124-L-1 (review of 5b93f62, artifact dv/auto_dv/reviews/2026-09-03-claude-diff-408c92f9-5b93f624.md, APPROVE-WITH-CHANGES, committed 9914207), fixed at 34c2d940162d: the stray ")" after "as for the plain-pop run" (line 87) is removed, so the section-3 parenthesis opened at "(the x18 = 800003ff" closes once at "see section 6)"; the paragraph balances at 6 opens / 6 closes.
+- CM132-L-3 (landing-9 review, artifact dv/auto_dv/reviews/2026-09-03-claude-diff-2aff8377-329902fc.md, committed e6f295b), fixed at e04ee810e43b: the section-6 assertion status line (note line 167) now names dv/auto_dv/tb/gen_b8_probe.sv (sva_b8_dummy_in_expansion), the bind dv/auto_dv/tb/gen_binds.sv:15-17 into ibex_if_stage, the knob chk_sva_b8 (default off, LOG-067 / LOG-076) and the two retained reds gen_fu_l10_b8_zcmp_dummy_on_* (35 firings) and gen_fu_l10_b8_zcmp_dummy_popret_on_* (59 firings), verified from a detached archive of 124cfbe.
+- Parked info from the 54c82d4 review taken in the same touch: CM124 and CM125 added to the row-id legend; the 408c92f9-5b93f624 and 9914207a-54c82d45 reviews added to the header and title.
