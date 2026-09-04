@@ -4,6 +4,12 @@
 #   urg -full64 -dir <vdb> -format text -report <dir> -tests <selection>
 # vdb: dv/auto_dv/work/tb-infra/wit/w23/vcs_simv.vdb (tb-infra's WP-8 part-1 build), cm_name test,
 # tests.txt confirming Total tests in report: 1.
+# Build provenance: when this report was taken the vdb's sources were uncommitted in the shared tree, so it
+# was of no commit at that moment; those same contents landed afterwards as tb-infra's landing 23. Read off the
+# build's own sources_sha256.txt against the commit: all 75 entries equal their f0723d6 versions, none differs and
+# none is absent, so the report is reproducible as the build of f0723d6's sources. The defect this log measures is
+# a property of the checker's parser and not of that build: three of the five live mis-attributions in section 3
+# lie in covergroups committed well before it.
 # run at 2026-09-04T11:37:38Z
 
 == 1. report excerpt: the three heading kinds the report actually uses ==

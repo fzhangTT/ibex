@@ -115,8 +115,13 @@ observed. Both halves hold: of 3959 emitted keys none carries any of the 96 cros
 always reads unhit), and 3130 cross bins across 119 group-and-cross pairs are keyed under the group's last-seen
 coverpoint, 56 of them with non-zero counts, one reporting 1200 hits that belong to a cross. The single name
 collision found has zero on both sides here, so the summing mechanism is proven while an inflation for that key is
-not demonstrated. The checker is the owner's file and was not edited; the log is the redirected output of the
-measurement, never retyped.
+not demonstrated. The checker is the owner's file and was not edited. Its measurement sections are the redirected
+output of the parser run rather than retyped text; the header lines that name the database and its build are written
+by hand. That header names the build it claims: the sources were uncommitted in the shared tree when the report was
+taken, and those contents landed afterwards as landing 23, all 75 entries of the build's own sources_sha256.txt
+equalling their f0723d6 versions, so a later reader reproduces the report from a commit rather than guessing at its
+tree. The parser defect stands regardless of the build, and three of the five live mis-attributions lie in covergroups
+committed well before it.
 
 | evidence path | source | bytes | md5 |
 |---|---|---|---|
@@ -138,4 +143,4 @@ measurement, never retyped.
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_cm174_data_ecc_condition_red.log | (runtime scratchpad) cm174/red_util.log + cm174/red_run.log | 1785 | c17a82573242002de87fa9f88921adc8 |
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_f1_probe_measured_red.log | (runtime scratchpad) f1/red_run.log | 594 | 4ffa5560c95bb2187ca21c2610339e06 |
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_l14_merge_verify.log | (runtime scratchpad) l14b/gen_l14_merge_verify.log | 4440 | 5e428524195514ac8d949a2565940955 |
-| dv/auto_dv/evidence/gen_tdd_logs/flow/gen_log084_cross_parse.log | (runtime scratchpad) log084/gen_log084_cross_parse.log | 2593 | 24774302bf4a00609ca49a9def5c0295 |
+| dv/auto_dv/evidence/gen_tdd_logs/flow/gen_log084_cross_parse.log | (runtime scratchpad) log084/gen_log084_cross_parse.log | 3203 | 3a840b5bc2e7bcf73d4c4883655f9d3c |
