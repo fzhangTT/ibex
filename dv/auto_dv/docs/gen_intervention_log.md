@@ -1875,3 +1875,11 @@ only the file it was given and its output is folded into the dispatching agent's
 agent before hand-off; LSF commands stay with the Runtime Manager itself, never a subagent; the Critic's verdict and
 the Orchestrator's hash gates and commits are never delegated, only the mechanical reading behind them may be.
 Relayed to all six teammates and applied by the Orchestrator to its own mechanical work.
+
+## LOG-083b - 2026-09-04 - Addendum: fan-out is at each agent's discretion
+
+The owner's clarification at 05:49Z: agents may choose to inline work or to use subagent-driven development as
+needed. LOG-083a is guidance on where fan-out pays, not a mandate to delegate every simple task; the agent judges per
+task whether a sonnet or haiku subagent saves more than the hand-over and verification cost. The limits of LOG-083a
+(unnamed subagents owning no files, dispatcher verification, LSF only from the Runtime Manager, verdicts and hash
+gates never delegated) are unchanged.
