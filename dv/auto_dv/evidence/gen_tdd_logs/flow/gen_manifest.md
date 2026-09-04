@@ -123,6 +123,15 @@ equalling their f0723d6 versions, so a later reader reproduces the report from a
 tree. The parser defect stands regardless of the build, and three of the five live mis-attributions lie in covergroups
 committed well before it.
 
+gen_cr23_manifest_stem_red.log is the CR-23-L-1 red: the loader accepted an entry whose manifest declares a different
+test, a wiring the per-entry check can never pass because gen_fcov validates the manifest against the entry name
+before it reads coverage. Three sections, the first two the redirected self-test output and the third the rule run
+against the committed testlist. It carries a control the other flow reds do not need: the red and green sections use
+a fabricated entry, so section 3 loads the real committed testlist of e754a83 and shows the rule refusing
+gen_test_pmc_ctrl_pin_off by name, which is the wiring that existed in the tree. Taken on an archive with that field
+already nulled, so the red is the new case alone; without that the eight reverted entries would have refused too and
+the red would not have isolated anything.
+
 | evidence path | source | bytes | md5 |
 |---|---|---|---|
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_gate_rule_red.log | dv/auto_dv/work/runtime/gate_rule_red.log | 926 | 78b72aae6509d2776a43c9314808b01b |
@@ -144,3 +153,4 @@ committed well before it.
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_f1_probe_measured_red.log | (runtime scratchpad) f1/red_run.log | 594 | 4ffa5560c95bb2187ca21c2610339e06 |
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_l14_merge_verify.log | (runtime scratchpad) l14b/gen_l14_merge_verify.log | 4440 | 5e428524195514ac8d949a2565940955 |
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_log084_cross_parse.log | (runtime scratchpad) log084/gen_log084_cross_parse.log | 3728 | 4aeb2ea5928a7b87a1d5db89343374e9 |
+| dv/auto_dv/evidence/gen_tdd_logs/flow/gen_cr23_manifest_stem_red.log | (runtime scratchpad) rt30/gen_cr23_manifest_stem_red.log | 2885 | 65b16eef885b324b9b9997c5ebe6c891 |

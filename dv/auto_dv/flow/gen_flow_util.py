@@ -444,6 +444,9 @@ def self_test() -> int:
                 ("a measured entry whose fcov_expectation_file stem is another test's (CM153-L-1, validate_manifest needs test == stem == entry)",
                  lambda d: d["tests"][0].update(measured=True, tier="smoke", fcov_expectation_file=other_manifest(d["tests"][0]["name"])),
                  "must be"),
+                ("an unmeasured entry whose fcov_expectation_file stem is another test's (CR-23-L-1: check_test validates against the entry name whether measured or not)",
+                 lambda d: d["tests"][0].update(measured=False, tier=C.CHECK_TIER, fcov_expectation_file=other_manifest(d["tests"][0]["name"])),
+                 "must be"),
                 ("a measured entry with icache ECC injection on and the alert_minor row off (LOG-077)",
                  lambda d: d["tests"][0].update(measured=True, tier="smoke", plusargs=d["tests"][0]["plusargs"] + [f"+{C.PLUSARG_KNOB_ICACHE_ECC_ERR_RATE}=rare", f"+{C.PLUSARG_CHK_ALERT_MINOR}=0"]),
                  "LOG-077"),
@@ -484,11 +487,9 @@ def self_test() -> int:
             cond = False
         ok &= cond
         print("SELF-TEST", "ok " if cond else "BAD", "load_testlist accepts an unmeasured entry that turns the B8 probe knob on (B8 evidence runs stay possible)")
-        # CM153-L-1, the positive side: an unmeasured entry may name another test's manifest in the manifest home (the committed
-        # gen_test_pmc_ctrl_pin_off form, taken here from a listing of the home rather than one named file), and null is always fine.
-        for label, upd in (("an unmeasured entry naming another test's manifest in dv/auto_dv/fcov_expectations loads",
-                            dict(measured=False, tier=C.CHECK_TIER, fcov_expectation_file=other_manifest(load_yaml(C.TESTLIST_YAML)["tests"][0]["name"]))),
-                           ("a null fcov_expectation_file loads", dict(fcov_expectation_file=None))):
+        # The unmeasured exemption of CM153-L-1's positive side is withdrawn (CR-23-L-1): gen_fcov validates the manifest
+        # against the entry name on every entry, so null is the only alternative to the entry's own manifest.
+        for label, upd in (("a null fcov_expectation_file loads", dict(fcov_expectation_file=None)),):
             t5 = load_yaml(C.TESTLIST_YAML)
             t5["tests"][0].update(upd)
             f5 = Path(td) / "testlist_fcov_ok.yaml"
@@ -1429,8 +1430,10 @@ def load_testlist(path: Path = C.TESTLIST_YAML) -> dict[str, Any]:
                 die(f"{path}: test {t['name']} fcov_expectation_file {fcov} is outside {home}/ (the schema's manifest home, the one directory the covergroup-set and manifest tools read; a check-tier entry with a proof manifest elsewhere uses null)")
             if not (C.SOURCE_ROOT / fp).is_file():
                 die(f"{path}: test {t['name']} fcov_expectation_file {fcov} does not exist under the source root")
-            if t.get("measured", True) and fp.name != f"{t['name']}{C.FCOV_MANIFEST_SUFFIX}":
-                die(f"{path}: test {t['name']} fcov_expectation_file {fcov} must be {home}/{t['name']}{C.FCOV_MANIFEST_SUFFIX} for a measured entry (validate_manifest needs the manifest's test, the file stem and the entry name equal)")
+            # Every entry, measured or not: gen_fcov.check_test validates the manifest against the entry name before it
+            # reads coverage, so a differing stem can only end as an unverifiable protocol error.
+            if fp.name != f"{t['name']}{C.FCOV_MANIFEST_SUFFIX}":
+                die(f"{path}: test {t['name']} fcov_expectation_file {fcov} must be {home}/{t['name']}{C.FCOV_MANIFEST_SUFFIX} or null (validate_manifest needs the manifest's test, the file stem and the entry name equal on every entry; a shared or group manifest fails the per-entry check as unverifiable)")
         if t.get("red_fixture"):
             if t.get("expected_fail"):
                 die(f"{path}: test {t['name']}: red_fixture and expected_fail are exclusive (a fixture is not an RTL-bug candidate)")

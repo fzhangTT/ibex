@@ -1,0 +1,24 @@
+# CR-23-L-1 red: the testlist loader accepted a manifest whose declared test is not the entry naming it
+# The per-entry fcov check (gen_fcov.check_test) validates the manifest against the ENTRY NAME before it reads
+# coverage, so a differing stem can only end as an unverifiable protocol error. The loader required the three-way
+# equality for MEASURED entries only, so it accepted a wiring the check can never pass. Rule now: every entry that
+# names a manifest names its own, or null. This withdraws the positive side of CM153-L-1.
+# Taken on a detached archive of e754a83 (the current head), with gen_test_pmc_ctrl_pin_off's field already nulled,
+# so the red is the new case alone rather than the eight reverted entries.
+# Sections 1 and 2 are the redirected self-test output; section 3 is the rule against the COMMITTED testlist.
+== 1. RED: the case added, the rule NOT yet written ==
+   command: python3 dv/auto_dv/flow/gen_flow_util.py --self-test   (rc 2)
+   SELF-TEST BAD load_testlist refuses an unmeasured entry whose fcov_expectation_file stem is another test's (CR-23-L-1: check_test validates against the entry name whether measured or not) (message names 'must be')
+   SELF-TEST BAD build-input gate case 13: every listed non-input is tracked and each glob class matches a tracked file (['git ls-files failed: fatal: not a git repository (or any parent up to mount point /)\nStopping at filesystem boundary (GIT_DISCOVERY_ACROSS_FILESYSTEM not set).']); list sha256 80d4a7081e03
+   ok cases in this run: 149
+
+== 2. GREEN: the same command with the rule written ==
+   command: python3 dv/auto_dv/flow/gen_flow_util.py --self-test   (rc 2, case 13 only: an archive has no .git)
+   SELF-TEST ok  load_testlist refuses an unmeasured entry whose fcov_expectation_file stem is another test's (CR-23-L-1: check_test validates against the entry name whether measured or not) (message names 'must be')
+   SELF-TEST BAD build-input gate case 13: every listed non-input is tracked and each glob class matches a tracked file (['git ls-files failed: fatal: not a git repository (or any parent up to mount point /)\nStopping at filesystem boundary (GIT_DISCOVERY_ACROSS_FILESYSTEM not set).']); list sha256 80d4a7081e03
+   ok cases in this run: 150
+
+== 3. CONTROL: the rule against the COMMITTED testlist of e754a83, which still carries the field ==
+   command: load_testlist on the committed testlist (scratch copy) with the new rule
+   ERROR: head_testlist.yaml: test gen_test_pmc_ctrl_pin_off fcov_expectation_file dv/auto_dv/fcov_expectations/gen_test_pmc_ctrl.fcov.yaml must be dv/auto_dv/fcov_expectations/gen_test_pmc_ctrl_pin_off.fcov.yaml or null (validate_manifest needs the manifest's test, the file stem and the entry name equal on every entry; a shared or group manifest fails the per-entry check as unverifiable)
+   REFUSED - the rule bites on the real committed wiring

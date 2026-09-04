@@ -1828,7 +1828,7 @@ tests:
       extra_args:
       - --gcc-opts=-Idv/auto_dv/tests/gen_programs
     seeds: 1
-    fcov_expectation_file: dv/auto_dv/fcov_expectations/gen_test_pmc_ctrl.fcov.yaml
+    fcov_expectation_file: null
     timeout_s: 900
     owner: test-writer
     pass_marker: GEN_TEST_PASS
