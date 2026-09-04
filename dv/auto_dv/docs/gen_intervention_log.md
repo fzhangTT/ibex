@@ -1734,3 +1734,13 @@ fresh tb-infra is spawned with full context and the same work directory; its fir
 list, then the Slice A hand-off its STATUS calls ready. The rule made explicit for every teammate: end the turn after
 each hand-off or STATUS stamp so the inbox is read; a turn longer than twenty minutes without reading the inbox is a
 stall even when files move.
+
+## LOG-076 - 2026-09-04 - LOG-067 addendum: the B8 probe knob is named chk_sva_b8
+
+LOG-067 named the gating knob chk_sva_probe. tb-infra built it as chk_sva_b8 (gen_tb_knobs.yaml, plusarg
++gen_chk_sva_b8, default 0) in landing 9 (329902f), following the existing per-assertion family chk_sva_alert,
+chk_sva_dbg, chk_sva_icram, chk_sva_irq and the rest, where the suffix names the assertion group the knob gates. The
+cross-model review of landing 9 (CM132-M-2) records the rename as undocumented. Ruling: the built name stands as the
+ruled knob; every other LOG-067 condition is unchanged (default off, on only in B8 evidence runs, the C10 exception
+recorded in the probe register and the SVA layer header, and the flow refusing a measured entry that sets it, which
+Runtime now builds). tb-infra records the name in its response table; no rename.
