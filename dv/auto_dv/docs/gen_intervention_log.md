@@ -2071,3 +2071,19 @@ Corrigendum (20:0xZ, units; Test Writer and runtime-2): the 758 above counts a b
 entries); the DISTINCT count of unbuilt-covergroup bins over the same nine is 735, the 23 shared bins being declared by more than
 one of the nine across seven covergroups. The same pair list-wide: 4044 by sum, 3902 distinct (142 duplicate references). After
 the detach at 18ac053 every one of the 2066 declared bins sits on a built covergroup.
+
+## LOG-087 - 2026-09-04 - Orchestrator ruling: a coverage-off check-tier regression carries the standing guard and fails on it
+
+Question (runtime-2, guard corrigendum log gen_fu_guard_fcov_red_corrigendum.log, ede678c): the standing guard
+gen_ut_lockstep_icache_ecc_fcov_red is a check-tier entry whose expectation check needs a coverage database; in a
+check-tier regression run with --no-coverage no stage can judge it, it grades NOT_RUN, gen_regress counts not_run into
+the failing total, and the regression exits 2 on the guard alone.
+
+Ruling (19:2xZ, task list row; recorded here so the corrigendum's citation resolves inside the repository): by design.
+A run that cannot exercise the mechanism the guard exists to prove may not report a clean pass; excluding the entry from
+coverage-off runs would hide that the guard did not run; special-casing that NOT_RUN in the failing total would key a
+regression's exit on a reason string that a failed build also produces. The remedy for a clean check-tier gate is to
+run the check tier with coverage (measured: 87 runs in about five minutes on existing builds). A distinct verdict for a
+deferred red no stage could judge, excluded from the failing total by its own name with its own red, is the alternative
+considered and not taken; it is rt37-shaped work frozen behind round 1 (LOG-085). Every round-1 run carries coverage
+(gen_round passes neither --no-coverage nor --repro), so the guard grades RED-OK in the round.
