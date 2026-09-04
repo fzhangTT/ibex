@@ -20,15 +20,18 @@ def _usage(msg=None):
     sys.exit(2)
 
 
+# Accept exactly the two forms the usage line describes and nothing else. A third argument was previously accepted and
+# then ignored, which is worse than refusing it: the caller believes the scratch root they passed is being read.
 if len(sys.argv) < 2 or sys.argv[1] in ("-h", "--help"):
     _usage()
-if "--from-artifact" not in sys.argv[2:] and len(sys.argv) < 3:
-    _usage("the scratch root is required unless --from-artifact is given")
+if len(sys.argv) != 3:
+    _usage("exactly one of a scratch root or --from-artifact follows the landing root")
 
 
 ROOT = pathlib.Path(sys.argv[1])
+FROM_ARTIFACT = sys.argv[2] == "--from-artifact"   # the mode is the second positional, not a flag found anywhere
 # the scratch root is only meaningful when reading the trace session; --from-artifact needs none
-S = pathlib.Path(sys.argv[2]) if len(sys.argv) > 2 and sys.argv[2] != "--from-artifact" else pathlib.Path(".")
+S = pathlib.Path(".") if FROM_ARTIFACT else pathlib.Path(sys.argv[2])
 L = ROOT / "dv/auto_dv/evidence/gen_tdd_logs"
 MAN = L / "gen_manifest.md"
 MU = L / "mutations"
@@ -41,8 +44,6 @@ def die(msg):
     print("REFUSED: " + msg)
     sys.exit(1)
 
-
-FROM_ARTIFACT = "--from-artifact" in sys.argv
 
 if not DUP.exists():
     die("the duplicate-copies artifact is missing, so the indices cannot be derived: %s" % DUP)
@@ -63,7 +64,9 @@ if FROM_ARTIFACT:
     raw = [l for l in prev if "ICTRACE tagwrite" in l and not l.startswith("#")]
     keep = [l for l in raw if any(re.search(r"index=%d " % i, l) for i in idx)]
     if len(keep) != len(raw):
-        die("the retained artifact holds %d tag-write lines outside the indices %s it names" % (len(raw) - len(keep), idx))
+        n = len(raw) - len(keep)
+        die("the retained artifact holds %d tag-write line%s outside the indices %s the duplicate-copies artifact names"
+            % (n, "" if n == 1 else "s", idx))
     if not keep:
         die("the retained artifact holds no raw tag-write lines to re-derive from: %s" % DST)
     m = re.search(r"total of (\d+) tag-write lines", "\n".join(l for l in prev if l.startswith("#")))

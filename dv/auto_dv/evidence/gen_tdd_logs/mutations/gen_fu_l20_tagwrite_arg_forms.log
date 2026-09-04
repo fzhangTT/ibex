@@ -1,0 +1,20 @@
+# gen_trace_tagwrite_history.py argument handling, one row per call form, produced by running each form.
+# The tool accepts exactly the two forms its usage line describes; every other form prints the usage line and
+# exits 2. A third argument was previously accepted and then ignored, which is worse than refusing it: the
+# caller believes the scratch root they passed is being read.
+#
+# form                                                            exit  first line of output
+(none)                                                           2     usage: gen_trace_tagwrite_history.py <landing root> (<scratch root> | 
+<landing root>                                                   2     usage: gen_trace_tagwrite_history.py <landing root> (<scratch root> | 
+<landing root> --from-artifact                                   0     indices [26, 27], 322 of 1564 tag-write lines kept
+<landing root> <scratch root>                                    0     indices [26, 27], 322 of 1564 tag-write lines kept
+<landing root> <scratch root> --from-artifact                    2     usage: gen_trace_tagwrite_history.py <landing root> (<scratch root> | 
+<landing root> --from-artifact <scratch root>                    2     usage: gen_trace_tagwrite_history.py <landing root> (<scratch root> | 
+#
+# Regeneration is byte-identical across both accepted forms: the retained artifact's md5 is a7702922e3b65efc56b340e6ee2b1348
+# before this table's runs and a7702922e3b65efc56b340e6ee2b1348 after, so neither accepted form alters what it reproduces.
+#
+# The self-check refuses an artifact carrying a tag-write line outside the indices the duplicate-copies
+# artifact names. Reproduced by appending one index-30 line to a copy and re-running the mode:
+exit 1: REFUSED: the retained artifact holds 1 tag-write line outside the indices [26, 27] the duplicate-copies artifa
+# The copy is restored afterwards; the artifact's md5 is a7702922e3b65efc56b340e6ee2b1348 again.
