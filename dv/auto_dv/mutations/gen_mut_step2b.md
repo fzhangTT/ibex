@@ -209,7 +209,13 @@ MUT-SUP3 catch without it reported nothing and is not retained).
 
 Rule for these rows (the Critic's tb_l12 L-3): a build sha in a mutant row is copied from the retained run header (build_sources_sha256) or the compile log, never typed; a firing count is the assertion's or the checker's own count, never a grep over its name.
 
-## Landing 14 mutants (WP-12: the data-RAM ECC hook and the hit judgement; re-run on w18 in landing 15, table below)
+## Landing 14 mutants (WP-12: the data-RAM ECC hook and the hit judgement) -- SUPERSEDED by the landing-15 table below
+
+SUPERSEDED, and read as history only. Landing 15 re-ran all six of these mutations on build w18 and re-retained the run files under the same
+gen_fu_l16_* paths, so the six w16 build shas in the table below are carried by no retained header any more and the catch files the rows name now
+hold the w18 runs. The section's rule that a build sha is copied from a retained header therefore applies to the landing-15 table, not to this one;
+these shas were copied from the headers of runs whose evidence is now only in git history at a28d1ae. For the current evidence of every mutation
+listed here, including its build identity and its per-check-site error counts, read the landing-15 table.
 
 Provenance: six copies of wp12_root (the landing sources, build w16 de983a8e68063c27) with one mutation each, applied out of tree by
 mut_oot_fcov.sh (the source tree's copy of the mutated file read back unchanged after the runs); the mutations as applied are
@@ -226,6 +232,9 @@ gen_fu_l16_<mutant>_mutant.diff and each copy's compile log gen_fu_l16_<mutant>_
 | MUT-BITS | gen_icache_ram.sv: the second flip of a two-bit injection lands on the first position (no corruption) | gen_ut_lockstep on gen_icache_ecc_directed.S, tag rate frequent, two bits, row alert_minor (+gen_chk_all=0 +gen_chk_alert_minor=1) | 21b77abf9c06b6f8 (bits_w16) | FAIL (UVM_ERROR 930): 930 `missing within` (gen_fu_l16_BITS_catch_ecc_tag_two_*) | PASS (0) gen_fu_l16_BITS_ablate_ecc_tag_two_* |
 | MUT-ALIGN | gen_checkers_pkg.sv: form (a) reads the probe's tag of cycle c + 2 instead of c + 1 | gen_ut_lockstep on gen_icache_ecc_far_directed.S, data rate frequent, probe on, row alert_minor (+gen_chk_all=0 +gen_chk_alert_minor=1) | da54df85425870e4 (align_w16) | FAIL (UVM_ERROR 13): 13 `every ECC injection in its window was judged not to owe it` (the true hit way judged from the wrong cycle's tag) (gen_fu_l16_ALIGN_catch_ecc_far_data_freq_*) | PASS (0) gen_fu_l16_ALIGN_ablate_ecc_far_data_freq_* |
 
+Every gen_fu_l16_* file named in the rows above now holds the landing-15 re-run of that mutation, not the run the row describes; the w16 build
+identity of these six rows is the tree at a28d1ae. Read the rows for what each mutation is and the landing-15 table for its current evidence.
+
 ## Landing 15 mutants (the measured-run judge's own reds, the probe-off data reds, and the landing-14 six re-run on w18)
 
 Both verdicts on landing 14 found the same gap: every data-side mutant ran with the P9 probe on, where form (a) decides the hit way, and the one
@@ -234,7 +243,7 @@ batch answers that and re-runs the landing-14 six on the landing-15 build so eve
 
 Build w18, sources cff50f81508de1a9. Each mutant is built out of tree by mut_oot_fcov.sh from a copy of the landing sources, and the shared tree is
 never touched (the source tree's copy of the mutated file is read back unchanged after the runs). Each mutant build was checked to differ from w18 in
-exactly the file its mutation names by comparing per-file sha256 lists (scratchpad/gen_l15_mut_identity.py): 13 roots including the trace session, 13
+exactly the file its mutation names by comparing per-file sha256 lists (dv/auto_dv/tools/gen_mutant_build_identity.py, which takes the landing root, the build and the scratch root holding the out-of-tree mutant roots): 13 roots including the trace session, 13
 matches, 0 mismatches. Every catch run carries +gen_chk_all=0 +gen_chk_alert_minor=1, so the failure signature belongs to the named checker with every
 other Zone A check inert; every ablation runs the same mutant with the row off. Build shas are copied from the run headers. The per-site splits are the
 checker's own counts over the whole run, retained in each excerpt header: gen_checkers_pkg.sv(660) a pulse with no announced injection at all, (664) a
@@ -258,9 +267,11 @@ off nothing else can decide the hit way and the run fails.
 | MUT-BITS | gen_icache_ram.sv: the second flip of a two-bit injection lands on the first position | gen_ut_lockstep on gen_icache_ecc_directed.S, tag rate frequent, two bits, row alert_minor | a3d6a46ef3eb4ec8 | FAIL (UVM_ERROR 930): 682=930 (gen_fu_l16_BITS_catch_ecc_tag_two_*) | PASS (0) gen_fu_l16_BITS_ablate_ecc_tag_two_* |
 | MUT-ALIGN | gen_checkers_pkg.sv: form (a) reads the probe's tag of cycle c + 2 instead of c + 1 | gen_ut_lockstep on gen_icache_ecc_far_directed.S, data rate frequent, probe on, row alert_minor | 140b96a8e4f34ba2 | FAIL (UVM_ERROR 13): 664=13 (gen_fu_l16_ALIGN_catch_ecc_far_data_freq_*) | PASS (0) gen_fu_l16_ALIGN_ablate_ecc_far_data_freq_* |
 
-Notes on reading the table. The six landing-14 mutants reproduce their w16 error counts exactly on w18 (988, 494, 483, 830, 930, 13), which is
+Notes on reading the table. The six landing-14 mutants reproduce their w16 error counts exactly on w18 (988, 494, 483, 830, 930, 13; the w16 totals from the retained verdict
+files as landing 14 committed them, now in git history at a28d1ae), which is
 independent evidence that the landing-15 source changes alter no behaviour. MUT-BITS carries no probe plusarg and exercises the tag path, which is why
 it could not cover the data judgement. MUT-ALIGN is a mutation of form (a) and is caught only on the far program, since the one-region program's
-consecutive lookups share a tag; the alignment histogram retained in landing 15 is what makes that statement checkable rather than asserted. DATAMISS
+consecutive lookups share a tag; the alignment histogram retained in landing 15 is what makes that statement checkable rather than asserted. The one site-660 firing in MUT-ICE-WAY on the far program probe-off is a correct reading, not a defect: the announcement moved to a way that was
+invalid, so the pulse's window held no candidate that owed or excused it. DATAMISS
 and DATAWAY appear three times each: one mutation, proved on two programs with the probe off and once with it on, in three separate out-of-tree roots
 so no run overwrites another.

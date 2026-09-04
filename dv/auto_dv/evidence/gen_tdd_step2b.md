@@ -643,7 +643,7 @@ gen_fu_l15_sources_sha256_sb3.txt).
 ## 16. Landing 14: WP-12, the data-RAM ECC injection hook, the hit judgement (forms a and b), two-bit flips, the far program
 
 Built as w16 (sources de983a8e68063c27) and re-proved in landing 15 on build w18 (sources cff50f81508de1a9, the per-file list
-gen_fu_l16_sources_sha256_w18.txt), whose 13 evidence runs give summary lines byte-identical to w16's on all 13. Every retained file this section
+gen_fu_l16_sources_sha256_w18.txt), whose 13 evidence runs give summary lines identical to w16's on the retained first 400 characters (13 of 13) and in every figure re-derived from them; the comparison beyond 400 characters was made on the two builds' run outputs in the staging root, which are not retained, since w16's excerpts were truncated there and now exist only in git history at a28d1ae. The six landing-14 mutants reproducing their counts on w18 is retained evidence of the same point. Every retained file this section
 cites now names w18 or a w18 mutant build (build_sources_sha256 in the header; each mutant build differs from w18 in the mutated file only, checked
 per file and recorded in Section 17), with no exception: the runs of the two intermediate builds and of the earlier trace copy, whose per-file lists
 were never captured, are retired and their facts re-proved as named mutations and as one trace session on w18 (Section 17).
@@ -757,7 +757,7 @@ mismatches. This landing answers the cross-model rows CM173 and the Critic's CR-
 - Source changes, and the proof they change no behaviour. The un-tweak operands and the probe's default width now come from ibex_pkg
   (gen_icache_ram.sv: IC_TAG_SIZE-2, IC_INDEX_W-1, IC_LINE_W; gen_ic_lookup_probe.sv: ADDR_W - IC_INDEX_HI - 1, the form gen_binds.sv already passed),
   so a geometry change cannot silently mis-address them (CM173 m-1, CR-15 L-5). Under this build configuration each derived form equals the literal it
-  replaces (20, 7, 3 and 21), and the 13 evidence runs give GEN_MISC summary lines byte-identical to w16's on all 13, so the change is measured to be
+  replaces (20, 7, 3 and 21), and the 13 evidence runs give GEN_MISC summary lines byte-identical to w16's (on the run outputs; from committed files, over the retained first 400 characters) on all 13, so the change is measured to be
   behaviour-preserving rather than argued to be. The C10 note in gen_protocol_props.sv now names the P9 probe beside B8, stating that P9 carries no
   property, which keeps the B8 claim true (CR-15 L-4). The knob table's hit-way sentence now states the condition unconditionally and names both tag
   sources, since the monitor derives the hit way in both forms and only the source of the lookup tag differs; gen_tb_pkg.sv and gen_knobs.py are
@@ -765,7 +765,7 @@ mismatches. This landing answers the cross-model rows CM173 and the Critic's CR-
 - Retention now keeps the figures the record quotes (CM173 M-1, CR-15 M-1). The excerpt tool capped every kept line at 400 characters while the
   GEN_MISC summary line is 713, so it was cut before the duplicate-copy, a/b agreement and latency fields: the record's proof that the measured-run
   form agrees with the probe rested on no retained file. The summary line is now kept whole and every other line still capped, the header says so, and
-  every figure in Section 16 and below is re-derived from the retained line by a checked-in reader (scratchpad/gen_l15_figures.py) which fails on a
+  every figure in Section 16 and below is re-derived from the retained line by a committed reader (dv/auto_dv/tools/gen_icache_ecc_figures.py) which fails on a
   field it cannot parse or an identity that does not hold. Two identities it enforces: the field the log calls judged is the processed total, so
   hit_way + other_or_invalid_way + unjudged must equal it; and with the probe off, ambiguous + pending must equal unjudged, while with the probe on
   unjudged equals the end-of-run pending count and ambiguous is form (b)'s own statistic measured beside form (a)'s verdict.
@@ -804,7 +804,9 @@ mismatches. This landing answers the cross-model rows CM173 and the Critic's CR-
   dense code a missing pulse would not fail the run, and a measured run's verdict must be read with that. Cross-check on the derivation: the population
   form (b) decides with the probe off equals the a/b both-judged count of the probe-on run of the same program, 554 and 174 on the two programs. The
   API document carries the figure per program; raising it is what Q-019 would decide, since a probe-on measured run would let form (a) judge.
-- The trace session (CR-15 L-2, M-1). One session on w18 with only the TRACE displays applied, its own compile log, per-file list and driver log, so the
+- The trace session (CR-15 L-2, M-1). One session on a w18-derived display build (sources 74c372d4823c6bc1: the landing sources with the TRACE displays
+  added, differing from w18 in gen_tb_pkg.sv alone, the applied delta retained as gen_fu_l16_trace17_mutant.diff at three added $display lines and no
+  removal), with its own compile log, per-file list and driver log, so the
   earlier complaint that the driver log described a different session cannot recur. TRACE2's anchors no longer exist in the rebuilt judge and TRACE3
   hard-codes one index; TRACE's own injection lines carry both ways' valid bits and stored tags, so the evidence is index-general without them. It
   produced the alignment histogram above and the duplicate-copy filter: 20 announced injections whose line was valid in both ways under the same tag,
@@ -813,9 +815,45 @@ mismatches. This landing answers the cross-model rows CM173 and the Critic's CR-
   first intermediate build, the one run of the second, the nine files of the earlier trace copy, the driver log of the first, and the two identity files
   of the superseded landing build. Their headers carry a 16-hex build digest and no per-file list, their build trees no longer exist, and their source
   states were never committed, so the lists cannot be reconstructed; a digest is not invertible. Every fact they carried is re-proved above on w18. The
-  deletion list is dv/auto_dv/work/tb-infra/gen_landing15_deletes.txt.
+  deletion list is dv/auto_dv/work/tb-infra/gen_landing15_deletes.txt, a gitignored work file kept for the hand-off; the authority for what was retired is the commit diff of landing 15, where the 21 paths appear as 10 deletions and 11 git-detected renames.
 - The seventh ablation and the trace run's errors (CR-15 L-4). The landing-14 mutant table listed six mutants while seven ablations were retained, the
   seventh belonging to the trace copy, whose catch run carried ten errors from its pre-fix sources with no row explaining them. The trace session is no
   longer a mutant with a catch and an ablation: it is one green run (0 errors) whose purpose is the two figures above, so the count matches the table.
 - Rows folded: CM173 M-1, M-2, m-1, m-2, m-3, m-4; CR-15 M-1, M-2, L-1, L-2, L-3, L-4, L-5, L-6, L-7, L-8, and I-1 (the excerpt headers now say
   counted by python, which the regenerated headers carry). I-2, I-3 and I-4 record facts and ask for nothing.
+
+## 18. Landing 16: the landing-15 review rows, the committed derivations, and the allocation evidence restored
+
+No build and no simulation: every figure here comes from files landing 15 retained or from the trace session that produced them, and the record edits
+answer the five CM179 minors and the eight CR-16 rows. Both verdicts on landing 15 were positive (APPROVE-WITH-CHANGES with no major, and the Critic's
+APPROVE, which lifted the gen_l14 merge gate), and both row sets are wording and tooling rather than evidence.
+- The allocation evidence is restored, which my own landing-15 retirement had cost. Retiring the earlier tag-write trace left WP12-F2's claim that the
+  core allocates a second copy of a still-valid line after an ECC-correction refetch resting on RTL terms alone, with no observational evidence at all;
+  the DV Lead worded its plan around that honestly and I owed it back. gen_fu_l16_trace17_tagwrite_history.log now carries the 322 tag writes at the
+  duplicate indices out of the trace run's 1564, the indices taken from gen_fu_l16_trace17_duplicate_copies.log rather than hard-coded, plus a
+  reconstruction that carries each way's valid bit and tag forward: 16 episodes in which both ways held the same tag valid at one index, 13 at index 26
+  and 3 at index 27, each with its start and end cycle, the shared tag 00100000 and the way whose copy was added second. The 13 reproduces the figure
+  the plan had carried from the retired file, now on a build with its own compile log and per-file list; the 3 at the second index is evidence the old
+  one-index filter could not see. All 16 added into way 0, and the artifact says in its own header to read that narrowly: one program at one seed
+  evidences the direction of each episode it lists and NOT the way-selection policy, which needs the RTL selection terms or several programs and seeds.
+- The derivations are committed, since a record that calls its tooling checked-in must be able to point at it: dv/auto_dv/tools/gen_icache_ecc_figures.py
+  (re-derives every figure from the retained lines and fails on an unparsable field or a broken identity), gen_mutant_build_identity.py (checks each
+  mutant build differs from the landing build in exactly its mutated file) and gen_trace_tagwrite_history.py (produces the artifact above). The two that
+  read the out-of-tree mutant roots now take the scratch root as an argument instead of assuming they sit beside it, which a committed tool must not do,
+  and the tag-write generator regenerates its artifact byte-identically after the move. One correction to the Critic's first option for this row:
+  committing them under the work directory would not have made them tracked, since .gitignore excludes it.
+- The trace session's source delta is retained as gen_fu_l16_trace17_mutant.diff: three added display lines against the landing sources and no removal,
+  so the claim that only the displays were applied is now checkable from committed files rather than from my word, and the session's own per-file list
+  independently shows it differs from the landing build in gen_tb_pkg.sv alone. The sentence calls it a w18-derived display build and names its sources
+  sha.
+- The landing-14 mutant table is marked superseded at its heading, with a paragraph explaining that the re-run moved its evidence and one line under the
+  table itself saying that every file the rows name now holds the landing-15 re-run and that the w16 identity of those six rows is the tree at a28d1ae.
+  The copied-from-a-retained-header rule therefore applies to the landing-15 table.
+- The comparison claim is split into what was measured and what a reader can check: identical on the retained first 400 characters, 13 of 13, and in
+  every figure re-derived from them, the rest compared on run outputs that are not retained. The six landing-14 mutants reproducing their counts on w18
+  is retained evidence of the same point.
+- The alert_minor row of the component API document now names Section 5a where it introduces form (b) and quotes the reach on both programs, so a
+  reader of the row meets the judge's power without having to find the section.
+- One reading recorded so a split is not mistaken for a defect (CR-16 I-3): MUT-ICE-WAY on the far program probe-off fires the no-announced-injection
+  site once because the announcement moved to a way that was invalid, leaving the pulse's window with no candidate that owed or excused it.
+- Rows folded: CM179 m-1 to m-5 and its no-finding note on the retirement accounting; CR-16 L-1 to L-5 and I-1 to I-3.

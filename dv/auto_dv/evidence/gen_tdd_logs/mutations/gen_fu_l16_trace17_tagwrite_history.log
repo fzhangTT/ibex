@@ -1,0 +1,358 @@
+# The tag-write history at the indices where a line was valid in both ways at once, from the landing-15 trace
+# session (scratch mut_root/TRACE17, the TRACE displays on the landing build, one-region program prog_icache_ecc).
+# This is the observational evidence for WP12-F2's allocation claim: the core allocates a second copy of a line
+# that is still valid in the other way after an ECC-correction refetch, because each fill captures its way in the
+# IC1 cycle of its own lookup while the correction's invalidation write lands later, and no comparator in the
+# module compares the captured fill addresses (rtl/ibex_icache.sv). Read a way's line as valid=1 until a later
+# write at the same index and way sets valid=0.
+# Indices 26, 27, taken from gen_fu_l16_trace17_duplicate_copies.log rather than hard-coded. 322 tag-write lines at
+# those indices of 1564 in the run; counted by python from the run's own ICTRACE tagwrite lines.
+#
+# Reconstructed from the writes below, by carrying each way's valid bit and tag forward: 16 episodes in
+# which both ways held the SAME tag valid at one index, 13 at index 26, 3 at index 27.
+# Each row is the interval from the write that made the second copy valid to the write that ended it, and
+# added_way is the way that write names: the copy allocated second, which is the direction of the
+# allocation. Across the episodes: 16 added into way 0.
+# READ THAT AGGREGATE NARROWLY: it is one program at one seed, so it evidences the direction of each
+# episode it lists and NOT the way-selection policy. A policy claim needs the RTL selection terms or
+# several programs and seeds.
+episode index=26 tag=00100000 added_way=0 both_valid_from_cycle=1916 until_cycle=2127
+episode index=26 tag=00100000 added_way=0 both_valid_from_cycle=6604 until_cycle=6789
+episode index=26 tag=00100000 added_way=0 both_valid_from_cycle=6808 until_cycle=6863
+episode index=26 tag=00100000 added_way=0 both_valid_from_cycle=7771 until_cycle=8083
+episode index=26 tag=00100000 added_way=0 both_valid_from_cycle=8612 until_cycle=8652
+episode index=26 tag=00100000 added_way=0 both_valid_from_cycle=9357 until_cycle=9734
+episode index=26 tag=00100000 added_way=0 both_valid_from_cycle=9849 until_cycle=10244
+episode index=26 tag=00100000 added_way=0 both_valid_from_cycle=11298 until_cycle=11339
+episode index=26 tag=00100000 added_way=0 both_valid_from_cycle=12698 until_cycle=12805
+episode index=26 tag=00100000 added_way=0 both_valid_from_cycle=13180 until_cycle=13220
+episode index=26 tag=00100000 added_way=0 both_valid_from_cycle=13238 until_cycle=13432
+episode index=26 tag=00100000 added_way=0 both_valid_from_cycle=13754 until_cycle=14106
+episode index=26 tag=00100000 added_way=0 both_valid_from_cycle=16912 until_cycle=16923
+episode index=27 tag=00100000 added_way=0 both_valid_from_cycle=2919 until_cycle=3088
+episode index=27 tag=00100000 added_way=0 both_valid_from_cycle=6247 until_cycle=6483
+episode index=27 tag=00100000 added_way=0 both_valid_from_cycle=14780 until_cycle=14956
+#
+# The tag writes the reconstruction reads:
+ICTRACE tagwrite cycle=28 way=0 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=28 way=1 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=29 way=0 index=27 valid=0 tag=00000000
+ICTRACE tagwrite cycle=29 way=1 index=27 valid=0 tag=00000000
+ICTRACE tagwrite cycle=276 way=0 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=281 way=0 index=27 valid=1 tag=00100000
+ICTRACE tagwrite cycle=285 way=0 index=27 valid=0 tag=00000000
+ICTRACE tagwrite cycle=298 way=1 index=27 valid=1 tag=00100000
+ICTRACE tagwrite cycle=524 way=1 index=27 valid=0 tag=00000000
+ICTRACE tagwrite cycle=531 way=0 index=27 valid=1 tag=00100000
+ICTRACE tagwrite cycle=537 way=0 index=27 valid=1 tag=00100000
+ICTRACE tagwrite cycle=913 way=0 index=27 valid=0 tag=00000000
+ICTRACE tagwrite cycle=924 way=1 index=27 valid=1 tag=00100000
+ICTRACE tagwrite cycle=1033 way=1 index=27 valid=0 tag=00000000
+ICTRACE tagwrite cycle=1040 way=0 index=27 valid=1 tag=00100000
+ICTRACE tagwrite cycle=1046 way=0 index=27 valid=1 tag=00100000
+ICTRACE tagwrite cycle=1103 way=0 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=1113 way=1 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=1135 way=0 index=27 valid=0 tag=00000000
+ICTRACE tagwrite cycle=1143 way=1 index=27 valid=1 tag=00100000
+ICTRACE tagwrite cycle=1234 way=1 index=27 valid=0 tag=00000000
+ICTRACE tagwrite cycle=1243 way=0 index=27 valid=1 tag=00100000
+ICTRACE tagwrite cycle=1354 way=0 index=27 valid=0 tag=00000000
+ICTRACE tagwrite cycle=1360 way=1 index=27 valid=1 tag=00100000
+ICTRACE tagwrite cycle=1378 way=1 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=1387 way=0 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=1399 way=0 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=1435 way=1 index=27 valid=0 tag=00000000
+ICTRACE tagwrite cycle=1442 way=0 index=27 valid=1 tag=00100000
+ICTRACE tagwrite cycle=1446 way=0 index=27 valid=1 tag=00100000
+ICTRACE tagwrite cycle=1789 way=0 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=1798 way=1 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=1859 way=1 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=1868 way=0 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=1899 way=0 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=1908 way=1 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=1909 way=0 index=27 valid=0 tag=00000000
+ICTRACE tagwrite cycle=1916 way=0 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=1921 way=1 index=27 valid=1 tag=00100000
+ICTRACE tagwrite cycle=2097 way=1 index=27 valid=0 tag=00000000
+ICTRACE tagwrite cycle=2104 way=0 index=27 valid=1 tag=00100000
+ICTRACE tagwrite cycle=2115 way=0 index=27 valid=1 tag=00100000
+ICTRACE tagwrite cycle=2127 way=0 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=2127 way=1 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=2136 way=0 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=2267 way=0 index=27 valid=0 tag=00000000
+ICTRACE tagwrite cycle=2276 way=1 index=27 valid=1 tag=00100000
+ICTRACE tagwrite cycle=2363 way=0 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=2374 way=1 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=2480 way=1 index=27 valid=0 tag=00000000
+ICTRACE tagwrite cycle=2489 way=0 index=27 valid=1 tag=00100000
+ICTRACE tagwrite cycle=2898 way=0 index=27 valid=0 tag=00000000
+ICTRACE tagwrite cycle=2908 way=1 index=27 valid=1 tag=00100000
+ICTRACE tagwrite cycle=2919 way=0 index=27 valid=1 tag=00100000
+ICTRACE tagwrite cycle=3057 way=1 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=3067 way=0 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=3075 way=0 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=3088 way=0 index=27 valid=0 tag=00000000
+ICTRACE tagwrite cycle=3088 way=1 index=27 valid=0 tag=00000000
+ICTRACE tagwrite cycle=3097 way=0 index=27 valid=1 tag=00100000
+ICTRACE tagwrite cycle=3235 way=0 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=3246 way=1 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=3269 way=0 index=27 valid=0 tag=00000000
+ICTRACE tagwrite cycle=3280 way=1 index=27 valid=1 tag=00100000
+ICTRACE tagwrite cycle=3292 way=1 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=3303 way=0 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=3551 way=0 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=3561 way=1 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=3584 way=1 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=3599 way=0 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=3612 way=0 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=3649 way=0 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=3654 way=1 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=3745 way=1 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=3752 way=0 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=3861 way=1 index=27 valid=0 tag=00000000
+ICTRACE tagwrite cycle=3872 way=0 index=27 valid=1 tag=00100000
+ICTRACE tagwrite cycle=4062 way=0 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=4070 way=1 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=4140 way=0 index=27 valid=0 tag=00000000
+ICTRACE tagwrite cycle=4144 way=1 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=4151 way=1 index=27 valid=1 tag=00100000
+ICTRACE tagwrite cycle=4156 way=0 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=4243 way=1 index=27 valid=0 tag=00000000
+ICTRACE tagwrite cycle=4252 way=0 index=27 valid=1 tag=00100000
+ICTRACE tagwrite cycle=4441 way=0 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=4457 way=1 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=4843 way=0 index=27 valid=0 tag=00000000
+ICTRACE tagwrite cycle=4852 way=1 index=27 valid=1 tag=00100000
+ICTRACE tagwrite cycle=4936 way=1 index=27 valid=0 tag=00000000
+ICTRACE tagwrite cycle=4945 way=0 index=27 valid=1 tag=00100000
+ICTRACE tagwrite cycle=4951 way=0 index=27 valid=1 tag=00100000
+ICTRACE tagwrite cycle=4986 way=0 index=27 valid=0 tag=00000000
+ICTRACE tagwrite cycle=4996 way=1 index=27 valid=1 tag=00100000
+ICTRACE tagwrite cycle=5385 way=1 index=27 valid=0 tag=00000000
+ICTRACE tagwrite cycle=5393 way=0 index=27 valid=1 tag=00100000
+ICTRACE tagwrite cycle=6095 way=1 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=6106 way=0 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=6234 way=0 index=27 valid=0 tag=00000000
+ICTRACE tagwrite cycle=6241 way=1 index=27 valid=1 tag=00100000
+ICTRACE tagwrite cycle=6247 way=0 index=27 valid=1 tag=00100000
+ICTRACE tagwrite cycle=6483 way=0 index=27 valid=0 tag=00000000
+ICTRACE tagwrite cycle=6483 way=1 index=27 valid=0 tag=00000000
+ICTRACE tagwrite cycle=6494 way=1 index=27 valid=1 tag=00100000
+ICTRACE tagwrite cycle=6508 way=1 index=27 valid=0 tag=00000000
+ICTRACE tagwrite cycle=6519 way=0 index=27 valid=1 tag=00100000
+ICTRACE tagwrite cycle=6582 way=0 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=6594 way=1 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=6604 way=0 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=6789 way=0 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=6789 way=1 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=6796 way=1 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=6808 way=0 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=6863 way=0 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=6863 way=1 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=6873 way=0 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=7114 way=0 index=27 valid=0 tag=00000000
+ICTRACE tagwrite cycle=7123 way=1 index=27 valid=1 tag=00100000
+ICTRACE tagwrite cycle=7437 way=1 index=27 valid=0 tag=00000000
+ICTRACE tagwrite cycle=7446 way=0 index=27 valid=1 tag=00100000
+ICTRACE tagwrite cycle=7459 way=0 index=27 valid=1 tag=00100000
+ICTRACE tagwrite cycle=7704 way=0 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=7715 way=1 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=7723 way=1 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=7732 way=0 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=7754 way=0 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=7765 way=1 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=7771 way=0 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=8011 way=0 index=27 valid=0 tag=00000000
+ICTRACE tagwrite cycle=8022 way=1 index=27 valid=1 tag=00100000
+ICTRACE tagwrite cycle=8083 way=0 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=8083 way=1 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=8094 way=1 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=8120 way=1 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=8128 way=0 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=8139 way=0 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=8151 way=1 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=8319 way=1 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=8328 way=0 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=8338 way=0 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=8592 way=0 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=8602 way=1 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=8612 way=0 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=8652 way=0 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=8652 way=1 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=8661 way=1 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=8825 way=1 index=27 valid=0 tag=00000000
+ICTRACE tagwrite cycle=8834 way=0 index=27 valid=1 tag=00100000
+ICTRACE tagwrite cycle=8903 way=0 index=27 valid=0 tag=00000000
+ICTRACE tagwrite cycle=8911 way=1 index=27 valid=1 tag=00100000
+ICTRACE tagwrite cycle=9189 way=1 index=27 valid=0 tag=00000000
+ICTRACE tagwrite cycle=9193 way=1 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=9200 way=0 index=27 valid=1 tag=00100000
+ICTRACE tagwrite cycle=9205 way=0 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=9296 way=0 index=27 valid=0 tag=00000000
+ICTRACE tagwrite cycle=9307 way=1 index=27 valid=1 tag=00100000
+ICTRACE tagwrite cycle=9340 way=0 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=9349 way=1 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=9357 way=0 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=9734 way=0 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=9734 way=1 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=9743 way=0 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=9830 way=0 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=9840 way=1 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=9849 way=0 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=10188 way=1 index=27 valid=0 tag=00000000
+ICTRACE tagwrite cycle=10195 way=0 index=27 valid=1 tag=00100000
+ICTRACE tagwrite cycle=10244 way=0 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=10244 way=1 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=10252 way=0 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=10271 way=0 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=10283 way=1 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=10362 way=1 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=10370 way=0 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=10578 way=0 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=10585 way=1 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=10731 way=0 index=27 valid=0 tag=00000000
+ICTRACE tagwrite cycle=10741 way=1 index=27 valid=1 tag=00100000
+ICTRACE tagwrite cycle=10897 way=1 index=27 valid=0 tag=00000000
+ICTRACE tagwrite cycle=10906 way=0 index=27 valid=1 tag=00100000
+ICTRACE tagwrite cycle=11245 way=1 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=11259 way=0 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=11278 way=0 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=11289 way=1 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=11298 way=0 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=11339 way=0 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=11339 way=1 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=11348 way=0 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=11511 way=0 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=11522 way=1 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=11640 way=0 index=27 valid=0 tag=00000000
+ICTRACE tagwrite cycle=11651 way=1 index=27 valid=1 tag=00100000
+ICTRACE tagwrite cycle=11821 way=1 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=11830 way=0 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=11876 way=1 index=27 valid=0 tag=00000000
+ICTRACE tagwrite cycle=11883 way=0 index=27 valid=1 tag=00100000
+ICTRACE tagwrite cycle=12077 way=0 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=12088 way=1 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=12159 way=0 index=27 valid=0 tag=00000000
+ICTRACE tagwrite cycle=12166 way=1 index=27 valid=1 tag=00100000
+ICTRACE tagwrite cycle=12260 way=1 index=27 valid=0 tag=00000000
+ICTRACE tagwrite cycle=12269 way=0 index=27 valid=1 tag=00100000
+ICTRACE tagwrite cycle=12316 way=1 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=12328 way=0 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=12338 way=0 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=12681 way=0 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=12690 way=1 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=12698 way=0 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=12805 way=0 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=12805 way=1 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=12814 way=0 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=12859 way=0 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=12867 way=1 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=12889 way=1 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=12890 way=0 index=27 valid=0 tag=00000000
+ICTRACE tagwrite cycle=12897 way=0 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=12903 way=1 index=27 valid=1 tag=00100000
+ICTRACE tagwrite cycle=12909 way=0 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=12918 way=0 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=12931 way=1 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=12952 way=1 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=12961 way=0 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=12970 way=0 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=13132 way=1 index=27 valid=0 tag=00000000
+ICTRACE tagwrite cycle=13139 way=0 index=27 valid=1 tag=00100000
+ICTRACE tagwrite cycle=13156 way=0 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=13167 way=1 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=13180 way=0 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=13220 way=0 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=13220 way=1 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=13230 way=1 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=13238 way=0 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=13432 way=0 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=13432 way=1 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=13438 way=1 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=13640 way=1 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=13641 way=0 index=27 valid=0 tag=00000000
+ICTRACE tagwrite cycle=13650 way=0 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=13654 way=1 index=27 valid=1 tag=00100000
+ICTRACE tagwrite cycle=13732 way=0 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=13741 way=1 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=13754 way=0 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=13946 way=1 index=27 valid=0 tag=00000000
+ICTRACE tagwrite cycle=13955 way=0 index=27 valid=1 tag=00100000
+ICTRACE tagwrite cycle=14078 way=0 index=27 valid=0 tag=00000000
+ICTRACE tagwrite cycle=14087 way=1 index=27 valid=1 tag=00100000
+ICTRACE tagwrite cycle=14106 way=0 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=14106 way=1 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=14117 way=1 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=14151 way=1 index=27 valid=0 tag=00000000
+ICTRACE tagwrite cycle=14163 way=0 index=27 valid=1 tag=00100000
+ICTRACE tagwrite cycle=14208 way=0 index=27 valid=0 tag=00000000
+ICTRACE tagwrite cycle=14215 way=1 index=27 valid=1 tag=00100000
+ICTRACE tagwrite cycle=14516 way=1 index=27 valid=0 tag=00000000
+ICTRACE tagwrite cycle=14523 way=0 index=27 valid=1 tag=00100000
+ICTRACE tagwrite cycle=14765 way=0 index=27 valid=0 tag=00000000
+ICTRACE tagwrite cycle=14776 way=1 index=27 valid=1 tag=00100000
+ICTRACE tagwrite cycle=14780 way=0 index=27 valid=1 tag=00100000
+ICTRACE tagwrite cycle=14956 way=0 index=27 valid=0 tag=00000000
+ICTRACE tagwrite cycle=14956 way=1 index=27 valid=0 tag=00000000
+ICTRACE tagwrite cycle=14960 way=1 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=14967 way=0 index=27 valid=1 tag=00100000
+ICTRACE tagwrite cycle=14973 way=0 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=14980 way=0 index=27 valid=0 tag=00000000
+ICTRACE tagwrite cycle=14989 way=1 index=27 valid=1 tag=00100000
+ICTRACE tagwrite cycle=15011 way=1 index=27 valid=0 tag=00000000
+ICTRACE tagwrite cycle=15019 way=0 index=27 valid=1 tag=00100000
+ICTRACE tagwrite cycle=15165 way=0 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=15173 way=1 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=15423 way=1 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=15430 way=0 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=15828 way=0 index=27 valid=0 tag=00000000
+ICTRACE tagwrite cycle=15837 way=1 index=27 valid=1 tag=00100000
+ICTRACE tagwrite cycle=16056 way=1 index=27 valid=0 tag=00000000
+ICTRACE tagwrite cycle=16064 way=0 index=27 valid=1 tag=00100000
+ICTRACE tagwrite cycle=16301 way=0 index=27 valid=0 tag=00000000
+ICTRACE tagwrite cycle=16311 way=1 index=27 valid=1 tag=00100000
+ICTRACE tagwrite cycle=16544 way=0 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=16553 way=1 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=16588 way=1 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=16598 way=0 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=16608 way=0 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=16726 way=1 index=27 valid=0 tag=00000000
+ICTRACE tagwrite cycle=16732 way=0 index=27 valid=1 tag=00100000
+ICTRACE tagwrite cycle=16893 way=0 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=16903 way=1 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=16912 way=0 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=16923 way=0 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=16923 way=1 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=16933 way=0 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=17054 way=0 index=27 valid=0 tag=00000000
+ICTRACE tagwrite cycle=17062 way=1 index=27 valid=1 tag=00100000
+ICTRACE tagwrite cycle=17311 way=0 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=17320 way=1 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=17456 way=1 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=17464 way=0 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=17681 way=1 index=27 valid=0 tag=00000000
+ICTRACE tagwrite cycle=17690 way=0 index=27 valid=1 tag=00100000
+ICTRACE tagwrite cycle=17710 way=0 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=17721 way=1 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=18005 way=0 index=27 valid=0 tag=00000000
+ICTRACE tagwrite cycle=18013 way=1 index=27 valid=1 tag=00100000
+ICTRACE tagwrite cycle=18056 way=1 index=27 valid=0 tag=00000000
+ICTRACE tagwrite cycle=18065 way=0 index=27 valid=1 tag=00100000
+ICTRACE tagwrite cycle=18488 way=0 index=27 valid=0 tag=00000000
+ICTRACE tagwrite cycle=18497 way=1 index=27 valid=1 tag=00100000
+ICTRACE tagwrite cycle=18859 way=1 index=27 valid=0 tag=00000000
+ICTRACE tagwrite cycle=18870 way=0 index=27 valid=1 tag=00100000
+ICTRACE tagwrite cycle=19030 way=1 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=19041 way=0 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=19159 way=0 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=19167 way=1 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=19831 way=1 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=19840 way=0 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=19935 way=0 index=27 valid=0 tag=00000000
+ICTRACE tagwrite cycle=19944 way=1 index=27 valid=1 tag=00100000
+ICTRACE tagwrite cycle=20030 way=0 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=20039 way=1 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=20159 way=1 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=20168 way=0 index=26 valid=1 tag=00100000
+ICTRACE tagwrite cycle=20207 way=0 index=26 valid=0 tag=00000000
+ICTRACE tagwrite cycle=20219 way=1 index=26 valid=1 tag=00100000
