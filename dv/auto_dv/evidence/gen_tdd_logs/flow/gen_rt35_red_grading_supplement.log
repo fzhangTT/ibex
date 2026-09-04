@@ -1,0 +1,245 @@
+# rt35 supplement: the two later self-test cases with their reds, and the loader measurement's command
+#
+# WHY A SUPPLEMENT RATHER THAN AN EDIT. gen_rt35_red_grading.log is retained with a committed manifest row, and a
+# retained log's bytes do not move once its row is committed. Two things belong with that log and are not in it, so
+# they are here with their own row, the way the earlier exercised-run corrigendum was handled.
+#
+# READ THIS FIRST: THE PARENT LOG NAMES CODE THE PARENT COMMIT DOES NOT CARRY (CR-32 L-1).
+# gen_rt35_red_grading.log names dv/auto_dv/flow/gen_regress.py as sha256 57b934c34c91 at its lines 46, 114, 199,
+# 269 and 379, and the parent commit's blob is 5c9869bbe078. The committed hash appears in that log zero times. So
+# every figure that log reports about gen_regress.py is a true measurement of a file no commit holds.
+# THE CAUSE WAS MINE, and it is a rule breach rather than an accident of tooling. I appended two self-test cases to
+# gen_regress.py AFTER handing the rt35 list and BEFORE the commit was confirmed. A handed list is frozen because
+# the committer's hash check has already read it; the HOLD line covers a committed file and never licenses editing a
+# handed one, and I had both rules written down. The append landed in the same second as the final hash check, so
+# the check read the old bytes and the staging read the new ones, and the gate therefore ran on 57b934c34c91 while
+# the commit carries 5c9869bbe078. PART D below states what the two hashes differ by, PART E the corrected count.
+#
+# WHAT IS OWED AND WHY IT WAS LATE. The Orchestrator asked for two additions after the hand-off list had gone out:
+# a case pinning that the regression summary counts NOT_RUN as neither a pass nor a red-ok, and a case pinning that
+# a deferred red carrying a genuine simulation failure is regraded from that failure through the pre-merge path
+# rather than having it regraded away. I sent the HOLD line, added both, and the commit then captured them, so the
+# two cases ARE in the parent commit while its message says the contract is "pinned by two gen_regress self-test
+# cases". There are four, and none of the two later ones had a retained red. That is the gap this file closes, and
+# the parent's message understates the case count rather than overstating anything.
+#
+# IDENTITY
+# date_utc     : 2026-09-04T17:55:17Z
+# host         : soc-l-11
+# parent commit: e988ee65f2f982692895d79879ec5b378ef9938a   (carries rt35 and gen_rt35_red_grading.log)
+# clone HEAD   : e988ee65f2f982692895d79879ec5b378ef9938a
+# gen_regress.py under test here, taken from the parent commit and not from my tree:
+#   5c9869bbe078  e988ee6:dv/auto_dv/flow/gen_regress.py
+#   6d20a0b5dc32  e988ee6:dv/auto_dv/flow/gen_run.py
+#   the parent log named 57b934c34c91 for the first of these; see the header and PART D
+# the four gen_regress cases now in the parent, in the order they print:
+#   the pre-merge pass admits a parked deferred red instead of skipping it 
+#   the manifest summary counts the verdict the pre-merge pass left, not the parked one 
+#   an unchecked deferred red counts as NOT_RUN, never as a pass or a red-ok, and stays in the pass-rate 
+#   a deferred red carrying a real simulation failure is regraded from it and reads undeclared, with the 
+
+================================================================================
+PART A  the loader measurement, with the command that produces it
+================================================================================
+The parent log states that 102 entries carry 22 red fixtures and 27 fcov manifests and zero carry both, which is
+what makes the defect latent rather than live, but it does not say how that was measured. Stating a figure without
+its command is the exact fault of the CM205-Low-1 row answered in the same touch, so here is the command and its
+output. It calls the loader and the shipped predicate rather than re-implementing either, so a rename of the
+testlist field cannot leave this count quietly wrong.
+
+The command is written out in full below rather than cited by path, because Runtime's work directory is gitignored
+and a command citing a file that no commit carries is not re-runnable by a reviewer. Paste it at the clone root
+after sourcing ci/env.sh; the output beneath it is that command's own.
+
+  python3 - dv/auto_dv/flow/gen_testlist.yaml <<'PY'
+  import sys
+  from pathlib import Path
+  sys.path.insert(0, "dv/auto_dv/flow")
+  import gen_flow_util as U
+  tl = U.load_testlist(Path(sys.argv[1]).resolve())
+  t = tl["tests"]
+  both = [x["name"] for x in t if U.red_grading_deferred(x)]
+  print("entries                       : %d" % len(t))
+  print("red_fixture entries           : %d" % sum(1 for x in t if x.get("red_fixture")))
+  print("fcov_expectation_file entries : %d" % sum(1 for x in t if x.get("fcov_expectation_file")))
+  print("red_grading_deferred (both)   : %d  %s" % (len(both), both))
+  PY
+
+  output:
+    entries                       : 102
+    red_fixture entries           : 22
+    fcov_expectation_file entries : 27
+    red_grading_deferred (both)   : 0  []
+
+  measured against the committed testlist at e988ee6; the three counts climb as
+  entries land, and the fourth is the one the claim rests on: it must stay 0 until the standing guard is added,
+  and become exactly 1 when it is.
+
+================================================================================
+PART B  the two later cases, each against the rule it pins
+================================================================================
+Three rules are reverted one at a time inside one detached archive of the parent commit, so what varies is the rule
+and nothing else. RED 1 and RED 2 cover the two cases the parent log already showed; they are repeated here because
+the same run now carries all four cases and a partial run would invite the reader to guess. RED 3 is new: it removes
+the pre-grading restore, which is the mechanism the fourth case exists to pin.
+
+rt35 reds: the new self-test cases against the committed rule and against the fix
+date_utc : 2026-09-04T17:42:18Z
+root     : /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/rt35/arch_e988ee6  (detached archive with the touched files copied in; a clean tree to run in, not the
+           subject: what varies here is the flow rule, reverted and restored inside this one tree)
+
+================================================================
+RED 1  the pre-merge gate on the COMMITTED rule (verdict must be PASS or XFAIL)
+================================================================
+dv/auto_dv/flow/gen_regress.py reverted AWAY from the rule under test
+  e660220bf7ba  gen_regress.py under test
+SELF-TEST BAD the pre-merge pass admits a parked deferred red instead of skipping it (verdict NOT_RUN, fcov status None)
+SELF-TEST BAD the manifest summary counts the verdict the pre-merge pass left, not the parked one (not_run=1 not_run=1)
+SELF-TEST: FAIL
+  self-test exit: 2
+
+================================================================
+GREEN 1  the same two cases with the gate widened
+================================================================
+dv/auto_dv/flow/gen_regress.py reverted BACK to the rule under test
+  5c9869bbe078  gen_regress.py under test
+SELF-TEST ok  the pre-merge pass admits a parked deferred red instead of skipping it (verdict FAIL, fcov status PROTOCOL_ERROR)
+SELF-TEST ok  the manifest summary counts the verdict the pre-merge pass left, not the parked one (fail=1 not_run=0)
+SELF-TEST: PASS
+  self-test exit: 0
+
+================================================================
+RED 2  the unchecked-fixture verdict on the COMMITTED rule (grade it, accusing the checker)
+================================================================
+dv/auto_dv/flow/gen_run.py reverted AWAY from the rule under test
+  2fb2ebe79cdb  gen_run.py under test
+SELF-TEST BAD a deferred red no stage checked is NOT_RUN, not a dead-checker FAIL (got FAIL)
+SELF-TEST ok  a deferred red that DID collect its declared failure is still graded on that evidence (got RED-OK)
+SELF-TEST ok  a deferred red that failed some other way is undeclared, never NOT_RUN (got FAIL)
+SELF-TEST: FAIL
+  self-test exit: 2
+
+================================================================
+GREEN 2  the same three cases with NOT_RUN for an unchecked fixture
+================================================================
+dv/auto_dv/flow/gen_run.py reverted BACK to the rule under test
+  6d20a0b5dc32  gen_run.py under test
+SELF-TEST ok  a deferred red no stage checked is NOT_RUN, not a dead-checker FAIL (got NOT_RUN)
+SELF-TEST ok  a deferred red that DID collect its declared failure is still graded on that evidence (got RED-OK)
+SELF-TEST ok  a deferred red that failed some other way is undeclared, never NOT_RUN (got FAIL)
+SELF-TEST: PASS
+  self-test exit: 0
+
+================================================================
+RED 3  the pre-grading restore removed, so the pre-merge pass grades from the parked verdict
+================================================================
+dv/auto_dv/flow/gen_run.py reverted AWAY from the rule under test
+  b0efb4372941  gen_run.py under test
+SELF-TEST BAD a deferred red carrying a real simulation failure is regraded from it and reads undeclared, with the collected reason kept (verdict NOT_RUN, reason 'red fixture judged on an fcov expectation that no stage of this run checked (no ')
+SELF-TEST: FAIL
+  self-test exit: 2
+
+================================================================
+GREEN 3  the same case with the restore in place
+================================================================
+dv/auto_dv/flow/gen_run.py reverted BACK to the rule under test
+  6d20a0b5dc32  gen_run.py under test
+SELF-TEST ok  a deferred red carrying a real simulation failure is regraded from it and reads undeclared, with the collected reason kept (verdict FAIL, reason 'red fixture failed for an undeclared reason: sv_fatal at sim.log:41; red_expect ')
+SELF-TEST: PASS
+  self-test exit: 0
+
+================================================================
+NO RED FOR ONE CASE, stated rather than faked
+================================================================
+The case that an unchecked deferred red counts as NOT_RUN and never as a pass or a red-ok tests summarize,
+which this touch does not change. It is a reliance check on unchanged behaviour, not a red: the new NOT_RUN
+verdict depends on that accounting, so it is pinned here, but reverting a rule to make it fail would mean
+reverting a rule this touch never wrote.
+
+
+================================================================
+RED 4  the predicate's four cases against a flow that has no such predicate
+================================================================
+NOT CONSTRUCTED: red_grading_deferred does not exist in the committed flow, so its four cases cannot run
+against it at all (NameError, not a BAD line). The predicate is pinned by the two cases above, which fail
+with it present and the rules committed.
+
+done: 2026-09-04T17:42:19Z
+
+================================================================================
+PART C  what each red proves, and the one case that has none
+================================================================================
+RED 1, the pre-merge gate. With the gate reverted to admit only PASS and XFAIL, a parked deferred red is skipped:
+the case reports verdict NOT_RUN with fcov status None, and the summary case reports not_run=1 where it wants the
+regraded verdict. Both go BAD. With the gate widened both pass.
+
+RED 2, the unchecked-fixture verdict. With the choice reverted to grading an unchecked fixture, the first case
+reports FAIL where it wants NOT_RUN and goes BAD, while the other two cases stay ok, which is the point: reverting
+this one rule moves exactly one case and leaves the undeclared-reason and collected-failure rules alone.
+
+RED 3, the pre-grading restore. With the restore removed, a deferred red carrying a real simulation failure comes
+out of the pre-merge pass still NOT_RUN, carrying the missing-check reason instead of its own failure. So without
+the restore the pass grades from the parked verdict and a genuine crash is regraded away, which is what the
+Orchestrator asked to see pinned. With the restore in place the same case reads "red fixture failed for an
+undeclared reason: sv_fatal at sim.log:41", keeping the collected reason.
+
+THE GREENS RESTORE THE COMMITTED BYTES, which is how this file shows the reverts left nothing behind: each GREEN
+section prints the hash of the file it just restored, and those hashes are the parent commit's own blobs.
+
+  5c9869bbe078  e988ee6:dv/auto_dv/flow/gen_regress.py
+  6d20a0b5dc32  e988ee6:dv/auto_dv/flow/gen_run.py
+
+THE CASE WITH NO RED, stated rather than faked. "An unchecked deferred red counts as NOT_RUN, never as a pass or a
+red-ok, and stays in the pass-rate denominator" tests gen_regress.summarize, which this work never changed. It is a
+reliance check on unchanged behaviour: the new NOT_RUN verdict depends on that accounting, so it is pinned, but a
+red for it would mean reverting a rule nobody here wrote. Measured value rather than an assertion: one NOT_RUN run
+beside one PASS gives not_run=1, pass=1, red_ok=0, planned=2 and a pass rate of 50.0, so the NOT_RUN sits in the
+denominator and never in the good count.
+
+
+================================================================================
+PART D  what the two hashes differ by, measured rather than asserted
+================================================================================
+The claim that the two appended cases are the WHOLE delta is checkable: remove exactly those two case blocks from
+the parent commit's own blob and the result must be the handed hash, byte for byte. It is, and the removed span is
+one contiguous block at one offset, so nothing else moved between the hand-off and the commit.
+
+  committed blob                     : 5c9869bbe078  763 lines
+  the same file minus the two blocks : 57b934c34c91  733 lines
+  the removed span is contiguous     : True  (30 lines, one offset)
+  it holds both case labels and nothing else that this touch added:
+      an unchecked deferred red counts as NOT_RUN          True
+      a deferred red carrying a real simulation failure    True
+
+So the parent commit is the handed touch plus those two cases and nothing else, which is the reassuring half. The
+other half is that the parent's gate ran on 57b934c34c91, thirty lines short of what landed, so it did not exercise
+the two cases it now shares a commit with. The Orchestrator has re-run the flow self-tests and the red-signature
+check on a worktree of the parent after the fact.
+
+================================================================================
+PART E  the corrected RED 1 count, against the file the commit carries
+================================================================================
+The parent log's RED 1 reports 2 BAD lines. Against the committed file the same revert gives 3. Each number is right
+about its own input and the log states the wrong one for the commit, so both are measured here with the reason they
+differ: the third BAD is the real-simulation-failure case, which also depends on the widened gate and did not exist
+in the file the parent log measured.
+
+  the gate reverted, against the file the parent commit carries:
+    base       : 5c9869bbe078  (the parent commit's blob)
+    dv/auto_dv/flow/gen_regress.py reverted AWAY from the rule under test
+    under test : e660220bf7ba  (that base with the gate reverted)
+      SELF-TEST BAD the pre-merge pass admits a parked deferred red instead of skipping it (verdict NOT_RUN, fcov status None)
+      SELF-TEST BAD the manifest summary counts the verdict the pre-merge pass left, not the parked one (not_run=1 not_run=1)
+      SELF-TEST BAD a deferred red carrying a real simulation failure is regraded from it and reads undeclared, with the collected reason kept (verdict NOT_RUN, reason 'red fixture judged on an fcov expectation that no stage of this run checked (no ')
+    BAD count: 3
+
+  the same revert against the file the parent log measured, for the comparison:
+    base       : 57b934c34c91  (the hash the parent log names)
+    dv/auto_dv/flow/gen_regress.py reverted AWAY from the rule under test
+    under test : cbd2189e9a25  (that base with the gate reverted)
+      SELF-TEST BAD the pre-merge pass admits a parked deferred red instead of skipping it (verdict NOT_RUN, fcov status None)
+      SELF-TEST BAD the manifest summary counts the verdict the pre-merge pass left, not the parked one (not_run=1 not_run=1)
+    BAD count: 2
+  archive restored to the committed bytes: 5c9869bbe078
+
+assembled: 2026-09-04T17:55:20Z

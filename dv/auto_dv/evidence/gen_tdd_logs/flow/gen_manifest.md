@@ -191,6 +191,25 @@ red_fixture and an fcov manifest, so the defect was latent. The log also measure
 same failing stdout retained under the lockstep family's naming instead, load_testlist REFUSES the entry outright,
 because the replay cannot see a failure whose evidence is the expectation checker's reason.
 
+gen_rt35_red_grading_supplement.log carries what the rt35 log cannot, because a retained log's bytes do not move
+once its row is committed. Two of the four gen_regress self-test cases were added after the hand-off list went out,
+under a HOLD line, and the commit swept them up, so they are in the tree with no retained red and the parent's own
+message says two cases where there are four. This file gives the two later cases their reds. Three rules are
+reverted one at a time inside one detached archive of the parent commit: the pre-merge gate reverted to admit only
+PASS and XFAIL skips the parked run and both gate cases go BAD; the unchecked-fixture choice reverted to grading
+moves exactly one case and leaves the other two ok; and, new here, removing the pre-grading restore leaves a
+deferred red carrying a real simulation failure still NOT_RUN after the pass, carrying the missing-check reason
+instead of its own crash, which is the mechanism the fourth case exists to pin. Each green restores the parent's own
+blob hashes, which is how the file shows the reverts left nothing behind. It also supplies the loader measurement's
+command, written out in full because Runtime's work directory is gitignored and a command naming an uncommitted file
+is not re-runnable, and it states plainly which case has no red: the NOT_RUN accounting case tests summarize, which
+this work never changed, so it is a reliance check on unchanged behaviour with its measured values given.
+Its first paragraph, ahead of all of that, answers CR-32 L-1: the rt35 log names gen_regress.py by a hash the rt35
+commit does not carry, because Runtime appended those two cases to a file that was on an outstanding hand-off list
+and the append raced the committer's final hash check. PART D proves what the two hashes differ by, removing exactly
+the two case blocks from the commit's own blob to reproduce the logged hash byte for byte, and PART E measures RED 1
+against both files, 3 BAD against the commit and the 2 the log records, naming the base of each.
+
 | evidence path | source | bytes | md5 |
 |---|---|---|---|
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_gate_rule_red.log | dv/auto_dv/work/runtime/gate_rule_red.log | 926 | 78b72aae6509d2776a43c9314808b01b |
@@ -220,3 +239,4 @@ because the replay cannot see a failure whose evidence is the expectation checke
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_l25_fcov_detector_control_red.log | (runtime scratchpad) rt34/gen_l25_fcov_detector_control_red.log | 2552 | 662543da2c628e465cef8d88b694886c |
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_read_keyed_selftest.log | (runtime scratchpad) rt34/gen_read_keyed_selftest.log | 2579 | 487794e0876c31e11941a50ffce5b146 |
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_rt35_red_grading.log | (runtime scratchpad) rt35/gen_rt35_red_grading.log | 31785 | acc9a35cb98beebf104e6cb77ebc05ac |
+| dv/auto_dv/evidence/gen_tdd_logs/flow/gen_rt35_red_grading_supplement.log | (runtime scratchpad) rt35/gen_rt35_red_grading_supplement.log | 16792 | 217a2fd223682b7892b588357e9d9af5 |
