@@ -2014,3 +2014,58 @@ tests:
     keep_artifacts: true
     component: gen_fcov_pkg
     measured: false
+
+  - name: gen_ut_lockstep_zcmp_hz
+    description: "lock-step run of gen_zcmp_hazard_directed.S under the default (short) data-bus regime: the Zcmp hazard covergroup's base bins (gen_fcov_proof_slice5e)"
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0, +gen_ut_boot_retire=200]
+    program: {directed: [dv/auto_dv/stim/gen_directed/gen_zcmp_hazard_directed.S], seed: 1}
+    seeds: 1
+    fcov_expectation_file: dv/auto_dv/evidence/gen_fcov_proof_slice5e.fcov.yaml
+    timeout_s: 600
+    owner: tb-infra
+    pass_marker: GEN_UT_LOCKSTEP_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_fcov_pkg
+    measured: false
+  - name: gen_ut_lockstep_zcmp_hz_long
+    description: "the same program under the long data-bus regime: the ra-load deferral and the long delay class (gen_fcov_proof_slice5e2)"
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0, +gen_ut_boot_retire=200, +gen_knob_dmem_rvalid_delay=long, +gen_knob_dmem_gnt_delay=long]
+    program: {directed: [dv/auto_dv/stim/gen_directed/gen_zcmp_hazard_directed.S], seed: 1}
+    seeds: 1
+    fcov_expectation_file: dv/auto_dv/evidence/gen_fcov_proof_slice5e2.fcov.yaml
+    timeout_s: 600
+    owner: tb-infra
+    pass_marker: GEN_UT_LOCKSTEP_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_fcov_pkg
+    measured: false
+  - name: gen_ut_lockstep_zcmp_hz_fast
+    description: "the same program under the same-cycle / min1 bus regimes on both buses: the min1 delay class (gen_fcov_proof_slice5e3)"
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0, +gen_ut_boot_retire=200, +gen_knob_dmem_rvalid_delay=min1, +gen_knob_dmem_gnt_delay=same_cycle, +gen_knob_imem_rvalid_delay=min1, +gen_knob_imem_gnt_delay=same_cycle]
+    program: {directed: [dv/auto_dv/stim/gen_directed/gen_zcmp_hazard_directed.S], seed: 1}
+    seeds: 1
+    fcov_expectation_file: dv/auto_dv/evidence/gen_fcov_proof_slice5e3.fcov.yaml
+    timeout_s: 600
+    owner: tb-infra
+    pass_marker: GEN_UT_LOCKSTEP_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_fcov_pkg
+    measured: false
