@@ -2,7 +2,7 @@
 
 Deliverable 3 (DV_prompt.txt Section 11): the definition of every functional-coverage bin (not the
 implementation; TB Infra implements covergroups in the gen_ namespace from this plan). Owner: dv-lead.
-Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in), generated 2026-09-04 14:16 UTC from dv/auto_dv/work/dv-lead/parts6/fcov_*.md. Part-file names in this document (tp_<area>.md, fcov_<area>.md, gen_part_<area>.md, trace_*_<area>.csv and the README_*_BRIEF.md briefs) are this plan set's own gitignored sources, named as provenance: the content they hold is in the corresponding area of gen_test_plan.md, gen_fcov_plan.md or gen_feature_list.md, and the bug and doc-defect number series they define are in gen_bug_log.md. No claim in this document rests on opening one. Three rtl-arch notes this plan set cites are committed references, not work files: dv/auto_dv/evidence/gen_multdiv_bound_props.md (the MD-n bound properties and covers), dv/auto_dv/evidence/gen_bug_reproducer_specs.md (the reproducer recipes behind the bug log) and dv/auto_dv/evidence/gen_interface_inventory.md (the numbered driver and protocol rules); citations name them by basename and resolve there.
+Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in), generated 2026-09-04 15:06 UTC from dv/auto_dv/work/dv-lead/parts6/fcov_*.md. Part-file names in this document (tp_<area>.md, fcov_<area>.md, gen_part_<area>.md, trace_*_<area>.csv and the README_*_BRIEF.md briefs) are this plan set's own gitignored sources, named as provenance: the content they hold is in the corresponding area of gen_test_plan.md, gen_fcov_plan.md or gen_feature_list.md, and the bug and doc-defect number series they define are in gen_bug_log.md. No claim in this document rests on opening one. Three rtl-arch notes this plan set cites are committed references, not work files: dv/auto_dv/evidence/gen_multdiv_bound_props.md (the MD-n bound properties and covers), dv/auto_dv/evidence/gen_bug_reproducer_specs.md (the reproducer recipes behind the bug log) and dv/auto_dv/evidence/gen_interface_inventory.md (the numbered driver and protocol rules); citations name them by basename and resolve there.
 
 Build configuration: `opentitan` (ibex_configs.yaml): BaseIsa=RV32IorCHERIoT (CHERIoT mode excluded
 by owner ruling), RV32E=0, RV32M=RV32MSingleCycle, RV32B=RV32BOTEarlGrey, RV32ZC=RV32ZcaZcbZcmp,
@@ -1541,10 +1541,10 @@ Conventions
   - cp_hart = hart_id_i class iff (cp_csr == mhartid): bins zero{0}, all1{0xFFFF_FFFF}, rand{other}
   - cp_dbg = rvfi_ext_debug_mode at the read: bins nondbg{0}, dbg{1}
 - Crosses:
-  - cr_mtvec_first = cp_csr(mtvec) x cp_when x cp_boot_lo: bins mtvec_first_zero{mtvec first_insn zero}, mtvec_first_nonzero{mtvec first_insn nonzero}, mtvec_early_zero{mtvec early zero}, mtvec_early_nonzero{mtvec early nonzero}
-  - cr_first_csr = cp_csr x cp_when(first_insn): bins mstatus_first{mstatus}, mie_first{mie}, mcycle_first{mcycle}, minstret_first{minstret}, mhartid_first{mhartid}, misa_first{misa}, cpuctrlsts_first{cpuctrlsts}
-  - cr_dbg_reset = cp_csr x cp_dbg(dbg): bins dcsr_dbg{dcsr}, dpc_dbg{dpc}, dscratch0_dbg{dscratch0}, dscratch1_dbg{dscratch1}; ignore tdata1_dbg: tdata1 is M-readable and every item that reads it (TP-CSR-081/084/108) reads it in M-mode first, so a first read inside debug mode never happens (S-3d); ignore every other cp_csr x dbg: the debug ROM reads only the debug CSRs before their first write
-  - cr_hart_rd = cp_csr(mhartid) x cp_hart: bins hart_zero{zero}, hart_all1{all1}, hart_rand{rand}
+  - cr_mtvec_first = cp_csr x cp_when x cp_boot_lo: bins mtvec_first_zero{mtvec first_insn zero}, mtvec_first_nonzero{mtvec first_insn nonzero}, mtvec_early_zero{mtvec early zero}, mtvec_early_nonzero{mtvec early nonzero}; the bins restrict cp_csr to mtvec
+  - cr_first_csr = cp_csr x cp_when: bins mstatus_first{mstatus first_insn}, mie_first{mie first_insn}, mcycle_first{mcycle first_insn}, minstret_first{minstret first_insn}, mhartid_first{mhartid first_insn}, misa_first{misa first_insn}, cpuctrlsts_first{cpuctrlsts first_insn}; the bins restrict cp_when to first_insn
+  - cr_dbg_reset = cp_csr x cp_dbg: bins dcsr_dbg{dcsr dbg}, dpc_dbg{dpc dbg}, dscratch0_dbg{dscratch0 dbg}, dscratch1_dbg{dscratch1 dbg}; ignore tdata1_dbg: tdata1 is M-readable and every item that reads it (TP-CSR-081/084/108) reads it in M-mode first, so a first read inside debug mode never happens (S-3d); ignore every other cp_csr x dbg: the debug ROM reads only the debug CSRs before their first write
+  - cr_hart_rd = cp_csr x cp_hart: bins hart_zero{mhartid zero}, hart_all1{mhartid all1}, hart_rand{mhartid rand}; the bins restrict cp_csr to mhartid
 - Adopted (riscv-dv): none
 - TP items: TP-CSR-019, TP-CSR-020, TP-CSR-021, TP-CSR-027, TP-CSR-028, TP-CSR-032, TP-CSR-037, TP-CSR-038, TP-CSR-039, TP-CSR-042, TP-CSR-047, TP-CSR-050, TP-CSR-053, TP-CSR-058, TP-CSR-061, TP-CSR-062, TP-CSR-066, TP-CSR-069, TP-CSR-071, TP-CSR-080, TP-CSR-081, TP-CSR-082, TP-CSR-083, TP-CSR-085, TP-CSR-092, TP-CSR-095, TP-CSR-097, TP-CSR-099, TP-CSR-105, TP-CSR-106, TP-CSR-107, TP-CSR-108, TP-CSR-109
 ### CG-CSR-017: gen_cg_csr_storm
@@ -4925,7 +4925,13 @@ bug-candidate behaviour carry the bug tie (B16 in CG-DMEM-007).
   13 distinct coverpoint-bin pairs between them, and neither owed bin in any of the nine;
   OWED are two bins, both thinly hit and closing on one route, a seed sweep at
   coverage closure: cp_no_alert_case.during_invalidation (10, 9, 22) and
-  cp_no_alert_case.masked_duplicate_copy (4, 2, 14). Separately and NOT owed, two per-entry exclusions
+  cp_no_alert_case.masked_duplicate_copy (4, 2, 14). Both owed counts are now CONFIRMED THROUGH THE FLOW rather than
+  by a local runner alone: the first exercise of the fcov-expectation leg
+  (dv/auto_dv/evidence/gen_tdd_logs/flow/gen_l25_fcov_exercised.log) ran all nine entries from 813994b with
+  zero errors and read 78 declared bins over 13 distinct as HIT, and the two owed bins appear in that
+  report at 22, 10, 9 and at 14, 4, 2 across the entries that reach them. So they are REACHED and still
+  undeclared: every count is below the robustness bar of a structural bound or at least 30 in that entry's
+  own run, which is exactly why the route is a seed sweep rather than a declaration today. Separately and NOT owed, two per-entry exclusions
   live in tb-infra's manifest headers rather than here, since the bin is robust elsewhere and thin only
   on those entries: cp_no_alert_case.uninitialised_data_ram on the two far-program entries (9, 9) and
   cp_alert_pulses.one on the far probe-off entry (27). The counts are tb-infra's, measured per entry in its own output directory so no run's
@@ -4936,7 +4942,20 @@ bug-candidate behaviour carry the bug tie (B16 in CG-DMEM-007).
   fails a partial hit, with no merged mode; tb-infra's group manifest RETIRED with landing 25, which deleted it. So 29 is the plan's part-1 bin count and not any one manifest's declaration. BOTH routes
   out of the covergroup set's extra-manifest list have now been taken, one by each side of this ruling:
   the group manifest left by RETIREMENT and the nine left by ENTERING the ranking when Runtime's merge
-  named them, so that list is empty and CG-IC-006 is ranked with the 13 bins its manifests declare. Per
+  named them, so that list is empty and CG-IC-006 is ranked with the 13 bins its manifests declare. THE LOOKUP PROBE COSTS NO BIN ITS ROUTE, which is worth
+  stating because the opposite reading makes an owner item look urgent: four of the nine entries carry
+  gen_probe_ic_lookup (_data, _data_two, _both, _far_data) and so cannot become MEASURED entries while it
+  sits in their plusargs, since dv/auto_dv/flow/gen_run.py:204 refuses a debug-only knob in a measured run
+  on the measured flag alone with no coverage term, which is P6 working as intended rather than a gap. The
+  other five (the base entry, _data_noprobe, _tag_two, _far_data_noprobe, _tag_disabled) draw NO refusal at
+  all with the flag forced, so no LOG-067 or LOG-077 row blocks them either, and between them they declare
+  all 13 bins: the count declared only by a probe-carrying entry is ZERO, the one asymmetric bin being
+  disabled_cache on a probe-free entry. So measured credit for the robust set needs no ruling and no knob
+  removal, and the two OWED bins are declared by no entry on either side and close by a seed sweep, so they
+  do not turn on the probe either. Owner item Q-019 therefore governs whether those four may ALSO be
+  promoted, for volume and for their own judge's evidence, not whether any bin is reachable; promotion is a
+  separate decision with its own acceptance work and no entry of the nine has yet been exercised by a flow
+  run. Figures measured by tb-infra and re-derived by me through the flow's own function. Per
   LOG-084c the owed key is not a ban but a pending check: manifests may claim cross bins, and such a claim
   is evidence once it is VERIFIED through the flow's derived report, so the owed key retires when the part-1
   cross bins are verified that way. Both figures count coverpoint-bin
