@@ -8,7 +8,7 @@ reproducer; the ruling in Section 1 rests on the RTL citations in Sections 2 to 
 repository.
 
 Owner: rtl-arch. Written 2026-09-04T16:25Z from the RTL in this clone (rtl/ibex_core.sv, rtl/ibex_wb_stage.sv,
-rtl/ibex_configs.yaml) and the property as built (dv/auto_dv/tb/gen_protocol_props.sv:299). Build configuration:
+ibex_configs.yaml) and the property as built (dv/auto_dv/tb/gen_protocol_props.sv:299). Build configuration:
 opentitan, so WritebackStage = 1 (ibex_configs.yaml:49) and RVFI_STAGES = 2 (rtl/ibex_core.sv:1660). RTL is
 read-only. Question put by the Orchestrator: can the DUT legitimately assert rvfi_ext_irq_valid and rvfi_valid in
 the same cycle, or is tb-infra's firing run a DUT finding for the B8 facts. The assignment relayed five firings;
@@ -84,12 +84,11 @@ coincidence is a timing alignment, not an illegal state.
 
 This is why the trigger shape decides whether the property fires. A notification raised at the same time as the
 interrupt drains the pipeline and leaves the four following cycles empty of retirements, so the raise-triggered
-shape never aligns. A notification raised a short delay after an interrupt entry leaves the first handler
-instructions in flight, so a retirement can complete at C+3 and the port coincides at C+4. The 36 firings
-across the two knob values are
-consistent with that alignment; which of the two alignments each firing took, a handler retirement four cycles
-after one pulse or a second pulse overlapping an earlier record, is a waveform question and is open in
-Section 7. Neither alternative changes the ruling.
+shape never aligns. A notification raised a short delay after an interrupt entry leaves the pipeline refilling,
+so a retirement can complete at C+3 and the port coincides at C+4. The 36 firings across the two knob values are
+consistent with that alignment. Section 7 settles which alignment the run took and corrects a guess made here
+before the wave was read: this text first named a handler retirement as the likely coincident record, and in the
+run no handler executes at all.
 
 ## 6. What to assert instead
 
@@ -107,43 +106,77 @@ red-first evidence and a named mutation before it is adopted; it is a recommenda
 Keeping `sva_rvfi_irq_valid_seen` as a cover (gen_protocol_props.sv:304) remains right, and a cover of the
 coincidence itself is worth adding, since it is now a known reachable alignment rather than an error.
 
-## 7. What is not confirmed, and what a confirmation needs
+## 7. The wave confirmation
 
-No waveform has been read, because neither retained run holds one: a search of the whole build directory for
-fsdb, vcd and vpd files returns nothing, and the two run directories hold only results.xml, run_header.txt,
-sim.log, stdout.log, ucli.key and verdict.txt. So the cycle-level detail behind Section 5 is not confirmed: which
-instruction's writeback completion coincided with the port, and whether the four-cycle offset from the pulse
-condition holds in the run.
+Read 2026-09-04T16:45Z from the shape-matched wave run whose log is
+dv/auto_dv/evidence/gen_tdd_logs/mutations/gen_fu_l31b_nmi_wave_run.log. The dump itself is not retained and is
+not durable, named here as the Orchestrator ruled: waves.fsdb under the wave root that log names, 2501858 bytes,
+md5 44730e24c59e75c97cfe5e2ad13eb6f1, full hierarchy with SVA from time zero, build sources sha256
+96697a6fee7025b4 per both its compile log and its run header, seed 1, knob window with the delay swept 1..8 per
+event, armed on the taken event. Eleven firings with the first at 3655000 ps, matching the reproducer exactly.
+Times below are nanoseconds; the file's own scale unit is 10 ps.
 
-What a confirmation needs is one rerun of the same build, seed and program with wave dumping enabled, plus the
-knob's arm moved back to the taken-event branch, since tb-infra states the tree today arms it on the raise and
-that shape does not fire. The rerun belongs to Runtime, the arm change to tb-infra; both have been asked. The
-coincidence itself does not depend on it, for the reason in Section 8.
+- The coincidence, at signal level. rvfi_valid rises to 1 at 3645 and falls at 3655; rvfi_ext_irq_valid rises to 1
+  at 3645. Both are therefore high through the cycle that begins at 3645, and the assertion reports at 3655
+  because it samples that cycle's pre-edge values. Sampling exactly at 3655 shows rvfi_valid already 0, which is
+  the post-edge value and not what the property saw.
+- The four-cycle offset holds. The pulse condition held during the cycle beginning 3605, where every term of the
+  :1965 guard reads true: instr_valid_id 0, new_debug_req 0, new_nmi 1, ready_wb 1, captured_valid 0, with
+  new_irq 0 so the cause is the non-maskable one alone. Then rvfi_irq_valid is high 3615 to 3625,
+  rvfi_ext_stage_irq_valid[0] from 3625, [1] from 3635, and [2], the port, from 3645. On the retirement side
+  instr_done_wb is high 3635 to 3645, which sets rvfi_stage_valid[1] at 3645, matching Section 5's rule that
+  rvfi_valid is high at C+4 exactly when rvfi_wb_done was high at C+3.
+- The retiring instruction, named from the program's own disassembly rather than a decode: order 42, pc
+  0x80000120, encoding 0xfe629fe3, which the listing gives as `bne t0,t1,8000011e <loop>`, the backward branch of
+  the program's main loop. rvfi_intr is 0 on that record, so it is not a trap-handler entry.
+- The alignment, and it corrects Section 5's guess. One notification pulse and no second one, and no handler runs
+  at all: irq_nm_i is a one-cycle pulse high 3610 to 3620, nmi_mode never rises anywhere in the window, and the
+  program keeps retiring the same loop (pc 0x8000011e at 3605, 0x80000120 at 3645, 0x8000011e at 3735). So the
+  coincident record is an ordinary instruction and this is the notification-with-no-entry case the :2130 comment
+  describes, which is what the notification exists for. The stimulus pulse was gone before the controller could
+  take it.
 
-## 8. What the retained runs do confirm, re-derived here
+One finding the wave adds, and it makes the exclusivity premise worse rather than better. The port element is not a
+one-cycle pulse: it stays high from 3645 to 3735, nine cycles. The hop into it is guarded by
+`rvfi_wb_done | rvfi_ext_stage_irq_valid[1]` (:2192), so once the middle element clears, only a cycle containing a
+retirement can clear the port. Clearing the flag therefore requires the very event the property forbids beside it,
+and any retirement inside that window coincides. Here one did, in the window's first cycle, and the next
+retirement at 3735 is the cycle the flag clears.
 
-Runs: dv/auto_dv/work/tb-infra/wit/l32a/irq_nmi_window/ and .../irq_nmi_late/, build
-dv/auto_dv/work/tb-infra/wit/l32a with build_sources_sha256 cc08c9729184adc5 in both run headers, seed 1, module
-dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep, image prog.vmem of 156 words with crc32 0x8e882c5b verified at time
-0, gen_knob_nmi_after_irq_delay = window and late respectively, with gen_knob_irq_regime = storm and
-gen_knob_irq_line_mix = multi.
+For Section 6's candidate: at the port rvfi_ext_nmi is 1 and rvfi_ext_pre_mip is 0, and at the condition cycle
+new_irq is 0. So the disjunction holds here only through its non-maskable term, and this firing is a case the
+pending-interrupt term alone would not cover, which makes it a ready red-first case for the replacement.
 
-Re-derived from the retained sim.log of each run, not taken from the relay:
+## 8. What the retained runs confirm, re-derived
 
-- 11 firings in the window run and 25 in the late run, 36 in total. Each run's UVM error count equals its firing
-  count (11 and 25 in the verdict files), so every error in both runs is this property and nothing else failed.
+Runs, retained by landing 32 and citable from the commit:
+dv/auto_dv/evidence/gen_tdd_logs/mutations/gen_fu_l31b_nmi_take_window_reproducer.log (11 firings) and
+gen_fu_l31b_nmi_take_late_reproducer.log (25 firings), with the wave run's log beside them. Each carries every
+firing line with its picosecond time, the UVM error times, the cycle list and the count equality, so the figures
+below are re-derivable from the commit alone.
+
+The shape is not committed and cannot be reproduced from the tree as it stands. The knob
+gen_knob_nmi_after_irq_delay is not in the committed tree: the knob table carries it in the working tree only.
+The committed knob arms on the raise of a non-NMI line, as its own knob-table description states, while these runs
+arm on the bridge's taken event through a two-hunk working-tree diff, with the delay swept 1..8 per event. The
+sweep width matters: the first attempt at the wave used 1..17 and produced 28 firings rather than 11. No committed
+build identity applies to a never-committed shape, and the retained headers say so rather than claiming one.
+
+Re-derived from those logs, not taken from a relay:
+
+- 11 firings in the window run and 25 in the late run, 36 in total. Each run's error count equals its firing
+  count, so this property is the only failing mechanism in either.
 - The window run's firing cycles are 361, 1242, 2780, 4207, 4684, 6711, 11623, 13764, 15603, 16590 and 18076.
-  The first four match the four cycles the assignment relayed.
-- The firing I confirmed in full is the first one, cycle 361 of the window run: the assertion at
-  gen_protocol_props.sv:299 started and failed at 3655000 ps, and the reported offending term is `(!rvfi_valid)`.
-- The cycle numbers are the TB counter, and they map to simulation time as (cycle + 4.5) times 10000 ps on all 11
-  window firings without exception, which fixes the clock at 10 ns and places every firing on a clock edge.
+- The firing confirmed in full is the first, cycle 361 of the window run: the assertion at
+  gen_protocol_props.sv:299 started and failed at 3655000 ps with the offending term `(!rvfi_valid)`.
+- The cycle numbers are the TB counter and map to time as (cycle + 4.5) x 10000 ps on all 11 window firings
+  without exception. The build compiles with `-timescale=1ns/10ps`, which is why the logs' 10 ps unit yields
+  3655000 ps for cycle 361 and fixes the clock at 10 ns.
 
 That the offending term is the `!rvfi_valid` half is the whole of the disputed question: the property failed
-because rvfi_valid was high while rvfi_ext_irq_valid was high, not because the flag was spurious. So the
-coincidence is confirmed on retained evidence at a named cycle, and Sections 2 to 4 say it is legal. What the
-missing waveform would add is which instruction retired and whether the offset is the four cycles Section 5
-derives, neither of which changes the ruling.
+because rvfi_valid was high while rvfi_ext_irq_valid was high, not because the flag was spurious.
 
-One fact here is tb-infra's and I did not verify it: that the failing build arms the NMI pulse on the bridge's
-taken event while the tree today arms it on the raise. What I did verify is the knob value in each run header.
+Review rows answered. CR-31-L-3 and CM208-Low-4 are both addressed here: the runs behind these figures are the
+three retained paths named above rather than a gitignored working directory, the knob is stated as absent from the
+committed tree, and the configuration file citation in the header now names ibex_configs.yaml at the repository
+root rather than a path under rtl/.
