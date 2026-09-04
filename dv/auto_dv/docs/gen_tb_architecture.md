@@ -146,8 +146,9 @@ that fails the cocotb test; the regression script scans the log for these mechan
 Section 5). Exactness classes (Section C4.8): `exact` per cycle or per record; `windowed(constant)`
 around a `gen_tb_pkg` constant with a predicted value that bring-up confirms and a directed test
 pins (`GEN_CSR_WRITE_TO_RVFI_OFFSET` = 2, `GEN_TRAP_TO_RVFI_OFFSET` = 1, `GEN_RVFI_ID_EXIT_OFFSET` = 2
-plus the WB wait, `GEN_ICACHE_ECC_WINDOW`; `alert_bus` is exact for both sources after the RTL
-fact-check, Section 6.13); `bound` (`GEN_IRQ_ENTRY_BOUND_RECORDS` = 17 worst case, `ctr_minstret`
+plus the WB wait, `GEN_ICACHE_ECC_WINDOW`; `alert_bus` is exact for both sources after rtl-arch's RTL
+fact-check, task T-051, whose marks read "(v3, T-051-3)" in the C4 checker table and the C4.8 exactness table since
+version 3 folded those corrections into the body and retired the subsection 6.13 that had carried them); `bound` (`GEN_IRQ_ENTRY_BOUND_RECORDS` = 17 worst case, `ctr_minstret`
 with dummies on).
 
 ## 3. Language split (DV_prompt Section 9)
@@ -281,12 +282,23 @@ N-01/N-02/N-04 and the link-test-2 corrections. Per-finding dispositions: `dv/au
 Critic v2 APPROVE with conditions: `dv/auto_dv/evidence/gen_critic_tb_arch_components_v2.md`.
 
 The names inside the quotation are the note's own and are read under this document's citation convention: work-file
-names in it are provenance, and the facts they carry are in the committed records that superseded them, namely
-`dv/auto_dv/docs/gen_critic_tb_arch_components_v1.md` for the Critic's A-rows, rtl-arch's architecture RTL fact-check
-for the Section 4 marks, `dv/auto_dv/docs/gen_rv32b_otearlgrey_encodings.md` for the encodings reference,
-`dv/auto_dv/docs/gen_feature_list.md` for the reading report, the committed component API documents for the scoping
-notes, and `dv/auto_dv/evidence/gen_t046_spike_linktest2.md` for the link test. Those pointers are stated here rather
-than edited into the text above, because the text above is quoted and this document must not alter it.
+names in it are provenance, and this paragraph maps every tag the quotation's Sources line defines to what a reader
+opens instead. Committed successors: `dv/auto_dv/docs/gen_critic_tb_arch_components_v1.md` for the Critic's A-rows;
+`dv/auto_dv/evidence/gen_interface_inventory.md` for II, whose s-numbers are that document's own section numbers
+(s5 is its Section 5, the icache RAM ports and scramble-key handshake; s11 its Section 11, the cross-interface facts
+a system driver must respect); `dv/auto_dv/docs/gen_rv32b_otearlgrey_encodings.md` for ENC;
+`dv/auto_dv/docs/gen_feature_list.md` for RR, the reading report's product; the committed component API documents
+(`dv/auto_dv/docs/gen_component_api_env_knobs.md` and the per-agent ones) for SN; and
+`dv/auto_dv/evidence/gen_t046_spike_linktest2.md` for the link test. Identifier pointers, with no committed copy to
+open: BS marks are rtl-arch's behaviour-summary fact ids, kept as ids because DV_prompt folds behaviour summaries
+INTO the feature list rather than promoting a separate note, and where the plan set rests on one,
+`dv/auto_dv/docs/gen_feature_list.md` carries the fact with its own RTL citation beside the id; AN marks are sections
+of rtl-arch's answers to TB Infra, which no committed record supersedes; and rtl-arch's architecture RTL fact-check
+is task T-051, whose Section 4 corrections the quotation carries as the marks "(v3, T-051-n)", not a committed
+document. Those pointers are stated here rather than edited into the text above, because the text above is quoted
+and this document must not alter it. For the same reason the status and owed sentences INSIDE the quotation are the
+source's own and are dated to the quoted revision rather than read as current: they are tb-infra's to update, and
+they reach this document only through a re-quote.
 
 ### TB architecture: component sections (tb-infra, T-018) - version 3
 
@@ -1310,7 +1322,11 @@ finish() epilogue. The five items v1f listed as open are closed; everything in S
 ## 9. Record and event export (TB Infra T-080 design addendum, version 4c at 50256f0, embedded verbatim)
 
 Re-embedded by the DV Lead 2026-09-03 12:14 UTC. The text below is the committed `dv/auto_dv/docs/gen_rvfi_export_addendum.md`
-(sha256 prefix f510177cda02a0c6), heading depth shifted by one level. The Orchestrator's gate verdict on this version:
+(sha256 prefix f510177cda02a0c6), heading depth shifted by one level. The hash pins WHAT WAS QUOTED and nothing more:
+if the source moves, this quotation does not follow it and becomes a quotation of a superseded revision rather than a
+false claim, and a revision arrives only by re-quoting and re-hashing here. The status and owed sentences inside the
+quotation are the source's own, dated to the quoted revision rather than read as current, and this document neither
+edits them nor treats them as its own claims. The Orchestrator's gate verdict on this version:
 dv/auto_dv/reviews/2026-09-03-claude-replan-gen_rvfi_export_addendum-r5.md (APPROVE-WITH-CHANGES on the version 4c text at d0c0d15; its D1, D2 and D6 are closed by the aligned Section 9 committed as 50256f0). TB Infra owns the component; the Test Writer is the consumer; the plan's witness protocol
 (gen_test_plan.md Section 0) names the command this text designs in its Section 9.
 
