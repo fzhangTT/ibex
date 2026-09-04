@@ -1917,7 +1917,7 @@ tests:
     plusargs: [+gen_fetch_en_at_reset=0, +gen_ut_boot_retire=3000, +gen_knob_icache_ecc_err_rate=frequent]
     program: {directed: [dv/auto_dv/stim/gen_directed/gen_icache_ecc_directed.S], seed: 1}
     seeds: 1
-    fcov_expectation_file: null
+    fcov_expectation_file: dv/auto_dv/fcov_expectations/gen_ut_lockstep_icache_ecc.fcov.yaml
     timeout_s: 900
     owner: tb-infra
     pass_marker: GEN_UT_LOCKSTEP_PASS
@@ -2264,7 +2264,7 @@ tests:
       directed: [dv/auto_dv/stim/gen_directed/gen_icache_ecc_directed.S]
       seed: 1
     seeds: 1
-    fcov_expectation_file: null
+    fcov_expectation_file: dv/auto_dv/fcov_expectations/gen_ut_lockstep_icache_ecc_data.fcov.yaml
     timeout_s: 900
     owner: tb-infra
     pass_marker: GEN_UT_LOCKSTEP_PASS
@@ -2284,7 +2284,7 @@ tests:
       directed: [dv/auto_dv/stim/gen_directed/gen_icache_ecc_directed.S]
       seed: 1
     seeds: 1
-    fcov_expectation_file: null
+    fcov_expectation_file: dv/auto_dv/fcov_expectations/gen_ut_lockstep_icache_ecc_data_noprobe.fcov.yaml
     timeout_s: 900
     owner: tb-infra
     pass_marker: GEN_UT_LOCKSTEP_PASS
@@ -2304,7 +2304,7 @@ tests:
       directed: [dv/auto_dv/stim/gen_directed/gen_icache_ecc_directed.S]
       seed: 1
     seeds: 1
-    fcov_expectation_file: null
+    fcov_expectation_file: dv/auto_dv/fcov_expectations/gen_ut_lockstep_icache_ecc_tag_two.fcov.yaml
     timeout_s: 900
     owner: tb-infra
     pass_marker: GEN_UT_LOCKSTEP_PASS
@@ -2324,7 +2324,7 @@ tests:
       directed: [dv/auto_dv/stim/gen_directed/gen_icache_ecc_directed.S]
       seed: 1
     seeds: 1
-    fcov_expectation_file: null
+    fcov_expectation_file: dv/auto_dv/fcov_expectations/gen_ut_lockstep_icache_ecc_data_two.fcov.yaml
     timeout_s: 900
     owner: tb-infra
     pass_marker: GEN_UT_LOCKSTEP_PASS
@@ -2344,7 +2344,7 @@ tests:
       directed: [dv/auto_dv/stim/gen_directed/gen_icache_ecc_directed.S]
       seed: 1
     seeds: 1
-    fcov_expectation_file: null
+    fcov_expectation_file: dv/auto_dv/fcov_expectations/gen_ut_lockstep_icache_ecc_both.fcov.yaml
     timeout_s: 900
     owner: tb-infra
     pass_marker: GEN_UT_LOCKSTEP_PASS
@@ -2365,7 +2365,7 @@ tests:
       directed: [dv/auto_dv/stim/gen_directed/gen_icache_ecc_far_directed.S]
       seed: 1
     seeds: 1
-    fcov_expectation_file: null
+    fcov_expectation_file: dv/auto_dv/fcov_expectations/gen_ut_lockstep_icache_ecc_far_data.fcov.yaml
     timeout_s: 900
     owner: tb-infra
     pass_marker: GEN_UT_LOCKSTEP_PASS
@@ -2386,7 +2386,25 @@ tests:
       directed: [dv/auto_dv/stim/gen_directed/gen_icache_ecc_far_directed.S]
       seed: 1
     seeds: 1
-    fcov_expectation_file: null
+    fcov_expectation_file: dv/auto_dv/fcov_expectations/gen_ut_lockstep_icache_ecc_far_data_noprobe.fcov.yaml
+    timeout_s: 900
+    owner: tb-infra
+    pass_marker: GEN_UT_LOCKSTEP_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_checkers_pkg
+    measured: false
+  - name: gen_ut_lockstep_icache_ecc_tag_disabled
+    description: "lock-step run of gen_zc_directed.S, which never writes cpuctrlsts.icache_enable, with the tag-RAM ECC injection at rate frequent: every injection lands on a cycle the scoreboard sees as disabled, so CG-IC-006 cp_no_alert_case.disabled_cache is reached structurally rather than incidentally and no injection owes a pulse"
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0, +gen_ut_boot_retire=3000, +gen_knob_icache_ecc_err_rate=frequent]
+    program: {directed: [dv/auto_dv/stim/gen_directed/gen_zc_directed.S], seed: 1}
+    seeds: 1
+    fcov_expectation_file: dv/auto_dv/fcov_expectations/gen_ut_lockstep_icache_ecc_tag_disabled.fcov.yaml
     timeout_s: 900
     owner: tb-infra
     pass_marker: GEN_UT_LOCKSTEP_PASS
