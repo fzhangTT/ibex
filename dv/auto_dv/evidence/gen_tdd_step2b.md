@@ -1212,3 +1212,27 @@ Retained: gen_tdd_logs/lockstep/gen_fu_l40_pair_sample_quiesce.log, which also a
 four source-set digests behind landings 38 and 40 with the local runner's own recipe. One manifest row.
 
 Landing 40b puts the correction where a reader of the corrected log will find it: gen_tdd_logs/lockstep/gen_fu_l38_intg_store_read_race_corrigendum.log, beside the landing-38 log and with its own manifest row, answering CR-37-L-2 by naming both source-set figures and by saying plainly that the occurrence-count control in that log is a run-time figure only. The landing-38 log itself stays closed at its committed bytes.
+
+## Landing 40c: the quiesce loop's exhaustion path
+
+CM215-Low-1, found by the cross-model review of landing 40 and confirmed by reading: the loop counted equal samples,
+but the two reads AFTER it were a fresh twenty-first sample, so a loop that never saw two adjacent equal samples
+could still be handed one equal instant and pass. The break path was sound. The fix samples inside the loop, so
+nothing is read after it, and gates the reporting assertion on settled == 2, which is strictly stronger than the old
+equality assertion and replaces it rather than standing beside it. The bound now only decides how long to wait.
+
+THE DISCRIMINATION IS SHOWN ON THE PREDICATE, not in simulation, because the case is not constructible with this
+TB's stimulus: reaching the twenty-first sample needs a record retiring in nearly every cycle for twenty cycles and
+then the cadence breaking exactly there. dv/auto_dv/tb/unit/gen_ut_pair_quiesce_model.py models both shapes over one
+scripted in-flight stream, which the old shape passes and the new one fails, checks that a genuinely settled stream
+still passes, and reads gen_ut_intg_store.py so a later change makes it report itself stale. It carries a --self-test
+and a positive control: run against an archive of 9f47277 it exits 1 on the staleness check. It lives under tb/unit
+rather than tools because the record cites it and the tools directory belongs to another role's touch.
+
+MUT-RETSKEW1 was re-run on the fixed code and now fails through the new gate, with its message naming the bound. That
+is the exhaustion path's positive control and not a discriminating red, since the old shape failed on that mutation
+too, and the log says so. The 33-run regression passes and the red fixture still fires with 676 error lines.
+CM215-Low-4 in the same touch: the pasted comment is one full text in gen_ut_intg_store.py and a one-line pointer in
+the other two tests.
+
+Retained: gen_tdd_logs/lockstep/gen_fu_l40c_quiesce_exhaustion.log. One manifest row.

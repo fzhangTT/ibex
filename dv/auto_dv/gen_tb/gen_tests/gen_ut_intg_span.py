@@ -59,23 +59,21 @@ async def gen_ut_intg_span(dut):
     assert sup, "GEN_UT_INTG_SPAN: no record with rf_wr_suppress (the spanning load's corrupted halves should suppress its write)"
     assert sup[0].mem_addr == buf + 2, f"GEN_UT_INTG_SPAN: the first suppressed record's address {sup[0].mem_addr:08x} is not the spanning load's {buf + 2:08x}"
     # any further suppressed record is judged by the scoreboard's gate (a lying flag is its isa_rd miss), not here
-    # Two writers, one pair: the comparator writes evt_isa_records mid-record, the interface increments
-    # evt_retired_count on the edge, so equality at a single instant can be a skipped record cancelling one in
-    # flight; require it across a whole cycle. The bound waits, it never decides: an unconsumed record never converges.
+    # The pair's two writers, and why one instant is not enough: see gen_ut_intg_store.py.
     settled = 0
     for _ in range(QUIESCE_CYCLES):
-        if int(h.b.evt_retired_count.value) == int(h.b.evt_isa_records.value):
+        retired = int(h.b.evt_retired_count.value)
+        consumed = int(h.b.evt_isa_records.value)
+        if retired == consumed:
             settled += 1
             if settled == 2:
                 break
         else:
             settled = 0
         await b.wait_cycles_until(int(h.b.cycle_count.value) + 1)
-    retired = int(h.b.evt_retired_count.value)
-    consumed = int(h.b.evt_isa_records.value)
     mism = int(h.b.evt_isa_mismatch.value)
     log.info("GEN_UT_INTG_SPAN retired %d consumed %d mismatches %d tohost 0x%08x", retired, consumed, mism, int(h.b.evt_eot_code.value))
-    assert consumed == retired, f"GEN_UT_INTG_SPAN: comparator consumed {consumed} records, {retired} retired (must be equal)"
+    assert settled == 2, f"GEN_UT_INTG_SPAN: comparator consumed {consumed} records, {retired} retired (must be equal and hold across a cycle; {QUIESCE_CYCLES} cycles waited)"
     assert mism == 0, f"GEN_UT_INTG_SPAN: {mism} ISA mismatches"
     assert int(h.b.evt_eot_code.value) == 1, "GEN_UT_INTG_SPAN: program did not report pass"
     await b.finish(timeout_cycles=5000)

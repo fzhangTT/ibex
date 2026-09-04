@@ -1,0 +1,178 @@
+# gen_fu_l40c_quiesce_exhaustion.log -- landing 40c (TB Infra, 2026-09-04)
+#
+# WHAT THIS IS. Landing 40's quiesce loop had one hole, CM215-Low-1: on the EXHAUSTION path the assertion read a
+# fresh sample after the loop, so a loop that never saw two adjacent equal samples could still be handed one equal
+# instant and pass. The break path was sound. This log carries the hole read from the committed file, a
+# discriminating red at model level, the simulation proof that the new gate fires, the regression, and the red
+# fixture. CM215-Low-4 is in the same touch: the comment pasted in three tests is now one full text and two
+# pointers.
+# PATHS: $S is this session's scratchpad; the two roots kept from landing 40 are reused, so the change is Python
+# only and no rebuild was needed. BUILD IDENTITY below is the local runner's find-digest, never the committer's
+# gate digest, and no committed gate identity is claimed for these roots.
+#
+# ================ THE HOLE, read from the committed file ================
+# $ git show 9f47277:dv/auto_dv/gen_tb/gen_tests/gen_ut_lockstep.py | sed -n '50,63p'
+#       settled = 0
+#       for _ in range(QUIESCE_CYCLES):
+#           if int(h.b.evt_retired_count.value) == int(h.b.evt_isa_records.value):
+#               settled += 1
+#               if settled == 2:
+#                   break
+#           else:
+#               settled = 0
+#           await b.wait_cycles_until(int(h.b.cycle_count.value) + 1)
+#       retired = int(h.b.evt_retired_count.value)
+#       consumed = int(h.b.evt_isa_records.value)
+#       mism = int(h.b.evt_isa_mismatch.value)
+#       log.info("GEN_UT_LOCKSTEP retired %d consumed %d mismatches %d tohost 0x%08x", retired, consumed, mism,
+#                int(h.b.evt_eot_code.value))
+# The two reads after the loop are a 21st sample. If samples 1 to 20 never held equal twice in a row and sample 21
+# reads equal while a record is in flight, the assertion passes on a single instant, which is the defect landing 40
+# was written to remove. The break path never had this problem: it leaves the loop only after two adjacent equal
+# samples.
+# THE FIX: the loop samples into the variables the assertion uses, nothing is read after the loop, and the
+# reporting assertion is gated on settled == 2, so the bound only ever decides how long to wait. The new gate is
+# strictly stronger than the old equality assertion, so it REPLACES it rather than standing beside it.
+# $ sed -n '47,63p' dv/auto_dv/gen_tb/gen_tests/gen_ut_lockstep.py   [the landed shape]
+#       # The pair's two writers, and why one instant is not enough: see gen_ut_intg_store.py.
+#       settled = 0
+#       for _ in range(QUIESCE_CYCLES):
+#           retired = int(h.b.evt_retired_count.value)
+#           consumed = int(h.b.evt_isa_records.value)
+#           if retired == consumed:
+#               settled += 1
+#               if settled == 2:
+#                   break
+#           else:
+#               settled = 0
+#           await b.wait_cycles_until(int(h.b.cycle_count.value) + 1)
+#       mism = int(h.b.evt_isa_mismatch.value)
+#       log.info("GEN_UT_LOCKSTEP retired %d consumed %d mismatches %d tohost 0x%08x", retired, consumed, mism,
+#                int(h.b.evt_eot_code.value))
+#       assert retired > 0, "GEN_UT_LOCKSTEP: nothing retired"
+#       assert settled == 2, f"GEN_UT_LOCKSTEP: comparator consumed {consumed} records, {retired} retired (must be equal and hold across a cycle; {QUIESCE_CYCLES} cycles waited)"
+#
+# ================ THE DISCRIMINATING RED, at model level ================
+# The case is not constructible in simulation (see the section below), so the discrimination is shown on the
+# predicate itself. The model is committed with the tests it models, as a unit test with a --self-test, so the next
+# reader can run it: dv/auto_dv/tb/unit/gen_ut_pair_quiesce_model.py.
+# $ python3 dv/auto_dv/tb/unit/gen_ut_pair_quiesce_model.py --self-test ; echo rc=$?
+#   in-flight stream: 21 samples, equal at even indices including the one past the bound; adjacent equal pairs inside the bound: 0
+#     sampled after the loop   verdict=PASS  retired=31 consumed=31 settled=0
+#     sampled in the loop      verdict=FAIL  retired=31 consumed=30 settled=0
+#   settled stream: unequal once then equal; sampled in the loop verdict=PASS retired=31 consumed=31 settled=2
+#   SELF-TEST PASS
+#   rc=0
+# ONE STREAM, TWO VERDICTS: the same in-flight sample stream is a PASS when the assertion samples after the loop
+# and a FAIL when it samples inside it. A genuinely settled stream still passes, which is the other side of the
+# check. The self-test asserts both, and it also reads gen_ut_intg_store.py so that a later change to the test
+# makes the model report itself stale rather than quietly modelling nothing.
+# POSITIVE CONTROL on the self-test, because a check that cannot fail proves nothing: the same file run against an
+# archive of 9f47277, whose tests carry the pre-40c shape.
+# $ python3 $S/l33/dig/9f47277/dv/auto_dv/tb/unit/gen_ut_pair_quiesce_model.py --self-test ; echo rc=$?
+#   settled stream: unequal once then equal; sampled in the loop verdict=PASS retired=31 consumed=31 settled=2
+#   SELF-TEST FAIL: gen_ut_intg_store.py no longer contains 'assert settled == 2': this model may be stale
+#   SELF-TEST FAILED
+#   rc=1   [the tail above is the last three lines of that one run, not a second run]
+#
+# ================ THE EXHAUSTION PATH IN SIMULATION ================
+# MUT-RETSKEW1, the landing-40 mutation that leaves one retirement the comparator never consumes, drives the loop
+# to its bound. Re-run on the 40c tests on the same mutated build:
+# $ tail of $S/l33/l40c_runs.log, the cmlkA_ and cmspA_ blocks
+#   == 40C EXHAUSTION PROOF: MUT-RETSKEW1 build, the 40c tests, expect FAIL through the settled gate
+#   seed 1            verdict=FAIL     GEN_UT_LOCKSTEP retired 176 consumed 175 mismatches 0 tohost 0x00000001 AssertionError: GEN_UT_LOCKSTEP: comparator consumed 175 records, 176 retired (must be equal and hold across a cycle; 20 cycles waited)
+#   seed 391581543    verdict=FAIL     GEN_UT_LOCKSTEP retired 177 consumed 176 mismatches 0 tohost 0x00000001 AssertionError: GEN_UT_LOCKSTEP: comparator consumed 176 records, 177 retired (must be equal and hold across a cycle; 20 cycles waited)
+#   SWEEP DONE lockstep prefix=cmlkA_ seeds=2 2026-09-04T21:27:56Z
+#   seed 3            verdict=FAIL      
+#   seed 13           verdict=FAIL      
+#   SWEEP DONE intg_span prefix=cmspA_ seeds=2 2026-09-04T21:28:02Z
+# $ command grep -h 'sources sha256' $S/l33/l40_mut_root/outC/config_opts.txt
+#   sources sha256 (dv/auto_dv env, tb, isa, gen_tb): 7ef155c3ddcab7fd
+# The failure now comes THROUGH THE NEW GATE and says so in its message: "must be equal and hold across a cycle;
+# 20 cycles waited". Read this for what it is: a positive control that the new assertion's exhaustion path fires,
+# NOT a discriminating red between landing 40 and 40c, because the old shape also failed on this mutation (its
+# 21st sample was unequal too). The discrimination is the model above. On intg_span the mutation is still caught
+# earlier by the export sink, as landing 40 recorded, so those two runs remain no evidence about the loop.
+# WHY THE TRANSIENT CASE IS NOT CONSTRUCTIBLE HERE, stated as reasoning and not as a measurement: to reach sample
+# 21 the stream must deny two adjacent equal samples for twenty cycles, which needs a record retiring in nearly
+# every cycle, and then the 21st sample must fall equal while a record is still in flight, which needs the cadence
+# to break exactly there. No knob in this TB drives retirement at that density with that phase, and lengthening
+# the run does not change the phase. That is why the predicate is judged on the model instead.
+#
+# ================ THE REGRESSION AND THE RED FIXTURE ================
+# $ cat $S/l33/l40c_runs.log   [the green blocks and the fixture]
+#   == 40C GREEN on the clean build: the 23 intg_span seeds (4 of them the landing-40 red seeds)
+#   seed 1397140876   verdict=PASS     GEN_UT_INTG_SPAN retired 31 consumed 31 mismatches 0 tohost 0x00000001 
+#   seed 2            verdict=PASS     GEN_UT_INTG_SPAN retired 31 consumed 31 mismatches 0 tohost 0x00000001 
+#   seed 391581543    verdict=PASS     GEN_UT_INTG_SPAN retired 31 consumed 31 mismatches 0 tohost 0x00000001 
+#   seed 2062654708   verdict=PASS     GEN_UT_INTG_SPAN retired 31 consumed 31 mismatches 0 tohost 0x00000001 
+#   seed 1            verdict=PASS     GEN_UT_INTG_SPAN retired 30 consumed 30 mismatches 0 tohost 0x00000001 
+#   seed 3            verdict=PASS     GEN_UT_INTG_SPAN retired 31 consumed 31 mismatches 0 tohost 0x00000001 
+#   seed 42           verdict=PASS     GEN_UT_INTG_SPAN retired 31 consumed 31 mismatches 0 tohost 0x00000001 
+#   seed 99           verdict=PASS     GEN_UT_INTG_SPAN retired 31 consumed 31 mismatches 0 tohost 0x00000001 
+#   seed 7            verdict=PASS     GEN_UT_INTG_SPAN retired 31 consumed 31 mismatches 0 tohost 0x00000001 
+#   seed 13           verdict=PASS     GEN_UT_INTG_SPAN retired 31 consumed 31 mismatches 0 tohost 0x00000001 
+#   seed 17           verdict=PASS     GEN_UT_INTG_SPAN retired 31 consumed 31 mismatches 0 tohost 0x00000001 
+#   seed 11           verdict=PASS     GEN_UT_INTG_SPAN retired 31 consumed 31 mismatches 0 tohost 0x00000001 
+#   seed 202          verdict=PASS     GEN_UT_INTG_SPAN retired 31 consumed 31 mismatches 0 tohost 0x00000001 
+#   seed 303          verdict=PASS     GEN_UT_INTG_SPAN retired 31 consumed 31 mismatches 0 tohost 0x00000001 
+#   seed 101          verdict=PASS     GEN_UT_INTG_SPAN retired 31 consumed 31 mismatches 0 tohost 0x00000001 
+#   seed 505          verdict=PASS     GEN_UT_INTG_SPAN retired 31 consumed 31 mismatches 0 tohost 0x00000001 
+#   seed 12345        verdict=PASS     GEN_UT_INTG_SPAN retired 31 consumed 31 mismatches 0 tohost 0x00000001 
+#   seed 404          verdict=PASS     GEN_UT_INTG_SPAN retired 31 consumed 31 mismatches 0 tohost 0x00000001 
+#   seed 808          verdict=PASS     GEN_UT_INTG_SPAN retired 31 consumed 31 mismatches 0 tohost 0x00000001 
+#   seed 1111         verdict=PASS     GEN_UT_INTG_SPAN retired 30 consumed 30 mismatches 0 tohost 0x00000001 
+#   seed 606          verdict=PASS     GEN_UT_INTG_SPAN retired 31 consumed 31 mismatches 0 tohost 0x00000001 
+#   seed 909          verdict=PASS     GEN_UT_INTG_SPAN retired 31 consumed 31 mismatches 0 tohost 0x00000001 
+#   seed 707          verdict=PASS     GEN_UT_INTG_SPAN retired 31 consumed 31 mismatches 0 tohost 0x00000001 
+#   SWEEP DONE intg_span prefix=cspA_ seeds=23 2026-09-04T21:27:39Z
+#   == 40C GREEN: eight lockstep control seeds
+#   seed 7            verdict=PASS     GEN_UT_LOCKSTEP retired 169 consumed 169 mismatches 0 tohost 0x00000001 
+#   seed 3            verdict=PASS     GEN_UT_LOCKSTEP retired 169 consumed 169 mismatches 0 tohost 0x00000001 
+#   seed 1            verdict=PASS     GEN_UT_LOCKSTEP retired 169 consumed 169 mismatches 0 tohost 0x00000001 
+#   seed 391581543    verdict=PASS     GEN_UT_LOCKSTEP retired 169 consumed 169 mismatches 0 tohost 0x00000001 
+#   seed 13           verdict=PASS     GEN_UT_LOCKSTEP retired 169 consumed 169 mismatches 0 tohost 0x00000001 
+#   seed 2            verdict=PASS     GEN_UT_LOCKSTEP retired 169 consumed 169 mismatches 0 tohost 0x00000001 
+#   seed 101          verdict=PASS     GEN_UT_LOCKSTEP retired 169 consumed 169 mismatches 0 tohost 0x00000001 
+#   seed 12345        verdict=PASS     GEN_UT_LOCKSTEP retired 169 consumed 169 mismatches 0 tohost 0x00000001 
+#   SWEEP DONE lockstep prefix=clkA_ seeds=8 2026-09-04T21:27:46Z
+#   == 40C GREEN: intg_store at the landing-38 seed and a control
+#   seed 2062654708   verdict=PASS     GEN_UT_INTG_STORE retired 31 consumed 31 mismatches 0 tohost 0x00000001 
+#   seed 1            verdict=PASS     GEN_UT_INTG_STORE retired 31 consumed 31 mismatches 0 tohost 0x00000001 
+#   SWEEP DONE intg_store prefix=cstA_ seeds=2 2026-09-04T21:27:51Z
+#   == 40C: the red fixture on the changed module
+#     verdict: FAIL   isa error lines: 676
+#     GEN_UT_LOCKSTEP retired 169 consumed 169 mismatches 676 tohost 0x00000001
+#   40C RUNS DONE 2026-09-04T21:28:09Z
+# 33 runs pass, including the four seeds that failed on the pre-landing-40 code, and the red fixture still fails
+# with 676 error lines of the class its red_expect names.
+#
+# ================ CM215-LOW-4 AND THE SOURCE SET ================
+# $ command grep -c 'Two writers, one pair' dv/auto_dv/gen_tb/gen_tests/*.py ; command grep -l 'see gen_ut_intg_store.py' dv/auto_dv/gen_tb/gen_tests/*.py
+#   dv/auto_dv/gen_tb/gen_tests/gen_ut_intg_store.py:1
+#   dv/auto_dv/gen_tb/gen_tests/gen_ut_lockstep.py:0
+#   dv/auto_dv/gen_tb/gen_tests/gen_ut_intg_span.py:0
+#   pointer in: dv/auto_dv/gen_tb/gen_tests/gen_ut_intg_span.py
+#   pointer in: dv/auto_dv/gen_tb/gen_tests/gen_ut_lockstep.py
+# $ bash $S/l33/l40_digest.sh /localdev/fzhang/ws/ibex-challenge   [the clone with 40c and the model file]
+#   7585b4afb4d05cd8  files=78  root=the clone, landing 40c applied
+# $ bash $S/l33/l40_digest.sh $S/l33/l40_root   [root A, which ran the green: the model file is not in it]
+#   b1478c1d78e4a2b4  files=77  root=root A, 40c tests
+# $ diff <(sources list of the clone) <(sources list of root A) | grep -E '^[<>]'
+#   < 048de32612e75097b37c6aa9d1e9fe08f9c6a8b9e11bf16510c4c62be9384849  dv/auto_dv/tb/unit/gen_ut_pair_quiesce_model.py
+# $ cmp -s <clone copy> <root A copy> for each of the three tests
+#   identical gen_ut_intg_store.py
+#   identical gen_ut_lockstep.py
+#   identical gen_ut_intg_span.py
+# MEASURED, not argued: the two source lists differ by exactly ONE line, the new unit-test file, and the three test
+# files are byte-identical between the clone and the root that ran the green, which is what the runs depended on. The simv both roots used was compiled at 18c7a44b8edfefc4, landing 40's compile-time figure, and only Python
+# changed after it.
+#
+# ================ WHAT THIS CLOSES ================
+# CM215-Low-1: closed, with the model as the discriminating evidence and the mutation as the path control.
+# CM215-Low-4: closed, one full comment in gen_ut_intg_store.py and a one-line pointer in the other two.
+# ON THE WORDING the review also caught: the predicate tests EQUALITY ON TWO CONSECUTIVE SAMPLES, which is what
+# landing 40's code did and what this landing keeps; "the retired count unchanged across a cycle" was the other
+# fix the Critic offered and it is not what the code does. The assertion's message now says "hold across a cycle",
+# which describes the implemented predicate rather than the alternative.
+# END. Every figure above is produced by the command printed above its block.
