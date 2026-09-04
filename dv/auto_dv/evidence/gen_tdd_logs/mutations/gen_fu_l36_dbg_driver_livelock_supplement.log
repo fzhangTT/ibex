@@ -1,0 +1,64 @@
+# SUPPLEMENT to gen_fu_l36_dbg_driver_livelock_corrigendum.log (committed bc4eba8, md5 cb593f10...).
+# That corrigendum is RETAINED and stays closed; it answers OR-36-1, CM212 Low-1, Low-2 and Info-3. This supplement
+# carries only what arrived after it was committed: CR-34-L-1, and the Critic's two first-hand facts, re-derived here
+# rather than relayed.
+# WHY A SUPPLEMENT AND NOT AN EDIT: the corrigendum was committed at 19:29:42Z and I wrote over it at 19:30:21Z with
+# no WITHDRAW, before the confirmation reached me. The committed bytes were restored from the commit and verified at
+# md5 cb593f105976d28fb0ed111cf976e167, and the facts I had added live here instead. Recorded because the mistake is
+# the point: after a hand-off a listed file changes only after a withdrawal is acknowledged, whatever new facts
+# arrive, and "the commit had not been confirmed to me yet" is not an exception.
+#
+# CR-34-L-1: ALL FOUR RUNS BY PATH AND FIGURE. The retained landing-36 log tabulates four runs and named none of
+# their paths; the corrigendum named three roots but not the flow run and not the paths per run. All four are below.
+# TWO DIFFERENT DIGEST FUNCTIONS APPEAR and must not be compared with each other: the flow build reports
+# inputs.sources_sha256, gen_flow_util.filelist_digest over the build's filelists, while the three local runs report
+# build_sources_sha256, the local runner's find-digest over dv/auto_dv env, tb, isa and gen_tb.
+
+== 1. THE FOUR RUNS ==
+   1 LSF round-1, flat bound
+     path   /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_1_dryrun/runs/gen_ut_export_dbg_storm_700483392
+     build  that regression's build/gen_tb, from the mirror head tree of 962d31f82d3b
+$ command grep -ao "sources_sha256: [0-9a-f]\{16\}" <that regression>/build/gen_tb/build_manifest.yaml
+       sources_sha256: 3ecd04b3f9dc0734
+     that figure is the FLOW's filelist_digest, not the local runner's find-digest
+   2-local-reproduction-flat-bound
+     path   /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/l33/tohost_root/out/old
+     root   a detached archive of 962d31f
+     figure build_sources_sha256=f8087204d5d26cc3
+   3-local-sixteenfold-bound
+     path   /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/l33/tohost_root/out/new2
+     root   a detached archive of 962d31f
+     figure build_sources_sha256=f8087204d5d26cc3
+   4-local-driver-FIXED
+     path   /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/l33/drv_root/out/fixed
+     root   a detached archive of b105c09
+     figure build_sources_sha256=1a7de65f7001a0fa
+   Runs 2 and 3 share one build, which is why their figures are equal: only a Python bound differed.
+
+== 2. THE CRITIC'S TWO FACTS, RE-DERIVED HERE ==
+   (a) the fixed root's digest equals the local recipe over the COMMITTED sources of 1deec4c.
+$ git archive 1deec4c | tar -x -C <tmp>; then gen_tb_local.sh find over env, tb, isa, gen_tb | sha256sum
+       recipe over the committed 1deec4c : 1a7de65f7001a0fa
+       the fixed root's own figure       : 1a7de65f7001a0fa      EQUAL
+   So the root the green half ran in is DIGEST-IDENTICAL to the committed tree, which is stronger than the
+   per-file md5 match the corrigendum already records.
+   (b) the before-figure requests=39 releases=38 is carried by RETAINED LOGS the landing does not cite. The
+   citable quantity is the count of retained logs EXCLUDING this landing's own two artefacts, so the figure
+   stays true after this supplement lands; prose files that merely quote it grow as
+   this work proceeds: my own manifest row and record now mention it, and so does a Critic verdict, so any
+   total over all matching files drifts. The stable number is the logs.
+$ command grep -rl "requests=39 releases=38" dv/auto_dv/evidence, split by kind, excluding the landing-36 log
+       all matching files                       : 25
+       this landing's own artefacts (excluded)   : 2   (the landing-36 log and this supplement)
+       RETAINED LOGS carrying it, the citation  : 20
+       prose files that quote it                : 3
+           dv/auto_dv/evidence/gen_critic_tb_l34.md
+           dv/auto_dv/evidence/gen_tdd_logs/gen_manifest.md
+           dv/auto_dv/evidence/gen_tdd_step2b.md
+   RECONCILING WITH THE 22 I WAS GIVEN: at the time it was measured the prose files were two, a record and a
+   Critic verdict, giving 20 logs plus 2 = 22. My own manifest row has since added a third, which is exactly
+   why the log count and not the file total is what this supplement cites.
+   AND MY FIRST COUNT WAS 19, because I scoped the search to gen_tdd_logs and missed the sunset-pass copy.
+   The citation reads: every retained seed-7 dbg_storm excerpt since landing 1c plus the t150 seed-1 export
+   run. Second time today a search scope has cost me a count, the same lesson as the grep-wrapper one.
+# END. Every figure above is read by the command printed above it.

@@ -1093,9 +1093,16 @@ without touching the allowance. The ablation, the same mutated build with the fa
 Retained: gen_tdd_logs/mutations/gen_fu_l37_tag_eor_unconsumed.log, with a manifest row. Two corrigenda ride the
 same records touch, each with its own row and each leaving its retained log closed: CM211-Low-4 and CR-33-L-3
 are answered by gen_fu_l33_age17_attempt_corrigendum.log, which states the definition the Critic verified; and
-OR-36-1 and CM212 Low-1, Low-2 and Info-3 by gen_fu_l36_dbg_driver_livelock_corrigendum.log, which names all
+OR-36-1 and CM212 Low-1, Low-2 and Info-3 by gen_fu_l36_dbg_driver_livelock_corrigendum.log, which names the
+three local roots and
 three local runs with their roots' heads and the three changed files hashed on both sides, shows those files
 byte-identical to the blobs at 1deec4c, corrects the retained log's blank severity lines by measurement (the
 failing runs have no report summary at all, since the cocotb assertion aborts before the report phase), scopes
 that log's closing every-figure claim to the block it describes, and records that the level lags on EXIT too,
-so a request asserted just after a dret is released at once as a one-cycle pulse rather than held.
+so a request asserted just after a dret is released at once as a one-cycle pulse rather than held. CR-34-L-1 and
+the Critic's two first-hand facts arrived after that corrigendum was committed, so they are in
+gen_fu_l36_dbg_driver_livelock_supplement.log as landing 37b: all four runs by path and figure with the two
+digest functions distinguished, the fixed root's digest shown equal to the local recipe over the committed
+1deec4c sources, and the before-figure cited as 20 retained logs, a count that excludes this landing's own
+artefacts so it survives the file landing. That supplement also records why it is one: the corrigendum was
+overwritten after its commit with no withdrawal, and its committed bytes were restored and verified.
