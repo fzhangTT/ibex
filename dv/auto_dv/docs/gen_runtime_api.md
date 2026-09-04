@@ -207,8 +207,10 @@ gen_run.py --build-dir DIR --test NAME --seed N --run-dir DIR [--cov-dir VDB | -
   coverage, is refused the same way (NOT_RUN naming `B8_PROBE_RULE`, LOG-067): the operator path is guarded like the entry.
   So is a measured run that violates a `MEASURED_KNOB_CONDITIONS` row (LOG-077, plan-owner ruling Q-018): today's one row says
   icache ECC injection (`+gen_knob_icache_ecc_err_rate` rare or frequent) counts for the plan only with gen_chk_alerts' alert_minor
-  row on (`+gen_chk_alert_minor`; the knob table's default counts as on, an explicit 0 refuses); the trigger and the required knob
-  are read from the effective plusargs, else from the rendered knob table's defaults (`gen_flow_util.measured_knob_condition_refusal`).
+  row on (`+gen_chk_alert_minor`; the knob table's default counts as on, an explicit 0 refuses); the trigger is read from the
+  effective plusargs, else from the rendered knob table's default, and the required row is judged as the TB judges it
+  (`gen_chk_en`: `chk_all ? val : (set && val)`, so a row named by a plusarg follows that value and an unnamed row is on only
+  while the master enable `+gen_chk_all` is on) (`gen_flow_util.measured_knob_condition_refusal`, `checker_row_on`).
 - `--waves`: needs a `--waves` build; renders `gen_dump.tcl` into the run dir (FSDB with
   `$VERDI_HOME`, else VPD) and adds `-ucli -do dump.tcl`. Templates are rendered by
   `gen_flow_util.render_fields` (token replacement, Tcl braces untouched); `python3 gen_flow_util.py

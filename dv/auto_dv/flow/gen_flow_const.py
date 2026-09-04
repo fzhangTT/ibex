@@ -166,6 +166,7 @@ PLUSARG_SMOKE_CYCLES = "gen_smoke_cycles"
 PLUSARG_CHK_SVA_B8 = "gen_chk_sva_b8"   # the B8 probe assertion knob (LOG-067, name per LOG-076): B8 evidence runs only
 PLUSARG_KNOB_ICACHE_ECC_ERR_RATE = "gen_knob_icache_ecc_err_rate"   # icache tag-RAM ECC injection regime (none / rare / frequent)
 PLUSARG_CHK_ALERT_MINOR = "gen_chk_alert_minor"                      # gen_chk_alerts' alert_minor row enable
+PLUSARG_CHK_ALL = "gen_chk_all"   # master checker enable: gen_chk_en(cfg, val, set) = chk_all ? val : (set && val) (gen_checkers_pkg.sv:19)
 BANNER_TAG = "GEN_CONFIG_BANNER"
 # name in gen_tb_pkg.sv -> value here
 SV_SHARED_CONSTANTS = {
@@ -174,6 +175,7 @@ SV_SHARED_CONSTANTS = {
     "PLUSARG_CHK_SVA_B8": PLUSARG_CHK_SVA_B8,
     "PLUSARG_KNOB_ICACHE_ECC_ERR_RATE": PLUSARG_KNOB_ICACHE_ECC_ERR_RATE,
     "PLUSARG_CHK_ALERT_MINOR": PLUSARG_CHK_ALERT_MINOR,
+    "PLUSARG_CHK_ALL": PLUSARG_CHK_ALL,
     "GEN_BANNER_TAG": BANNER_TAG,
 }
 

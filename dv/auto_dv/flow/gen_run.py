@@ -253,7 +253,9 @@ def self_test() -> int:
             ("clean measured coverage run runs", [], [], True, True, None),
             ("LOG-077: the operator turning the alert_minor row off on a measured ECC-injection run refuses", [f"+{C.PLUSARG_CHK_ALERT_MINOR}=0"], [f"+{C.PLUSARG_KNOB_ICACHE_ECC_ERR_RATE}=frequent"], True, True, "LOG-077"),
             ("LOG-077: an operator rate frequent with the row at its table default runs", [f"+{C.PLUSARG_KNOB_ICACHE_ECC_ERR_RATE}=frequent"], [], True, True, None),
-            ("LOG-077: the same unmeasured, row off, runs (evidence run)", [f"+{C.PLUSARG_KNOB_ICACHE_ECC_ERR_RATE}=frequent", f"+{C.PLUSARG_CHK_ALERT_MINOR}=0"], [], False, True, None)):
+            ("LOG-077: the same unmeasured, row off, runs (evidence run)", [f"+{C.PLUSARG_KNOB_ICACHE_ECC_ERR_RATE}=frequent", f"+{C.PLUSARG_CHK_ALERT_MINOR}=0"], [], False, True, None),
+            ("LOG-077: an operator row =1 replaces the entry's =0, the measured ECC run runs (CM152-I-2)", [f"+{C.PLUSARG_CHK_ALERT_MINOR}=1"], [f"+{C.PLUSARG_KNOB_ICACHE_ECC_ERR_RATE}=frequent", f"+{C.PLUSARG_CHK_ALERT_MINOR}=0"], True, True, None),
+            ("LOG-077: the operator turning the master enable off on a measured ECC run refuses (CM152-M-1)", [f"+{C.PLUSARG_CHK_ALL}=0"], [f"+{C.PLUSARG_KNOB_ICACHE_ECC_ERR_RATE}=frequent"], True, True, "LOG-077")):
         got = measured_refusal(dict(entry, plusargs=entry["plusargs"] + entry_extra), extra, tl, measured, coverage)
         cond = (got is None) if want is None else (got is not None and want in got)
         ok &= cond
@@ -327,7 +329,8 @@ def main() -> int:
         U.die("--pass-marker overrides the testlist marker for red-run evidence only; refused on a measured run "
               "(use --measured no or --no-coverage)")
     pass_marker = a.pass_marker or test.get("pass_marker")
-    # Knobs a measured run must not carry (P6 debug-only knobs, the LOG-067 B8 probe knob): refuse in writing.
+    # Knobs a measured run must not carry (P6 debug-only knobs, the LOG-067 B8 probe knob, a MEASURED_KNOB_CONDITIONS row
+    # violated, LOG-077): refuse in writing.
     reason = measured_refusal(test, list(a.plusarg), testlist, measured, cov_vdb is not None)
     if reason:
         refusal = {"test": test["name"], "seed": seed, "verdict": C.VERDICT_NOT_RUN, "reason": reason,

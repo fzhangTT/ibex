@@ -24,6 +24,9 @@ util, serve and round cases of the same touch are again missing-constant crashes
 gen_log077_red.log is the TDD red of the LOG-077 enforcement (plan-owner ruling Q-018): the constants, the knob-table helpers and
 the cases in place, measured_knob_condition_refusal a stub returning None and no loader or gen_run rule; the five refuse cases print
 BAD while the positive cases and the const check pass, a discriminating red; then the rule was written and all cases pass.
+gen_log077_red2.log is the TDD red of the CM152-M-1 fix: the required checker row was judged without the TB's master enable
+(gen_chk_en: chk_all ? val : (set && val)), so the three chk_all cases print BAD before the fix while the isolation-mode case
+(chk_all off, the row set on) and the operator-restores case pass; then checker_row_on mirrors the precedence and all pass.
 
 | evidence path | source | bytes | md5 |
 |---|---|---|---|
@@ -33,3 +36,4 @@ BAD while the positive cases and the const check pass, a discriminating red; the
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_b8_probe_refusal_red.log | dv/auto_dv/work/runtime/b8_probe_refusal_red.log | 669 | 79c2e3e5ad16318c78ea72c156e17b02 |
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_b8_probe_refusal_red2.log | dv/auto_dv/work/runtime/b8_probe_refusal_red2.log | 2231 | d9c707ba179d81930b8edb06f3440db0 |
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_log077_red.log | dv/auto_dv/work/runtime/log077_red.log | 2027 | f6a061ae1b4f3a7f9ff24004975ecafb |
+| dv/auto_dv/evidence/gen_tdd_logs/flow/gen_log077_red2.log | dv/auto_dv/work/runtime/log077_red2.log | 1239 | cc6584b37c1fe68356a5aeefeeb98ec9 |

@@ -760,7 +760,11 @@ def self_test() -> int:
             ([f"+{rate}=none", f"+{row}=0"], None, False, "rate none with the row off runs (not triggered)"),
             ([f"+{row}=0"], None, False, "no rate plusarg (table default none) with the row off runs"),
             ([f"+{rate}=frequent"], {row: 0}, True, "a table default of 0 for the row (fabricated) refuses an entry that leaves it unmentioned"),
-            ([f"+{row}=0"], {rate: "frequent"}, True, "a table default of frequent (fabricated) triggers the condition")):
+            ([f"+{row}=0"], {rate: "frequent"}, True, "a table default of frequent (fabricated) triggers the condition"),
+            ([f"+{rate}=frequent", f"+{C.PLUSARG_CHK_ALL}=0"], None, True, "the master enable off with the row unmentioned refuses (the TB reads the row as off: chk_all ? val : (set && val); CM152-M-1)"),
+            ([f"+{rate}=frequent", f"+{C.PLUSARG_CHK_ALL}=0", f"+{row}=1"], None, False, "the master enable off with the row set on runs (isolation mode, the explicit row wins)"),
+            ([f"+{rate}=frequent", f"+{C.PLUSARG_CHK_ALL}=1", f"+{row}=0"], None, True, "the master enable on with the row set off refuses"),
+            ([f"+{rate}=frequent"], {C.PLUSARG_CHK_ALL: 0}, True, "a table default of 0 for the master enable (fabricated) with the row unmentioned refuses")):
         got = measured_knob_condition_refusal(pas, defaults)
         cond = (got is not None and "LOG-077" in got) if want_refuse else got is None
         ok &= cond
@@ -1197,22 +1201,36 @@ def effective_knob_value(plusargs: list[str], plusarg: str, defaults: dict[str, 
     for pa in plusargs:
         if plusarg_name(pa) == plusarg:
             return pa.split("=", 1)[1].strip() if "=" in pa else "1"
-    d = (defaults or {}).get(plusarg, knob_default_by_plusarg(plusarg)) if defaults is None or plusarg not in defaults else defaults[plusarg]
+    d = defaults[plusarg] if defaults and plusarg in defaults else knob_default_by_plusarg(plusarg)
     return None if d is None else str(d)
+
+
+def checker_row_on(plusargs: list[str], row: str, defaults: dict[str, Any] | None = None) -> bool:
+    """Whether the TB runs checker row `row` on: gen_chk_en(cfg, val, set) = chk_all ? val : (set && val)
+    (gen_checkers_pkg.sv:19), so a row named by a plusarg follows that value, and an unnamed row follows its table
+    default only while the master enable +gen_chk_all (plusarg, else table default) is on."""
+    on = lambda v: v is not None and v.strip() not in ("0", "")
+    row_set = any(plusarg_name(pa) == row for pa in plusargs)
+    row_val = on(effective_knob_value(plusargs, row, defaults))
+    if row_set:
+        return row_val
+    return on(effective_knob_value(plusargs, C.PLUSARG_CHK_ALL, defaults)) and row_val
 
 
 def measured_knob_condition_refusal(plusargs: list[str], defaults: dict[str, Any] | None = None) -> str | None:
     """The MEASURED_KNOB_CONDITIONS row a measured run with these effective plusargs violates (its rule text with the
-    values seen), or None. The trigger value and the required knob come from the plusargs, else from the knob table's
-    default; a required knob is on when present with no value or a value other than 0."""
+    values seen), or None. The trigger value comes from the plusargs, else from the knob table's default; the required
+    knob is a checker row and is judged as the TB judges it (checker_row_on: the master enable's precedence included)."""
     for cond in C.MEASURED_KNOB_CONDITIONS:
         trig = effective_knob_value(plusargs, cond["trigger"], defaults)
         if trig not in cond["values"]:
             continue
-        req = effective_knob_value(plusargs, cond["requires"], defaults)
-        if req is not None and req.strip() not in ("0", ""):
+        if checker_row_on(plusargs, cond["requires"], defaults):
             continue
-        return f"+{cond['trigger']}={trig} with +{cond['requires']}={'absent' if req is None else req}; {cond['rule']}"
+        req = effective_knob_value(plusargs, cond["requires"], defaults)
+        master = effective_knob_value(plusargs, C.PLUSARG_CHK_ALL, defaults)
+        return (f"+{cond['trigger']}={trig} while +{cond['requires']} reads off (row {'absent' if req is None else req}, "
+                f"+{C.PLUSARG_CHK_ALL} {'absent' if master is None else master}); {cond['rule']}")
     return None
 
 
@@ -1299,7 +1317,7 @@ def load_testlist(path: Path = C.TESTLIST_YAML) -> dict[str, Any]:
         if t.get("measured", True):
             why = measured_knob_condition_refusal(t.get("plusargs") or [])
             if why:
-                die(f"{path}: test {t['name']} is measured with {why}")
+                die(f"{path}: test {t['name']} is measured and carries {why}")
         if t.get("red_fixture"):
             if t.get("expected_fail"):
                 die(f"{path}: test {t['name']}: red_fixture and expected_fail are exclusive (a fixture is not an RTL-bug candidate)")

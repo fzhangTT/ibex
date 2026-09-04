@@ -1,0 +1,16 @@
+# TDD red for CM152-M-1: the required knob judged without the checker master enable; the chk_all cases print BAD before the fix
+Fri Sep  4 03:17:24 UTC 2026
+## gen_flow_const.py --check
+CONST-CHECK: PASS
+## gen_flow_util.py --self-test
+SELF-TEST BAD measured_knob_condition_refusal (LOG-077) the master enable off with the row unmentioned refuses (the TB reads the row as off: chk_all ? val : (set && val); CM152-M-1): None
+SELF-TEST ok  measured_knob_condition_refusal (LOG-077) the master enable off with the row set on runs (isolation mode, the explicit row wins): None
+SELF-TEST ok  measured_knob_condition_refusal (LOG-077) the master enable on with the row set off refuses: +gen_knob_icache_ecc_err_rate=frequent with +gen_chk_alert_minor=0; LOG-077 (Q-0
+SELF-TEST BAD measured_knob_condition_refusal (LOG-077) a table default of 0 for the master enable (fabricated) with the row unmentioned refuses: None
+SELF-TEST: FAIL
+rc=2
+## gen_run.py --self-test
+SELF-TEST ok  measured_refusal LOG-077: an operator row =1 replaces the entry's =0, the measured ECC run runs (CM152-I-2): None
+SELF-TEST BAD measured_refusal LOG-077: the operator turning the master enable off on a measured ECC run refuses (CM152-M-1): None
+SELF-TEST: FAIL
+rc=2
