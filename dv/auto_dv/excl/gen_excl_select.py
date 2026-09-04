@@ -441,8 +441,9 @@ CHERIOT_EX_LIVE_PORTS = {"lsu_req_o", "lsu_we_o", "lsu_addr_o", "lsu_wdata_o", "
 
 
 def ann_ex(reason, line):
+    terms = "" if CHERIOT_EX_EVIDENCE in reason else f"Term(s) {CHERIOT_EX_EVIDENCE}. "
     return (A0 + f"Class T (dead arm inside u_ibex_cheriot_ex, A.1 revised): rtl/ibex_cheriot_ex.sv:{line}: {reason}. "
-            f"Term(s) {CHERIOT_EX_EVIDENCE}. Reachable-but-masked logic of this module is NOT excluded. "
+            f"{terms}Reachable-but-masked logic of this module is NOT excluded. "
             f"EC-1 constant propagation + k-induction; EC-5 strict load.")
 
 
@@ -664,11 +665,11 @@ def strip_comment(l):
 
 
 def guard_analysis(rtl_path, mod=None):
-    global EX_MOD
-    EX_MOD = mod
     """Per RTL line: (dead, reason) from the enclosing if/else/case arms, using the file's indentation
     as the nesting (lowRISC style: bodies indented deeper than their header; chains at equal indent).
     Also returns per header line the ordered chain conditions and per case line the item labels."""
+    global EX_MOD
+    EX_MOD = mod
     raw = (C.REPO_ROOT / rtl_path).read_text().split("\n")
     n = len(raw)
     lines = [strip_comment(l) for l in raw]

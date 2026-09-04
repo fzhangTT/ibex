@@ -1,0 +1,14 @@
+Command: urg -full64 -format text -dir /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_1/cov/merged.vdb -elfile /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/excl/gen_exclusions.el -excl_strict -show ratios -report /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/rtl-arch/gen_excl_f1_round_0/gen_urg_report_with_iter1 -log /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/rtl-arch/gen_excl_f1_round_0/gen_f1_round_0_urg_with_iter1.log
+Date: Fri Sep  4 18:23:02 2026
+
+URG Version X-2025.06-SP2 Copyright (c) 1991-2025 by Synopsys Inc.
+
+Note-[URG-RATIO] URG show ratios
+  URG '-show ratios' option will turn on '-group ratio' automatically.
+  Please check the scores in group pages.
+
+
+Note-[URG-RDG] Report directory generated
+  Report written to directory 
+  /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/rtl-arch/gen_excl_f1_round_0/gen_urg_report_with_iter1
+

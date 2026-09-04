@@ -1,6 +1,6 @@
 # gen_excl_select report
-dump: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_rebaseline/cov_unmeasured/full_exclusions
-parsed entries: 8437
+dump: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_1/cov/full_exclusions
+parsed entries: 8621
 
 config check: BranchPredictor=0 BranchTargetALU=1 RV32B=RV32BOTEarlGrey (util/ibex_config.py opentitan vcs_opts)
 guard analysis ibex_core: 2 dead RTL lines
@@ -53,9 +53,9 @@ BLOCK ibex_cs_registers [(469, 475), (478, 484), (678, 698), (707, 715), (2014, 
     carve-back: :2142 Block 306 "3777635196" "mepc_cap <= gen_scr.mstack_epc_cap_q;"
 BLOCK ibex_controller [(690, 696)]: 1 blocks selected (dead guard); 0 in-range blocks kept in coverage (no dead guard); 0 A.8 carve-backs kept in coverage
 BLOCK ibex_decoder [(1342, 1344), (1348, 1350)]: 2 blocks selected (dead guard); 0 in-range blocks kept in coverage (no dead guard); 0 A.8 carve-backs kept in coverage
-BLOCK ibex_controller [(990, 993)]: class-D spare-encoding group HELD OUT (EC-3 not filled; --allow-unfilled-ec3 to emit)
-BLOCK ibex_load_store_unit [(605, 607)]: class-D spare-encoding group HELD OUT (EC-3 not filled; --allow-unfilled-ec3 to emit)
-BLOCK ibex_multdiv_fast [(522, 524)]: class-D spare-encoding group HELD OUT (EC-3 not filled; --allow-unfilled-ec3 to emit)
+BLOCK ibex_controller [(990, 993)]: 1 blocks selected (explicit enum-default entry); 0 in-range blocks kept in coverage (no dead guard); 0 A.8 carve-backs kept in coverage
+BLOCK ibex_load_store_unit [(605, 607)]: 1 blocks selected (explicit enum-default entry); 0 in-range blocks kept in coverage (no dead guard); 0 A.8 carve-backs kept in coverage
+BLOCK ibex_multdiv_fast [(522, 524)]: 1 blocks selected (explicit enum-default entry); 0 in-range blocks kept in coverage (no dead guard); 0 A.8 carve-backs kept in coverage
 BLOCK ibex_id_stage [(968, 970)]: 1 blocks selected (explicit enum-default entry); 0 in-range blocks kept in coverage (no dead guard); 0 A.8 carve-backs kept in coverage
 BLOCK ibex_multdiv_fast [(238, 240)]: 1 blocks selected (explicit enum-default entry); 0 in-range blocks kept in coverage (no dead guard); 0 A.8 carve-backs kept in coverage
 BLOCK ibex_icache [(1268, 1268)]: 1 blocks selected (explicit enum-default entry); 0 in-range blocks kept in coverage (no dead guard); 0 A.8 carve-backs kept in coverage
@@ -138,7 +138,7 @@ FSM ibex_load_store_unit.ls_fsm_cs: 10 states+transitions
 FSM ibex_load_store_unit.cap_rx_fsm_q: 7 states+transitions
 ASSERT ibex_register_file_ff: 3 of 3 found: ['g_cheriot_rf.CheriotRaddrAMSBClear', 'g_cheriot_rf.CheriotRaddrBMSBClear', 'g_cheriot_rf.CheriotWaddrMSBClear']
 
-Emitted 1421 entry lines in 41 (module, metric) scopes to dv/auto_dv/excl/gen_exclusions.el
+Emitted 1424 entry lines in 41 (module, metric) scopes to /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/excl/gen_exclusions.el
 A.8 carve-back filter removed 3 emitted lines:
   - ibex_register_file_ff: Condition 67 "2391767907" "(g_cheriot_rf.cheriot_enabled ? ((raddr_a_i[3:0] == '0) ? g_cheriot_rf.rcap_r0 : g_cheriot_rf.rf_shared[raddr_a_i[3:0]]) : CapWordZeroVal) 1 -1" (2 "1
   - ibex_register_file_ff: Condition 70 "2882321518" "(g_cheriot_rf.cheriot_enabled ? ((raddr_b_i[3:0] == '0) ? g_cheriot_rf.rcap_r0 : g_cheriot_rf.rf_shared[raddr_b_i[3:0]]) : CapWordZeroVal) 1 -1" (2 "1
