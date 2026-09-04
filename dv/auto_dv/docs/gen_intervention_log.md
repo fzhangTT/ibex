@@ -1779,3 +1779,12 @@ landing 11 may proceed: Runtime's gen_l11 testlist merge, the LOG-077 enforcemen
 tb-infra's landing 12. The CM148 rows (the Medium and the record Lows as a records-only touch now; the source-comment
 and grace-rule Lows with landing 12, whose build re-takes the sources identity) remain owed. The Critic's tb_l12 on
 f28d09b is pending and independent of this ruling.
+
+## LOG-077a - 2026-09-04 - LOG-077 addendum: the ruling's scope is 22 plan items in 15 groups
+
+The cross-model review of the DV Lead's plan v3n (artifact 2026-09-03-claude-diff-ba3799b0-262e423a.md, committed
+1ca763b) found that the Q-018 row and LOG-077 count "twenty plan items in thirteen groups" naming the knob, while the
+plan at HEAD carries knob:icache_ecc_err_rate in 22 items across 15 groups: TP-DIT-033 (gen_dit_random) and TP-RVFI-037
+(gen_rvfi_random) were omitted, both random-regime items whose tests turn the knob on. The ruling is unchanged (the
+knob is legitimate measured stimulus; the same conditions); only its scope count is amended here. The DV Lead corrects
+the row in its next plan touch. The LOG-077 enforcement named in LOG-078 as owed is now committed at cd9638a.
