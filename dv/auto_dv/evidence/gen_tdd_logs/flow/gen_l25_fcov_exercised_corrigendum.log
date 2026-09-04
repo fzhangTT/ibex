@@ -1,0 +1,133 @@
+# Corrigendum and measurement for gen_l25_fcov_exercised.log (committed 8f265b2, 8866 bytes,
+# md5 d7ebcb05197e73e149655108a5c96ac3). That log's bytes do not move; this file carries everything added after it.
+#
+# THE CORRIGENDUM. Lines 11 and 12 of that log state: "The shared form agreed on all nine verdicts and all 78 bins
+# and is recorded here as a cross-check, not as the source." When it committed, that claim rested on TWO entries of
+# the nine: those were the only two I had compared. The claim preceded its evidence. Section 2 below is the
+# measurement over all nine, and the claim holds, but a reader of the committed log should know it was asserted
+# first and measured afterwards. The overclaim is mine and is answered as a row in gen_critic_response_flow.md.
+#
+# Nothing else in that log is corrected. Its verdicts, its 78 hit bins, its owed-bin counts and its
+# does-not-establish section stand as committed.
+# Taken on the same artifacts: out roots l25_exercise_1430 (shared build) and l25_isolated_1435 (one output
+# directory and coverage database per entry), build identity b48479a3bc6f1d9f, source HEAD 813994b.
+== 1. isolation evidence, read from each report rather than assumed ==
+   Eighteen reports, nine per form. Each must hold exactly one test or the flow's own guard refuses it.
+
+== 2. the two forms compared bin by bin, all nine entries ==
+   command: compare_forms.py <isolated root> <shared runs root>
+   Running new bashrc
+   entry                                          isolated shared   bins / isolation (tests in each report)
+   gen_ut_lockstep_icache_ecc                     PASS     PASS      7 bins,  7 agree | isolated report 1 test(s), shared report 1 test(s)
+   gen_ut_lockstep_icache_ecc_data                PASS     PASS     10 bins, 10 agree | isolated report 1 test(s), shared report 1 test(s)
+   gen_ut_lockstep_icache_ecc_data_noprobe        PASS     PASS     10 bins, 10 agree | isolated report 1 test(s), shared report 1 test(s)
+   gen_ut_lockstep_icache_ecc_tag_two             PASS     PASS      7 bins,  7 agree | isolated report 1 test(s), shared report 1 test(s)
+   gen_ut_lockstep_icache_ecc_data_two            PASS     PASS     10 bins, 10 agree | isolated report 1 test(s), shared report 1 test(s)
+   gen_ut_lockstep_icache_ecc_both                PASS     PASS     11 bins, 11 agree | isolated report 1 test(s), shared report 1 test(s)
+   gen_ut_lockstep_icache_ecc_far_data            PASS     PASS      9 bins,  9 agree | isolated report 1 test(s), shared report 1 test(s)
+   gen_ut_lockstep_icache_ecc_far_data_noprobe    PASS     PASS      8 bins,  8 agree | isolated report 1 test(s), shared report 1 test(s)
+   gen_ut_lockstep_icache_ecc_tag_disabled        PASS     PASS      6 bins,  6 agree | isolated report 1 test(s), shared report 1 test(s)
+   
+   total declared bins compared 78 | identical in both forms 78 | differing 0
+   every report in both forms holds exactly one test: yes
+
+== 3. how this measurement nearly reported the opposite, kept because the hazard is general ==
+   My first comparison selected the shared-form run directory with a PREFIX GLOB. This entry family is
+   prefix-nested: ecc, ecc_data, ecc_data_two, ecc_data_noprobe. Asked for _data the glob matched
+   _data_noprobe, and the comparison reported two bins differing:
+       cp_alert_pulses.one      isolated 494   'shared' 148
+       cp_major_nmi_quiet.yes   isolated 848   'shared' 855
+   Those two values are _data_noprobe's own counts, visible in section 4. A third run of _data at the same
+   seed in a fresh directory reproduced 494 and 848, which is what identified the fault as the selector's
+   rather than the runs'. Reproduce before believing a discrepancy; and any prefix match over this entry
+   family can pick a sibling silently, which the per-test isolation check in section 1 is the guard against.
+
+== 4. every declared bin and its count, from the isolated form ==
+   gen_ut_lockstep_icache_ecc
+       cp_alert_pulses.one                                        HIT   915
+       cp_bits.single                                             HIT   925
+       cp_major_nmi_quiet.yes                                     HIT   781
+       cp_no_alert_case.uninitialised_data_ram                    HIT   35
+       cp_ram.tag                                                 HIT   925
+       cp_way.way0                                                HIT   464
+       cp_way.way1                                                HIT   461
+   gen_ut_lockstep_icache_ecc_data
+       cp_alert_pulses.one                                        HIT   494
+       cp_beat.beat0                                              HIT   459
+       cp_beat.beat1                                              HIT   445
+       cp_bits.single                                             HIT   904
+       cp_major_nmi_quiet.yes                                     HIT   848
+       cp_no_alert_case.uninitialised_data_ram                    HIT   35
+       cp_no_alert_case.unused_way_data                           HIT   406
+       cp_ram.data                                                HIT   904
+       cp_way.way0                                                HIT   483
+       cp_way.way1                                                HIT   421
+   gen_ut_lockstep_icache_ecc_data_noprobe
+       cp_alert_pulses.one                                        HIT   148
+       cp_beat.beat0                                              HIT   459
+       cp_beat.beat1                                              HIT   445
+       cp_bits.single                                             HIT   904
+       cp_major_nmi_quiet.yes                                     HIT   855
+       cp_no_alert_case.uninitialised_data_ram                    HIT   35
+       cp_no_alert_case.unused_way_data                           HIT   406
+       cp_ram.data                                                HIT   904
+       cp_way.way0                                                HIT   483
+       cp_way.way1                                                HIT   421
+   gen_ut_lockstep_icache_ecc_tag_two
+       cp_alert_pulses.one                                        HIT   931
+       cp_bits.double                                             HIT   940
+       cp_major_nmi_quiet.yes                                     HIT   777
+       cp_no_alert_case.uninitialised_data_ram                    HIT   35
+       cp_ram.tag                                                 HIT   940
+       cp_way.way0                                                HIT   473
+       cp_way.way1                                                HIT   467
+   gen_ut_lockstep_icache_ecc_data_two
+       cp_alert_pulses.one                                        HIT   436
+       cp_beat.beat0                                              HIT   451
+       cp_beat.beat1                                              HIT   448
+       cp_bits.double                                             HIT   899
+       cp_major_nmi_quiet.yes                                     HIT   832
+       cp_no_alert_case.uninitialised_data_ram                    HIT   35
+       cp_no_alert_case.unused_way_data                           HIT   461
+       cp_ram.data                                                HIT   899
+       cp_way.way0                                                HIT   481
+       cp_way.way1                                                HIT   418
+   gen_ut_lockstep_icache_ecc_both
+       cp_alert_pulses.one                                        HIT   1354
+       cp_beat.beat0                                              HIT   459
+       cp_beat.beat1                                              HIT   443
+       cp_bits.single                                             HIT   1827
+       cp_major_nmi_quiet.yes                                     HIT   1580
+       cp_no_alert_case.uninitialised_data_ram                    HIT   33
+       cp_no_alert_case.unused_way_data                           HIT   437
+       cp_ram.data                                                HIT   902
+       cp_ram.tag                                                 HIT   925
+       cp_way.way0                                                HIT   947
+       cp_way.way1                                                HIT   880
+   gen_ut_lockstep_icache_ecc_far_data
+       cp_alert_pulses.one                                        HIT   180
+       cp_beat.beat0                                              HIT   314
+       cp_beat.beat1                                              HIT   305
+       cp_bits.single                                             HIT   619
+       cp_major_nmi_quiet.yes                                     HIT   619
+       cp_no_alert_case.unused_way_data                           HIT   438
+       cp_ram.data                                                HIT   619
+       cp_way.way0                                                HIT   334
+       cp_way.way1                                                HIT   285
+   gen_ut_lockstep_icache_ecc_far_data_noprobe
+       cp_beat.beat0                                              HIT   314
+       cp_beat.beat1                                              HIT   305
+       cp_bits.single                                             HIT   619
+       cp_major_nmi_quiet.yes                                     HIT   619
+       cp_no_alert_case.unused_way_data                           HIT   147
+       cp_ram.data                                                HIT   619
+       cp_way.way0                                                HIT   334
+       cp_way.way1                                                HIT   285
+   gen_ut_lockstep_icache_ecc_tag_disabled
+       cp_bits.single                                             HIT   864
+       cp_major_nmi_quiet.yes                                     HIT   574
+       cp_no_alert_case.disabled_cache                            HIT   864
+       cp_ram.tag                                                 HIT   864
+       cp_way.way0                                                HIT   443
+       cp_way.way1                                                HIT   421
+   total declared bins listed: 78

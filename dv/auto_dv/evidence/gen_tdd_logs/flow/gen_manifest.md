@@ -151,6 +151,13 @@ says which figures come from which: one shared output root on my own judgment ab
 literal one-directory-and-database-per-entry form the Orchestrator asked for. The build identity in the header was
 read against the source root the runs used rather than against the clone.
 
+gen_l25_fcov_exercised_corrigendum.log carries everything added after gen_l25_fcov_exercised.log committed, because a
+retained log's bytes and md5 do not move once its row is committed. It opens with the corrigendum: that log's header
+claims the shared and isolated forms agreed on all nine verdicts and all 78 bins, and at the moment it committed that
+claim rested on two entries of the nine. The claim is now measured over all nine and holds. The rest is that
+measurement, the per-entry isolation evidence, every declared bin with its count, and the prefix-glob near-miss that
+nearly reported the opposite. Nothing in the committed log is corrected beyond that one header sentence's provenance.
+
 | evidence path | source | bytes | md5 |
 |---|---|---|---|
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_gate_rule_red.log | dv/auto_dv/work/runtime/gate_rule_red.log | 926 | 78b72aae6509d2776a43c9314808b01b |
@@ -175,3 +182,4 @@ read against the source root the runs used rather than against the clone.
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_cr23_manifest_stem_red.log | (runtime scratchpad) rt30/gen_cr23_manifest_stem_red.log | 2885 | 65b16eef885b324b9b9997c5ebe6c891 |
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_cm202_manifest_test_field_red.log | (runtime scratchpad) rt32/gen_cm202_manifest_test_field_red.log | 2838 | 383168720e28c1bacb84072cd346e9d8 |
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_l25_fcov_exercised.log | (runtime scratchpad) rt33/gen_l25_fcov_exercised.log | 8866 | d7ebcb05197e73e149655108a5c96ac3 |
+| dv/auto_dv/evidence/gen_tdd_logs/flow/gen_l25_fcov_exercised_corrigendum.log | (runtime scratchpad) rt34a/gen_l25_fcov_exercised_corrigendum.log | 10240 | d9fadbf3e1e6dd7a6807fc704c4906b0 |
