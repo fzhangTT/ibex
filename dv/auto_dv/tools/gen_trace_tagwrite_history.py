@@ -20,8 +20,8 @@ def _usage(msg=None):
     sys.exit(2)
 
 
-# Accept exactly the two forms the usage line describes and nothing else. A third argument was previously accepted and
-# then ignored, which is worse than refusing it: the caller believes the scratch root they passed is being read.
+# Accept exactly the two forms the usage line describes and nothing else: a trailing argument is refused rather than
+# ignored, because an ignored scratch root leaves the caller believing it is being read.
 if len(sys.argv) < 2 or sys.argv[1] in ("-h", "--help"):
     _usage()
 if len(sys.argv) != 3:

@@ -16,24 +16,58 @@ The renderer refuses this group as the plan stood at commit 6457c71. Adding CG-I
     gen_fcov_codegen: CG-IC-006.cr_ram_x_bits_x_way: no plan cross line `- cr_ram_x_bits_x_way = cp_a x cp_b`
     gen_fcov_codegen: CG-IC-006.cr_bits_x_rate: component cp_knob is not a coverpoint of the group
 
-The three causes are punctuation, not semantics, and each was a one-off departure from a convention the plan keeps
-elsewhere. The cp_multiway_mismatch line put its `(informational, TP-IC-038 only)` parenthetical BEFORE `iff`, where
-the coverpoint parser accepts it only at the end of the guard, as CG-DMEM-006.cp_b14_records (gen_fcov_plan.md:4141)
-already writes it. The cr_ram_x_bits_x_way line put `, 8 bins` between the cross's component list and its colon, the
-only cross line in the file with a bin-count phrase there. The cp_knob line said `: values` where the coverpoint
-parser requires the literal `: bins`; nine plan lines used `: values`, all of them knob operand-only coverpoints, and
-only cp_knob's belonged to this group.
+The three causes are punctuation, not semantics, but only ONE of them is a one-off, and the difference decides how far
+this plan's tool claim may reach. Measured with the loader's own bullet-join rather than a line-based scan, over the
+plan's 1469 coverpoint bullets in 206 covergroups:
 
-The decision, agreed with the plan owner: the plan owner normalises those three lines in its own touch, rather than
-the codegen parser being widened to accept all three forms, which would loosen three separate refusal paths for one
-group and would edit the plan owner's conventions from the tool side. The earlier claims that no tool change is
-required and that part 1 changes no coverpoint line in the plan are both WITHDRAWN: one of the two had to go, and this
-plan chooses the prerequisite.
+Counted over the coverpoint bullets the committed regex REFUSES, on lines the loader has joined, since a bullet wraps
+and the keyword can land on a continuation line:
 
-Status. The three edits are not in the tree at 6457c71, and the plan owner has since made all three, inside a wider
-plan-set touch that also records the build split and the Sample-line qualifiers in the group's own section. So the
-prerequisite exists as an uncommitted plan-owner touch at the time this plan is handed over, and the build starts when
-that touch is committed, not before. After it, eight `: values` lines remain in the file, none of them in this group.
+| form | at 6457c71 | at fa3fb77 | the CG-IC-006 line |
+|---|---|---|---|
+| a parenthetical between the coverpoint name and the next keyword | 19 lines / 6 covergroups | 18 / 5 | cp_multiway_mismatch, before `iff` |
+| `: values` where the parser requires the literal `: bins` | 12 / 8 | 11 / 7 | cp_knob |
+| a bin-count phrase between a cross's component list and its colon | 1 / 1 | 0 / 0 | cr_ram_x_bits_x_way, `, 8 bins` |
+
+So the first two forms are CONVENTIONS the plan keeps in a dozen other covergroups, all of them outside the
+implemented list today, and only the cross form was ever a variant: one line in the whole plan. The plan's own working
+shape for the parenthetical is at the end of the guard, as CG-DMEM-006.cp_b14_records (gen_fcov_plan.md:4141) writes
+it.
+
+That count is definition-sensitive, and this plan has now carried two wrong versions of it, so the definition is
+stated rather than implied. Every figure anyone has quoted for the `: values` form is reproducible from one of three
+choices:
+
+| lines | covergroups | how it was counted |
+|---|---|---|
+| 12 / 8 at 6457c71, 11 / 7 after | joined bullets, the definition above |
+| 11 / 7 at 6457c71, 10 / 6 after | raw lines, no join |
+| 9 / 5 at 6457c71, 8 / 4 after | raw lines and a needle with a trailing space |
+
+The join is what the loader does before matching, so the first row is the count that describes the parser. The second
+row is a raw-line scan, which loses one bullet whose keyword lands on a continuation line. The third adds a needle
+with a trailing space, which loses two more because two bullets END at the keyword. This plan's earlier nine was the
+third row, and the figures in review row CM192-L-1 are the second.
+
+The measurement corrects this plan's own earlier claim of nine `: values` lines. That count came from a line-based
+scan, which cannot see a wrapped bullet whose keyword lands on a continuation line the loader joins; three of the
+twelve wrap. A count of a parser's inputs has to be taken with the parser's reader.
+
+The decision, agreed with the plan owner: it normalises those three lines in its own touch, and WP-8 proposes no tool
+change. The claim is scoped to this group and no further. Three normalised lines make CG-IC-006 render, which is all
+part 1 needs; they do not make the parser accept the plan at large, and on the counts above it plainly would need to
+for the 29 remaining lines in 12 other covergroups. That whole-plan question, normalise the conventions or widen the
+parser, is a separate plan-side item in the plan owner's name, to be taken once with me before the next covergroup
+enters the implemented list, and no WP-8 step depends on it. The earlier claims that no tool change is required and
+that part 1 changes no coverpoint line in the plan are both WITHDRAWN: the first overreached from this group to the
+plan, and the second was false of the group.
+
+Status: MET. The three edits are not in the tree at 6457c71; the plan owner's v4g carries all three and is committed
+at fa3fb77, inside a wider touch that also records the build split, the Sample-line qualifiers and the no-alert
+precedence in the group's own section. So the prerequisite is closed and the build's remaining condition is the
+re-review of this plan, not a plan-owner touch. Eleven `: values` lines remain in the file, none of them in this
+group, and the committed rendered include is still up to date against the normalised plan, so nothing of the TB's
+went stale.
 
 Verified rather than argued, in a temp root built by `git archive HEAD` of four files with the shared tree untouched.
 Positive control first: the untouched root renders `--check: up to date`, so the root reproduces HEAD exactly. The
@@ -41,8 +75,9 @@ group then renders from the plan owner's working-tree file with nothing else cha
 
     // CG-IC-006 (gen_ic_ecc_cg), 24 coverpoint bins, 16 cross bins
 
-CG-IC-006 appends 65 lines (4591 to 4657) and the HEAD-rendered text is an exact prefix of the new file, so no other
-group's rendered text changes by one byte. That result came out three times over: from a first probe that applied only
+CG-IC-006 appends 66 lines, 4591 to 4657: a blank separator and a 65-line group block. The HEAD-rendered text is an
+exact prefix of the new file, so no other group's rendered text changes by one byte. That result came out three times
+over: from a first probe that applied only
 the three line edits to HEAD's plan, and from two successive revisions of the plan owner's working-tree file as it was
 still being written. So the figures do not depend on the in-flight wording around those lines, which is why no hash of
 a file still being edited is quoted here.
@@ -108,6 +143,11 @@ unjudged (-1, a squashed speculative lookup, an ambiguous parse, or the run endi
 cp_alert_pulses rather than a bin. The coverpoint renders only `bins one= {0}`, since the plan's ignore clause drops
 its zero and many bins, so -1 is the only correct value for an unjudged injection and for every non-injection sample.
 
+The twelve sample() arguments are filled in the plan's coverpoint order, which the renderer fixes and the sampler
+must match position for position: cp_ram, cp_bits, cp_way, cp_beat, cp_alert_pulses, cp_inval_ways, cp_refetch,
+cp_major_nmi_quiet, cp_lookups_blocked_next, cp_no_alert_case, cp_multiway_mismatch, cp_knob. Positions six, seven,
+nine and eleven are the part-2 coverpoints and take -1 on every part-1 sample.
+
 The wiring is one line in the pattern the env already uses: the misc monitor takes a `gen_isa_cov` handle assigned in
 gen_env_pkg's connect_phase beside the existing direct assignments (`misc_mon.sink = sink` at :241,
 `dispatch.isa_cov = isa_cov` at :232), and gen_isa_cov gains the covergroup, its `new()` under `cfg.fcov_en` with the
@@ -127,12 +167,11 @@ for the word `parameter`, so the strip is not eating the file. So the sampler ca
 until the flag exists, which is why it is in part 1 rather than deferred.
 
 Build. One bit per RAM address in gen_icache_ram.sv beside the `mem [Depth]` array it already stores (:28). The
-granularity is a LINE of one way, not a word, and this is the one place where the fcov plan's Sample line and this
-build should be reworded to agree: the plan says "a per-data-word written flag" while its own bin text says
-"never-written data line read", and the line is right. Each RAM address holds a whole line (the data instance is
+granularity is a LINE of one way, not a word: each RAM address holds a whole line (the data instance is
 `.Width(LineSizeECC), .Depth(IC_NUM_LINES)` at gen_tb_top.sv:156) and the model's write port carries one whole entry,
-so no sub-line write exists to distinguish words by: the array is IC_NUM_LINES = 256 bits per way and 512 bits in the
-build. The plan owner has been asked for "per data-RAM line of a way" in that sentence.
+so no sub-line write exists to distinguish words by. The array is IC_NUM_LINES = 256 bits per way and 512 bits in the
+build. The fcov plan said "per-data-word" against its own bin text's "never-written data line read"; v4g settles it
+per line, so the plan and this build now say the same thing and no wording is owed either way.
 
 Set in the write branch beside `mem[addr] <= wdata` (:76), so it is set on ANY write the model sees, which is the
 point of putting it there: the invalidation sweep and the ECC-correction write both write data words, because
@@ -153,10 +192,28 @@ and never enters `gen_icram_events::q`. That queue is capped at 256 entries with
 (rtl:280, :282, :274), so pushing uninitialised reads into `q` would evict injections still waiting for a form-(b)
 verdict, which can take up to GEN_ICACHE_RETIRE_WINDOW = 64 cycles (gen_tb_pkg.sv:248), and those evictions would turn
 into false "alert_minor_o high without an announced ECC injection" errors from attribute_pulse
-(gen_checkers_pkg.sv:634). Instead the model notes the event in a separate bounded static queue of gen_icram_events
-that attribute_pulse, pending_in_window, close_owed, judge_data and report_phase never read: all five iterate `q` only,
-so the new queue is unreachable from pulse attribution by construction, and that is the property the mutation in
+(gen_checkers_pkg.sv:634). Instead the model notes the event in a separate static queue of gen_icram_events that
+attribute_pulse, pending_in_window, close_owed, judge_data and report_phase never read: all five iterate `q` only, so
+the new queue is unreachable from pulse attribution by construction, and that is the property the mutation in
 Section 7 pins.
+
+A separate queue needs its own drain, which the first version of this plan did not give it: the closure point of
+Section 4 iterates `q`, so an uninitialised event placed outside `q` would never be sampled at all. Two drain sites,
+both beside calls that already exist, and neither inside the injection closure:
+
+- The per-cycle pass, beside `close_owed(0)` (gen_checkers_pkg.sv:511). An event whose read cycle plus
+  GEN_ICACHE_ECC_WINDOW has passed is classified and sampled there, judging alert_minor_o from the per-cycle levels
+  the monitor already records for the quiet windowing of Section 6. It cannot be sampled at the read, because the
+  no-alert half of the classification is only known once the window has closed.
+- The final pass, beside `close_owed(1)` (:705). Whatever the end of the run leaves undrained is classified there on
+  the levels recorded so far, so no event is silently dropped.
+
+The queue cannot evict, and the bound is arithmetic rather than a hope: the sample is the first checked read of a
+never-written line of a way, so at most IC_NUM_LINES x IC_NUM_WAYS = 512 events exist in a whole run, each drained
+within GEN_ICACHE_ECC_WINDOW cycles of its read. A queue sized 512 therefore holds every event that can ever be
+pushed. Because a bound that is argued is not a bound that is checked, the model also counts pushes it cannot store
+and the monitor reports that count in its GEN_MISC summary, so a nonzero eviction count is visible in every run
+rather than inferred from this paragraph.
 
 Qualification, so the bin is neither vacuous nor overlapping. Unwritten-line reads occur from the first lookup of
 every run, including with the cache disabled and during the reset sweep, so the unqualified form of the Sample line,
@@ -248,8 +305,12 @@ classifier fault is a failing run and not only a failing offline check.
 - Mutation-proof, written flag. Named mutation: the write branch marks every address written from the initial block,
   so the uninitialised case never classifies. Detector: the same manifest check, on the declared bin, with every
   other Zone A check disabled, plus the ablation control. Second named mutation: the uninitialised event is pushed
-  into `gen_icram_events::q` instead of its own queue, which is the fault Section 5 designs against. Detector: the
-  alert_minor check, which reports pulses without an announced injection once the queue evicts pending injections.
+  into `gen_icram_events::q` instead of its own queue, which is the fault Section 5 designs against. Its detector is
+  NOT the alert_minor check: that check only fires once the 256-deep `q` actually evicts a pending injection, which
+  needs more than 256 events inside one 64-cycle verdict window and is therefore stimulus-dependent. The detector is
+  deterministic instead, a GEN_FCOV_UT case asserting that `gen_icram_events::q.size()` is unchanged across an
+  uninitialised event and that the bypass queue's size rose by one, which fails on the mutation in any run that
+  reaches one uninitialised read.
 - Mutation-proof, quiet windowing. Named mutation: the window is sampled one cycle short, so an alert at the boundary
   is missed and the quiet bin is hit wrongly. No manifest can catch a wrongly hit bin, so the detector is a
   GEN_FCOV_UT case on the boundary cycle, run through GEN_CMD_FCOV_SELFTEST, with its ablation control.
@@ -261,12 +322,12 @@ classifier fault is a failing run and not only a failing offline check.
 
 Every coverpoint, cross and Sample line this work touches goes to the Orchestrator and the Test Writer before it
 lands, per the assignment, and the three normalised lines of Section 1 plus the Sample-line qualifiers are the plan
-owner's own touch, announced the same way. That touch is in the working tree already: the group's section now carries
-the checked-lookup qualification, the written-flag description, the no-alert precedence order, the per-signal quiet
-windowing and a build-split paragraph of its own. The split it records is EIGHT sampled and FOUR passing
+owner's own touch, announced the same way, and it is committed at fa3fb77: the group's section carries the
+checked-lookup qualification, the written-flag description per line, the no-alert precedence order, the per-signal
+quiet windowing and a build-split paragraph of its own. The split it records is EIGHT sampled and FOUR passing
 not-applicable, which is the state after part 1 builds two of the six observations that were unbuilt when the split
 was first sized six-and-six by observability alone. One wording item is owed back to it, the word-versus-line
-granularity of Section 5; nothing else in that section disagrees with this plan.
+granularity of Section 5, which v4g has since taken; nothing in that section now disagrees with this plan.
 
 WP-8 in gen_test_plan.md is wider than this covergroup, and this plan is not all of it. That row assigns TB Infra the
 three exact export rows `icram lookup`, `icram tag_write` and `icram fill_write`, announced by gen_icache_ram like
@@ -288,13 +349,22 @@ shape changes.
 
 | row | answered in |
 |---|---|
-| C-1, the unbuildable pair of constraints | Section 1: the prerequisite named and now met in the working tree, both sentences withdrawn, the refusals and the successful render reproduced |
+| C-1, the unbuildable pair of constraints | Section 1: the prerequisite named and met at fa3fb77, the tool claim scoped to this group with the two conventions measured, both sentences withdrawn, the refusals and the successful render reproduced |
 | H-1, the announcement flooding the event queue | Section 5, "Published without touching the alert path": a separate queue, with the five functions that read `q` only |
 | H-2, anti-vacuity of uninitialised_data_ram | Section 5, "Qualification" and "Bin precedence": first read per line, `qualified_at`, injection-free, and the precedence order; sweep writes counted as writes |
 | M-1, cleared on reset | Section 5, "Cleared never": initial block only, not on reset, not on invalidation |
 | M-2, window semantics per signal | Section 6: levels over 1..GEN_ICACHE_ECC_WINDOW with a persistent level not quiet, the NMI flag over the retire window through `gen_model_state.nmi_int_pend`, the "referenced ZERO times" wording withdrawn |
 | M-3, unnamed trust-triad detectors | Section 7: a detector named per red and per mutation, GEN_FCOV_UT for wrongly hit bins, no forced DUT output |
 | M-4, sample timing and probe-off judging | Section 4: the closure point, form (b) in measured runs, -1 when unjudged, and the sampler reading no probe state |
+
+## 11. Where each row of the re-review is answered
+
+| row | answered in |
+|---|---|
+| CM192-M-1, the bypass queue had no drain point | Section 5: two drain sites beside the existing per-cycle and final passes, the 512-event arithmetic bound, and an eviction count in the GEN_MISC summary |
+| CM192-L-1, the `: values` counts | Section 1: the counts re-measured on joined bullets at both commits, with the three-way reconciliation that shows which definition produces which figure |
+| CM192-L-2, the second mutation's detector was stimulus-dependent | Section 7: replaced by a GEN_FCOV_UT case on the two queue sizes |
+| CM192-L-3, stale status sentences and the appended line count | Section 1: the prerequisite cited at fa3fb77, the granularity sentence dropped, 66 lines |
 | L-1, the zero-hits sentence | Section 5, first paragraph: an identifier claim with the measurement and its control |
 | L-2, cp_knob's three bins | Section 2: the render total and the manifest total stated separately |
 | L-3, the WP-8 row of the test plan | Section 8: the export rows and the digest guard placed outside this split |
