@@ -1809,7 +1809,7 @@ tests:
     notes: measured false until the PMC covergroups are built; the pin-off variant is gen_test_pmc_ctrl_pin_off
 
   - name: gen_test_pmc_ctrl_pin_off
-    description: 'gen_test_pmc_ctrl with the mcounteren_writable pin off (+gen_knob_mcounteren_writable=off, generator --pin off): the same items with the dropped-branch expectations (mcounteren writes dropped without a trap, TP-PMC-028); the manifest is the group''s (the pin-on entry carries the applied-branch bins, this one the dropped-branch ones)'
+    description: 'gen_test_pmc_ctrl with the mcounteren_writable pin off (+gen_knob_mcounteren_writable=off, generator --pin off): the same items with the dropped-branch expectations (mcounteren writes dropped without a trap, TP-PMC-028); the manifest is the group''s, keyed by test name, and declares the pin-on bins; the dropped-branch bins are declared by no manifest until this entry gets its own at the group''s promotion to measured'
     tier: check
     build: gen_tb
     uvm_test: gen_base_test
