@@ -289,3 +289,24 @@ cp_first_event other than first_instr_retire, cp_key_req_context other than rese
 key_delay `delayed` class, and the unreachable-by-construction bins named above.
 Counters: FCOV_QUERY 13 (records), 14 (multiplies), 15 (reset samples), 16 (security events); referee lines for the four groups; the
 vector table gains 47 classifier rows (74 cases in all).
+
+## Slice A, second part: gen_cmp_zcmp_hazard_cg (CG-CMP-009)
+
+Rendered once plan v3f retired cp_hazard.popret_ra_fwd (12 pattern bins, the CSV's set). Sampled by gen_isa_cov's Zcmp collector at the
+completion of a push / pop / popret / popretz sequence (one sample per pattern the sequence matches) and at the move flush:
+- write_pushed_reg_then_push / load_pushed_reg_then_push: the instruction before the sequence (`prev_wr`, `prev_ld` at the sequence
+  start) wrote a register the push's rlist saves (`zp_regs`: ra, s0, s1, then x18..x27); store_same_slot_then_pop: one of the pop's
+  load words is among the last 64 plain-store words; push_then_pop_b2b / pop_then_push_b2b: the record before the sequence was the
+  last micro-op of the other kind; popret_then_target / popretz_then_target and cp_ret_once: pended, the next plain record's pc equals
+  the loaded ra (`zp_ret_target`); cp_redirect_once, only while cpuctrlsts.icache_enable is tracked 0: exactly one ibus fetch of the
+  target word between the ret's last micro-op and the target's retirement (APPROXIMATION: fetches are counted by word and stamp, not by
+  the DUT's redirect signal); popret_ft_cm / popretz_ft_cm and cp_ft_kind: the halfword at the cm.* pc + 2 read from the model's
+  memory (gen_isa_read_word) and decoded (`hz_cm_kind`); popret_ra_deferred: the ra-load's data-bus response latency (the agent's completed transaction of the ra
+  slot) exceeds one cycle, so the response arrived after the addi entered ID (C-9); the min1 response never defers, the plan's ignore; load_then_mva01s / mvsa01_then_mva01s from the move collector's hazard and back-to-back facts, cp_dmem_delay for
+  the load pattern from the last data response before the move.
+- cp_rlist_class from rlist (4 / 5..14 / 15), cp_dmem_delay the sequence's class (as gen_cmp_zcmp_pushpop_cg's), cp_delta_uop from the
+  micro-op record cycles (all consecutive = all_one).
+- Stimulus: gen_zcmp_hazard_directed.S under the default, the long and the same-cycle / min1 data-bus regimes (deferral and stall
+  classes). Also in this part: cpuctrlsts.icache_enable's tracked reset value corrected to 0 (the RTL's), which the security group's
+  key_req_context classes and the redirect coverpoint read.
+- Counters: FCOV_QUERY 17 (hazard samples); a referee line; 10 classifier rows in the vector table (84 cases in all).

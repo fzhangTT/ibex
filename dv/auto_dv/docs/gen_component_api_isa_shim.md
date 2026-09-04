@@ -187,6 +187,32 @@ installed by `gen_install_counter_holders` in legalize_after_reset) and tb-infra
   cycle to an empty WB, rtl/ibex_id_stage.sv:1059-1062, :1120): the gap rule sees the retirement gap, not the hazard, so a program with that pattern
   reads one more than Ibex; the DUT's own dummy instructions count in Ibex and not in the model, and no knob narrows the compare: a program that
   enables dummy instructions through cpuctrl and then reads minstret raises isa_rd misses (the retained dummy programs read no counter).
-  Unit test sections 14 (Runtime's holders, 23 rows) and 15 (the proxy, 31 rows: 24 at the T-235 commit, 7 tb_l9 rows since): reds
-  gen_fu_l9_ut_isa_shim_red_t235.log (8 failures on the pre-integration shim, run with an intermediate test file: CM123-L-8) and
-  gen_fu_l12_ut_isa_shim_red_tbl9.log (2 failures, the landing's test on the committed T-235 shim); green gen_fu_l12_ut_isa_shim.log (278 OK).
+  Unit test sections 14 (Runtime's holders, 23 rows) and 15 (the proxy, 35 rows: 24 at the T-235 commit, 7 tb_l9 rows, 4 landing-11 rows for
+  CM123-L-2 / L-3 and tb_l11 L-5): reds gen_fu_l9_ut_isa_shim_red_t235.log (8 failures on the pre-integration shim, run with an intermediate
+  test file: CM123-L-8), gen_fu_l12_ut_isa_shim_red_tbl9.log (2 failures, the landing-10 test on the committed T-235 shim) and
+  gen_fu_l13_ut_isa_shim_red_73ff075.log (4 failures, the landing-11 test on the committed landing-10 shim); green gen_fu_l13_ut_isa_shim.log
+  (293 OK, stamped with the landing-11 shim).
+
+### T-235 sizing (CM102-L-5): the five gaps between Spike's counters and Ibex's, as sized before the build and as built
+
+The sizing tb-infra relayed to the DV Lead before T-235 (through the Orchestrator, by message, never committed: CM102-L-5) is recorded here
+against what was built, so the plan's ranking has a committed artifact behind it. The five gaps, each with the size the estimate gave and the
+size the build took:
+1. mcountinhibit: Ibex implements bits 0 and 2..12 (mcycle, minstret, mhpmcounter3..12), Spike a different writable set. Estimate: one CSR
+   holder class, a day's slice of Runtime's part. Built: `gen_mcountinhibit_csr_t` (gen_isa_shim_counters.h / .cc, Runtime's part R), 23 unit-test
+   rows in section 14; Spike's own mcountinhibit untouched so `retired` stays derivable under IR = 1.
+2. The unimplemented counters mhpmcounter13..31 (and h) and mhpmevent13..31: Ibex reads 0 and ignores writes without trapping, Spike traps
+   or holds them. Estimate: one read-zero holder class installed on 57 addresses, same slice. Built: `gen_zero_csr_t`, installed by
+   `gen_install_counter_holders`; the CG-CSR-004 hpm_unimpl family is an independent compare against the constant zero (plan v3h).
+3. minstret / minstreth under mcountinhibit.IR and the two write corners (the instruction retiring in the write cycle: a low write loses the
+   carry, a high write reloads the low word). Estimate: the largest gap, a proxy over Spike's counter plus a per-record gap from the
+   scoreboard, two to three days including the reds. Built: `gen_minstret_proxy_t` with `gen_minstret_half_csr_t` per address, `g_inh`, the
+   retirement gap DPI, the writer rule (the writer itself is never counted, neither is the record after a writer), the draft-B count
+   (landing 11); 35 section-15 rows; measured on gen_pmc_ctrl (8000 records, 0 mismatches) and on the directed minstret programs.
+4. The U-mode aliases instret / instreth: legal iff mcounteren.IR, through Spike's counter proxies over the halves. Estimate: hours. Built:
+   `counter_proxy_csr_t` instances over `lo` / `hi` in the same csrmap edit.
+5. mcycle and the HPM counters 3..12: Ibex's values come from the record (record-synced consistency compares, not model predictions), so
+   the gap is a sync, not a model. Estimate: hours, already partly built (gen_isa_set_time / gen_isa_set_hpm before every step). Built as
+   estimated; the compare class is stated in gen_component_api_scoreboard.md (Critic T-102 M-1).
+Not part of the five and not modelled (stated above): the hazard variant of the high-word corner and the DUT's dummy instructions under a
+minstret read.

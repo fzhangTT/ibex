@@ -1,0 +1,6 @@
+FM16 applied to /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/FM16/dv/auto_dv/env/gen_fcov_pkg.sv; original sha256 802e323aab04ad8a
+FM16_catch_zcmp_hz: verdict: PASS reason: no collected failure mechanism; end marker and config banner present  UVM_ERROR :    0 first: 
+FM16: build sources sha256: 9647b7f65ea4fc03; source tree untouched: dv/auto_dv/env/gen_fcov_pkg.sv sha256 802e323aab04ad8a (the mutated file's copy in the source tree, read after the runs)
+FM16: checker FCOV-EXPECTATION: FAIL - 1 declared bin(s) not hit: gen_cmp_zcmp_hazard_cg.cp_rlist_class.r15
+gen_fcov_proof_slice5e_fm16_ablation.fcov.yaml bins 25
+FM16: ablation checker FCOV-EXPECTATION: PASS - all 25 declared bins hit

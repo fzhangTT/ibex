@@ -503,39 +503,6 @@ against plan v3i (gen_fu_l12_codegen_check.log).
 - The landing-7 review rows (gen_critic_response_fcov.md): see gen_tdd_fcov.md Section 7 (the exclusion counts only the self-test's
   own miss, every counted group refereed, the unit test's own red on the FM4 build, the record corrections).
 
-## 13. Landing 9: the cross-model rows of landings 2c and 7, and the B8 probe (LOG-067)
-
-Build aa 4bc32b82a3b03340 (wit_root; sources list gen_fu_l10_sources_sha256_aa.txt). Greens: boot_zc, lockstep_zc, lockstep_s7,
-intg_s7_allchk, the two storms, the debug storm, ut_isa_cov_zc, ut_witness, lockstep_zcmp_mv (gen_fu_l10_*). The knobs and fcov codegen
---check were up to date on the copy against the plan the copy carried (its base commit, before the v3d..v3h touches; that output was not
-retained); at 329902f the committed renderer reports STALE against the moved plan (CM132, tb_l10), and the Slice A state is up to date again
-against plan v3i (gen_fu_l12_codegen_check.log).
-- The B8 probe (T-225; rtl-arch's gen_b8_rtl_facts.md section 6; the C10 ruling LOG-067 = a probe bind behind a knob): tb/gen_b8_probe.sv
-  bound into ibex_if_stage by gen_binds.sv, assertion `sva_b8_dummy_in_expansion` ((if_id_pipe_reg_we && insert_dummy_instr) |-> the
-  Zcmp FSM's state, rlist and sp_offset unchanged), knob `+gen_chk_sva_b8` default 0. Red: the two dummy programs with the knob on,
-  gen_zcmp_dummy_directed.S 35 firings (gen_fu_l10_b8_zcmp_dummy_on_*: 62 UVM_ERROR lines, of them 35 sva_b8_dummy_in_expansion; each
-  firing is one VCS failure line and one UVM_ERROR line) and gen_zcmp_dummy_popret_directed.S 59 firings (gen_fu_l10_b8_zcmp_dummy_popret_on_*:
-  13251 UVM_ERROR lines, of them 59 the assertion's; the knob-on run ran longer than the knob-off run's 9408 comparator rows); with the
-  knob off the same programs show 0 firings (gen_fu_l10_lockstep_zcmp_dummy_*, _popret_*; those controls ran with +gen_ut_boot_retire=10 and an
-  export file, not the knob-on runs' plusargs, tb_l10 L-1). Matched controls re-run on build ai with the knob-on plusargs (+gen_ut_boot_retire=1000,
-  no export) and the knob off: gen_fu_l12_b8_zcmp_dummy_off_1000_* 27 UVM_ERROR lines and gen_fu_l12_b8_zcmp_dummy_popret_off_1000_* 13192, 0
-  firings each, equal to the knob-on runs' non-B8 counts (62 - 35 and 13251 - 59): the knob adds exactly the assertion's lines. No green with a true antecedent exists: a dummy-enabled
-  program without Zcmp is not in the stimulus set, so the assertion's silence there is vacuous and stated as such. The knob stays off by
-  default because the assertion fails on the DUT's B8 defect itself, not on a TB fault. LOG-067's remaining conditions: the flow's
-  refusal of a measured entry that sets the knob is built by Runtime at fa9ba21 (the testlist loader refuses a measured entry whose plusargs
-  turn the knob on, and measured dispatch is refused when a canary build records it on or absent; LOG-076); the knob is named chk_sva_b8 after the per-assertion
-  family, the name ruled to stand (LOG-076); the probe-register row and the SVA layer header's C10-exception note are CM132-M-2 items
-  (the row in this landing, the header comment with the next source-changing landing).
-- The landing-2c review rows (gen_critic_response_fu2a.md, the table "cross-model review of landing 2c"): the gate looks up both words
-  of a load spanning two bus words (the second announcement sits at +4), announcements enter the gate's list for loads only, the irq
-  checker's two never-taken rules are silent in NMI mode and the summary prints `never taken=`, the dbg_dret message uses the dcsr
-  constants, the alert_minor window is a range over a lookup shift register with the parameter default 2, and the record corrections
-  (MUT-NT2's build sha, per-mutant provenance, the export-rows excerpt header, the CM43-L-3 file name). Greens: the runs above, the
-  integrity run with 83 suppressed loads through the widened gate. No red for the spanning second-half case: the retained programs
-  have no corrupted second half of a spanning load (the integrity run's 83 are whole-word), stated rather than staged.
-- The landing-7 review rows (gen_critic_response_fcov.md): see gen_tdd_fcov.md Section 7 (the exclusion counts only the self-test's
-  own miss, every counted group refereed, the unit test's own red on the FM4 build, the record corrections).
-
 ### 12.1 The Critic's tb_l9 rows on T-235 (rows CR-9), fixed in the Slice A landing
 
 The T-235 red gen_fu_l9_ut_isa_shim_red_t235.log ran with an intermediate test file (sha256 36128fb905fc4f4e, not kept), not the
@@ -581,8 +548,9 @@ landing-10 code ran on b0 / b0h (the landing-10 sources with the hook; gen_fu_l1
   the tag RAM unchecked, rtl/ibex_icache.sv:266, and the TB learns both states late). Program gen_icache_ecc_directed.S (enable once, a
   cross-line loop). Measured on b2 / b2r, rate frequent: 870 injections (682 qualified), 436 pulses, 0 mismatches, 0 missing, every pulse one
   cycle after its lookup read (the summary's latency histogram 0 / 436 / 0); rate rare with slow imem: 32 / 32 / 16 / 0 / 0.
-- CM132-H-1 red and green. b2r (the landing-9 slice [ICACHE_ECC_WINDOW:1]): sva_alert_minor_window FAILS 431 times in the frequent run and 19
-  in the rare run (gen_fu_l13_red_h1_ecc_freq_*, gen_fu_l13_red_h1_ecc_slow_rare_*); the same with every check off but the alert SVA group
+- CM132-H-1 red and green. b2r (the landing-9 slice [ICACHE_ECC_WINDOW:1]): sva_alert_minor_window FAILS 215 times in the frequent run (the assertion's own
+  count: about half of the 436 pulses; the other 221 passed the old slice through neighbouring lookups) and 9 times in the rare run
+  (gen_fu_l13_red_h1_ecc_freq_*, gen_fu_l13_red_h1_ecc_slow_rare_*); the same with every check off but the alert SVA group
   FAILS (gen_fu_l13_catch_h1_ecc_freq_*) and with every check off PASSES (gen_fu_l13_ablate_h1_ecc_freq_*). b2 ([ICACHE_ECC_WINDOW-1:0]):
   0 failures on the same runs (gen_fu_l13_green_h1_*). Why the first attempts stayed green: the fetch stream looks up nearly every cycle,
   so the neighbouring lookups set lookup_hist[2:1] when a pulse came one cycle after its own lookup; the dedicated program's loop and the

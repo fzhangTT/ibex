@@ -3928,3 +3928,124 @@
       bins none_zcmp_uop= binsof(cp_rd_source.none) && binsof(cp_insn_kind.zcmp_uop);
     }
   endgroup
+
+  // CG-CMP-009 (gen_cmp_zcmp_hazard_cg), 28 coverpoint bins, 74 cross bins
+  localparam int GEN_FC_CMP_ZCMP_HAZARD_CP_HAZARD_STORE_SAME_SLOT_THEN_POP = 0;
+  localparam int GEN_FC_CMP_ZCMP_HAZARD_CP_HAZARD_WRITE_PUSHED_REG_THEN_PUSH = 1;
+  localparam int GEN_FC_CMP_ZCMP_HAZARD_CP_HAZARD_LOAD_PUSHED_REG_THEN_PUSH = 2;
+  localparam int GEN_FC_CMP_ZCMP_HAZARD_CP_HAZARD_LOAD_THEN_MVA01S = 3;
+  localparam int GEN_FC_CMP_ZCMP_HAZARD_CP_HAZARD_POPRET_RA_DEFERRED = 4;
+  localparam int GEN_FC_CMP_ZCMP_HAZARD_CP_HAZARD_PUSH_THEN_POP_B2B = 5;
+  localparam int GEN_FC_CMP_ZCMP_HAZARD_CP_HAZARD_POP_THEN_PUSH_B2B = 6;
+  localparam int GEN_FC_CMP_ZCMP_HAZARD_CP_HAZARD_POPRET_THEN_TARGET = 7;
+  localparam int GEN_FC_CMP_ZCMP_HAZARD_CP_HAZARD_POPRETZ_THEN_TARGET = 8;
+  localparam int GEN_FC_CMP_ZCMP_HAZARD_CP_HAZARD_MVSA01_THEN_MVA01S = 9;
+  localparam int GEN_FC_CMP_ZCMP_HAZARD_CP_HAZARD_POPRET_FT_CM = 10;
+  localparam int GEN_FC_CMP_ZCMP_HAZARD_CP_HAZARD_POPRETZ_FT_CM = 11;
+  localparam int GEN_FC_CMP_ZCMP_HAZARD_CP_FT_KIND_CM_PUSH = 0;
+  localparam int GEN_FC_CMP_ZCMP_HAZARD_CP_FT_KIND_CM_POP = 1;
+  localparam int GEN_FC_CMP_ZCMP_HAZARD_CP_FT_KIND_CM_POPRET = 2;
+  localparam int GEN_FC_CMP_ZCMP_HAZARD_CP_FT_KIND_CM_POPRETZ = 3;
+  localparam int GEN_FC_CMP_ZCMP_HAZARD_CP_FT_KIND_CM_MVSA01 = 4;
+  localparam int GEN_FC_CMP_ZCMP_HAZARD_CP_FT_KIND_CM_MVA01S = 5;
+  localparam int GEN_FC_CMP_ZCMP_HAZARD_CP_RET_ONCE_YES = 0;
+  localparam int GEN_FC_CMP_ZCMP_HAZARD_CP_REDIRECT_ONCE_YES = 0;
+  localparam int GEN_FC_CMP_ZCMP_HAZARD_CP_RLIST_CLASS_R4 = 0;
+  localparam int GEN_FC_CMP_ZCMP_HAZARD_CP_RLIST_CLASS_R5_14 = 1;
+  localparam int GEN_FC_CMP_ZCMP_HAZARD_CP_RLIST_CLASS_R15 = 2;
+  localparam int GEN_FC_CMP_ZCMP_HAZARD_CP_DMEM_DELAY_MIN1 = 0;
+  localparam int GEN_FC_CMP_ZCMP_HAZARD_CP_DMEM_DELAY_SHORT = 1;
+  localparam int GEN_FC_CMP_ZCMP_HAZARD_CP_DMEM_DELAY_LONG = 2;
+  localparam int GEN_FC_CMP_ZCMP_HAZARD_CP_DELTA_UOP_ALL_ONE = 0;
+  localparam int GEN_FC_CMP_ZCMP_HAZARD_CP_DELTA_UOP_SOME_STALL = 1;
+  covergroup gen_cmp_zcmp_hazard_cg with function sample(int v_cp_hazard, int v_cp_ft_kind, int v_cp_ret_once, int v_cp_redirect_once, int v_cp_rlist_class, int v_cp_dmem_delay, int v_cp_delta_uop);
+    option.per_instance = 0;
+    option.cross_auto_bin_max = 0;   // a cross has exactly the CSV's named bins: no automatic bins for the plan's ignored tuples
+    cp_hazard: coverpoint v_cp_hazard { bins store_same_slot_then_pop= {0}; bins write_pushed_reg_then_push= {1}; bins load_pushed_reg_then_push= {2}; bins load_then_mva01s= {3}; bins popret_ra_deferred= {4}; bins push_then_pop_b2b= {5}; bins pop_then_push_b2b= {6}; bins popret_then_target= {7}; bins popretz_then_target= {8}; bins mvsa01_then_mva01s= {9}; bins popret_ft_cm= {10}; bins popretz_ft_cm= {11}; ignore_bins na = {-1}; }
+    cp_ft_kind: coverpoint v_cp_ft_kind { bins cm_push= {0}; bins cm_pop= {1}; bins cm_popret= {2}; bins cm_popretz= {3}; bins cm_mvsa01= {4}; bins cm_mva01s= {5}; ignore_bins na = {-1}; }
+    cp_ret_once: coverpoint v_cp_ret_once { bins yes= {0}; ignore_bins na = {-1}; }
+    cp_redirect_once: coverpoint v_cp_redirect_once { bins yes= {0}; ignore_bins na = {-1}; }
+    cp_rlist_class: coverpoint v_cp_rlist_class { bins r4= {0}; bins r5_14= {1}; bins r15= {2}; ignore_bins na = {-1}; }
+    cp_dmem_delay: coverpoint v_cp_dmem_delay { bins min1= {0}; bins short= {1}; bins long= {2}; ignore_bins na = {-1}; }
+    cp_delta_uop: coverpoint v_cp_delta_uop { bins all_one= {0}; bins some_stall= {1}; ignore_bins na = {-1}; }
+    cr_hazard_delay: cross cp_hazard, cp_dmem_delay {
+      bins popret_ra_deferred_long= binsof(cp_hazard.popret_ra_deferred) && binsof(cp_dmem_delay.long);
+      bins popret_ra_deferred_short= binsof(cp_hazard.popret_ra_deferred) && binsof(cp_dmem_delay.short);
+      bins load_pushed_reg_then_push_long= binsof(cp_hazard.load_pushed_reg_then_push) && binsof(cp_dmem_delay.long);
+      bins load_pushed_reg_then_push_min1= binsof(cp_hazard.load_pushed_reg_then_push) && binsof(cp_dmem_delay.min1);
+      bins load_pushed_reg_then_push_short= binsof(cp_hazard.load_pushed_reg_then_push) && binsof(cp_dmem_delay.short);
+      bins load_then_mva01s_long= binsof(cp_hazard.load_then_mva01s) && binsof(cp_dmem_delay.long);
+      bins load_then_mva01s_min1= binsof(cp_hazard.load_then_mva01s) && binsof(cp_dmem_delay.min1);
+      bins load_then_mva01s_short= binsof(cp_hazard.load_then_mva01s) && binsof(cp_dmem_delay.short);
+      bins store_same_slot_then_pop_long= binsof(cp_hazard.store_same_slot_then_pop) && binsof(cp_dmem_delay.long);
+      bins store_same_slot_then_pop_min1= binsof(cp_hazard.store_same_slot_then_pop) && binsof(cp_dmem_delay.min1);
+      bins store_same_slot_then_pop_short= binsof(cp_hazard.store_same_slot_then_pop) && binsof(cp_dmem_delay.short);
+      bins write_pushed_reg_then_push_long= binsof(cp_hazard.write_pushed_reg_then_push) && binsof(cp_dmem_delay.long);
+      bins write_pushed_reg_then_push_min1= binsof(cp_hazard.write_pushed_reg_then_push) && binsof(cp_dmem_delay.min1);
+      bins write_pushed_reg_then_push_short= binsof(cp_hazard.write_pushed_reg_then_push) && binsof(cp_dmem_delay.short);
+      bins pop_then_push_b2b_long= binsof(cp_hazard.pop_then_push_b2b) && binsof(cp_dmem_delay.long);
+      bins pop_then_push_b2b_min1= binsof(cp_hazard.pop_then_push_b2b) && binsof(cp_dmem_delay.min1);
+      bins pop_then_push_b2b_short= binsof(cp_hazard.pop_then_push_b2b) && binsof(cp_dmem_delay.short);
+      bins popret_ft_cm_long= binsof(cp_hazard.popret_ft_cm) && binsof(cp_dmem_delay.long);
+      bins popret_ft_cm_min1= binsof(cp_hazard.popret_ft_cm) && binsof(cp_dmem_delay.min1);
+      bins popret_ft_cm_short= binsof(cp_hazard.popret_ft_cm) && binsof(cp_dmem_delay.short);
+      bins popret_then_target_long= binsof(cp_hazard.popret_then_target) && binsof(cp_dmem_delay.long);
+      bins popret_then_target_min1= binsof(cp_hazard.popret_then_target) && binsof(cp_dmem_delay.min1);
+      bins popret_then_target_short= binsof(cp_hazard.popret_then_target) && binsof(cp_dmem_delay.short);
+      bins popretz_ft_cm_long= binsof(cp_hazard.popretz_ft_cm) && binsof(cp_dmem_delay.long);
+      bins popretz_ft_cm_min1= binsof(cp_hazard.popretz_ft_cm) && binsof(cp_dmem_delay.min1);
+      bins popretz_ft_cm_short= binsof(cp_hazard.popretz_ft_cm) && binsof(cp_dmem_delay.short);
+      bins popretz_then_target_long= binsof(cp_hazard.popretz_then_target) && binsof(cp_dmem_delay.long);
+      bins popretz_then_target_min1= binsof(cp_hazard.popretz_then_target) && binsof(cp_dmem_delay.min1);
+      bins popretz_then_target_short= binsof(cp_hazard.popretz_then_target) && binsof(cp_dmem_delay.short);
+      bins push_then_pop_b2b_long= binsof(cp_hazard.push_then_pop_b2b) && binsof(cp_dmem_delay.long);
+      bins push_then_pop_b2b_min1= binsof(cp_hazard.push_then_pop_b2b) && binsof(cp_dmem_delay.min1);
+      bins push_then_pop_b2b_short= binsof(cp_hazard.push_then_pop_b2b) && binsof(cp_dmem_delay.short);
+    }
+    cr_hazard_rlist: cross cp_hazard, cp_rlist_class {
+      bins load_pushed_reg_then_push_r15= binsof(cp_hazard.load_pushed_reg_then_push) && binsof(cp_rlist_class.r15);
+      bins load_pushed_reg_then_push_r4= binsof(cp_hazard.load_pushed_reg_then_push) && binsof(cp_rlist_class.r4);
+      bins load_pushed_reg_then_push_r5_14= binsof(cp_hazard.load_pushed_reg_then_push) && binsof(cp_rlist_class.r5_14);
+      bins store_same_slot_then_pop_r15= binsof(cp_hazard.store_same_slot_then_pop) && binsof(cp_rlist_class.r15);
+      bins store_same_slot_then_pop_r4= binsof(cp_hazard.store_same_slot_then_pop) && binsof(cp_rlist_class.r4);
+      bins store_same_slot_then_pop_r5_14= binsof(cp_hazard.store_same_slot_then_pop) && binsof(cp_rlist_class.r5_14);
+      bins write_pushed_reg_then_push_r15= binsof(cp_hazard.write_pushed_reg_then_push) && binsof(cp_rlist_class.r15);
+      bins write_pushed_reg_then_push_r4= binsof(cp_hazard.write_pushed_reg_then_push) && binsof(cp_rlist_class.r4);
+      bins write_pushed_reg_then_push_r5_14= binsof(cp_hazard.write_pushed_reg_then_push) && binsof(cp_rlist_class.r5_14);
+      bins pop_then_push_b2b_r15= binsof(cp_hazard.pop_then_push_b2b) && binsof(cp_rlist_class.r15);
+      bins pop_then_push_b2b_r4= binsof(cp_hazard.pop_then_push_b2b) && binsof(cp_rlist_class.r4);
+      bins pop_then_push_b2b_r5_14= binsof(cp_hazard.pop_then_push_b2b) && binsof(cp_rlist_class.r5_14);
+      bins popret_ft_cm_r15= binsof(cp_hazard.popret_ft_cm) && binsof(cp_rlist_class.r15);
+      bins popret_ft_cm_r4= binsof(cp_hazard.popret_ft_cm) && binsof(cp_rlist_class.r4);
+      bins popret_ft_cm_r5_14= binsof(cp_hazard.popret_ft_cm) && binsof(cp_rlist_class.r5_14);
+      bins popret_ra_deferred_r15= binsof(cp_hazard.popret_ra_deferred) && binsof(cp_rlist_class.r15);
+      bins popret_ra_deferred_r4= binsof(cp_hazard.popret_ra_deferred) && binsof(cp_rlist_class.r4);
+      bins popret_ra_deferred_r5_14= binsof(cp_hazard.popret_ra_deferred) && binsof(cp_rlist_class.r5_14);
+      bins popret_then_target_r15= binsof(cp_hazard.popret_then_target) && binsof(cp_rlist_class.r15);
+      bins popret_then_target_r4= binsof(cp_hazard.popret_then_target) && binsof(cp_rlist_class.r4);
+      bins popret_then_target_r5_14= binsof(cp_hazard.popret_then_target) && binsof(cp_rlist_class.r5_14);
+      bins popretz_ft_cm_r15= binsof(cp_hazard.popretz_ft_cm) && binsof(cp_rlist_class.r15);
+      bins popretz_ft_cm_r4= binsof(cp_hazard.popretz_ft_cm) && binsof(cp_rlist_class.r4);
+      bins popretz_ft_cm_r5_14= binsof(cp_hazard.popretz_ft_cm) && binsof(cp_rlist_class.r5_14);
+      bins popretz_then_target_r15= binsof(cp_hazard.popretz_then_target) && binsof(cp_rlist_class.r15);
+      bins popretz_then_target_r4= binsof(cp_hazard.popretz_then_target) && binsof(cp_rlist_class.r4);
+      bins popretz_then_target_r5_14= binsof(cp_hazard.popretz_then_target) && binsof(cp_rlist_class.r5_14);
+      bins push_then_pop_b2b_r15= binsof(cp_hazard.push_then_pop_b2b) && binsof(cp_rlist_class.r15);
+      bins push_then_pop_b2b_r4= binsof(cp_hazard.push_then_pop_b2b) && binsof(cp_rlist_class.r4);
+      bins push_then_pop_b2b_r5_14= binsof(cp_hazard.push_then_pop_b2b) && binsof(cp_rlist_class.r5_14);
+    }
+    cr_ft_kind: cross cp_hazard, cp_ft_kind {
+      bins popret_ft_cm_cm_mva01s= binsof(cp_hazard.popret_ft_cm) && binsof(cp_ft_kind.cm_mva01s);
+      bins popret_ft_cm_cm_mvsa01= binsof(cp_hazard.popret_ft_cm) && binsof(cp_ft_kind.cm_mvsa01);
+      bins popret_ft_cm_cm_pop= binsof(cp_hazard.popret_ft_cm) && binsof(cp_ft_kind.cm_pop);
+      bins popret_ft_cm_cm_popret= binsof(cp_hazard.popret_ft_cm) && binsof(cp_ft_kind.cm_popret);
+      bins popret_ft_cm_cm_popretz= binsof(cp_hazard.popret_ft_cm) && binsof(cp_ft_kind.cm_popretz);
+      bins popret_ft_cm_cm_push= binsof(cp_hazard.popret_ft_cm) && binsof(cp_ft_kind.cm_push);
+      bins popretz_ft_cm_cm_mva01s= binsof(cp_hazard.popretz_ft_cm) && binsof(cp_ft_kind.cm_mva01s);
+      bins popretz_ft_cm_cm_mvsa01= binsof(cp_hazard.popretz_ft_cm) && binsof(cp_ft_kind.cm_mvsa01);
+      bins popretz_ft_cm_cm_pop= binsof(cp_hazard.popretz_ft_cm) && binsof(cp_ft_kind.cm_pop);
+      bins popretz_ft_cm_cm_popret= binsof(cp_hazard.popretz_ft_cm) && binsof(cp_ft_kind.cm_popret);
+      bins popretz_ft_cm_cm_popretz= binsof(cp_hazard.popretz_ft_cm) && binsof(cp_ft_kind.cm_popretz);
+      bins popretz_ft_cm_cm_push= binsof(cp_hazard.popretz_ft_cm) && binsof(cp_ft_kind.cm_push);
+    }
+  endgroup

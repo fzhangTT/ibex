@@ -117,3 +117,9 @@ against the mutant's own urg report, and both check logs carry a stamp (manifest
 
 The batch driver log is gen_fu_l13_oot_mutation_batch_fm_l11.log; the ablation manifests in evidence/ are the ones checked (identical to the
 mutant directories' copies).
+
+## Landing 12: FM16 (gen_cmp_zcmp_hazard_cg)
+
+| id | mutation | vehicle | build | catch (the checker on the proof manifest) | ablation |
+|---|---|---|---|---|---|
+| FM16 | gen_fcov_pkg.sv: the rlist class boundary off by one (`rlist == 14` classed r15, so rlist 15 falls into r5_14) | gen_ut_lockstep on gen_zcmp_hazard_directed.S, default bus regime; manifest gen_fcov_proof_slice5e.fcov.yaml | 9647b7f65ea4fc03 (mut_root/FM16, copied from the landing sources; canary gen_fcov_pkg.sv 802e323aab04ad8a) | FAIL: `1 declared bin(s) not hit: gen_cmp_zcmp_hazard_cg.cp_rlist_class.r15` (gen_fu_l14_FM16_check.log, stamped) | PASS, all 25 declared bins hit (gen_fcov_proof_slice5e_fm16_ablation.fcov.yaml, gen_fu_l14_FM16_ablation_check.log, stamped) |

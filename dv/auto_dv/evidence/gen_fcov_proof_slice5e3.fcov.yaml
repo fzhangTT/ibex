@@ -1,0 +1,53 @@
+# gen_fcov_proof_slice5e3.fcov.yaml: fcov-expectation proof of T-205 Slice A (gen_cmp_zcmp_hazard_cg): the same program under the same-cycle / min1 bus regimes: the min1 delay class; build b12x, fresh vdb
+test: gen_fcov_proof_slice5e3
+owner: tb-infra
+bins:
+  - gen_cmp_zcmp_hazard_cg.cp_hazard.popretz_ft_cm
+  - gen_cmp_zcmp_hazard_cg.cp_hazard.popret_ft_cm
+  - gen_cmp_zcmp_hazard_cg.cp_hazard.mvsa01_then_mva01s
+  - gen_cmp_zcmp_hazard_cg.cp_hazard.popretz_then_target
+  - gen_cmp_zcmp_hazard_cg.cp_hazard.popret_then_target
+  - gen_cmp_zcmp_hazard_cg.cp_hazard.pop_then_push_b2b
+  - gen_cmp_zcmp_hazard_cg.cp_hazard.push_then_pop_b2b
+  - gen_cmp_zcmp_hazard_cg.cp_hazard.load_then_mva01s
+  - gen_cmp_zcmp_hazard_cg.cp_hazard.load_pushed_reg_then_push
+  - gen_cmp_zcmp_hazard_cg.cp_hazard.write_pushed_reg_then_push
+  - gen_cmp_zcmp_hazard_cg.cp_hazard.store_same_slot_then_pop
+  - gen_cmp_zcmp_hazard_cg.cp_ft_kind.cm_mva01s
+  - gen_cmp_zcmp_hazard_cg.cp_ft_kind.cm_mvsa01
+  - gen_cmp_zcmp_hazard_cg.cp_ft_kind.cm_popretz
+  - gen_cmp_zcmp_hazard_cg.cp_ft_kind.cm_popret
+  - gen_cmp_zcmp_hazard_cg.cp_ft_kind.cm_pop
+  - gen_cmp_zcmp_hazard_cg.cp_ft_kind.cm_push
+  - gen_cmp_zcmp_hazard_cg.cp_ret_once.yes
+  - gen_cmp_zcmp_hazard_cg.cp_rlist_class.r15
+  - gen_cmp_zcmp_hazard_cg.cp_rlist_class.r5_14
+  - gen_cmp_zcmp_hazard_cg.cp_rlist_class.r4
+  - gen_cmp_zcmp_hazard_cg.cp_dmem_delay.min1
+  - gen_cmp_zcmp_hazard_cg.cp_delta_uop.some_stall
+  - gen_cmp_zcmp_hazard_cg.cp_delta_uop.all_one
+anti_vacuity:
+  gen_cmp_zcmp_hazard_cg.cp_hazard.popretz_ft_cm: "plan CG-CMP-009 anti-vacuity: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_cmp_zcmp_hazard_cg.cp_hazard.popret_ft_cm: "plan CG-CMP-009 anti-vacuity: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_cmp_zcmp_hazard_cg.cp_hazard.mvsa01_then_mva01s: "plan CG-CMP-009 anti-vacuity: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_cmp_zcmp_hazard_cg.cp_hazard.popretz_then_target: "plan CG-CMP-009 anti-vacuity: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_cmp_zcmp_hazard_cg.cp_hazard.popret_then_target: "plan CG-CMP-009 anti-vacuity: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_cmp_zcmp_hazard_cg.cp_hazard.pop_then_push_b2b: "plan CG-CMP-009 anti-vacuity: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_cmp_zcmp_hazard_cg.cp_hazard.push_then_pop_b2b: "plan CG-CMP-009 anti-vacuity: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_cmp_zcmp_hazard_cg.cp_hazard.load_then_mva01s: "plan CG-CMP-009 anti-vacuity: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_cmp_zcmp_hazard_cg.cp_hazard.load_pushed_reg_then_push: "plan CG-CMP-009 anti-vacuity: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_cmp_zcmp_hazard_cg.cp_hazard.write_pushed_reg_then_push: "plan CG-CMP-009 anti-vacuity: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_cmp_zcmp_hazard_cg.cp_hazard.store_same_slot_then_pop: "plan CG-CMP-009 anti-vacuity: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_cmp_zcmp_hazard_cg.cp_ft_kind.cm_mva01s: "plan CG-CMP-009 anti-vacuity: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_cmp_zcmp_hazard_cg.cp_ft_kind.cm_mvsa01: "plan CG-CMP-009 anti-vacuity: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_cmp_zcmp_hazard_cg.cp_ft_kind.cm_popretz: "plan CG-CMP-009 anti-vacuity: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_cmp_zcmp_hazard_cg.cp_ft_kind.cm_popret: "plan CG-CMP-009 anti-vacuity: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_cmp_zcmp_hazard_cg.cp_ft_kind.cm_pop: "plan CG-CMP-009 anti-vacuity: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_cmp_zcmp_hazard_cg.cp_ft_kind.cm_push: "plan CG-CMP-009 anti-vacuity: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_cmp_zcmp_hazard_cg.cp_ret_once.yes: "plan CG-CMP-009 anti-vacuity: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_cmp_zcmp_hazard_cg.cp_rlist_class.r15: "plan CG-CMP-009 anti-vacuity: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_cmp_zcmp_hazard_cg.cp_rlist_class.r5_14: "plan CG-CMP-009 anti-vacuity: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_cmp_zcmp_hazard_cg.cp_rlist_class.r4: "plan CG-CMP-009 anti-vacuity: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_cmp_zcmp_hazard_cg.cp_dmem_delay.min1: "plan CG-CMP-009 anti-vacuity: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed; the hit is a retired instruction the lock-step compare judged against the ISA model; owned by no test-plan item (the plan's Section 0a table, no CSV row): a proof bin that credits nothing"
+  gen_cmp_zcmp_hazard_cg.cp_delta_uop.some_stall: "plan CG-CMP-009 anti-vacuity: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed; the hit is a retired instruction the lock-step compare judged against the ISA model"
+  gen_cmp_zcmp_hazard_cg.cp_delta_uop.all_one: "plan CG-CMP-009 anti-vacuity: the pattern requires a specific preceding/following retirement so it cannot fire on an isolated cm.*; a hit proves the hazard pattern executed; the hit is a retired instruction the lock-step compare judged against the ISA model"

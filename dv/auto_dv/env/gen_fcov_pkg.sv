@@ -107,6 +107,7 @@ package gen_fcov_pkg;
     gen_mul_timing_cg  mt_cg;        // the multiply's timing neighbours
     gen_rst_boot_cg    rst_cg;       // one sample per reset
     gen_sec_ctrl_inputs_cg sec_cg;   // the security-input events
+    gen_cmp_zcmp_hazard_cg hz_cg;    // the Zcmp neighbour patterns (CG-CMP-009)
     // CG-BIT-006 binv_twice: the record before was binv / binvi, with its rd and index
     bit sb_prev_binv = 0; logic [4:0] sb_prev_rd, sb_prev_idx; int unsigned n_sbit = 0, n_zcb = 0;
     // CG-CMP-007 move pair: form, register fields, the two source values, the neighbour facts; sampled once the next record is known
@@ -127,7 +128,12 @@ package gen_fcov_pkg;
     // the sequence's sample waits for the record after it: that record's mhpmcounter10 counts through the last micro-op, the first micro-op's counts through the instruction before the sequence, so their difference is the cm.*'s own count
     bit zcmp_pend = 0; int zcmp_v [13]; int unsigned n_zcmp_uop_no = 0, n_zcmp_order_no = 0, n_zcmp_tags_no = 0, n_zcmp_minstret_no = 0;
     // data-bus responses seen (cycle of rvalid, latency after grant): cp_dmem_delay classifies the responses inside the sequence's window
-    int unsigned dlat_cyc [$], dlat_lat [$], dlat_gnt [$]; int unsigned prev_rec_cycle = 0, cur_rec_cycle = 0, zp_win_start;
+    int unsigned dlat_cyc [$], dlat_lat [$], dlat_gnt [$]; logic [31:0] dlat_addr [$]; int unsigned prev_rec_cycle = 0, cur_rec_cycle = 0, zp_win_start;
+    // CG-CMP-009 state: the neighbour facts of a sequence (the instruction before it, the sequence before it, the fall-through halfword,
+    // the recent plain stores, the micro-op cycles) and the pended return-target check
+    int unsigned n_hz = 0; int ut_last_hz [7]; logic [31:0] st_addr [$]; logic [31:0] zp_load_addr [$]; int prev_seq_kind = -1, hz_b2b_prev = -1;
+    logic [31:0] hz_prev_wr; bit hz_prev_ld; int unsigned zp_last_uop_cycle, zp_ra_load_cycle, zp_addi_cycle; bit zp_uop_stall; logic [31:0] zp_ret_target, zp_ra_addr;
+    bit hz_pend = 0; int hz_pend_kind; int hz_pend_v [7]; int unsigned hz_pend_cycle;
     // Slice A state: the previous record (continuity, gap, the multiply's neighbour), the pending multiply (its successor decides
     // cp_next_dep), the recent fetches (fetch-stall), the reset-release facts and the security-input trackers
     gen_rvfi_txn prev_t, last_t; bit have_prev = 0, have_last = 0; int unsigned n_rec = 0, n_mt = 0, n_rst = 0, n_sec = 0;   // last_t: the record before the one write() is handling
@@ -143,8 +149,8 @@ package gen_fcov_pkg;
     bit zca_pend = 0; int zca_v [7];
     function new(string name, uvm_component parent); super.new(name, parent); dbus_imp = new("dbus_imp", this); ibus_imp = new("ibus_imp", this); key_imp = new("key_imp", this); endfunction
     function void write_dbus(gen_bus_txn b);   // every completed data-bus transaction, in completion order
-      dlat_cyc.push_back(b.stamp_rvalid); dlat_lat.push_back(b.rvalid_delay); dlat_gnt.push_back(b.stamp_gnt);   // the RVFI record's cycle base (bridge counter)
-      if (dlat_cyc.size() > 256) begin void'(dlat_cyc.pop_front()); void'(dlat_lat.pop_front()); void'(dlat_gnt.pop_front()); end
+      dlat_cyc.push_back(b.stamp_rvalid); dlat_lat.push_back(b.rvalid_delay); dlat_gnt.push_back(b.stamp_gnt); dlat_addr.push_back({b.addr[31:2], 2'b00});   // the RVFI record's cycle base (bridge counter)
+      if (dlat_cyc.size() > 256) begin void'(dlat_cyc.pop_front()); void'(dlat_lat.pop_front()); void'(dlat_gnt.pop_front()); void'(dlat_addr.pop_front()); end
     endfunction
     function void build_phase(uvm_phase phase);
       super.build_phase(phase);
@@ -153,7 +159,7 @@ package gen_fcov_pkg;
       if (!uvm_config_db#(virtual gen_irq_if)::get(this, "", "irq_vif", irq_vif)) `uvm_fatal("GEN_FCOV", "irq vif not in uvm_config_db")
       if (!uvm_config_db#(virtual gen_dbg_if)::get(this, "", "dbg_vif", dbg_vif)) `uvm_fatal("GEN_FCOV", "dbg vif not in uvm_config_db")
       hart_id_v = cfg.hart_id;
-      if (cfg.fcov_en) begin mul_cg = new(); div_cg = new(); alu_cg = new(); bit_cg = new(); imm_cg = new(); sh_cg = new(); cnt_cg = new(); zca_cg = new(); zcmp_cg = new(); mv_cg = new(); csr_cg = new(); br_cg = new(); sbit_cg = new(); zcb_cg = new(); rec_cg = new(); mt_cg = new(); rst_cg = new(); sec_cg = new(); end
+      if (cfg.fcov_en) begin mul_cg = new(); div_cg = new(); alu_cg = new(); bit_cg = new(); imm_cg = new(); sh_cg = new(); cnt_cg = new(); zca_cg = new(); zcmp_cg = new(); mv_cg = new(); csr_cg = new(); br_cg = new(); sbit_cg = new(); zcb_cg = new(); rec_cg = new(); mt_cg = new(); rst_cg = new(); sec_cg = new(); hz_cg = new(); end
     endfunction
     // ---- classifiers (plan bin order = the rendered GEN_FC_* indices)
     function int mul_rs_cls(logic [31:0] v);   // CG-MUL-001 cp_rs1_class / cp_rs2_class (same bin list)
@@ -542,10 +548,50 @@ package gen_fcov_pkg;
     endfunction
 
     // ---- CG-CMP-006: the 16-bit source word of a Zcmp stack instruction (rvfi_ext_expanded_insn): kind, rlist, spimm, N, stack_adj
+    // ---- CG-CMP-009 helpers: the registers a push / pop rlist names, the cm.* kind of a halfword, the pattern sample
+    function logic [31:0] zp_regs(int rlist);   // ra, s0, s1, then s2..s11 (x18..x27) as rlist grows; rlist 15 = all twelve
+      logic [31:0] m = 32'h2;   // ra
+      if (rlist >= 5) m[8] = 1'b1; if (rlist >= 6) m[9] = 1'b1;
+      for (int r = 7; r <= rlist && r <= 15; r++) begin int idx = (r == 15) ? 27 : 18 + (r - 7); m[idx] = 1'b1; if (r == 15) begin m[26] = 1'b1; m[25] = 1'b1; end end
+      return m;
+    endfunction
+    function int hz_cm_kind(logic [15:0] hw);   // the fall-through halfword: a Zcmp stack op or a move, else -1
+      if (hw[15:13] == 3'b101 && hw[1:0] == 2'b10) case (hw[12:8])
+        5'b11000: return GEN_FC_CMP_ZCMP_HAZARD_CP_FT_KIND_CM_PUSH; 5'b11010: return GEN_FC_CMP_ZCMP_HAZARD_CP_FT_KIND_CM_POP;
+        5'b11100: return GEN_FC_CMP_ZCMP_HAZARD_CP_FT_KIND_CM_POPRETZ; 5'b11110: return GEN_FC_CMP_ZCMP_HAZARD_CP_FT_KIND_CM_POPRET;
+        default: ;
+      endcase
+      if (hw[15:10] == 6'b101011 && hw[1:0] == 2'b10) return hw[6:5] == 2'b01 ? GEN_FC_CMP_ZCMP_HAZARD_CP_FT_KIND_CM_MVSA01 : hw[6:5] == 2'b11 ? GEN_FC_CMP_ZCMP_HAZARD_CP_FT_KIND_CM_MVA01S : -1;
+      return -1;
+    endfunction
+    function int hz_rlist_cls(int rlist);
+      return (rlist == 4) ? GEN_FC_CMP_ZCMP_HAZARD_CP_RLIST_CLASS_R4 : (rlist == 15) ? GEN_FC_CMP_ZCMP_HAZARD_CP_RLIST_CLASS_R15 : GEN_FC_CMP_ZCMP_HAZARD_CP_RLIST_CLASS_R5_14;
+    endfunction
+    function void hz_sample(int pattern, int ft, int ret_once, int redirect_once, int rlist_cls, int delay, int delta_uop);
+      int v [7];
+      if (hz_cg == null) return;
+      v[0] = pattern; v[1] = ft; v[2] = ret_once; v[3] = redirect_once; v[4] = rlist_cls; v[5] = delay; v[6] = delta_uop;
+      hz_cg.sample(v[0], v[1], v[2], v[3], v[4], v[5], v[6]); ut_last_hz = v; n_hz++;
+    endfunction
+    // the pended popret / popretz: its return target must retire next (cp_ret_once, popret(z)_then_target; cp_redirect_once counts the fetches
+    // of the target word between the ret and its retirement while the icache is disabled)
+    function void hz_flush(gen_rvfi_txn nxt);
+      if (!hz_pend) return;
+      if (nxt != null && !nxt.ext_exp_valid && nxt.pc_rdata == zp_ret_target) begin
+        int redir = -1;
+        if (!icache_en_tracked) begin int nf = 0; foreach (ib_addr[i]) if (ib_addr[i][31:2] == zp_ret_target[31:2] && ib_rv[i] > hz_pend_cycle && ib_rv[i] <= nxt.cycle) nf++; redir = (nf == 1) ? GEN_FC_CMP_ZCMP_HAZARD_CP_REDIRECT_ONCE_YES : -1; end
+        hz_sample(hz_pend_kind == GEN_FC_CMP_ZCMP_PUSHPOP_CP_INSN_CM_POPRET ? GEN_FC_CMP_ZCMP_HAZARD_CP_HAZARD_POPRET_THEN_TARGET : GEN_FC_CMP_ZCMP_HAZARD_CP_HAZARD_POPRETZ_THEN_TARGET,
+                  -1, GEN_FC_CMP_ZCMP_HAZARD_CP_RET_ONCE_YES, redir, hz_pend_v[4], hz_pend_v[5], hz_pend_v[6]);
+      end
+      hz_pend = 0;
+    endfunction
     function void zp_start(gen_rvfi_txn t);
       logic [15:0] w = t.ext_exp_insn;
       zp_in = 1; zp_pc = t.pc_rdata; zp_count = 0; zp_mem_k = 0; zp_sp_valid = 0; zp_order_ok = 1; zp_tags_ok = 1; zp_ret_align = -1; zp_prev_reg = 5'd31;
       zp_mhpm10_first = t.ext_mhpmcounters[7]; zp_win_start = prev_rec_cycle;
+      zp_load_addr.delete(); zp_last_uop_cycle = t.cycle; zp_uop_stall = 0; zp_ra_load_cycle = 0; zp_addi_cycle = 0; zp_ret_target = 0;
+      hz_b2b_prev = (have_last && last_t.ext_exp_valid && last_t.ext_exp_last) ? prev_seq_kind : -1;   // the record before this first micro-op closed a sequence
+      hz_prev_wr = prev_wr; hz_prev_ld = prev_ld;   // the instruction before the sequence
       zp_kind = -1;
       if (w[15:13] == 3'b101 && w[1:0] == 2'b10) case (w[12:8])
         5'b11000: zp_kind = GEN_FC_CMP_ZCMP_PUSHPOP_CP_INSN_CM_PUSH;
@@ -589,6 +635,7 @@ package gen_fcov_pkg;
     function void zp_step(gen_rvfi_txn t);
       bit is_st; int unsigned bytes; logic [4:0] r; logic [31:0] want;
       zp_count++;
+      if (zp_count > 1 && t.cycle - zp_last_uop_cycle > 1) zp_uop_stall = 1; zp_last_uop_cycle = t.cycle;   // cp_delta_uop
       if (!t.ext_exp_last && t.pc_wdata != t.pc_rdata) zp_tags_ok = 0;   // intermediate micro-ops report their own pc (R9)
       if (t.insn[1:0] != 2'b11) zp_tags_ok = 0;                            // every micro-op word is the synthesized 32-bit one
       if (zp_mv >= 0) begin   // a move micro-op: `addi dst, src, 0` with the register pair of its position
@@ -617,7 +664,10 @@ package gen_fcov_pkg;
         want = is_st ? zp_sp - 32'(4 * zp_mem_k) : zp_sp + 32'(zp_adj) - 32'(4 * zp_mem_k);
         if (t.mem_addr != want || (zp_mem_k > 1 && r >= zp_prev_reg)) zp_order_ok = 0;   // descending registers, addresses as predicted
         zp_prev_reg = r;
+        if (!is_st) begin zp_load_addr.push_back({t.mem_addr[31:2], 2'b00}); if (r == 5'd1) begin zp_ra_load_cycle = t.cycle; zp_ra_addr = {t.mem_addr[31:2], 2'b00}; end end   // the pop's slots; the ra load
       end
+      if (t.insn[6:0] == ibex_pkg::OPCODE_OP_IMM && t.insn[14:12] == 3'b000 && t.insn[11:7] == 5'd2 && t.insn[19:15] == 5'd2) zp_addi_cycle = t.cycle;   // the addi sp, sp, adj micro-op
+      if (t.insn[6:0] == ibex_pkg::OPCODE_JALR) zp_ret_target = t.rs1_rdata;   // the ret's target (the loaded ra)
       if (t.insn[6:0] == ibex_pkg::OPCODE_JALR)   // the jalr x0, 0(ra) of popret / popretz: the loaded ra
         zp_ret_align = t.rs1_rdata[0] ? GEN_FC_CMP_ZCMP_PUSHPOP_CP_RET_ALIGN_ODD : t.rs1_rdata[1] ? GEN_FC_CMP_ZCMP_PUSHPOP_CP_RET_ALIGN_HALF : GEN_FC_CMP_ZCMP_PUSHPOP_CP_RET_ALIGN_WORD;
       if (t.ext_exp_last) begin
@@ -637,6 +687,27 @@ package gen_fcov_pkg;
           zcmp_v[10] = is_push || zp_kind == GEN_FC_CMP_ZCMP_PUSHPOP_CP_INSN_CM_POP ? -1 : zp_ret_align; zcmp_v[11] = zp_delay_cls(zp_win_start, t.cycle);
           zcmp_v[12] = gen_isa_read_csr(GEN_CSR_CPUCTRLSTS)[GEN_CPUCTRLSTS_DUMMY_INSTR_EN_BIT] ? GEN_FC_CMP_ZCMP_PUSHPOP_CP_DUMMY_EN_ON : GEN_FC_CMP_ZCMP_PUSHPOP_CP_DUMMY_EN_OFF;
           zcmp_pend = 1;
+          begin   // CG-CMP-009: the neighbour patterns of this sequence, one sample per pattern seen
+            int rl = hz_rlist_cls(zp_rlist), dl = zcmp_v[11], du = zp_uop_stall ? GEN_FC_CMP_ZCMP_HAZARD_CP_DELTA_UOP_SOME_STALL : GEN_FC_CMP_ZCMP_HAZARD_CP_DELTA_UOP_ALL_ONE;
+            bit is_pop = (zp_kind == GEN_FC_CMP_ZCMP_PUSHPOP_CP_INSN_CM_POP), is_ret = (zp_kind == GEN_FC_CMP_ZCMP_PUSHPOP_CP_INSN_CM_POPRET || zp_kind == GEN_FC_CMP_ZCMP_PUSHPOP_CP_INSN_CM_POPRETZ);
+            if (is_push && (hz_prev_wr & zp_regs(zp_rlist)) != 0)
+              hz_sample(hz_prev_ld ? GEN_FC_CMP_ZCMP_HAZARD_CP_HAZARD_LOAD_PUSHED_REG_THEN_PUSH : GEN_FC_CMP_ZCMP_HAZARD_CP_HAZARD_WRITE_PUSHED_REG_THEN_PUSH, -1, -1, -1, rl, dl, du);
+            if (is_push && hz_b2b_prev == GEN_FC_CMP_ZCMP_PUSHPOP_CP_INSN_CM_POP) hz_sample(GEN_FC_CMP_ZCMP_HAZARD_CP_HAZARD_POP_THEN_PUSH_B2B, -1, -1, -1, rl, dl, du);
+            if (is_pop && hz_b2b_prev == GEN_FC_CMP_ZCMP_PUSHPOP_CP_INSN_CM_PUSH) hz_sample(GEN_FC_CMP_ZCMP_HAZARD_CP_HAZARD_PUSH_THEN_POP_B2B, -1, -1, -1, rl, dl, du);
+            if (is_pop || is_ret) begin bit same = 0; foreach (zp_load_addr[i]) foreach (st_addr[j]) if (zp_load_addr[i] == st_addr[j]) same = 1;
+              if (same) hz_sample(GEN_FC_CMP_ZCMP_HAZARD_CP_HAZARD_STORE_SAME_SLOT_THEN_POP, -1, -1, -1, rl, dl, du); end
+            if (is_ret) begin
+              logic [31:0] w = gen_isa_read_word({zp_pc[31:2], 2'b00} + (zp_pc[1] ? 32'd4 : 32'd0)); logic [15:0] hw = zp_pc[1] ? w[15:0] : w[31:16];   // the halfword at pc + 2
+              int ft = hz_cm_kind(hw);
+              begin   // the ra load's response later than the cycle after its grant defers the addi (C-9); the min1 response never does (the plan's ignore)
+                int ra_lat = -1; foreach (dlat_addr[i]) if (dlat_addr[i] == zp_ra_addr && dlat_cyc[i] <= t.cycle) ra_lat = dlat_lat[i];
+                if (zp_ra_load_cycle != 0 && ra_lat > 1) hz_sample(GEN_FC_CMP_ZCMP_HAZARD_CP_HAZARD_POPRET_RA_DEFERRED, -1, -1, -1, rl, dl, du);
+              end
+              if (ft >= 0) hz_sample(zp_kind == GEN_FC_CMP_ZCMP_PUSHPOP_CP_INSN_CM_POPRET ? GEN_FC_CMP_ZCMP_HAZARD_CP_HAZARD_POPRET_FT_CM : GEN_FC_CMP_ZCMP_HAZARD_CP_HAZARD_POPRETZ_FT_CM, ft, -1, -1, rl, dl, du);
+              hz_pend = 1; hz_pend_kind = zp_kind; hz_pend_v[4] = rl; hz_pend_v[5] = dl; hz_pend_v[6] = du; hz_pend_cycle = t.cycle;   // the target check on the next record
+            end
+            prev_seq_kind = zp_kind;
+          end
         end
         zp_in = 0;
       end
@@ -661,6 +732,14 @@ package gen_fcov_pkg;
         if (k >= 0 && k != mv_v[0]) mv_v[5] = mv_b2b(mv_v[0], k);
       end
       mv_cg.sample(mv_v[0], mv_v[1], mv_v[2], mv_v[3], mv_v[4], mv_v[5], mv_v[6], mv_v[7]);
+      begin   // CG-CMP-009: the move patterns (no rlist; the delay class is the preceding load's response)
+        int du = zp_uop_stall ? GEN_FC_CMP_ZCMP_HAZARD_CP_DELTA_UOP_SOME_STALL : GEN_FC_CMP_ZCMP_HAZARD_CP_DELTA_UOP_ALL_ONE;
+        if (mv_v[0] == GEN_FC_CMP_ZCMP_MV_CP_INSN_CM_MVA01S && mv_v[6] == GEN_FC_CMP_ZCMP_MV_CP_HAZARD_SRC_LOAD_PREV) begin
+          int dl = -1; foreach (dlat_cyc[i]) if (dlat_cyc[i] <= zp_win_start + 1) dl = (dlat_lat[i] == 1) ? GEN_FC_CMP_ZCMP_HAZARD_CP_DMEM_DELAY_MIN1 : (dlat_lat[i] <= 4) ? GEN_FC_CMP_ZCMP_HAZARD_CP_DMEM_DELAY_SHORT : GEN_FC_CMP_ZCMP_HAZARD_CP_DMEM_DELAY_LONG;
+          hz_sample(GEN_FC_CMP_ZCMP_HAZARD_CP_HAZARD_LOAD_THEN_MVA01S, -1, -1, -1, -1, dl, du);
+        end
+        if (mv_v[0] == GEN_FC_CMP_ZCMP_MV_CP_INSN_CM_MVA01S && mv_v[5] == GEN_FC_CMP_ZCMP_MV_CP_B2B_MVSA01_THEN_MVA01S) hz_sample(GEN_FC_CMP_ZCMP_HAZARD_CP_HAZARD_MVSA01_THEN_MVA01S, -1, -1, -1, -1, -1, du);
+      end
       ut_last_mv = mv_v;
       mv_pend = 0;
     endfunction
@@ -1094,7 +1173,9 @@ package gen_fcov_pkg;
       if (mul_cg == null) return;
       prev_rec_cycle = cur_rec_cycle; cur_rec_cycle = t.cycle;
       mt_flush(t);
+      hz_flush(t);
       rec_sample(t);
+      if (!t.ext_exp_valid && t.mem_wmask != 0) begin st_addr.push_back({t.mem_addr[31:2], 2'b00}); if (st_addr.size() > 64) void'(st_addr.pop_front()); end   // recent plain stores (store_same_slot_then_pop)
       if (!rst_sampled) rst_sample(rst_first_event_cls(t.intr, t.ext_nmi, t.ext_debug_mode));
       sec_record(t);
       last_t = prev_t; have_last = have_prev;   // the neighbour facts of the rest of write() (the multiply's cp_prev / cp_delta) read the record before this one
@@ -1188,7 +1269,7 @@ package gen_fcov_pkg;
     function int unsigned query(int k);
       case (k)
         0: return n_slt_eq; 1: return n_zcmp; 2: return n_zcmp_minstret_no; 3: return n_cnt; 4: return n_cnt_res_na; 5: return n_imm;
-        6: return n_zcmp_uop_no; 7: return n_zcmp_order_no; 8: return n_zcmp_tags_no; 9: return n_br; 10: return n_mv; 11: return n_csr_pairs; 12: return n_mv_miss; 13: return n_rec; 14: return n_mt; 15: return n_rst; 16: return n_sec;
+        6: return n_zcmp_uop_no; 7: return n_zcmp_order_no; 8: return n_zcmp_tags_no; 9: return n_br; 10: return n_mv; 11: return n_csr_pairs; 12: return n_mv_miss; 13: return n_rec; 14: return n_mt; 15: return n_rst; 16: return n_sec; 17: return n_hz;
         default: return 32'hffff_ffff;
       endcase
     endfunction
@@ -1313,6 +1394,17 @@ package gen_fcov_pkg;
       `GEN_FCOV_UT("first event: debug entry", rst_first_event_cls(0, 0, 1), GEN_FC_RST_BOOT_CP_FIRST_EVENT_DEBUG_ENTRY)
       `GEN_FCOV_UT("boot-to-request 2 / 3 / 6 / 1", rst_req_cls(2) * 1000 + rst_req_cls(3) * 100 + rst_req_cls(6) * 10 + (rst_req_cls(1) + 1), GEN_FC_RST_BOOT_CP_BOOT_TO_REQ_CYCLES_TWO * 1000 + GEN_FC_RST_BOOT_CP_BOOT_TO_REQ_CYCLES_THREE * 100 + GEN_FC_RST_BOOT_CP_BOOT_TO_REQ_CYCLES_MORE * 10)
       `GEN_FCOV_UT("mubi: On / Off / other", mubi_cls_sec(ibex_pkg::IbexMuBiOn) * 100 + mubi_cls_sec(ibex_pkg::IbexMuBiOff) * 10 + mubi_cls_sec(ibex_pkg::ibex_mubi_t'(4'b0011)), GEN_FC_SEC_CTRL_INPUTS_CP_FETCH_EN_VAL_ON * 100 + GEN_FC_SEC_CTRL_INPUTS_CP_FETCH_EN_VAL_OFF * 10 + GEN_FC_SEC_CTRL_INPUTS_CP_FETCH_EN_VAL_INVALID)
+      // CG-CMP-009 classifiers: the rlist register set, the fall-through halfword kind, the rlist class
+      `GEN_FCOV_UT("rlist 4 saves ra only", zp_regs(4), 32'h0000_0002)
+      `GEN_FCOV_UT("rlist 6 saves ra, s0, s1", zp_regs(6), 32'h0000_0302)
+      `GEN_FCOV_UT("rlist 8 saves ra, s0..s3 (x18, x19)", zp_regs(8), 32'h000c_0302)
+      `GEN_FCOV_UT("rlist 15 saves ra, s0..s11 (x18..x27)", zp_regs(15), 32'h0ffc_0302)
+      `GEN_FCOV_UT("halfword cm.push {ra} is a cm_push", hz_cm_kind(16'hb842), GEN_FC_CMP_ZCMP_HAZARD_CP_FT_KIND_CM_PUSH)
+      `GEN_FCOV_UT("halfword cm.popret {ra} is a cm_popret", hz_cm_kind(16'hbe42), GEN_FC_CMP_ZCMP_HAZARD_CP_FT_KIND_CM_POPRET)
+      `GEN_FCOV_UT("halfword cm.mva01s s7, s6 is a cm_mva01s", hz_cm_kind(16'haffa), GEN_FC_CMP_ZCMP_HAZARD_CP_FT_KIND_CM_MVA01S)
+      `GEN_FCOV_UT("halfword cm.mvsa01 s2, s3 is a cm_mvsa01", hz_cm_kind(16'had2e), GEN_FC_CMP_ZCMP_HAZARD_CP_FT_KIND_CM_MVSA01)
+      `GEN_FCOV_UT("halfword c.addi is not a cm.*", hz_cm_kind(16'h0085), -1)
+      `GEN_FCOV_UT("rlist classes 4 / 9 / 15", hz_rlist_cls(4) * 100 + hz_rlist_cls(9) * 10 + hz_rlist_cls(15), GEN_FC_CMP_ZCMP_HAZARD_CP_RLIST_CLASS_R4 * 100 + GEN_FC_CMP_ZCMP_HAZARD_CP_RLIST_CLASS_R5_14 * 10 + GEN_FC_CMP_ZCMP_HAZARD_CP_RLIST_CLASS_R15)
       `undef GEN_FCOV_UT
       `uvm_info("GEN_FCOV_UT", $sformatf("self-test: %0d cases, %0d failures", n, fails), UVM_LOW)
       return fails;
@@ -1320,11 +1412,12 @@ package gen_fcov_pkg;
     function void report_phase(uvm_phase phase);
       zca_flush(null);   // the last 16-bit record has no successor: its next_len is not applicable
       mt_flush(null);    // a multiply at the very end has no successor: cp_next_dep na
+      hz_flush(null);    // a popret at the very end has no target record
       if (!rst_sampled && rst_release_seen && rst_fetch_en != GEN_FC_RST_BOOT_CP_FETCH_EN_AT_RELEASE_ON) rst_sample(GEN_FC_RST_BOOT_CP_FIRST_EVENT_NONE_FETCH_DISABLED);   // no record: fetch stayed disabled
       mv_flush(null);    // a move pair at the very end has no neighbour after
       zcmp_flush(null);  // a sequence at the very end has no record after it: minstret_once not applicable
       `uvm_info("GEN_FCOV", $sformatf("move pairs: %0d sampled, %0d with mismatching micro-ops (%0d of them the self-test's)", n_mv, n_mv_miss, ut_mv_miss_expected), UVM_LOW)
-      `uvm_info("GEN_FCOV", $sformatf("slice A samples: records=%0d mul_timing=%0d rst_boot=%0d (boot_to_req %0d) sec_ctrl_inputs=%0d", n_rec, n_mt, n_rst, boot_to_req, n_sec), UVM_LOW)
+      `uvm_info("GEN_FCOV", $sformatf("slice A samples: records=%0d mul_timing=%0d rst_boot=%0d (boot_to_req %0d) sec_ctrl_inputs=%0d zcmp_hazard=%0d", n_rec, n_mt, n_rst, boot_to_req, n_sec, n_hz), UVM_LOW)
       if (mul_cg != null) begin   // referee: a group the sampler fed must show coverage, a dropped sample is a collected failure
         if (n_mv_miss > ut_mv_miss_expected) `uvm_error("GEN_FCOV_REF", $sformatf("gen_cmp_zcmp_mv_cg: %0d legal move pairs whose micro-ops did not match the expansion", n_mv_miss - ut_mv_miss_expected))
         if (n_mul > 0 && mul_cg.get_coverage() == 0.0) `uvm_error("GEN_FCOV_REF", "gen_mul_ops_cg sampled without coverage")
@@ -1340,6 +1433,7 @@ package gen_fcov_pkg;
         if (n_mt > 0 && mt_cg.get_coverage() == 0.0) `uvm_error("GEN_FCOV_REF", "gen_mul_timing_cg sampled without coverage")
         if (n_rst > 0 && rst_cg.get_coverage() == 0.0) `uvm_error("GEN_FCOV_REF", "gen_rst_boot_cg sampled without coverage")
         if (n_sec > 0 && sec_cg.get_coverage() == 0.0) `uvm_error("GEN_FCOV_REF", "gen_sec_ctrl_inputs_cg sampled without coverage")
+        if (n_hz > 0 && hz_cg.get_coverage() == 0.0) `uvm_error("GEN_FCOV_REF", "gen_cmp_zcmp_hazard_cg sampled without coverage")
         if (n_br > 0 && br_cg.get_coverage() == 0.0) `uvm_error("GEN_FCOV_REF", "gen_isa_branch_cg sampled without coverage")
         if (n_zcmp > 0 && zcmp_cg.get_coverage() == 0.0) `uvm_error("GEN_FCOV_REF", "gen_cmp_zcmp_pushpop_cg sampled without coverage")
         if (n_csr_pairs > 0 && csr_cg.get_coverage() == 0.0) `uvm_error("GEN_FCOV_REF", "gen_csr_trap_setup_warl_cg sampled without coverage")

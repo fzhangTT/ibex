@@ -1,0 +1,11 @@
+--- /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/l12_rehearsal/dv/auto_dv/env/gen_fcov_pkg.sv	2026-09-03 22:34:40.204742244 -0400
++++ /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/mut_root/FM16/dv/auto_dv/env/gen_fcov_pkg.sv	2026-09-03 22:36:35.913503868 -0400
+@@ -565,7 +565,7 @@
+       return -1;
+     endfunction
+     function int hz_rlist_cls(int rlist);
+-      return (rlist == 4) ? GEN_FC_CMP_ZCMP_HAZARD_CP_RLIST_CLASS_R4 : (rlist == 15) ? GEN_FC_CMP_ZCMP_HAZARD_CP_RLIST_CLASS_R15 : GEN_FC_CMP_ZCMP_HAZARD_CP_RLIST_CLASS_R5_14;
++      return (rlist == 4) ? GEN_FC_CMP_ZCMP_HAZARD_CP_RLIST_CLASS_R4 : (rlist == 14) ? GEN_FC_CMP_ZCMP_HAZARD_CP_RLIST_CLASS_R15 : GEN_FC_CMP_ZCMP_HAZARD_CP_RLIST_CLASS_R5_14;   // FM16: the r15 class boundary off by one
+     endfunction
+     function void hz_sample(int pattern, int ft, int ret_once, int redirect_once, int rlist_cls, int delay, int delta_uop);
+       int v [7];

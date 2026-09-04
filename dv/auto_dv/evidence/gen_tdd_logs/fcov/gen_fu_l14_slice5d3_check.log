@@ -1,0 +1,7 @@
+FCOV-EXPECTATION: gen_sec_ctrl_inputs_cg.cp_event.mcounteren_write = HIT (count=34)
+FCOV-EXPECTATION: gen_sec_ctrl_inputs_cg.cp_event.fetch_en_change = HIT (count=1)
+FCOV-EXPECTATION: gen_sec_ctrl_inputs_cg.cp_fetch_en_val.on = HIT (count=1)
+FCOV-EXPECTATION: gen_sec_ctrl_inputs_cg.cp_mcounteren_w_val.on = HIT (count=34)
+FCOV-EXPECTATION: gen_sec_ctrl_inputs_cg.cp_mcounteren_write_effect.dropped = HIT (count=1)
+FCOV-EXPECTATION: gen_sec_ctrl_inputs_cg.cp_mcounteren_write_effect.applied = HIT (count=28)
+FCOV-EXPECTATION: PASS - all 6 declared bins hit

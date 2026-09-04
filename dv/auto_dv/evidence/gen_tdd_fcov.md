@@ -287,3 +287,28 @@ are byte-identical (--check up to date), five unit-test cases hold the forms (ge
   (the core makes no key request: its header once claimed the zero read-backs, CM138-M-1); unreachable by construction:
   cp_reset_kind.mid_run, boot_addr_change and its context.
 - Regression on ai: boot_zc, lockstep_zc, ut_witness, lockstep_s7, intg_s7_allchk, lockstep_zcmp_mv, the two gen_pmc_ctrl runs PASS (gen_fu_l12_*).
+
+## 9. Slice A, second part (landing 12): gen_cmp_zcmp_hazard_cg (CG-CMP-009)
+
+Build b12 (l12_root = the committed landing 11 at f28d09b plus this part; the per-file list gen_fu_l14_sources_sha256_b12.txt). The group
+renders since plan v3f retired cp_hazard.popret_ra_fwd (the renderer refused the group while the plan listed a bin the CSV did not carry: the
+Slice-A-1 row); 19 covergroups, 722 coverpoint and 2860 cross bins rendered on plan v3l, --check up to date, the codegen unit test PASS
+(gen_fu_l14_ut_fcov_codegen.log). The sampler sits in gen_isa_cov's Zcmp collector (gen_component_api_fcov.md, "Slice A, second part").
+- Red first: on the landing-11 sampler the group does not exist, so its 12 pattern bins cannot be declared; the manifests below were written
+  from the reports of this part's runs and each check is the checker's verdict on them. The unit test carries 10 hazard classifier rows
+  (84 cases in all, 0 failures on b12: gen_fu_l14_ut_isa_cov_zc_*).
+- Program gen_zcmp_hazard_directed.S under three data-bus regimes: default (gen_fcov_proof_slice5e.fcov.yaml, 26 coverpoint bins hit, crosses
+  35 / 74), long rvalid and grant (slice5e2: 26 bins, the ra-load deferral class), same-cycle grant / min1 response (slice5e3: 24 bins, crosses
+  30 / 74: the deferral is absent under min1 as the plan's ignore says, and the long delay class is not reached). All 12 pattern bins are hit
+  in the default and long runs; every check PASS on b12 (gen_fu_l14_slice5e_check.log, _slice5e2_, _slice5e3_; the urg reports and commands
+  retained beside them). The notes are derived from the plan's Sample bullet (whole, wrapped lines joined) with the unowned-bin marking.
+- Not reached and stated in the manifests: the cross tuples that need the long class together with the same-cycle patterns (cr_hazard_delay
+  11 / 32 at best), cr_hazard_rlist tuples of patterns the program's rlists do not pair (18 / 30), cr_ft_kind 6 / 12 (the fall-through
+  halfword kinds the program lays out).
+- Mutant FM16 (gen_fcov_pkg.sv: the rlist class boundary off by one, `rlist == 14` classed r15) against the landing sources: the checker on
+  slice5e FAILS on `gen_cmp_zcmp_hazard_cg.cp_rlist_class.r15` alone, the ablation manifest (slice5e without that bin, 25 bins) PASSES; both
+  checks stamped (manifest md5, report, build 9647b7f65ea4fc03, mutant), the canary hashes the mutated file (gen_fcov_pkg.sv 802e323aab04ad8a),
+  the mutation as applied is retained (gen_fu_l14_FM16_mutant.diff). gen_mut_fcov.md row.
+- Regression on b12: 21 of the 22-name set PASS (the Slice A set plus the Zcmp regime runs the collector serves: lockstep_zcmp_dummy is the
+  B8 red by design, 27 comparator rows, gen_fu_l14_lockstep_zcmp_dummy_*), the eleven Slice A proofs re-checked on the landed build, every
+  check PASS (gen_fu_l14_slice*_check.log), the sampler unit test 84 cases 0 failures (gen_fu_l14_ut_isa_cov_zc_*).
