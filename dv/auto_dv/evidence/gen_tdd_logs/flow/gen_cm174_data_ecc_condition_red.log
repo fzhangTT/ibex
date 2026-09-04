@@ -1,0 +1,13 @@
+SELF-TEST BAD measured_knob_condition_refusal (LOG-077) data-RAM rate rare with the alert_minor row off refuses (v3y extends the Q-018 conditions from the tag knob to the data knob): None
+SELF-TEST ok  measured_knob_condition_refusal (LOG-077) data-RAM rate frequent with the row at its table default (1) runs: None
+SELF-TEST ok  measured_knob_condition_refusal (LOG-077) data-RAM rate rare with the row explicitly on runs: None
+SELF-TEST ok  measured_knob_condition_refusal (LOG-077) data-RAM rate none with the row off runs (not triggered): None
+SELF-TEST BAD measured_knob_condition_refusal (LOG-077) data-RAM rate frequent with the master enable off and the row unmentioned refuses: None
+SELF-TEST BAD measured_knob_condition_refusal (LOG-077) tag rate none but data rate rare with the row off refuses: the data row triggers on its own: None
+SELF-TEST ok  measured_knob_condition_refusal (LOG-077) the bit count at two with both rates at their default none and the row off runs: the bit count injects nothing by itself, so the plan gives it no condition: None
+SELF-TEST BAD build-input gate case 13: every listed non-input is tracked and each glob class matches a tracked file (['git ls-files failed: fatal: not a git repository (or any parent up to mount point /)\nStopping at filesystem boundary (GIT_DISCOVERY_ACROSS_FILESYSTEM not set).']); list sha256 80d4a7081e03
+SELF-TEST: FAIL
+SELF-TEST BAD measured_refusal LOG-077 data half: the operator turning the alert_minor row off on a measured data-RAM ECC run refuses: None
+SELF-TEST ok  measured_refusal LOG-077 data half: an operator data rate frequent with the row at its table default runs: None
+SELF-TEST ok  measured_refusal LOG-077 data half: the same unmeasured with the row off runs (evidence run): None
+SELF-TEST: FAIL

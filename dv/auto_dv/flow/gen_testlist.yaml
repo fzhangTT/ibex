@@ -46,8 +46,9 @@ schema_version: 1
 #   fcov_manifest_required_tiers: tiers whose MEASURED tests must carry an fcov_expectation_file (a null
 #     manifest there FAILs the run at merge time; Critic P-07); an entry with measured: false contributes no
 #     coverage and is exempt, as is tier check.
-#   debug_only_plusargs: knob names that never run in a measured coverage run (tb-arch P6: probe
-#     P6, the CSR debug compare); a measured run enabling one is refused in writing (NOT_RUN).
+#   debug_only_plusargs: knob names that never run in a measured run, coverage on or off (tb-arch
+#     P6: probe P6, the CSR debug compare, the P9 icache lookup probe); a measured run enabling one
+#     is refused in writing (NOT_RUN).
 #     The one origin of the property and of the names is TB Infra's rendered knob table
 #     dv/auto_dv/gen_tb/gen_knobs.py (PLUSARGS[...]['debug_only']); load_testlist refuses this
 #     list unless it equals that set.
@@ -2251,4 +2252,147 @@ tests:
     expected_fail: false
     keep_artifacts: true
     component: gen_rvfi_pkg
+    measured: false
+  - name: gen_ut_lockstep_icache_ecc_data
+    description: 'lock-step run of gen_icache_ecc_directed.S with data-RAM ECC injection at rate frequent, the P9 lookup probe on (evidence run: form (a) judges every injection; the probe knob is debug_only,
+      so the entry stays unmeasured)'
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0, +gen_ut_boot_retire=3000, +gen_knob_icache_data_ecc_err_rate=frequent, +gen_probe_ic_lookup=1]
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_icache_ecc_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 900
+    owner: tb-infra
+    pass_marker: GEN_UT_LOCKSTEP_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_checkers_pkg
+    measured: false
+  - name: gen_ut_lockstep_icache_ecc_data_noprobe
+    description: 'the same injection with the probe off: form (b) judges from the retirement stream (the measured-run form; a candidate for measured once the alert rows are on)'
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0, +gen_ut_boot_retire=3000, +gen_knob_icache_data_ecc_err_rate=frequent]
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_icache_ecc_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 900
+    owner: tb-infra
+    pass_marker: GEN_UT_LOCKSTEP_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_checkers_pkg
+    measured: false
+  - name: gen_ut_lockstep_icache_ecc_tag_two
+    description: tag-RAM ECC injection at rate frequent with two bits per flip
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0, +gen_ut_boot_retire=3000, +gen_knob_icache_ecc_err_rate=frequent, +gen_knob_icache_ecc_bits=two]
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_icache_ecc_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 900
+    owner: tb-infra
+    pass_marker: GEN_UT_LOCKSTEP_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_checkers_pkg
+    measured: false
+  - name: gen_ut_lockstep_icache_ecc_data_two
+    description: data-RAM ECC injection at rate frequent with two bits per flip inside one beat, the probe on
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0, +gen_ut_boot_retire=3000, +gen_knob_icache_data_ecc_err_rate=frequent, +gen_knob_icache_ecc_bits=two, +gen_probe_ic_lookup=1]
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_icache_ecc_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 900
+    owner: tb-infra
+    pass_marker: GEN_UT_LOCKSTEP_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_checkers_pkg
+    measured: false
+  - name: gen_ut_lockstep_icache_ecc_both
+    description: 'tag and data injection at rate frequent, the probe on: a tag and a data injection in one lookup cycle share one pulse'
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0, +gen_ut_boot_retire=3000, +gen_knob_icache_ecc_err_rate=frequent, +gen_knob_icache_data_ecc_err_rate=frequent, +gen_probe_ic_lookup=1]
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_icache_ecc_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 900
+    owner: tb-infra
+    pass_marker: GEN_UT_LOCKSTEP_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_checkers_pkg
+    measured: false
+  - name: gen_ut_lockstep_icache_ecc_far_data
+    description: 'lock-step run of gen_icache_ecc_far_directed.S (two bodies 2 KB apart: aliased indices under two tags, the tag changes at every jump) with data-RAM ECC injection at rate frequent,
+      the P9 lookup probe on (evidence run: the hit-way decision between two valid ways; the entry stays unmeasured)'
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0, +gen_ut_boot_retire=3000, +gen_knob_icache_data_ecc_err_rate=frequent, +gen_probe_ic_lookup=1]
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_icache_ecc_far_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 900
+    owner: tb-infra
+    pass_marker: GEN_UT_LOCKSTEP_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_checkers_pkg
+    measured: false
+  - name: gen_ut_lockstep_icache_ecc_far_data_noprobe
+    description: 'the far program with the probe off: form (b) judges the two-tag hit decision from the retirement stream (the measured-run form; most associations are ambiguous there and
+      stay unjudged)'
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0, +gen_ut_boot_retire=3000, +gen_knob_icache_data_ecc_err_rate=frequent]
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_icache_ecc_far_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 900
+    owner: tb-infra
+    pass_marker: GEN_UT_LOCKSTEP_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_checkers_pkg
     measured: false

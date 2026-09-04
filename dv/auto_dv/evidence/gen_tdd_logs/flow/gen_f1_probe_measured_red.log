@@ -1,0 +1,5 @@
+SELF-TEST BAD measured_refusal P6 (F1): a debug-only knob in a measured run WITHOUT coverage refuses too: None
+SELF-TEST BAD measured_refusal P6 (F1): the P9 probe knob in a measured run without coverage refuses: None
+SELF-TEST ok  measured_refusal P6 (F1): the P9 probe knob in a measured coverage run refuses: debug-only plusarg(s) ['gen_probe_ic_lookup'] enabled in a measured coverage run (P6); run it unmeasured (measured: false or --measured no)
+SELF-TEST ok  measured_refusal P6 (F1): the P9 probe knob on an unmeasured run without coverage runs (its evidence run): None
+SELF-TEST: FAIL

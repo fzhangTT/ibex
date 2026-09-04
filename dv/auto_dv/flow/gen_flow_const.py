@@ -166,6 +166,9 @@ PLUSARG_BUILD_CONFIG = "gen_build_config"
 PLUSARG_SMOKE_CYCLES = "gen_smoke_cycles"
 PLUSARG_CHK_SVA_B8 = "gen_chk_sva_b8"   # the B8 probe assertion knob (LOG-067, name per LOG-076): B8 evidence runs only
 PLUSARG_KNOB_ICACHE_ECC_ERR_RATE = "gen_knob_icache_ecc_err_rate"   # icache tag-RAM ECC injection regime (none / rare / frequent)
+PLUSARG_PROBE_IC_LOOKUP = "gen_probe_ic_lookup"   # the P9 icache lookup-address probe (LOG-079): debug_only, never in a measured run
+PLUSARG_KNOB_ICACHE_DATA_ECC_ERR_RATE = "gen_knob_icache_data_ecc_err_rate"   # icache data-RAM ECC injection regime (none / rare / frequent)
+PLUSARG_KNOB_ICACHE_ECC_BITS = "gen_knob_icache_ecc_bits"   # bits flipped per icache ECC injection (one / two); injects nothing on its own
 PLUSARG_CHK_ALERT_MINOR = "gen_chk_alert_minor"                      # gen_chk_alerts' alert_minor row enable
 PLUSARG_CHK_ALL = "gen_chk_all"   # master checker enable: gen_chk_en(cfg, val, set) = chk_all ? val : (set && val) (gen_checkers_pkg.sv:19)
 BANNER_TAG = "GEN_CONFIG_BANNER"
@@ -175,6 +178,9 @@ SV_SHARED_CONSTANTS = {
     "PLUSARG_SMOKE_CYCLES": PLUSARG_SMOKE_CYCLES,
     "PLUSARG_CHK_SVA_B8": PLUSARG_CHK_SVA_B8,
     "PLUSARG_KNOB_ICACHE_ECC_ERR_RATE": PLUSARG_KNOB_ICACHE_ECC_ERR_RATE,
+    "PLUSARG_PROBE_IC_LOOKUP": PLUSARG_PROBE_IC_LOOKUP,
+    "PLUSARG_KNOB_ICACHE_DATA_ECC_ERR_RATE": PLUSARG_KNOB_ICACHE_DATA_ECC_ERR_RATE,
+    "PLUSARG_KNOB_ICACHE_ECC_BITS": PLUSARG_KNOB_ICACHE_ECC_BITS,
     "PLUSARG_CHK_ALERT_MINOR": PLUSARG_CHK_ALERT_MINOR,
     "PLUSARG_CHK_ALL": PLUSARG_CHK_ALL,
     "GEN_BANNER_TAG": BANNER_TAG,
@@ -449,14 +455,27 @@ B8_PROBE_RULE = (f"LOG-067 (name per LOG-076): the B8 probe assertion knob {B8_P
                  "defaults it on (or records no default) refuses measured dispatch")
 # LOG-077 (plan-owner ruling Q-018): a measured run whose effective plusargs, or the knob table's default, set a trigger knob to
 # one of the listed values counts for the plan only with the required knob on (a plusarg, or the table default); the loader
-# refuses such an entry and gen_run refuses such a run before the job, operator plusargs included. One row today; a later
-# condition of the same shape is a row, not a rule.
+# refuses such an entry and gen_run refuses such a run before the job, operator plusargs included. Two rows, the tag and
+# data-RAM ECC rates; the bit-count knob gets none because it injects nothing without a rate. A later condition of the
+# same shape is a row, not a rule.
 MEASURED_KNOB_CONDITIONS = (
     {"trigger": PLUSARG_KNOB_ICACHE_ECC_ERR_RATE, "values": ("rare", "frequent"), "requires": PLUSARG_CHK_ALERT_MINOR,
      "rule": (f"LOG-077 (Q-018): icache ECC injection (+{PLUSARG_KNOB_ICACHE_ECC_ERR_RATE} rare or frequent) is measured stimulus "
               f"only with gen_chk_alerts' alert_minor row on (+{PLUSARG_CHK_ALERT_MINOR}; the knob table default counts as on); "
               "a measured run with the rate on and the row off is refused: turn the row on or run it unmeasured")},
+    {"trigger": PLUSARG_KNOB_ICACHE_DATA_ECC_ERR_RATE, "values": ("rare", "frequent"), "requires": PLUSARG_CHK_ALERT_MINOR,
+     "rule": (f"LOG-077 (Q-018), extended from the tag knob to the data-RAM half by the plan owner: icache data-RAM ECC "
+              f"injection (+{PLUSARG_KNOB_ICACHE_DATA_ECC_ERR_RATE} rare or frequent) is measured stimulus only with "
+              f"gen_chk_alerts' alert_minor row on (+{PLUSARG_CHK_ALERT_MINOR}; the knob table default counts as on); a "
+              "measured run with the rate on and the row off is refused: turn the row on or run it unmeasured")},
 )
+# A testlist plusarg carries no whitespace: VCS converts a whitespace-carrying value to 0, so such a token would
+# mean something other than it reads. The checker-knob reader stays VCS-faithful for operator argv, which the loader
+# never sees.
+TESTLIST_PLUSARG_WHITESPACE = " \t\n\r\v\f"
+TESTLIST_PLUSARG_RULE = ("a testlist plusarg carries no whitespace: VCS converts a whitespace-carrying value to 0 "
+                         "($value$plusargs \"name=%d\"), so the entry would not mean what it reads; write the value "
+                         "without whitespace, or drop the plusarg")
 ROUND_EXIT_REFUSED = 2
 # Collected failure mechanisms scanned in sim.log (name, regex). Order = report priority.
 FAIL_PATTERNS = (

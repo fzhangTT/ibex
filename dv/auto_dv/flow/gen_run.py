@@ -191,7 +191,8 @@ def effective_plusargs(test: dict[str, Any], extra_plusargs: list[str]) -> list[
 
 
 def measured_refusal(test: dict[str, Any], extra_plusargs: list[str], testlist: dict[str, Any], measured: bool, coverage: bool) -> str | None:
-    """The reason a run must not start, or None: a debug-only knob in a measured coverage run (tb-arch P6), the B8
+    """The reason a run must not start, or None: a debug-only knob in any measured run (tb-arch P6, widened by the plan
+    owner: a measured run feeds the credit report whether coverage is on or not), the B8
     probe knob on in any measured run (LOG-067), or a MEASURED_KNOB_CONDITIONS row violated in a measured run (LOG-077),
     all judged on the effective plusargs (operator values included, so the operator path is guarded like the entry). The
     forbidden knobs (P6, LOG-067) count a bare +name and =00 as on, over-refusing on the safe side; the required checker
@@ -200,8 +201,8 @@ def measured_refusal(test: dict[str, Any], extra_plusargs: list[str], testlist: 
     sim treats as row-off cannot pass the gate."""
     eff = effective_plusargs(test, extra_plusargs)
     debug_only = [n for n in (testlist.get("debug_only_plusargs") or []) if U.plusarg_enabled(eff, n)]
-    if measured and coverage and debug_only:
-        return (f"debug-only plusarg(s) {debug_only} enabled in a measured coverage run (P6); "
+    if measured and debug_only:
+        return (f"debug-only plusarg(s) {debug_only} enabled in a measured run (P6); "
                 "run it unmeasured (measured: false or --measured no)")
     if measured and U.plusarg_enabled(eff, C.PLUSARG_CHK_SVA_B8):
         return f"+{C.PLUSARG_CHK_SVA_B8} on in a measured run; {C.B8_PROBE_RULE}; run it unmeasured (--measured no)"
@@ -242,12 +243,16 @@ def self_test() -> int:
     case("knob narrowed, header names a source the build cannot emit: FAIL", [f"+{efile}=exp.txt", f"+{esrc}=pin"], "# gen_export v1 sources=pin", C.VERDICT_FAIL, "emitted mismatch")
     case("a FAIL stays FAIL with its own reason", [f"+{efile}=exp.txt"], None, C.VERDICT_FAIL, "decided", verdict=C.VERDICT_FAIL)
     # Measured-run refusals on the effective plusargs (entry + operator, operator replacing).
-    tl = {"debug_only_plusargs": ["gen_dbg_x"]}
+    tl = {"debug_only_plusargs": ["gen_dbg_x", C.PLUSARG_PROBE_IC_LOOKUP]}
     entry = {"name": "gen_t", "plusargs": ["+gen_fetch_en_at_reset=0"]}
     b8 = f"+{C.PLUSARG_CHK_SVA_B8}=1"
     for label, extra, entry_extra, measured, coverage, want in (
             ("P6: a debug-only knob in a measured coverage run refuses", ["+gen_dbg_x=1"], [], True, True, "(P6)"),
             ("P6: the same knob unmeasured runs", ["+gen_dbg_x=1"], [], False, True, None),
+            ("P6 (F1): a debug-only knob in a measured run WITHOUT coverage refuses too", ["+gen_dbg_x=1"], [], True, False, "(P6)"),
+            ("P6 (F1): the P9 probe knob in a measured run without coverage refuses", [f"+{C.PLUSARG_PROBE_IC_LOOKUP}=1"], [], True, False, "(P6)"),
+            ("P6 (F1): the P9 probe knob in a measured coverage run refuses", [f"+{C.PLUSARG_PROBE_IC_LOOKUP}=1"], [], True, True, "(P6)"),
+            ("P6 (F1): the P9 probe knob on an unmeasured run without coverage runs (its evidence run)", [f"+{C.PLUSARG_PROBE_IC_LOOKUP}=1"], [], False, False, None),
             ("LOG-067: the operator B8 plusarg on a measured coverage run refuses", [b8], [], True, True, "LOG-067"),
             ("LOG-067: the operator B8 plusarg on a measured run without coverage refuses too", [b8], [], True, False, "LOG-067"),
             ("LOG-067: the bare +gen_chk_sva_b8 counts as on", [f"+{C.PLUSARG_CHK_SVA_B8}"], [], True, True, "LOG-067"),
@@ -258,7 +263,10 @@ def self_test() -> int:
             ("LOG-077: an operator rate frequent with the row at its table default runs", [f"+{C.PLUSARG_KNOB_ICACHE_ECC_ERR_RATE}=frequent"], [], True, True, None),
             ("LOG-077: the same unmeasured, row off, runs (evidence run)", [f"+{C.PLUSARG_KNOB_ICACHE_ECC_ERR_RATE}=frequent", f"+{C.PLUSARG_CHK_ALERT_MINOR}=0"], [], False, True, None),
             ("LOG-077: an operator row =1 replaces the entry's =0, the measured ECC run runs (CM152-I-2)", [f"+{C.PLUSARG_CHK_ALERT_MINOR}=1"], [f"+{C.PLUSARG_KNOB_ICACHE_ECC_ERR_RATE}=frequent", f"+{C.PLUSARG_CHK_ALERT_MINOR}=0"], True, True, None),
-            ("LOG-077: the operator turning the master enable off on a measured ECC run refuses (CM152-M-1)", [f"+{C.PLUSARG_CHK_ALL}=0"], [f"+{C.PLUSARG_KNOB_ICACHE_ECC_ERR_RATE}=frequent"], True, True, "LOG-077")):
+            ("LOG-077: the operator turning the master enable off on a measured ECC run refuses (CM152-M-1)", [f"+{C.PLUSARG_CHK_ALL}=0"], [f"+{C.PLUSARG_KNOB_ICACHE_ECC_ERR_RATE}=frequent"], True, True, "LOG-077"),
+            ("LOG-077 data half: the operator turning the alert_minor row off on a measured data-RAM ECC run refuses", [f"+{C.PLUSARG_CHK_ALERT_MINOR}=0"], [f"+{C.PLUSARG_KNOB_ICACHE_DATA_ECC_ERR_RATE}=frequent"], True, True, "LOG-077"),
+            ("LOG-077 data half: an operator data rate frequent with the row at its table default runs", [f"+{C.PLUSARG_KNOB_ICACHE_DATA_ECC_ERR_RATE}=frequent"], [], True, True, None),
+            ("LOG-077 data half: the same unmeasured with the row off runs (evidence run)", [f"+{C.PLUSARG_KNOB_ICACHE_DATA_ECC_ERR_RATE}=frequent", f"+{C.PLUSARG_CHK_ALERT_MINOR}=0"], [], False, True, None)):
         got = measured_refusal(dict(entry, plusargs=entry["plusargs"] + entry_extra), extra, tl, measured, coverage)
         cond = (got is None) if want is None else (got is not None and want in got)
         ok &= cond

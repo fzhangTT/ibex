@@ -1,0 +1,6 @@
+SELF-TEST BAD load_testlist refuses a testlist plusarg value carrying a space (CM168-I-1) (message names 'no whitespace')
+SELF-TEST BAD load_testlist refuses a testlist plusarg value carrying a tab (CM168-I-1) (message names 'no whitespace')
+SELF-TEST BAD load_testlist refuses a testlist plusarg value carrying a trailing newline (CM168-I-1: the widened value group accepted it) (message names 'no whitespace')
+SELF-TEST BAD load_testlist refuses a testlist plusarg value carrying a carriage return (CM168-I-1) (message names 'no whitespace')
+SELF-TEST BAD build-input gate case 13: every listed non-input is tracked and each glob class matches a tracked file (['git ls-files failed: fatal: not a git repository (or any parent up to mount point /)\nStopping at filesystem boundary (GIT_DISCOVERY_ACROSS_FILESYSTEM not set).']); list sha256 80d4a7081e03
+SELF-TEST: FAIL

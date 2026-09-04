@@ -63,6 +63,35 @@ gen_cm167_newline_red.log is the TDD red of the CM167-L-1 fix on a detached arch
 the LF-after-the-digit case (the regex's `$` before a trailing newline) and the LF-before-the-digit case (plusarg_name's `.*` stopping
 at the newline, a hole found while writing the red) print BAD while CR, CR LF and the six sign forms pass (a discriminating red); the gate
 case 13 BAD line is again the archive's missing .git; then fullmatch and the `[\s\S]*` value group make all ten pass (139 ok).
+gen_cm168_testlist_whitespace_red.log is the TDD red of the CM168-I-1 fix on a detached archive of ce1bda0: four new
+cases append a plusarg whose value carries a space, a tab, a trailing LF and a CR to an entry; all four print BAD against
+the unfixed loader while every one of the 139 pre-existing cases passes (a discriminating red: the four are the only new
+failures, confirmed against a pristine control archive of the same commit, which shows 139 ok and the same single BAD);
+the gate case 13 BAD line is the archive's missing .git (git ls-files), not part of the red, and is kept because the
+excerpt filter keeps every BAD line; then the loader refuses whitespace inside a testlist plusarg token and all four
+pass (143 ok, case 13 the only BAD in the archive). The excerpt is the redirected output of
+`command grep -E 'CM168-I-1|^SELF-TEST BAD|^SELF-TEST: ' red_full.log`, never retyped; that command reproduces the
+retained bytes exactly, and the 139 / 143 counts above are its own, re-derived with command grep rather than the
+shell's ugrep wrapper.
+
+gen_cm174_data_ecc_condition_red.log is the TDD red of the second MEASURED_KNOB_CONDITIONS row on a detached archive of
+dde456f: seven new helper cases and three new gen_run cases for the data-RAM ECC rate. The three helper refuse cases (rate
+rare with the alert_minor row off, rate frequent with the master enable off and the row unmentioned, tag rate none while the
+data rate is rare) and the one gen_run refuse case print BAD against the single-row table, while the four helper accept cases
+and the two gen_run accept cases pass, so the red discriminates the missing row rather than the whole condition path. The
+seventh helper case is an accept and stays one: the bit-count knob at two with both rates at their default none must run,
+because the bit count injects nothing by itself. The gate case 13 BAD line is the archive's missing .git. With the row in
+place all ten pass (helper 150 ok, gen_run 24 ok). The excerpt is the redirected output of
+`command grep -h -E 'data-RAM rate|tag rate none but data rate|bit count at two|LOG-077 data half|^SELF-TEST BAD|^SELF-TEST: ' red_util.log red_run.log`,
+never retyped, and the -h keeps the two source names out of the retained lines.
+
+gen_f1_probe_measured_red.log is the TDD red of the widened P6 condition on a detached archive of dde456f: four new
+gen_run cases for a debug-only knob in a measured run. The two coverage-off refuse cases (the stub knob and the P9
+icache lookup probe) print BAD against the measured-and-coverage condition, while the coverage-on refuse case and the
+unmeasured accept case pass, so the red discriminates the coverage term rather than the whole P6 path. With the term
+dropped all four pass (gen_run 28 ok) and no other self-test moves. The excerpt is the redirected output of
+`command grep -h -E 'P6 \(F1\)|^SELF-TEST BAD|^SELF-TEST: ' red_run.log`, never retyped.
+
 | evidence path | source | bytes | md5 |
 |---|---|---|---|
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_gate_rule_red.log | dv/auto_dv/work/runtime/gate_rule_red.log | 926 | 78b72aae6509d2776a43c9314808b01b |
@@ -79,3 +108,6 @@ case 13 BAD line is again the archive's missing .git; then fullmatch and the `[\
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_cm162_whitespace_underscore_red.log | (runtime scratchpad) cm162/red.log | 2176 | 9b2ee182f9e500422e5dc0a057e0fd7d |
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_cm167_vcs_probe.log | (runtime scratchpad) l13/probe167.log + cm162/probe/run_probe167.sh | 1720 | bb0ad1b719b38c26c462ce04bcb4cc3f |
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_cm167_newline_red.log | (runtime scratchpad) l13/red167.log | 2245 | fd340befe73f21baa64c30030da0dbc6 |
+| dv/auto_dv/evidence/gen_tdd_logs/flow/gen_cm168_testlist_whitespace_red.log | (runtime scratchpad) cm168/red_full.log | 870 | 17ce1af6f42a6a07ceb08ce9b14f4d78 |
+| dv/auto_dv/evidence/gen_tdd_logs/flow/gen_cm174_data_ecc_condition_red.log | (runtime scratchpad) cm174/red_util.log + cm174/red_run.log | 1785 | c17a82573242002de87fa9f88921adc8 |
+| dv/auto_dv/evidence/gen_tdd_logs/flow/gen_f1_probe_measured_red.log | (runtime scratchpad) f1/red_run.log | 594 | 4ffa5560c95bb2187ca21c2610339e06 |

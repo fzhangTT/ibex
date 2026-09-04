@@ -446,7 +446,19 @@ def self_test() -> int:
                  "must be"),
                 ("a measured entry with icache ECC injection on and the alert_minor row off (LOG-077)",
                  lambda d: d["tests"][0].update(measured=True, tier="smoke", plusargs=d["tests"][0]["plusargs"] + [f"+{C.PLUSARG_KNOB_ICACHE_ECC_ERR_RATE}=rare", f"+{C.PLUSARG_CHK_ALERT_MINOR}=0"]),
-                 "LOG-077")):
+                 "LOG-077"),
+                ("a testlist plusarg value carrying a space (CM168-I-1)",
+                 lambda d: d["tests"][0].update(plusargs=d["tests"][0]["plusargs"] + [f"+{C.PLUSARG_CHK_ALL}= 1"]),
+                 "no whitespace"),
+                ("a testlist plusarg value carrying a tab (CM168-I-1)",
+                 lambda d: d["tests"][0].update(plusargs=d["tests"][0]["plusargs"] + [f"+{C.PLUSARG_CHK_ALL}=\t1"]),
+                 "no whitespace"),
+                ("a testlist plusarg value carrying a trailing newline (CM168-I-1: the widened value group accepted it)",
+                 lambda d: d["tests"][0].update(plusargs=d["tests"][0]["plusargs"] + [f"+{C.PLUSARG_CHK_ALL}=1\n"]),
+                 "no whitespace"),
+                ("a testlist plusarg value carrying a carriage return (CM168-I-1)",
+                 lambda d: d["tests"][0].update(plusargs=d["tests"][0]["plusargs"] + [f"+{C.PLUSARG_CHK_ALL}=1\r"]),
+                 "no whitespace")):
             t2 = load_yaml(C.TESTLIST_YAML)
             mutate(t2)
             f = Path(td) / "testlist_bad.yaml"
@@ -785,6 +797,7 @@ def self_test() -> int:
     ok &= cond_f
     print("SELF-TEST", "ok " if cond_f else "BAD", f"canary_build_facts records the two B8 probe facts beside covergroups_declared (CM140-L-3): {[k for k in facts if k.startswith('b8_')] if facts else None}")
     rate, row = C.PLUSARG_KNOB_ICACHE_ECC_ERR_RATE, C.PLUSARG_CHK_ALERT_MINOR
+    drate, bits = C.PLUSARG_KNOB_ICACHE_DATA_ECC_ERR_RATE, C.PLUSARG_KNOB_ICACHE_ECC_BITS
     for pas, defaults, want_refuse, label in (
             ([f"+{rate}=rare", f"+{row}=0"], None, True, "rate rare with the alert_minor row off refuses"),
             ([f"+{rate}=frequent"], None, False, "rate frequent with the row at its table default (1) runs"),
@@ -831,7 +844,14 @@ def self_test() -> int:
             ([f"+{rate}=frequent", f"+{row}=--1"], None, True, "+row=--1: a doubled sign reads 0, refuses (CM167-I-1)"),
             ([f"+{rate}=frequent", f"+{row}=-"], None, True, "+row=-: a bare sign reads 0, refuses (CM167-I-1)"),
             ([f"+{rate}=frequent", f"+{row}=+"], None, True, "+row=+: a bare sign reads 0, refuses (CM167-I-1)"),
-            ([f"+{rate}=frequent", f"+{row}=1-"], None, True, "+row=1-: a trailing sign reads 0, refuses (CM167-I-1)")):
+            ([f"+{rate}=frequent", f"+{row}=1-"], None, True, "+row=1-: a trailing sign reads 0, refuses (CM167-I-1)"),
+            ([f"+{drate}=rare", f"+{row}=0"], None, True, "data-RAM rate rare with the alert_minor row off refuses (v3y extends the Q-018 conditions from the tag knob to the data knob)"),
+            ([f"+{drate}=frequent"], None, False, "data-RAM rate frequent with the row at its table default (1) runs"),
+            ([f"+{drate}=rare", f"+{row}=1"], None, False, "data-RAM rate rare with the row explicitly on runs"),
+            ([f"+{drate}=none", f"+{row}=0"], None, False, "data-RAM rate none with the row off runs (not triggered)"),
+            ([f"+{drate}=frequent", f"+{C.PLUSARG_CHK_ALL}=0"], None, True, "data-RAM rate frequent with the master enable off and the row unmentioned refuses"),
+            ([f"+{rate}=none", f"+{drate}=rare", f"+{row}=0"], None, True, "tag rate none but data rate rare with the row off refuses: the data row triggers on its own"),
+            ([f"+{bits}=two", f"+{row}=0"], None, False, "the bit count at two with both rates at their default none and the row off runs: the bit count injects nothing by itself, so the plan gives it no condition")):
         got = measured_knob_condition_refusal(pas, defaults)
         cond = (got is not None and "LOG-077" in got) if want_refuse else got is None
         ok &= cond
@@ -1474,6 +1494,8 @@ def load_testlist(path: Path = C.TESTLIST_YAML) -> dict[str, Any]:
         export_name, witness_name = by_ident.get(C.SV_PLUSARG_EXPORT_FILE), by_ident.get(C.SV_PLUSARG_WITNESS_IDS)
         for pa in t["plusargs"]:
             name = plusarg_name(pa)
+            if any(c in C.TESTLIST_PLUSARG_WHITESPACE for c in pa):
+                die(f"{path}: test {t['name']} plusarg {pa!r}: {C.TESTLIST_PLUSARG_RULE}")
             if witness_name and name == witness_name:
                 die(f"{path}: test {t['name']} plusarg {pa!r}: the witness plusarg is rendered by the flow from witness_ids, never listed by hand")
             if export_name and name == export_name:
@@ -1514,7 +1536,12 @@ def plusarg_name(pa: str) -> str | None:
 
 
 def plusarg_enabled(plusargs: list[str], name: str) -> bool:
-    """True when +name is present with no value or a value other than 0."""
+    """True when +name is present with no value, or with a value that is neither 0 nor empty once stripped.
+
+    Deliberately stricter than the VCS-faithful checker_knob_state, and used only for the forbidden-knob gates (P6 and
+    B8_PROBE_RULE): once stripped, only "0" and an empty value read off, so +name, +name=00, +name=x and "+name= 1"
+    all refuse an entry VCS itself would read as 0. Under-reading a forbidden knob would let a measured run through;
+    over-reading only asks the author to write the 0 plainly."""
     for pa in plusargs:
         if plusarg_name(pa) == name:
             val = pa.split("=", 1)[1] if "=" in pa else "1"

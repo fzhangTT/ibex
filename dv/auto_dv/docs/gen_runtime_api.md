@@ -198,17 +198,22 @@ gen_run.py --build-dir DIR --test NAME --seed N --run-dir DIR [--cov-dir VDB | -
   expectation unmet` or `fcov expectation unverifiable`. In a regression the check runs after every
   writer finished (Section 3).
 - `--measured auto|yes|no`: whether the run's coverage enters a measured merge (auto = the testlist
-  `measured` flag; a mutation build forces no). A measured coverage run whose plusargs enable a knob
-  listed under the testlist header `debug_only_plusargs` is refused in writing (result.yaml NOT_RUN,
-  no job): tb-arch ruling P6, the CSR-flop debug compare never enters a measurement.
+  `measured` flag; a mutation build forces no). Any measured run whose plusargs enable a knob listed
+  under the testlist header `debug_only_plusargs` is refused in writing (result.yaml NOT_RUN, no job),
+  coverage on or off: tb-arch ruling P6, widened by the plan owner because a coverage-off measured run
+  still feeds the credit report's results and so feeds a plan claim. The P9 icache lookup probe
+  (`+gen_probe_ic_lookup`) is debug_only for that reason and runs only in its own unmeasured evidence runs.
 - `--pass-marker`: overrides the testlist marker (red-run evidence only; refused on a measured run).
   An operator `--plusarg` replaces a same-name testlist plusarg (VCS honours the first occurrence; for a `name=%d`
   parse the first `name=` form, a bare `+name` never matching).
   The B8 probe knob `+gen_chk_sva_b8` on in the effective plusargs (entry plus operator) of a measured run, with or without
   coverage, is refused the same way (NOT_RUN naming `B8_PROBE_RULE`, LOG-067): the operator path is guarded like the entry.
-  So is a measured run that violates a `MEASURED_KNOB_CONDITIONS` row (LOG-077, plan-owner ruling Q-018): today's one row says
-  icache ECC injection (`+gen_knob_icache_ecc_err_rate` rare or frequent) counts for the plan only with gen_chk_alerts' alert_minor
-  row on (`+gen_chk_alert_minor`; the knob table's default counts as on); the trigger is read from the effective plusargs, else
+  So is a measured run that violates a `MEASURED_KNOB_CONDITIONS` row (LOG-077, plan-owner ruling Q-018): the two rows say that
+  icache ECC injection, tag-RAM (`+gen_knob_icache_ecc_err_rate`) or data-RAM (`+gen_knob_icache_data_ecc_err_rate`), at rare or
+  frequent counts for the plan only with gen_chk_alerts' alert_minor row on (`+gen_chk_alert_minor`; the knob table's default
+  counts as on), the data row on the same terms as the tag row by the plan owner's decision. Either rate triggers on its own.
+  `+gen_knob_icache_ecc_bits` gets no row: it sets how many bits an injection flips and injects nothing while both rates read
+  none, so a condition on it would refuse a run that injects nothing. The trigger is read from the effective plusargs, else
   from the rendered knob table's default, and the required row is judged as the TB judges it (`gen_chk_en`: `chk_all ? val :
   (set && val)`) with the knobs read as VCS's `$value$plusargs("name=%d")` reads them (`checker_knob_state`): the first `name=`
   form sets the knob, its value is the remainder as a 32-bit decimal integer (sign and underscore digit separators as VCS
@@ -217,6 +222,9 @@ gen_run.py --build-dir DIR --test NAME --seed N --run-dir DIR [--cov-dir VDB | -
   whitespace, so `= 1`, `=1 ` and `=1` followed by a newline read 0; every form probed on VCS, gen_tdd_logs/flow/gen_cm162_vcs_probe.log
   and gen_cm167_vcs_probe.log) reads 0; a bare `+name` never matches; an unset row follows its table default, and is on only while the master
   enable `+gen_chk_all` is on (`gen_flow_util.measured_knob_condition_refusal`, `checker_row_on`).
+  That whitespace reading describes `checker_knob_state` only, and reaches a run only through operator `--plusarg`:
+  a testlist plusarg token carrying whitespace is refused at load (`TESTLIST_PLUSARG_RULE`, Section 7), so no entry
+  relies on it. `plusarg_enabled`, which the forbidden-knob gates use, stays deliberately stricter (its docstring).
 - `--waves`: needs a `--waves` build; renders `gen_dump.tcl` into the run dir (FSDB with
   `$VERDI_HOME`, else VPD) and adds `-ucli -do dump.tcl`. Templates are rendered by
   `gen_flow_util.render_fields` (token replacement, Tcl braces untouched); `python3 gen_flow_util.py
@@ -515,8 +523,11 @@ optional `pass_marker`, `feature_groups`, `cocotb_module`, `expected_fail`, `com
 `gen_flow_util.load_testlist` rejects unknown keys, unknown builds, non-gen_ names, bad tiers and
 owners, a tier-check test that is not `measured: false`, a measured test whose plusargs turn on the B8 probe knob
 `+gen_chk_sva_b8` (LOG-067, knob name per LOG-076: the knob is for unmeasured B8 evidence runs only), a measured test that violates a
-`MEASURED_KNOB_CONDITIONS` row (LOG-077: icache ECC injection at rare or frequent with `+gen_chk_alert_minor` off, the table default
-counting as on), an `fcov_expectation_file` that is not null and not an existing file directly under `dv/auto_dv/fcov_expectations/`
+`MEASURED_KNOB_CONDITIONS` row (LOG-077: icache ECC injection, tag-RAM or data-RAM rate at rare or frequent, with
+`+gen_chk_alert_minor` off, the table default counting as on), a plusarg token carrying whitespace
+(`TESTLIST_PLUSARG_RULE`: VCS converts a whitespace-carrying value to 0, so the entry would not mean what it
+reads), an `fcov_expectation_file` that is not null and not an existing file
+directly under `dv/auto_dv/fcov_expectations/`
 (the schema's manifest home, the one directory the covergroup-set and manifest tools read; a check-tier entry with a proof manifest under evidence uses null)
 or, for a measured entry, not named `<entry>.fcov.yaml` (validate_manifest needs the manifest's test, the file stem and the entry name
 equal; an unmeasured entry may name a group manifest), and any plusarg whose name is neither a
