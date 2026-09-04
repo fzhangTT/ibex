@@ -1,7 +1,7 @@
 # Test plan - Ibex core, opentitan configuration
 
 Deliverable 2 (DV_prompt.txt Section 11): feature -> test-plan items -> tests -> bins. Owner: dv-lead.
-Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in: checker direction per gen_bug_log.md, rvfi_trap-on-ebreak-into-debug rule, vacuity fixes, impossible bins pruned, layer-1 weight tables, timing qualifiers), generated 2026-09-04 02:56 UTC from dv/auto_dv/work/dv-lead/parts6/tp_*.md. Companion documents:
+Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in: checker direction per gen_bug_log.md, rvfi_trap-on-ebreak-into-debug rule, vacuity fixes, impossible bins pruned, layer-1 weight tables, timing qualifiers), generated 2026-09-04 03:14 UTC from dv/auto_dv/work/dv-lead/parts6/tp_*.md. Companion documents:
 dv/auto_dv/docs/gen_feature_list.md (features), gen_fcov_plan.md (bins), gen_bug_log.md (B/D lists),
 gen_trace_feature_tp.csv and gen_trace_tp_bin.csv (machine-readable traceability), checked by
 dv/auto_dv/tools/gen_trace_check.py.
@@ -346,7 +346,7 @@ Section 1.6 was the T-181 measurement hold, lifted under LOG-042e; its number is
 
 ## 1.7 Round-0 PROBE crediting (probe of 37c7ecb refused as a round, LOG-046; 0 credited, every hosted item NOT-RUN-CLEAN) (generated from the regression manifest and sim logs; 162 items in 15 hosted groups)
 
-Invocation, byte for byte (copy the whole line; a quoted heading may contain semicolons): python3 dv/auto_dv/tools/gen_round_credit.py --regress-manifest /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0/manifest.yaml --plan-sha v3n-on-0778d23 --round 0 --heading-id round0-probe --csv dv/auto_dv/evidence/gen_round0_credit/gen_round0_credit.csv --md dv/auto_dv/evidence/gen_round0_credit/gen_round0_credit.md; regression manifest sha256 4c9a21df00d6adf6ea092d1dda930c952836737b57c9e0e39d20e2737c8bf587; plan inputs read (item headers with group / tier / expected, hold sections, carve-out sections and rows with item / tag / until / reason, gen_trace_tp_bin.csv, gen_trace_witness_ids.csv) digest 7bffaf9590c0; carve-out rows read 2 (0 hosted in this round; the UNCREDITED / COUNTED-ONLY columns count carved items that would otherwise have credited, a carved item that is UNHIT or NOT-RUN-CLEAN keeps that state and shows its tag in the Carve-out column); landing label v3n-on-0778d23 (the --plan-sha argument, a label only, not the commit whose plan was read). Regression /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0: status done, source {'mode': 'head', 'source_root': '/proj_soc/user_dev/fzhang/ibex_dv_mirror_head/37c7ecb6dbe0', 'head_sha': '37c7ecb6dbe023e6f6b098e932367e339a24735a', 'worktree_dirty': None}, git 37c7ecb6dbe023e6f6b098e932367e339a24735a; 47 runs: pass 2, fail 45, xfail 0, red_ok 0, timeout 0, not_run 0; fcov checks {'checked': 44, 'pass': 0, 'unmet': 0, 'unverifiable': 44}; covergroups_exist False; clean regression (gen_round.py hard rule): NO.
+Invocation, byte for byte (copy the whole line; a quoted heading may contain semicolons): python3 dv/auto_dv/tools/gen_round_credit.py --regress-manifest /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0/manifest.yaml --plan-sha v3p-on-3320214 --round 0 --heading-id round0-probe --csv dv/auto_dv/evidence/gen_round0_credit/gen_round0_credit.csv --md dv/auto_dv/evidence/gen_round0_credit/gen_round0_credit.md; regression manifest sha256 4c9a21df00d6adf6ea092d1dda930c952836737b57c9e0e39d20e2737c8bf587; plan inputs read (item headers with group / tier / expected, hold sections, carve-out sections and rows with item / tag / until / reason, gen_trace_tp_bin.csv, gen_trace_witness_ids.csv) digest 7bffaf9590c0; carve-out rows read 2 (0 hosted in this round; the UNCREDITED / COUNTED-ONLY columns count carved items that would otherwise have credited, a carved item that is UNHIT or NOT-RUN-CLEAN keeps that state and shows its tag in the Carve-out column); landing label v3p-on-3320214 (the --plan-sha argument, a label only, not the commit whose plan was read). Regression /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0: status done, source {'mode': 'head', 'source_root': '/proj_soc/user_dev/fzhang/ibex_dv_mirror_head/37c7ecb6dbe0', 'head_sha': '37c7ecb6dbe023e6f6b098e932367e339a24735a', 'worktree_dirty': None}, git 37c7ecb6dbe023e6f6b098e932367e339a24735a; 47 runs: pass 2, fail 45, xfail 0, red_ok 0, timeout 0, not_run 0; fcov checks {'checked': 44, 'pass': 0, 'unmet': 0, 'unverifiable': 44}; covergroups_exist False; clean regression (gen_round.py hard rule): NO.
 
 | Area | Items hosted | CREDITED | UNCREDITED | COUNTED-ONLY | HELD | UNHIT | FIRE-FAIL | NOT-FIRED | NOT-RUN-CLEAN | UNVERIFIED |
 |---|---|---|---|---|---|---|---|---|---|---|
@@ -19348,12 +19348,13 @@ Stimulus line override the table for that item.
 - Knobs: knob:icache_ecc_err_rate (rare), knob:imem_gnt_delay, knob:imem_rvalid_delay
 - Fire-check: >= 5 injection events each followed within a bounded window by an alert_minor_o
   pulse (TB injection log correlated with the alert monitor).
-- Pass criteria: gen_chk_alerts (exactly one 1-cycle alert_minor_o pulse per qualified injected error,
-  within GEN_ICACHE_ECC_WINDOW = 2 cycles of the lookup request that returns the corrupted tag (the
-  RAM read lands one cycle after the request, the alert one cycle after the check; measured in
-  tb-infra landing 11 at f28d09b, gen_tdd_step2b.md Section 14: every pulse one cycle after its lookup
-  read, 436 of 436 at rate frequent, 0 missing; no retained run had alert_minor_o high before that
-  landing) with the invalidation write one cycle later; no pulse otherwise; a data error on a way
+- Pass criteria: gen_chk_alerts (exactly one 1-cycle alert_minor_o pulse per lookup cycle carrying at
+  least one qualified injected error (the injections of one lookup cycle share one pulse), within
+  GEN_ICACHE_ECC_WINDOW = 2 cycles of the lookup request that returns the corrupted tag (the RAM read
+  lands one cycle after the request, the alert one cycle after the check; measured in tb-infra landing
+  11 at f28d09b, gen_tdd_step2b.md Section 14: 682 qualified injections, 436 pulses, 0 missing at rate
+  frequent, every pulse one cycle after its lookup read; no retained run had alert_minor_o high before
+  that landing) with the invalidation write one cycle later; no pulse otherwise; a data error on a way
   that does not hit is never flagged, rtl/ibex_icache.sv:585) ; gen_chk_icache (line invalidated and refilled from the bus after the
   alert) ; gen_isa_compare (program result unaffected).
 - Notes: injection equipment status (tb-infra landing 11 at f28d09b): knob_icache_ecc_err_rate had no consumer
@@ -22347,7 +22348,7 @@ intent and the DV Lead reconciles them with TB Infra.
 | knob:irq_hold | `+gen_knob_irq_hold=until_taken|through_handler|pulse` | irq driver | hold policy UNTIL_TAKEN / UNTIL_ACK / CYCLES(1..3) |
 | knob:debug_req_regime | `+gen_knob_debug_req_regime=none|sparse|storm` | dbg driver | inter-arrival and hold draws |
 | knob:fetch_enable_regime | `+gen_knob_fetch_enable_regime=always_on|toggling` | fetch_enable driver (misc monitor side) | Off windows 1..200 cycles, gap mean ~1000 |
-| knob:icache_ecc_err_rate | `+gen_knob_icache_ecc_err_rate=none|rare|frequent` | icache RAM models | per-lookup injection 0 / ~0.5 / ~20 per mille (BUILT in tb-infra landing 11 at f28d09b for the tag RAMs only, one bit per injection; before it the knob had no consumer; measured stimulus per Q-018, not debug_only) |
+| knob:icache_ecc_err_rate | `+gen_knob_icache_ecc_err_rate=none|rare|frequent` | icache RAM models | per-lookup injection none 0 / rare 2 / frequent 50 per mille as built (regime_windows.rate_per_mille in gen_tb_knobs.yaml, consumed as gen_icram_events::inject_rate; the plan's intent figures were 0 / ~0.5 / ~20); BUILT in tb-infra landing 11 at f28d09b for the tag RAMs only, one bit per injection; before it the knob had no consumer; measured stimulus per Q-018, not debug_only |
 | knob:scr_key_delay | `+gen_knob_scr_key_delay=immediate|delayed|withheld_then_valid` | scramble-key responder | valid low 1 / 2..200 / 201..2000 cycles |
 | knob:instr_mix | `+gen_knob_instr_mix=isa_only|m_heavy|compressed_heavy|bitmanip_heavy|csr_heavy|ls_heavy|branch_heavy|mixed` | program generator (region marker) | riscv-dv category weights |
 | knob:priv_regime | `+gen_knob_priv_regime=m_only|u_heavy|alternating` | program generator (region marker) | privilege switch schedule |
@@ -22378,7 +22379,7 @@ classes. TB Infra implements the rows as `dist` constraints in the agents' items
 | irq release (irq_hold) | until_taken / through_handler / pulse | release uniform 0..3 cycles after rvfi_intr / after the MMIO ack store / pulse length uniform 1..3 |
 | debug_req inter-arrival and hold (debug_req_regime) | none / sparse / storm | none / mean ~5000 cycles, hold until debug mode then uniform 0..3 (50% held through dret) / mean ~100 cycles, 20% one-cycle pulses |
 | fetch_enable Off windows (fetch_enable_regime) | always_on / toggling | none / Off length uniform 1..200, gap mean ~1000 cycles, Off encoding 80% IbexMuBiOff, 20% invalid $bits(ibex_mubi_t) value |
-| icache ECC injection (icache_ecc_err_rate) | none / rare / frequent | per lookup 0 / ~1/2000 / ~1/50; tag vs data 50/50; 1-bit vs 2-bit 50/50; way uniform over IC_NUM_WAYS (as built at f28d09b: tag RAMs only, exactly one bit per injection; the data-RAM and two-bit halves NOT BUILT, a data ECC error being checked only on a hit the TB cannot know from the boundary) |
+| icache ECC injection (icache_ecc_err_rate) | none / rare / frequent | per lookup 0 / 2 / 50 per mille as built (the plan's intent figures 0 / ~1/2000 / ~1/50); tag vs data 50/50; 1-bit vs 2-bit 50/50; way uniform over IC_NUM_WAYS (as built at f28d09b: tag RAMs only, exactly one bit per injection; the data-RAM and two-bit halves NOT BUILT, a data ECC error being checked only on a hit the TB cannot know from the boundary) |
 | scramble key delay (scr_key_delay) | immediate / delayed / withheld_then_valid | valid low 1 cycle / uniform 2..200 / uniform 201..2000 |
 | program operands and immediates (instr_mix, all values) | - | riscv-dv per-instruction randomization: registers uniform, immediates uniform over the encoding with sign extremes biased at 5% |
 | privilege switches (priv_regime) | m_only / u_heavy / alternating | none / ~70% of instructions in U / switch every uniform 10..100 instructions |
@@ -22485,7 +22486,8 @@ Instruction-cache RAM models and scramble-key responder (tb-infra b.3, b.4; s5):
 
 - knob:icache_ecc_err_rate {none, rare, frequent}; default none. Injection into
   ic_tag_rdata_i / ic_data_rdata_i on lookups (F-IC-030..035). none: 0. rare: ~1/2000 lookups.
-  frequent: ~1/50 lookups. Layer 1 per injection: tag vs data 50/50, 1-bit vs 2-bit 50/50, way
+  frequent: ~1/50 lookups (intent figures; as built the rates are none 0 / rare 2 / frequent 50 per mille,
+  regime_windows.rate_per_mille in gen_tb_knobs.yaml). Layer 1 per injection: tag vs data 50/50, 1-bit vs 2-bit 50/50, way
   uniform over IC_NUM_WAYS. Built in tb-infra landing 11 at f28d09b as test equipment for the tag RAMs
   only, one bit per injection, announced through gen_icram_events (before it the knob had no consumer
   and no retained run had alert_minor_o high); the data-RAM and two-bit halves are NOT BUILT.
