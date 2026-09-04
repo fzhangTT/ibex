@@ -1720,3 +1720,17 @@ the lift condition is met; the DV Lead removes the twelve UNCREDITED rows and th
 Section 1.8 and rewrites the LIFTED record to cite the two verdicts; the spanning-load fix (CM117-M-1) and its evidence
 remain owed by tb-infra in its next landing and are recorded in the LIFTED record as an open strictness gap. The
 TP-IRQ-079 / TP-SEC-025 COUNTED-ONLY rows stay until the NMI-pre-empted rule fix lands.
+
+## LOG-075 - 2026-09-04 - tb-infra stopped and respawned: unreachable inside one long turn
+
+Landing 9 (82 files, handed 23:07Z) was held before commit for two clerical defects: six retained logs edited in
+place still carried their pre-edit md5 in gen_tdd_logs/gen_manifest.md, and sixteen review rows used placeholder ids
+(CM-2c-*, CM-l7-*) instead of the assigned CM117-* / CM119-*. Five messages (23:08Z, 23:27Z, 23:34Z, 23:48Z, 23:57Z)
+stated the defects and the two edits. tb-infra's STATUS kept saying it waited for the landing-9 commit while it started
+further Slice A work; ListAgents showed it running throughout, so the messages sat in its inbox unread for an hour while
+it never ended its turn. It had meanwhile taken the LOG-067 ruling from rtl-arch's note rather than from the message
+that carried it. Under the watchdog rule (nudged at the previous tick and still not acting) the agent is stopped and a
+fresh tb-infra is spawned with full context and the same work directory; its first task is the landing-9 superseding
+list, then the Slice A hand-off its STATUS calls ready. The rule made explicit for every teammate: end the turn after
+each hand-off or STATUS stamp so the inbox is read; a turn longer than twenty minutes without reading the inbox is a
+stall even when files move.
