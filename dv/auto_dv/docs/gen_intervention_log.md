@@ -2182,3 +2182,20 @@ measured entry at the round's seeds (45 runs) at that HEAD; (4) landing 40 (tb-i
 dispatch. rt38's plan is committed as the record of the rejected alternative; runtime-2 implements nothing of it. The round slips
 by this work; the owner's directive (LOG-085) is served by a first measurement in which every measured run carries an enforced
 per-run claim rather than by an earlier round that checks two entries.
+
+Corrigendum to LOG-091 (20:5xZ, DV Lead refinement and Critic verdict): (a) the Critic's P-07 verdict (dv/auto_dv/work/critic/
+gen_critic_p07_note.md): rt38's deferral is a RELAXATION of trust-triad rule 3 ("declared-but-unhit bins FAIL the run",
+dv_principles.md:149), so it is the owner's call and stays shelved; the Critic records that its tb_l35/tb_l37 approvals of the
+detaches did not apply fcov_policy_failures to the detached measured entries. (b) One instrument, no plan edit: gen_test_lib.py:915-918
+derives declare_bins() through gen_fcov_manifest.plan_bins, the same function that renders the manifest, so a bin in a test's
+bins_not_hit leaves both the declaration and the manifest by construction; the 147 plan-line marks are unnecessary. (c) The guard
+rail bites three measured entries whose declarations sit entirely on unbuilt covergroups (gen_test_bit_draft 15 of 15,
+gen_test_csr_reset 68 of 68, gen_test_pmp_csr_warl 266 of 266): they go measured false for round 1 with their references left null
+(the LOG-086 mechanism, legitimate for unmeasured entries), their test modules and committed manifests untouched, named in the round
+record. (d) Round 1 becomes 53 runs, 12 measured entries at 36 measured runs, all 12 checked against re-scoped manifests (guaranteed
+sets: bit_ratified 654, isa_alu 563, mul_mul 338, cmp_zcmp_basic 325, cmp_zca 324, mul_div 196, isa_cti 184, csr_trap_setup 151,
+isa_shift 120, cmp_zcb 96, rst_boot 6, csr_access 4). (e) The Test Writer's landing covers the ten re-scoped tests and their
+manifests (class A 758 + 127 bins with ready reasons, class B 123 with the per-run reason, class C 123 with its triage per bin; work
+list dv/auto_dv/work/dv-lead/gen_bins_not_hit_worklist.md); runtime-2 then restores the ten references and sets the three measured
+false in one testlist touch; the acceptance gate before dispatch is a re-flight of all 36 measured runs at the round's seeds plus
+fcov_policy_failures at zero on the planned 53.
