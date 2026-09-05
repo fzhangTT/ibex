@@ -255,3 +255,47 @@ for every transaction in that span to see whether any response is paired with an
 not request. It cannot be done from what exists: the two dumps runtime-2 made were non-durable
 scratch and were deleted at my own request after the Section 7 read, which was premature by one
 question. A re-dump would be runtime-2's to schedule.
+
+## 9. The unmapped store at 9284500, and a scoping corrigendum to Section 3
+
+Runtime-2 censused 1207954461 by first firing and reported two events ahead of the grant event. This
+section records what each turned out to be. Nothing in Sections 1-8 is withdrawn.
+
+### 9.1 The earlier exclusivity firing is already in this file
+
+The first of the two, sva_rvfi_irq_valid_exclusive at cycle 6591.5, is the row this file's own table
+already carries as 3 firings first at 6591500, and Section 4 already gives the distance as 2659
+cycles in this run and 4773 in 165313640, and already argues the exclusivity condition is neither
+necessary nor sufficient. No fact changes.
+
+CORRIGENDUM to Section 3, because the wording is what caused the report. Section 3 says "The
+grant-without-request firing is first in BOTH runs and fires exactly ONCE in each." Its scope is the
+three ibus properties, which the following sentence fixes by naming "the other two". Read on its own
+that sentence claims the grant firing was first of any event, which the table two paragraphs earlier
+contradicts. The scoped reading is the intended one and the only one the rest of the file uses. The
+sentence should be read as: first of the three IBUS properties in both runs.
+
+### 9.2 The unmapped store is the divergent instruction, not a precursor
+
+The second, a single MEM_UNMAPPED write to unmapped address 0x40000000 at 9284500, is six cycles
+before the first instruction divergence at 9290500. It is the same instruction seen one pipeline
+stage earlier, not a separate event.
+
+Order 462 at 9290500 is pc=80000154 with dut insn=0062a023, and that record carries mem=40000000,
+with the companion isa_mem line reporting "store model=0 dut wmask=1111". 0062a023 decodes as
+sw x6, 0(x5): opcode 0100011 STORE, funct3 010 SW, rs1 x5, rs2 x6, immediate zero. A full-word store
+whose address is whatever x5 holds. The MEM_UNMAPPED names 0x40000000 and the RVFI record names
+mem=40000000 with a full word mask. The 6000-tick separation is six cycles, the distance from the LSU
+access to the RVFI retirement comparison.
+
+So the core did not diverge because it stored to an unmapped address. It stored to an unmapped
+address because it had already been handed a store where the model expected a branch. The unmapped
+write is downstream of the wrong word, and it is not a second candidate mechanism for it.
+
+Measured in two independent builds, because the census was taken on a different regression from the
+one this file cites. In regress_wave_4017573 (mirror 40175738c709), this file's own run, and in
+regress_chkfix (mirror 9c7f8f63957d), both lines are identical: MEM_UNMAPPED at 9284500 to
+0x40000000, and order 462 at 9290500 with insn model=018b1063 dut=0062a023.
+
+NOT CLAIMED: that x5 held 0x40000000 for any traced reason. The store's address follows from its
+operand and the RVFI record states it directly; where that operand value came from is not read here.
