@@ -1,0 +1,4 @@
+gen_test_bit_ratified post-fix block: 40 runs with a coverage report
+declared 617 | EVERY 617 | SOME 0 | NEVER 0
+declared cross legs 494 | at every seed 494
+every declared bin hit at every seed; nothing under the bar

@@ -1,0 +1,32 @@
+THE 24 STIMULUS-CLASS SHAPES, post-fix block vs the wave's block, SAME seeds, one changed file
+post-fix reports 40 | wave reports 40
+
+shape                                                    post-fix   wave       verdict
+gen_bit_sbit_cg.cp_binv_twice.yes                        40/40      0/40       DIFFERS
+gen_bit_zba_zbb_ops_cg.cr_op_eq.pack_yes                 40/40      40/40      same
+gen_bit_zba_zbb_ops_cg.cr_op_eq.packh_yes                40/40      40/40      same
+gen_bit_zba_zbb_ops_cg.cr_op_eq.packu_yes                40/40      40/40      same
+gen_bit_zba_zbb_ops_cg.cr_op_rd_x0.pack_no               40/40      40/40      same
+gen_bit_zba_zbb_ops_cg.cr_op_rd_x0.packh_no              40/40      40/40      same
+gen_bit_zba_zbb_ops_cg.cr_op_rd_x0.packu_no              40/40      40/40      same
+gen_bit_zba_zbb_ops_cg.cr_op_same.andn_all_same          40/40      40/40      same
+gen_bit_zba_zbb_ops_cg.cr_op_same.andn_rs1_eq_rs2        40/40      40/40      same
+gen_bit_zba_zbb_ops_cg.cr_op_same.max_all_same           40/40      40/40      same
+gen_bit_zba_zbb_ops_cg.cr_op_same.min_all_same           40/40      40/40      same
+gen_bit_zba_zbb_ops_cg.cr_op_same.minu_all_same          40/40      40/40      same
+gen_bit_zba_zbb_ops_cg.cr_op_same.orn_all_same           40/40      40/40      same
+gen_bit_zba_zbb_ops_cg.cr_op_same.pack_all_same          40/40      40/40      same
+gen_bit_zba_zbb_ops_cg.cr_op_same.pack_rs1_eq_rs2        40/40      40/40      same
+gen_bit_zba_zbb_ops_cg.cr_op_same.packh_all_same         40/40      40/40      same
+gen_bit_zba_zbb_ops_cg.cr_op_same.packh_rs1_eq_rs2       40/40      40/40      same
+gen_bit_zba_zbb_ops_cg.cr_op_same.packu_all_same         40/40      40/40      same
+gen_bit_zba_zbb_ops_cg.cr_op_same.packu_rs1_eq_rs2       40/40      40/40      same
+gen_bit_zba_zbb_ops_cg.cr_op_same.sh1add_all_same        40/40      40/40      same
+gen_bit_zba_zbb_ops_cg.cr_op_same.sh2add_all_same        40/40      40/40      same
+gen_bit_zba_zbb_ops_cg.cr_op_same.sh3add_all_same        40/40      40/40      same
+gen_bit_zba_zbb_ops_cg.cr_op_same.xnor_all_same          40/40      40/40      same
+gen_bit_zba_zbb_ops_cg.cr_op_same.xnor_rs1_eq_rs2        40/40      40/40      same
+
+shapes at EVERY seed post-fix: 24 of 24
+DISAGREEMENT RULE: shapes differing between the two blocks: 1
+   gen_bit_sbit_cg.cp_binv_twice.yes: post-fix 40/40, wave 0/40
