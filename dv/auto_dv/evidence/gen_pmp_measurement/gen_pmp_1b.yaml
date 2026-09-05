@@ -1,0 +1,78 @@
+measurement: PMP step-1b re-measure, the second block beside the 218e9f3 one
+served_utc: '2026-09-05T09:29:59Z'
+served_by: runtime-2
+kind: unmeasured for the round, coverage on, no manifest row; PINNED
+head_sha: 4cd3ff6aaf22bb5f3a977b3ac2006f16ebce0060
+source_root: /proj_soc/user_dev/fzhang/ibex_dv_mirror_head/4cd3ff6aaf22
+source_tree_sha256: dcc4580e2e9f4b36e4478a1a45d2306cb75e7dcf901fb740d63e2d3bb8e38044
+driver: >
+  a detached archive of 4cd3ff6 whose gen_run.py hashes to the committed blob (ad3e464a39b4), so the flow
+  code was committed too; the build is head mode with the mirror state fresh and vcs rc=0.
+outdir: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_pmp_1b
+seed_sets: >
+  the FIRST block's own 120 seeds, 40 disjoint per entry, taken by READING that block's run directories
+  rather than regenerating them: its scheme is not reproducible from base 218090305 alone (three candidate
+  schemes were tried and none matched). Reading them is the stronger guarantee of the same set, and it
+  preserves the seed whose run never started.
+planned_runs: 120
+ran: 119
+pass: 119
+not_run: 1
+not_run_detail: >
+  gen_test_pmp_csr_warl seed 230969025 never started, exactly as predicted before the wave: the COMMITTED
+  generator at 4cd3ff6 asserts on its own draw at that seed, so no program is generated and gen_run writes
+  no result.yaml. Its run directory holds a program directory and nothing else. csr_warl is therefore
+  measured over 39 seeds, not 40. This is a property of the PINNED COMMIT and not of the entry as it stands
+  today: the Test Writer's backstop is committed at 4017573 and seed 230969025 produces a program there.
+  A fortieth seed was deliberately NOT spliced in, on the Test Writer's reasoning that a seed set carrying
+  two different generators is worse than a clean 39.
+infrastructure_disclosure: >
+  Ten csr_warl runs FAILED on their first attempt with reason "sim.log missing" and no LSF output at all.
+  Cause, fully known and mine: they were the ten in flight when I killed the dispatcher to widen the batch
+  from 10 to 40 after busers showed no per-user cap, so their farm jobs died with their client. They were
+  RE-RUN cleanly rather than censored or reported as a smaller n. The 119 PASS figure is after that re-run.
+  No run in this block rests on a first attempt that lost its job.
+verdicts: 119 of 119 PASS; every reason "no collected failure mechanism; end marker and config banner present"
+manifests_hold: true
+manifest_result:
+  gen_test_pmp_csr_warl: {seeds: 39, declared: 179, hit_every_run: 179, unmet: 0, md5: faf7e54976f4c947f85c7a2eb778513c}
+  gen_test_pmp_lock:     {seeds: 40, declared: 39,  hit_every_run: 39,  unmet: 0, md5: 91c204336115865799239be1ea3d5b0b}
+  gen_test_pmp_mseccfg:  {seeds: 40, declared: 26,  hit_every_run: 26,  unmet: 0, md5: 63b486a37ad3f121a62bf15a98613c12}
+manifest_md5_unchanged_at_head: true
+fcov_check_provenance: >
+  The runs were dispatched WITHOUT --fcov-check, so no run produced a checker log inline. The check was run
+  POST-HOC through the flow's own gen_fcov.check_test, the exact function gen_run's --fcov-check path calls,
+  against the coverage each run had already written. result.yaml is UNTOUCHED and still carries fcov_check
+  null in all 119, so no record claims a check that happened during the run; each fcov_check.log's first
+  line is the checker argv. check_test writes fcov_manifest_used.yaml, a RUN artifact name, so it is renamed
+  to fcov_manifest_used.post.yaml in every run directory: nothing may claim a shape the run did not have.
+caller_defect_found_and_corrected: >
+  The first post-hoc pass called gen_fcov.run_checker directly. That takes the checker's --vdb/--cm-name
+  branch, which builds a urg report with NO cross rewrite, so every cross bin read MISSING-FROM-REPORT: 91
+  of csr_warl's 179, and by the same mechanism 20 of lock's 39 and 25 of mseccfg's 26. Read at face value
+  that says all three MEASURED entries fail every seed of a measured round. It was caught before it was
+  reported, by the shape of the number: 26 seeds each at exactly 88 hit and 91 unmet with ZERO variation is
+  a structural absence, not stimulus, and 91 equals exactly the manifest's cross-bin count. gen_run's real
+  path is check_test, which runs per_test_report and derived_report first to turn "Summary for Cross <cr>"
+  into the variable form ci/check_fcov_expectations.py parses (LOG-054). NO defect exists in the flow, the
+  manifests or the entries; the defect was in the caller and is corrected here.
+two_independent_readers_agree: >
+  Given that near-miss, the census and the checker were crossed before any claim was made. The per-test URG
+  census (reviewed gen_read_keyed.parse_report, 119 reports read, 0 rejected, 407 bins in the family, the
+  same population as the first block) and the post-hoc checker agree exactly: zero declared bins below the
+  every-seed bar, zero declared bins absent from the census, zero unmet from the checker.
+method: >
+  Per-seed attribution from ONE urg report PER TEST selected by full path with -tests, because a merged
+  report's per-bin TEST column caps at ten tests with no marker. Every per-test report's own covergroup
+  totals are cross-checked against that report's groups.txt row before its bins are counted.
+per_test_report_dir: scratchpad pertest_1b (one directory per test, named test_<entry>_<seed>)
+metric_set_difference: >
+  These runs omit CONDITION coverage from the metric set (the build did not pass --cond) where the first
+  block carried it. Declared rather than left to be discovered. It is a code-coverage metric and does not
+  touch covergroups: the per-test report carries the same four gen_pmp covergroups and the identical
+  407-bin family population. The Orchestrator ruled against rebuilding for it.
+per_entry_before_after:
+  gen_test_pmp_csr_warl: {before: {seeds: 39, every: 215, some: 119, never: 73}, after: {seeds: 39, every: 214, some: 125, never: 68}}
+  gen_test_pmp_lock:     {before: {seeds: 40, every: 139, some: 174, never: 94}, after: {seeds: 40, every: 142, some: 174, never: 91}}
+  gen_test_pmp_mseccfg:  {before: {seeds: 40, every: 175, some: 81,  never: 151}, after: {seeds: 40, every: 177, some: 80,  never: 150}}
+full_listing: dv/auto_dv/evidence/gen_pmp_measurement/gen_pmp_1b_bins.txt
