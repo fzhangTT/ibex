@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Verdict excerpts of a served request (CM103-m-2): the request manifest's rows plus the collected verdict lines of every
+"""Verdict excerpts of a served request: the request manifest's rows plus the collected verdict lines of every
 run, written as dv/auto_dv/evidence/gen_acceptance_<tag>_<seq>_verdict_excerpt.log so a reviewer of the commit can read what
 the wave produced. The manifests live under dv/auto_dv/work/runtime/results/ (gitignored) and the run artefacts under the
 out root (site storage), so a reader with access to both regenerates or checks an excerpt; without them the excerpt is a
@@ -47,7 +47,7 @@ def render(request: str, tag: str, manifest: dict, results_rel: str, what: str |
     seq = request.rsplit("-", 1)[-1]
     sms = manifest.get("server_mirror_sync") or {}
     echo = manifest.get("request_echo") or {}
-    what = what or f"batch-3 acceptance verdicts of request {request} (CM103-m-2)"
+    what = what or f"batch-3 acceptance verdicts of request {request}"
     source = source or f"the request manifest {results_rel}/{request}/manifest.yaml (work tree, unmirrored)"
     L = [f"# gen_acceptance_{tag}_{seq}_verdict_excerpt.log: {what}",
          f"# Source: {source} and each",

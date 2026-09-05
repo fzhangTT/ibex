@@ -47,7 +47,7 @@ def git_pathspecs() -> list[str]:
             specs.append(item)
     return specs + [f":(exclude){e}" for e in C.MIRROR_EXCLUDE_PATHS]
 MANIFEST_NAME = "gen_mirror_manifest.yaml"
-# The venv is only as fresh as the lock files it was built from (T-027 review).
+# The venv is only as fresh as the lock files it was built from.
 VENV_INPUT_FILES = ["ci/requirements.lock", "ci/requirements-cocotb.txt", "ci/setup-venv.sh"]
 # The freshness hash covers only what a compute host CONSUMES at run time: the Python modules
 # (cocotb tests, flow helpers) and the environment scripts. RTL and TB sources are compiled on the

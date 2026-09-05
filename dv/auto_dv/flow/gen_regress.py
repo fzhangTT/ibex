@@ -228,7 +228,7 @@ def summarize(runs: list[dict[str, Any]]) -> dict[str, Any]:
     good = counts[C.VERDICT_PASS] + counts[C.VERDICT_XFAIL]
     out = {"planned": n, **{k.lower(): v for k, v in counts.items()}, "red_ok": red_ok,
            "pass_rate_pct": round(100.0 * good / regular, 2) if regular else None}
-    # Trust-triad rule 3 accounting (P-07): runs without a declared-bins manifest are listed, never silent.
+    # Trust-triad rule 3 accounting: runs without a declared-bins manifest are listed, never silent.
     exempt = sorted({r["test"] for r in runs if not r.get("fcov_expectation_file")})
     out["runs_without_fcov_manifest"] = sum(1 for r in runs if not r.get("fcov_expectation_file"))
     out["tests_without_fcov_manifest"] = exempt

@@ -361,7 +361,7 @@ def path_is_shared(path: Path) -> bool:
 
 
 def require_sv_constants() -> None:
-    """Flow steps call this first: SV and Python constants homes must agree (P-06)."""
+    """Flow steps call this first: the SV and Python constants homes must agree."""
     problems = C.check_sv_constants()
     if problems:
         die("constants mismatch between gen_tb_pkg.sv / ci checker and gen_flow_const.py: " + "; ".join(problems))
@@ -404,7 +404,7 @@ def render_fields(text: str, fields: dict[str, str], comment_prefixes: tuple[str
 
 
 def self_test() -> int:
-    """Render both checked-in templates and check the Tcl braces survive (review finding, T-010)."""
+    """Render both checked-in templates and check the Tcl braces survive."""
     ok = True
     hier = render_fields(C.CM_HIER_TEMPLATE.read_text(encoding="utf-8"), {"tb_top": "top_x", "dut_instance": "u_y"})
     ok &= hier.strip() == "+tree top_x.u_y"
@@ -611,7 +611,7 @@ def self_test() -> int:
     cond = wt.get("TP-BIT-036") == 0 and len(wt) >= 200
     ok &= cond
     print("SELF-TEST", "ok " if cond else "BAD", f"witness_index from the real CSV: TP-BIT-036 -> {wt.get('TP-BIT-036')}, {len(wt)} ids")
-    # T-226: the as-built protocol. Two ids of one owner group render (indices, the group's index, no plusarg unless the
+    # The as-built protocol. Two ids of one owner group render (indices, the group's index, no plusarg unless the
     # TB declares one); an unknown id and ids of two owner groups are refused.
     w_ids, w_group_of, w_groups = witness_tables()
     grp = w_group_of["TP-DBG-004"]
@@ -1204,7 +1204,7 @@ def red_signature_check(test: dict[str, Any]) -> dict[str, Any] | None:
     res = V.decide_lines(lines, test.get("pass_marker"), False, 1, C.BUILD_CONFIG, [], True, False,
                          banner_lines=sim_lines or None, red_fixture=True, red_expect=test.get("red_expect"))
     # Two checks: the designed-failure line of the retained log must match the regex, and the log must come out RED-OK
-    # through the verdict (the literal criterion, T-153). A log whose verdict is not RED-OK is refused unless the entry
+    # through the verdict (the literal criterion). A log whose verdict is not RED-OK is refused unless the entry
     # is on RED_STALE_ALLOWLIST (a live comparator row ahead of the harness line). A family without a harness line
     # (a fixture failing through a collected UVM error) has the verdict's own evidence line as its designed failure,
     # which RED-OK already requires to match red_expect.
@@ -1373,7 +1373,7 @@ def witness_tables() -> tuple[dict[str, int], dict[str, str], dict[str, int]]:
 
 
 def witness_render(test: dict[str, Any]) -> dict[str, Any] | None:
-    """The witness record of a test entry, as the TB built the protocol (T-226): the TP ids, their indices (the CSV's
+    """The witness record of a test entry, as the TB built the protocol: the TP ids, their indices (the CSV's
     index column, equal to the rendered WITNESS_IDS), the one owner group they share and its WITNESS_GROUPS index,
     which the test's epilogue sends as COV_WITNESS <index> <group>. The TB declares no witness plusarg (the epilogue
     reads the entry itself), so `plusarg` is None unless the SV constants home names one. None when the entry lists
@@ -1571,7 +1571,7 @@ def load_testlist(path: Path = C.TESTLIST_YAML) -> dict[str, Any]:
         if t["tier"] not in C.ALL_TIERS:
             die(f"{path}: test {t['name']} tier {t['tier']!r} not in {C.ALL_TIERS}")
         if t["tier"] == C.CHECK_TIER and t.get("measured", True):
-            die(f"{path}: test {t['name']} is tier {C.CHECK_TIER} and must be measured: false (Critic R-01)")
+            die(f"{path}: test {t['name']} is tier {C.CHECK_TIER} and must be measured: false, so it never reaches a measured merge")
         if t.get("measured", True) and plusarg_enabled(t.get("plusargs") or [], C.PLUSARG_CHK_SVA_B8):
             die(f"{path}: test {t['name']} is measured and turns on +{C.PLUSARG_CHK_SVA_B8}; {C.B8_PROBE_RULE}")
         if t.get("measured", True):

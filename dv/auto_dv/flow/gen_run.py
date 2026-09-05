@@ -413,7 +413,7 @@ def main() -> int:
         if measured:
             cov_vdb = (a.cov_dir or build_vdb).resolve()
         else:
-            # The measured/unmeasured split holds for a standalone run too (T-027 review): an unmeasured
+            # The measured/unmeasured split holds for a standalone run too: an unmeasured
             # run never writes into the build vdb; default is a seeded copy beside the build.
             cov_vdb = (a.cov_dir or (Path(build["outdir"]) / C.UNMEASURED_COV_DIRNAME / f"{build['build']}.vdb")).resolve()
             if cov_vdb == build_vdb:

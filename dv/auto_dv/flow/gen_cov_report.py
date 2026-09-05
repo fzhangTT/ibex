@@ -69,7 +69,7 @@ def merge(cov_dir: Path, vdbs: list[Path], elfiles: list[Path] | None = None,
     report = cov_dir / C.URG_REPORT_DIRNAME
     banned = [x for x in (extra or []) if x in C.URG_EXCL_BANNED]
     if banned:
-        U.die(f"urg options {banned} are banned by the exclusion policy (R-5.2)")
+        U.die(f"urg options {banned} are banned by the exclusion policy: propagation and bypass are never added")
     argv = ["urg", "-full64", "-format", "both", "-dbname", str(cov_dir / C.MERGED_VDB_NAME),
             "-report", str(report), "-log", str(cov_dir / C.URG_MERGE_LOG), "-show", "ratios"]
     for v in vdbs:

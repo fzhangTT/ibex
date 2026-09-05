@@ -5,7 +5,7 @@ FAILS the run. The verdict is ci/check_fcov_expectations.py's (per test, pre-mer
 own vdb slice via `urg -tests <vdb minus .vdb>/<cm_name>`); this module validates the manifest
 schema, drives the checker, parses its per-bin lines and carries the anti-vacuity notes through.
 
-Cross bins (LOG-054): urg's grpinfo.txt lists a cross under `Summary for Cross <cr>` and names each
+Cross bins: urg's grpinfo.txt lists a cross under `Summary for Cross <cr>` and names each
 row by its component tuple (one column per coverpoint, then COUNT AT LEAST), never by a bin name; the
 checker reads only `Summary for Variable` sections with NAME COUNT rows. This module runs the per-test
 urg report itself (the checker's own command and isolation check), derives a variable-form grpinfo.txt
@@ -444,7 +444,7 @@ def self_test() -> int:
         cond = res["status"] == "PROTOCOL_ERROR" and res["reason"].startswith(REASON_UNVERIFIABLE) and res["declared"] == 2
         ok &= cond
         print("SELF-TEST", "ok " if cond else "BAD", f"fabricated report: unverifiable query is not a pass and keeps declared=2: {res['status']} declared={res['declared']}")
-        # Cross bins (LOG-054): a fabricated grpinfo.txt in urg's tuple form, derived to the variable form, through the REAL checker.
+        # Cross bins: a fabricated grpinfo.txt in urg's tuple form, derived to the variable form, through the REAL checker.
         var_block = ["Summary for Variable cp_op", "", "Covered bins", "", "NAME  COUNT AT LEAST NUMBER ", "c_mul 5     1        1      ", "", "----------"]
         var_full = ["Summary for Variable cp_full", "", "Bins", "", "NAME  COUNT AT LEAST ", "hit_a 4     1        ", "", "----------"]
         cross_block = ["Summary for Cross cr_extremes", "", "Samples crossed: cp_op cp_rs1_class cp_rs2_class",
@@ -526,7 +526,7 @@ def self_test() -> int:
         print("SELF-TEST", "ok " if cond else "BAD", f"real sample {CROSS_SAMPLE.name} through the REAL checker: every cross bin MISSING-FROM-REPORT on the raw report; on the derived form gen_mul_ops_cg.cr_op_rd_x0.mul_no is HIT (count 94), a 'Bins'-table bin HIT, bare and bracketed auto rows HIT/UNHIT, a 3-component row UNHIT, a plain variable bin HIT both times, an absent bin MISSING; stats {stats_s}")
         if not cond:
             print("   got:", got, "| cross before:", cross_before)
-        # TB Infra's own probe report (T-215 sample): its three-bin manifest passes only through the derived form.
+        # TB Infra's own probe report: its three-bin manifest passes only through the derived form.
         rep_t = d / "report_tbinfra"; rep_t.mkdir()
         shutil.copyfile(CROSS_SAMPLE_TBINFRA, rep_t / "grpinfo.txt")
         derived_t, stats_t = derived_report(rep_t)

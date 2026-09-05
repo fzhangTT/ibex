@@ -234,7 +234,8 @@ def collect(outdir: Path, round_no: int, dry_run: bool, label: str | None,
     ev.mkdir(parents=True)
     report = Path(cov.get("report_dir") or "")
     copied: list[str] = []
-    # asserts.txt: per-assertion ATTEMPTS / REAL SUCCESSES / FAILURES, the EC-3 evidence rtl-arch reads
+    # asserts.txt: per-assertion ATTEMPTS / REAL SUCCESSES / FAILURES, the EC-3 evidence class of
+    # dv/auto_dv/docs/gen_critic_exclusions_draft_v2.md that rtl-arch reads
     # (gen_excl_select.py --ec3-asserts) from a committed file rather than the out-tree.
     for f in C.ROUND_URG_FILES:
         src = report / f

@@ -42,7 +42,7 @@ RED_TEST_SUFFIX = "_red"
 RED_TEST_PREFIXES = (RED_TEST_PREFIX, "gen_ut_")   # group = the name without one of these and the red suffix
 RED_CHECK_EXIT_REFUSE = 2   # --check-red-signatures: an entry is refused (harness-line mismatch, or a retained log whose verdict is not RED-OK)
 RED_CHECK_EXIT_STALE = 3    # --check-red-signatures: no refusal, but stale retained logs remain (a visible debt)
-# The literal criterion (T-153): the retained pinned-red log, run through the verdict with the entry's red_expect, must
+# The literal criterion: the retained pinned-red log, run through the verdict with the entry's red_expect, must
 # come out RED-OK, else the entry is refused at load. The one exception is this allowlist of entries whose retained log
 # still carries a live comparator error ahead of the harness line: entry -> (blocking task, removal condition). Such an
 # entry is reported "stale: comparator row pending (<task>)" and counted in the exit-3 summary; the list shrinks to
@@ -221,7 +221,7 @@ VCS_DEBUG_PP_FLAGS = ["-debug_access+pp"]
 # SIM_RECIPE Section 6 lists -ucli at compile time too; VCS X-2025.06-SP2 rejects that
 # (Error-[DBG_UCLI_DEP]), so -ucli goes on the simv command line only (gen_run.py --waves).
 VCS_DEBUG_WAVES_FLAGS = ["-debug_access+all"]
-# Verified set from SIM_RECIPE Section 3; cond is the T-010 trial metric (see gen_runtime_api.md).
+# Verified set from SIM_RECIPE Section 3; cond is the trial metric (see gen_runtime_api.md).
 COV_METRICS_VERIFIED = "line+tgl+assert+fsm+branch"
 COV_METRICS_WITH_COND = "line+cond+tgl+assert+fsm+branch"
 # Standing rule: the glitch filter (-cm_glitch 0, ruled in LOG-008) is a build-entry knob
@@ -378,7 +378,7 @@ ENV_BUILD_CONFIG = "GEN_BUILD_CONFIG"
 
 def ruling_scope_text(gated: list[str], info: list[str]) -> str:
     return RULING_SCOPE_TEMPLATE.format(gated=sorted(gated) or "[none]", info=sorted(info) or "[none]")
-# Testlist header policies: fcov_manifest_required_tiers (P-07), debug_only_plusargs (tb-arch P6).
+# Testlist header policies: fcov_manifest_required_tiers, debug_only_plusargs.
 TESTLIST_OPTIONAL_TOP_KEYS = ("fcov_manifest_required_tiers", "debug_only_plusargs", "red_expect_policy")
 # red_expect_policy tokens: fire_id = a red_expect starting with GEN_TEST_FAIL must name a fire_ id (the harness
 # prints the designed fire id on that line, so a generic signature would accept any fixture failure).
@@ -394,7 +394,7 @@ RED_LOG_FAMILIES = (
     (("dv", "auto_dv", "evidence", "gen_tdd_logs", "lockstep"), ("gen_{group}_red1_stdout_excerpt.log", "gen_{group}_red1_stdout.log"),
      "gen_{group}_red1_sim.log", None),
 )
-# Plusarg names a testlist entry may use besides the gen_tb_pkg.sv PLUSARG_* set (P-06).
+# Plusarg names a testlist entry may use besides the gen_tb_pkg.sv PLUSARG_* set.
 SIMULATOR_PLUSARGS = ("ntb_random_seed", "UVM_TESTNAME", "UVM_VERBOSITY", "UVM_NO_RELNOTES", "UVM_TIMEOUT",
                       "UVM_MAX_QUIT_COUNT")
 # VCS runtime plusargs carry their value inside the name (+vcs+finish+<time>, +vcs+lic+wait): prefix match.
@@ -543,7 +543,8 @@ ROUND_NO_GAIN_N = 5
 EVIDENCE_DIR = REPO_ROOT / "dv" / "auto_dv" / "evidence"
 ROUND_INDEX = EVIDENCE_DIR / "gen_rounds.yaml"
 ROUND_DIR_PREFIX = "gen_round_"
-# Round evidence files: gen_round.py writes them and the exclusion tools under dv/auto_dv/excl read them (EC-3 fill,
+# Round evidence files: gen_round.py writes them and the exclusion tools under dv/auto_dv/excl read them (the EC-3
+# evidence class of dv/auto_dv/docs/gen_critic_exclusions_draft_v2.md; fill,
 # F1 pass), so the names have this one home and every file carries the landing rule's prefix.
 EVIDENCE_FILE_PREFIX = "gen_"
 
@@ -623,7 +624,7 @@ def sv_plusarg_names(tb_pkg: Path = TB_PKG_SV) -> dict[str, str]:
 
 def check_sv_constants(tb_pkg: Path = TB_PKG_SV) -> list[str]:
     """Mismatches between this module and gen_tb_pkg.sv for the shared names, plus the
-    fcov-checker exit-code contract against its own docstring (P-06 single source)."""
+    fcov-checker exit-code contract against its own docstring, which is its single source."""
     problems: list[str] = []
     if not tb_pkg.is_file():
         return [f"{tb_pkg}: missing"]

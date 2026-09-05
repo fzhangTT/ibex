@@ -30,7 +30,7 @@ def scan_log(lines: list[str], pass_marker: str | None, build_config: str,
              banner_lines: list[str] | None = None, origins: list[tuple[str, int]] | None = None) -> dict[str, Any]:
     """Return {verdict, reason, evidence, uvm_counts, cocotb_summary, finish_seen, marker_seen,
     banner_seen, banner}. PASS requires: no collected failure mechanism, the end marker, and the
-    time-zero config banner naming the expected build configuration (P-09; never skippable). The
+    time-zero config banner naming the expected build configuration, never skippable. The
     banner is collected from `banner_lines` (sim.log only) when given, else from `lines`."""
     if not build_config:
         raise ValueError("scan_log: build_config is required (the banner rule is not skippable)")
@@ -188,7 +188,7 @@ def decide(sim_log: Path, pass_marker: str | None, timed_out: bool, expected_fai
            red_expect: str | None = None) -> dict[str, Any]:
     """sim.log (VCS -l) plus the simv stdout capture (cocotb's Python logging bypasses -l); the
     config banner is taken from sim.log alone; crash signatures from lsf.err/run.log; PASS needs
-    marker AND ($finish seen OR exit code 0) (P-02)."""
+    marker AND ($finish seen OR exit code 0)."""
     sim_lines = sim_log.read_text(encoding="utf-8", errors="replace").splitlines() if sim_log.is_file() else []
     lines = list(sim_lines)
     origins = [(sim_log.name, i) for i in range(1, len(sim_lines) + 1)]
@@ -207,7 +207,7 @@ def decide(sim_log: Path, pass_marker: str | None, timed_out: bool, expected_fai
 
 
 BANNER = "GEN_CONFIG_BANNER build_config=opentitan"
-# Real sim.log excerpts from the P-01 red runs (t038_red/*, gen_smoke build of regress_t027_smoke_recheck).
+# Real sim.log excerpts from the retained red runs (t038_red/*, gen_smoke build of regress_t027_smoke_recheck).
 REAL_FATAL = [
     "GEN_SMOKE: max_cycles=1 boot_addr=0x80000000",
     "GEN_SMOKE: retired=0 alerts=0 core_busy=On irq_pending=0 data_tag_o=0",

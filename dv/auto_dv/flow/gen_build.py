@@ -135,7 +135,7 @@ def compose_command(build: dict[str, Any], outdir: Path, a: argparse.Namespace) 
     if a.coverage:
         hier = outdir / "cm_hier.cfg"
         # One +tree per coverage root; the build entry (cov_trees, default the DUT instance) is the
-        # single source of the scope (P-04).
+        # single source of the scope.
         tmpl = C.CM_HIER_TEMPLATE.read_text(encoding="utf-8")
         hier.write_text("".join(U.render_fields(tmpl, {"tb_top": build["tb_top"], "dut_instance": tree})
                                 for tree in cov_trees(build) + info_trees(build)), encoding="utf-8")
@@ -342,7 +342,7 @@ def main() -> int:
     ap.add_argument("--timeout-s", type=int, default=3600)
     ap.add_argument("--force", action="store_true", help="delete an existing outdir first")
     ap.add_argument("--rtl-root", type=Path,
-                    help="mutation builds (Critic A-24): directory holding mutated copies of RTL files, "
+                    help="mutation builds: directory holding mutated copies of RTL files, "
                          "clone-relative layout (e.g. <dir>/rtl/ibex_alu.sv); DV never edits rtl/ in place")
     ap.add_argument("--mutation-id", help="mutation identifier recorded with --rtl-root (required with it)")
     a = ap.parse_args()

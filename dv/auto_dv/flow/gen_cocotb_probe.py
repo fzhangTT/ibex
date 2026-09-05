@@ -1,4 +1,4 @@
-"""Flow probe for the cocotb-on-LSF path (T-027): proves that the cocotb VPI library, libpython
+"""Flow probe for the cocotb-on-LSF path: proves that the cocotb VPI library, libpython
 and this module load on the compute host and that Python sees the DUT. It is test equipment of
 the flow, not a DUT test: no checking of Ibex behaviour, `measured: false` in the testlist.
 
