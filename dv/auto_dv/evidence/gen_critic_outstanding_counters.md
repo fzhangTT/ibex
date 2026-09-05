@@ -363,3 +363,72 @@ CRITIC VERDICT: REQUEST-CHANGES on 69eb33f..8ee50ea, confined to M-2 and M-3. M-
 committed sources: 71 fires to 1, a dead cover to 70 of 70) and the saturation of both counters is approved; the l53 corrigendum's
 corrections are right. What remains is a record that cannot be tied to the tree (M-2) and one obligation comment that names a
 route the RTL does not permit (M-3), both small to fix. L-2, L-4, L-5, L-7, L-8 and, from 7.4, L-9..L-13 owed as disclosed.
+
+## 8. Confirmation on 69eb33f..ac2d306 (landing 58, counters fix 3): M-3 closed, M-2 standing; REQUEST-CHANGES confined to the identity row (appended under a HOLD, 2026-09-05T14:39:19Z; Sections 1-7 unchanged)
+
+Artifacts at ac2d306: gen_bus_if.sv, gen_protocol_props.sv, gen_fu_l58_decrement_saturate.log (md5 f4d9c925 per its manifest row,
+10952 bytes), gen_manifest.md; rev76 (dv/auto_dv/reviews/2026-09-05-claude-diff-c0451154-ac2d3062.md at d8bed4e, 5c419f806485c0e9).
+Method: two out-of-tree archives of 4bd933f, E unchanged and F with ac2d306's two tb files laid over it (their blobs checked),
+each clean and with my own MUT-SPURIOUSWINDOW (a response asserted with the pending queue empty on every driver cycle 300 to 399,
+both agents; script retained under my scratch and its outputs under dv/auto_dv/work/critic/l53/), compiled with the local flow;
+gen_ut_irq on the irq1 program (crc32 8e882c5b, 156 words) at seed 1; the re-dump run re-read; the identity method checked
+(the run header's build_sources_sha256 is sha256 of the build's sources_sha256.txt); rev76 read after the findings were fixed
+(l53/draft_s8_fix3_prerev76.txt, with post-read notes appended and dated). Exposure: the Orchestrator's messages relayed one fact
+(the two counters as one offset mechanism) and, after my draft, tb-infra-2's explanation that the log's two digests are the mutant
+builds' headers. Logs: l53/fix3_prechecks.txt, l53/fix3_red_rerun.txt.
+
+- Row 1, the decrement form: the diff replaces the sum test with a decrement qualified on the pre-update count in gen_bus_if.sv and
+  on both counters in gen_protocol_props.sv; the four traced cases follow from the expression, and the one case that differs from
+  the sum form is a grant with a spurious response on an empty count, which now reads 1.
+- THE RED REPRODUCES PER PROPERTY EXACTLY. E (sum form): sva_rvalid_legal 129, sva_ibus_rvalid_outstanding 29,
+  sva_dbus_rvalid_outstanding 100; F (decrement): 110, 10, 100. The interface check splits by its own message text into dbus 100
+  and ibus 29 on E and dbus 100 and ibus 10 on F, so the nineteen removed interface fires are the ibus obligation's nineteen, which
+  the log asserts from equal differences and my runs derive. Both clean builds PASS with zero real errors. The DUT's own assertion
+  NoMemResponseWithoutPendingAccess (rtl/ibex_core.sv:1390) fires 100 times in both mutant runs. L-6 (Low, records; tb-infra-2):
+  the totals read 2684 and 2646 here against the log's 2640 and 2602, both 44 higher in the lockstep and crash_dump ids while the
+  38 and every per-property figure are exact; the log quotes no run header or summary line, so the constant cannot be traced.
+- Row 2, one defect: on the 165313640 re-dump the eight sva_ibus_rvalid_outstanding cycles [18345, 18363, 18408, 18422, 18457,
+  18979, 19032, 19108] equal the eight sva_rvalid_legal cycles, the eight sva_ibus_outstanding_max floods start one cycle after
+  each and run 9, 40, 9, 27, 24, 48, 71 and 52 cycles as listed, and the last real error is inside the eighth flood. I-1 (Info):
+  the list names no bus (the run's ids are the IBUS counter's) and "every real UVM_ERROR" is the five bus-protocol ids only (627
+  real errors in the run, the isa_*, crash_dump and MEM_UNMAPPED ids interleaved from 18368 omitted).
+- Row 3, M-3 CLOSED: the :218 annotation now says the build elaborates WritebackStage=1 from -pvalue on the compile line, names
+  gen_dut_top.sv:51 as the default, and cites the branch taken (gen_stall_mem, data_req_allowed = ~outstanding_memory_access at
+  rtl/ibex_id_stage.sv:1019), consistent with the round-0 build command and banner Section 7 read; the split is the only route to
+  two.
+- Row 4, M-2 STANDING. The log says the roots are archives of 4bd933f with E's identity 1c4f99930208695f and F's dd9f4cd5ddd825de.
+  An archive of 4bd933f built by the same flow has identity b7067f660ed88693 (my E; my 38b729a build before it reads the same,
+  there being no TB file change between 38b729a and 4bd933f) and 4bd933f plus ac2d306's two tb files has edb6e789fe40b5c5 (my F;
+  the TB diff 4bd933f..ac2d306 is exactly those two files). The log's two identities therefore name no archive of 4bd933f, which is
+  the fault rev66's second Medium and my M-2 were about, repeated with a base sha that does not verify. The relayed explanation,
+  that the two digests are the mutant roots' headers, is stated here as relayed: with the window mutation retained only as prose it
+  cannot be tested from the tree (my own mutant identities, bdf3ac45167f0232 and ea3dc3e72a29d5ad, come from a different injection
+  text and prove nothing about theirs). The red's substance stands on my builds; the record's basis does not. M-2 closes when a
+  companion gives the clean roots' identities, the two copied files' digests against the ac2d306 blobs, and the mutation as a
+  retained diff with the wrapper digest it produces, and states which digests the table used. The landing-55 S build
+  (4ebaa0bc49091b37) stays unresolved with it.
+- Row 5, the landing-53 figures: out_l53wrapmut/r and out_l53satmut/r are named by relative path only and I could not locate them
+  (not under ibex_dv_out, ibex_dv_probe, the clone's work directories or the project scratch), so the corrected integers 1 and 2642
+  are not re-derived here; Section 7 measured the response obligation 71 to 1 on my own builds. The counting rule's doubling holds on
+  my mutant run (mentions 200, 58 and 260 against firings 100, 29 and 129); my sim.log carries no Report Summary, so the per-id and
+  tally halves are not re-derived. L-7 (Low, records; tb-infra-2): give the retained runs' absolute roots or quote their lines.
+- The remaining rows: my L-2 is answered (the equal-fire equality was a quiet-fixture artefact; this red, 100 injected and 100
+  reported by both forms, is the general evidence). L-4 and L-5 are NOT dispositioned by landing 55's log or the l56 companion as
+  the log says: my rows at 7.4 place them with the l52 vacuity corrigendum and the DV Lead, where they stay owed. L-8 (Low, records;
+  tb-infra-2): the log's mutant diff is prose, as the three SPURIOUSRVALID mutants before it; the l57 fixtures it points at are the
+  irq mutants, not these.
+
+Reconciliation with rev76 (read after the rows above were fixed):
+- Its Medium is my M-2 as it stands, with the same two recomputed identities (it validated the recipe on c045115 as Section 7 had);
+  it adds that the log does not say whether the digests are clean or mutant roots, retains no copied-file digest, and leaves the S
+  build unresolved. Agreed on every part.
+- Its Low on the counting-rule root is my L-7 (same search, same absence). Its Low on the red's unquoted figures: my per-bus split
+  derives the nineteen it says are asserted. Its Low on Row 2's overstatement is my I-1 widened, verified on my own breakdown. Its
+  Low on the mutants-as-prose misattribution is my L-8, verified against landing 57's retained files. Its Low on L-4 and L-5 is
+  verified against my own rows and adopted. Its Info on the annotation's line numbers is fair and not a row of mine.
+- Verdict after reconciliation: unchanged. Both agree there is no Major and that M-3 closes.
+
+CRITIC VERDICT: REQUEST-CHANGES on 69eb33f..ac2d306, confined to M-2 (the build identities that name no archive of 4bd933f, and
+the mutation retained as prose). M-3 is CLOSED; M-1 stayed closed from Section 7; the red's per-property claims reproduce to the
+digit; L-6, L-7 and L-8 and I-1 are owed with M-2's companion, L-4 and L-5 with the DV Lead. The group closes when that companion
+lands and its digests verify.
