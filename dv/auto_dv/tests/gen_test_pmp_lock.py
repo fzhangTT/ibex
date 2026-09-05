@@ -123,17 +123,7 @@ class PmpLock(GenTest):
     # items of the plan group this test does not check, with the reason (two-sided against the group by the structure check)
     not_built = {}
     # bins of built items whose precondition this test does not apply (rule (g)), with the reason; left out of the manifest
-    bins_not_hit = {
-        "gen_pmp_addr_write_cg.cr_self_lock.locked_rlb1_written":
-            "declaration: the sampler sets self_locked from the entry's lock bit AND NOT mseccfg.RLB "
-            "(gen_fcov_pkg.sv), so cp_self_lock.locked and cp_rlb.rlb1 are mutually exclusive by construction and "
-            "no stimulus reaches this cross bin; this entry does rewrite locked entries under RLB=1, and the "
-            "classifier does not label those samples locked",
-        "gen_pmp_addr_write_cg.cr_tor_lock.nl_tor_rlb1_written":
-            "declaration: the sampler sets next_locked from the next entry's lock bit AND NOT mseccfg.RLB "
-            "(gen_fcov_pkg.sv), so cp_next_cfg.next_locked_tor and cp_rlb.rlb1 are mutually exclusive by "
-            "construction and no stimulus reaches this cross bin",
-    }
+    bins_not_hit = {}
 
     def report_count(self):
         return prog.plan(self.seed).k

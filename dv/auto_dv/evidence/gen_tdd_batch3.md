@@ -849,3 +849,43 @@ two entries land, the manifests are re-rendered so the shapes produced at EVERY 
 bins, coverpoint and cross halves separate, with none of the 46 credited before that measurement.
 The full accounting is beside the log it corrects, at
 gen_tdd_logs/test_writer/gen_fu_shape_check_corrigendum.md, because a retained log is not reopened.
+
+## 17. PMP step 1b: two bins promoted because the sampler that excluded them is gone
+
+WHAT CHANGED. gen_test_pmp_lock declares 41 bins instead of 39 and has no not_hit lines left. The two
+promoted bins are gen_pmp_addr_write_cg.cr_self_lock.locked_rlb1_written and cr_tor_lock.
+nl_tor_rlb1_written, hit at every one of the 40 measured seeds of the step-1b block. The other two PMP
+manifests re-render byte-identical and this touch does not change them.
+
+WHY THE REASONS WENT OUT RATHER THAN BEING REWORDED. Both were declaration-class and said the sampler
+takes the lock field as the lock bit AND NOT mseccfg.RLB, so locked and rlb1 are mutually exclusive by
+construction and no stimulus reaches the cross. The step-1b fixes took the raw lock bit; at the block's
+own commit and at this touch's base the field is `pmp_cfg_pre[i][7]` with no RLB term (both citations
+pinned to their commits in the retained log, because a bare line number moves under any landing above
+it). A reason that describes a sampler which no longer exists is a false claim about the entry's runs,
+not a stale one.
+
+THE ASYMMETRY THIS EXPOSES, and it is the general lesson rather than a PMP one. A declared bin is
+checked every run: if the stimulus stops producing it, the run fails. A not_hit REASON is checked only
+when a person reads it. So a sampler or plan change that removes an exclusion silently obsoletes every
+reason resting on it, and nothing in the flow notices. These two sat wrong from the landing that fixed
+the sampler until this measurement. The DV Lead has taken the sweep for such reasons into its own
+ruling procedure, which is the right home for it: the ruling creates the stale reasons, so catching
+them belongs to the ruling.
+
+WHAT MADE THE REST CHECKABLE IN ONE PASS. Every seed-dependent reason in gen_test_pmp_csr_warl carries
+its own count, "hit at N of the entry's 39 measured seeds". That let all 78 be re-verified against a
+new block by comparing two numbers per line, and all 78 hold with the denominator unchanged. A reason
+that carries its number can be re-checked; one that says "sometimes" cannot.
+
+THE DENOMINATOR IS 39 OF 40 AND SAYS SO. Seed 230969025 produces no program at the block's pinned
+commit, whose WARL generator asserts on its own draw; the backstop that closes it landed later. No
+fortieth run was spliced in from the fixed generator, because a seed set holding two generators is
+worth less than a clean 39.
+
+A PARSER DEFECT THIS SECTION PASSED THROUGH. The first reading of csr_warl's not_hit set found three
+lines where there are 81: the class token pattern could not match a hyphen, so every "seed-dependent"
+line was dropped silently and the entry read as shorter than it is. That figure was reported before it
+was caught. It was the second hyphen-token defect of the day in a census of mine. The remedy applied to
+both is structural rather than attentive: count the raw marker lines and assert the parser consumed
+every one, so the next token that widens fails loudly instead of shrinking the input.

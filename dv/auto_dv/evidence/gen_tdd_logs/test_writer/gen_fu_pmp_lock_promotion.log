@@ -1,0 +1,65 @@
+# gen_fu_pmp_lock_promotion: two bins leave bins_not_hit because the sampler that excluded them is gone
+
+WHAT THIS CLAIMS. gen_pmp_addr_write_cg.cr_self_lock.locked_rlb1_written and
+gen_pmp_addr_write_cg.cr_tor_lock.nl_tor_rlb1_written are hit at every one of the 40 measured seeds
+of gen_test_pmp_lock in the step-1b block, so they become declared bins. NOT claimed: anything about
+the other two PMP entries, which this touch leaves byte-identical, or about any bin outside those two.
+
+WHY THEY WERE EXCLUDED AND WHY THAT ENDED. Both reasons were declaration-class and said the sampler
+sets the lock field from the entry's lock bit AND NOT mseccfg.RLB, making locked and rlb1 mutually
+exclusive by construction so no stimulus could reach the cross. That was true of the sampler as it
+stood. The step-1b sampler fixes took the raw lock bit, so the exclusion is gone and the stimulus
+this entry already had reaches both bins. Pinned to commits, because a bare line number moves:
+
+  at 4cd3ff6, the commit the block is pinned to
+    gen_fcov_pkg.sv:2448  bit self_locked = pmp_cfg_pre[i][7];
+    gen_fcov_pkg.sv:2464  next_locked = pmp_cfg_pre[i+1][7];
+  at 9a42c17ee69316dbc68b1536d5e9abe148078941, this touch's base
+    gen_fcov_pkg.sv:2506  bit self_locked = pmp_cfg_pre[i][7];
+    gen_fcov_pkg.sv:2522  next_locked = pmp_cfg_pre[i+1][7];
+
+Neither carries an RLB term. So the reasons described a sampler that no longer exists, which makes
+them false claims about the entry's runs rather than merely stale ones, and they are removed rather
+than reworded.
+
+THE MEASUREMENT, from the retained block's own artifacts.
+  block            dv/auto_dv/evidence/gen_pmp_measurement/gen_index.md, gen_pmp_1b.yaml,
+                   gen_pmp_1b_bins.txt, retained at 2956a8a, measured on 4cd3ff6
+  read by          each run's own urgReport_variable_form/grpinfo.txt, parsed with the reviewed
+                   gen_read_keyed.parse_report, a bin counting as hit when its count is non-zero
+  gen_test_pmp_lock            40 runs, 40 PASS, 39 declared bins all hit at every seed
+    locked_rlb1_written        40 of 40
+    nl_tor_rlb1_written        40 of 40
+  gen_test_pmp_csr_warl        39 runs, 39 PASS, 179 declared bins all hit at every seed
+  gen_test_pmp_mseccfg         40 runs, 40 PASS,  26 declared bins all hit at every seed
+
+THE csr_warl DENOMINATOR IS 39 OF 40, not 40, and it is a property of the pinned commit rather than
+of the entry today: seed 230969025 produces no program at 4cd3ff6, whose WARL generator asserts on
+its own draw. The backstop that closes that hole is committed at 4017573, after the block's pin. No
+fortieth run was spliced in from a different generator, which would have put two generators in one
+seed set.
+
+csr_warl IS UNCHANGED OVER ALL 81 OF ITS not_hit LINES, checked rather than assumed: 78
+seed-dependent, 2 stimulus, 1 declaration; none is hit at every seed, 78 are hit at some and 3 at
+none. Every one of the 78 seed-dependent reasons carries its own count, and every one of those counts
+equals its measured value with the denominator 39 before and after. That includes the line the DV
+Lead asked to be re-checked, cr_rw01_mml.rw01_mml1_l1_rlb1_stored, which records 16 of the entry's 39
+measured seeds and measures 16 of 39. So the step-1b fixes moved nothing in that entry's
+seed-dependent set.
+
+A TOOL DEFECT THIS MEASUREMENT PASSED THROUGH, recorded because the first reading was wrong and the
+wrong reading was reported. My census matched the not_hit class token with a pattern that cannot
+contain a hyphen, so "seed-dependent" never matched and 78 of the 81 lines were dropped SILENTLY: the
+entry read as having three not_hit lines and I reported that figure. It was the second such parse
+defect in one day, after MISSING-FROM-REPORT in a run-report census. The remedy is not vigilance
+about hyphens: both censuses now count the raw marker lines and ASSERT the match count equals it, so
+a token that widens again fails loudly instead of shrinking the input.
+
+WHAT THE RE-RENDER PRODUCES, run in place and checked entry by entry:
+  gen_test_pmp_lock       39 declared, 2 not_hit  ->  41 declared, 0 not_hit   (this touch)
+  gen_test_pmp_csr_warl   179 declared, 81 not_hit  ->  byte-identical
+  gen_test_pmp_mseccfg     26 declared,  0 not_hit  ->  byte-identical
+The promoted entry is 19 coverpoint bins and 22 cross bins. No plan change is needed: the plan
+already traces both bins to their items, and it was the test's own bins_not_hit that excluded them.
+gen_test_lib --self-test exits 0 on a detached archive carrying the changed test and manifest, which
+is the rule that the manifest and declare_bins agree.
