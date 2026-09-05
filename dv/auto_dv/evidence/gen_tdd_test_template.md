@@ -684,8 +684,7 @@ sentence and instance 1 from its message received 14:40Z (one section, three ins
 as instance 1); instances 2 and 3 from its second message, received after the 14:42Z re-hand and before the 14:45Z
 WITHDRAW, which supersedes the first for those two and cites their figures to a committed log. This record adds the
 section number to the header and the numbering and titles of instances 2 and 3; the sentences are the DV Lead's,
-checked word for word against the messages as received. The ablation-reading rule this section first carried on its
-own is instance 1.
+checked word for word against the messages as received. The ablation-reading rule, received first, is instance 1.
 
 An evidence set must be shown CAPABLE OF FAILING, not merely observed to pass. A set that passes is evidence
 only once something establishes it could have failed. Three instances:
@@ -711,6 +710,10 @@ only once something establishes it could have failed. Three instances:
    and the mask is what moved. The one-against-zero form of the same evidence would have needed a shortened
    run and would have proved less.
 
+   Test Writer's gloss on instance 2 (rev84 L-3), not the DV Lead's text: a count difference IS an acceptable red
+   when both builds run to the same end and the count moves without any truncation, because the run length is
+   then a confounder held equal; the instance rules against the count only where it needs the run cut short.
+
 3. THE EVIDENCE SET FOR A SHARED CHANGE. A pre-hand evidence set for a change to a shared stimulus
    component, or to a checker other roles depend on, must include at least one run that could have failed
    had the change been wrong. Two forms qualify: a run of a real program whose output is compared against
@@ -730,9 +733,10 @@ The mechanism instance 1 names, read in the tree rather than taken from the rela
 the commit that last changed the file: in dv/auto_dv/env/gen_checkers_pkg.sv at 41bcbe8 (tb-infra-2's landing 61, the
 package's latest change at this hand) the irq/nmi entry checker increments its detection counter `expect_fail++` at
 :162 and gates the `uvm_error` alone behind `if (gen_chk_en(cfg, ...))` at :163. The two lines sat at :164/:165 at
-d8bed4e and :163/:164 at 139c325; landings 60 and 61 each removed a line above them, which is why the hand's verifier
-re-derives both numbers from the handed HEAD and refuses the hand when the record's numbers differ. The same log
-states the mechanism in prose at :61-63 ("expect_fail is incremented BEFORE the gen_chk_en gate, so disabling the
+d8bed4e and :163/:164 at 139c325; landings 60 and 61 each removed a line above them, which is why this paragraph pins
+to a commit. The reader's check is `git show 41bcbe8:dv/auto_dv/env/gen_checkers_pkg.sv | sed -n '162,163p'`; the
+hand's own script, outside the tree, derived both numbers from the handed HEAD and refused the hand once when they had
+moved (rev84 L-2). The same log states the mechanism in prose at :61-63 ("expect_fail is incremented BEFORE the gen_chk_en gate, so disabling the
 named check suppresses the uvm_error and leaves the detection counted"), a citation that does not move with the
 file's layout. The rule text names the checker and not a line by the DV Lead's choice, so that the rule outlives the
 file's layout; this paragraph is pinned to a commit for the same reason.
@@ -740,7 +744,13 @@ file's layout; this paragraph is pinned to a commit for the same reason.
 COMPANION LINE (this touch): Section 20 of this record and the rev64 row section of gen_critic_response_test_template.md
 were committed at 2c63b83 indented by four spaces, the output of a patch script split in two by re-indenting its lines,
 which re-indented the quoted text along with the code; markdown rendered both as code blocks, and a section check reading
-"## " at column 0 could not see Section 20. The plan chain's section-number check, which every plan-class hand of this file
-runs and which a reader can run (the headers of this file, matched at column 0, must number sequentially), would have caught
-it on this touch; it was found by the same grep a step earlier. Both blocks are de-indented in this touch with their content
-unchanged, proven byte for byte minus the four leading spaces.
+"## " at column 0 could not see Section 20. It was found by that grep; the earlier wording here named a plan-chain
+section-number check that does not exist in the tree (rev84 L-1, the Orchestrator's relay taken on trust). The check that
+exists is dv/auto_dv/tools/gen_section_check.py, committed with this correction: `python3 dv/auto_dv/tools/gen_section_check.py
+dv/auto_dv/evidence/gen_tdd_test_template.md --from 17` and `... gen_critic_response_test_template.md --indent-only`
+fail on a gap, a repeat or an indented header or table row; its self-test's red case is the 2c63b83 shape, and run on the
+2c63b83 blobs it reports this record's :651 and the response file's :200-207. A whole-file run of it on this record
+reports the pre-existing order of Sections 4, 6, 7, 5, 8 (:148-271): Section 5 stands after Section 7, a placement left
+as it is because review rows cite those numbers. Both blocks are de-indented in this touch with their content unchanged,
+proven byte for byte minus the four leading spaces; the response file's trailing whitespace-only line was dropped and a
+final newline added, the one difference (rev84 I-2).
