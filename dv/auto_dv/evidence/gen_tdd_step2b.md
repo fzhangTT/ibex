@@ -1423,3 +1423,42 @@ that rule now binds any archive verification touching the TB.
 
 Retained: gen_tdd_logs/fcov/gen_fu_l43_irq_step1_covergroups.log, which carries the per-covergroup sample events,
 sources, caveats and unreachable bins, and both of the above with their measured census figures. One manifest row.
+
+## Landing 44: the PMP sampler rows from the cross-model review, and the raw lock bit
+
+Five review rows against the PMP samplers, four fixed and one refused with its reason. None of them invalidates a
+declared bin; all of them misroute credit between bins that mean something, which is why they land before that
+credit is taken rather than after.
+
+THE ROOT OF THE TWO MAJORS IS THE SAME MISTAKE IN TWO PLACES: a classifier comparing against what the instruction
+PRESENTED rather than what the DUT would DO with it. The configuration outcome compared the raw attempted byte, so
+a write differing only in bits the DUT never stores looked ignored on an unlocked entry, and a write whose W was
+dropped looked written. It now compares against the byte the DUT would store. The reset-tracking flag was one
+run-wide bit where the plan defines one per CSR, so at most one of four class bins could ever read yes; it is now
+one per class. Neither was found by a failing run, because each classifier was self-consistent; only the plan
+disagreed with them.
+
+ONE ROW IS NOT FIXED AND THE LOG SAYS SO. The plan wants the trap bin to mean a specific cause. The record carries
+a one-bit trap flag and no cause, and the model state that carries the cause arrives on a different callback, so
+any retired trap on a PMP CSR access is booked illegal. That is sound for this DUT, where such an access traps only
+as an illegal instruction, but it is classification by elimination rather than a read of the cause. The review row
+allowed a check or a stated caveat; this is the caveat, and it is written where a reader of the coverage will find
+it rather than in a commit message.
+
+THE RAW LOCK BIT is the same independence argument as the review rows, from the other end. Two coverpoints encoded
+the rule-locking bit that a third coverpoint already carried, which made the components of their crosses dependent
+and two declared cross bins unreachable in principle. The two now carry the raw lock bit and the cross expresses
+the effective lock. The effective reading survives where it belongs, in the outcome rule, whose plan text names it.
+
+A CORRIGENDUM, NOT AN EDIT. The original PMP landing's retained log claimed none of those four covergroups had an
+unreachable bin. The reset-flag defect makes that false. Its bytes are untouched and a corrigendum stands beside it
+with its own manifest row, saying what the sentence should have claimed: the parameter clauses it cited establish
+something about the DUT's configuration, not about the samplers, and a sampler can make a bin unreachable whatever
+the configuration allows.
+
+THE PREDICTION IS IN THE LOG, BEFORE THE MEASUREMENT. Six named bins with what must not move, what may move and in
+which direction, and the limit that makes a flat result a correct outcome rather than a failed fix: the misrouted
+combination is counted nowhere, so the numbers can falsify these changes but cannot confirm them. The proof is the
+classifier reading what the RTL reads.
+
+Retained: gen_tdd_logs/fcov/gen_fu_l44_pmp_step1b.log and gen_fu_pmp1_covergroups_corrigendum.log. Two manifest rows.

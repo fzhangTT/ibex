@@ -1,0 +1,25 @@
+# gen_fu_pmp1_covergroups_corrigendum.log -- one sentence of gen_fu_pmp1_covergroups.log is wrong
+# Produced 2026-09-05T07:16:15Z on soc-l-11. The retained log's bytes are NOT touched; this file
+# stands beside it and carries its own manifest row, as a corrigendum must.
+#
+# THE SENTENCE, at line 100 of gen_fu_pmp1_covergroups.log:
+#   "NONE of the four groups has a bin that is unreachable at this configuration"
+# It is FALSE as written, and the counter-example is in the same landing's own code.
+#
+# WHY. CG-PMP-004's cp_first_after_reset was sampled from ONE run-wide flag, set false after ANY PMP CSR
+# access, while the plan defines it per CSR: "no prior write to this CSR since reset". cr_reset_read crosses
+# it with cp_class, so at most ONE of rst_pmpcfg, rst_pmpaddr, rst_mseccfg and rst_mseccfgh could read yes in
+# a run, whichever class the program touched first. The other three were unreachable BY CONSTRUCTION, not by
+# configuration, and the sentence above claimed the opposite of a covergroup in the same set.
+#
+# HOW IT WAS FOUND: the cross-model review of the pmp-step1 range (CM224 MAJOR-2), not by me and not by a
+# failing run. The classifier was self-consistent, so nothing failed; only the plan's own definition
+# disagreed with it.
+#
+# WHAT THE SENTENCE SHOULD HAVE SAID: the four groups have no bin unreachable AT THIS CONFIGURATION - which
+# is what the PMPEnable, PMPNumRegions and PMPGranularity clauses actually establish - but that is a claim
+# about the DUT's parameters, NOT about the samplers. A sampler can make a bin unreachable whatever the
+# configuration allows, and this one did. The scope of the claim was wrong, not its evidence.
+#
+# FIXED: the flag is now per CSR class, so each class's first access reads yes independently.
+# The fix and its evidence are in gen_fu_l44_pmp_step1b.log, landing 44.

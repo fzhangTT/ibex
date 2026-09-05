@@ -2131,7 +2131,10 @@ package gen_fcov_pkg;
     logic [7:0]  pmp_cfg_now [16], pmp_cfg_pre [16];
     logic [31:0] pmp_addr_now [16], pmp_addr_pre [16];
     logic [31:0] pmp_msec_now = '0, pmp_msec_pre = '0;
-    bit pmp_have_pre = 0, pmp_first_acc = 1, pmp_wr_pend = 0;
+    bit pmp_have_pre = 0, pmp_wr_pend = 0;
+    // cp_first_after_reset is per CSR CLASS, as the plan defines it: one run-wide flag let at most one
+    // of the four class bins ever read yes
+    bit pmp_first_acc [4] = '{1, 1, 1, 1};
     int unsigned n_pmp_acc = 0, n_pmp_tbl = 0, n_pmp_tbl_dropped = 0;
     // CG-PMP-014 defers: a snapshot is sampled only once a record retires before the next table change (the plan's
     // condition), which is also when cp_all_off_u is decided.
@@ -2205,10 +2208,15 @@ package gen_fcov_pkg;
                         v_op,
                         pmp_is_write(t.insn) ? GEN_FC_PMP_CSR_ACCESS_CP_RW_WRITE
                                              : GEN_FC_PMP_CSR_ACCESS_CP_RW_READ_ONLY,
+                        // the plan names mcause 2; rvfi_trap is ONE BIT here (gen_rvfi_if.sv:8) so the cause is
+                        // not on the record, and the model state that carries mcause arrives on another
+                        // callback. Any retired trap on a PMP CSR access is booked illegal, which is sound
+                        // for this DUT (a PMP CSR access traps only as an illegal instruction) but is a
+                        // classification by elimination rather than a read of the cause
                         t.trap ? GEN_FC_PMP_CSR_ACCESS_CP_TRAP_ILLEGAL : GEN_FC_PMP_CSR_ACCESS_CP_TRAP_NONE,
-                        pmp_first_acc ? GEN_FC_PMP_CSR_ACCESS_CP_FIRST_AFTER_RESET_YES
-                                      : GEN_FC_PMP_CSR_ACCESS_CP_FIRST_AFTER_RESET_NO);
-      n_pmp_acc++; pmp_first_acc = 0;
+                        pmp_first_acc[cls] ? GEN_FC_PMP_CSR_ACCESS_CP_FIRST_AFTER_RESET_YES
+                                           : GEN_FC_PMP_CSR_ACCESS_CP_FIRST_AFTER_RESET_NO);
+      n_pmp_acc++; pmp_first_acc[cls] = 0;
     endfunction
 
     // the byte range of entry i in words of four bytes, from the model's table; returns 0 when the entry is off
@@ -2339,6 +2347,7 @@ package gen_fcov_pkg;
     // ---- CG-PMP-001 and CG-PMP-002: the two write groups -------------------------------------------------
     gen_pmp_cfg_write_cg  pmp_cfg_cg;
     gen_pmp_addr_write_cg pmp_addr_cg;
+    int unsigned n_pmp_addr_readback_odd = 0;
     int unsigned n_pmp_cfg = 0, n_pmp_addr = 0;
     // the write being resolved: its facts are taken at the write record, its outcome at the next one
     bit pmp_wr_is_cfg = 0; int pmp_wr_idx = -1; logic [31:0] pmp_wr_val = '0; int pmp_wr_op = -1;
@@ -2371,10 +2380,23 @@ package gen_fcov_pkg;
     endfunction
 
     // CG-PMP-001: one sample per entry byte of the written word, resolved against the readback
+    // the byte the DUT would store for an attempted cfg byte: bits 6:5 have no field in pmp_cfg_t
+    // (rtl/ibex_cs_registers.sv:1429-1437 assigns lock from bit 7, mode from [4:3], RWX from [2:0]), and W
+    // is dropped when R is clear while MML is 0
+    function logic [7:0] pmp_stored_byte(logic [7:0] a_b, bit mml);
+      logic [7:0] s = a_b & 8'h9f;
+      if (!mml && !s[0] && s[1]) s[1] = 1'b0;
+      return s;
+    endfunction
+    // the RTL's executable-lock set, is_mml_m_exec_cfg (rtl/ibex_cs_registers.sv:164-176): with lock set,
+    // {read, write, exec} in {001, 010, 011, 101} only. A locked RWX=111 row IS written under MML.
+    function bit pmp_mml_exec_lock(logic [7:0] a_b);
+      return a_b[7] && ({a_b[0], a_b[1], a_b[2]} inside {3'b001, 3'b010, 3'b011, 3'b101});
+    endfunction
     function void pmp_cfg_sample();
       logic [31:0] old_w = '0;
       logic [31:0] att;
-      logic [7:0]  a_b, pre_b, post_b;
+      logic [7:0]  a_b, pre_b, post_b, exp_b;
       int lockmix = 0, v_lrwx, v_outcome;
       bit mml = pmp_msec_pre[ibex_pkg::CSR_MSECCFG_MML_BIT], rlb = pmp_msec_pre[ibex_pkg::CSR_MSECCFG_RLB_BIT];
       if (pmp_cfg_cg == null || pmp_wr_idx < 0) return;
@@ -2385,12 +2407,16 @@ package gen_fcov_pkg;
         int i = 4*pmp_wr_idx + b;
         a_b = att[8*b +: 8]; pre_b = pmp_cfg_pre[i]; post_b = pmp_cfg_now[i];
         v_lrwx = GEN_FC_PMP_CFG_WRITE_CP_WR_LRWX_C0000 + int'({a_b[7], a_b[0], a_b[1], a_b[2]});
-        if (post_b == pre_b && a_b != pre_b) begin
-          v_outcome = (mml && !rlb && a_b[7] && (a_b[2] || (!a_b[0] && a_b[1])))
+        exp_b = pmp_stored_byte(a_b, mml);
+        // the outcome compares the stored byte against what the DUT WOULD store, not against the raw
+        // attempted byte: bits 6:5 are never stored and W is dropped when R is clear under MML=0, so a raw
+        // comparison books a reserved-bit-only write as ignored on an unlocked entry and a W-drop as written
+        if (post_b == pre_b && exp_b != pre_b) begin
+          v_outcome = (mml && !rlb && pmp_mml_exec_lock(a_b))
                       ? GEN_FC_PMP_CFG_WRITE_CP_OUTCOME_IGNORED_MML_EXEC
                       : GEN_FC_PMP_CFG_WRITE_CP_OUTCOME_IGNORED_LOCK;
-        end else if (!mml && !a_b[0] && a_b[1] && post_b == (a_b & 8'hfd)) begin
-          v_outcome = GEN_FC_PMP_CFG_WRITE_CP_OUTCOME_W_DROPPED;   // W without R is dropped when MML is 0
+        end else if (post_b == exp_b && exp_b != (a_b & 8'h9f)) begin
+          v_outcome = GEN_FC_PMP_CFG_WRITE_CP_OUTCOME_W_DROPPED;   // the write landed with W dropped
         end else begin
           v_outcome = GEN_FC_PMP_CFG_WRITE_CP_OUTCOME_WRITTEN;
         end
@@ -2416,19 +2442,26 @@ package gen_fcov_pkg;
     function void pmp_addr_sample();
       int i = pmp_wr_idx, v_outcome, v_next;
       bit rlb = pmp_msec_pre[ibex_pkg::CSR_MSECCFG_RLB_BIT];
-      bit self_locked = pmp_cfg_pre[i][7] && !rlb;
-      bit next_locked, next_tor;
+      // cp_self_lock and cp_next_cfg carry the RAW lock bit; RLB is carried by cp_rlb alone, so the cross of
+      // the two expresses the effective lock. Encoding RLB in both made the components dependent and two
+      // declared cross bins unreachable. The effective lock stays, for the OUTCOME rule only.
+      bit self_locked = pmp_cfg_pre[i][7];
+      bit self_blocked = self_locked && !rlb;
+      bit next_locked, next_blocked, next_tor;
       if (pmp_addr_cg == null || i < 0) return;
-      if (pmp_addr_now[i] == pmp_wr_val)
-        v_outcome = GEN_FC_PMP_ADDR_WRITE_CP_OUTCOME_WRITTEN;
-      else if (self_locked)
-        v_outcome = GEN_FC_PMP_ADDR_WRITE_CP_OUTCOME_IGNORED_SELF_LOCK;
-      else
-        v_outcome = GEN_FC_PMP_ADDR_WRITE_CP_OUTCOME_IGNORED_TOR_LOCK;
+      next_tor = (i < 15) && (pmp_cfg_pre[i+1][4:3] == 2'b01);
+      next_blocked = (i < 15) && pmp_cfg_pre[i+1][7] && !rlb;
+      // the outcome is decided by the PRE-STATE rule and only CONFIRMED by the readback: a locked entry
+      // rewritten with its current value reads back equal and is still ignored
+      if (self_blocked)            v_outcome = GEN_FC_PMP_ADDR_WRITE_CP_OUTCOME_IGNORED_SELF_LOCK;
+      else if (next_blocked && next_tor) v_outcome = GEN_FC_PMP_ADDR_WRITE_CP_OUTCOME_IGNORED_TOR_LOCK;
+      else                         v_outcome = GEN_FC_PMP_ADDR_WRITE_CP_OUTCOME_WRITTEN;
+      // the readback must agree with the rule; a disagreement is counted and reported, never absorbed
+      if ((v_outcome == GEN_FC_PMP_ADDR_WRITE_CP_OUTCOME_WRITTEN) != (pmp_addr_now[i] == pmp_wr_val))
+        n_pmp_addr_readback_odd++;
       if (i == 15) v_next = GEN_FC_PMP_ADDR_WRITE_CP_NEXT_CFG_TOP;
       else begin
-        next_locked = pmp_cfg_pre[i+1][7] && !rlb;
-        next_tor = (pmp_cfg_pre[i+1][4:3] == 2'b01);
+        next_locked = pmp_cfg_pre[i+1][7];
         v_next = next_locked ? (next_tor ? GEN_FC_PMP_ADDR_WRITE_CP_NEXT_CFG_NEXT_LOCKED_TOR
                                          : GEN_FC_PMP_ADDR_WRITE_CP_NEXT_CFG_NEXT_LOCKED_OTHER)
                              : (next_tor ? GEN_FC_PMP_ADDR_WRITE_CP_NEXT_CFG_NEXT_UNLOCKED_TOR
@@ -2795,7 +2828,7 @@ package gen_fcov_pkg;
       `uvm_info("GEN_FCOV", $sformatf("move pairs: %0d sampled, %0d with mismatching micro-ops (%0d of them the self-test's)", n_mv, n_mv_miss, ut_mv_miss_expected), UVM_LOW)
       `uvm_info("GEN_FCOV", $sformatf("slice A samples: records=%0d mul_timing=%0d rst_boot=%0d (boot_to_req %0d) sec_ctrl_inputs=%0d zcmp_hazard=%0d", n_rec, n_mt, n_rst, boot_to_req, n_sec, n_hz), UVM_LOW)
       `uvm_info("GEN_FCOV", $sformatf("irq samples: entry=%0d edge=%0d access=%0d mie_global=%0d debug_window=%0d (post-exit undecided %0d, dropped unclosed %0d) reset=%0d fetch_off=%0d view misses %0d", n_irq_entry, n_irq_edge, n_irq_access, n_irq_mie, n_irq_dbg, n_irq_dbg_undecided, n_irq_dbg_dropped, n_irq_rst, n_irq_off, n_irq_view_miss), UVM_LOW)
-      `uvm_info("GEN_FCOV", $sformatf("pmp samples: cfg_write=%0d addr_write=%0d csr_access=%0d table_state=%0d (dropped without a retire %0d)", n_pmp_cfg, n_pmp_addr, n_pmp_acc, n_pmp_tbl, n_pmp_tbl_dropped), UVM_LOW)
+      `uvm_info("GEN_FCOV", $sformatf("pmp samples: cfg_write=%0d addr_write=%0d csr_access=%0d table_state=%0d (dropped without a retire %0d, readback disagreed with the pre-state rule %0d)", n_pmp_cfg, n_pmp_addr, n_pmp_acc, n_pmp_tbl, n_pmp_tbl_dropped, n_pmp_addr_readback_odd), UVM_LOW)
       if (mul_cg != null) begin   // referee: a group the sampler fed must show coverage, a dropped sample is a collected failure
         if (n_mv_miss > ut_mv_miss_expected) `uvm_error("GEN_FCOV_REF", $sformatf("gen_cmp_zcmp_mv_cg: %0d legal move pairs whose micro-ops did not match the expansion", n_mv_miss - ut_mv_miss_expected))
         if (n_irq_entry > 0 && irq_entry_cg.get_coverage() == 0.0) `uvm_error("GEN_FCOV_REF", "gen_irq_entry_cg sampled without coverage")

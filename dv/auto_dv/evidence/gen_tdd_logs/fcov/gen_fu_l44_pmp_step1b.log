@@ -1,0 +1,72 @@
+# gen_fu_l44_pmp_step1b.log -- the CM224 sampler rows and the raw-lock shape
+# Produced 2026-09-05T07:16:57Z on soc-l-11 from a detached archive of 24da095
+# with this landing's files applied. Sampler corrections to committed covergroups; per LOG-096 a covergroup
+# owes render, compile, sample-event and caveat statements, not a trust triad, and no bin moves here.
+#
+# RENDER: the plan's pass 2 changed coverpoint PROSE only, so the rendered include is unchanged.
+#   gen_fcov_codegen --check: up to date
+# COMPILE: sources sha256 1105ddfa05dd0163, vcs exit 0
+#
+# THE FIVE ROWS, each with what it did and what it does now.
+# MAJOR-1  cp_outcome compared the RAW attempted cfg byte with the pre byte. The DUT stores neither bits 6:5
+#          (pmp_cfg_t has no field for them; rtl/ibex_cs_registers.sv:1429-1437 assigns lock from bit 7, mode
+#          from [4:3], RWX from [2:0]) nor W when R is clear under MML=0. So a write differing only in
+#          reserved bits left post == pre and was booked ignored_lock on an UNLOCKED entry or under RLB=1,
+#          and a W-without-R write carrying reserved bits failed the old "post == (a_b & 8'hfd)" test and was
+#          booked written instead of w_dropped. Now a helper computes the byte the DUT WOULD store and the
+#          comparison is against that.
+# MINOR-1  the executable-lock predicate was L && (X || (!R && W)), which includes RWX=111. The RTL's
+#          is_mml_m_exec_cfg (rtl/ibex_cs_registers.sv:164-176) accepts {read,write,exec} in
+#          {001, 010, 011, 101} only; I checked all eight encodings and 111 is the ONLY divergence, so a
+#          locked all-permissions row IS written under MML. The predicate now names the four.
+# MAJOR-2  cp_first_after_reset was ONE run-wide flag cleared by any PMP CSR access, while the plan defines
+#          it per CSR. At most one of the four cr_reset_read class bins could read yes per run. It is now a
+#          flag per CSR class. The retained log of the original landing claimed no bin of the four groups was
+#          unreachable; that sentence is corrected in gen_fu_pmp1_covergroups_corrigendum.log, whose bytes
+#          stand beside it rather than editing it.
+# MINOR-2  the address cp_outcome read written whenever the readback equalled the attempted value, so a
+#          locked RLB=0 entry rewritten with its CURRENT value was booked written though ignored. The outcome
+#          is now decided by the PRE-STATE rule and only CONFIRMED by the readback; a disagreement between
+#          the two is COUNTED and reported rather than absorbed.
+# MINOR-3  NOT FIXED, and stated rather than claimed. The plan wants cp_trap.illegal to mean mcause 2.
+#          rvfi_trap is ONE BIT in this TB (gen_rvfi_if.sv:8), so the cause is not on the record, and the
+#          model state that carries mcause arrives on a different callback. Any retired trap on a PMP CSR
+#          access is booked illegal. That is sound for this DUT, where such an access traps only as an
+#          illegal instruction, but it is classification by elimination and not a read of the cause. The
+#          review row allowed either a check or a stated caveat; this is the caveat.
+# RAW LOCK cp_self_lock and cp_next_cfg now carry the RAW lock bit and cp_rlb carries RLB alone, so the cross
+#          of the two expresses the effective lock. Encoding RLB in both made the components dependent and
+#          made cr_self_lock.locked_rlb1_written and cr_tor_lock.nl_tor_rlb1_written unreachable. The
+#          EFFECTIVE lock remains, used by the outcome rule only, whose plan text still names RLB=0.
+#
+# SMOKES, from a tree assembled from this landing's list, verdicts from the flow's own gen_verdict.decide:
+#   storm     PASS  referee errors 0
+#   lines     PASS  referee errors 0
+#   dbgstorm  PASS  referee errors 0
+#   fetchen   PASS  referee errors 0
+#   pmp       PASS  referee errors 0
+#   the PMP fixture's own sampler line, counts unchanged from the original landing:
+#     pmp samples: cfg_write=4 addr_write=1 csr_access=2 table_state=2 (dropped without a retire 0, readback disagreed with the pre-state rule 0)
+#   The new "readback disagreed with the pre-state rule" figure is the Minor-2 confirmation: on this fixture
+#   the rule and the readback agree on every sample, so the change re-labels nothing here and the counter is
+#   the mechanism that would say if it ever did.
+#
+# THE PREDICTION FOR runtime-2's RE-MEASURE, stated BEFORE the run so it can falsify rather than confirm.
+# In the csr_warl block, after this landing:
+#   cr_mml_exec_suppress's four bins (rlb0_c1001/c1010/c1011/c1101) CANNOT move. They need encodings this
+#     landing does not touch. If any of them moves, this fix reached something it should not have.
+#   cp_outcome.ignored_mml_exec (13 of 39 before) may LOSE only seeds whose ONLY such sample was a c1111.
+#   cr_lock_outcome.locked_rlb0_ignored (23 of 39 before) may GAIN those and cannot lose any.
+#   cr_mml_nonexec_accept.c1111_written (3 of 39 before) must hold or rise: it is fed by writes that LAND,
+#     which the guard never touched.
+#   cr_self_lock.locked_rlb1_written and cr_tor_lock.nl_tor_rlb1_written (0 of 39 and 0 of 40 before) become
+#     REACHABLE for the first time; whether they are HIT depends on the stimulus reaching that combination.
+#   cr_top_lock.top_unlocked_written (40 of 40 in the lock entry) must HOLD. gen_pmp_lock_prog.py's
+#     p6_top_entry asserts the top entry is unlocked, writes pmpaddr15 one to three times with must_change
+#     set, and only then locks it, so its samples are RAW-unlocked and never depended on RLB.
+#
+# AND THE PREDICTION'S LIMIT, said before the run rather than after. cross_auto_bin_max is 0, so an unnamed
+# {mml1, rlb0, c1111, ignored_mml_exec} tuple is counted NOWHERE and the only visible trace of the Minor-1
+# misroute is a seed's membership in cp_outcome.ignored_mml_exec. A seed that also had a legitimate
+# exec-encoding sample shows nothing. So "no number moved" is a POSSIBLE AND CORRECT outcome, not a failed
+# fix. The proof of these changes is the classifier reading what the RTL reads; the numbers can only falsify.
