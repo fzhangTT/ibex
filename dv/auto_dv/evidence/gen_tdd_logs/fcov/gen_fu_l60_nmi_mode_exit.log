@@ -1,0 +1,71 @@
+# gen_fu_l60_nmi_mode_exit.log -- NMI mode is left on the FIRST mret, as the design leaves it (TB Infra,
+# 2026-09-05). Landing 60, feature group "irq checker fix", closing rev60's Medium, which was held back from
+# landing 57 because it had no red.
+#
+# ================ THE RTL FACT, STATED HERE AND NOT ONLY IN THE FIXTURE ==================================
+# rtl/ibex_controller.sv, in the FLUSH state, clears NMI mode on an mret with no nesting count of any kind:
+#   if (mret_insn) begin ... if (nmi_mode_q) begin
+#              nmi_mode_d          = 1'b0; // exit NMI mode
+#   end
+# So the FIRST mret executed while in NMI mode leaves it, and a trap taken inside the NMI handler does not
+# deepen anything. Both mirrors counted a depth and exited only at depth zero.
+# THIS IS WHY THE DEFECT EXISTED: nobody had checked the term, including me when I wrote the mirror. The fact
+# belongs in the landing rather than in the fixture's header, because the next person to touch either mirror
+# will read this and not the assembly.
+#
+# ================ THE BUILDS, NAMED SO A READER CAN RECOMPUTE THEM =======================================
+# A review of my previous landing found that I answered a build-identity row by publishing two more identities
+# nobody could resolve, because they were MUTANT builds and I did not say so. Not repeating it.
+#   base commit dd23dff. Both roots are archives of it.
+#   rootG = that archive plus the two files below AS COMMITTED at dd23dff (the depth mirror, the pre-fix side)
+#   rootH = that archive plus the two files below AS HANDED WITH THIS LOG (the RTL mirror)
+#     gen_checkers_pkg.sv  rootG md5 ed3ef053   rootH md5 412733ec
+#     gen_fcov_pkg.sv      rootG md5 3a3c6c35   rootH md5 0d99a8c0
+#     gen_dut_top.sv       56041635 in BOTH before mutation, the committed value
+#   The build digests below are of MUTANT builds and CANNOT be recomputed from a committed tree, because the
+#   mutation is not committed. The mutant is MUT-IRQWITHHOLDALL, whose diff is retained at
+#   dv/auto_dv/evidence/gen_irq_fixtures/gen_mut_irqwithholdall.diff and applies to gen_dut_top.sv at that
+#   commit to give md5 5d9ec8ba, so a reader can reconstruct the mutant source and recompute them.
+#     rootG mutant build_sources_sha256 311aaf1ed6d1c9cc
+#     rootH mutant build_sources_sha256 00a451af15ba8b17   (the ablation run shares this build, as it must:
+#                                                            the ablation is a plusarg, not a recompile)
+#
+# ================ THE FIXTURE, AND WHY THE FIRST ONE NEVER RAN ==========================================
+# gen_irq_nmi_aligned.S, retained beside this log, md5 4a790cfab0d39791098d37f2c2714ac9. Image crc32 3cba3f47,
+# 218 words, tohost 0x800003c8. Module gen_ut_irq_nmi_long, seed 1.
+# It carries an EXPLICIT 32-slot vector table at a 256-byte-aligned address, the NMI at slot 31 and synchronous
+# exceptions at slot 0. My first attempt put a handler at an unaligned address and it NEVER EXECUTED: a csrw of
+# mtvec keeps only bits [31:8] and substitutes a forced low byte, so the address was discarded and every trap
+# vectored below the image. Three "eliminations" I reported against that fixture eliminated nothing, because
+# all three edited code that never ran. The alignment requirement is in the fixture's own header so the next
+# person does not spend a day on it.
+# The NMI handler takes a nested ecall on purpose. The exception handler steps mepc and returns, and THAT
+# inner mret is what leaves NMI mode in the design while the outer handler still has forty records to run.
+# MIE is set before the NMI so the outer mret restores it, and set again inside the handler after the inner
+# mret restores it from a cleared MPIE.
+#
+# ================ THE RED ==============================================================================
+#   build                      irq_entry   raised at   judged at   takeable records
+#   rootG, depth mirror            1        order 206   order 267        18
+#   rootH, RTL mirror              1        order 206   order 225        18
+#   rootH, +gen_chk_irq_entry=0    0            -           -             -
+# Same raise in both, judged FORTY-TWO RECORDS APART. Those forty-two are the remainder of the NMI handler
+# after the inner mret: records in which the design had already left NMI mode and was takeable, while the
+# depth mirror still masked every expectation. Takeable reads 18 in both, so the bound itself is not what
+# moved; the mask is.
+# THE COUNT DOES NOT DISCRIMINATE ON THIS FIXTURE and that is deliberate. In a run that ends inside that
+# window the report is lost entirely, and that FOLLOWS from these numbers rather than needing a second
+# fixture. A one-against-zero on a shortened run would look cleaner and prove less, because the zero would be
+# explained by the run ending as well as by the mask; these numbers isolate the mask with the confounder held
+# equal. That is the DV Lead's ruling and its reasoning, not mine, and it is why no short-run fixture exists.
+# THE ABLATION READS ZERO ERRORS, NOT ZERO DETECTIONS. expect_fail is incremented BEFORE the gen_chk_en gate,
+# so disabling the named check suppresses the uvm_error and leaves the detection counted; the summary line's
+# bound-failure count is what shows detection continued. The control establishes that the named rule is what
+# REPORTS the fire, which is what a mutation control must show, and it cannot show the rule stopped detecting.
+#
+# ================ THE CONTROL AND WHAT IT IS WORTH ======================================================
+# All six regression smokes PASS on the tree build with zero referee errors and zero fires.
+# SAID PLAINLY: that set is weaker evidence than I have been treating it as. Six smokes passed on a bus-agent
+# restructure of mine that produced 4.29 million error lines on a real regression program, so "all six smokes
+# pass" bounds very little. Here it means only that this change breaks nothing the smokes exercise, and the
+# red above is what carries the claim.

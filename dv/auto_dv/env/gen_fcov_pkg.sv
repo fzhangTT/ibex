@@ -292,7 +292,7 @@ package gen_fcov_pkg;
     int unsigned n_irq_edge = 0, n_irq_access = 0, n_irq_mie = 0;
     int unsigned n_irq_view_miss = 0;   // record events whose cycle had aged out of the published view
     gen_model_state irq_st; bit irq_have_st = 0;      // the last retired record's model state
-    bit irq_nmi_mode = 0; int irq_nmi_depth = 0;      // NMI mode, tracked as gen_irq_checker tracks it
+    bit irq_nmi_mode = 0;      // NMI mode, tracked as gen_irq_checker tracks it
     logic [31:0] irq_mie_prev = '0, irq_mstatus_prev = '0;
 
     // the irq checker's own sampled view of a cycle (gen_tb_pkg::gen_irq_view), so this covergroup judges a
@@ -495,9 +495,10 @@ package gen_fcov_pkg;
       // this record by write_mst. Of the three called after the guard, two read the record itself; the debug
       // one reads the view and emits an undecided window on a miss, which is its intended behaviour.
       if (irq_view_ok) begin
-        if (st.is_intr && st.entry_cause == ibex_pkg::ExcCauseIrqNm.lower_cause) begin irq_nmi_mode = 1; irq_nmi_depth = 0; end
-        else if (irq_nmi_mode && (st.is_trap || st.is_intr)) irq_nmi_depth++;
-        else if (irq_nmi_mode && st.is_mret && !st.is_trap) begin if (irq_nmi_depth > 0) irq_nmi_depth--; else irq_nmi_mode = 0; end
+        // the RTL clears nmi_mode_q on the FIRST mret executed while in NMI mode (rtl/ibex_controller.sv:954-960),
+        // with no nesting count, so a trap taken inside the NMI handler does not deepen it
+        if (st.is_intr && st.entry_cause == ibex_pkg::ExcCauseIrqNm.lower_cause) irq_nmi_mode = 1;
+        else if (irq_nmi_mode && st.is_mret && !st.is_trap) irq_nmi_mode = 0;
         if (st.wrote_mie && irq_have_st) irq_edge_mie(st);
         irq_access_sample(st, t);
         irq_mie_global_sample(st);

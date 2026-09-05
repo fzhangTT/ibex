@@ -57,9 +57,8 @@ package gen_checkers_pkg;
     int unsigned intg_at_last = 0, intg_consumed = 0;
     // nmi_internal: an announced corruption must produce the internal NMI entry within GEN_NMI_INT_ENTRY_BOUND_RECORDS
     // records spent outside NMI mode (the DUT takes no NMI inside NMI mode); NMI mode runs from the NMI-vector entry to
-    // the mret that closes it, nested traps inside it counted by depth
+    // the mret that closes it; the RTL keeps no nesting count, so a trap inside the handler does not deepen it
     bit nmi_mode = 0, intg_wait = 0;
-    int nmi_depth = 0;
     int unsigned intg_wait_records = 0, nmi_internal_fail = 0;
     int unsigned step_records = 0;   // records whose model dcsr has step set: unmasked and counted, never a mask term
     // records in which an expectation was held ONLY because its own enable bit was clear, so the bound did not
@@ -172,9 +171,10 @@ package gen_checkers_pkg;
         end
       end
       // NMI mode and the internal-NMI latency bound
-      if (st.is_intr && st.entry_cause == ibex_pkg::ExcCauseIrqNm.lower_cause) begin nmi_mode = 1; nmi_depth = 0; end
-      else if (nmi_mode && (st.is_trap || st.is_intr)) nmi_depth++;
-      else if (nmi_mode && st.is_mret && !st.is_trap) begin if (nmi_depth > 0) nmi_depth--; else nmi_mode = 0; end
+      // the RTL clears nmi_mode_q on the FIRST mret executed while in NMI mode (rtl/ibex_controller.sv:954-960),
+      // with no nesting count, so a trap taken inside the NMI handler does not deepen it
+      if (st.is_intr && st.entry_cause == ibex_pkg::ExcCauseIrqNm.lower_cause) nmi_mode = 1;
+      else if (nmi_mode && st.is_mret && !st.is_trap) nmi_mode = 0;
       if (!intg_wait && gen_bus_err_log::intg_announced > intg_at_last) begin intg_wait = 1; intg_wait_order = st.order; intg_wait_records = 0; end
       else if (intg_wait && !nmi_mode && !st.debug_mode) begin   // handle_irq is closed in debug mode (rtl/ibex_controller.sv:498): not counted
         intg_wait_records++;
