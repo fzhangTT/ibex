@@ -627,12 +627,15 @@ mis-resolution but an alarm about a bin that is fine. And it is blind to the oth
 two-operand ops carry no class tag. The control that would have caught both is a second calibration
 arm flagging any resolved bin whose predicted rate disagrees with a measured one; those forty runs
 are the ready control for it. The tool stays withdrawn either way.
-THE ARTIFACT THOSE FIGURES COME FROM, named here because the corrigendum first cited them as prose:
-gen_tdd_logs/test_writer/gen_fu_generator_fix_sweep.log reads them from the forty pre-fix runs
-themselves (gen_test_bit_ratified at forty seeds in regress_gensweep2, on the generator whose md5 is
-1bed9e902389d0fbabc68cd8ae9abd40): cr_op_rs1.zext_h_pos_rand hit in 28 of the 40 runs, and
-cp_single_pos.p16 in all 40 at three to five occurrences each. The p16 row is printed in that log as
-the sweep's control for exactly this reason.
+THE ARTIFACT THOSE FIGURES COME FROM, named here because the corrigendum first cited them as prose,
+and now in both of the places a reader may look. The Runtime Manager's own retention of the block is
+gen_generator_sweep/gen_index.md, whose mapper table carries the two rows verbatim: zext_h_pos_rand
+read 40 of 40 against 28 of 40 measured, cp_single_pos.p16 read 6 of 40 against 40 of 40 at three to
+five hits per run. Independently of it, gen_tdd_logs/test_writer/gen_fu_generator_fix_sweep.log
+re-derives the same two figures from the forty pre-fix run directories themselves (gen_test_bit_ratified
+at forty seeds in regress_gensweep2, on the generator whose md5 is 1bed9e902389d0fbabc68cd8ae9abd40),
+and prints the p16 row as the sweep's control for exactly this reason. Two records reached the same
+numbers from the same runs by separate readings, which is worth more than either citation alone.
 
 Its calibration could not catch either: the control flags a resolved bin at zero that the report says
 was hit, and a mis-resolution landing at 6 of 40 passes that test. So the ten entries have no
