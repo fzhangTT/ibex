@@ -2563,3 +2563,16 @@ failure. The question to the owner is unchanged. tb-infra-2's refusal (a cocotb-
 pinned venv's, an empty --libpython, or a VPI library resolving outside the venv stops the build with the reason)
 lands as its own touch; the same hole in gen_build.py's --local-cocotb path, gen_flow_util.py's version record and
 gen_run_fixture.sh goes to their owners as review rows.
+
+### LOG-099 third corrigendum (2026-09-05 07:37Z, Orchestrator; from tb-infra-2's three compiles)
+The first corrigendum said a build against the site cocotb "exits 0" and passes with the same identity as a pinned
+build. That was stated from a compile not run to completion, and it is wrong. tb-infra-2 compiled the committed
+runner three times with the working environment as the control: the good shape (pinned venv cocotb-config, a
+good LIBPYTHON_LOC) exits 0 and produces the simulator binary; the gate shape (site Python 3.9 cocotb-config,
+empty LIBPYTHON_LOC) and the mixed shape (site cocotb-config, good LIBPYTHON_LOC) both exit 1 inside vcs with
+"Fatal Python error: init_fs_encoding ... No module named 'encodings'" against the site library's baked prefix,
+the wrong library on the -load line and no binary produced. With the Orchestrator's two failing A/B variants that
+is five measurements of the bad shape and none passes. The build identity therefore conceals nothing, and the
+item asking it to cover the linked VPI library is withdrawn. The refusal guard is kept as a diagnostic: a named
+message saying which cocotb-config answered and where the pinned one is, in place of a codec error printed after
+a full vcs command line. The question to the owner about ci/env.sh's masked export is unchanged.
