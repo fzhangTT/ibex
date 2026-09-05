@@ -1,0 +1,140 @@
+# gen_fu_l43_irq_step1_covergroups.log -- IRQ step 1: four covergroups rendered, sampled and smoked
+# Produced 2026-09-05T06:42:59Z on soc-l-11 from a detached archive of 0b16018 with this
+# landing's files applied and landing 42's checker fix in (that commit, e1bee86, followed the archive).
+# Per LOG-096 a covergroup owes render, codegen unit test, compile with identity, the sample event and
+# signal source per group, the field caveats, and the bins no stimulus reaches; NOT a trust triad.
+#
+# RENDER
+#   gen_fcov_codegen --check: up to date
+#   groups rendered: 33
+#   the four of this landing:
+#     gen_irq_entry_cg at line 5206
+#     gen_irq_pending_model_cg at line 5321
+#     gen_irq_debug_interplay_cg at line 5392
+#     gen_irq_reset_fetch_en_cg at line 5460
+#
+# CODEGEN UNIT TEST, and its RED. The five checks below name a string only this landing's rendering
+# features can produce; against an include rendered by the codegen BEFORE them all five fail, because the
+# covergroups they belong to cannot be rendered at all.
+#   command: python3 dv/auto_dv/tb/unit/gen_ut_fcov_codegen.py
+#   GREEN, on this landing's tree:
+#     OK   array bin: one plan bin renders as an indexed SV bin set
+#     OK   array bin: its base is a localparam the sampler indexes from
+#     OK   array element in a cross: the plan's fast_5 spelling resolves to the bin fast[5]
+#     OK   an iff guard holding a comparison does not swallow the bins list
+#     OK   a cross whose plan line carries a parenthesised comment before the colon still renders
+#     GEN_UT_FCOV_CODEGEN PASS (0 failures)
+#   RED, the same test file on an archive of 0b16018 whose include the COMMITTED codegen rendered:
+#     FAIL array bin: one plan bin renders as an indexed SV bin set
+#     FAIL array bin: its base is a localparam the sampler indexes from
+#     FAIL array element in a cross: the plan's fast_5 spelling resolves to the bin fast[5]
+#     FAIL an iff guard holding a comparison does not swallow the bins list
+#     FAIL a cross whose plan line carries a parenthesised comment before the colon still renders
+#     GEN_UT_FCOV_CODEGEN FAIL (5 failures)
+#
+# COMPILE with identity (dv/auto_dv/tb/gen_tb_local.sh compile):
+#   sources sha256 (dv/auto_dv env, tb, isa, gen_tb): 4153c078b0704697
+#   vcs exit: 0
+#
+# SMOKE, four fixtures. Verdicts from the flow's own gen_verdict.decide; the referee count is the
+# GEN_FCOV_REF errors, which fire when a group the sampler fed shows no coverage.
+#   storm     PASS  referee errors 0
+#     irq samples: entry=173 edge=348 access=1 mie_global=174 debug_window=0 (post-exit undecided 0, dropped unclosed 0) reset=1 fetch_off=0 view misses 0
+#   lines     PASS  referee errors 0
+#     irq samples: entry=6 edge=12 access=1 mie_global=7 debug_window=0 (post-exit undecided 0, dropped unclosed 0) reset=1 fetch_off=0 view misses 0
+#   dbgstorm  PASS  referee errors 0
+#     irq samples: entry=39 edge=80 access=1 mie_global=40 debug_window=1 (post-exit undecided 0, dropped unclosed 0) reset=1 fetch_off=0 view misses 0
+#   fetchen   PASS  referee errors 0
+#     irq samples: entry=15 edge=33 access=1 mie_global=16 debug_window=0 (post-exit undecided 0, dropped unclosed 0) reset=1 fetch_off=1 view misses 0
+#   storm    = gen_ut_lockstep on the NMI-long program under a storm irq regime
+#   lines    = gen_ut_irq on the directed interrupt program (6 lines over 5 masks)
+#   dbgstorm = gen_ut_dbg on that program under a storm regime: the one shape that opens a debug window
+#   fetchen  = gen_ut_fetch_en on that program under a storm regime: the one shape that opens and CLOSES a
+#              fetch_enable Off window, which is why fetch_off reads 1 there and 0 elsewhere
+#
+# THE ARITHMETIC CHECK, which is why these counts are evidence and not decoration: gen_ut_irq raises six
+# lines over five masks, so the pin side must see 6 rises and 6 falls = 12 edges; the program writes mie
+# once (all ones) = 1 access; and one mstatus set plus six mrets = 7 global-enable events. It reads
+# entry=6 edge=12 access=1 mie_global=7.
+#
+# ================================================================================================
+# TWO THINGS THIS LANDING WAS REFUSED FOR ONCE, RECORDED SO THE NEXT READER DOES NOT REDO THEM
+#
+# 1. THE RENDERER'S LOADER WAS NOT WIDENED. An earlier version tolerated a parenthetical between a cross's
+#    component list and its colon, to admit ONE plan line (CG-IRQ-001's cr_upath_pending). That silently
+#    reclassified the construct across the WHOLE plan: gen_norm_probe --self-test went BAD on two cases and
+#    the scope census fell from 23 refusals to 4, removing 19 lines from the normalisation work list the
+#    probe exists to maintain. Measured both ways, with retired 32 / guard 1 / other 69 in each:
+#        with the tolerance   scope 4
+#        reverted             scope 23
+#    The tolerance is reverted and gen_fcov_codegen.py carries a comment saying why it must not come back.
+#    The plan line was normalised instead, which takes the census to 22: that edit CLOSES a row of the work
+#    list rather than hiding 19. The two innocent loosenings stay (an iff guard holding a comparison, and
+#    the bins-list tokenizer); a bisect showed neither moves the probe.
+#
+# 2. THE HANDED LIST WAS ONCE MISSING gen_tb_top.sv, and with it every run of every test would have died in
+#    build_phase at time 0 on "misc vif not in uvm_config_db" (gen_fcov_pkg.sv:705). That file carries one
+#    line, the uvm_config_db::set that publishes misc_vif. NO STATIC CHECK CAN SEE THAT: hashes, the
+#    manifest, codegen --check, the codegen unit test, unbuilt-mark and a full TB compile all pass without
+#    it, because a config_db lookup is a run-time fact. The smokes above are therefore run from a tree
+#    assembled STRICTLY from the handed list rather than from a working root, which is the check that
+#    found it.
+# ================================================================================================
+# SAMPLE EVENT, SIGNAL SOURCE AND FIELD CAVEATS, PER COVERGROUP (LOG-096)
+#
+# CG-IRQ-001 gen_irq_entry_cg. EVENT: one per retired record with rvfi_intr. SOURCE: the record itself and
+#   the model of record the scoreboard publishes (mcause's cause, mstatus, mepc, mie as of that record),
+#   plus the pin levels kept from the irq agent's own events. CAVEATS: mstatus is the state AFTER the entry,
+#   so cp_mie_global reads MPIE, which holds MIE as it was; cp_u_path and cp_u_pending_at_return are passed
+#   -1 until CG-IRQ-005's handler stack lands, which is a deferral and not a claim.
+#
+# CG-IRQ-003 gen_irq_pending_model_cg. EVENTS: three, not one per record. ev_edge is a CYCLE event (a pin
+#   change from the agent's event, or the commit of a retired mie write); ev_access is a retired CSR access
+#   to mip or mie; ev_mie is a retired mstatus write that changes MIE, or ANY retired mret. Each entry point
+#   fills its own coverpoints and passes -1 for the rest.
+#   SOURCE: the irq checker's own published per-cycle sampled view (gen_tb_pkg::gen_irq_view), written by
+#   gen_irq_checker at its sample point, so this covergroup judges a record's commit cycle from the SAME
+#   sample the checker judges it from and no offset arithmetic lives here. The checker now reads its mie
+#   history from that same holder, so there is ONE history and not two that agree by inspection.
+#   CAVEATS: the pin EDGE itself comes from the agent's event, because the checker's sample at that cycle
+#   holds the value BEFORE the driver's falling-edge change and cannot express "a pin changed here". A
+#   record whose commit cycle has aged out of the published window samples NOTHING and is counted as a view
+#   miss in the report line. cp_state at a pin event is the last retired record's state except sleep, which
+#   is read from core_busy at that cycle (mubi-off is the controller's WAIT_SLEEP/SLEEP). cp_mie_write reads
+#   the value the instruction PRESENTED, not what the WARL mask kept. An edge whose class the plan does not
+#   name samples nothing rather than a bin it did not earn.
+#
+# CG-IRQ-010 gen_irq_debug_interplay_cg. EVENT: one per WINDOW, sampled after the record that decides
+#   cp_post_exit. A window opens on a record with a line pending while in debug mode or stepping outside it,
+#   and closes at its exit (a dret, or the stepped record itself). SOURCE: the model of record for
+#   debug_mode, dcsr, is_dret, is_mret, is_intr, nmi_pend and nmi_int_pend; the published view for the pins;
+#   the locally tracked NMI mode for cp_mode.debug_in_nmi_handler.
+#   CAVEATS: a record can BOTH open and close a window (a line that becomes pending on the dret itself, or
+#   the single record of a step window), which the first version got wrong and the smoke caught: a window
+#   opened on the dret waited for a second dret that never came and nothing was ever sampled. A window whose
+#   observation has not closed is DROPPED and counted ("dropped unclosed"), never sampled, as the plan says.
+#   KNOWN DIVERGENCE FROM THE PLAN TEXT, already with the DV Lead and deferred by it to one consolidated
+#   touch: the plan qualifies both cp_post_exit bins by dpc, but a step window's next retirement is in the
+#   debug ROM at an address BELOW the program's, so a dpc comparison cannot discriminate there; the sampler
+#   classifies on the first record after the exit, which decides the same question directly.
+#
+# CG-IRQ-011 gen_irq_reset_fetch_en_cg. EVENTS: two. ev_reset is the reset release, with the pins latched
+#   there, the first architectural event, the first reset-time CSR read-backs and a boot mret, each its own
+#   sample so one coverpoint carries one fact. ev_off is a CLOSED fetch-enable Off window of at least the
+#   plan's 20 cycles, TAKEN from gen_misc_monitor's published queue rather than detected here a second time
+#   from the same pin, and completed by the first fetch after the return to On, which arrives on the ibus
+#   subscription this class already had.
+#   CAVEATS: cp_fetch_off is judged from the published samples that still cover the window, so a window
+#   longer than the published depth is judged on the part still covered. cp_fetch_on_after compares the
+#   fetched address against mtvec as of the last record, read through the ISA shim, which returns the value
+#   BEFORE that record; mtvec rarely moves, and a run that moved it inside an Off window would classify from
+#   the older base. A debug request at reset with neither an NMI nor a regular line has no bin in the plan
+#   and samples nothing.
+#
+# BINS NO STIMULUS IN THE TREE REACHES TODAY, for the entry that declares them rather than for this landing:
+#   CG-IRQ-003 cp_state.u_mode / step / sleep / debug_mode / nmi_mode, cp_transition.nmi_only_rise, every
+#   cp_mip_access bin, cp_mie_write.all_ones / fast_only / random_masked, cp_mie_global_edge.mret_mpie0_pending.
+#   CG-IRQ-010 the whole group needs a debug request or dcsr.step together with a raised line; only the
+#   dbgstorm fixture above does that, and no testlist entry does.
+#   CG-IRQ-011 every cp_fetch_off bin but the one the fetchen fixture hits, and cp_boot_mret.to_u_mie1,
+#   which needs a U-mode boot program.

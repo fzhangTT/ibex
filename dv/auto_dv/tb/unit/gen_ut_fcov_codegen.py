@@ -51,6 +51,20 @@ def main():
     named = sum(len(re.findall(r"(?<![a-z_])bins \\?\w+ ?=", l)) for l in text.splitlines() if ": coverpoint " in l)
     ignored = sum(l.count("ignore_bins na") for l in text.splitlines() if ": coverpoint " in l)
     check("the rendered coverpoint lines carry one ignore_bins na each and the named bins are counted apart", ignored == text.count(": coverpoint ") and named > ignored)
+    # ---- the five rendering features the IRQ family needed, each checked by a string only that feature can
+    # produce. Against an include rendered by the codegen BEFORE them these five fail, because the covergroups
+    # they belong to cannot be rendered at all: that is this block's red.
+    check("array bin: one plan bin renders as an indexed SV bin set",
+          "bins fast[15]= {[3:17]};" in text)
+    check("array bin: its base is a localparam the sampler indexes from",
+          "GEN_FC_IRQ_ENTRY_CP_LINE_FAST = 3;" in text)
+    check("array element in a cross: the plan's fast_5 spelling resolves to the bin fast[5]",
+          "binsof(cp_line.fast[5])" in text)
+    check("an iff guard holding a comparison does not swallow the bins list",
+          "cp_u_path: coverpoint" in text or "cp_u_pending_at_return: coverpoint" in text)
+    check("a cross whose plan line carries a parenthesised comment before the colon still renders",
+          "cr_line_mode_post:" in text)
+
     root = scratch_tree("nested_brace_value")
     p = root / PLAN; s = p.read_text()
     s2 = s.replace("bins f0{000}, f1{001}", "bins f0{{1'b0, 2'b00}}, f1{001}", 1)

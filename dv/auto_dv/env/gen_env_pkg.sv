@@ -249,6 +249,7 @@ package gen_env_pkg;
       irq.ap.connect(isa_cov.irq_imp);           // line assertions: the divider's mid-op events and the irq latency
       dbg.ap.connect(isa_cov.dbg_imp);           // debug-request assertions: the same
       sb.ap_state.connect(irq_chk.imp_state);
+      sb.ap_state.connect(isa_cov.state_imp);   // the IRQ covergroups sample on the model of record
       sb.ap_state.connect(dbg_chk.imp_state);
       sb.ap_state.connect(misc_mon.imp_state);
       irq.ap.connect(irq_chk.imp_evt);

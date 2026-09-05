@@ -1365,3 +1365,61 @@ failure was unreachable there. It gates round 2 through the IRQ step-1 samplers.
 
 Retained: gen_tdd_logs/lockstep/gen_fu_l42_dbg_dret_entry.log with the mutant diff under gen_tdd_logs/mutations/.
 Two manifest rows.
+
+## Landing 43: IRQ step 1, four covergroups and the one sampled view they read
+
+CG-IRQ-001, 003, 010 and 011 render from the corrected plan, sample, compile and smoke. Per LOG-096 a covergroup
+owes render, a codegen unit test, a compile with identity, the sample event and signal source per group, the field
+caveats and the bins no stimulus reaches; it does not owe a trust triad, and this landing does not claim one.
+
+THE RENDERING FEATURES AND THEIR RED. Five checks in the codegen unit test name strings only these features can
+produce: an array bin rendered as an indexed SV bin set, its base localparam, an array element resolved from the
+plan's underscore spelling inside a cross, a coverpoint whose iff guard holds a comparison, and a cross whose plan
+line carries a parenthesised comment before the colon. Run against an include the committed codegen rendered, all
+five FAIL, because the covergroups they belong to cannot be rendered at all. That is the red, and it is one command.
+
+ONE SAMPLED VIEW, NOT TWO HISTORIES. CG-IRQ-003 needs the pins and mie at a record's commit cycle, two cycles before
+the record reports it. It used to keep its own histories, and its pin timestamps came from the irq agent's events at
+the falling edge while the irq_pending checker samples pins at the rising edge, so the two components could mean
+cycles one apart by the same words. The checker now publishes its own sampled view through a static holder in the
+package that compiles first, and reads its mie history from that same holder; the coverage class keeps no history at
+all. There is one history, written and read by both, rather than two that agree by inspection. A record whose cycle
+has aged out of the published window samples nothing and is counted as a view miss.
+
+THE PIN EDGE IS THE ONE THING NOT TAKEN FROM THAT VIEW, deliberately: the checker's sample at an edge cycle holds
+the value BEFORE the driver's falling-edge change, so it cannot express that a pin changed at that cycle.
+
+WHAT THE SMOKE CAUGHT. CG-IRQ-010's first version tested a window's exit only on a LATER record, so a window that
+opened on the dret itself waited for a second dret that never came and nothing was ever sampled. A probe measured it
+(four debug records, one with a pending line, zero windows sampled) and the fix lets one record both open and close
+a window. A window whose observation has not closed is now dropped and counted rather than sampled, which is what
+the corrected plan requires.
+
+FETCH-ENABLE WINDOWS ARE CONSUMED, NOT RE-DETECTED. gen_misc_monitor already held the cycle fetch_enable left On for
+its own drain check but recorded no window END. It now publishes the closed window, and the coverage class takes it.
+The first fetch after the return to On arrives on the instruction-bus subscription the class already had, so that
+half needed no new plumbing.
+
+Four smoke fixtures, all PASS with zero referee errors, including one that opens and closes a fetch-enable window so
+ev_off is sampled rather than merely implemented. The line-sweep fixture is the arithmetic check: six lines over
+five masks give twelve edges, one mie write and seven global-enable events, and it reads exactly that.
+
+### This landing was refused once, and both reasons are worth keeping
+
+THE LOADER WAS NOT WIDENED. An earlier version tolerated a parenthetical between a cross's component list and its
+colon, to admit one plan line. Every gate passed except gen_norm_probe's self-test, because that probe calls the
+renderer's own loader: two of its cases went BAD and the scope census fell from 23 refusals to 4, removing 19 lines
+from the normalisation work list the probe exists to maintain. The tolerance is reverted, the codegen carries a
+comment saying why it must not come back, and the plan line was normalised instead, which takes the census to 22.
+That edit CLOSES a row of the work list where the loader change would have hidden nineteen. Two other loosenings
+were bisected as innocent and stay: an iff guard holding a comparison, and the bins-list tokenizer.
+
+THE HANDED LIST WAS ONCE MISSING gen_tb_top.sv, whose single uvm_config_db::set publishes the misc_vif handle the
+coverage class takes a UVM_FATAL without. With it absent, every run of every test dies in build_phase at time 0.
+NO STATIC CHECK CAN SEE THAT: hashes, the manifest, codegen --check, the codegen unit test, unbuilt-mark and a full
+TB compile all pass without it, because a config_db lookup is a run-time fact. The four smokes are therefore run
+from a tree assembled STRICTLY from the handed list rather than from a working root, which is what found it, and
+that rule now binds any archive verification touching the TB.
+
+Retained: gen_tdd_logs/fcov/gen_fu_l43_irq_step1_covergroups.log, which carries the per-covergroup sample events,
+sources, caveats and unreachable bins, and both of the above with their measured census figures. One manifest row.

@@ -32,8 +32,6 @@ package gen_checkers_pkg;
     gen_export_sink sink;   // E misc irq_entry lines: per-entry priority decidability for the fire checks (CM25-L-3)
     int unsigned eor_open = 0;
     // model mie history: (effective DUT cycle, value); the compare of cycle c uses the last entry <= c
-    typedef struct { int unsigned eff_cycle; logic [31:0] mie; } mie_upd_t;
-    mie_upd_t mie_hist [$];
     typedef struct { int unsigned cycle; logic [17:0] pins; bit pending; } sample_t;
     sample_t pend_q [$];
     int unsigned last_rec_cycle = 0;
@@ -72,17 +70,15 @@ package gen_checkers_pkg;
       if (!uvm_config_db#(virtual gen_irq_if)::get(this, "", "vif", vif)) `uvm_fatal("GEN_IRQ_CHK", "vif not in uvm_config_db")
       if (!uvm_config_db#(virtual gen_bridge_if)::get(this, "", "bridge_vif", bvif)) `uvm_fatal("GEN_IRQ_CHK", "bridge_vif not in uvm_config_db")
       if (!uvm_config_db#(gen_env_cfg)::get(this, "", "cfg", cfg)) `uvm_fatal("GEN_IRQ_CHK", "cfg not in uvm_config_db")
-      mie_hist.push_back('{0, 32'h0});   // reset value
+      gen_irq_view::clear(); gen_irq_view::push_mie(0, 32'h0);   // reset value
     endfunction
     function void end_of_elaboration_phase(uvm_phase phase);   // the sink requires every emitted row to be announced (T-141)
       super.end_of_elaboration_phase(phase);
       if (sink != null) sink.register_row("misc", "irq_entry");
     endfunction
 
-    function logic [31:0] mie_at(int unsigned c);
-      logic [31:0] v = 32'h0;
-      foreach (mie_hist[i]) if (mie_hist[i].eff_cycle <= c) v = mie_hist[i].mie;
-      return v;
+    function logic [31:0] mie_at(int unsigned c);   // the published history, so the coverage class reads the same one
+      return gen_irq_view::mie_at(c);
     endfunction
     function bit expected_pending(logic [17:0] pins, logic [31:0] mie);
       for (int i = 0; i < 18; i++) if (pins[i] && mie[gen_irq_mie_bit(i)]) return 1'b1;
@@ -94,8 +90,7 @@ package gen_checkers_pkg;
     function void write_state(gen_model_state st);
       if (st.wrote_mie || !have_st) begin
         int unsigned eff = (st.cycle >= GEN_CSR_WRITE_TO_RVFI_OFFSET) ? st.cycle - GEN_CSR_WRITE_TO_RVFI_OFFSET + 1 : 0;
-        mie_hist.push_back('{eff, st.mie});
-        while (mie_hist.size() > 64) void'(mie_hist.pop_front());
+        gen_irq_view::push_mie(eff, st.mie);
       end
       if (st.is_intr) begin
         // the taken cause is the one the DUT's vector names (the model's mcause is stale when the model did not take the
@@ -241,6 +236,7 @@ package gen_checkers_pkg;
         @(posedge vif.clk);
         if (!vif.rst_n) begin pend_q.delete(); continue; end
         pend_q.push_back('{bvif.cycle_count, vif.lines()[17:0], vif.pending});
+        gen_irq_view::push_sample(bvif.cycle_count, vif.lines(), vif.pending);   // the same sample, published
         while (pend_q.size() > 0 && pend_q[0].cycle + GEN_CSR_WRITE_TO_RVFI_OFFSET + 1 <= bvif.cycle_count) begin
           sample_t smp = pend_q.pop_front();
           bit exp = expected_pending(smp.pins, mie_at(smp.cycle));
@@ -537,6 +533,9 @@ package gen_checkers_pkg;
         begin   // fetch_enable_i: remember the cycle it left On; back On clears the window
           bit fe_on = (misc.fetch_enable == ibex_pkg::IbexMuBiOn);
           if (fe_on_q && !fe_on) fe_off_cycle = misc.cycle;
+          // the window's END, which the drain check never needed and a covergroup does: publish it on the
+          // return to On, before the Off cycle is cleared
+          if (!fe_on_q && fe_on && fe_off_cycle != 0) gen_fetch_en_windows::publish(fe_off_cycle, misc.cycle);
           if (fe_on) fe_off_cycle = 0;
           fe_on_q = fe_on;
         end

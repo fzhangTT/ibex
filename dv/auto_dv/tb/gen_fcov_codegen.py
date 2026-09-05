@@ -27,7 +27,8 @@ REL_OUT = "dv/auto_dv/env/gen_fcov_groups.svh"
 IMPLEMENTED = ("CG-MUL-001", "CG-MUL-003", "CG-ISA-002", "CG-BIT-001", "CG-ISA-001", "CG-ISA-003", "CG-BIT-002", "CG-CMP-001", "CG-CMP-006",
                "CG-CMP-007", "CG-CSR-002", "CG-ISA-007", "CG-BIT-006", "CG-CMP-005", "CG-MUL-002", "CG-RST-001", "CG-SEC-005", "CG-RVFI-001", "CG-CMP-009",
                "CG-ISA-004", "CG-ISA-005", "CG-ISA-006", "CG-MUL-004", "CG-CMP-002", "CG-IC-006",
-               "CG-PMP-001", "CG-PMP-002", "CG-PMP-004", "CG-PMP-014")
+               "CG-PMP-001", "CG-PMP-002", "CG-PMP-004", "CG-PMP-014",
+               "CG-IRQ-001", "CG-IRQ-003", "CG-IRQ-010", "CG-IRQ-011")
 
 
 def die(msg):
@@ -72,13 +73,32 @@ def load_plan(root):
         if cur is None:
             continue
         # `- cp_x = <expr>: bins ...`, also `- cp_x iff <guard> = <expr>: bins ...` and the expression-less `- cp_x: bins ...`
-        m = re.match(r"^\s+- (cp_[a-z0-9_]+)(?: iff [^=:]*?)?(?: = .*?)?: bins (.*)$", line)
+        m = re.match(r"^\s+- (cp_[a-z0-9_]+)(?: iff .*?)?(?: = .*?)?: bins (.*)$", line)   # an iff guard may hold a
+        # comparison (`iff (cp_priv_pre == u)`); the lazy match still ends at the line's own `: bins `
         if m:
             bins_text = re.split(r";\s*ignore(?:_bins)?\b", m.group(2))[0]   # `; ignore_bins x{..}: reason` and `; ignore ...` are not bins
             ignored = set(re.findall(r"ignore(?:_bins)?\s+([a-z0-9_]+)", m.group(2)[len(bins_text):]))   # a listed bin the clause names has no CSV row and renders nothing
-            pairs = re.findall(r"([a-z0-9_]+)\{((?:[^{}]|\{[^{}]*\})*)\}", bins_text)   # a value may hold one brace level: low{{mtvec[31:8], 8'b0} < 32'h1000}
-            if not pairs:   # names without values: `bins immediate, delayed, withheld_then_valid`
-                pairs = [(t.strip(), "") for t in re.split(r",", re.sub(r"\(.*?\)", "", bins_text)) if re.fullmatch(r"[a-z0-9_]+", t.strip())]
+            # one bins list, walked at brace depth 0 so a value may hold commas: an item is `name{value}` or a bare
+            # `name` (the plan mixes both in one list), and `fast[15]{...}` is one array bin
+            pairs, tok, depth = [], "", 0
+            for ch in bins_text + ",":
+                if ch == "{":
+                    depth += 1
+                elif ch == "}":
+                    depth -= 1
+                if ch == "," and depth == 0:
+                    s, tok = tok.strip(), ""
+                    if not s:
+                        continue
+                    # trailing prose after the last brace is a comment, not part of the bin
+                    mb = re.match(r"^([a-z_][a-z0-9_]*(?:\[\d+\])?)\s*\{(.*)\}", s, re.S)
+                    mn = re.match(r"^([a-z_][a-z0-9_]*(?:\[\d+\])?)\s*(?:\(.*\))?$", s, re.S)
+                    if mb:
+                        pairs.append((mb.group(1), mb.group(2)))
+                    elif mn:
+                        pairs.append((mn.group(1), ""))
+                else:
+                    tok += ch
             pairs = [(n, v) for n, v in pairs if n not in ignored]
             if pairs:
                 cur["cps"][m.group(1)] = [n for n, v in pairs]
@@ -87,6 +107,10 @@ def load_plan(root):
             continue
         # `- cr_x = cp_a x cp_b: bins ...`; a names-only list (`: c16_no, c16_yes, ...`) declares no tuple, the CSV names split into components
         m = re.match(r"^\s+- (cr_[a-z0-9_]+) = ((?:cp_[a-z0-9_]+\s*x\s*)+cp_[a-z0-9_]+)\s*:\s*(?:bins )?(.*)$", line)
+        # the "[covergroup not built, not in manifest]" tag is NOT tolerated here, because it is a state
+        # claim that must be removed when the group is built. A parenthetical between the components and the
+        # colon is NOT tolerated either: gen_norm_probe classifies it as a scope line the plan owes a
+        # normalisation, and admitting it here would silently empty that work list
         if m:
             comps = [c.strip() for c in re.split(r"\s+x\s+", m.group(2))]
             # explicit cross bins name the component tuple in braces, comma- or space-separated: `div_intmin_m1{div, int_min,
@@ -116,8 +140,43 @@ def resolve_bin(g, cp, token, bins):
     return g.get("values", {}).get(cp, {}).get(token)
 
 
+ARRAY_BIN_ELEM = re.compile(r"^([a-z_][a-z0-9_]*)\[(\d+)\]$")
+ARRAY_BIN = re.compile(r"^([a-z0-9_]+)\[(\d+)\]$")
+
+
+def expand_bin(name):
+    """`fast[15]` is one plan bin and fifteen URG bins fast[0]..fast[14]; anything else is itself."""
+    m = ARRAY_BIN.match(name)
+    return [f"{m.group(1)}[{i}]" for i in range(int(m.group(2)))] if m else [name]
+
+
+def bin_width(name):
+    m = ARRAY_BIN.match(name)
+    return int(m.group(2)) if m else 1
+
 def split_cross_bin(name, comp_bins):
-    """Split an underscore-joined cross-bin name into one bin per component coverpoint (longest match, backtracking)."""
+    """Split an underscore-joined cross-bin name into one bin per component coverpoint (longest match, backtracking).
+    An array element joins as `fast_5` where the bin itself is `fast[5]`, so both spellings are tried."""
+    def spellings(b):
+        m = ARRAY_BIN_ELEM.match(b)
+        return [b, f"{m.group(1)}_{m.group(2)}"] if m else [b]
+
+    def rec(rest, k):
+        if k == len(comp_bins):
+            return [] if rest == "" else None
+        cands = sorted({(s, b) for b in comp_bins[k] for s in spellings(b)}, key=lambda sb: len(sb[0]), reverse=True)
+        for s, b in cands:
+            if rest == s and k == len(comp_bins) - 1:
+                return [b]
+            if rest.startswith(s + "_"):
+                tail = rec(rest[len(s) + 1:], k + 1)
+                if tail is not None:
+                    return [b] + tail
+        return None
+    return rec(name, 0)
+
+
+def _unused_split_cross_bin(name, comp_bins):
     def rec(rest, k):
         if k == len(comp_bins):
             return [] if rest == "" else None
@@ -170,22 +229,33 @@ def render(root):
             die(f"{cg}: coverpoint names outside cp_/cr_: {other}")
         order = {}
         for cp in cps:
-            if cp in cb and set(g["cps"][cp]) != set(cb[cp]):
-                die(f"{cg}.{cp}: plan bins {sorted(set(g['cps'][cp]))} differ from CSV bins {sorted(set(cb[cp]))}")
+            plan_expanded = [x for b in g["cps"][cp] for x in expand_bin(b)]
+            if cp in cb and set(plan_expanded) != set(cb[cp]):
+                die(f"{cg}.{cp}: plan bins {sorted(set(plan_expanded))} differ from CSV bins {sorted(set(cb[cp]))}")
             if cp not in cb and cp not in g.get("operand_only", set()):
                 die(f"{cg}.{cp}: no CSV rows and no [operand-only:] marker on the plan line")
             order[cp] = g["cps"][cp]
         L.append("")
         L.append(f"  // {cg} ({sv}), {sum(len(order[x]) for x in cps)} coverpoint bins, {sum(len(cb[x]) for x in crs)} cross bins")
+        base = {}
         for cp in cps:
-            for i, b in enumerate(order[cp]):
-                L.append(f"  localparam int GEN_FC_{up}_{cp.upper()}_{sv_ident(b).upper()} = {i};")
+            i = 0
+            for b in order[cp]:
+                base[(cp, b)] = i
+                nm = ARRAY_BIN.match(b)
+                L.append(f"  localparam int GEN_FC_{up}_{cp.upper()}_{sv_ident(nm.group(1) if nm else b).upper()} = {i};")
+                i += bin_width(b)
         args = ", ".join(f"int v_{cp}" for cp in cps)
         L.append(f"  covergroup {sv} with function sample({args});")
         L.append("    option.per_instance = 0;")
         L.append("    option.cross_auto_bin_max = 0;   // a cross has exactly the CSV's named bins: no automatic bins for the plan's ignored tuples")
         for cp in cps:
-            body = " ".join(f"bins {sv_bin(b)}= {{{i}}};" for i, b in enumerate(order[cp]))
+            parts, i = [], 0                     # an array bin takes N consecutive indices: bins fast[15] = {[i:i+14]}
+            for b in order[cp]:
+                w = bin_width(b)
+                parts.append(f"bins {sv_bin(b)}= {{{i}}};" if w == 1 else f"bins {b}= {{[{i}:{i + w - 1}]}};")
+                i += w
+            body = " ".join(parts)
             L.append(f"    {cp}: coverpoint v_{cp} {{ {body} ignore_bins na = {{-1}}; }}")
         for cr in crs:
             if cr not in g["crosses"]:
@@ -198,14 +268,15 @@ def render(root):
             for b in cb[cr]:
                 parts = explicit.get(b)
                 if parts is None:
-                    sp = split_cross_bin(b, [order[c] for c in comps])
+                    sp = split_cross_bin(b, [[x for y in order[c] for x in expand_bin(y)] for c in comps])
                     parts = None if sp is None else [[p] for p in sp]
                 sel = []
                 for c, p in zip(comps, parts or []):
                     if p is None: continue   # `any <cp>`: the component is unconstrained
-                    names = [resolve_bin(g, c, t, order[c]) for t in p]
+                    exp_c = [x for y in order[c] for x in expand_bin(y)]   # an array element is a bin here
+                    names = [resolve_bin(g, c, t, exp_c) for t in p]
                     if any(n is None for n in names): parts = None; break
-                    terms = [f"binsof({c}.{sv_bin(n)})" for n in names]
+                    terms = [f"binsof({c}.{n if ARRAY_BIN_ELEM.match(n) else sv_bin(n)})" for n in names]
                     sel.append(terms[0] if len(terms) == 1 else "(" + " || ".join(terms) + ")")
                 if parts is None or not sel:
                     die(f"{cg}.{cr}.{b}: does not split into bins of {comps}")

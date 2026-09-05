@@ -88,6 +88,7 @@ package gen_fcov_pkg;
   `uvm_analysis_imp_decl(_key)
   `uvm_analysis_imp_decl(_irqe)
   `uvm_analysis_imp_decl(_dbge)
+  `uvm_analysis_imp_decl(_mst)
   class gen_isa_cov extends uvm_subscriber #(gen_rvfi_txn);
     `uvm_component_utils(gen_isa_cov)
     gen_env_cfg cfg;
@@ -127,6 +128,7 @@ package gen_fcov_pkg;
     bit csr_pend [8], csr_eff_ok [8], csr_shadow_ok [8]; int csr_op [8], csr_rd [8], csr_gate [8]; logic [31:0] csr_wval [8], csr_eff [8], csr_shadow [8];
     virtual gen_ctrl_if ctrl_vif;   // mcounteren_writable_i as driven when a CSR write record arrives (cp_mcen_gate)
     virtual gen_irq_if irq_vif; virtual gen_dbg_if dbg_vif;   // the pins pending at the reset release
+    virtual gen_misc_if misc_vif;   // irq_pending_o at a pin or mie edge (CG-IRQ-003 cp_transition)
     int unsigned n_br = 0, n_mv = 0, n_csr_pairs = 0, n_csr_wr = 0, n_csr_replaced = 0;
     int unsigned n_mv_miss = 0, ut_mv_miss_expected = 0;   // legal move pairs whose micro-ops did not match the expansion (the self-test's own excluded)
     // counters and last-sample copies the unit test reads (FCOV_QUERY / FCOV_SELFTEST)
@@ -156,15 +158,531 @@ package gen_fcov_pkg;
     int unsigned ev_cyc [$]; int ev_kind [$]; bit dit_tracked = 0;   // dit_tracked: cpuctrlsts.data_ind_timing resets to 0
     int unsigned n_lu = 0, n_hx = 0, n_jp = 0, n_dt = 0, n_ie = 0; int ut_last_lu [6], ut_last_hx [3], ut_last_jp [10], ut_last_dt [10], ut_last_ie [13];
     uvm_analysis_imp_irqe #(gen_irq_evt, gen_isa_cov) irq_imp;   // the irq driver's line changes
-    uvm_analysis_imp_dbge #(gen_irq_evt, gen_isa_cov) dbg_imp;   // the debug driver's request changes (the same item: changed[0] = req)
+    uvm_analysis_imp_dbge #(gen_irq_evt, gen_isa_cov) dbg_imp;
+    uvm_analysis_imp_mst #(gen_model_state, gen_isa_cov) state_imp;   // the model of record per retired record   // the debug driver's request changes (the same item: changed[0] = req)
     uvm_analysis_imp_dbus #(gen_bus_txn, gen_isa_cov) dbus_imp;
     uvm_analysis_imp_ibus #(gen_bus_txn, gen_isa_cov) ibus_imp;
     uvm_analysis_imp_key #(gen_key_evt, gen_isa_cov) key_imp;
     int unsigned n_mul = 0, n_div = 0, n_alu = 0, n_bit = 0, n_imm = 0, n_sh = 0, n_cnt = 0, n_zca = 0, n_zca32 = 0;
     // the pending 16-bit record of CG-CMP-001: sampled when the next record tells the next instruction's length
     bit zca_pend = 0; int zca_v [7];
-    function new(string name, uvm_component parent); super.new(name, parent); dbus_imp = new("dbus_imp", this); ibus_imp = new("ibus_imp", this); key_imp = new("key_imp", this); irq_imp = new("irq_imp", this); dbg_imp = new("dbg_imp", this); endfunction
+    function new(string name, uvm_component parent); super.new(name, parent); dbus_imp = new("dbus_imp", this); ibus_imp = new("ibus_imp", this); key_imp = new("key_imp", this); irq_imp = new("irq_imp", this); dbg_imp = new("dbg_imp", this); state_imp = new("state_imp", this); endfunction
+    // ---- IRQ step 1: CG-IRQ-001 gen_irq_entry_cg ---------------------------------------------------------
+    // The entry is a retired record with rvfi_intr; its facts come from the record itself and from the model of
+    // record the scoreboard publishes (gen_model_state), which carries mcause's cause, mstatus, mepc and mie as
+    // of that record. The pin levels come from the irq agent's own events, kept here per line.
+    gen_irq_entry_cg irq_entry_cg;
+    int unsigned n_irq_entry = 0;
+    logic [18:0] irq_lines_now = '0;    // 0 sw, 1 timer, 2 ext, 3..17 fast, 18 nm (gen_irq_evt.lines_after)
+    gen_rvfi_txn irq_last_t; bit irq_have_t = 0;      // the record the state below belongs to
+    logic [31:0] irq_prev_pc = '0, irq_prev_insn = '0; bit irq_have_prev_pc = 0, irq_prev_was_zcmp = 0;
+
+    // the plan's cp_line: an ordinary line keeps its index (0 sw, 1 timer, 2 ext, 3+i fast[i]); an NMI is its own
+    function int irq_line_bin(gen_model_state st, gen_rvfi_txn t);
+      int line;
+      if (t != null && t.ext_nmi_int) return GEN_FC_IRQ_ENTRY_CP_LINE_NMI_INT;
+      if (st.entry_cause == int'(ibex_pkg::ExcCauseIrqNm.lower_cause)) return GEN_FC_IRQ_ENTRY_CP_LINE_NMI_EXT;
+      line = gen_irq_line_of_cause(st.entry_cause);
+      if (line < 0) return -1;
+      if (line == 0) return GEN_FC_IRQ_ENTRY_CP_LINE_SOFTWARE;
+      if (line == 1) return GEN_FC_IRQ_ENTRY_CP_LINE_TIMER;
+      if (line == 2) return GEN_FC_IRQ_ENTRY_CP_LINE_EXTERNAL;
+      return GEN_FC_IRQ_ENTRY_CP_LINE_FAST + (line - 3);
+    endfunction
+
+    // cp_others: the other mie-enabled lines at the entry, against the entry's own line
+    function int irq_others_bin(gen_model_state st, int this_line);
+      bit any_enabled = 0, any_pending_lower = 0;
+      for (int l = 0; l < 18; l++) begin
+        if (l == this_line) continue;
+        if (!st.mie[gen_irq_mie_bit(l)]) continue;
+        any_enabled = 1;
+        if (irq_lines_now[l] && this_line >= 0 && gen_irq_rank(l) > gen_irq_rank(this_line)) any_pending_lower = 1;
+      end
+      if (any_pending_lower) return GEN_FC_IRQ_ENTRY_CP_OTHERS_OTHERS_PENDING_LOWER;
+      return any_enabled ? GEN_FC_IRQ_ENTRY_CP_OTHERS_OTHERS_ENABLED_IDLE
+                         : GEN_FC_IRQ_ENTRY_CP_OTHERS_ONLY_THIS;
+    endfunction
+
+    // cp_mepc_src: what mepc points at, decided against the record before the entry
+    function int irq_mepc_bin(gen_model_state st);
+      logic [31:0] seq_pc;
+      if (!irq_have_prev_pc) return (st.mepc == cfg.boot_addr) ? GEN_FC_IRQ_ENTRY_CP_MEPC_SRC_BOOT_PC : -1;
+      seq_pc = irq_prev_pc + ((irq_prev_insn[1:0] == 2'b11) ? 32'd4 : 32'd2);
+      if (irq_prev_was_zcmp) return GEN_FC_IRQ_ENTRY_CP_MEPC_SRC_CM_PC;
+      if (irq_prev_insn == 32'h10500073) return GEN_FC_IRQ_ENTRY_CP_MEPC_SRC_WFI_NEXT;
+      if (irq_prev_insn == 32'h30200073) return GEN_FC_IRQ_ENTRY_CP_MEPC_SRC_MRET_TARGET;
+      if (irq_prev_insn == 32'h7b200073) return GEN_FC_IRQ_ENTRY_CP_MEPC_SRC_DRET_TARGET;
+      if (st.mepc == seq_pc) return GEN_FC_IRQ_ENTRY_CP_MEPC_SRC_SEQUENTIAL;
+      if (irq_prev_insn[6:0] == ibex_pkg::OPCODE_BRANCH) return GEN_FC_IRQ_ENTRY_CP_MEPC_SRC_BRANCH_TARGET;
+      if (irq_prev_insn[6:0] inside {ibex_pkg::OPCODE_JAL, ibex_pkg::OPCODE_JALR})
+        return GEN_FC_IRQ_ENTRY_CP_MEPC_SRC_JUMP_TARGET;
+      return (st.mepc == cfg.boot_addr) ? GEN_FC_IRQ_ENTRY_CP_MEPC_SRC_BOOT_PC : -1;
+    endfunction
+
+    // cp_rvfi_marks: the record's own interrupt markers, in the plan's order of preference
+    function int irq_marks_bin(gen_rvfi_txn t);
+      if (t == null) return -1;
+      if (t.ext_nmi_int) return GEN_FC_IRQ_ENTRY_CP_RVFI_MARKS_NMI_INT_FLAG;
+      if (t.ext_nmi) return GEN_FC_IRQ_ENTRY_CP_RVFI_MARKS_NMI_FLAG;
+      if (t.ext_pre_mip != 0) return GEN_FC_IRQ_ENTRY_CP_RVFI_MARKS_INTR_WITH_PRE_MIP;
+      if (t.ext_irq_valid) return GEN_FC_IRQ_ENTRY_CP_RVFI_MARKS_IRQ_VALID_LEVEL;
+      return GEN_FC_IRQ_ENTRY_CP_RVFI_MARKS_IRQ_VALID_ABSENT;
+    endfunction
+
+    // one entry per interrupt-entry record
+    function void irq_entry_sample(gen_model_state st);
+      gen_rvfi_txn t = (irq_have_t && irq_last_t != null && irq_last_t.order == st.order) ? irq_last_t : null;
+      int v_line = irq_line_bin(st, t);
+      int v_priv = (st.mstatus[12:11] == 2'b11) ? GEN_FC_IRQ_ENTRY_CP_PRIV_PRE_M :
+                   (st.mstatus[12:11] == 2'b00) ? GEN_FC_IRQ_ENTRY_CP_PRIV_PRE_U : -1;
+      int raw_line = gen_irq_line_of_cause(st.entry_cause);
+      if (irq_entry_cg == null) return;
+      irq_entry_cg.sample(v_line,
+                          v_priv,
+                          st.mstatus[7] ? GEN_FC_IRQ_ENTRY_CP_MIE_GLOBAL_MIE1    // MPIE holds MIE as it was
+                                        : GEN_FC_IRQ_ENTRY_CP_MIE_GLOBAL_MIE0,
+                          irq_others_bin(st, raw_line),
+                          irq_mepc_bin(st),
+                          -1,     // cp_u_path and cp_u_pending_at_return need the return into U, which the
+                          -1,     // handler-flow group's stack will carry: filled when CG-IRQ-005 lands
+                          irq_marks_bin(t));
+      n_irq_entry++;
+    endfunction
+
+    // the model of record for each retired record, published by the scoreboard
+    function void write_mst(gen_model_state st);
+      gen_rvfi_txn t = (irq_have_t && irq_last_t != null && irq_last_t.order == st.order) ? irq_last_t : null;
+      if (st.is_intr) irq_entry_sample(st);
+      irq_pend_record(st, t);
+      irq_prev_pc = st.pc_rdata; irq_prev_insn = st.insn; irq_have_prev_pc = 1;
+      irq_prev_was_zcmp = (t != null) ? t.ext_exp_valid : 1'b0;
+      irq_st = st; irq_have_st = 1;   // the state a cycle event between records is judged against
+    endfunction
+
+    // ---- IRQ step 1: CG-IRQ-003 gen_irq_pending_model_cg -------------------------------------------------
+    // Three sample events, not one per record: ev_edge is a CYCLE event (a pin change, or the commit of a
+    // retired mie write), ev_access and ev_mie are record events. Each entry point fills its own coverpoints
+    // and passes -1 for the rest, so no coverpoint is given a value its iff clause excludes.
+    // The pending state is the TB's own model of irq_pending_o (a pin high whose mie bit is set): comparing
+    // the DUT's output against that model is the irq_pending checker's job, and modelling it here keeps a DUT
+    // fault out of the bins. Pin levels and mie are kept by cycle so a record event is judged at its commit
+    // cycle, which is GEN_CSR_WRITE_TO_RVFI_OFFSET cycles before the record that reports it.
+    gen_irq_pending_model_cg irq_pend_cg;
+    int unsigned n_irq_edge = 0, n_irq_access = 0, n_irq_mie = 0;
+    int unsigned n_irq_view_miss = 0;   // record events whose cycle had aged out of the published view
+    gen_model_state irq_st; bit irq_have_st = 0;      // the last retired record's model state
+    bit irq_nmi_mode = 0; int irq_nmi_depth = 0;      // NMI mode, tracked as gen_irq_checker tracks it
+    logic [31:0] irq_mie_prev = '0, irq_mstatus_prev = '0;
+
+    // the irq checker's own sampled view of a cycle (gen_tb_pkg::gen_irq_view), so this covergroup judges a
+    // record's commit cycle from the SAME sample the checker judges it from, with no offset arithmetic here
+    function logic [31:0] irq_mie_at(int unsigned c);
+      return gen_irq_view::mie_at(c);
+    endfunction
+    function logic [18:0] irq_pins_at(int unsigned c);
+      logic [18:0] pins; bit pending;
+      if (gen_irq_view::sample_at(c, pins, pending)) return pins;
+      n_irq_view_miss++;   // older than the published window: the caller samples nothing rather than guessing
+      return '0;
+    endfunction
+    function bit irq_view_has(int unsigned c);
+      logic [18:0] pins; bit pending;
+      return gen_irq_view::sample_at(c, pins, pending);
+    endfunction
+    // the model of irq_pending_o: the nm line is not in mie/mip and never contributes
+    function bit irq_pending_model(logic [18:0] pins, logic [31:0] mie);
+      for (int i = 0; i < 18; i++) if (pins[i] && mie[gen_irq_mie_bit(i)]) return 1'b1;
+      return 1'b0;
+    endfunction
+    function logic [31:0] irq_mie_warl();
+      return GEN_IRQ_FAST_MASK | (32'h1 << ibex_pkg::CSR_MSIX_BIT)
+                               | (32'h1 << ibex_pkg::CSR_MTIX_BIT)
+                               | (32'h1 << ibex_pkg::CSR_MEIX_BIT);
+    endfunction
+    function int unsigned irq_commit_cycle(gen_model_state st);
+      return (st.cycle >= GEN_CSR_WRITE_TO_RVFI_OFFSET) ? st.cycle - GEN_CSR_WRITE_TO_RVFI_OFFSET + 1 : 0;
+    endfunction
+
+    // cp_state: debug and NMI mode outrank the rest. Sleep is the only class that is not a record fact, so it
+    // is read from core_busy (mubi-off is the controller's WAIT_SLEEP/SLEEP, rtl/ibex_controller.sv:598,:619)
+    // and only for a cycle event, where the read is of that cycle.
+    function int irq_state_bin(gen_model_state st, bit cycle_event);
+      if (st != null && st.debug_mode) return GEN_FC_IRQ_PENDING_MODEL_CP_STATE_DEBUG_MODE;
+      if (irq_nmi_mode) return GEN_FC_IRQ_PENDING_MODEL_CP_STATE_NMI_MODE;
+      if (cycle_event && misc_vif != null && misc_vif.core_busy == ibex_pkg::IbexMuBiOff)
+        return GEN_FC_IRQ_PENDING_MODEL_CP_STATE_SLEEP;
+      if (st == null) return -1;
+      if (st.dcsr[2]) return GEN_FC_IRQ_PENDING_MODEL_CP_STATE_STEP;   // dcsr.step (rtl/ibex_cs_registers.sv:231)
+      if (st.prv == ibex_pkg::PRIV_LVL_U) return GEN_FC_IRQ_PENDING_MODEL_CP_STATE_U_MODE;
+      return st.mstatus[ibex_pkg::CSR_MSTATUS_MIE_BIT] ? GEN_FC_IRQ_PENDING_MODEL_CP_STATE_MIE1_M
+                                                       : GEN_FC_IRQ_PENDING_MODEL_CP_STATE_MIE0_M;
+    endfunction
+
+    // cp_line_kind: the plan's thirds over the fast lines, sized from the mie fast field itself
+    function int irq_kind_bin(int line);
+      int fw = ibex_pkg::CSR_MFIX_BIT_HIGH - ibex_pkg::CSR_MFIX_BIT_LOW + 1;
+      if (line == 0) return GEN_FC_IRQ_PENDING_MODEL_CP_LINE_KIND_SOFTWARE;
+      if (line == 1) return GEN_FC_IRQ_PENDING_MODEL_CP_LINE_KIND_TIMER;
+      if (line == 2) return GEN_FC_IRQ_PENDING_MODEL_CP_LINE_KIND_EXTERNAL;
+      if (line < 3 || line > 17) return -1;                        // the nm line has no mie/mip class
+      if ((line - 3) * 3 < fw) return GEN_FC_IRQ_PENDING_MODEL_CP_LINE_KIND_FAST_LOW;
+      if ((line - 3) * 3 < 2 * fw) return GEN_FC_IRQ_PENDING_MODEL_CP_LINE_KIND_FAST_MID;
+      return GEN_FC_IRQ_PENDING_MODEL_CP_LINE_KIND_FAST_HIGH;
+    endfunction
+
+    // ev_edge, pin side: one sample per changed line, classified at the event's own cycle. An edge whose class
+    // the plan does not name (a disabled line falling) samples nothing rather than a bin it did not earn.
+    function void irq_edge_pins(gen_irq_evt e);
+      logic [18:0] pins_pre = e.lines_after ^ e.changed;
+      logic [31:0] mie = irq_mie_at(e.cycle);
+      bit pend_before = irq_pending_model(pins_pre, mie);
+      bit pend_after  = irq_pending_model(e.lines_after, mie);
+      if (irq_pend_cg == null) return;
+      for (int l = 0; l < 19; l++) begin
+        int v_tr = -1;
+        if (!e.changed[l]) continue;
+        if (l == 18) begin
+          if (e.level && e.changed[17:0] == 0) v_tr = GEN_FC_IRQ_PENDING_MODEL_CP_TRANSITION_NMI_ONLY_RISE;
+        end else if (e.level) begin
+          v_tr = !mie[gen_irq_mie_bit(l)] ? GEN_FC_IRQ_PENDING_MODEL_CP_TRANSITION_RISE_DISABLED :
+                 pend_before              ? GEN_FC_IRQ_PENDING_MODEL_CP_TRANSITION_RISE_ENABLED_OTHER_HIGH :
+                                            GEN_FC_IRQ_PENDING_MODEL_CP_TRANSITION_RISE_ENABLED;
+        end else if (mie[gen_irq_mie_bit(l)]) begin
+          v_tr = pend_after ? GEN_FC_IRQ_PENDING_MODEL_CP_TRANSITION_FALL_NOT_LAST
+                            : GEN_FC_IRQ_PENDING_MODEL_CP_TRANSITION_FALL_LAST;
+        end
+        if (v_tr < 0) continue;
+        irq_pend_cg.sample(v_tr, irq_state_bin(irq_have_st ? irq_st : null, 1'b1), irq_kind_bin(l), -1, -1, -1);
+        n_irq_edge++;
+      end
+    endfunction
+
+    // ev_edge, mie-write side: the write commits before its record, so the pins are read at the commit cycle
+    function void irq_edge_mie(gen_model_state st);
+      logic [18:0] pins = irq_pins_at(irq_commit_cycle(st));
+      bit pend_before = irq_pending_model(pins, irq_mie_prev);
+      if (irq_pend_cg == null) return;
+      for (int l = 0; l < 18; l++) begin
+        int b = gen_irq_mie_bit(l);
+        int v_tr = -1;
+        if (b < 0 || !pins[l] || irq_mie_prev[b] == st.mie[b]) continue;
+        if (st.mie[b] && !pend_before) v_tr = GEN_FC_IRQ_PENDING_MODEL_CP_TRANSITION_MIE_SET_PIN_HIGH;
+        else if (!st.mie[b])           v_tr = GEN_FC_IRQ_PENDING_MODEL_CP_TRANSITION_MIE_CLEAR_PIN_HIGH;
+        if (v_tr < 0) continue;
+        irq_pend_cg.sample(v_tr, irq_state_bin(st, 1'b0), irq_kind_bin(l), -1, -1, -1);
+        n_irq_edge++;
+      end
+    endfunction
+
+    // ev_access: a retired csr access to mip or mie. The class comes from the record's own instruction; the
+    // read classes from mie and the pins as of the commit cycle; the mie write value from rs1_rdata (or the
+    // immediate form's own field), which is the value the write presented, not what the WARL mask kept.
+    function void irq_access_sample(gen_model_state st, gen_rvfi_txn t);
+      logic [11:0] csr = st.insn[31:20];
+      logic [2:0]  f3  = st.insn[14:12];
+      logic [4:0]  rs1 = st.insn[19:15];
+      bit is_csr = (st.insn[6:0] == 7'b1110011) && (f3 != 3'b000);
+      bit reads_only = (f3[1:0] != 2'b01) && (rs1 == 5'd0);   // csrrs/csrrc with a zero source writes nothing
+      logic [18:0] pins;
+      logic [31:0] wdata;
+      int v_mip = -1, v_mie = -1;
+      if (!is_csr || irq_pend_cg == null) return;
+      if (csr != 12'h344 && csr != 12'h304) return;           // mip, mie
+      pins = irq_pins_at(irq_commit_cycle(st));
+      if (csr == 12'h344) begin
+        if (reads_only) begin
+          bit any_high = 0, any_high_en = 0, any_high_dis = 0;
+          for (int l = 0; l < 18; l++) if (pins[l]) begin
+            any_high = 1;
+            if (st.mie[gen_irq_mie_bit(l)]) any_high_en = 1; else any_high_dis = 1;
+          end
+          if (st.mie == 32'h0 && any_high)   v_mip = GEN_FC_IRQ_PENDING_MODEL_CP_MIP_ACCESS_READ_MIE0_PINS_HIGH;
+          else if (any_high_en && any_high_dis) v_mip = GEN_FC_IRQ_PENDING_MODEL_CP_MIP_ACCESS_READ_PARTIAL_MIE;
+          else if (!any_high)                v_mip = GEN_FC_IRQ_PENDING_MODEL_CP_MIP_ACCESS_READ_ALL_LOW;
+        end else begin
+          v_mip = (f3[1:0] == 2'b01) ? GEN_FC_IRQ_PENDING_MODEL_CP_MIP_ACCESS_WRITE_CSRRW_IGNORED :
+                  (f3[1:0] == 2'b10) ? GEN_FC_IRQ_PENDING_MODEL_CP_MIP_ACCESS_WRITE_CSRRS_IGNORED :
+                                       GEN_FC_IRQ_PENDING_MODEL_CP_MIP_ACCESS_WRITE_CSRRC_IGNORED;
+        end
+      end else if (!reads_only) begin
+        if (!f3[2] && t == null) return;                      // the register form needs its record's rs1_rdata
+        wdata = f3[2] ? {27'h0, rs1} : t.rs1_rdata;
+        if (wdata == 32'hffffffff)            v_mie = GEN_FC_IRQ_PENDING_MODEL_CP_MIE_WRITE_ALL_ONES;
+        else if (wdata == 32'h0)              v_mie = GEN_FC_IRQ_PENDING_MODEL_CP_MIE_WRITE_ZERO;
+        else if ((wdata & ~irq_mie_warl()) != 0) v_mie = GEN_FC_IRQ_PENDING_MODEL_CP_MIE_WRITE_RANDOM_MASKED;
+        else if ((wdata & ~GEN_IRQ_FAST_MASK) == 0) v_mie = GEN_FC_IRQ_PENDING_MODEL_CP_MIE_WRITE_FAST_ONLY;
+      end
+      if (v_mip < 0 && v_mie < 0) return;
+      irq_pend_cg.sample(-1, irq_state_bin(st, 1'b0), -1, v_mip, v_mie, -1);
+      n_irq_access++;
+    endfunction
+
+    // ev_mie: mstatus.MIE seen from a retired mstatus write or an mret, with the pending state at the commit
+    // cycle. The mret arm samples on EVERY mret, not only one that changes MIE: the plan's mret_mpie0_pending
+    // bin is an mret that leaves MIE at 0, which is not a change.
+    function void irq_mie_global_sample(gen_model_state st);
+      bit was  = irq_mstatus_prev[ibex_pkg::CSR_MSTATUS_MIE_BIT];
+      bit now  = st.mstatus[ibex_pkg::CSR_MSTATUS_MIE_BIT];
+      int unsigned c = irq_commit_cycle(st);
+      bit pend = irq_pending_model(irq_pins_at(c), irq_mie_at(c));
+      int v = -1;
+      if (irq_pend_cg == null) return;
+      if (st.is_mret) begin
+        if (!pend || st.prv != ibex_pkg::PRIV_LVL_M) return;
+        v = now ? GEN_FC_IRQ_PENDING_MODEL_CP_MIE_GLOBAL_EDGE_MRET_MPIE1_PENDING
+                : GEN_FC_IRQ_PENDING_MODEL_CP_MIE_GLOBAL_EDGE_MRET_MPIE0_PENDING;
+      end else if (st.wrote_mstatus && was != now) begin
+        v = now ? (pend ? GEN_FC_IRQ_PENDING_MODEL_CP_MIE_GLOBAL_EDGE_SET_PENDING
+                        : GEN_FC_IRQ_PENDING_MODEL_CP_MIE_GLOBAL_EDGE_SET_IDLE)
+                : (pend ? GEN_FC_IRQ_PENDING_MODEL_CP_MIE_GLOBAL_EDGE_CLEAR_PENDING
+                        : GEN_FC_IRQ_PENDING_MODEL_CP_MIE_GLOBAL_EDGE_CLEAR_IDLE);
+      end
+      if (v < 0) return;
+      irq_pend_cg.sample(-1, irq_state_bin(st, 1'b0), -1, -1, -1, v);
+      n_irq_mie++;
+    endfunction
+
+    // per record: the histories the cycle reads use, NMI mode, then the two record events
+    function void irq_pend_record(gen_model_state st, gen_rvfi_txn t);
+      if (!irq_view_has(irq_commit_cycle(st))) begin   // no published sample for this cycle: judge nothing
+        n_irq_view_miss++;
+        irq_mie_prev = st.mie; irq_mstatus_prev = st.mstatus;
+        return;
+      end
+      if (st.is_intr && st.entry_cause == ibex_pkg::ExcCauseIrqNm.lower_cause) begin irq_nmi_mode = 1; irq_nmi_depth = 0; end
+      else if (irq_nmi_mode && (st.is_trap || st.is_intr)) irq_nmi_depth++;
+      else if (irq_nmi_mode && st.is_mret && !st.is_trap) begin if (irq_nmi_depth > 0) irq_nmi_depth--; else irq_nmi_mode = 0; end
+      if (st.wrote_mie && irq_have_st) irq_edge_mie(st);
+      irq_access_sample(st, t);
+      irq_mie_global_sample(st);
+      irq_dbg_record(st);
+      irq_mtvec_base = gen_isa_read_csr(ibex_pkg::CSR_MTVEC);   // the model's mtvec as of BEFORE this record
+      irq_rst_record(st, t);
+      irq_off_take();
+      irq_mie_prev = st.mie; irq_mstatus_prev = st.mstatus;
+    endfunction
+
+    // ---- IRQ step 1: CG-IRQ-010 gen_irq_debug_interplay_cg -----------------------------------------------
+    // A WINDOW group: it opens on a record where a line is pending and enabled while the core is in debug mode
+    // or stepping outside it, closes at the exit (dret, or the retirement of the stepped instruction), and is
+    // sampled ONCE per window after the record that decides cp_post_exit. Every coverpoint of the group belongs
+    // to the same window, which is why the seven values go in one call.
+    gen_irq_debug_interplay_cg irq_dbg_cg;
+    int unsigned n_irq_dbg = 0, n_irq_dbg_undecided = 0, n_irq_dbg_dropped = 0;
+    // one slot: this DUT takes no debug entry from debug mode, so windows do not nest
+    bit dbgw_open = 0, dbgw_await = 0, dbgw_held = 0, dbgw_nmi = 0, dbgw_mret_seen = 0;
+    int dbgw_line = -1, dbgw_mode = -1, dbgw_prv = -1, dbgw_nmip = -1, dbgw_exit = -1;
+    int unsigned dbgw_records = 0;
+    int unsigned dbgw_post_bound = 256;   // records to wait for an NMI handler's mret before judging the window
+
+    // the class of the line that opened the window, in the plan's order: an internal NMI outranks the pin,
+    // which outranks an ordinary enabled line
+    function int irq_dbg_line_bin(gen_model_state st, logic [18:0] pins, logic [31:0] mie);
+      if (st.nmi_int_pend) return GEN_FC_IRQ_DEBUG_INTERPLAY_CP_LINE_NMI_INT;
+      if (st.nmi_pend || pins[18]) return GEN_FC_IRQ_DEBUG_INTERPLAY_CP_LINE_NMI_EXT;
+      if (irq_pending_model(pins, mie)) return GEN_FC_IRQ_DEBUG_INTERPLAY_CP_LINE_IRQ;
+      return -1;
+    endfunction
+    // is the window's own line still asserted?
+    function bit irq_dbg_still(gen_model_state st, logic [18:0] pins, logic [31:0] mie);
+      case (dbgw_line)
+        GEN_FC_IRQ_DEBUG_INTERPLAY_CP_LINE_NMI_INT: return st.nmi_int_pend;
+        GEN_FC_IRQ_DEBUG_INTERPLAY_CP_LINE_NMI_EXT: return st.nmi_pend || pins[18];
+        GEN_FC_IRQ_DEBUG_INTERPLAY_CP_LINE_IRQ:     return irq_pending_model(pins, mie);
+        default: return 1'b0;
+      endcase
+    endfunction
+    // the plan does not sample a window whose observation has not closed, so one that outlives its bound is
+    // dropped and counted instead of being given a bin it did not earn
+    function void irq_dbg_drop();
+      n_irq_dbg_dropped++;
+      dbgw_open = 0; dbgw_await = 0;
+    endfunction
+    function void irq_dbg_emit(int v_post);
+      if (irq_dbg_cg == null) return;
+      irq_dbg_cg.sample(dbgw_line, dbgw_mode, dbgw_held ? GEN_FC_IRQ_DEBUG_INTERPLAY_CP_DURATION_HELD_THROUGH_EXIT
+                                                        : GEN_FC_IRQ_DEBUG_INTERPLAY_CP_DURATION_DROPPED_BEFORE_EXIT,
+                        v_post, dbgw_prv, dbgw_nmip, dbgw_exit);
+      n_irq_dbg++;
+      if (v_post < 0) n_irq_dbg_undecided++;
+      dbgw_open = 0; dbgw_await = 0;
+    endfunction
+
+    // one record of the window's life. A record can open the window AND close it (a line that becomes
+    // pending on the dret itself, or the single record of a step window), so the open test runs first and
+    // the hold and exit tests run on the same record.
+    function void irq_dbg_record(gen_model_state st);
+      logic [18:0] pins = irq_pins_at(irq_commit_cycle(st));
+      logic [31:0] mie = st.mie;
+      bit stepping = st.dcsr[2] && !st.debug_mode;   // dcsr.step outside debug mode
+      if (irq_dbg_cg == null) return;
+      if (dbgw_await) begin
+        // the first record after the exit decides cp_post_exit: an entry is the taken case, an ordinary
+        // retirement with the line still asserted is the not-taken case, anything else is undecided and the
+        // window is sampled with cp_post_exit in its ignore bin rather than a bin it did not earn. A window
+        // opened inside an NMI handler defers past that handler's mret first.
+        if (dbgw_nmi && !dbgw_mret_seen) begin
+          if (st.is_intr) irq_dbg_emit(GEN_FC_IRQ_DEBUG_INTERPLAY_CP_POST_EXIT_TAKEN_BEFORE_FIRST_INSN);
+          else if (st.is_mret) dbgw_mret_seen = 1;
+          else if (dbgw_records >= dbgw_post_bound) irq_dbg_drop();
+          dbgw_records++;
+        end else if (st.is_intr) begin
+          irq_dbg_emit(dbgw_mret_seen ? GEN_FC_IRQ_DEBUG_INTERPLAY_CP_POST_EXIT_TAKEN_AFTER_NMI_MRET
+                                      : GEN_FC_IRQ_DEBUG_INTERPLAY_CP_POST_EXIT_TAKEN_BEFORE_FIRST_INSN);
+        end else if (irq_dbg_still(st, pins, mie)) begin
+          irq_dbg_emit(GEN_FC_IRQ_DEBUG_INTERPLAY_CP_POST_EXIT_NOT_TAKEN);
+        end else begin
+          irq_dbg_emit(-1);
+        end
+        return;
+      end
+      if (!dbgw_open) begin
+        if (!st.debug_mode && !stepping) return;
+        dbgw_line = irq_dbg_line_bin(st, pins, mie);
+        if (dbgw_line < 0) return;                     // no line pending: not a window of this group
+        dbgw_mode = !st.debug_mode ? GEN_FC_IRQ_DEBUG_INTERPLAY_CP_MODE_STEP_OUTSIDE :
+                    irq_nmi_mode   ? GEN_FC_IRQ_DEBUG_INTERPLAY_CP_MODE_DEBUG_IN_NMI_HANDLER
+                                   : GEN_FC_IRQ_DEBUG_INTERPLAY_CP_MODE_DEBUG_MODE;
+        dbgw_prv = (st.dcsr[1:0] == ibex_pkg::PRIV_LVL_U) ? GEN_FC_IRQ_DEBUG_INTERPLAY_CP_DCSR_PRV_U
+                                                          : GEN_FC_IRQ_DEBUG_INTERPLAY_CP_DCSR_PRV_M;
+        dbgw_nmi = (dbgw_mode == GEN_FC_IRQ_DEBUG_INTERPLAY_CP_MODE_DEBUG_IN_NMI_HANDLER);
+        dbgw_nmip = -1; dbgw_exit = -1; dbgw_held = 1; dbgw_mret_seen = 0;
+        dbgw_open = 1;
+      end
+      if (!irq_dbg_still(st, pins, mie)) dbgw_held = 0;
+      if (st.insn[6:0] == 7'b1110011 && st.insn[14:12] != 3'b000 && st.insn[31:20] == 12'h7b0)
+        dbgw_nmip = (st.nmi_pend || pins[18]) ? GEN_FC_IRQ_DEBUG_INTERPLAY_CP_NMIP_READ_READ_WITH_NMI_HIGH
+                                              : GEN_FC_IRQ_DEBUG_INTERPLAY_CP_NMIP_READ_READ_WITH_NMI_LOW;
+      if (dbgw_mode == GEN_FC_IRQ_DEBUG_INTERPLAY_CP_MODE_STEP_OUTSIDE) begin
+        dbgw_exit = GEN_FC_IRQ_DEBUG_INTERPLAY_CP_EXIT_KIND_STEP_COMPLETE;   // this record IS the stepped one
+        dbgw_await = 1; dbgw_records = 0;
+      end else if (st.is_dret) begin
+        dbgw_exit = GEN_FC_IRQ_DEBUG_INTERPLAY_CP_EXIT_KIND_DRET;
+        dbgw_await = 1; dbgw_records = 0;
+      end
+    endfunction
+
+    // ---- IRQ step 1: CG-IRQ-011 gen_irq_reset_fetch_en_cg ------------------------------------------------
+    // Two sample events. ev_reset is the reset release: the pins latched there, the first architectural event,
+    // the first reset-time CSR read-backs and a boot mret. Each observation is its own sample, so one
+    // coverpoint carries one fact instead of a sample inventing values for the others. ev_off is a CLOSED
+    // fetch-enable Off window, TAKEN from gen_misc_monitor's published queue rather than detected here a
+    // second time from the same pin, and completed by the first fetch after the return to On, which arrives
+    // on the ibus subscription this class already has.
+    gen_irq_reset_fetch_en_cg irq_rst_cg;
+    int unsigned n_irq_rst = 0, n_irq_off = 0, n_irq_off_unclosed = 0;
+    int irq_rst_lines = -1, irq_rst_first = -1;
+    bit irq_rst_have = 0, irq_rst_first_done = 0, irq_rst_trapped = 0;
+    logic [18:0] irq_rst_pins = '0; bit irq_rst_dbg = 0;
+    bit irq_rd_mstatus = 0, irq_rd_mie = 0, irq_rd_mtvec = 0, irq_rd_mip = 0;
+    bit irq_off_open = 0; int irq_off_cls = -1; int unsigned irq_off_on_cycle = 0;
+    logic [31:0] irq_mtvec_base = '0;   // mtvec as of the last record, for "the first fetch after On is the vector"
+
+    // cp_lines_at_reset: the pin pattern latched at the release. A debug request with neither an NMI nor a
+    // regular line has no bin in the plan and samples nothing.
+    function int irq_rst_lines_bin(logic [18:0] pins, bit dbg);
+      bit nm = pins[18];
+      bit reg_line = |pins[17:0];
+      if (dbg && nm) return GEN_FC_IRQ_RESET_FETCH_EN_CP_LINES_AT_RESET_DEBUG_AND_NMI;
+      if (dbg && reg_line) return GEN_FC_IRQ_RESET_FETCH_EN_CP_LINES_AT_RESET_DEBUG_AND_REGULAR;
+      if (dbg) return -1;
+      if (nm && reg_line) return GEN_FC_IRQ_RESET_FETCH_EN_CP_LINES_AT_RESET_NMI_AND_REGULAR;
+      if (nm) return GEN_FC_IRQ_RESET_FETCH_EN_CP_LINES_AT_RESET_NMI_ONLY;
+      if (reg_line) return GEN_FC_IRQ_RESET_FETCH_EN_CP_LINES_AT_RESET_REGULAR_ONLY;
+      return GEN_FC_IRQ_RESET_FETCH_EN_CP_LINES_AT_RESET_NONE;
+    endfunction
+
+    function void irq_rst_emit(int v_reads, int v_mret);
+      if (irq_rst_cg == null || !irq_rst_have) return;
+      irq_rst_cg.sample(irq_rst_lines, irq_rst_first, v_reads, v_mret, -1, -1);
+      n_irq_rst++;
+    endfunction
+
+    // the first architectural event after the release, and the reset-time facts that ride with it
+    function void irq_rst_record(gen_model_state st, gen_rvfi_txn t);
+      logic [11:0] csr = st.insn[31:20];
+      logic [2:0]  f3  = st.insn[14:12];
+      bit is_read = (st.insn[6:0] == 7'b1110011) && (f3 != 3'b000) && (st.insn[19:15] == 5'd0) && (f3[1:0] != 2'b01);
+      logic [18:0] pins;
+      if (!irq_rst_have) return;
+      if (!irq_rst_first_done) begin
+        irq_rst_first = st.nmi_pend && st.is_intr ? GEN_FC_IRQ_RESET_FETCH_EN_CP_FIRST_EVENT_NMI_BEFORE_INSN :
+                        st.debug_mode            ? GEN_FC_IRQ_RESET_FETCH_EN_CP_FIRST_EVENT_DEBUG_BEFORE_INSN :
+                        (st.pc_rdata == cfg.boot_addr) ? GEN_FC_IRQ_RESET_FETCH_EN_CP_FIRST_EVENT_BOOT_INSN : -1;
+        irq_rst_first_done = 1;
+        irq_rst_emit(-1, -1);                       // the pin pattern and the first event, once
+      end
+      // cp_reset_reads: the FIRST read-back of each of the four, judged against the record's own rd_wdata
+      if (is_read && t != null && t.rd_addr != 5'd0) begin
+        int v = -1;
+        if (csr == 12'h300 && !irq_rd_mstatus) begin irq_rd_mstatus = 1; if (t.rd_wdata == 32'h80) v = GEN_FC_IRQ_RESET_FETCH_EN_CP_RESET_READS_MSTATUS_0X80; end
+        else if (csr == 12'h304 && !irq_rd_mie) begin irq_rd_mie = 1; if (t.rd_wdata == 32'h0) v = GEN_FC_IRQ_RESET_FETCH_EN_CP_RESET_READS_MIE_0; end
+        else if (csr == 12'h305 && !irq_rd_mtvec) begin irq_rd_mtvec = 1; if (t.rd_wdata[31:8] == cfg.boot_addr[31:8]) v = GEN_FC_IRQ_RESET_FETCH_EN_CP_RESET_READS_MTVEC_BOOT_PAGE; end
+        else if (csr == 12'h344 && !irq_rd_mip) begin
+          irq_rd_mip = 1;
+          pins = irq_pins_at(irq_commit_cycle(st));
+          if (t.rd_wdata[17:0] == pins[17:0]) v = GEN_FC_IRQ_RESET_FETCH_EN_CP_RESET_READS_MIP_REFLECTS_PINS;
+        end
+        if (v >= 0) irq_rst_emit(v, -1);
+      end
+      // cp_boot_mret: an mret before any trap, returning to U with MIE restored
+      if (st.is_mret && !irq_rst_trapped && st.prv == ibex_pkg::PRIV_LVL_U
+          && st.mstatus[ibex_pkg::CSR_MSTATUS_MIE_BIT])
+        irq_rst_emit(-1, GEN_FC_IRQ_RESET_FETCH_EN_CP_BOOT_MRET_TO_U_MIE1);
+      if (st.is_trap || st.is_intr) irq_rst_trapped = 1;
+    endfunction
+
+    // cp_fetch_off: the interrupt situation in a closed Off window, read from the published samples that
+    // still cover it. A window longer than the published depth is judged on the part still covered, which the
+    // note states; the classes are exclusive and taken in the plan's order of specificity.
+    function int irq_off_bin(int unsigned off_cycle, int unsigned on_cycle);
+      bit nm_rose = 0, line_rose = 0, pending_at_start = 0, any = 0;
+      logic [18:0] pins, prev; bit pending, have_prev = 0;
+      for (int unsigned c = off_cycle; c <= on_cycle; c++) begin
+        if (!gen_irq_view::sample_at(c, pins, pending)) continue;
+        if (|pins[17:0] || pins[18]) any = 1;
+        if (c == off_cycle && irq_pending_model(pins, gen_irq_view::mie_at(c))) pending_at_start = 1;
+        if (have_prev) begin
+          if (pins[18] && !prev[18]) nm_rose = 1;
+          if (|(pins[17:0] & ~prev[17:0])) line_rose = 1;
+        end
+        prev = pins; have_prev = 1;
+      end
+      if (nm_rose) return GEN_FC_IRQ_RESET_FETCH_EN_CP_FETCH_OFF_NMI_WHILE_OFF;
+      if (pending_at_start) return GEN_FC_IRQ_RESET_FETCH_EN_CP_FETCH_OFF_IRQ_PENDING_WHILE_OFF_CSR_UPDATED;
+      if (line_rose) return GEN_FC_IRQ_RESET_FETCH_EN_CP_FETCH_OFF_IRQ_ARRIVES_WHILE_OFF;
+      if (!any) return GEN_FC_IRQ_RESET_FETCH_EN_CP_FETCH_OFF_NONE_PENDING_WHILE_OFF;
+      return -1;
+    endfunction
+
+    // one closed window per call, opened here and completed by the first fetch after the return to On
+    function void irq_off_take();
+      int unsigned off_cycle, on_cycle;
+      if (irq_rst_cg == null || irq_off_open) return;
+      if (!gen_fetch_en_windows::take(off_cycle, on_cycle)) return;
+      irq_off_cls = irq_off_bin(off_cycle, on_cycle);
+      irq_off_on_cycle = on_cycle;
+      irq_off_open = 1;
+    endfunction
+
+    // the first fetch after On decides cp_fetch_on_after: the trap vector, or anything else (a resume)
+    function void irq_off_first_fetch(gen_bus_txn b);
+      int v_on;
+      if (!irq_off_open || b.stamp_gnt < irq_off_on_cycle) return;
+      v_on = (irq_mtvec_base != 0 && b.addr[31:8] == irq_mtvec_base[31:8])
+             ? GEN_FC_IRQ_RESET_FETCH_EN_CP_FETCH_ON_AFTER_HANDLER_FETCHED_AT_ON
+             : GEN_FC_IRQ_RESET_FETCH_EN_CP_FETCH_ON_AFTER_RESUME_AT_ON;
+      if (irq_rst_cg != null) begin
+        irq_rst_cg.sample(-1, -1, -1, -1, irq_off_cls, v_on);
+        n_irq_off++;
+      end
+      irq_off_open = 0;
+    endfunction
+
     function void write_irqe(gen_irq_evt e);   // an asserted edge of an interrupt line: an NMI raise or an ordinary irq (cp_event_mid)
+      irq_lines_now = e.lines_after;   // the level of every line, for cp_others
+      irq_edge_pins(e);
       if (e.level) ev_push(e.cycle, e.changed[18] ? GEN_FC_DIV_TIMING_CP_EVENT_MID_NMI : GEN_FC_DIV_TIMING_CP_EVENT_MID_IRQ);
     endfunction
     function void write_dbge(gen_irq_evt e);   // an asserted edge of debug_req_i
@@ -184,8 +702,9 @@ package gen_fcov_pkg;
       if (!uvm_config_db#(virtual gen_ctrl_if)::get(this, "", "vif", ctrl_vif)) `uvm_fatal("GEN_FCOV", "ctrl vif not in uvm_config_db")
       if (!uvm_config_db#(virtual gen_irq_if)::get(this, "", "irq_vif", irq_vif)) `uvm_fatal("GEN_FCOV", "irq vif not in uvm_config_db")
       if (!uvm_config_db#(virtual gen_dbg_if)::get(this, "", "dbg_vif", dbg_vif)) `uvm_fatal("GEN_FCOV", "dbg vif not in uvm_config_db")
+      if (!uvm_config_db#(virtual gen_misc_if)::get(this, "", "misc_vif", misc_vif)) `uvm_fatal("GEN_FCOV", "misc vif not in uvm_config_db")
       hart_id_v = cfg.hart_id;
-      if (cfg.fcov_en) begin mul_cg = new(); div_cg = new(); alu_cg = new(); bit_cg = new(); imm_cg = new(); sh_cg = new(); cnt_cg = new(); zca_cg = new(); zcmp_cg = new(); mv_cg = new(); csr_cg = new(); br_cg = new(); sbit_cg = new(); zcb_cg = new(); rec_cg = new(); mt_cg = new(); rst_cg = new(); ic_ecc_cg = new(); sec_cg = new(); hz_cg = new(); lu_cg = new(); hx_cg = new(); jp_cg = new(); dt_cg = new(); ie_cg = new(); pmp_acc_cg = new(); pmp_tbl_cg = new(); pmp_cfg_cg = new(); pmp_addr_cg = new(); end
+      if (cfg.fcov_en) begin mul_cg = new(); div_cg = new(); alu_cg = new(); bit_cg = new(); imm_cg = new(); sh_cg = new(); cnt_cg = new(); zca_cg = new(); zcmp_cg = new(); mv_cg = new(); csr_cg = new(); br_cg = new(); sbit_cg = new(); zcb_cg = new(); rec_cg = new(); mt_cg = new(); rst_cg = new(); ic_ecc_cg = new(); sec_cg = new(); hz_cg = new(); lu_cg = new(); hx_cg = new(); jp_cg = new(); dt_cg = new(); ie_cg = new(); irq_entry_cg = new(); irq_pend_cg = new(); irq_dbg_cg = new(); irq_rst_cg = new(); pmp_acc_cg = new(); pmp_tbl_cg = new(); pmp_cfg_cg = new(); pmp_addr_cg = new(); end
     endfunction
     // ---- classifiers (plan bin order = the rendered GEN_FC_* indices)
     // CG-IC-006 cp_no_alert_case, most-masking first, which is the fcov plan's precedence: the enable and the sweep are terms
@@ -1484,7 +2003,8 @@ package gen_fcov_pkg;
       ie_cg.sample(v[0], v[1], v[2], v[3], v[4], v[5], v[6], v[7], v[8], v[9], v[10], v[11], v[12]);
       ut_last_ie = v;
     endfunction
-    function void write_ibus(gen_bus_txn b);   // every completed fetch: its word and response cycle for the fetch-stall class; the first request's distance
+    function void write_ibus(gen_bus_txn b);
+      irq_off_first_fetch(b);   // CG-IRQ-011 cp_fetch_on_after: the first fetch after the return to On   // every completed fetch: its word and response cycle for the fetch-stall class; the first request's distance
       ib_addr.push_back(b.addr); ib_rv.push_back(b.stamp_rvalid);   // the RVFI record's cycle base
       if (ib_addr.size() > 64) begin void'(ib_addr.pop_front()); void'(ib_rv.pop_front()); end
       if (b.first_after_release && !boot_to_req_seen) begin boot_to_req = b.since_release; boot_to_req_seen = 1; end
@@ -1589,6 +2109,8 @@ package gen_fcov_pkg;
       rst_fetch_en = mubi_cls_rst(ctrl_vif.fetch_enable);
       rst_pending = rst_pending_cls(irq_vif.lines()[17:0], irq_vif.nm, dbg_vif.req);
       rst_release_seen = 1;
+      irq_rst_pins = irq_vif.lines(); irq_rst_dbg = dbg_vif.req;   // CG-IRQ-011 ev_reset: the pins latched at the release
+      irq_rst_lines = irq_rst_lines_bin(irq_rst_pins, irq_rst_dbg); irq_rst_have = 1;
       fe_q = ctrl_vif.fetch_enable; mw_q = ctrl_vif.mcounteren_writable;
       forever begin
         @(posedge ctrl_vif.clk);
@@ -1936,6 +2458,7 @@ package gen_fcov_pkg;
       hx_flush(t);
       rec_sample(t);
       pmp_record(t);
+      irq_last_t = t; irq_have_t = 1;   // the state for this record arrives next
       if (!rst_sampled) rst_sample(rst_first_event_cls(t.intr, t.ext_nmi, t.ext_debug_mode));
       sec_record(t);
       last_t = prev_t; have_last = have_prev;   // the neighbour facts of the rest of write() (the multiply's cp_prev / cp_delta) read the record before this one
@@ -2271,9 +2794,13 @@ package gen_fcov_pkg;
       zcmp_flush(null);  // a sequence at the very end has no record after it: minstret_once not applicable
       `uvm_info("GEN_FCOV", $sformatf("move pairs: %0d sampled, %0d with mismatching micro-ops (%0d of them the self-test's)", n_mv, n_mv_miss, ut_mv_miss_expected), UVM_LOW)
       `uvm_info("GEN_FCOV", $sformatf("slice A samples: records=%0d mul_timing=%0d rst_boot=%0d (boot_to_req %0d) sec_ctrl_inputs=%0d zcmp_hazard=%0d", n_rec, n_mt, n_rst, boot_to_req, n_sec, n_hz), UVM_LOW)
+      `uvm_info("GEN_FCOV", $sformatf("irq samples: entry=%0d edge=%0d access=%0d mie_global=%0d debug_window=%0d (post-exit undecided %0d, dropped unclosed %0d) reset=%0d fetch_off=%0d view misses %0d", n_irq_entry, n_irq_edge, n_irq_access, n_irq_mie, n_irq_dbg, n_irq_dbg_undecided, n_irq_dbg_dropped, n_irq_rst, n_irq_off, n_irq_view_miss), UVM_LOW)
       `uvm_info("GEN_FCOV", $sformatf("pmp samples: cfg_write=%0d addr_write=%0d csr_access=%0d table_state=%0d (dropped without a retire %0d)", n_pmp_cfg, n_pmp_addr, n_pmp_acc, n_pmp_tbl, n_pmp_tbl_dropped), UVM_LOW)
       if (mul_cg != null) begin   // referee: a group the sampler fed must show coverage, a dropped sample is a collected failure
         if (n_mv_miss > ut_mv_miss_expected) `uvm_error("GEN_FCOV_REF", $sformatf("gen_cmp_zcmp_mv_cg: %0d legal move pairs whose micro-ops did not match the expansion", n_mv_miss - ut_mv_miss_expected))
+        if (n_irq_entry > 0 && irq_entry_cg.get_coverage() == 0.0) `uvm_error("GEN_FCOV_REF", "gen_irq_entry_cg sampled without coverage")
+        if ((n_irq_edge + n_irq_access + n_irq_mie) > 0 && irq_pend_cg.get_coverage() == 0.0) `uvm_error("GEN_FCOV_REF", "gen_irq_pending_model_cg sampled without coverage")
+        if (n_irq_dbg > 0 && irq_dbg_cg.get_coverage() == 0.0) `uvm_error("GEN_FCOV_REF", "gen_irq_debug_interplay_cg sampled without coverage")
         if (n_pmp_acc > 0 && pmp_acc_cg.get_coverage() == 0.0) `uvm_error("GEN_FCOV_REF", "gen_pmp_csr_access_cg sampled without coverage")
         if (n_pmp_tbl > 0 && pmp_tbl_cg.get_coverage() == 0.0) `uvm_error("GEN_FCOV_REF", "gen_pmp_table_state_cg sampled without coverage")
         if (n_pmp_cfg > 0 && pmp_cfg_cg.get_coverage() == 0.0) `uvm_error("GEN_FCOV_REF", "gen_pmp_cfg_write_cg sampled without coverage")

@@ -571,6 +571,65 @@ package gen_tb_pkg;
   // scoreboard's cpuctrlsts tracking and no invalidation sweep is within GEN_ICACHE_ECC_GRACE_CYCLES: a lookup made while the
   // cache is disabled or invalidating reads the tag RAM but is not checked (rtl/ibex_icache.sv:266), and the TB sees both
   // states late (the enable from its record, the sweep from its all-ways tag writes).
+  // gen_irq_view: the irq checker's own per-cycle sampled view of the interrupt pins, and the mie history it
+  // judges against, published so a covergroup judges a cycle from the SAME samples rather than keeping a
+  // second history with its own timestamp convention. Written by gen_irq_checker, read by the coverage class;
+  // it lives here because gen_fcov_pkg compiles before gen_checkers_pkg and cannot hold a handle to it.
+  parameter int unsigned GEN_IRQ_VIEW_SAMPLES = 256;   // cycles of pin samples kept; a read older than this fails and the caller says so
+  parameter int unsigned GEN_IRQ_VIEW_MIE = 64;        // mie updates kept, the depth the checker used before this was shared
+  class gen_irq_view;
+    typedef struct { int unsigned cycle; logic [18:0] pins; bit pending; } smp_t;
+    typedef struct { int unsigned eff_cycle; logic [31:0] mie; } mie_t;
+    static smp_t q [$];
+    static mie_t m [$];
+    static function void clear();
+      q.delete(); m.delete();
+    endfunction
+    static function void push_sample(int unsigned c, logic [18:0] pins, bit pending);
+      q.push_back('{c, pins, pending});
+      while (q.size() > GEN_IRQ_VIEW_SAMPLES) void'(q.pop_front());
+    endfunction
+    static function void push_mie(int unsigned eff_cycle, logic [31:0] mie);
+      m.push_back('{eff_cycle, mie});
+      while (m.size() > GEN_IRQ_VIEW_MIE) void'(m.pop_front());
+    endfunction
+    // the sampled pins of one cycle; 0 when that cycle has aged out of the window
+    static function bit sample_at(int unsigned c, output logic [18:0] pins, output bit pending);
+      for (int i = q.size() - 1; i >= 0; i--)
+        if (q[i].cycle == c) begin pins = q[i].pins; pending = q[i].pending; return 1'b1; end
+      return 1'b0;
+    endfunction
+    static function logic [31:0] mie_at(int unsigned c);
+      logic [31:0] v = 32'h0;
+      foreach (m[i]) if (m[i].eff_cycle <= c) v = m[i].mie;
+      return v;
+    endfunction
+  endclass
+
+  // gen_fetch_en_windows: closed fetch_enable_i Off windows, published by gen_misc_monitor which already
+  // holds the Off cycle for its own drain check, so a covergroup consumes the window instead of detecting it
+  // a second time from the same pin. A window is published when fetch_enable returns to On.
+  parameter int unsigned GEN_FETCH_EN_WINDOW_MIN_CYCLES = 20;   // CG-IRQ-011 ev_off: windows shorter than this are not sampled
+  class gen_fetch_en_windows;
+    typedef struct { int unsigned off_cycle; int unsigned on_cycle; } win_t;
+    static win_t q [$];
+    static int unsigned published = 0, skipped_short = 0;
+    static function void clear();
+      q.delete(); published = 0; skipped_short = 0;
+    endfunction
+    static function void publish(int unsigned off_cycle, int unsigned on_cycle);
+      if (on_cycle < off_cycle + GEN_FETCH_EN_WINDOW_MIN_CYCLES) begin skipped_short++; return; end
+      q.push_back('{off_cycle, on_cycle});
+      published++;
+    endfunction
+    static function bit take(output int unsigned off_cycle, output int unsigned on_cycle);
+      win_t w;
+      if (q.size() == 0) return 1'b0;
+      w = q.pop_front(); off_cycle = w.off_cycle; on_cycle = w.on_cycle;
+      return 1'b1;
+    endfunction
+  endclass
+
   class gen_icram_events;
     // an injection: kind inject (tag RAM) or inject_data (data RAM), the beat and the bits of the flip, every way's stored valid bit and
     // tag at the read (un-tweaked), and, once judged, the hit way and the verdicts (a: the P9 probe's tag; b: the retiring pc's tag)
