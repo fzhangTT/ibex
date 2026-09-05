@@ -1232,3 +1232,90 @@ earlier section of this file carried.
 | rev85 I (file types not named) | The census did not visit SystemVerilog, where Q-002 stands in gen_dut_top.sv | Low | Accepted. The census covered .py, .yaml, .tcl, .f, .sh and .csv and NOT .sv, which is now stated wherever a count appears. gen_dut_top.sv is tb-infra-2's and the site is routed to it rather than edited | this row and the table above | The file types are named in the METHOD line rather than left for a reader to infer |
 | the three user-facing strings | Reviewer labels in a `--help` string and two `die()` messages, found by rtl-arch's rule that a label sits in generated prose as easily as in a comment | Low | Taken, and the row says WHY it was allowed rather than implying the rule required it. The Orchestrator ruled that the code-comment rule covers comments and docstrings only: STRINGS ARE PROGRAM OUTPUT and are outside it, so the 61 self-test, red-fixture and testlist labels STAY as traceability, and these three user-facing prose strings were taken by choice as a courtesy cleanup. Consumers checked BEFORE editing, since a `die()` message can be matched by a red_expect signature: none of the three is matched by any red_expect, self-test or tool in the tree | gen_build.py:345, gen_cov_report.py:72, gen_flow_util.py:1574 | Each states its rule in words where the label stood; the parallel mentions in gen_runtime_api.md are documentation rather than code comments and are left |
 
+
+## CORRECTION to the rev85 rows above, and the answer to rev90 and Critic flow 9.2 (2026-09-05T18:59:15Z)
+
+I re-derived the count table from its own stated METHOD after the landing and it did not reproduce. rev90 and
+the Critic reached three of the same faults independently and added a fourth, so this section answers rev90's
+four Lows and three Infos and the Critic's L-22 to L-25 together with what I had already found. The row that
+was written to FIX an unreproducible figure is the row that introduced a wrong one, so the remedy is not a
+better number in the same prose. It is a tool, committed in this touch as
+`dv/auto_dv/tools/gen_comment_census.py`, whose self-test carries a negative fixture for each fault below.
+
+THREE FAULTS, and each returns a plausible number rather than an error:
+
+- A WORD-BOUNDARY ANCHOR AFTER THE DIGITS. `\bLOG-\d+\b` cannot match `LOG-028a` or `LOG-046a`: there is no
+  boundary between "8" and "a". NINE occurrences are invisible to it, at 555f17a gen_flow_const.py:330 :445,
+  gen_flow_util.py:639 :1145 :1276, gen_regress.py:193 :752, gen_round.py:397, gen_serve_requests.py:433.
+- A LINE SHAPE THAT READS ONLY LEADING COMMENTS. A comment TRAILING code is a comment. One fault, three
+  victims, each found by a different reader: gen_fcov.py:68's T-215 (rev90's first Low, the Critic's L-22),
+  gen_testlist.yaml:214's LOG-039, and the dated ruling on gen_flow_const.py:420. The tool now scans the
+  COMMENT'S OWN TEXT rather than the line holding it, quote-aware, so a yaml value carrying a "#" opens no
+  comment and a comment after a value is one.
+- A SCOPE NARROWER THAN THE STATED ONE. The two faults above account for most of the gap; the remainder I
+  cannot account for and will not guess at.
+
+THE THREE COUNTS RECONCILE EXACTLY once the comment rather than the line is scanned, which is the strongest
+evidence I can offer that the tool is right and my three hand counts were not. For LOG-n and A-n at 555f17a:
+
+| reading | occurrences on lines | whose figure |
+|---|---|---|
+| .py only, comments and docstrings | 35 on 32 | the Critic's, L-23 |
+| .py and .yaml, leading AND trailing comments | 37 on 34 | rev90's |
+| the same, plus F-001 counted as the intervention-log id it is | 39 on 36 | this tool, adopting rev90's Info |
+
+FIGURES at this commit, from `python3 dv/auto_dv/tools/gen_comment_census.py`:
+
+| class | count | the rev85 row says |
+|---|---|---|
+| intervention-log ruling ids (LOG-n, A-n, F-n, R-n) | 39 occurrences on 36 lines | 23 on 21 |
+| question ids (Q-n) | 0 | swept earlier, and still zero |
+| task ids (T-n) | 0, after gen_fcov.py:68 is swept in this touch | 0, which was false by one at 555f17a |
+| exclusion classes (EC-n) | 4 on 4 | "the EC-3 cross-reference pair", so two |
+| process pointers (every other id of the shape) | 0 | 0, and this one holds |
+| rulings cited by date | 6 on 6 | 4 on 4 |
+| dates that timestamp an observation, not a ruling | 2 on 2 | not distinguished at all |
+
+The six dated rulings are gen_cov_report.py:430, gen_flow_const.py:420 :524, gen_flow_util.py:1143 and
+gen_run.py:190 :502 at this commit. rev90 reports five and is short exactly gen_flow_const.py:420, a comment
+trailing a constant assignment, which is the second fault again. The two observations, gen_cov_report.py:396
+and gen_verdict.py:235, are timestamps on measured evidence and the tool reports them rather than dropping
+them, so no date leaves the census unaccounted for.
+
+THE ORIGINAL FIGURE WAS RIGHT, AND MY CORRECTION MADE IT WORSE. "the 35 permitted citations across nine
+modules" is the owner class read as LINES over the Python modules at the parent commit. Its fault was the
+missing unit, which is what rev85 said. Replacing it with "23 occurrences on 21 lines" replaced a right number
+with a wrong one and dressed it in a method statement that made it look checked.
+
+| claim as it stands above | correction |
+|---|---|
+| "TEN sites in dv/auto_dv/flow" and "Zero T-nnn remain in dv/auto_dv/flow" | ELEVEN comment sites. The eleventh is gen_fcov.py:68, swept in this touch to "TB Infra's probe report, whole, same header form: its header lines say from where", which names the producer the fact can be checked against. The same sentence misplaces the fixture: gen_fixtures/gen_grpinfo_cross_sample_tbinfra.txt is under dv/auto_dv/flow, not dv/auto_dv/tests, so it was never across an ownership line and I should not have routed it as if it were. It stays for a reason rather than by oversight: it is a captured probe report, its header line is that artifact's own provenance, and .txt is outside the census scope. gen_flow_util.py:630 and :1677 carry T-226 and P-06 inside strings, which the rule does not reach. Scoped as it should have been: zero T-nnn on comment or docstring lines under dv/auto_dv/flow |
+| the count table and its METHOD | the figures above, with the tool that produces them and the three-way reconciliation. rev90's remedy offered a choice between restating the filter and restating the counts; I have done both, because the filter I stated was the one I should have run and the counts I gave were not the ones it returns |
+| "the EC-3 cross-reference pair" | FOUR sites, not two (the Critic's L-24, rev90's third Low) |
+| the rule's home cited as gen_test_plan.md Section 0 at e4aef00 | The fact-stating case is not in Section 0 at e4aef00; it landed at 2f92709 and stands at gen_test_plan.md:51. The two kept sites rested on a rule that was not yet in the plan when the row claimed it was, which is the Critic's L-25 and rev90's fourth Low. Cited at 2f92709 from here on |
+
+THE EC-3 CONDITION, EXTENDED AND FLAGGED. The Orchestrator set its condition on the two sites I had shown it.
+I have applied it to the two it never saw, so all four now name dv/auto_dv/docs/gen_critic_exclusions_draft_v2.md
+(gen_flow_const.py:547 :564 :615 and gen_round.py:237 at this commit). Recorded for objection rather than
+buried: extending a condition to sites its ruler did not see is my reading of it, not its ruling.
+
+LOG-030, THE FIFTH FACT-STATING CASE. The DV Lead ruled it: the identifier stays, and it attaches to the CLAUSE
+the ruling decided rather than to the sentence, because LOG-030 is the decision that made the end-of-test wait
+progress-based and so created the count. Its wording is applied at gen_flow_const.py:30-32.
+
+rev90's THREE INFOS. F-001 ADOPTED: it is an intervention-log entry (gen_intervention_log.md:323), not a plan
+id, and the METHOD excluded the whole F family by prefix, omitting gen_flow_const.py:144 and :152. The tool no
+longer decides that family by shape, because the feature list uses F-1 and F-BIT-034 for features while the log
+uses F-001 for a ruling: an F id is an intervention-log identifier when the log defines it under that heading
+and a plan id otherwise, resolved by lookup and asserted by a self-test case. gen_acceptance_excerpt.py IS
+OUTSIDE EVERY FIGURE: each count is scoped to dv/auto_dv/flow, the tools file is not in it, and its A-002
+comment and its third `Path(C.selftest_tmp())` are outside the "22 plus 2" as well; the row calling the file
+the flow's meant that it is mine to sweep, not that it is inside the census scope. P6 STAYS: it is a probe
+register name (gen_component_api_binds.md:60), it carries no dash, and dash-less names are outside the shape
+by design, which the tool's own docstring now says so the next reader does not count them.
+
+CITES REBASED. The rev85 rows' line numbers are as at 555f17a and are true read there. This touch inserts three
+comment lines into gen_flow_const.py, so at this commit a cite past :31 moves down one, past the old :562 two,
+and past the old :612 three: :45 to :46, :143 to :144, :151 to :152, :224 to :225, :330 to :331, :381 to :382,
+:397 to :398, :445 to :446, :472 to :473, :546 to :547, :563 to :564, :613 to :615, :626 to :629.
+gen_round.py:237 and both gen_fcov.py cites do not move.

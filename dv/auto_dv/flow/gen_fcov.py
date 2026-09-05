@@ -65,7 +65,7 @@ ISOLATION_TOTAL_RE = r"Total tests in report: (\d+)"
 ISOLATION_EXACT_RE_FMT = r"^\S*/{cm}\s*$"
 COLLISION_REFUSE = "derived cross-bin names collide in the variable-form report (the checker would sum their counts)"
 CROSS_SAMPLE = Path(__file__).resolve().parent / "gen_fixtures" / "gen_grpinfo_cross_sample.txt"   # real urg excerpt, header lines say from where
-CROSS_SAMPLE_TBINFRA = CROSS_SAMPLE.parent / "gen_grpinfo_cross_sample_tbinfra.txt"   # TB Infra's T-215 probe report, whole, same header form
+CROSS_SAMPLE_TBINFRA = CROSS_SAMPLE.parent / "gen_grpinfo_cross_sample_tbinfra.txt"   # TB Infra's probe report, whole, same header form: its header lines say from where
 
 
 def manifest_path(test: dict[str, Any]) -> Path | None:

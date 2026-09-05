@@ -27,8 +27,9 @@ ENV_HEAD_SHA = "GEN_DV_HEAD_SHA"
 JOB_ENV_UNSET = ("PYTHONPATH", "GEN_TEST_STAGED_ENTRIES")
 # Exported in every simulation job after the unsets: the harness refuses developer-only inputs when it sees this marker.
 JOB_ENV_SET = {"GEN_DV_FLOW_RUN": "1"}
-# The harness ends every run with this line (LOG-030): n > 0 report stores lagged n program budgets while the core
-# kept retiring (slow bus regimes), so a run can be slow but green; recorded per run so slowness is visible.
+# The harness ends every run with this line. A slow-but-green run is one whose report stores lagged n program
+# budgets while the core kept retiring, in slow bus regimes; the count exists because the end-of-test wait is
+# progress-based rather than a fixed budget (LOG-030), and is recorded per run so slow runs are visible.
 SLOW_TOTAL_RE = r"GEN_TEST_SLOW_TOTAL rounds=(\d+) budget_cycles=(\d+)"
 # Retained pinned-red logs (the Test Writer's TDD evidence): a red fixture's red_expect must turn its own retained log
 # into RED-OK through the verdict, else the signature is refused at load. The logs
@@ -560,7 +561,8 @@ ROUND_EV_HIERARCHY = round_evidence_name("hierarchy.txt")
 ROUND_EV_TESTS = round_evidence_name("tests.txt")
 ROUND_EV_GROUPS = round_evidence_name("groups.txt")
 ROUND_EV_GRPINFO = round_evidence_name("grpinfo.txt")
-ROUND_EV_ASSERTS = round_evidence_name("asserts.txt")                     # EC-3 evidence (gen_excl_select.py --ec3-asserts)
+# EC-3 evidence class of dv/auto_dv/docs/gen_critic_exclusions_draft_v2.md, read by gen_excl_select.py --ec3-asserts.
+ROUND_EV_ASSERTS = round_evidence_name("asserts.txt")
 ROUND_EV_REGRESS_MANIFEST = round_evidence_name("regress_manifest.yaml")   # read beside it by both exclusion tools
 ROUND_EV_HIERARCHY_DUT_ROWS = round_evidence_name("hierarchy_dut_rows.txt")
 ROUND_EV_GROUPS_SUMMARY = round_evidence_name("groups_summary.txt")
@@ -610,7 +612,8 @@ ROUND_EV_MODINFO = round_evidence_name("modinfo.txt") + ".gz"
 ROUND_EV_FULL_EXCL_DIR = URG_DUMP_DIRNAME   # holds round_evidence_name(fullexclude.<metric>) + .gz
 ROUND_EV_ELFILES_DIR = "elfiles"
 ROUND_EV_SUMMARY = "gen_round_summary.md"
-ROUND_EC3_ASSERTS_RE = rf"^{re.escape(str(EVIDENCE_DIR.relative_to(REPO_ROOT)))}/{ROUND_DIR_PREFIX}[^/]+/{re.escape(ROUND_EV_ASSERTS)}$"   # the EC-3 input the selector accepts
+# The only path the selector accepts as EC-3 evidence (the class of dv/auto_dv/docs/gen_critic_exclusions_draft_v2.md).
+ROUND_EC3_ASSERTS_RE = rf"^{re.escape(str(EVIDENCE_DIR.relative_to(REPO_ROOT)))}/{ROUND_DIR_PREFIX}[^/]+/{re.escape(ROUND_EV_ASSERTS)}$"
 
 
 def sv_plusarg_names(tb_pkg: Path = TB_PKG_SV) -> dict[str, str]:
