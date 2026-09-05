@@ -589,3 +589,107 @@ fingerprint does not stand in for the causal chain.
 One framing to hold rather than relax: the surplus entry and the stale capture remain unseparated.
 Measuring the precondition does not settle the delivery question by association, and no sentence in
 this file should be read as if it had.
+
+## 12. The property, the four grant uses, and why the repair is legal
+
+The RTL side of the grant-hold repair. The driver side, the gated shape's implementation and its
+measurement, is tb-infra-2's landing record; this section is cited from there for the no-loop
+precondition and does not restate the driver's code.
+
+Every line number below is pinned to commit 9a8d852, and each was verified against the tree at
+c736d29, where `git diff 9a8d852..c736d29 -- rtl/ doc/` is empty, so the two commits carry identical
+sources for every file cited here. Line numbers in these files are not stable: gen_checkers_pkg.sv
+moved by one line under landing 60 this afternoon, and the icache's are no more stable than that. A
+reader checking this section re-greps the signal rather than trusting the number.
+
+### 12.1 The property is right and is not weakened
+
+`sva_ibus_gnt_only_with_req: instr_gnt_i |-> instr_req_o`, sampled at the rising edge.
+
+doc/03_reference/instruction_fetch.rst:58-60 defines the grant: "The other side accepted the request.
+``instr_req_o`` may be deasserted in the next cycle." A grant at an edge whose sampled request is low
+accepts nothing. The same table at :62-64 requires `instr_rvalid_i` to be "high for exactly one cycle
+per request", so such a grant also manufactures a response with no request behind it, which is a
+second violation rather than a stylistic one.
+
+It is also the only detector we have. The icache's response path carries no address term at all,
+`fill_rvd_arb[fb] = instr_rvalid_i & fill_rvd_exp[fb] & ~|(fill_rvd_exp & fill_older_q[fb])`
+(rtl/ibex_icache.sv:851-852), and the bus carries no response tag, so nothing in the design can
+reject a response it did not ask for. Section 11.5 records that measurement.
+
+WHAT THE PROPERTY IS FOR AFTER THE REPAIR, so a later reader does not take a silent property for a
+dead one. The gated shape makes it hold by construction for this agent. It remains the detector for
+any future agent, and for any change that reintroduces an ungated grant, and it is still the only one
+for the reason above. A permanently silent property here is the repair working, not a property to
+delete.
+
+### 12.2 The committed driver produces the phantom transaction too
+
+This matters for what the repair is claimed to do. The committed driver fires the property once per
+run, at one accepting edge, in each of the two grant-event seeds. Section 11.2 measures that edge on
+the registers with its positive control, and 11.3 measures the entry the driver queued there while
+the core booked nothing.
+
+So the repair removes a phantom transaction the committed driver already produces. It is not merely
+undoing a port. One firing per run is one grant of nothing per run, each queueing a response the core
+never asked for; the narrowness of the detector is why the rate looked small.
+
+### 12.3 The four combinational uses of the grant
+
+At 9a8d852, `instr_gnt_i` appears in rtl/ibex_icache.sv at :44 as the port and then combinationally in
+exactly four places:
+
+- :704 `assign fill_spec_done = fill_spec_req & instr_gnt_i;`
+- :705 `assign fill_spec_hold = fill_spec_req & ~instr_gnt_i;`
+- :762 inside `fill_ext_cnt_d`, the term `fill_ext_arb[fb] & instr_gnt_i`
+- :765 inside `fill_ext_hold_d`, the term `fill_ext_arb[fb] & ~instr_gnt_i`
+
+All four terminate in two next-state signals, both registered. `fill_spec_done` is used exactly once,
+at :760 inside `fill_ext_cnt_d` (:759-762). `fill_spec_hold` is used exactly once, at :764 inside
+`fill_ext_hold_d` (:764-765).
+
+Neither `fill_ext_done_d` (:767-775), which is what feeds `fill_ext_req` (:756), nor
+`lookup_grant_ic0` and its source `lookup_req_ic0` (:262, :249-250) uses the grant. Both terms of
+`instr_req = ((~icache_enable_i | branch_i) & lookup_grant_ic0) | (|fill_ext_req)` (:1030-1031) are
+therefore grant-independent.
+
+This enumeration was completed after the DV Lead's correction. The first version of the argument named
+only the two uses at :762 and :765; it reached the right conclusion because the two it missed happen
+to terminate in registers, not because they had been enumerated.
+
+### 12.4 The conclusion holds outside the icache and in both configurations
+
+An icache-only enumeration is not a statement about `instr_req_o` at the core boundary, so the
+argument continues outward.
+
+In rtl/ibex_if_stage.sv the grant enters at :48 and is only routed: to the icache at :325 under
+`gen_icache`, or to the prefetch buffer at :372 under `gen_no_icache`. It has no combinational use in
+if_stage itself. This configuration has ICache=1, so the icache is the live path.
+
+The other path is clean as well, which makes the conclusion configuration-independent rather than true
+only because we build with the cache. In rtl/ibex_prefetch_buffer.sv, `instr_req_o = valid_req` (:264),
+`valid_req = valid_req_q | valid_new_req` (:122), and `valid_new_req = req_i & (fifo_ready | branch_i)
+& ~rdata_outstanding_q[NUM_REQS-1]` (:119-120), none of which is the grant. The grant's use there,
+`valid_req_d = valid_req & ~instr_gnt_i` (:125), is a next-state signal.
+
+So gating the grant with the live request creates no combinational loop in either build.
+
+### 12.5 The acceptance is shape-dependent
+
+Two shapes were considered and they take different acceptance criteria. Recording both, because a
+reader meeting only one conclusion will otherwise apply it to the wrong shape.
+
+DECISION-ONLY SHAPE, where the grant width becomes one cycle by construction and the address comes
+from a registered sample, but the grant is asserted from the driver's decision alone: the property's
+count stays at one per run and does not fall to zero. A half-cycle window between a falling-edge
+decision and the rising edge that samples it is inherent to any driver deciding there. Zero would be
+the surprise.
+
+GATED SHAPE, where the grant is additionally a combinational AND with the live request at the
+accepting edge: the count goes to zero, and zero is the correct outcome rather than a surprise,
+because the property cannot be violated by construction. The acceptance is the phantom transaction
+gone, measured as no response enqueued for a request not presented at the accepting edge.
+
+The earlier prediction of one firing was made about the decision-only shape and is correct for it. It
+was wrong for the gated shape, and an acceptance criterion inherits the scope of the prediction it is
+built on.
