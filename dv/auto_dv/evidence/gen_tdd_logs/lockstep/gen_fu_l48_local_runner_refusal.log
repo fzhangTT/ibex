@@ -1,0 +1,110 @@
+# gen_fu_l48_local_runner_refusal.log -- gen_tb_local.sh refuses a cocotb that is not the clone's pinned one
+# (TB Infra, 2026-09-05). A CORRECTNESS fix, not a diagnosis improvement, and this log exists partly to record
+# why I said the opposite twice before measuring the state that decides it.
+#
+# ================ THE DEFECT ================
+# The committed runner asks PATH for cocotb-config and checks only that the call succeeded. A site
+# installation for another Python answers that question perfectly well: `cocotb-config --lib-name-path vpi vcs`
+# exits 0 and returns a real library. The build then links THAT library, and whether it survives depends on a
+# variable the runner never inspects.
+#
+# ================ THE STATE THAT DECIDES IT, AND THE TWO I MEASURED FIRST ================
+# LIBPYTHON_LOC has THREE states, not two, and they do not behave alike:
+#   site cocotb-config, variable UNSET    vcs exit 0, vcs_simv PRODUCED, no error   <- the silent wrong build
+#   site cocotb-config, variable EMPTY    vcs exit 1, no binary, Python codec error
+#   site cocotb-config, variable GOOD     vcs exit 1, no binary, Python codec error
+# I measured the second and third, found both loud, and told the Orchestrator and runtime-2 that a
+# wrong-toolchain build cannot pass silently. That was wrong, and a corrigendum in the owner's log was written
+# on my say-so and has since been reversed. The first state is the one a fresh worktree produces.
+# THE MECHANISM, measured on ci/env.sh's own line rather than inferred:
+# $ with the site cocotb-config ON PATH, running env.sh's guard
+#   guard TAKEN     -> LIBPYTHON_LOC is set to []            an EMPTY string
+# $ with no cocotb-config on PATH at all
+#   guard NOT taken -> LIBPYTHON_LOC is <UNSET>
+# `command -v cocotb-config >/dev/null 2>&1 && export LIBPYTHON_LOC="$(cocotb-config --libpython)" || true`
+# assigns an empty string when the tool is present and answers empty, and assigns NOTHING when the tool is
+# absent. A fresh worktree has no .venv when the gate sources env.sh, so the variable is never assigned; the
+# venv appears later, and if PATH then reaches a site cocotb-config first, the build links its library and the
+# absent variable lets cocotb find a working libpython on its own.
+# ABSENT AND EMPTY ARE DIFFERENT STATES AND THEY BEHAVE OPPOSITELY. That is the whole defect and the whole
+# reason I got it wrong: I reasoned about the export form masking the substitution's exit status, wrote that
+# down, and never tested the branch where the export does not happen at all.
+#
+# ================ THE RED: the committed script, in the shape that passes ================
+# $ source ci/env.sh; strip the clone venv from PATH; unset LIBPYTHON_LOC; then the COMMITTED runner
+#   exit 0
+#   dv/auto_dv/out_l48red/vcs_simv                      1524544 bytes, executable
+#   its own compile.log command line carries:
+#     -load /tools_soc/opensrc/python/python-3.9/lib/python3.9/site-packages/cocotb/libs/libcocotbvpi_vcs.so
+#   vcs exit: 0, and no Python error of any kind in the log
+# A BINARY LINKED AGAINST THE WRONG PYTHON'S COCOTB, BUILT WITHOUT A WORD.
+#
+# ================ THE IDENTITY DOES NOT DISTINGUISH IT ================
+# The runner's own source digest is taken over
+#   find dv/auto_dv/env dv/auto_dv/tb dv/auto_dv/isa dv/auto_dv/gen_tb -type f ( -name '*.sv' -o '*.svh' -o
+#   '*.f' -o '*.cc' -o '*.h' -o '*.py' -o '*.yaml' -o '*.sh' )
+# The linked VPI library is not in that set and cannot be, since it lives in a venv outside the clone. So two
+# builds of the same sources against different cocotbs carry the same digest. That is the flow item runtime-2
+# holds, and its premise is this measurement rather than my earlier inference.
+#
+# ================ THE FIX, AND THE THREE ARMS THAT WERE ALREADY PROVED ================
+# gen_require_pinned_cocotb runs BEFORE either consumer (the compile's --lib-name-path and the run's
+# --libpython) and refuses unless all of:
+#   the resolved cocotb-config is the clone's pinned .venv one, compared as RESOLVED directory paths so a
+#     symlinked venv still passes (the shape gen_mirror.venv_info already uses, copied deliberately);
+#   --libpython is non-empty and names a file that exists;
+#   the VPI library the tool names resolves INSIDE the pinned venv.
+# Only then does it export LIBPYTHON_LOC. The export lives inside the guard so a refusing script cannot also
+# export a bad value, and it covers the gate's shape where env.sh never exported one.
+# THE LIBRARY-PATH PREPEND IS DELIBERATELY ABSENT. The Orchestrator's A/B measured it inert: exporting the
+# variable alone passes and prepending the directory alone fails, because cocotb's VPI dlopens libpython by
+# the absolute path in the variable. A measured-inert line has no place in a safety fix.
+#
+# ================ BOTH DIRECTIONS ON ONE COMMAND EACH ================
+# $ the FIXED runner, the SAME shape that produced the silent binary above
+#   gen_tb_local.sh: cocotb-config is /tools_soc/opensrc/python/python-3.9/bin/cocotb-config, not this clone's
+#     pinned venv (/localdev/fzhang/ws/ibex-challenge/.venv/bin/cocotb-config).
+#     A site cocotb-config answers for the pinned one and the build passes against the wrong Python.
+#   exit 1, and no build is attempted
+# $ the FIXED runner, the good shape
+#   exit 0, vcs_simv produced, and its command line carries
+#     -load <clone>/.venv/lib/python3.12/site-packages/cocotb/libs/libcocotbvpi_vcs.so
+#   so the guard costs the working path nothing.
+# $ the export, with the variable unset before the call
+#   before: [<UNSET>]
+#   after : [/tools_soc/opensrc/python/python-3.12.10/lib/libpython3.12.so.1.0]
+# FIVE ARMS were proved on the guard before it was applied, each refusing for its own reason: the real venv
+# passes; a site cocotb-config is refused BY NAME; an empty --libpython is refused; a missing venv is refused;
+# and a pinned cocotb-config whose VPI library resolves outside the venv is refused.
+#
+# ================ THE REGRESSION THIS GUARD ALMOST SHIPPED, CAUGHT BY ITS OWN VERIFICATION ================
+# The first version keyed the expected venv on $ROOT/.venv, the tree the script lives in. That is right for the
+# clone and WRONG FOR EVERY DETACHED ARCHIVE, which is how this team verifies a landing and how the committer
+# assembles a worktree: an archive has no .venv of its own and correctly uses the one ci/env.sh activated.
+# $ the first version, good shape, from a tree assembled from the handed list
+#   compile rc=1   "gen_tb_local.sh: <archive>/.venv/bin does not exist; run ci/setup-venv.sh before building"
+# A guard against building with the wrong cocotb had become a guard against building at all. Nothing in a
+# static check would have shown it: the syntax is fine, the five arms still pass, and the clone still works.
+# It appeared only because the list-only verification runs a REAL compile from the assembled tree.
+# THE FIX is to key on the venv this shell ACTIVATED, falling back to the tree's own:
+#   venv="${VIRTUAL_ENV:-$ROOT/.venv}"
+# which keeps the property that matters - the cocotb-config must belong to an activated venv rather than a site
+# installation, and its VPI library must live inside that same venv - while working wherever the tree sits.
+# $ the fixed version, good shape, from a tree assembled from the handed list
+#   compile rc=0, and a run through the same script: verdict PASS, 0 referee errors
+# $ the fixed version, same tree, venv ACTIVATED but off PATH so the site tool answers
+#   "cocotb-config is /tools_soc/.../python-3.9/bin/cocotb-config, not the activated venv's
+#    (<clone>/.venv/bin/cocotb-config)."   exit 1
+# $ the fixed version, same tree, nothing activated and no .venv in the tree
+#   "no activated venv and no <archive>/.venv; source ci/env.sh or run ci/setup-venv.sh"   exit 1
+# Both refusals are correct and they say different things, which is the point of naming the cause.
+#
+# ================ WHAT THIS DOES NOT CLAIM ================
+# The silent binary does NOT run through this script: the run path's `LIBPY="$(cocotb-config --libpython)" ||
+# exit 1` is a BARE assignment, so the substitution's non-zero status is the assignment's and it already
+# refuses. What is proved here is a silently successful BUILD, not a silently successful RUN through this
+# runner. Whether another runner would execute such a binary is a question about the flow, and after being
+# wrong twice by generalising I am not answering it by inference.
+# Nothing built through the committed script in a NORMAL shell is suspect: with the pinned venv on PATH the
+# behaviour is unchanged, which the good-shape compile above shows.
+# END. Every figure above is produced by the command printed above its block.

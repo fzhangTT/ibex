@@ -20,8 +20,46 @@ sv_string() { sed -n "s/.*\bstring[[:space:]]\+$2[[:space:]]*=[[:space:]]*\"\([^
 flow_flags() { python3 -c "
 import sys; sys.path.insert(0, '$FLOW'); import gen_flow_const as C
 sys.stdout.write('\0'.join(C.VCS_BASE_FLAGS + C.VCS_UVM_FLAGS + C.VCS_COMMON_FLAGS + C.VCS_DEBUG_PP_FLAGS + [C.COCOTB_DEFINE]))"; }
+# The build links cocotb's VPI library and the run loads its libpython. A cocotb-config outside this
+# clone's pinned venv answers --lib-name-path with a working path for a different Python, so the build
+# would pass while linking the wrong cocotb; refuse instead of producing that binary.
+gen_require_pinned_cocotb() {
+  local cc want have venv
+  cc="$(command -v cocotb-config)" || {
+    echo "gen_tb_local.sh: no cocotb-config on PATH; source ci/env.sh in a clone whose .venv exists" >&2; return 1; }
+  # the venv this shell activated, else this tree's own. A detached archive or a fresh worktree has no .venv
+  # of its own and correctly uses the one ci/env.sh activated, so keying on $ROOT alone would refuse every
+  # archive verification the team runs.
+  venv="${VIRTUAL_ENV:-$ROOT/.venv}"
+  want="$(cd "$venv/bin" 2>/dev/null && pwd -P)" || {
+    echo "gen_tb_local.sh: no activated venv and no $ROOT/.venv; source ci/env.sh or run ci/setup-venv.sh" >&2; return 1; }
+  have="$(cd "$(dirname "$cc")" 2>/dev/null && pwd -P)"
+  [ "$have" = "$want" ] || {
+    echo "gen_tb_local.sh: cocotb-config is $cc, not the activated venv's ($want/cocotb-config)." >&2
+    echo "  A site cocotb-config answers for the pinned one and the build passes against the wrong Python." >&2
+    return 1; }
+  local lp vpi venv_real
+  lp="$(cocotb-config --libpython)" || lp=""
+  [ -n "$lp" ] || {
+    echo "gen_tb_local.sh: cocotb-config --libpython is empty ($cc); the run would get LIBPYTHON_LOC=''" >&2; return 1; }
+  [ -e "$lp" ] || {
+    echo "gen_tb_local.sh: cocotb-config --libpython names a missing file: $lp" >&2; return 1; }
+  # the VPI library the simv links must itself live in the pinned venv (the check gen_mirror.venv_info makes),
+  # resolved because a head tree may reach its venv through a symlink
+  vpi="$(cocotb-config --lib-name-path vpi vcs)" || vpi=""
+  venv_real="$(cd "$venv" && pwd -P)"
+  case "$(readlink -f "$vpi" 2>/dev/null)" in
+    "$venv_real"/*) ;;
+    *) echo "gen_tb_local.sh: cocotb VPI library is outside the pinned venv: ${vpi:-<empty>}" >&2; return 1 ;;
+  esac
+  # only a validated cocotb exports: env.sh's own export is silently empty when it is sourced in a worktree
+  # whose venv does not exist yet, and the run then loads no libpython
+  export LIBPYTHON_LOC="$lp"
+  return 0
+}
 case "$MODE" in
   compile)
+    gen_require_pinned_cocotb || exit 1
     if [ -e "$OUT" ]; then
       if [ "${FORCE:-0}" = "1" ]; then rm -rf "$OUT"; else echo "gen_tb_local.sh: OUT exists ($OUT); set FORCE=1 to wipe" >&2; exit 2; fi
     fi
@@ -56,6 +94,7 @@ case "$MODE" in
     echo "vcs exit: $rc" | tee -a "$OUT/compile.log"
     exit $rc ;;
   run)
+    gen_require_pinned_cocotb || exit 1
     NAME="${1:?run name}"; MODULE="${2:?python module}"; shift 2
     [ -x "$OUT/vcs_simv" ] || { echo "gen_tb_local.sh: no simv in $OUT" >&2; exit 2; }
     dir="$OUT/$NAME"; mkdir -p "$dir"
