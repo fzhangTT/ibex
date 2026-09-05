@@ -1,0 +1,124 @@
+a_correction_recorded: my first reading of seed 165313640 sampled the first 400 KB, saw the grant property in it and
+  was about to report the property as firing constantly. It fires 4 times; the flood is two other counters. Every
+  figure here is over a complete log.
+block: 'agent-fix pair: tb-infra-2''s restructured bus driver against the committed agent, on the 4017573 sources'
+build:
+  committed_agent_builds_sources_sha256: fc6a99f777d55b3d... (regress_wave_4017573 and regress_ibus_wave)
+  inputs_sources_sha256: a0c0ea3d6714286ab892c34c5ef501126a5bdb353e4a4e73f0e4f4005cab57e5
+  isolation: a cp -rL copy of the 4017573 mirror behind a guard refusing any destination under the shared mirror family;
+    the shared agent still reads 7f9e7d6cb8b6efa2 after the run
+  outdir: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_agentfixF/build/gen_tb
+  overlay_proved: the build's filelist names the ported path and that file hashes to 7704b99309910ef5; the sources
+    digest differs from both committed-agent builds while the source count is equal at 117, so exactly one file's
+    content differs
+  recorded_as: 'a WORKTREE source with head_sha null: the tree is 4017573 plus an overlay and is not any commit. Built
+    with --allow-stale-mirror, which is what that flag is for.'
+  source_count: 117
+  source_root: /proj_soc/user_dev/fzhang/ibex_dv_mirror_agentfix/4017573_ported
+  status: ok
+committed_agent_baseline:
+  '1207954461':
+    grant_property_firings: 1
+    irq_entry_firings: 258
+    isa_insn_first_cycle: 9290.5
+    uvm_error_message_lines: 693238
+  '165313640':
+    grant_property_firings: 1
+    uvm_error_message_lines: 627
+early_cycles:
+  file: gen_agentfix_early_cycles.txt
+  leads: 'on 165313640 the grant property fires at cycles 76 and 101 BEFORE the first isa mismatch at 111.5, then
+    at 118 and 132 while four checkers cascade at 138.5: the bus anomaly leads the divergence by about 35 cycles'
+  seed_1207954461_first_isa_insn_cycles:
+  - 178.5
+  - 179.5
+  - 182.5
+  - 198.5
+  - 223.5
+economised: 'four runs reduced to two on my proposal and tb-infra-2''s agreement: the committed-agent side is already
+  measured three times per seed (regress_wave_4017573, regress_ibus_wave, redump_4017573), all six figures 1. Across
+  all FORTY wave seeds of the entry the property fires in exactly those two seeds and zero in the other 38, so they
+  are the population and not a sample.'
+kind: evidence about an UNCOMMITTED agent; no property of any commit; no manifest row
+request: 'tb-infra-2''s: one build with its ported gen_agents_pkg.sv overlaid on 4017573''s sources and two runs on
+  the two grant-event seeds. Primary acceptance: the grant-only-with-request property fires ZERO times on both seeds.
+  Secondary, a fact either way: whether the divergence and the wedge survive.'
+resource_cap: a 20 GB cap was armed on the second run BEFORE it started, since the first had written 1.5 GB and the
+  second seed is the larger one. It finished at 738 MB, well inside, so neither count is over a truncated log.
+result:
+  '1207954461':
+    grant_property_firings: 108
+    grant_property_first_cycle: 146.5
+    irq_entry_firings: 5332
+    isa_insn_firings: 37091
+    isa_insn_first_cycle: 178.5
+    reason: assertion_failure at sim.log:44
+    run_dir: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_agentfixF/runs/gen_test_irq_basic_1207954461
+    sim_log_bytes: 737967946
+    top_mechanisms:
+      crash_dump:
+        firings: 37229
+        first_cycle: 297.5
+      isa_insn:
+        firings: 37091
+        first_cycle: 178.5
+      isa_pc:
+        firings: 42074
+        first_cycle: 297.5
+      isa_pc_next:
+        firings: 31494
+        first_cycle: 225.5
+      sva_ibus_outstanding_max:
+        firings: 1640497
+        first_cycle: 291.5
+    uvm_error_message_lines: 1825734
+    verdict: FAIL
+  '165313640':
+    grant_property_firings: 4
+    grant_property_first_cycle: 80.5
+    irq_entry_firings: 11
+    isa_insn_firings: 264940
+    isa_insn_first_cycle: 111.5
+    reason: assertion_failure at sim.log:44
+    run_dir: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_agentfixF/runs/gen_test_irq_basic_165313640
+    sim_log_bytes: 1523479976
+    top_mechanisms:
+      crash_dump:
+        firings: 264939
+        first_cycle: 138.5
+      isa_insn:
+        firings: 264940
+        first_cycle: 111.5
+      isa_pc:
+        firings: 264939
+        first_cycle: 138.5
+      sva_ibus_rvalid_outstanding:
+        firings: 1587709
+        first_cycle: 1885.5
+      sva_rvalid_legal:
+        firings: 1587709
+        first_cycle: 1885.5
+    uvm_error_message_lines: 4294133
+    verdict: FAIL
+retention: 'tb-infra-2 released the two run logs in writing at 2026-09-05T14:34Z; its release names only those two.
+  They are still in place as this record lands and are MOVED to /proj_soc/user_dev/fzhang/ibex_dv_out/trash/agentfixF_runs_released
+  only after it is committed, never removed by an rm on a variable path: a chain can refuse, and a record whose logs
+  are gone cannot be re-verified. gen_agentfix_early_cycles.txt is what survives them, proved faithful while the logs
+  existed: 25 cited line numbers resolved in the files they name and matched the quoted text, zero mismatched, zero
+  unresolved. The re-dump waveforms stay held; rtl-arch has released nothing.'
+served_by: runtime
+served_utc: 2026-09-05T14:21Z
+the_ported_agent:
+  bytes: 47052
+  confirmed_independently: tb-infra-2 derived the same bytes from the clone's history without using my file, reaching
+    the same sha256 and size.
+  derivation: tb-infra-2's fix is written against HEAD; 4017573's agent differs from HEAD's by one commit (9c7f8f6,
+    +8 lines, a comment block). Reverse-applying that hunk gives a file that differs from 4017573's agent by exactly
+    the change's own 73 added / 44 removed.
+  sha256_first16: 7704b99309910ef5
+the_secondary_fact: 'the divergence does not merely survive, it starts earlier: on 1207954461 the first isa_insn mismatch
+  moves from cycle 9290.5 to 178.5, about 9100 cycles earlier, with irq_entry 258 -> 5332; 165313640 diverges 101
+  times on the committed agent and 264,940 times from cycle 111.5 on the ported one. So the restructure is not a candidate
+  for the wedge''s cause.'
+verdict_against_the_acceptance: FAILS on both seeds. The property fires 4 and 108 times against an acceptance of zero,
+  and against 1 and 1 on the committed agent.

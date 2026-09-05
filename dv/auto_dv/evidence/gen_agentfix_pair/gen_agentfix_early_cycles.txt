@@ -1,0 +1,53 @@
+# Early-cycle excerpt of the ported-agent runs (runtime-2, 2026-09-05T14:24:22Z)
+#
+# WHY IT EXISTS. tb-infra-2 asked for these lines and released the two sim logs (1.5 GB and 738 MB) once
+# they were pulled, so that it can build a LOCAL fixture reproducing the failure before touching the driver
+# again. After the release this excerpt is the only surviving record of those early cycles.
+#
+# THE FILTER, named rather than left to be inferred: only UVM_ERROR lines are shown, and the end-of-run
+# 'UVM_ERROR : <count>' summary line is excluded, which is the same counting rule the pair record uses.
+# Lines are reproduced IN FULL, not truncated. Line numbers are 1-based into each run's own sim.log.
+#
+# The 'ported agent' is tb-infra-2's restructured bus driver, sha256 7704b99309910ef5, built on 4017573's
+# sources. The committed agent fires the grant property ONCE in each of these two seeds and produces 627
+# and 693,238 UVM_ERROR lines against 4,294,133 and 1,825,734 here.
+
+## seed 165313640: the first 20 real UVM_ERROR lines, in file order
+## source /proj_soc/user_dev/fzhang/ibex_dv_out/regress_agentfixF/runs/gen_test_irq_basic_165313640/sim.log
+
+  sim.log:45: UVM_ERROR @ 80500: reporter [sva_ibus_gnt_only_with_req] GEN_PROTO sva_ibus_gnt_only_with_req: protocol property violated at cycle 76
+  sim.log:48: UVM_ERROR @ 105500: reporter [sva_ibus_gnt_only_with_req] GEN_PROTO sva_ibus_gnt_only_with_req: protocol property violated at cycle 101
+  sim.log:50: UVM_ERROR /proj_soc/user_dev/fzhang/ibex_dv_mirror_agentfix/4017573_ported/dv/auto_dv/env/gen_rvfi_pkg.sv(260) @ 111500: uvm_test_top.env.sb [isa_insn] insn model=8ffffdb7 dut=00000000 (order=2 pc=80000100 insn=00000000 trap=1 intr=0 rd=x0/00000000 mem=00000000 w0000 r1111 mode=3 cyc=106)
+  sim.log:51: UVM_ERROR /proj_soc/user_dev/fzhang/ibex_dv_mirror_agentfix/4017573_ported/dv/auto_dv/env/gen_rvfi_pkg.sv(260) @ 111500: uvm_test_top.env.sb [isa_trap] dut trapped, model retired 1 trap=0 cause=00000000 (order=2 pc=80000100 insn=00000000 trap=1 intr=0 rd=x0/00000000 mem=00000000 w0000 r1111 mode=3 cyc=106)
+  sim.log:54: UVM_ERROR @ 122500: reporter [sva_ibus_gnt_only_with_req] GEN_PROTO sva_ibus_gnt_only_with_req: protocol property violated at cycle 118
+  sim.log:57: UVM_ERROR @ 136500: reporter [sva_ibus_gnt_only_with_req] GEN_PROTO sva_ibus_gnt_only_with_req: protocol property violated at cycle 132
+  sim.log:59: UVM_ERROR /proj_soc/user_dev/fzhang/ibex_dv_mirror_agentfix/4017573_ported/dv/auto_dv/env/gen_rvfi_pkg.sv(260) @ 138500: uvm_test_top.env.sb [isa_pc] pc model=80000104 dut=80000000 (order=3 pc=80000000 insn=00000c93 trap=0 intr=0 rd=x25/00000000 mem=00000000 w0000 r1111 mode=3 cyc=133)
+  sim.log:60: UVM_ERROR /proj_soc/user_dev/fzhang/ibex_dv_mirror_agentfix/4017573_ported/dv/auto_dv/env/gen_rvfi_pkg.sv(260) @ 138500: uvm_test_top.env.sb [isa_insn] insn model=104d8d93 dut=00000c93 (order=3 pc=80000000 insn=00000c93 trap=0 intr=0 rd=x25/00000000 mem=00000000 w0000 r1111 mode=3 cyc=133)
+  sim.log:61: UVM_ERROR /proj_soc/user_dev/fzhang/ibex_dv_mirror_agentfix/4017573_ported/dv/auto_dv/env/gen_rvfi_pkg.sv(260) @ 138500: uvm_test_top.env.sb [isa_rd] rd model=x27/8ffff104 dut=x25/00000000 (order=3 pc=80000000 insn=00000c93 trap=0 intr=0 rd=x25/00000000 mem=00000000 w0000 r1111 mode=3 cyc=133)
+  sim.log:62: UVM_ERROR /proj_soc/user_dev/fzhang/ibex_dv_mirror_agentfix/4017573_ported/dv/auto_dv/env/gen_rvfi_pkg.sv(260) @ 138500: uvm_test_top.env.sb [isa_pc_next] pc_next model=80000108 dut=80000004 (order=3 pc=80000000 insn=00000c93 trap=0 intr=0 rd=x25/00000000 mem=00000000 w0000 r1111 mode=3 cyc=133)
+  sim.log:63: UVM_ERROR /proj_soc/user_dev/fzhang/ibex_dv_mirror_agentfix/4017573_ported/dv/auto_dv/env/gen_checkers_pkg.sv(435) @ 138500: uvm_test_top.env.misc_mon [crash_dump] crash_dump exception_pc/exception_addr 80000100/00000000 at order 2: model mepc/mtval 00000000/00000000, previous 00000000/00000000, next 00000000/00000000
+  sim.log:64: UVM_ERROR /proj_soc/user_dev/fzhang/ibex_dv_mirror_agentfix/4017573_ported/dv/auto_dv/env/gen_rvfi_pkg.sv(260) @ 139500: uvm_test_top.env.sb [isa_pc] pc model=80000108 dut=80000004 (order=4 pc=80000004 insn=00000b93 trap=0 intr=0 rd=x23/00000000 mem=00000000 w0000 r1111 mode=3 cyc=134)
+  sim.log:65: UVM_ERROR /proj_soc/user_dev/fzhang/ibex_dv_mirror_agentfix/4017573_ported/dv/auto_dv/env/gen_rvfi_pkg.sv(260) @ 139500: uvm_test_top.env.sb [isa_insn] insn model=8ffffd37 dut=00000b93 (order=4 pc=80000004 insn=00000b93 trap=0 intr=0 rd=x23/00000000 mem=00000000 w0000 r1111 mode=3 cyc=134)
+  sim.log:66: UVM_ERROR /proj_soc/user_dev/fzhang/ibex_dv_mirror_agentfix/4017573_ported/dv/auto_dv/env/gen_rvfi_pkg.sv(260) @ 139500: uvm_test_top.env.sb [isa_rd] rd model=x26/8ffff000 dut=x23/00000000 (order=4 pc=80000004 insn=00000b93 trap=0 intr=0 rd=x23/00000000 mem=00000000 w0000 r1111 mode=3 cyc=134)
+  sim.log:67: UVM_ERROR /proj_soc/user_dev/fzhang/ibex_dv_mirror_agentfix/4017573_ported/dv/auto_dv/env/gen_rvfi_pkg.sv(260) @ 139500: uvm_test_top.env.sb [isa_pc_next] pc_next model=8000010c dut=80000008 (order=4 pc=80000004 insn=00000b93 trap=0 intr=0 rd=x23/00000000 mem=00000000 w0000 r1111 mode=3 cyc=134)
+  sim.log:68: UVM_ERROR /proj_soc/user_dev/fzhang/ibex_dv_mirror_agentfix/4017573_ported/dv/auto_dv/env/gen_checkers_pkg.sv(435) @ 139500: uvm_test_top.env.misc_mon [crash_dump] crash_dump exception_pc/exception_addr 80000100/00000000 at order 3: model mepc/mtval 00000000/00000000, previous 00000000/00000000, next 00000000/00000000
+  sim.log:69: UVM_ERROR /proj_soc/user_dev/fzhang/ibex_dv_mirror_agentfix/4017573_ported/dv/auto_dv/env/gen_rvfi_pkg.sv(260) @ 140500: uvm_test_top.env.sb [isa_pc] pc model=8000010c dut=80000008 (order=5 pc=80000008 insn=00000000 trap=1 intr=0 rd=x0/00000000 mem=00000000 w0000 r1111 mode=3 cyc=135)
+  sim.log:70: UVM_ERROR /proj_soc/user_dev/fzhang/ibex_dv_mirror_agentfix/4017573_ported/dv/auto_dv/env/gen_rvfi_pkg.sv(260) @ 140500: uvm_test_top.env.sb [isa_insn] insn model=100d0d13 dut=00000000 (order=5 pc=80000008 insn=00000000 trap=1 intr=0 rd=x0/00000000 mem=00000000 w0000 r1111 mode=3 cyc=135)
+  sim.log:71: UVM_ERROR /proj_soc/user_dev/fzhang/ibex_dv_mirror_agentfix/4017573_ported/dv/auto_dv/env/gen_rvfi_pkg.sv(260) @ 140500: uvm_test_top.env.sb [isa_trap] dut trapped, model retired 1 trap=0 cause=00000000 (order=5 pc=80000008 insn=00000000 trap=1 intr=0 rd=x0/00000000 mem=00000000 w0000 r1111 mode=3 cyc=135)
+  sim.log:72: UVM_ERROR /proj_soc/user_dev/fzhang/ibex_dv_mirror_agentfix/4017573_ported/dv/auto_dv/env/gen_checkers_pkg.sv(435) @ 140500: uvm_test_top.env.misc_mon [crash_dump] crash_dump exception_pc/exception_addr 80000100/00000000 at order 4: model mepc/mtval 00000000/00000000, previous 00000000/00000000, next 00000000/00000000
+
+## seed 165313640: the first 5 sva_ibus_gnt_only_with_req firings, with cycles
+
+  sim.log:45: cycle 80.5  UVM_ERROR @ 80500: reporter [sva_ibus_gnt_only_with_req] GEN_PROTO sva_ibus_gnt_only_with_req: protocol property violated at cycle 76
+  sim.log:48: cycle 105.5  UVM_ERROR @ 105500: reporter [sva_ibus_gnt_only_with_req] GEN_PROTO sva_ibus_gnt_only_with_req: protocol property violated at cycle 101
+  sim.log:54: cycle 122.5  UVM_ERROR @ 122500: reporter [sva_ibus_gnt_only_with_req] GEN_PROTO sva_ibus_gnt_only_with_req: protocol property violated at cycle 118
+  sim.log:57: cycle 136.5  UVM_ERROR @ 136500: reporter [sva_ibus_gnt_only_with_req] GEN_PROTO sva_ibus_gnt_only_with_req: protocol property violated at cycle 132
+
+## seed 1207954461: the first 5 isa_insn lines
+## source /proj_soc/user_dev/fzhang/ibex_dv_out/regress_agentfixF/runs/gen_test_irq_basic_1207954461/sim.log
+
+  sim.log:46: cycle 178.5  UVM_ERROR /proj_soc/user_dev/fzhang/ibex_dv_mirror_agentfix/4017573_ported/dv/auto_dv/env/gen_rvfi_pkg.sv(260) @ 178500: uvm_test_top.env.sb [isa_insn] insn model=30429073 dut=88828293 (order=17 pc=8000013c insn=88828293 trap=0 intr=0 rd=x5/7fff0110 mem=7fff0110 w0000 r1111 mode=3 cyc=173)
+  sim.log:48: cycle 179.5  UVM_ERROR /proj_soc/user_dev/fzhang/ibex_dv_mirror_agentfix/4017573_ported/dv/auto_dv/env/gen_rvfi_pkg.sv(260) @ 179500: uvm_test_top.env.sb [isa_insn] insn model=a5c302b7 dut=30429073 (order=18 pc=80000140 insn=30429073 trap=0 intr=0 rd=x0/00000000 mem=7ffefe0c w0000 r1111 mode=3 cyc=174)
+  sim.log:51: cycle 182.5  UVM_ERROR /proj_soc/user_dev/fzhang/ibex_dv_mirror_agentfix/4017573_ported/dv/auto_dv/env/gen_rvfi_pkg.sv(260) @ 182500: uvm_test_top.env.sb [isa_insn] insn model=00128293 dut=a5c302b7 (order=19 pc=80000144 insn=a5c302b7 trap=0 intr=0 rd=x5/a5c30000 mem=a5c30000 w0000 r1111 mode=3 cyc=177)
+  sim.log:53: cycle 198.5  UVM_ERROR /proj_soc/user_dev/fzhang/ibex_dv_mirror_agentfix/4017573_ported/dv/auto_dv/env/gen_rvfi_pkg.sv(260) @ 198500: uvm_test_top.env.sb [isa_insn] insn model=005da023 dut=00128293 (order=20 pc=80000148 insn=00128293 trap=0 intr=0 rd=x5/a5c30001 mem=a5c30001 w0000 r1111 mode=3 cyc=193)
+  sim.log:60: cycle 223.5  UVM_ERROR /proj_soc/user_dev/fzhang/ibex_dv_mirror_agentfix/4017573_ported/dv/auto_dv/env/gen_rvfi_pkg.sv(260) @ 223500: uvm_test_top.env.sb [isa_insn] insn model=00800293 dut=005da023 (order=21 pc=8000014c insn=005da023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=218)
