@@ -65,3 +65,33 @@ Sections 1 to 3's findings were fixed. Its verification matches mine (58 at the 
 parser's 58 tokens, T9's arithmetic, T10 against the pair record). Its Medium is M-1, found by it, verified by me and adopted; its Lows
 are L-2 to L-5 above; L-1 is mine and not in its list. Verdict as stated: REQUEST-CHANGES confined to M-1; the tool itself and the
 citation convention are approved as they stand, and the lift is the DV Lead's touch correcting T8's cell.
+
+## 6. The T8 touch at b5f499e, 398727a..b5f499e: M-1 closed, the tool gains its self-test; REQUEST-CHANGES lifted (2026-09-05T18:48:42Z; Sections 1-5 unchanged)
+
+Artifacts at b5f499e: gen_tb_defects.md (the T8 cell), gen_register_cites.py (150 lines changed); no review of b5f499e exists at HEAD, so none is read here. Method: a detached worktree of
+b5f499e: the tool with no argument (the pin read from the record's header), --verbose, --self-test, the prose-citation probe of Section 3
+repeated, and an archive with an empty git init for the refusal; the T8 cell read against the blobs Sections 8 and 9 of the counters
+record already read; findings fixed before any review of b5f499e (register/preread_b5f499e.txt).
+
+- M-1 CLOSED: T8's cell now reads "FIXED IN TWO STEPS" and names both commits with their arithmetic, c045115's sum-qualified form at
+  gen_protocol_props.sv:133 and :135 (the form T9 calls defective, the one-low offset kept) and ac2d306's decrement gated on a positive
+  count at :135-138, and says why both are named; that is what the blobs say and what the counters record's Sections 8 and 9 read. The
+  four new table entries pin those lines at their commits and the tool resolves them (62 citations checked at the pin, PASS).
+- L-2 CLOSED for the self-test: --self-test passes four cases (the table resolves at the pin; a moved line fails through the resolution
+  half; a citation the table does not carry fails through the coverage half; an absent pin is refused and reported as the pin, not as bad
+  citations). Nothing in the tree invokes the tool as a gate yet; the tool now takes no argument so a gate can, and the invocation is the
+  DV Lead's next step, not a row here.
+- L-3 CLOSED: an archive with an empty git init refuses with exit 2 and names the commits it cannot carry, "unchecked rather than wrong".
+  L-4 CLOSED: --verbose prints one line per citation, 62 of them. L-5 answered: the commit message states that the three "reads now"
+  lines came from the verify script's own git show, not from the tool, which is what my run of the shipped tool showed.
+- L-1 OPEN: the reverse scan still reads the table rows; the same well-formed prose citation appended to a copy passes unexamined
+  (62 checked, PASS). Owed as before.
+- L-6 (Low, records; DV Lead): the header (:21) reads "every other citation was read at 398727a, the record's own last commit"; after
+  this touch the record's last commit is b5f499e, so the clause is false by one commit while the pin itself stays right (no cited file
+  moved). Say "read at 398727a" and drop the clause, or let the tool's self-test pin the header's commit against git log.
+- The T8 entries pin per commit in-row, so the header pin is untouched, as the convention intends.
+
+A reconciliation follows as a further line if a review of b5f499e lands and the Orchestrator asks for one.
+
+CRITIC VERDICT: APPROVE on 398727a..b5f499e. The REQUEST-CHANGES of this file's opening verdict, confined to M-1, is LIFTED; L-1 and L-6 are owed
+to the DV Lead's next touch of the register or the tool.
