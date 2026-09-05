@@ -138,7 +138,7 @@ FSM ibex_load_store_unit.ls_fsm_cs: 10 states+transitions
 FSM ibex_load_store_unit.cap_rx_fsm_q: 7 states+transitions
 ASSERT ibex_register_file_ff: 3 of 3 found: ['g_cheriot_rf.CheriotRaddrAMSBClear', 'g_cheriot_rf.CheriotRaddrBMSBClear', 'g_cheriot_rf.CheriotWaddrMSBClear']
 
-Emitted 1424 entry lines in 41 (module, metric) scopes to /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/excl/gen_exclusions.el
+Emitted 1424 entry lines in 41 (module, metric) scopes to dv/auto_dv/excl/gen_exclusions.el
 A.8 carve-back filter removed 3 emitted lines:
   - ibex_register_file_ff: Condition 67 "2391767907" "(g_cheriot_rf.cheriot_enabled ? ((raddr_a_i[3:0] == '0) ? g_cheriot_rf.rcap_r0 : g_cheriot_rf.rf_shared[raddr_a_i[3:0]]) : CapWordZeroVal) 1 -1" (2 "1
   - ibex_register_file_ff: Condition 70 "2882321518" "(g_cheriot_rf.cheriot_enabled ? ((raddr_b_i[3:0] == '0) ? g_cheriot_rf.rcap_r0 : g_cheriot_rf.rf_shared[raddr_b_i[3:0]]) : CapWordZeroVal) 1 -1" (2 "1

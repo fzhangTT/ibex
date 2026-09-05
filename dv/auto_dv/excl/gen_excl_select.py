@@ -1084,7 +1084,9 @@ def main():
             lines.extend(scope + [""])
     Path(a.out).write_text("\n".join(lines) + "\n")
     report.append("")
-    report.append(f"Emitted {total} entry lines in {len(groups)} (module, metric) scopes to {a.out}")
+    # report paths repo-relative: an absolute clone path is not reproducible for another reader
+    out_rel = str(Path(a.out).resolve()).replace(str(C.REPO_ROOT.resolve()) + "/", "")
+    report.append(f"Emitted {total} entry lines in {len(groups)} (module, metric) scopes to {out_rel}")
     if dropped:
         report.append(f"Dropped {len(dropped)} entries refuted by a strict load (covered in the reference vdb; kept in coverage):")
         report.extend("  - " + d[:200] for d in dropped)
