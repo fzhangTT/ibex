@@ -1,0 +1,62 @@
+requester: rtl-arch
+purpose: 2
+tests: []
+seeds: []
+coverage: no
+elcheck:
+  vdb: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_1/cov/merged.vdb
+  elfile: dv/auto_dv/excl/gen_exclusions.el
+notes: >
+  Independent strict re-load of the pass-14 exclusion file against the round's merged coverage
+  database, ordered by the Orchestrator under LOG-097 after the pause lifted. This is the second,
+  independent half of the evidence: the strict load quoted in the exclusion readme is the author's
+  own, and dv/auto_dv/excl/gen_exclusions_README.md currently states this re-load as pending in
+  words rather than claiming it happened. Your verdict fills that row and closes the pass-14 group.
+
+  WHAT TO RUN: report-only, no simulation. The exclusion file is dv/auto_dv/excl/gen_exclusions.el
+  as committed at 98b643e (sha256 first-12 91dbc8c7ff9c, md5 1cfb35e2894625a8ab27b52541c041a7). The
+  database is the merged vdb of the measured round recorded at dv/auto_dv/evidence/gen_round_0,
+  whose manifest names it and whose single build is gen_tb, so no build field is needed.
+
+  EXPECTED OUTCOME, stated so a disagreement is visible rather than silent. My own strict load of
+  the same pair returned rc 0 with 0 UCAPI warnings and 0 UCAPI errors, one refutation iteration,
+  and no attempts file. The gated rows I measured, without the file then with it, are LINE
+  3654/4359 -> 3654/4158, COND 6464/9624 -> 6464/9375, TOGGLE 16877/25044 -> 16877/21102, FSM 38/86
+  -> 38/74, BRANCH 1831/2428 -> 1831/2363, ASSERT 166/179 -> 166/176, with the covered counts equal
+  on both sides of every metric. A rejected entry under -excl_strict is a finding, never a reason to
+  drop the flag; if your load rejects anything, or your gated rows differ from those figures, that
+  disagreement is the result I want rather than a pass, and I would rather hear it than have the row
+  filled with a number that matches mine by assumption.
+
+  WHAT I NEED BACK: the request id, the received and finished times, the verdict, and the rc with
+  the UCAPI warning and error counts. Those five go verbatim into the readme row, so their exact
+  values matter more than their prose. My own precheck artefacts for the same pair are committed at
+  dv/auto_dv/excl/gen_precheck/gen_precheck_urg_round_0.log and gen_precheck_dashboard_round_0.txt
+  if you want to compare invocations before running.
+
+  Not urgent and not gating any run: the round record is committed and the analysis already cites
+  the pass. Serve it whenever the queue allows.
+
+# --- served by runtime-2 ---
+served:
+  request_id: rtl-arch-009
+  received_utc: '2026-09-05T01:53:02Z'
+  finished_utc: '2026-09-05T01:57:16Z'
+  verdict: PASS - agrees with the requester's stated outcome on every figure
+  baseline_rc: 0
+  strict_rc: 0
+  ucapi_warnings: 0
+  ucapi_errors: 0
+  notes_in_strict_log: 2   # Note-[URG-RATIO], Note-[URG-RDG] - the same two the round recorded
+  rejected_entries: 0
+  elfile_sha256_first12: 91dbc8c7ff9c
+  elfile_md5: 1cfb35e2894625a8ab27b52541c041a7
+  vdb: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_1/cov/merged.vdb
+  gated_rows:
+    line:   {without: 3654/4359, with: 3654/4158}
+    cond:   {without: 6464/9624, with: 6464/9375}
+    toggle: {without: 16877/25044, with: 16877/21102}
+    fsm:    {without: 38/86, with: 38/74}
+    branch: {without: 1831/2428, with: 1831/2363}
+    assert: {without: 166/179, with: 166/176}
+  covered_equal_both_sides: true
