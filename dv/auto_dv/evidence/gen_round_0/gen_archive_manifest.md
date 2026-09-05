@@ -30,6 +30,24 @@ Sources, both under `/proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_1/cov`:
 | `gen_round_0_merged_vdb.tar.gz` | `cov/merged.vdb` | 51 |
 | `gen_round_0_urg_report.tar.gz` | `cov/report` | 92 |
 
+## Served-request records retained beside the round
+
+The `gen_elcheck_rtl_arch_*.yaml` files here are the REQUESTS rtl-arch filed. The four files below
+are the flow's own RESULTS manifests for the same requests, retained byte-identical to the copies the
+run queue wrote under `dv/auto_dv/work/runtime/results/rtl-arch-<n>/manifest.yaml`, so a reader of the
+commit has both halves without following a path into a directory git does not track. No header was
+added to them: their sha256 is the generated file's, and that is what makes the retention checkable.
+
+| file | bytes | sha256 |
+|---|---|---|
+| `gen_results_rtl_arch_004.yaml` | 11574 | `8626d2d5263da56ef27ec84a8c1e1665433efeed1f83df4a4b410308d05b8499` |
+| `gen_results_rtl_arch_005.yaml` | 11645 | `5a0394820ab563b0f18296c67a464476363b9ac805bf69c12e94c376beee285e` |
+| `gen_results_rtl_arch_006.yaml` | 11401 | `d12235b6e454d82d66c491d49f9bd68773c6f37659c4dcaffafbce4059c52cbd` |
+| `gen_results_rtl_arch_007.yaml` | 11179 | `a4ef886ca86a6953cddcea0315f0349c3aa0065b140867ef6d1a04d6d339c306` |
+
+Each records the request echo, the purpose text, the runs the request produced and their verdicts.
+The elcheck request beside it names the vdb and exclusion file the check loaded.
+
 ## Reproducibility
 
 Both archives were built with a fixed member order and fixed metadata, then compressed without a

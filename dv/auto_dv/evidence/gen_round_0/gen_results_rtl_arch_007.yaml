@@ -1,0 +1,318 @@
+request: rtl-arch-007
+request_file: /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/runtime/requests/rtl-arch-007.yaml
+received_utc: '2026-09-03T09:50:02Z'
+request_echo:
+  requester: rtl-arch
+  purpose: 2
+  tests: []
+  seeds: []
+  coverage: true
+  component: exclusion-file
+  elcheck:
+    vdb: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_rebaseline/cov_unmeasured/merged.vdb
+    elfile: /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/excl/gen_exclusions.el
+  notes: 'Supersedes rtl-arch-006. File md5 9b642ef57393d8b3af8de9485a8f6f88 at filing (1421 entry lines,
+    492 annotation groups); the sorted entry set equals the rtl-arch-006 file exactly, only annotation
+    texts changed. rtl-arch pre-check pass 13: urg rc 0, 0 warnings/errors, attempts file no. Manifest
+    path only, please.
+
+    '
+out_root: /proj_soc/user_dev/fzhang/ibex_dv_out
+requester: rtl-arch
+purpose: 2
+purpose_text: 'TB component change: smoke tier + the tests that exercise the component + mutation runs'
+scope:
+  purpose: 2
+  kind: elcheck
+  component: exclusion-file
+  vdb: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_rebaseline/cov_unmeasured/merged.vdb
+  elfile: /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/excl/gen_exclusions.el
+  tests: []
+  seed_count: 0
+notes: 'Supersedes rtl-arch-006. File md5 9b642ef57393d8b3af8de9485a8f6f88 at filing (1421 entry lines,
+  492 annotation groups); the sorted entry set equals the rtl-arch-006 file exactly, only annotation texts
+  changed. rtl-arch pre-check pass 13: urg rc 0, 0 warnings/errors, attempts file no. Manifest path only,
+  please.
+
+  '
+scope_decision: accepted
+status: done
+elcheck_outdir: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_req_rtl-arch-007
+elcheck:
+  kind: elcheck
+  vdb: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_rebaseline/cov_unmeasured/merged.vdb
+  elfile: /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/excl/gen_exclusions.el
+  elfile_sha256: 3a815ffc68358b5e4499af0d45106936bbd9d3173350be076805ccd8f5331839
+  scopes_from: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_rebaseline/build/gen_smoke/build_manifest.yaml
+  dut_scopes:
+  - gen_smoke_tb_top.u_dut.u_ibex_core
+  - gen_smoke_tb_top.u_dut.u_register_file
+  info_scopes:
+  - gen_smoke_tb_top.u_dut
+  with_elfile:
+    status: ok
+    merged_vdb: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_req_rtl-arch-007/cov_elcheck/merged.vdb
+    report_dir: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_req_rtl-arch-007/cov_elcheck/report
+    dashboard_txt: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_req_rtl-arch-007/cov_elcheck/report/dashboard.txt
+    merge_log: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_req_rtl-arch-007/cov_elcheck/merge.log
+    urg_rc: 0
+    urg_wall_s: 3.5
+    urg_timed_out: false
+    urg_cmd: urg -full64 -format both -dbname /proj_soc/user_dev/fzhang/ibex_dv_out/regress_req_rtl-arch-007/cov_elcheck/merged.vdb
+      -report /proj_soc/user_dev/fzhang/ibex_dv_out/regress_req_rtl-arch-007/cov_elcheck/report -log /proj_soc/user_dev/fzhang/ibex_dv_out/regress_req_rtl-arch-007/cov_elcheck/merge.log
+      -show ratios -dir /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_rebaseline/cov_unmeasured/merged.vdb
+      -elfile /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/excl/gen_exclusions.el -excl_strict -dump
+      full_exclusions
+    input_vdbs:
+    - /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_rebaseline/cov_unmeasured/merged.vdb
+    elfiles:
+    - /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/excl/gen_exclusions.el
+    excl_strict: true
+    exclusion_violations: []
+    full_exclusions_dump:
+    - /proj_soc/user_dev/fzhang/ibex_dv_out/regress_req_rtl-arch-007/cov_elcheck/full_exclusions/fullexclude.assert
+    - /proj_soc/user_dev/fzhang/ibex_dv_out/regress_req_rtl-arch-007/cov_elcheck/full_exclusions/fullexclude.branch
+    - /proj_soc/user_dev/fzhang/ibex_dv_out/regress_req_rtl-arch-007/cov_elcheck/full_exclusions/fullexclude.cond
+    - /proj_soc/user_dev/fzhang/ibex_dv_out/regress_req_rtl-arch-007/cov_elcheck/full_exclusions/fullexclude.fsm
+    - /proj_soc/user_dev/fzhang/ibex_dv_out/regress_req_rtl-arch-007/cov_elcheck/full_exclusions/fullexclude.line
+    - /proj_soc/user_dev/fzhang/ibex_dv_out/regress_req_rtl-arch-007/cov_elcheck/full_exclusions/fullexclude.tgl
+    - /proj_soc/user_dev/fzhang/ibex_dv_out/regress_req_rtl-arch-007/cov_elcheck/full_exclusions/fullexclude_module.assert
+    - /proj_soc/user_dev/fzhang/ibex_dv_out/regress_req_rtl-arch-007/cov_elcheck/full_exclusions/fullexclude_module.branch
+    - /proj_soc/user_dev/fzhang/ibex_dv_out/regress_req_rtl-arch-007/cov_elcheck/full_exclusions/fullexclude_module.cond
+    - /proj_soc/user_dev/fzhang/ibex_dv_out/regress_req_rtl-arch-007/cov_elcheck/full_exclusions/fullexclude_module.fsm
+    - /proj_soc/user_dev/fzhang/ibex_dv_out/regress_req_rtl-arch-007/cov_elcheck/full_exclusions/fullexclude_module.line
+    - /proj_soc/user_dev/fzhang/ibex_dv_out/regress_req_rtl-arch-007/cov_elcheck/full_exclusions/fullexclude_module.tgl
+    totals:
+      line: 40.78
+      cond: 27.33
+      toggle: 8.66
+      fsm: 8.11
+      branch: 33.91
+      assert: 80.34
+      group: n/a
+      score: 33.19
+      ratios:
+        line: 1694/4154
+        cond: 2547/9319
+        toggle: 1994/23016
+        fsm: 6/74
+        branch: 798/2353
+        assert: 143/178
+      tests_in_report: 1
+      columns_reported:
+      - line
+      - cond
+      - toggle
+      - fsm
+      - branch
+      - assert
+    dut_scope:
+      gen_smoke_tb_top.u_dut.u_ibex_core:
+        line: 39.66
+        cond: 27.34
+        toggle: 8.24
+        fsm: 8.11
+        branch: 32.34
+        assert: 82.08
+        group: n/a
+        score: 32.96
+        ratios:
+          line: 1596/4024
+          cond: 2504/9160
+          toggle: 1678/20364
+          fsm: 6/74
+          branch: 726/2245
+          assert: 142/173
+        instance: gen_smoke_tb_top.u_dut.u_ibex_core
+        excl_marker: (x)
+      gen_smoke_tb_top.u_dut.u_register_file:
+        line: 75.38
+        cond: 27.04
+        toggle: 1.72
+        fsm: n/a
+        branch: 66.67
+        assert: 50.0
+        group: n/a
+        score: 44.16
+        ratios:
+          line: 98/130
+          cond: 43/159
+          toggle: 4/232
+          branch: 72/108
+          assert: 1/2
+        instance: gen_smoke_tb_top.u_dut.u_register_file
+        excl_marker: (x)
+    info_scope:
+      gen_smoke_tb_top.u_dut:
+        line: 40.78
+        cond: 27.33
+        toggle: 8.66
+        fsm: 8.11
+        branch: 33.91
+        assert: 81.71
+        group: n/a
+        score: 33.42
+        ratios:
+          line: 1694/4154
+          cond: 2547/9319
+          toggle: 1994/23016
+          fsm: 6/74
+          branch: 798/2353
+          assert: 143/175
+        instance: gen_smoke_tb_top.u_dut
+        excl_marker: null
+    gate_row:
+      line: 40.78
+      cond: 27.33
+      toggle: 8.17
+      fsm: 8.11
+      branch: 33.91
+      assert: 81.71
+      group: n/a
+      score: n/a
+      ratios:
+        line: 1694/4154
+        cond: 2547/9319
+        toggle: 1682/20596
+        fsm: 6/74
+        branch: 798/2353
+        assert: 143/175
+      combined_from:
+      - gen_smoke_tb_top.u_dut.u_ibex_core
+      - gen_smoke_tb_top.u_dut.u_register_file
+      rule: sum of covered and of total objects per metric over the gated scopes (disjoint subtrees, never
+        nested); percent = 100 * covered / total
+    limited_design: false
+    merge_rc: 0
+    merge_warnings: []
+  without_elfile:
+    status: ok
+    merged_vdb: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_req_rtl-arch-007/cov_plain/merged.vdb
+    report_dir: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_req_rtl-arch-007/cov_plain/report
+    dashboard_txt: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_req_rtl-arch-007/cov_plain/report/dashboard.txt
+    merge_log: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_req_rtl-arch-007/cov_plain/merge.log
+    urg_rc: 0
+    urg_wall_s: 2.7
+    urg_timed_out: false
+    urg_cmd: urg -full64 -format both -dbname /proj_soc/user_dev/fzhang/ibex_dv_out/regress_req_rtl-arch-007/cov_plain/merged.vdb
+      -report /proj_soc/user_dev/fzhang/ibex_dv_out/regress_req_rtl-arch-007/cov_plain/report -log /proj_soc/user_dev/fzhang/ibex_dv_out/regress_req_rtl-arch-007/cov_plain/merge.log
+      -show ratios -dir /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_rebaseline/cov_unmeasured/merged.vdb
+    input_vdbs:
+    - /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_rebaseline/cov_unmeasured/merged.vdb
+    elfiles: []
+    excl_strict: false
+    exclusion_violations: []
+    full_exclusions_dump: []
+    totals:
+      line: 38.93
+      cond: 26.63
+      toggle: 7.4
+      fsm: 6.98
+      branch: 33.0
+      assert: 79.01
+      group: n/a
+      score: 31.99
+      ratios:
+        line: 1694/4351
+        cond: 2547/9566
+        toggle: 1994/26958
+        fsm: 6/86
+        branch: 798/2418
+        assert: 143/181
+      tests_in_report: 1
+      columns_reported:
+      - line
+      - cond
+      - toggle
+      - fsm
+      - branch
+      - assert
+    dut_scope:
+      gen_smoke_tb_top.u_dut.u_ibex_core:
+        line: 37.81
+        cond: 26.62
+        toggle: 6.92
+        fsm: 6.98
+        branch: 31.43
+        assert: 82.08
+        group: n/a
+        score: 31.97
+        ratios:
+          line: 1596/4221
+          cond: 2504/9407
+          toggle: 1678/24236
+          fsm: 6/86
+          branch: 726/2310
+          assert: 142/173
+        instance: gen_smoke_tb_top.u_dut.u_ibex_core
+        excl_marker: null
+      gen_smoke_tb_top.u_dut.u_register_file:
+        line: 75.38
+        cond: 27.04
+        toggle: 1.32
+        fsm: n/a
+        branch: 66.67
+        assert: 20.0
+        group: n/a
+        score: 38.08
+        ratios:
+          line: 98/130
+          cond: 43/159
+          toggle: 4/302
+          branch: 72/108
+          assert: 1/5
+        instance: gen_smoke_tb_top.u_dut.u_register_file
+        excl_marker: null
+    info_scope:
+      gen_smoke_tb_top.u_dut:
+        line: 38.93
+        cond: 26.63
+        toggle: 7.4
+        fsm: 6.98
+        branch: 33.0
+        assert: 80.34
+        group: n/a
+        score: 32.21
+        ratios:
+          line: 1694/4351
+          cond: 2547/9566
+          toggle: 1994/26958
+          fsm: 6/86
+          branch: 798/2418
+          assert: 143/178
+        instance: gen_smoke_tb_top.u_dut
+        excl_marker: null
+    gate_row:
+      line: 38.93
+      cond: 26.63
+      toggle: 6.85
+      fsm: 6.98
+      branch: 33.0
+      assert: 80.34
+      group: n/a
+      score: n/a
+      ratios:
+        line: 1694/4351
+        cond: 2547/9566
+        toggle: 1682/24538
+        fsm: 6/86
+        branch: 798/2418
+        assert: 143/178
+      combined_from:
+      - gen_smoke_tb_top.u_dut.u_ibex_core
+      - gen_smoke_tb_top.u_dut.u_register_file
+      rule: sum of covered and of total objects per metric over the gated scopes (disjoint subtrees, never
+        nested); percent = 100 * covered / total
+    limited_design: false
+    merge_rc: 0
+    merge_warnings: []
+  excluded_counts_gate_row:
+    line: 197
+    cond: 247
+    toggle: 3942
+    fsm: 12
+    branch: 65
+    assert: 3
+  verdict: ok
+serve_wall_s: 6.5
+finished_utc: '2026-09-03T09:50:08Z'
