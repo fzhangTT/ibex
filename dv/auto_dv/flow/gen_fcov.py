@@ -58,7 +58,7 @@ SECTION_START_RE = re.compile(r"^(Summary for (Variable|Group|Cross)\b|Variables
 BINS_TITLE_RE = re.compile(r"^(Uncovered bins|Covered bins|Bins)\s*$")   # "Bins": urg's title when every bin is covered
 TUPLE_TOKEN_RE = re.compile(r"\[[^\]]*\]|\S+")   # a bracketed component (possibly multi-valued) or a bare token
 CHECKER_MODE = "--report-dir on the variable-form grpinfo.txt derived by gen_fcov (cross rows named by their tuple)"
-# The checker's own per-test urg command and isolation regexes, re-typed here because ci/ is the owner's (Q-017); the
+# The checker's own per-test urg command and isolation regexes, re-typed here because ci/ belongs to another owner; the
 # self-test parses ci/check_fcov_expectations.py and asserts these copies equal its source, so drift fails loud.
 URG_PER_TEST_ARGV = ("urg", "-full64", "-dir", "<vdb>", "-format", "text", "-report", "<report>", "-tests", "<sel_file>")
 ISOLATION_TOTAL_RE = r"Total tests in report: (\d+)"

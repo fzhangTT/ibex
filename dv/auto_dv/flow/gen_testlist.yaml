@@ -14,7 +14,7 @@
 #   description            one line
 #   tier                   smoke | targeted | full (a test is in its tier and every higher tier), or
 #                          check: build/elaboration checks outside the measured tiers (--tier check
-#                          or by name only; must be measured: false; Critic R-01)
+#                          or by name only; must be measured: false, so it never reaches a merge)
 #   build                  key into builds
 #   uvm_test               value of +UVM_TESTNAME (null = the TB top has no UVM test class)
 #   plusargs               list of "+name=value" strings from the testlist entry
@@ -39,12 +39,12 @@
 #                          runs (default: pruned after the manifest, paths recorded in result.yaml)
 #   component              TB component this test exercises (purpose-2 selection)
 #   measured               default true; false = mutation-evidence or forced-error test that never
-#                          enters a measured coverage merge (separate vdb tree, Critic ruling R-5.5)
+#                          enters a measured coverage merge; its coverage goes to a separate vdb tree
 schema_version: 1
 
 # Policies (flow-enforced):
 #   fcov_manifest_required_tiers: tiers whose MEASURED tests must carry an fcov_expectation_file (a null
-#     manifest there FAILs the run at merge time; Critic P-07); an entry with measured: false contributes no
+#     manifest there FAILs the run at merge time); an entry with measured: false contributes no
 #     coverage and is exempt, as is tier check.
 #   debug_only_plusargs: knob names that never run in a measured run, coverage on or off (tb-arch
 #     P6: probe P6, the CSR debug compare, the P9 icache lookup probe); a measured run enabling one

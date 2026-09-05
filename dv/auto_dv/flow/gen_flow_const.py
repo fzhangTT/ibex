@@ -149,9 +149,15 @@ SELFTEST_TMP_ENV = "GEN_DV_SELFTEST_TMP"   # reviewer override: a private scratc
 def selftest_tmp() -> str:
     """Scratch parent for self-tests: under the runtime work tree (or the directory GEN_DV_SELFTEST_TMP
     names explicitly), never the shared /tmp (F-001)."""
-    root = Path(os.environ[SELFTEST_TMP_ENV]) if os.environ.get(SELFTEST_TMP_ENV) else SELFTEST_TMP
+    root = selftest_tmp_path()
     root.mkdir(parents=True, exist_ok=True)
     return str(root)
+
+
+def selftest_tmp_path() -> Path:
+    """The same path without creating it: a caller that only needs the location, such as a guard root computed on
+    a production path, must not leave a directory behind as a side effect of asking."""
+    return Path(os.environ[SELFTEST_TMP_ENV]) if os.environ.get(SELFTEST_TMP_ENV) else SELFTEST_TMP
 
 
 REQUESTS_DIR = WORK_DIR / "requests"
@@ -463,7 +469,7 @@ B8_PROBE_RULE = (f"LOG-067 (name per LOG-076): the B8 probe assertion knob {B8_P
                  "unmeasured B8 evidence runs; a measured entry that sets it is refused at load, a measured run whose effective plusargs "
                  "(entry plus operator) turn it on is refused before it starts, and a canary build whose knob table or probe source "
                  "defaults it on (or records no default) refuses measured dispatch")
-# LOG-077 (plan-owner ruling Q-018): a measured run whose effective plusargs, or the knob table's default, set a trigger knob to
+# LOG-077: a measured run whose effective plusargs, or the knob table's default, set a trigger knob to
 # one of the listed values counts for the plan only with the required knob on (a plusarg, or the table default); the loader
 # refuses such an entry and gen_run refuses such a run before the job, operator plusargs included. Two rows, the tag and
 # data-RAM ECC rates; the bit-count knob gets none because it injects nothing without a rate. A later condition of the

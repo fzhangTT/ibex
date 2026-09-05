@@ -212,7 +212,7 @@ def remove_tree_guarded(path: Path, roots: tuple[Path, ...], what: str) -> int:
 
 def remove_selftest_tree(path: Path) -> int:
     """A self-test removes only what it created under the self-test scratch root (GEN_DV_SELFTEST_TMP or the default)."""
-    return remove_tree_guarded(path, (Path(C.selftest_tmp()),), "self-test dir")
+    return remove_tree_guarded(path, (C.selftest_tmp_path(),), "self-test dir")
 
 
 def git_head() -> dict[str, Any]:
@@ -1127,8 +1127,9 @@ def knobs_module() -> Any:
 
 
 def export_facts() -> dict[str, Any]:
-    """What a build of this source tree can export, copied row for row from the rendered table (plan sunset
-    trigger C-3): export_sources = [{source, event, fields}] (one exact event per row, no wildcards) and
+    """What a build of this source tree can export, copied row for row from the rendered table so the sunset
+    decision reads observed rows rather than declared ones: export_sources = [{source, event, fields}] (one
+    exact event per row, no wildcards) and
     export_knobs = {plusarg: compiled default} for the gen_export_* knobs."""
     k = knobs_module()
     rows = [{"source": str(r[0]), "event": str(r[1]), "fields": [str(f) for f in (r[2] if len(r) > 2 else [])]}

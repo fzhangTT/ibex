@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Shared-storage mirror of the clone for LSF jobs that need the clone's files on the compute
-host (intervention log Q-012 default): rsync of the source subset, a Python venv built ON shared
+host, which is the default: rsync of the source subset, a Python venv built ON shared
 storage with ci/setup-venv.sh semantics, the spike install, and a manifest (git HEAD, content
 hash of the run-time-consumed files) so a stale mirror fails loud at build and run time.
 
@@ -72,7 +72,7 @@ def export_head(stage: Path, sha: str | None = None) -> str:
     if stage.exists():
         # The self-test root is a valid staging home too, so an export can be exercised from a checkout whose
         # work directory does not exist.
-        U.remove_tree_guarded(stage, (C.WORK_DIR, head_family(), Path(C.selftest_tmp())), "export staging dir")
+        U.remove_tree_guarded(stage, (C.WORK_DIR, head_family(), C.selftest_tmp_path()), "export staging dir")
     stage.mkdir(parents=True)
     specs = git_pathspecs()
     tar = stage.parent / (stage.name + ".tar")
