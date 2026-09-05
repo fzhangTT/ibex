@@ -187,6 +187,21 @@ def main():
             check("the mirror is the enum, not the knob value set",
                   got is not None and set(got) != set(knob_vals) and all(k.startswith("GEN_IRQ_HOLD_") for k in got),
                   f"knob values {knob_vals}")
+            # comment stripping, on synthetic declarations rather than the committed one, which carries no
+            # comment. The expectation is a hand-written tuple: an oracle that re-derived it with the
+            # implementation's own regex would agree with a wrong parse, which is how this defect survived.
+            import tempfile
+            cg = load_module("gen_knobs_codegen", CODEGEN)
+            for body, expect_names, label in (
+                    ("A_ONE,  // a comment, with a comma\n  A_TWO, A_THREE", ("A_ONE", "A_TWO", "A_THREE"), "line comment containing a comma"),
+                    ("B_ONE, /* block, comment */ B_TWO", ("B_ONE", "B_TWO"), "block comment containing a comma"),
+                    ("C_ONE, C_TWO", ("C_ONE", "C_TWO"), "no comment (control)")):
+                d = Path(tempfile.mkdtemp())
+                (d / "x.sv").write_text("typedef enum {%s} my_e;\n" % body)
+                parsed = cg.sv_enum_members(d / "x.sv", "my_e")
+                check(f"enum parse: {label}", tuple(parsed) == expect_names, f"got {tuple(parsed)}, want {expect_names}")
+                check(f"enum ordinals: {label}", list(parsed.values()) == list(range(len(expect_names))), f"got {list(parsed.values())}")
+
             check("the two namespaces really do disagree on until_taken",
                   knob_vals.index("until_taken") != want["GEN_IRQ_HOLD_UNTIL_TAKEN"],
                   "if these ever agree, this guard has stopped proving anything")

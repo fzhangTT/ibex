@@ -173,8 +173,9 @@ package gen_fcov_pkg;
     // of that record. The pin levels come from the irq agent's own events, kept here per line.
     gen_irq_entry_cg irq_entry_cg;
     int unsigned n_irq_entry = 0;
-    int unsigned n_irq_mret_masked = 0;
-    int unsigned n_irq_mret_entry = 0, n_irq_mret_newbin_entry = 0;   // mrets that mask a pending enabled line: the one case with no bin
+    int unsigned n_irq_mret_masked = 0;   // mrets that mask a pending enabled line: the one case with no bin
+    int unsigned n_irq_mret_entry = 0, n_irq_mret_newbin_entry = 0;
+    bit          prev_trapped = 0;   // the previous record trapped, so an entry cleared MIE inside it
     bit irq_view_ok = 0;   // this record had a published view sample
     int unsigned n_irq_entry_rel = 0;   // second samples carrying only the pre/post mip relation
     gen_rvfi_txn irq_last_t; bit irq_have_t = 0;      // the record the state below belongs to
@@ -442,7 +443,8 @@ package gen_fcov_pkg;
     // bin is an mret that leaves MIE at 0, which is not a change.
     function void irq_mie_global_sample(gen_model_state st);
       // An entry record's pre-state is what the ENTRY left, not the interrupted instruction's: a trap
-      // clears MIE unconditionally (rtl/ibex_cs_registers.sv:924) and retires no record of its own, so the
+      // clears MIE for a non-debug entry (rtl/ibex_cs_registers.sv:924, inside else if (!debug_mode_i) at
+      // :918) and, for an rvfi_intr record, retires no record of its own, so the
       // previous record here is the instruction that was interrupted, whose MIE was necessarily set.
       // is_trap is NOT the same case: that record's own pre-state really is its predecessor's.
       bit was  = st.is_intr ? 1'b0 : irq_mstatus_prev[ibex_pkg::CSR_MSTATUS_MIE_BIT];
@@ -452,7 +454,8 @@ package gen_fcov_pkg;
       int v = -1;
       if (irq_pend_cg == null) return;
       if (st.is_mret) begin
-        if (!pend || st.prv != ibex_pkg::PRIV_LVL_M) return;
+        // an mret that itself TRAPPED did not perform the return, so its post-state is the entry's, not MPIE's
+        if (!pend || st.prv != ibex_pkg::PRIV_LVL_M || st.is_trap) return;
         // Four combinations of MIE before and MPIE, keyed the way this coverpoint's other four bins are
         // keyed: edge direction crossed with pending. 0->1 is a set edge, 0->0 and 1->1 are not edges, and
         // 1->0 is a CLEAR edge that no bin names yet, so it must not fall into the stays-clear bin.
@@ -462,9 +465,13 @@ package gen_fcov_pkg;
                            : -1;
         if (v < 0) n_irq_mret_masked++;   // the clear edge: an mret that masks a pending enabled line
         if (st.is_intr) n_irq_mret_entry++;   // an mret that IS a handler's first instruction
-        // the invariant rev56's Major turned on: nothing booked into the stays-set bin may be an entry
-        // record, because an entry leaves MIE clear. A non-zero reading here is the same defect returning.
-        if (st.is_intr && v == GEN_FC_IRQ_PENDING_MODEL_CP_MIE_GLOBAL_EDGE_MRET_MIE1_MPIE1_PENDING)
+        // The invariant: nothing booked into the stays-set bin may follow an entry,
+        // because an entry leaves MIE clear. It must witness BOTH routes, and the asymmetry is why one term
+        // cannot: an EXCEPTION is taken BY an instruction, so its clear lands inside that instruction's own
+        // published state and shows up as the PREVIOUS record having trapped; an INTERRUPT is taken BETWEEN
+        // instructions, so its clear lands in no record at all and shows up only as THIS record's entry flag.
+        // Keying on the entry flag alone made this counter blind to the first route by construction.
+        if ((st.is_intr || prev_trapped) && v == GEN_FC_IRQ_PENDING_MODEL_CP_MIE_GLOBAL_EDGE_MRET_MIE1_MPIE1_PENDING)
           n_irq_mret_newbin_entry++;
       end else if (st.wrote_mstatus && was != now) begin
         v = now ? (pend ? GEN_FC_IRQ_PENDING_MODEL_CP_MIE_GLOBAL_EDGE_SET_PENDING
@@ -495,7 +502,7 @@ package gen_fcov_pkg;
       irq_mtvec_have = 1;
       irq_rst_record(st, t);
       irq_off_take();
-      irq_mie_prev = st.mie; irq_mstatus_prev = st.mstatus;
+      irq_mie_prev = st.mie; irq_mstatus_prev = st.mstatus; prev_trapped = st.is_trap;
     endfunction
 
     // ---- IRQ step 1: CG-IRQ-010 gen_irq_debug_interplay_cg -----------------------------------------------
@@ -2893,6 +2900,9 @@ package gen_fcov_pkg;
         if ((n_irq_edge + n_irq_access + n_irq_mie) > 0 && irq_pend_cg.get_coverage() == 0.0) `uvm_error("GEN_FCOV_REF", "gen_irq_pending_model_cg sampled without coverage")
         if (n_irq_dbg > 0 && irq_dbg_cg.get_coverage() == 0.0) `uvm_error("GEN_FCOV_REF", "gen_irq_debug_interplay_cg sampled without coverage")
         if ((n_irq_rst + n_irq_off) > 0 && irq_rst_cg.get_coverage() == 0.0) `uvm_error("GEN_FCOV_REF", "gen_irq_reset_fetch_en_cg sampled without coverage")
+        // the two-route invariant, as an ERROR rather than a print: a booking into the stays-set bin that
+        // follows an entry cannot be right, and a counter that only prints cannot fail a run
+        if (n_irq_mret_newbin_entry > 0) `uvm_error("GEN_FCOV_REF", $sformatf("%0d mret sample(s) booked into mret_mie1_mpie1_pending after an entry (this record an interrupt entry, or the previous record trapped): the pre-state cannot have been set", n_irq_mret_newbin_entry))
         if (n_pmp_acc > 0 && pmp_acc_cg.get_coverage() == 0.0) `uvm_error("GEN_FCOV_REF", "gen_pmp_csr_access_cg sampled without coverage")
         if (n_pmp_tbl > 0 && pmp_tbl_cg.get_coverage() == 0.0) `uvm_error("GEN_FCOV_REF", "gen_pmp_table_state_cg sampled without coverage")
         if (n_pmp_cfg > 0 && pmp_cfg_cg.get_coverage() == 0.0) `uvm_error("GEN_FCOV_REF", "gen_pmp_cfg_write_cg sampled without coverage")

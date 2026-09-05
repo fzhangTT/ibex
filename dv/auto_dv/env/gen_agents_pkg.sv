@@ -521,6 +521,14 @@ package gen_agents_pkg;
     if (line <= 17) return ibex_pkg::CSR_MFIX_BIT_LOW + (line - 3);
     return -1;
   endfunction
+  // A line BITMAP mapped to the mie/mip bits those lines occupy. A message that prints a line bitmap
+  // beside a raw mie word invites comparing bit n of one against bit n of the other, which is wrong for
+  // every line: line 0 is enabled by bit 3, not bit 0. Printing both lets a reader see the mapping.
+  function automatic logic [31:0] gen_irq_lines_to_mie_bits(logic [18:0] lines);
+    logic [31:0] bits = '0;
+    for (int l = 0; l < 18; l++) if (lines[l]) bits[gen_irq_mie_bit(l)] = 1'b1;
+    return bits;   // line 18 (NM) has no mie bit and is deliberately not mapped
+  endfunction
   // mcause lower_cause of an interrupt entry -> line bit (-1: not a line, e.g. NMI)
   function automatic int gen_irq_line_of_cause(int unsigned lower_cause);
     for (int l = 0; l < 18; l++) if (gen_irq_mie_bit(l) == lower_cause) return l;

@@ -117,7 +117,17 @@ package gen_checkers_pkg;
             gen_chk_en(cfg, cfg.chk_irq_masked, cfg.chk_irq_masked_set))
           `uvm_error("irq_masked", $sformatf("interrupt entry (mcause %08h) while MIE=0 in M-mode at order %0d", st.mcause, st.order))
       end
-      // entry bound: expectations older than GEN_IRQ_ENTRY_BOUND_RECORDS records
+      // entry bound: expectations older than GEN_IRQ_ENTRY_BOUND_RECORDS records. The bound measures the
+      // INTERRUPT PATH, so a record on which the DUT was right to withhold must not spend it. That has to be
+      // decided PER RECORD, before the expiry test: a mask that lifts before the bound expires (the global
+      // enable does, exactly at the mret) would otherwise leave the whole masked window already charged, and a
+      // restart tested only at expiry never sees it. Measured: every fire reports mstatus with MIE already
+      // restored, so a restart at expiry cannot help.
+      begin
+        bit masked = nmi_mode || st.debug_mode ||
+                     (!st.mstatus[ibex_pkg::CSR_MSTATUS_MIE_BIT] && st.prv == ibex_pkg::PRIV_LVL_M);
+        if (masked) foreach (expects[i]) expects[i].order_at = st.order;
+      end
       foreach (expects[i]) begin
         if (st.order - expects[i].order_at > GEN_IRQ_ENTRY_BOUND_RECORDS) begin
           // still enabled? (the line may have been released or masked meanwhile)
@@ -131,8 +141,8 @@ package gen_checkers_pkg;
             expect_fail++;
             if (gen_chk_en(cfg, expects[i].nmi ? cfg.chk_nmi_entry : cfg.chk_irq_entry, expects[i].nmi ? cfg.chk_nmi_entry_set : cfg.chk_irq_entry_set))
               `uvm_error(expects[i].nmi ? "nmi_entry" : "irq_entry",
-                         $sformatf("lines %05h raised at cycle %0d (order %0d) not taken within %0d records (now order %0d, mie %08h mstatus %08h)",
-                                   expects[i].lines, expects[i].cycle, expects[i].order_at, GEN_IRQ_ENTRY_BOUND_RECORDS, st.order, st.mie, st.mstatus))
+                         $sformatf("lines %05h (enable bits %08h) raised at cycle %0d (order %0d) not taken within %0d records (now order %0d, mie %08h mstatus %08h)",
+                                   expects[i].lines, gen_irq_lines_to_mie_bits(expects[i].lines), expects[i].cycle, expects[i].order_at, GEN_IRQ_ENTRY_BOUND_RECORDS, st.order, st.mie, st.mstatus))
           end
           expects.delete(i);
           break;

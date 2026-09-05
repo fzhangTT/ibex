@@ -1,0 +1,107 @@
+# gen_fu_l52_irq_entry_bound.log -- the irq_entry bound, its message, and an invariant that could not witness
+# itself (TB Infra, 2026-09-05). Feature group "irq checker fix".
+#
+# THE ONE BUILD EVERY FIGURE COMES FROM
+# $ bash dv/auto_dv/tb/gen_tb_local.sh compile <root>/dv/auto_dv/out_l52c     compile rc=0
+#
+# ================ THE DEFECT, FROM THE CHECKER'S OWN COMMENT ================
+# The arm restarts an expectation's bound whenever a mask is present, and says why: "NMI mode and debug mode
+# mask every line: the expectation is neither judged nor forgotten, its bound restarts when the mask lifts".
+# The GLOBAL ENABLE is the third mask and had no such treatment: it appeared once, in the fire condition at
+# expiry, and never in the restart. Every record of a handler has it clear (hardware entry clears it, only the
+# mret restores it), so the bound accrued over records on which the DUT was RIGHT to withhold.
+# THE MEASUREMENT THAT MADE IT DECIDABLE was the Test Writer's, not mine: sixteen firing runs, every
+# raise-to-fire distance 18 to 23 against a bound of 17 and a masked window of 19 (a two-instruction vector
+# stub plus a seventeen-instruction handler). The count of ENABLED records with the line pending is zero in
+# every row, and it said plainly that this is zero BY CONSTRUCTION rather than by observation, because nothing
+# retains a per-record trace. A lost interrupt grows without limit; this is a fixed 1-to-6 overshoot.
+# It also measured BOTH of the terms I had left unexcluded out of existence: zero compressed instructions of
+# any kind in the emitted program, so no expansion commit phase, and nothing entering debug or single step.
+#
+# ================ MY FIRST FIX COULD NOT HAVE WORKED, AND THE RED FOUND IT BEFORE I CLAIMED ANYTHING =========
+# I added the global enable as a third mask to the EXISTING restart. That restart sits INSIDE the expiry test,
+# so it runs only once the bound has already expired.
+# $ A/B on a long-handler fixture, same plusargs
+#   committed  9 fires     "fixed"  9 fires, same order 665
+# WHY, measured rather than reasoned: every fire reports mstatus 00000088, MIE bit 3 SET. That mask lifts
+# exactly at the mret and the bound expires just after, so a restart tested at expiry never sees it. The
+# existing NMI/debug restart works only because those modes persist for many records and the expiry check
+# lands inside the masked period; it has the same latent weakness.
+#
+# ================ THE STRUCTURAL FIX: DO NOT ACCRUE, RATHER THAN RESTART ================
+# A per-record step BEFORE the expiry test advances every expectation's baseline while masked, covering all
+# three masks rather than adding a third special case. In U mode a line is takeable whatever the bit says
+# (ibex_controller.sv:490), so the term is qualified on M mode.
+# $ the same fixture, the same plusargs, on the final build
+#   committed 9 fires  ->  fixed 0 fires, and ZERO UVM_ERROR of any kind
+# THE FIXED RUN STILL FAILS AND I AM NOT CALLING IT A PASS: its verdict reason is "cocotb_summary" (the storm
+# program not reaching tohost), where the committed run's is "uvm_error at sim.log:32". A different reason.
+#
+# ================ PROVING IT DOES NOT BLIND THE CHECKER, WHICH MATTERED MORE THAN THE RED ================
+# MUTATION MUT-IRQWITHHOLD in gen_dut_top.sv: the core's external interrupt input tied low, so the pin reaches
+# the checker but never the design - a genuine never-taken enabled interrupt.
+# $ on the STORM fixture      CATCH 0, ABLATE 0
+#   NOT a demonstration, and reported as a failure to demonstrate rather than as success: under a storm,
+#   entries are back to back so unmasked stretches never reach the bound.
+# $ on a QUIET single-line fixture   CATCH 1, ABLATE 0 (+gen_chk_irq_entry=0)
+#   "lines 00004 (enable bits 00000800) raised at cycle 588 (order 120) not taken within 17 records
+#    (now order 138, mie 7fff0888 mstatus 00000088"
+#   The fixed checker DOES still fire on a genuine withhold, and the named rule is what fired.
+# Reverted byte-identical: gen_dut_top.sv md5 56041635e557a5531283918982a3f37f before and after, no marker.
+#
+# ================ A CONSEQUENCE THAT SHOULD BE DECIDED KNOWINGLY, NOT DISCOVERED ================
+# The bound now fires only on 18 or more CONSECUTIVE UNMASKED records. Under a heavy storm this checker is
+# therefore LESS SENSITIVE than it was: the storm arm of the mutation above shows exactly that, a genuine
+# withheld interrupt producing no fire because no unmasked stretch is long enough. That is deliberate, since
+# the bound is meant to measure the interrupt path, but it is a real reduction and it is with the DV Lead.
+#
+# ================ THE MESSAGE PRINTED TWO NUMBERING SCHEMES SIDE BY SIDE ================
+# It printed the line bitmap beside the raw enable word with no mapping, and a reader comparing bit n of one
+# against bit n of the other gets the wrong answer for every line: line 0's enable is bit 3. That misreading
+# cost the Orchestrator, runtime-2 and me an exchange each and produced a wrong premise in a review row.
+# The message now prints both, through a helper placed BESIDE the line-to-bit function it is built from
+# (gen_agents_pkg.sv) rather than as a second copy of the mapping inside the checker - adding a second copy of
+# a mapping to fix a message about that mapping would have been the wrong instinct even though it was smaller.
+# $ the quiet-fixture fire above: "lines 00004 (enable bits 00000800)" - line 2 -> bit 11. Correct.
+#
+# ================ AN INVARIANT THAT COULD NOT WITNESS ITSELF (rev57 Major, the DV Lead's finding) ==========
+# The counter I added in landing 49 TO PROVE that fix was gated on the entry flag - the very flag the fix
+# turns on - so a booking arriving by any other route incremented nothing and it would have read zero while
+# being violated. The DV Lead found it and named it better than I would have: an invariant counter that shares
+# the defect's own gating term cannot witness it. Same shape as the two-build comparison landing 49 retracts.
+# TWO ROUTES, AND THE ASYMMETRY IS WHY ONE TERM CANNOT COVER BOTH. An EXCEPTION is taken BY an instruction, so
+# the entry's clear lands inside that instruction's own published state and shows up as the PREVIOUS record
+# having trapped. An INTERRUPT is taken BETWEEN instructions, so the clear lands in no record at all and shows
+# up only as THIS record's entry flag. It now keys on (st.is_intr || prev_trapped).
+# AND IT IS NOW A REFEREE ERROR, NOT A PRINT (rev57's Major, the same collected-mechanism property rev53 asked
+# of the PMP readback counter): a nonzero value raises GEN_FCOV_REF and fails the run.
+# IT CANNOT BE EXERCISED TODAY, AND I AM STATING THAT RATHER THAN PRESENTING THE CORRECTION AS MEASURED:
+# nothing books into that bin at all in any current program, so the counter reads zero either way. That is
+# precisely why its previous form's zero was uninformative, and it is the honest limit of this evidence.
+#
+# ================ rev57's OTHER ROWS ================
+#   Low: the trailing comment at the counter declarations belonged to a different counter; moved.
+#   Low: the review reference removed from the invariant's comment; the mechanism stated instead.
+#   Low: the "unconditionally" citation now carries the debug term and says "for an rvfi_intr record".
+#   Low: a trapping mret is excluded from the arm - an mret that itself trapped did not perform the return.
+#   Minor-2: the comment-stripping parser had no COMMITTED test and its unit test re-derived with the
+#   implementation's own regex. There are now three committed cases whose expectation is a HAND-WRITTEN tuple,
+#   because an oracle sharing the implementation's parser agrees with a wrong parse, which is how the defect
+#   survived. RED against the pre-fix parser (9a42c17^), same three cases:
+#     line comment with a comma    FAIL  got ('A_ONE', '// a comment', 'with a comma\n  A_TWO', 'A_THREE')
+#     block comment with a comma   FAIL  got ('B_ONE', '/* block', 'comment */ B_TWO')
+#     no comment (control)         PASS  got ('C_ONE', 'C_TWO')
+#   The control passing is what makes the two failures evidence rather than a broken harness.
+#
+# ================ GATES AND SMOKES ================
+# $ four smokes on the build above, verdicts from each run's own verdict.txt
+#   storm PASS ref 0 irq_entry 0 | lines PASS ref 0 irq_entry 0 | dbgstorm PASS ref 0 irq_entry 0 |
+#   fetchen PASS ref 0 irq_entry 0
+# $ GEN_UT_KNOBS_CODEGEN PASS (0 failures), including the three new cases and their ordinal checks
+#
+# ================ OWED, NOT IN THIS TOUCH ================
+# The Test Writer flagged one seed firing 258 times where the others fire 1 to 17, at the same distances. It
+# should collapse to zero with the rest; that is a pass criterion for runtime-2's re-run of the thirteen after
+# this commits, not something I can measure locally. If it does not collapse, that seed is saying something
+# the arithmetic does not and I report it rather than declaring the fix good on the other fifteen.
+# END. Every figure above is produced by the command printed above its block.
