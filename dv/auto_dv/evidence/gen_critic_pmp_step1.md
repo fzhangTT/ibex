@@ -301,3 +301,43 @@ dv_principles.md sha256 d9c27db18f511411, unchanged.
 CRITIC VERDICT: APPROVE for 4cd3ff6 and 2956a8a. The REQUEST-CHANGES of Section 5 on 2d87642..5db73d4 is LIFTED on
 this record: the pmp-step1 group stands approved with L-2 (form v3), L-7 and L-8 owed as disclosed. Sections 1-6
 above are byte-identical to the 2897920 commit (136a1e78eb187626).
+
+## Section 8. Reconciliation of Section 7 with the cross-model re-review rev53 (written 2026-09-05T09:57:11Z)
+
+Artifact: dv/auto_dv/reviews/2026-09-05-claude-diff-d15d969d-2956a8a8.md, committed 33d0f28, sha256 0b1ede8af0bdc020,
+43 lines, verdict APPROVE-WITH-CHANGES, read after Section 7 was committed at ba304f4 (my withdrawal to fold this section into the hand crossed
+the commit and is void; HOLD sent before this edit). Exposure before Section 7: none of rev53's rows.
+
+Agreement. rev53 verifies the same RTL terms (the effective lock at :1463, the address enables at :1475-1481, the
+byte legalisation at :1429-1446, is_mml_m_exec_cfg's operand order and set), the census (the same EVERY/SOME/NEVER
+splits, the ten predicted rows, the fifteen non-predicted movers, the two bins leaving every-seed), the disclosures
+and the retention digests, all of which Section 7 reproduces from the run directories and the listings. Its Low 1
+(pmp_stored_byte keeps the mode bits verbatim, right only at PMPGranularity 0) is the fact Section 7.2 states; the ask
+to write the assumption at the function is taken as L-9. Verdict words agree in substance: both approve the group.
+
+Rows Section 7 did not carry, adopted after verifying the mechanism, my miss stated where it is one:
+- L-10 (Low, sampler; adopted from rev53 Minor 1, verified; MY MISS). The cfg cp_outcome arms at gen_fcov_pkg.sv:2462-
+  2470 (at 2956a8a) decide by the readback: a locked entry under RLB=0 rewritten with a byte whose legalised value
+  equals the pre byte reads post == pre == exp, fails "ignored" (needs exp != pre) and "w_dropped" (needs exp != the
+  masked attempt), and is booked written, although pmp_cfg_we is 0 for that entry (rtl/ibex_cs_registers.sv:1423-1424)
+  and the plan's cr_lock_outcome line (gen_fcov_plan.md:2521 at 2956a8a) carries ignore_bins locked_rlb0_written
+  "the lock always wins when RLB=0". It is the coincidence I closed for the
+  address sampler as L-4 and did not re-check on the cfg arms in 7.2. No declared bin becomes false (written is hit by
+  real writes at every seed), so Low: decide by the pre-state rule first (pre_b[7] && !rlb is ignored, exec-locked
+  under MML is ignored_mml_exec) and let the readback confirm, as the address arm does.
+- L-11 (Low, collected mechanism; adopted from rev53 Minor 2, verified). n_pmp_addr_readback_odd (:2398, :2509) reaches
+  only the UVM_LOW summary line at :2879 and no GEN_FCOV_REF line (the referee block at :2880-2906 has 26 such lines
+  and none names it), so a disagreement between the RTL-derived rule and the readback cannot fail a run; the l44 log
+  calls it "the mechanism that would say if it ever did". Add the referee line (dv_principles.md section 2).
+- L-12 (Low, plan and sampler semantics; adopted from rev53 Minor 3, verified). The plan's cp_first_after_reset
+  (gen_fcov_plan.md:2588 at 2956a8a) is titled "no prior write to this CSR since reset" while its yes bin says "first
+  access since reset"; the sampler clears pmp_first_acc[cls] after every sampled access, trapped and read-only
+  included (:2267), per class rather than per CSR. The choice only under-counts, and cr_reset_read.rst_pmpcfg and
+  rst_pmpaddr read 0 of N in all three entries in both blocks with neither log saying whether that is stimulus or the
+  any-access clearing. Reconcile the plan wording and state the chosen semantics.
+- L-13 (Low, records; adopted from rev53 Low 2, verified). The 4cd3ff6 commit message says "The address sampler orders
+  the written test first"; the code decides the two lock rules first and written is the else branch (:2504-2506), as
+  the l44 log's MINOR-2 text says. Correct in the next record touching the group.
+
+Disagreement: none. Verdict unchanged: APPROVE for 4cd3ff6 and 2956a8a, the Section 5 REQUEST-CHANGES lifted, with
+L-2 (form v3), L-7, L-8 and L-9..L-13 owed as disclosed.
