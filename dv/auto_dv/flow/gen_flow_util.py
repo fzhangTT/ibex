@@ -989,7 +989,8 @@ def self_test() -> int:
         and bool(dv) and not Path(dv).is_absolute() and ".." not in Path(dv).parts
     ok &= cond
     print("SELF-TEST", "ok " if cond else "BAD", f"export_file_for (export default): groups {list(C.EXPORT_DEFAULT_FEATURE_GROUPS)} default to {dv}; an entry naming its own keeps it; others get none: {got}")
-    # A-002 diagnostics name the two causes apart: a path that is not there and a path that is a file.
+    # The guard refuses to delete anything it was not pointed at deliberately (owner ruling A-002); its two
+    # refusals must read apart, so a missing path and a path that is a file are never the same message.
     msgs = []
     for target in (rg / "gone", C.ENV_SH):
         buf = io.StringIO()
