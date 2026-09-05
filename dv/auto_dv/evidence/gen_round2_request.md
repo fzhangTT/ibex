@@ -355,7 +355,8 @@ own favour: gen_fcov_plan.md Section 0, the "Seeds against the guarantee" rule, 
 current declared sets were calibrated over, and no manifest carries the field today, so under the plan's own
 words all fifteen are capped at their calibrated count and NONE at forty. The blocks above are what those
 entries were measured over; they are not the field the rule reads. So this paragraph is the evidence for a
-future cap and not a licence for Section 3.5's twelve, and the licence arrives when the field does. THE CAP
+future cap and not a licence for Section 3.5's twelve, and the licence arrives when the field does. The inputs digest those documents carry, and what a reader can and cannot recompute from it, is recorded
+in dv/auto_dv/evidence/gen_plan_digest_provenance.md. THE CAP
 IS APPLIED BY HAND TODAY: the plan places it in a single testlist-header value beside
 fcov_manifest_required_tiers (the same Section 0 rule), and that value is absent from gen_testlist.yaml:59,
 so nothing in the flow reads it and a reviewer checks this by hand until it exists. Until that lands the
@@ -372,7 +373,7 @@ this form records rather than re-argues, each with its status at this commit.
 
 | # | condition | status |
 |---|---|---|
-| a | the irq_entry checker item classified and fixed | fixed at b9e5fad; rev60 APPROVE-WITH-CHANGES with rows owed; the Critic's re-verdict REQUEST-CHANGES confined to one records sentence; OPEN on the gating record: gen_critic_irq_checker_fix.md for 65b7cb0..b9e5fad still reads REQUEST-CHANGES confined to M-3, and the only record of the lift is a clause in the Critic's form verdict at 55d784a, which is not that artifact. The append to the gating record is requested; this row says CLOSED and names that record when it lands. rev60's rows are owed inside fix 3 |
+| a | the irq_entry checker item classified and fixed | fixed at b9e5fad; rev60 APPROVE-WITH-CHANGES with rows owed; the Critic's re-verdict REQUEST-CHANGES confined to one records sentence; CLOSED at 5f9bea6: gen_critic_irq_checker_fix.md now records M-3 closed by landing 56's companion at fab8a61 and the REQUEST-CHANGES on 65b7cb0..b9e5fad lifted, with the standing verdict APPROVE. rev60's and the Critic's Lows are owed inside tb-infra-2's irq follow-ups, and the NMI-mode change is its own future landing |
 | b | its red fixture RED-OK at three of three rather than masked | CLOSED at 67c6ac1: the three seeds re-run on a b9e5fad build read 3 of 3 RED-OK with zero irq_entry firings, beside the earlier block with its records untouched |
 | c | the fixed cocotb timeout in the stimulus path replaced by a seed-independent bound | CLOSED: fixed at 6b894ab, rev64 APPROVE-WITH-CHANGES at 348e4ae with its rows at 2c63b83, no re-review owed |
 | d | a fresh forty-seed sweep at the fix commit with its manifest rendered FROM that sweep | open |

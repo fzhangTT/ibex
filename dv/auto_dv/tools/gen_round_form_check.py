@@ -112,7 +112,7 @@ def named_entries(flat, pattern):
     return {'gen_test_' + n for n in re.findall(r'[a-z][a-z0-9_]*', m.group(1)) if n != 'and'}
 
 
-def check_selection(c):
+def check_selection(c, plan_path=None):
     """Section 1's restated table and Section 7's rows, recomputed by CALLING the flow.
 
     An import failure is a FAILURE and not a skip: a form whose selection figures cannot be verified must not
@@ -175,18 +175,33 @@ def check_selection(c):
         c.check(f"{t['name']} built", s_built, len(built))
         c.check(f"{t['name']} covergroups", s_cgs, len(cgs))
     c.check('declared total', r'declared sets total (\d+) bins', total)
-    # The form cites the cap rule by NAME rather than by line, which is robust only while the name is there.
-    plan = (R / 'dv/auto_dv/docs/gen_fcov_plan.md').read_text(encoding='ascii')
-    c.check('cap rule name present in the plan',
-            len(re.findall(r'^- Seeds against the guarantee', plan, re.M)), 1)
+    # The form cites the cap rule by NAME rather than by line, which holds only while the name is there. The
+    # name is read OUT OF THE FORM so editing the citation is checked too, rather than compared with a copy
+    # of it kept here.
+    plan = (plan_path or (R / 'dv/auto_dv/docs/gen_fcov_plan.md')).read_text(encoding='ascii')
+    cited = re.search(r'gen_fcov_plan\.md Section 0, the "([^"]+)" rule', c.flat)
+    if cited is None:
+        c.fail('cap rule citation: the form names no Section 0 rule to check')
+    else:
+        c.check('cap rule name present in the plan',
+                len(re.findall(rf'^- {re.escape(cited.group(1))}', plan, re.M)), 1)
     # The per-entry checks find each row by name, so an EXTRA row is invisible to them; count the table.
     rows = re.findall(r'\| gen_\w+ \| \d+ \| \d+ \| \d+ of \d+ \|', c.flat)
     c.check('Section 7 row count', len(rows), len(meas))
+    # The prose count of open conditions is a claim about the table beside it, so read the table.
+    conds = re.findall(r'\| [a-f] \| [^|]+ \| ([^|]+) \|', c.flat)
+    words = {'one': 1, 'two': 2, 'three': 3, 'four': 4, 'five': 5, 'six': 6}
+    m = re.search(r'(\w+) of the six are open at this commit', c.flat)
+    if m is None or m.group(1).lower() not in words:
+        c.fail('open conditions: the form states no readable open count')
+    else:
+        c.check('open conditions', words[m.group(1).lower()],
+                sum(1 for s in conds if s.strip().lower().startswith('open')))
 
 
-def run_checks(form_text, manifest, preflight_text, quiet=False):
+def run_checks(form_text, manifest, preflight_text, quiet=False, plan_path=None):
     c = Checker(form_text, quiet)
-    check_selection(c)
+    check_selection(c, plan_path)
     runs = manifest['runs']
     walls = [r['wall_s'] for r in runs]
     summary = manifest.get('summary') or {}
@@ -319,19 +334,19 @@ def run_checks(form_text, manifest, preflight_text, quiet=False):
 
 
 def _rule_rename_self_test():
-    """Renaming the cap rule must fail the citation claim: a name-based citation needs a name check."""
-    plan = R / 'dv/auto_dv/docs/gen_fcov_plan.md'
-    original = plan.read_bytes()
-    try:
-        plan.write_bytes(original.replace(b'- Seeds against the guarantee', b'- Seeds versus the guarantee', 1))
+    """Renaming the cap rule must fail the citation claim. The rename happens on a COPY: the tracked plan is
+    never written, so a read-only checkout, an interrupt mid-case and two concurrent runs are all safe."""
+    import tempfile
+    src = (R / 'dv/auto_dv/docs/gen_fcov_plan.md').read_bytes()
+    with tempfile.TemporaryDirectory() as d:
+        copy = pathlib.Path(d) / 'gen_fcov_plan.md'
+        copy.write_bytes(src.replace(b'- Seeds against the guarantee', b'- Seeds versus the guarantee', 1))
         c = run_checks(FORM_DEFAULT.read_text(encoding='ascii'), yaml.safe_load(open(MANIFEST_DEFAULT)),
-                       PREFLIGHT_DEFAULT.read_text(encoding='ascii'), quiet=True)
+                       PREFLIGHT_DEFAULT.read_text(encoding='ascii'), quiet=True, plan_path=copy)
         bad = any('cap rule name' in b for b in c.bad)
         print(f"SELF-TEST {'ok  ' if bad else 'FAIL'} renaming the cap rule fails the citation claim: "
               f"{'fail' if bad else 'pass'}, want fail")
         return bad
-    finally:
-        plan.write_bytes(original)
 
 
 def _cwd_self_test():
@@ -379,6 +394,8 @@ def self_test():
         ('a dropped Section 7 row fails', r'\| gen_test_rst_boot \| 3 \| 6 \| 3 of 3 \|[^\n]*\n', ''),
         ('a wrong restated plan run count fails', r"(\| THE ROUND'S PLAN AT \w+ \| 20 \| )56 \|", r'\g<1>57 |'),
         # The per-entry checks look each row up by name, so only a count catches an EXTRA row.
+        ('a wrong open-condition count fails', r'Three of the six are open at this commit',
+         'Four of the six are open at this commit'),
         ('an extra Section 7 row fails', r'(\| gen_test_rst_boot \| 3 \| 6 \| 3 of 3 \|[^\n]*\n)',
          r'\g<1>| gen_test_ghost | 3 | 9 | 1 of 1 | PASS |\n'),
     ]:

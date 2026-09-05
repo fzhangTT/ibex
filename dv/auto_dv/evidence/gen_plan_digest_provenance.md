@@ -1,6 +1,6 @@
 # The plan set's inputs digest: what it covers, and the run that shows it
 
-Owner: dv-lead. Written 2026-09-05. This record exists because a rule I put in the plan two touches ago says
+Owner: dv-lead. Written 2026-09-05. This record exists because a rule I put in the plan earlier that day says
 a comparison is recorded beside the thing it supports and never asserted in a commit message, and a reviewer
 found me relying on a number that lived only in a commit message and was computed from gitignored files.
 
@@ -14,17 +14,19 @@ file and a digest over the parts alone let two different Section 0 texts share o
 
 ## The run
 
+Both commands below are one line each and run as written from the repository root. The function they
+reproduce is `_inputs_digest()` in dv/auto_dv/work/dv-lead/gen_build_docs.py, which hashes each input's NAME
+before its BYTES, in sorted order, `parts/` before `parts6/`, and then the generator's own file last.
+
     $ sha256sum dv/auto_dv/work/dv-lead/gen_build_docs.py | cut -c1-16
     48e6d3aa9a1590c5
 
-    $ python3 -c "import hashlib, pathlib; W=pathlib.Path('dv/auto_dv/work/dv-lead'); h=hashlib.sha256()
-      for f in sorted((W/'parts').glob('*')) + sorted((W/'parts6').glob('*')):
-          if f.is_file(): h.update(f.name.encode()); h.update(f.read_bytes())
-      print(h.hexdigest()[:12])"
-    916cc594a845                                  # parts only
+    $ python3 -c "import hashlib,pathlib; W=pathlib.Path('dv/auto_dv/work/dv-lead'); h=hashlib.sha256(); [(h.update(f.name.encode()), h.update(f.read_bytes())) for f in sorted((W/'parts').glob('*'))+sorted((W/'parts6').glob('*')) if f.is_file()]; print(h.hexdigest()[:12])"
+    916cc594a845                                  # the parts alone
 
-    $ the same with the generator's own bytes folded in after the parts
-    f9a685486369                                  # parts + generator
+    $ python3 -c "import hashlib,pathlib; W=pathlib.Path('dv/auto_dv/work/dv-lead'); h=hashlib.sha256(); [(h.update(f.name.encode()), h.update(f.read_bytes())) for f in sorted((W/'parts').glob('*'))+sorted((W/'parts6').glob('*')) if f.is_file()]; me=(W/'gen_build_docs.py').resolve(); h.update(me.name.encode()); h.update(me.read_bytes()); print(h.hexdigest()[:12])"
+    f9a685486369                                  # the parts and then the generator, which is what the
+                                                  # header carries today
 
 ## What it settles
 
