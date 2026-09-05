@@ -173,3 +173,88 @@ exemption.
   and M-2 rest on my rule that a plan-stated pass criterion absent from the check is blocking for that check.
 - After the range: 721bab8 (Test Writer) says the entry compares every mepc against the exported spin label and the four
   directed modules call the floor identity; that touch is judged at its own range, and it is the shape M-1 and M-2 ask for.
+
+## Section 7. Recorded re-review of 721bab8, the disposition of M-1 and M-2 (written 2026-09-05T07:46:10Z)
+
+Artifact: commit 721bab8 (parent 4cd3ff6), eleven files: gen_test_lib.py, gen_test_template.py,
+gen_test_irq_basic.py, gen_test_rst_boot.py, gen_test_csr_access.py, gen_test_csr_reset.py,
+gen_programs/gen_irq_basic_prog.py, gen_tdd_logs/test_writer/gen_fu_mepc_identity.log (new, 5426 bytes,
+md5 7931b0e0a7b70819d955831bc0b5756e, its gen_manifest.md row matches), gen_tdd_batch3.md and
+gen_critic_response_batch3.md. All eleven are ASCII-clean. Method: the diff read in full; every claim of
+the retained log re-derived on a detached worktree of 721bab8 (scratch critic_irqr; my logs retained
+under dv/auto_dv/work/critic/irqr/); the landing claims no simulation and I ran none. Exposure: the
+Orchestrator's messages summarised the landing's commit message and the rows' dispositions before I
+read the diff; every statement below is my own measurement.
+
+7.1 M-1 (mepc checked for uniformity only; MPP unread): ADDRESSED.
+- The check. fire_tp_irq_002 now asserts pcs == {spin} with spin = lib.program_symbol_addr(self.image,
+  "gen_irq_wait"); line_facts adds (mstatus & MSTATUS_MPP) == MSTATUS_MPP_M, so all four line classes
+  check MPP. The generator exports the label (.globl gen_irq_wait); program_symbol_addr reads the
+  sidecar's symbols block and asserts the symbol exists.
+- The RTL fact behind the MPP predicate. On exception entry mstatus_d.mpp = priv_lvl_q
+  (rtl/ibex_cs_registers.sv:927); mret restores priv_lvl_d = mstatus_q.mpp and sets mpp to PRIV_LVL_U
+  (:954, :978), so MPP reads U between entries and M again at each entry; the handler reads mstatus after
+  entry; the program never leaves M-mode (its only privilege instruction is the handler's mret).
+  PRIV_LVL_M = 2'b11 (rtl/ibex_pkg.sv:225), so (mstatus & 3<<11) == 3<<11 is the right predicate.
+- The retained red, reproduced. The log names its inputs by digest: the retained run log 70722f03779f
+  equals the committed blob of gen_irq_basic_red1_stdout.log; the generator a350edcbb6d0 equals the
+  committed blob of gen_irq_basic_prog.py at 721bab8 (so the log's "working tree" is the committed file);
+  the proof script 5b303d27eb96 equals the script embedded in the log (extracted and hashed). I built the
+  program at seed 694904681 from the 721bab8 worktree: gen_irq_wait = 0x80000154, the value all eighteen
+  recorded mepc words carry. I ran the extracted script against the committed run log and my sidecar:
+  exit 0, result block byte-identical to the log's (control True/True; the three mutants committed True,
+  fixed False; RED/GREEN HOLDS True). One mutant the script omits, the mixed set {spin, spin+4}: committed
+  False, fixed False, so the fixed check is nowhere weaker than the committed one.
+- Info: pcs == {spin} is False for an empty entry set, where len(pcs) <= 1 passed vacuously.
+
+7.2 M-2 (floor identity opt-in; four modules skipped it): ADDRESSED.
+- The four modules call lib.program_min_retired(self.image, <plan>.min_retired) in fire_check:
+  gen_test_irq_basic and gen_test_rst_boot with prog.plan(self.seed), gen_test_csr_access with self.plan
+  (:64 plan_for), gen_test_csr_reset with self._plan (:168). py_compile of the seven Python files passes;
+  gen_test_lib.py --self-test PASS at 721bab8.
+- The condition, re-derived by me: 19 generators under gen_programs/*.py declare gen_min_retired (the
+  twentieth grep match is gen_boot_retire_red.S, a red fixture); 19 test modules import one of them and
+  each of the 19 calls program_min_retired with its plan value (census over dv/auto_dv/tests/gen_test_*.py:
+  every module with a generator import has exactly one call). gen_test_boot_retire calls it without a
+  plan value, the stated riscv-dv exemption. Section 13's corrigendum, nineteen rather than fifteen, is
+  the count I get.
+
+7.3 The Lows of Section 5 in this landing.
+- L-1 (the report-edge wait duplicated wait_eot's rule): one template step, next_report_edge, carries the
+  lateness rule; wait_eot and await_reports both call it, and _slow_rounds increments in that one place,
+  so GEN_TEST_SLOW_TOTAL now counts stimulus waits too. The GEN_TEST_SLOW info line's wording changed;
+  the flow parses only GEN_TEST_SLOW_TOTAL (dv/auto_dv/flow/gen_flow_const.py:32), so no consumer
+  breaks. The template imports Edge and with_timeout (:48); the entry's now-unused import is removed
+  and no use remains. CLOSED.
+- L-2 ("red_expect matched" in neither retained file): Section 15 now separates QUOTED lines from
+  COUNTED figures. The two quoted lines are verbatim substrings of gen_irq_basic_red1_stdout.log lines
+  282 and 195 (fixed-string grep); the counted figures are the ones I measured in Section 3 (92 report
+  words, 0 UVM_ERROR, 14 phases). CLOSED.
+- L-5 (incident narrations in code): four docstrings and comments trimmed; the gen_test_lib.py diff and
+  the CycleWaiters docstring change are comment-only. CLOSED.
+- L-3 (fcov leg), L-4 (HOLD_UNTIL_ACK literal), L-6 (no retained 40-seed sweep): routed in the response
+  file to the DV Lead, tb-infra-2 and runtime-2; not this landing's to close. My generator-level control
+  re-run at 721bab8: 40 of 40 seeds generate, each program carries the .globl line, and the three
+  --red --red-item TP-IRQ-002 builds return 0 (dv/auto_dv/work/critic/irqr/).
+
+7.4 New findings on 721bab8.
+- L-7 (low). The retained log names "sidecar of a program built at the same seed 60326dfb0989".
+  prog.sym.json embeds absolute paths (the directed .S path, the tool paths), so its digest is not
+  reproducible by anyone else: my build at the same seed gives 461101d27f33 with an identical symbols
+  block. The load-bearing fact, gen_irq_wait = 0x80000154, is reproduced; a path-free identity (the
+  symbols block, sha256 over json.dumps(symbols, sort_keys=True), 70f98779d358 in my build, or prog.nm)
+  would make the line checkable. A corrigendum beside the log, or the manifest row, at the next touch.
+- L-8 (low). gen_tdd_batch3.md's Section 14 corrigendum and the response file cite the Runtime Manager's
+  measurement "against forty simulated runs" (40 of 40 against 28 of 40 for cr_op_rs1.zext_h_pos_rand;
+  6 of 40 against 40 of 40 for cp_single_pos.p16) and name no retained artifact; git grep at HEAD over
+  dv/auto_dv/evidence, work, reviews and docs finds the figures only in those two prose passages. The
+  passage decides nothing (the mapper stays withdrawn), so this is a records defect: name the run set or
+  manifest the figures come from.
+- Build identity: 721bab8 touches no file of gen_rtl.f or gen_tb.f; gate key 449f0e66969bd42b at 721bab8
+  and at its parent 4cd3ff6, both computed with gen_build_identity.py on detached worktrees.
+
+7.5 Verdict on 721bab8. Both Mediums of Section 5 are addressed with evidence I reproduced; L-1, L-2
+and L-5 are closed; L-3, L-4 and L-6 are routed; L-7 and L-8 are new Lows on the record.
+CRITIC VERDICT: APPROVE for 721bab8. The REQUEST-CHANGES of Section 5 on 0203c6e..b6b1bbe is LIFTED on
+this record: the irq-entry group stands approved, with L-3, L-4, L-6, L-7 and L-8 owed as disclosed.
+Sections 1-6 above are byte-identical to the d355f7f commit (69a2f14b24f9a5f0).
