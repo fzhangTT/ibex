@@ -2552,3 +2552,14 @@ over the SystemVerilog sources) does not distinguish it from a build against the
 the owner stands unchanged; the mechanism is the site cocotb-config answering for the pinned one. tb-infra-2 lands a
 refusal in gen_tb_local.sh (a cocotb-config that is not the clone's pinned venv's, or an empty --libpython, stops the
 build with the reason) as its own landing; the committer gate keeps exporting LIBPYTHON_LOC from the worktree venv.
+
+### LOG-099 second corrigendum (2026-09-05 07:31Z, Orchestrator; from tb-infra-2's measurement)
+The first corrigendum said the site cocotb-config's --libpython "returns an empty string, so the export succeeds".
+Measured: on the site Python 3.9 cocotb-config, --libpython exits 1 with empty output while --lib-name-path exits 0
+with a real 3.9 library path. ci/env.sh line 77 still exports an empty value because "export VAR=$(...)" returns
+export's own status and masks the substitution's failure. The hole a wrong toolchain passes through is the compile
+path of gen_tb_local.sh, which takes the --lib-name-path answer; its run path already refuses on the --libpython
+failure. The question to the owner is unchanged. tb-infra-2's refusal (a cocotb-config that is not the clone's
+pinned venv's, an empty --libpython, or a VPI library resolving outside the venv stops the build with the reason)
+lands as its own touch; the same hole in gen_build.py's --local-cocotb path, gen_flow_util.py's version record and
+gen_run_fixture.sh goes to their owners as review rows.
