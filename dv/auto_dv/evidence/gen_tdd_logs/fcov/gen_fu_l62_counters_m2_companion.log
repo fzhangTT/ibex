@@ -1,0 +1,247 @@
+# gen_fu_l62_counters_m2_companion.log -- the two totals, the window mutation as a diff, the bus named, and
+# the records rows three reviews left owed (TB Infra, 2026-09-05). Landing 62, feature group "outstanding
+# counters", answering the Critic's Section 8 (L-6, L-8, I-1), its Section 9.1 (L-9, L-10), its Section 12.1
+# (L-25, L-26) and rev81's Lows on landing 61. The logs it corrects are untouched:
+# gen_fu_l58_decrement_saturate.log (md5 f4d9c925119ba1aba21b9012d88e7cb0) and
+# gen_fu_l61_artifacts_and_identity.log (md5 809399f8afca2599743e41b86d84d596). No TB source changes in this
+# landing. Three quoted lines below run past this log's width because they are whole run lines: the
+# landing-61 log was faulted for cutting exactly these.
+#
+# S = /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad,
+# the team scratchpad this session shares. Absolute paths below are written with that prefix as S.
+#
+# ================ THE THING WORTH SAYING FIRST ==========================================================
+# THE CONTESTED NUMBER WAS THE WRONG STATISTIC TO PUBLISH. The l58 red table's last column is a whole-run
+# error count, and a whole-run count moves whenever ANY checker in the build changes, whether or not it has
+# anything to do with the claim. The claim was about two protocol properties. A reader who reproduces the
+# runs on a different base gets different totals and identical per-property figures, and has no way from the
+# table to tell which of those two facts the row depended on. The fix is not a better total: it is to publish
+# the per-id breakdown, which is what the claim is made of, and to say in the row that the total is
+# collateral. Both are below, and the third measurement in Row 1 shows the total moving by one for a reason
+# that has nothing to do with the counters.
+# DISCLOSURE: I first answered L-6 by measuring the wrong pair, the landing-53 wrapping and saturating runs
+# rather than the landing-58 E and F runs, and had to re-derive. The pair is named in every figure here.
+#
+# ================ ROW 1 (Critic Section 8 L-6): the two totals, per id ===================================
+# THE ARTIFACTS. Both runs are retained on disk and are the runs the l58 table was read from:
+#   E  S/l61/rootE/dv/auto_dv/out_mut/e_mut/   (sim.log, stdout.log, run_header.txt, verdict.txt)
+#   F  S/l61/rootF/dv/auto_dv/out_mut/f_mut/   (the same four files)
+# The two run headers verbatim, minus the S prefix on the image path:
+#   # run e_mut: 2026-09-05T13:37:18Z host=soc-l-11 seed=1 module=dv.auto_dv.gen_tb.gen_tests.gen_ut_irq
+#     build_sources_sha256=1c4f99930208695f plusargs=[+gen_mem_image=S/irq1_prog/prog.vmem
+#     +gen_mem_image_crc32=8e882c5b +gen_mem_image_words=156 +gen_boot_addr=80000000
+#     +gen_tohost_addr=800002d0 +gen_fetch_en_at_reset=0]
+#   # run f_mut: 2026-09-05T13:37:21Z host=soc-l-11 seed=1 module=dv.auto_dv.gen_tb.gen_tests.gen_ut_irq
+#     build_sources_sha256=dd9f4cd5ddd825de plusargs=[the same six]
+# NEITHER sim.log CARRIES A UVM REPORT SUMMARY: the run ends on the cocotb failure before the report phase, so
+# the total cannot be quoted from a tally line and is the counting command's own count. Said rather than
+# papered over, because "quote the summary line" is exactly what the Critic asked for and it does not exist
+# here.
+# THE COMMAND, one per figure, on either file:
+#   grep -cE '^UVM_ERROR [^:]' <run>/sim.log
+#   grep -cE '^UVM_ERROR [^:].*\[<id>\]' <run>/sim.log
+# Both totals read the same from stdout.log as from sim.log (2640 and 2602 either way).
+# EVERY ID IN BOTH RUNS. No filter drops anything on my side: this is the whole run, id by id.
+#   id                             E (sum form)   F (decrement)   difference
+#   isa_insn                            517            517             0
+#   crash_dump                          517            517             0
+#   isa_pc                              516            516             0
+#   isa_trap                            262            262             0
+#   isa_rd                              258            258             0
+#   sva_rvalid_legal                    129            110           -19
+#   alert_bus                           100            100             0
+#   ASSERT FAILED                       100            100             0
+#   sva_dbus_rvalid_outstanding         100            100             0
+#   sva_dbus_rdata_intg                 100            100             0
+#   sva_ibus_rvalid_outstanding          29             10           -19
+#   nmi_entry                             7              7             0
+#   irq_entry                             4              4             0
+#   isa_pc_next                           1              1             0
+#   TOTAL                              2640           2602           -38
+# The lockstep and crash_dump family (isa_insn, isa_pc, isa_trap, isa_rd, isa_pc_next, crash_dump) sums to
+# 2071 in BOTH runs. Every id except the two properties is equal. So the 38 is 19 and 19 and nothing else
+# moved, which is what the l58 row claimed and is now visible rather than inferred from two totals.
+# THE CRITIC'S 2684 AND 2646. Their Section 8 row places the 44 in that same family and in both of their
+# runs, which is their measurement and not mine; taking it, their delta is 38 as well and we agree on every
+# figure the row rests on. I do not re-derive their runs: they are
+# their own builds from a different injection text, by their account, and a whole-run count is build-specific.
+# What can be said from here is that neither reader's filter drops ids, and that the disagreement is between
+# two builds rather than between two counts of one build.
+# THE MEASUREMENT THAT SHOWS IT. The same mutation applied to a clean archive of c736d29, the commit these
+# two runs were built on, with the same fixture, seed and plusargs:
+#   run     build_sources_sha256   rvalid_legal   ibus_rvalid_outstanding   dbus_rvalid_outstanding   total
+#   w_mut   93e8b0487eeda480           110                  10                       100             2603
+#   F       dd9f4cd5ddd825de           110                  10                       100             2602
+# Every per-property figure is identical. The total is one higher, and the one is irq_entry, 4 in F and 5 in
+# w_mut: the per-line enable term that landed between the two bases. An unrelated checker moved the column the
+# Critic could not trace, on the same mutation and the same fixture. Run at S/l62/rootW/dv/auto_dv/out_l62/w_mut/.
+# NOT CLAIMED: that the Critic's 44 has the same kind of cause as my 1. Mine is named; theirs is theirs to
+# name if it matters, and it does not, because the delta agrees.
+#
+# ================ ROW 2 (Critic Section 8 L-8): the window mutation, retained as a diff ==================
+# MUT-SPURIOUSWINDOW is retained at dv/auto_dv/evidence/gen_irq_fixtures/gen_mut_spuriouswindow.diff with a
+# real hunk (@@ -272,6 +272,7 @@), one added line in the bus driver's response side. There is one driver
+# class, put on the instruction or the data bus by cfg.is_data, so the single site gives both agents the
+# window; the red fires on both buses, which is the evidence for that sentence rather than the code reading.
+# IT APPLIES AND IT PRODUCES THE DIGEST THE LANDING-58 BUILDS RECORDED. git apply --check passes on a clean
+# archive of c736d29 and on a clean archive of 4bd933f (the blob is unchanged between them), and applying it
+# gives gen_agents_pkg.sv sha256 34d354bb18468154..., which is the digest for that file inside
+#   S/l61/rootE/dv/auto_dv/out_mut/sources_sha256.txt   (build 1c4f99930208695f)
+#   S/l61/rootF/dv/auto_dv/out_mut/sources_sha256.txt   (build dd9f4cd5ddd825de)
+# so the retained text IS the injection those two builds carried. That is the thing prose could not show and
+# the reason the row was a Low rather than a note.
+# THE IDENTITY METHOD, verified on all four builds: build_sources_sha256 is the first 16 of sha256 of the
+# build's own sources_sha256.txt. sha256sum reproduces 1c4f99930208695f (E), dd9f4cd5ddd825de (F),
+# 93e8b0487eeda480 (w_mut) and d9a0553bd4e0b326 (the clean control below) from those files.
+# THE RUN THAT COULD HAVE FAILED. Two archives of c736d29, one with the diff and one without, same fixture,
+# same seed, same plusargs, both compiled and run here:
+#   root                 build               verdict   real UVM_ERROR   legal / ibus / dbus
+#   rootC (no diff)      d9a0553bd4e0b326    PASS            0             0 / 0 / 0
+#   rootW (diff)         93e8b0487eeda480    FAIL         2603           110 / 10 / 100
+# If the retained diff did not inject, the mutant run would read zero like its control and this row would have
+# failed here rather than in a reviewer's hands. The control is also the check that the fixture is quiet
+# without the mutation, which the l58 red asserted and did not show.
+# THE TWO COPIED FILES, against the ac2d306 blobs, which is the item of the Critic's four that landing 61
+# did not carry. F is the 4bd933f archive with landing 58's two tb files laid over it, and F's own
+# sources_sha256.txt records for them
+#   efc37cb28fd221bb76891dcb4322e5d0c317a9b1e7a7057d9cf18346f4e175a9  dv/auto_dv/tb/gen_bus_if.sv
+#   584d3e27bacf2d969c3a9718f5129b3a5e1ba48679be968be68fb6e43732de2a  dv/auto_dv/tb/gen_protocol_props.sv
+# which are exactly what `git cat-file blob ac2d306:<path> | sha256sum` prints for both. E records the
+# 4bd933f blobs for the same two files, f9f602e73787bd96... and b75e705d84f13b23..., so E is unmodified where
+# F is overlaid and the pair differs in those two files and the mutation, nothing else.
+# AND IT DATES THE TB: d9a0553bd4e0b326 is the same build identity as out_l65 in gen_fu_l61_artifacts_and_
+# identity.log, and an archive of 1bc77bb reads it a third time, so no TB source has changed between 41bcbe8
+# and this landing's base and the landing-61 counter figures still stand on the current tree.
+#
+# ================ ROW 3 (Critic Section 8 I-1): the bus, named ==========================================
+# gen_fu_l58_decrement_saturate.log:58-68 lists eight obligations and eight floods without naming a bus. THEY
+# ARE ALL THE IBUS SIDE. From the same re-dump run,
+# /proj_soc/user_dev/fzhang/ibex_dv_out/redump_4017573/runs/gen_test_irq_basic_165313640/sim.log:
+#   sva_ibus_gnt_only_with_req        1     the list's first line
+#   sva_ibus_rvalid_outstanding       8     the eight obligations
+#   sva_ibus_outstanding_max        280     the eight floods
+#   sva_rvalid_legal                  8     every one of them prints "ibus: rvalid with no outstanding grant"
+# The interface check's id is not bus-scoped, so its bus is in the message text, and all eight say ibus:
+#   ibus: rvalid with no outstanding grant at cycle 18345
+# THE OMITTED IDS, so "every real UVM_ERROR in cycle order" is read as what it is. The run has 627 real
+# UVM_ERRORs; the four ids above carry 297; 330 are omitted:
+#   isa_pc_next 102, isa_insn 101, isa_pc 101, crash_dump 15, isa_mem 4, isa_rd 4,
+#   sva_rvfi_irq_valid_exclusive 2, MEM_UNMAPPED 1
+# AND THAT CLOSES THE DIFFERENCE OF TWO gen_fu_l61_artifacts_and_identity.log left open against rev76's 328.
+# The same 627 partitions two ways: 297 shown and 330 omitted, which is the four ids the list actually
+# prints, or 299 and 328, which is those four plus sva_rvfi_irq_valid_exclusive at cycles 13561 and 18337.
+# rev76 asks for "the five bus-protocol ids" and its 328 counts those two lines as shown, while the same
+# sentence names them among the omitted, so its two figures partition differently from one another. The
+# difference of two is those two lines. 330 is the figure that answers "what did the list omit", because the
+# list prints four ids and neither of those two is one of them.
+# The alternation claim of that row is untouched: the eight obligation cycles, the eight interface-check
+# cycles and the eight flood starts are the same eight instants, on the ibus.
+#
+# ================ ROW 4: the plusarg the landing-60 recipe left out =====================================
+# Every run in this log takes the same six plusargs, and the run headers above carry them verbatim. One of
+# them, +gen_fetch_en_at_reset=0, is missing from the recipe printed in gen_fu_l60_nmi_mode_exit.log. A reader
+# reproducing any run in this group should take the plusarg list from a run header, which is generated from
+# the invocation, rather than from a recipe line typed into a log. I do not state here what the plusarg
+# changes, because I have not measured a run without it.
+#
+# ================ ROW 5 (Critic Section 9.1 L-9): the landing-53 identities are MUTANT identities ========
+# gen_fu_l58_decrement_saturate.log:104-105 names cb66d1b569cba4fb and 0d548320b34bf9d9 without saying they
+# are mutant builds, which is the same fault as the E and F pair and is why a reader could not place them.
+#   cb66d1b569cba4fb  dv/auto_dv/out_l53wrapmut  MUT-SPURIOUSRVALID with the WRAPPING protocol properties
+#   0d548320b34bf9d9  dv/auto_dv/out_l53satmut   MUT-SPURIOUSRVALID with the SATURATING protocol properties
+# Both record gen_agents_pkg.sv 0b9b7ed9e3e808bf..., which is not the committed file (c271ef7cce08c653... at
+# HEAD), so both are mutant. They differ from EACH OTHER in exactly one entry, gen_protocol_props.sv, which is
+# the A and the B of that red: 4b00a9824f2ff843... wrapping against 231d124e01347a9b... saturating.
+# THE CLEAN ROOT is dv/auto_dv/out_l53, identity 713ecb4610393977, which records the committed agent and the
+# saturating props, so it is the unmutated sibling of out_l53satmut. There is NO clean sibling of the wrapping
+# build: hashing every dv/auto_dv/out_*/sources_sha256.txt in the clone finds the wrapping props digest in
+# out_l53wrapmut alone. Said rather than left looking like an oversight: the wrapping form was a working-tree
+# candidate that was never built clean.
+#
+# ================ ROW 6 (Critic Section 9.1 L-10): the landing-55 S build, unresolved and said so =========
+# gen_fu_l55_bus_if_saturate.log gives its saturating build the identity 4ebaa0bc49091b37 and names no root.
+# I cannot resolve it. Every sources_sha256.txt in the clone's 35 out directories and in this session's 66
+# scratch builds was hashed and none reads 4ebaa0bc49091b37; the root it was built in is gone. It is recorded
+# UNRESOLVED with the search stated, not carried forward as an identity a reader can reproduce. It is also
+# the oldest instance of the defect the last four landings kept repeating, and the one that cannot be repaired
+# by looking harder, only by not making it again.
+#
+# ================ ROW 7 (Critic Section 12.1 L-25): the per-Low ledger, corrected =========================
+# gen_fu_l61_artifacts_and_identity.log:89-94 credits Lows to the wrong work and never says whose numbering it
+# uses. THE DOCUMENT IS dv/auto_dv/evidence/gen_critic_irq_checker_fix.md, and its Section 12.1 states the
+# ledger of record. Against it, four of my lines were wrong:
+#   L-6   is the toggle source and the mutant diffs, closed by landings 57 and 59. The log credited landing
+#         57's per-line enable term, which is L-10.
+#   L-12  is the dcsr home, closed by landings 57 and 59. The log credited the ablation precision, which is
+#         a row of nobody's.
+#   L-8   is the NMI-mode mirror, and landing 60 CLOSED it (that file's Section 11). The log called it
+#         untouched.
+#   L-9   is the re-measurement record, answered by the reds2 block at 67c6ac1. The log called it untouched.
+#   L-7 and L-11 are records notes with nothing owed; L-10 and L-13 closed by landing 57; L-14 to L-24 as
+#         that file's Sections 9 to 12 state.
+# The lesson is the one the ledger existed to avoid: a ledger that does not name its source document is a
+# claim about someone else's numbering made without opening it.
+#
+# ================ ROW 8 (rev81's Lows and Critic Section 12.1 L-26): the five runs, the ablation sentence,
+# the manifest row, the mirror and the locale ============================================================
+# THE FIVE RUNS gen_fu_l61_artifacts_and_identity.log points at with a <scratch> prefix that resolves from
+# nowhere. S is the path at the top of this log. Headers verbatim with the image path shortened to S:
+#   # run e_mut: 2026-09-05T13:37:18Z host=soc-l-11 seed=1 module=dv.auto_dv.gen_tb.gen_tests.gen_ut_irq
+#     build_sources_sha256=1c4f99930208695f plusargs=[+gen_mem_image=S/irq1_prog/prog.vmem
+#     +gen_mem_image_crc32=8e882c5b +gen_mem_image_words=156 +gen_boot_addr=80000000
+#     +gen_tohost_addr=800002d0 +gen_fetch_en_at_reset=0]
+#   # run f_mut: 2026-09-05T13:37:21Z, the same line with build_sources_sha256=dd9f4cd5ddd825de
+#   # run g_mut: 2026-09-05T14:10:37Z host=soc-l-11 seed=1
+#     module=dv.auto_dv.gen_tb.gen_tests.gen_ut_irq_nmi_long build_sources_sha256=311aaf1ed6d1c9cc
+#     plusargs=[+gen_mem_image=S/l60b/prog/prog.vmem +gen_mem_image_crc32=3cba3f47 +gen_mem_image_words=218
+#     +gen_boot_addr=80000000 +gen_tohost_addr=800003c8 +gen_fetch_en_at_reset=0]
+#   # run h_mut: 2026-09-05T14:10:41Z, the same line with build_sources_sha256=00a451af15ba8b17
+#   # run h_abl: 2026-09-05T14:10:45Z, the h_mut line with +gen_chk_irq_entry=0 appended to the plusargs
+# Roots: S/l61/rootE/dv/auto_dv/out_mut/e_mut, S/l61/rootF/dv/auto_dv/out_mut/f_mut,
+# S/l60b/rootG/dv/auto_dv/out_mut/g_mut, S/l60b/rootH/dv/auto_dv/out_mut/h_mut and .../h_abl.
+# VERDICT LINES. e_mut and f_mut both read
+#   verdict: FAIL / reason: uvm_error at sim.log:32 (alert_bus)
+# and the three NMI runs all read
+#   verdict: FAIL / reason: uvm_error at sim.log:32 (irq_pending)
+# THE FIRE LINES, whole, where landing 61 quoted them cut at both ends:
+#   UVM_ERROR dv/auto_dv/env/gen_checkers_pkg.sv(166) @ 1113500: uvm_test_top.env.irq_chk [irq_entry] lines 00004 (enable bits 00000800) raised at cycle 902 (order 206) not taken within 17 records (now order 267, takeable records 18, mie 7fff0888 mstatus 00000088)
+#   UVM_ERROR dv/auto_dv/env/gen_checkers_pkg.sv(165) @ 965500: uvm_test_top.env.irq_chk [irq_entry] lines 00004 (enable bits 00000800) raised at cycle 902 (order 206) not taken within 17 records (now order 225, takeable records 18, mie 7fff0888 mstatus 00001888)
+# The first is g_mut, the second h_mut; h_abl has no such line, which is the ablation working.
+# THE SUMMARY LINE, whole. All three NMI runs print the SAME line byte for byte (md5 71a730485766 on the line):
+#   UVM_INFO dv/auto_dv/env/gen_checkers_pkg.sv(299) @ 1776500: uvm_test_top.env.irq_chk [GEN_IRQ_CHK] irq_pending cycles checked=1769 mismatches=867; entries=1 nmi=1 (internal 0, accepted on announced corruptions) cause checked=1 mismatches=0 priority undecidable=0 bound failures=1 expectations released=0 open expectations=0 nmi_internal bound failures=0 open after the drain=0; records with the model dcsr step bit set=0; records held by a clear per-line enable alone=0
+# e_mut and f_mut have NO checker summary line: the alert_bus error ends those runs before the report phase,
+# which is the same reason they carry no UVM Report Summary in Row 1. Stated instead of substituted for.
+# THE ABLATION SENTENCE, CORRECTED. gen_fu_l61_artifacts_and_identity.log:112 says the ablation "counts ONE
+# bound failure while reporting ZERO errors". Zero errors OF THE NAMED CHECK, not zero errors. Per id:
+#   g_mut  irq_pending 867  irq_entry 1  total 868  verdict FAIL
+#   h_mut  irq_pending 867  irq_entry 1  total 868  verdict FAIL
+#   h_abl  irq_pending 867  irq_entry 0  total 867  verdict FAIL
+# The 867 are the mutation's own signature: MUT-IRQWITHHOLDALL ties the four regular lines low, so
+# irq_pending_o reads 0 where the model expects 1, once per checked cycle. The precision survives in its
+# correct form and is now visible rather than asserted: the named check off removes its one report and leaves
+# bound failures=1 in the summary. What does not survive is the phrase "reporting ZERO errors" for a run that
+# reports 867.
+# THE MANIFEST ROW for that log, corrected here with the log's bytes untouched: it said THREE landings in a
+# row where the log opens with FOUR, and it repeated the ablation sentence. Both are fixed in the row this
+# landing hands. rev81 also reads "narrowed to the five bus-protocol ids" in that row; the row does not
+# contain the phrase and never did, the manifest at 41bcbe8 having no occurrence of "five bus". The wording is
+# in the COMMIT MESSAGE of 41bcbe8, which no landing can edit, so the count is corrected here instead: the
+# re-dump list covers FOUR ids, and the only other sva_ id in that run, sva_rvfi_irq_valid_exclusive, is not a
+# bus-protocol id.
+# THE MIRROR IS RULED OUT as the candidate for the held-expectation counter moving 250 to 244.
+# gen_fu_l61_artifacts_and_identity.log leaves it open; the Critic's Section 10 closes it, reading 244 on a
+# dd23dff archive, which is BEFORE the NMI-mode mirror landed, and 244 again at boot_retire 40, 60 and 80,
+# with 344 at 120 and 935 with the plusarg absent. None of them reads 250. So the mirror did not move the
+# figure, and the unnamed build's 250 stays unexplained by anything committed. Recorded that way rather than
+# left as a candidate a reader might chase.
+# THE LOCALE, once, beside the recipe. The identity is the first 16 of sha256 of sources_sha256.txt, and that
+# file is built by gen_tb_local.sh as `find ... | sort | xargs sha256sum`, so its line order is whatever the
+# environment's collation gives. Every build in this log was produced with LANG=en_CA.UTF-8, which is what the
+# site environment sets; a reader reproducing a digest under a different collation should expect the file to
+# order differently.
+#
+# ================ WHAT THIS LANDING DOES NOT CLOSE ======================================================
+# The Critic's L-4 and L-5 stay with the DV Lead, as Section 9 places them; nothing here touches them.
+# The Critic's L-7 was closed in their Section 9 and is not reopened.
+# The landing-55 S build is answered in Row 6 as unresolved with its search stated, which is the most an
+# honest record can say about a root that no longer exists.

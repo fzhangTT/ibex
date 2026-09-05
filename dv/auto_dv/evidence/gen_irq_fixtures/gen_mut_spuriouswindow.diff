@@ -1,0 +1,22 @@
+# MUT-SPURIOUSWINDOW: the bus driver asserts a response with its pending queue empty on every cycle from 300
+# to 399. There is one driver class, selected onto the instruction or the data bus by cfg.is_data, so this one
+# site puts the window on BOTH bus agents; the red shows it, firing on the ibus and the dbus. Some injected
+# responses land in the same cycle as a grant, which is the case that separates a saturating sum from a
+# saturating decrement. Applied to an out-of-tree archive only; the committed gen_agents_pkg.sv is never
+# edited. Line ranges are against gen_agents_pkg.sv at c736d29, whose blob is unchanged back through 4bd933f,
+# the base of the landing-58 red, so the same diff applies to either. Apply with:
+#   git apply gen_mut_spuriouswindow.diff
+# What it produces: the mutated file sha256 34d354bb1846..., which is the digest the landing-58 E and F builds
+# recorded for this file in their own sources_sha256.txt, so this text is the injection those builds carried;
+# and build_sources_sha256 93e8b0487eeda480 on an archive of c736d29, against d9a0553bd4e0b326 for the same
+# archive without it.
+--- a/dv/auto_dv/env/gen_agents_pkg.sv
++++ b/dv/auto_dv/env/gen_agents_pkg.sv
+@@ -272,6 +272,7 @@
+         if (!released) begin released = 1; release_cycle = cycle; end
+         // ---- response side: at most one per cycle, in order
+         vif.rvalid = 1'b0; vif.err = 1'b0; vif.intg_corrupt = 1'b0;
++        if (pend.size() == 0 && cycle >= 300 && cycle < 400) vif.rvalid = 1'b1;   // MUT-SPURIOUSWINDOW
+         if (pend.size() > 0 && pend[0].due <= cycle) begin
+           gen_bus_pend_t p = pend.pop_front();
+           gen_bus_txn t = gen_bus_txn::type_id::create("txn");
