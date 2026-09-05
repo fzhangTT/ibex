@@ -2344,3 +2344,28 @@ record), then the mirror prune and rt37; rtl-arch's request to runtime-2 for the
 the Test Writer's generator fixes (twelve pack-family bins needing the form-table entry and the sweep as one change, six reasons re-classed with
 a measured rate, six sweep targets, cmp_zca's 22) and the per-run vs cumulative manifest semantics with the DV Lead; tb-infra's CR-36 L-1/L-2 and
 the five items frozen under LOG-085, whose freeze ends with this pause. Round 2 work built on the round's plan credit waits for CR-40 M-1.
+
+## LOG-095 - 2026-09-05 00:1xZ - Owner directive: review cadence (cross-model reviews grouped by feature; the Critic triggers on plan and code changes only)
+
+Owner (verbatim): "we dont need to review every commit (they should be grouped based on feature as you mentioned for the cross model). Also the
+critic only needs to trigger on plan and code changes."
+
+Rules in force from this entry (the Orchestrator applies them; Critical Invariant 1 of CLAUDE.md is unchanged: every plan gets a pre-execution
+review and every diff a post-execution review, and REQUEST-CHANGES still gates progress built on the touch until a recorded re-review):
+- Cross-model review, diff side: ONE review per FEATURE GROUP, not per commit. A feature group is the set of commits from a feature's first
+  landing to its last records touch (for example: a flow fix with its plan, implementation, self-tests and response rows; a TB covergroup
+  landing with its tests, manifests, retained logs and records; a generator fix set with its manifests and records). The Orchestrator opens the
+  group at the first commit and launches the range review when the owning role declares the group complete or when the group has been open
+  for four hours, whichever comes first. Records-only commits (corrigenda, response rows, intervention-log entries, verdict files, review
+  artifacts, dashboards, round records) ride the next feature range that closes; they never open a review of their own.
+- Cross-model review, plan side: unchanged, a pre-execution review per plan or flow-change plan before its diff is written.
+- Critic verdicts: triggered only by PLAN changes (gen_test_plan.md, gen_fcov_plan.md, gen_feature_list.md, gen_trace_*.csv,
+  gen_tb_architecture.md, a round request form or its corrigenda that change the round's shape) and by CODE changes (dv/auto_dv/tb, env, tests,
+  flow, tools, excl, fcov_expectations, gen_testlist.yaml). Records-only touches (evidence corrigenda, response files, intervention-log
+  entries, review artifacts, collected round records, coverage analyses, dashboards) get NO Critic verdict; their figures are checked by the
+  feature-range cross-model review they ride in. A Critic verdict covers a feature group, not each commit within it, and is requested by the
+  Orchestrator when the group's code or plan commits are in.
+- Corrigendum rows on an already-verdicted file stay as they are (a corrigendum section, not a re-verdict).
+Expected effect: today's cadence of about 45 review launches and 40 Critic files for one round falls to roughly one review and one verdict per
+feature group; a landing's wait for its gates drops from 20-40 minutes per commit to one cycle per feature. The owner's pause (LOG-093/094)
+remains in force until the owner lifts it; this entry changes cadence, not the pause.
