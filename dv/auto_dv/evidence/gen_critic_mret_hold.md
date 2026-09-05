@@ -189,3 +189,122 @@ it at 09:19Z (no program performs the case; the bin stands as a fourth combinati
 So the disposition M-1 asks of the plan on that point is void; the corrigenda owed for the 173 narrative are the l46
 and l47 logs', and the DV Lead's coming plan line is additive (the reason, the structural fact, the fixture sentence).
 M-1's mechanism, measurement and verdict word are unchanged. Found by the Orchestrator; verified by me at HEAD.
+
+## Section 7. Recorded re-review of the mret pre-state fix (written 2026-09-05T10:21:33Z)
+
+Scope. The range the Orchestrator named is 03aafce..9bb1974; the commits judged are tb-infra-2's landing 49 at
+9a42c17 (the pre-state fix, the discriminator counters, the parser fix, the l49 log, the corrigendum companion for the
+l46 and l47 logs), the fixture companion at 021684d (landing 50, judged under L-3 and L-4 below) and the DV Lead's clause-free plan
+line at 9bb1974; the joint landing dc60063 was judged in Sections 1-6 and stands as judged, with one
+annotation: its commit body carries the sentence "the case every program in the tree performs" (the DV Lead's hand-off
+prose), which the pre-state defect invalidated; the corrected reading is that no program in the tree performs the
+stays-set case, the 173 being the declared restoring edge, and the DV Lead retracted the claim at 09:19Z. The plan
+never carried it. Method: the diff read in full;
+the fix traced against the RTL's rvfi_intr and trap-entry terms; the four smokes re-run on my own compile of a
+detached worktree of 9a42c17 (TB-source identity fd9ba5b4ffae6a3c, gate key 3219e5ceb2426c90) with the commands the
+l47 log retains, each run's own urg report read; the parser exercised on synthetic declarations; my logs under
+dv/auto_dv/work/critic/mret2/ (README.txt). Exposure: the Orchestrator's messages summarised the landing; rev57 is
+read only for a Section 8 when it lands. dv_principles.md sha256 d9c27db18f511411, unchanged.
+
+7.1 Gates and records. On the 9a42c17 worktree gen_fcov_codegen --check and gen_knobs_codegen --check are up to date,
+GEN_UT_FCOV_CODEGEN and GEN_UT_KNOBS_CODEGEN PASS, gen_unbuilt_mark_check PASS. The l46 and l47 logs are byte-unchanged
+(md5 e9be074c5036cb62956ff71bc2b29bf7 and 1456cef854e37c0df572b29d05ca9b87, the values the corrigendum names); the two
+new logs' manifest rows match their sizes and md5s; all seven files are ASCII-clean; the corrigendum's three quoted
+l47 sentences exist verbatim at its :120, :122 and :128.
+
+7.2 M-1 (the pre-state at an entry record) FIXED, traced and measured.
+- The fix is one term at the one site that reads the pre-state: was = st.is_intr ? 1'b0 : irq_mstatus_prev[MIE]. Why
+  st.is_intr is exactly the right discriminator: the RTL sets rvfi_intr for the first instruction of a trap handler
+  only when the pc was set through EXC_PC_IRQ (rtl/ibex_core.sv:2403-2413, rvfi_set_trap_pc_d), that is for interrupt
+  and NMI entries, which retire no record of their own while clearing MIE (ibex_cs_registers.sv:924). A synchronous
+  exception is different in both respects: its faulting instruction retires a record with rvfi_trap, and the model
+  state that record carries is the post-trap state, MIE already clear, so the handler's first instruction reads the
+  right pre-state from the previous record and needs no override; the log's decision to leave st.is_trap alone is
+  therefore correct, not merely cautious. Debug entry does not touch MIE.
+- MEASURED on my build with the retained recipes, each run's own report: mret_mie1_mpie1_pending 0 in all four smokes;
+  mret_mpie1_pending 173 (storm), 6 (lines), 39 (dbgstorm), 15 (fetchen); cp_mie_global_edge 2 of 7 in each; the two
+  new counters read "mrets that are a handler's first instruction" 173 of 173, 6 of 6, 39 of 39, 15 of 15 and "wrongly
+  booked stays-set" 0 in every run; all four verdicts PASS with referee 0. These are the l49 log's figures to the digit.
+- The invariant the second counter states (nothing booked into the stays-set bin may be an entry record) is the
+  discriminator rev56's Low and my M-1 asked for, and it is a run-summary line rather than a review argument.
+
+7.3 L-2 (the parser) FIXED. sv_enum_members strips both comment forms before splitting and asserts each member is an
+identifier; the unit test hand-lists the four members and checks the declaration still lists exactly those in order,
+so it no longer shares the implementation's regex. Exercised by me on synthetic declarations: a // comment carrying a
+comma parses to {A_ONE, A_TWO, A_THREE}, a block comment to {B_ONE, B_TWO}, an explicit value and a non-identifier
+member die with the named reason.
+
+7.4 L-1 (the mutation text and the cycle-zero wording) FIXED by the corrigendum: the mutation is printed as a diff
+(the clear of the valid flag removed while the cycle is still cleared), the three cycle-zero sentences are quoted and
+corrected, and the fetch-enable fixture is stated to have no reset window, which is what my three variants showed
+(Section 5). The corrigendum also inverts the l46 and l47 logs' 173 narrative to the true reading and states why the
+two-build comparison could not have caught a shared input; that matches the corrigendum I appended to
+gen_critic_irq_step1.md Section 7.3.
+
+7.5 The plan line. The plan line at 9bb1974 (gen_fcov_plan.md, the cp_mie_global_edge bullet; gen_test_plan.md and
+gen_feature_list.md move only in their inputs-digest header, 7c0527c89b39) gives mret_mie1_mpie1_pending its class,
+NOT-BUILT-STIMULUS, with the derivation in gating terms: a non-debug trap entry clears MIE (the csr_save_cause_i arm,
+!debug_csr_save_i, !debug_mode_i, :924) and retires no record, so an mret shows MIE 1 before it only where the record is
+not a trap entry and MIE is set at that point; this is the reading of L-5 and L-6 above and it names the debug guard
+that the l49 log omits. Its survey of every mret site holds on my own census at 9bb1974: 22 files under gen_programs
+and gen_directed emit mret; every mstatus write within six lines of an mret sets MPP alone (gen_cpuctrl_directed.S:36
+and gen_dmem_err_directed.S:63 with 0x1800, gen_isa_cti_prog.py:849 and gen_csr_trap_setup_prog.py:771 and :781 with
+MPP = M, gen_rst_boot_prog.py:330) or clears bits (gen_pmc_ctrl_prog.py:371, gen_pmp_csr_warl_prog.py:780); none sets
+MIE; the vectors of gen_irq_directed.S and gen_nmi_long_directed.S are bare mrets; the irq generator's handler
+(gen_irq_basic_prog.py:189-196) stores and returns. The measured outcome it reads at 021684d matches the companion
+(both shapes leave the three mret bins uncovered, the return arm never fires, the only hit is the superseded
+incidental one, the "only path" sentence withdrawn, the re-entry read from counts, the three limits carried, the
+window consequence under the per-run rule); no bin is added or removed, the trace and mark checks pass
+(gen_trace_check 2279/2205/74, gen_unbuilt_mark_check PASS, both codegen checks up to date at 9bb1974) and the three
+documents are ASCII-clean. One precision point, not a defect: the line says the bin's only hit "to date" is incidental;
+it is, and the companion's probe runs are unretained (L-4), so the line's measured clause rests on the companion's
+words as the companion itself does. No item owns the bin and one is owed, as the line says. APPROVED.
+
+7.6 Rows and verdict.
+- L-3 (Low, records; disclosed and corrected inside the range). The l49 log's fixture sentence at its lines 55-56,
+  "THE FIXTURE MUST WRITE mstatus.MIE BEFORE THE mret, with a line pending at the mret. That is the only path to
+  (now && was)", is wrong, and tb-infra-2's companion gen_fu_l49_fixture_corrigendum.log (021684d, landing 50)
+  withdraws it on its own measurement: in the retained probe pair (a handler that reports each entry, then sets MIE,
+  then returns; one line held sticky 3000 cycles, or thirty short pulses) all three mret bins stay uncovered and the
+  mret arm never fires; the sticky shape completes with 151 entries in 3000 cycles, so a handler that sets MIE with a
+  line pending re-enters instead of retiring its mret; the bin's only hit to date is one incidental hit in a superseded
+  timed-out storm probe. The RTL supports the inferred mechanism: a CSR write other than mscratch or mepc flushes the
+  pipeline (rtl/ibex_id_stage.sv:595-599), and in the empty ID slot that follows, DECODE takes a pending enabled
+  interrupt (rtl/ibex_controller.sv:703-711: no stall, no special request, nothing in ID or WB, handle_irq) before the
+  mret is fetched, so the reachable shape is a line arriving after that bubble and before the mret's commit, a timing
+  window. The companion states its limits (mechanism inferred from counts, one run incomplete, an arbitrary pulse
+  spacing) and keeps the classification: not-built-stimulus, with the consequence that a windowed fixture could buy
+  merged-report credit but never a declared bin under the per-run rule. Nothing in the classifier fix depends on the
+  withdrawn sentence. The companion's probe programs and test were scratch and removed from the tree, so its figures
+  (151 entries, 607 records, the two urg readings) rest on the log's words alone with no run directory retained; under
+  the evidence-audit rule that is a records Low (L-4): retain the two probe runs' sim logs and urg excerpts beside the
+  companion, or say where they live. The l49 log's bytes are unchanged, as the manifest row says.
+- L-5 (Low, precision; raised by tb-infra-2 after the DV Lead corrected the citation; judged unreachable by me). The
+  classifier's override treats every is_intr record's pre-state as cleared, citing an unconditional clear at
+  rtl/ibex_cs_registers.sv:924; the clear sits under `else if (!debug_mode_i)` after `if (debug_csr_save_i)` (:911-927),
+  so a debug entry and an exception in debug mode leave MIE alone, and "unconditionally" in the l49 log (:9), its
+  corrigendum (:11) and the classifier comment (gen_fcov_pkg.sv:445 at 9a42c17) is imprecise. The gap is theoretical:
+  st.is_intr is rvfi_intr, set only through rvfi_set_trap_pc_d on `pc_set && pc_mux_id == PC_EXC && exc_pc_mux_id ==
+  EXC_PC_IRQ` (rtl/ibex_core.sv:2405-2410); EXC_PC_IRQ is driven only in IRQ_TAKEN (rtl/ibex_controller.sv:727),
+  entered only through handle_irq = `~debug_mode_q & ~debug_single_step_i & ~nmi_mode_q & (irq_nm | (irq_pending_i &
+  irq_enabled)) & ...` (:498-500), while a debug entry drives EXC_PC_DBD (:766) and sets no marker. Every is_intr record
+  therefore follows an interrupt or NMI entry taken outside debug mode, where :924 did clear MIE. Disposition: the
+  one-term guard rides tb-infra-2's counter touch as hygiene; the three citations take a records corrigendum.
+- L-6 (Low, records; the exception-entry question, raised by tb-infra-2, settled here from the source as hygiene). An
+  exception also clears MIE through the same arm and rvfi_intr does not mark its handler's first instruction, so the
+  override does not fire there; that is correct, because the classifier's pre-state is the ISA model's mstatus read by
+  publish_state at the end of each record (gen_rvfi_pkg.sv:199-207, :583), after the model stepped that record. A
+  trapping instruction is stepped and the trap is taken inside that step (the scoreboard requires `trap && retired ==
+  0` from it, :518-520, and the next record's pc must equal the model's post-step pc, the handler, :514), so the trap
+  record's published mstatus is post-trap with MIE clear, and the handler's first instruction reads the right
+  pre-state from the previous record. The interrupt entry is the one event with no record: the model takes it only
+  when the handler's first record arrives with intr (:352-376), so the interrupted instruction's published mstatus
+  still has MIE set, exactly the case the override keys on. The fix is complete for programs with exception handlers;
+  the l49 log's sentence "an entry retires no record of its own" should read "an interrupt entry", which rides the
+  same records corrigendum as L-5.
+- Conformance (dv_principles.md): the fix reads the entry's own effect rather than a neighbouring record; the
+  discriminator is a collected counter; the two logs whose interpretation inverted are corrected beside, not inside;
+  the parser's oracle is independent of its implementation.
+CRITIC VERDICT: APPROVE for 9a42c17, 021684d and 9bb1974. The REQUEST-CHANGES of Section 5 on 03aafce..dc60063 is LIFTED on
+this record: the mret-bin-and-hold-mirror group stands approved. Sections 1-6 and the corrigendum above are
+byte-identical to the ec70820 commit (dc9e64def0536c4e).
