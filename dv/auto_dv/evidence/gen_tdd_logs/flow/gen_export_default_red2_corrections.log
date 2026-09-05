@@ -1,0 +1,31 @@
+# Companion to gen_export_default_red2.log: two corrections, the log's bytes untouched
+#
+# Raised as two Lows by rev73 on 44a24f5..ccd755d. Both are mine and both are right.
+
+# 1. THE PREDECESSOR'S FAULT IS OVERSTATED IN THAT LOG.
+#
+# The log says the old record tied its POST tree to "a tree that never ran". That is stronger than the
+# evidence. The old header named edbe821 where the archives were taken at 7d1a6fe, but those two commits hold
+# BYTE-IDENTICAL flow directories, so the mis-named header pointed at the same eight blobs. Measured here:
+#     gen_flow_const.py    7d1a6fe 935728bb83e378d1   edbe821 935728bb83e378d1
+#     gen_flow_util.py     7d1a6fe 1f5d9503043d0970   edbe821 1f5d9503043d0970
+#     gen_run.py           7d1a6fe 7632eca5b10f840c   edbe821 7632eca5b10f840c
+#     gen_regress.py       7d1a6fe 29a4f5042b171e3b   edbe821 29a4f5042b171e3b
+#     git diff 7d1a6fe edbe821 -- dv/auto_dv/flow  : no output
+#
+# SO THE FAULT IS A FALSE PROVENANCE CLAIM WITH NO EFFECT ON THE BYTES. The old log's measurement was not
+# unsound; a reader could not have CHECKED it from the header, which is why it was re-run on a provable basis.
+# The distinction matters: 'the header cannot be checked' is a records defect, 'the bytes were wrong' is not
+# what happened, and the log as written invites the second reading.
+
+# 2. THE PRE BLOCK PARAPHRASES ONE FIELD, UNDER A HEADING THAT PROMISES QUOTED FIELDS.
+#
+# It prints `export_origin None` for the pre-change run. The pre-change code never writes that key at all, so
+# the file has no such field and None is my rendering of a missing key, not its value. It should read
+#     export_origin          absent (key not written by the pre-change code)
+# This is the same paraphrase-under-a-quoting-heading that rev69's M-1 named in the log this one replaced,
+# reproduced one artefact later. Every other field in both blocks is a true quotation.
+#
+# NEITHER CORRECTION MOVES A RESULT. The PRE run wrote no export file and the POST run wrote one with
+# export_origin 'default'; both verdicts are PASS; all eight driver digests still equal the two commits' blobs.
+

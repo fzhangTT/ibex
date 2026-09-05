@@ -1,0 +1,99 @@
+# Companion to gen_verdict_reason_red.log: the basis of Section 2, the scripts, and the population's root
+#
+# Raised as a Low by rev73: Section 1's basis is a commit and reproduces exactly, but Section 2 named no tree
+# because the fix was uncommitted when it ran, neither script was folded in, and the 22-run population named
+# no run directory. The log's bytes are untouched; everything it could not say is here.
+
+# THE TREE SECTION 2 RAN ON. The change was uncommitted at the time and is now committed at 1fa0bc7. The two
+# files the transcript exercises, by digest at that commit:
+#     gen_verdict.py       1fa0bc7 4cc36636a67a03ba
+#     gen_flow_const.py    1fa0bc7 7d62bdae08c285d4
+# Section 1 ran against the code at 4b8d667, which has no mechanism_id at all; that is what makes it a red.
+#
+# THE POPULATION'S ROOT: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_wave_4017573/runs, 403 run directories,
+# of which 22 are non-fcov failures. fcov-expectation failures are excluded because their reason comes from the
+# coverage checker rather than the log scan, so this change cannot reach them.
+#
+# BOTH SCRIPTS ARE BELOW IN FULL. The population script was run as an inline heredoc rather than from a file;
+# it is reproduced here verbatim as run, and its docstring carries the trap that produced a false result on my
+# first pass (omitting red_fixture and red_expect regrades a RED-OK fixture as a plain FAIL).
+
+----------------------------------------------------------------
+# red.py  md5 8549513988b2e901abff212600a32d75  1821 bytes
+----------------------------------------------------------------
+#!/usr/bin/env python3
+"""RED for the verdict-reason item: the earliest failing line of a VCS assertion failure is the Offending
+continuation, which names no mechanism, and the reason carries only its class and position while the very
+next line names the property."""
+import sys
+sys.path.insert(0, "/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/flow")
+import gen_verdict as V, gen_flow_const as C
+
+# The real shape, taken verbatim from the 258-fire run's sim.log lines 44-46 with the paths shortened.
+LINES = [
+    "UVM_INFO @ 229500: reporter [GEN_EOT] end-of-test store 0xa5c30001 at 0x8ffff104 (store 1)",
+    '"gen_protocol_props.sv", 299: gen_tb_top.u_dut.gen_protocol_props_i.sva_rvfi_irq_valid_exclusive: started at 65915000ps failed at 65915000ps',
+    "\tOffending '(!rvfi_valid)'",
+    "UVM_ERROR @ 6591500: reporter [sva_rvfi_irq_valid_exclusive] GEN_PROTO sva_rvfi_irq_valid_exclusive: protocol property violated at cycle 6587",
+    "GEN_TEST_PASS",
+]
+res = V.decide_lines(LINES, "GEN_TEST_PASS", False, 0, C.BUILD_CONFIG, [])
+print("verdict :", res["verdict"])
+print("reason  :", res["reason"])
+print("evidence:", res["evidence"].strip())
+named = "sva_rvfi_irq_valid_exclusive" in res["reason"]
+print("SELF-TEST", "ok " if named else "BAD", "the reason names the property that fired:", named)
+
+# Control: an unrelated error far below the hit must NOT be attributed to it.
+FAR = LINES[:3] + ["filler"] * 12 + [
+    "UVM_ERROR @ 9999999: reporter [some_other_thing] unrelated",
+    "GEN_TEST_PASS",
+]
+res2 = V.decide_lines(FAR, "GEN_TEST_PASS", False, 0, C.BUILD_CONFIG, [])
+print("CONTROL reason:", res2["reason"])
+far_ok = "some_other_thing" not in res2["reason"]
+print("SELF-TEST", "ok " if far_ok else "BAD", "a distant unrelated error is not attributed:", far_ok)
+sys.exit(0 if (named and far_ok) else 2)
+
+----------------------------------------------------------------
+# population.py  md5 26b62950254e90ce2bc64c0486d871af  2066 bytes
+----------------------------------------------------------------
+#!/usr/bin/env python3
+"""Re-decide every non-fcov failure of the wave regression with the changed verdict and compare.
+
+Run root: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_wave_4017573/runs (403 run directories).
+fcov-expectation failures are excluded because their reason comes from the coverage checker, not the log scan.
+Each run is re-decided with the arguments the ORIGINAL run had, red_fixture and red_expect included; omitting
+those two regrades a RED-OK fixture as a plain FAIL and reports a false verdict change."""
+import sys, os, re, yaml, pathlib, collections
+sys.path.insert(0, "/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/flow")
+import gen_verdict as V, gen_flow_const as C
+R = pathlib.Path("/proj_soc/user_dev/fzhang/ibex_dv_out/regress_wave_4017573/runs")
+same = chg = gained = 0; names = collections.Counter(); kept = []
+for d in sorted(os.listdir(R)):
+    rp = R / d / "result.yaml"
+    if not rp.is_file():
+        continue
+    old = yaml.safe_load(open(rp))
+    if old["verdict"] == "PASS" or old["reason"].startswith("fcov expectation"):
+        continue
+    res = V.decide(R / d / "sim.log", old.get("pass_marker") or "GEN_TEST_PASS", False, False,
+                   old.get("exit_code"), extra_logs=[R / d / "sim_stdout.log"], build_config=C.BUILD_CONFIG,
+                   stderr_logs=[], red_fixture=bool(old.get("red_fixture")), red_expect=old.get("red_expect"))
+    same += res["verdict"] == old["verdict"]; chg += res["verdict"] != old["verdict"]
+    if res["reason"] != old["reason"]:
+        gained += 1
+        m = re.search(r"\(([A-Za-z_]\w*)\)", res["reason"])
+        if m:
+            names[m.group(1)] += 1
+    else:
+        kept.append((d, res["reason"][:70]))
+print(f"non-fcov failures re-decided: {same + chg}")
+print(f"  verdict unchanged: {same}    verdict changed: {chg}")
+print(f"  reasons that gained a mechanism name: {gained}")
+for k, v in names.most_common():
+    print(f"     {v:3d}  {k}")
+print(f"  reasons unchanged (no UVM id within the window): {len(kept)}")
+for d, r in kept:
+    print(f"     {d}: {r}")
+

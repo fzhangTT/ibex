@@ -67,3 +67,16 @@ differs is `cp_binv_twice.yes` itself, 40 of 40 here against 0 of 40 in the wave
 So the delta does NOT move bins, and the decision not to re-pin the wave for this fix is now supported by
 measurement rather than by argument. Nothing is written up as a finding, because nothing differs except the change
 the fix was for.
+
+## The comparison this block's carry-over rests on
+
+Added 2026-09-05T14:14Z on the DV Lead's ruling that the comparison a carry-over rests on lives beside the block.
+
+| file | bytes | sha256 first-12 |
+|---|---|---|
+| `gen_carryover_comparison.md` | 4778 | `9fad5d2dbde1` |
+
+Written by the Test Writer: the byte comparison of this block's generator (70f31808) against HEAD's
+(b8a99dc827c3) over the block's forty seeds and every red form, 1520 of 1520 pairs identical, with the retained
+log `gen_tdd_logs/test_writer/gen_fu_bit_ratified_carryover.log` and its script. It is the evidence that this
+block's measurements still describe the generator in the tree.

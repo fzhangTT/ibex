@@ -505,6 +505,9 @@ UVM_SUMMARY_RE = re.compile(r"^UVM_(FATAL|ERROR|WARNING|INFO)\s*:\s*(\d+)")
 # it quotes. When the reported line carries no id, the reason takes one from the next few lines.
 MECHANISM_ID_RE = re.compile(r"^UVM_(?:FATAL|ERROR)\s[^\[]*\[([^\]]+)\]")
 MECHANISM_LOOKAHEAD = 3
+# Only the assertion shape may take its id from a following line; every other class takes its own or none,
+# so an unrelated bracketed error below a failure is never read as that failure's mechanism.
+MECHANISM_LOOKAHEAD_CLASS = "assertion_failure"
 COCOTB_SUMMARY_RE = re.compile(r"\*\*\s+TESTS=(\d+)\s+PASS=(\d+)\s+FAIL=(\d+)\s+SKIP=(\d+)")
 FINISH_RE = re.compile(r"^\$finish (at simulation time|called)")
 

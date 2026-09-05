@@ -455,7 +455,7 @@ def self_test() -> int:
     cond = led["witnessed"] == 2 and led["clauses"] == 3 and led["text"] == "witnessed clauses: 2 of 3 (CG-WIT-001)"
     ok &= cond
     print(f"SELF-TEST {'ok ' if cond else 'BAD'} fabricated grpinfo.txt: ledger bins counted only from the ledger covergroup: {led['text']}")
-    # rt39 item one: the three group quantities and the one selector.
+    # The three group quantities and the one selector.
     rows39 = [{"name": "gen_a_cg", "score": 50.0, "weight": 1, "covered": 5, "expected": 10},
               {"name": "gen_b_cg", "score": 100.0, "weight": 1, "covered": 10, "expected": 10},
               {"name": C.LEDGER_COVERGROUPS[0], "score": 0.0, "weight": 1, "covered": 0, "expected": 80}]

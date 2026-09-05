@@ -1,0 +1,18 @@
+# Companion to gen_build_identity_basis.log: two sentences reworded from measurement to inference
+#
+# Raised as an Info by rev73, and it is right. That file says "SO THE BASIS IS ... uncommitted working-tree
+# files" and heads a block "THE FILES THE TRANSCRIPT EXERCISED". Both are INFERENCES stated in the voice of
+# measurement. What is measured there is only that acbb40d lacks the build-identity code:
+#     vpi_lib_identity in gen_flow_util.py   acbb40d: 0 occurrences   7930d04: 1
+#     vpi_lib          in gen_build.py       acbb40d: 1 occurrence    7930d04: 2
+# Nothing in that record measures that the bytes which RAN equal 7930d04's blobs. They were working-tree files
+# at the time and were not hashed then, so the equality cannot be established now.
+#
+# READ THOSE TWO SENTENCES AS:
+#   "the code under test was not in the tree the header names, and the blobs that later landed at 7930d04 are
+#    the only committed form of it"
+#   "THE FILES 7930d04 HOLDS, which are the committed form of what the transcript exercised"
+#
+# WHAT IS UNAFFECTED: the RED section of gen_build_identity_red.log reads the COMMITTED round-0 build manifest,
+# so its three parts and its control are properties of that record and hold whatever tree they ran on.
+

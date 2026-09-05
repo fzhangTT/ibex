@@ -1605,7 +1605,7 @@ def load_testlist(path: Path = C.TESTLIST_YAML) -> dict[str, Any]:
                     and C.RED_EXPECT_FIRE_TOKEN not in rx:
                 die(f"{path}: test {t['name']}: red_expect {rx!r} matches the {C.RED_EXPECT_HARNESS_PREFIX} harness line but names no "
                     f"{C.RED_EXPECT_FIRE_TOKEN} id (policy {C.RED_EXPECT_POLICY_FIRE_ID}: the designed fire id is on that line)")
-            # rt37: a signature only the fcov checker can produce needs a manifest to produce it. Without one the
+            # A signature only the fcov checker can produce needs a manifest to produce it. Without one the
             # fixture is graded on its sim log (red_grading_deferred is false), so red_expect can never match.
             if not t.get("fcov_expectation_file") and C.FCOV_UNMET_REASON in rx:
                 die(f"{path}: test {t['name']}: red_expect {rx!r} matches the fcov checker's unmet-bin reason but "

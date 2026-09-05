@@ -1095,10 +1095,17 @@ both the regression-start and collect-time readings, each with its own scope str
 added: the facts are recorded so a reader can judge, not enforced.
 
 THE CANARY AND THE ROUND ARE COMPARED BY SOURCES DIGEST. The index entry carries
-`canary_sources_sha256`, `round_sources_sha256` and `sources_sha256_match`, with `C.SOURCES_DIGEST_SCOPE`
-stating what the digest covers: THE FILELIST SOURCES ONLY, not the defines, the parameters or any other
-compile option. A canary of other sources records its own digest and the match reads false rather than the
-comparison being silently absent, which is what the pre-change record did.
+`canary_sources_sha256`, `round_sources_sha256`, `round_sources_sha256_all` and `sources_sha256_match`, with
+`C.SOURCES_DIGEST_SCOPE` stating what the digest covers: THE FILELIST SOURCES ONLY, not the defines, the
+parameters or any other compile option. `round_sources_sha256_all` lists EVERY build's digest; the scalar
+`round_sources_sha256` and the match are the round's answer only when that list has exactly one distinct value.
+
+THE MATCH HAS THREE OUTCOMES, NOT TWO. True and false mean the round is single-sourced and the canary does or
+does not share that source. NULL means the comparison could not be made and is not a mismatch: either no digest
+is known, or the round was built from MORE THAN ONE source tree, in which case a scalar answer would describe
+whichever build happened to be read and cover the rest. A reader who sees null should look at
+`round_sources_sha256_all`. The pre-change record made the comparison silently absent; an intermediate version
+reported a mixed-source round as false, which reads as a mismatch rather than as undecidable.
 
 RETENTION OF COMPRESSED ARTEFACTS IS REPRODUCIBLE. `retain_gz` shells `gzip -n` rather than using Python's
 gzip, and the collect retains `modlist.txt` and `modinfo.txt` with a `gz_copied` count. Python's

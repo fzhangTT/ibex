@@ -87,7 +87,7 @@ def dut_scope_row(m: dict[str, Any]) -> dict[str, Any]:
                 row = dict(first)
     if not row:
         return {m: C.NOT_APPLICABLE for m in C.URG_METRICS} | {"ratios": {}, "parse_error": "gate row missing (no combined DUT-scope row)"}
-    # rt39 item one: the same selector the round uses, so the dashboard cannot print a third quantity.
+    # The same selector the round uses, so the dashboard cannot print a third quantity.
     cell = R.group_cell(cov.get("group_quantities") or {})
     row["group"] = cell.get("percent") if cell.get("percent") is not None else C.NOT_APPLICABLE
     ratios = dict(row.get("ratios") or {})

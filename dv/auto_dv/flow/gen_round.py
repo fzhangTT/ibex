@@ -123,7 +123,7 @@ def metric_row(cov: dict[str, Any]) -> dict[str, Any]:
                            "combining_rule": gate.get("rule")}
     for m in GATED_CODE_METRICS:
         row[m] = gate.get(m, C.NOT_APPLICABLE)
-    # One selector for the group cell (rt39 item one): the percent and the ratio always come from the
+    # One selector for the group cell: the percent and the ratio always come from the
     # same named quantity, so no consumer can pair a percent from one definition with another's denominator.
     cell = R.group_cell(cov.get("group_quantities") or {})
     row["group"] = cell.get("percent") if cell.get("percent") is not None else C.NOT_APPLICABLE
@@ -241,7 +241,7 @@ def collect(outdir: Path, round_no: int, dry_run: bool, label: str | None,
         if src.is_file():
             shutil.copyfile(src, ev / C.round_evidence_name(f))
             copied.append(C.round_evidence_name(f))
-    # rt39 item five: the two large URG products, retained compressed with the reproducible shape.
+    # The two large URG products, retained compressed with the reproducible shape.
     gz_copied: list[str] = []
     for f in C.ROUND_URG_GZ_FILES:
         src = report / f
@@ -285,7 +285,7 @@ def collect(outdir: Path, round_no: int, dry_run: bool, label: str | None,
     for e in cov.get("elfiles") or []:
         (ev / C.ROUND_EV_ELFILES_DIR).mkdir(exist_ok=True)
         shutil.copyfile(e, ev / C.ROUND_EV_ELFILES_DIR / C.round_evidence_name(Path(e).name))
-    # rt39 item four: the canary's identity against the round's. Both values travel with the compare
+    # The canary's identity against the round's. Both values travel with the compare
     # result, so a reader of the commit never has to open a path under work/ that git does not track.
     canary = man.get("canary_build") or {}
     canary_sources = canary.get("sources_sha256")
@@ -459,7 +459,6 @@ def self_test() -> int:
     cond = gzip.decompress(a_gz.read_bytes()) == src.read_bytes()
     ok &= cond
     print("SELF-TEST", "ok " if cond else "BAD", "retain_gz round-trips the source bytes unchanged")
-    U.remove_selftest_tree(d)
     # The round's source identity: one distinct digest decides, two make it undecidable rather than half-checked.
     def _bm(name: str, digest: str | None) -> dict[str, Any]:
         mp = d / f"{name}_manifest.yaml"
@@ -494,11 +493,15 @@ def self_test() -> int:
              gen_dashboard.dut_scope_row({"coverage": cov_rec})["group_cell"]]
     view = [tuple(c.get(k) for k in keys) for c in cells]
     other = R.group_cell(cov_rec["group_quantities"], "group_bins_gate")
-    cond = len(set(view)) == 1 and view[0][0] == C.GROUP_CELL_FIELD and tuple(other.get(k) for k in keys) != view[0]
+    # Pinned to the fixture's own literal, not merely to "the three agree": three empty cells agree, and so does a
+    # selector reading the wrong quantity while labelling it with the selected field's name.
+    want = (C.GROUP_CELL_FIELD, *(cov_rec["group_quantities"][C.GROUP_CELL_FIELD][k] for k in keys[1:]))
+    cond = len(set(view)) == 1 and view[0] == want and tuple(other.get(k) for k in keys) != view[0]
     ok &= cond
     print("SELF-TEST", "ok " if cond else "BAD",
           f"one selector, three consumers: manifest, round summary and dashboard return the same cell "
           f"{view[0]}; a different field is a different cell")
+    U.remove_selftest_tree(d)   # after the LAST case that writes into it, so no scratch root survives a run
     print("SELF-TEST:", "PASS" if ok else "FAIL")
     return 0 if ok else 2
 

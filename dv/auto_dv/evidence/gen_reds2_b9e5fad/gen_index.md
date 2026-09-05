@@ -10,7 +10,7 @@ does not track.
 
 | file | bytes | sha256 |
 |---|---|---|
-| `gen_reds2_b9e5fad.yaml` | 3406 | `ea5795b0beeb762cb8ac698e924b523fb52e00509539c12b89cfc34399d9b8c6` |
+| `gen_reds2_b9e5fad.yaml` | 3560 | `baff21ca96e402525059a87bfec591b3d0569dbd1d97ca09840aa0460ae2ac27` |
 
 Pinned to b9e5fad36c4d7f643a02c76f333ee00bfa22bc6a, head-mode mirror, driver a detached archive of that commit
 whose `gen_run.py` hashes to 7632eca5b10f840c, equal to the committed blob. Fresh output directory.
@@ -41,7 +41,10 @@ firing, which is the rule this record's predecessor had to learn twice.
 
 ## What these runs do NOT carry
 
-`export_origin` is null on all four. The driver is the pinned b9e5fad archive, which predates the export default,
-so no record stream was written. This is stated because I told the Orchestrator these runs would write one: the
+No record stream was written: the driver is the pinned b9e5fad archive, which predates the export default.
+
+CORRECTED 2026-09-05T14:14Z (Critic, flow follow-ups). This paragraph said "`export_origin` is null on all four". The four
+result.yaml files carry NO `export_origin` KEY AT ALL, since the code that writes it is not in the pinned driver;
+null was this page's rendering of a missing key, not a value any file holds. Checked on all four. This is stated because I told the Orchestrator these runs would write one: the
 pinned driver is the right choice for a verification block, and the export run on this seed had already been
 released as unnecessary by its requester.

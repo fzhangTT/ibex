@@ -80,7 +80,7 @@ def scan_log(lines: list[str], pass_marker: str | None, build_config: str,
         # without it the index into the scanned text is all there is.
         where = f"{origins[idx - 1][0]}:{origins[idx - 1][1]}" if origins and idx <= len(origins) else f"log line {idx}"
         # evidence is the display form (300 chars); evidence_line is the full line the red_expect regex sees.
-        mech = mechanism_id(lines, idx)
+        mech = mechanism_id(lines, idx, name)
         out.update(verdict=C.VERDICT_FAIL, reason=f"{name} at {where}" + (f" ({mech})" if mech else ""),
                    evidence=line[:300], evidence_line=line)
         return out
@@ -130,12 +130,19 @@ def grade_red_fixture(res: dict[str, Any], red_expect: str | None) -> dict[str, 
     return res
 
 
-def mechanism_id(lines: list[str], idx: int) -> str | None:
-    """The name of the mechanism the failing line at idx (1-based) belongs to, or None. The line's own bracketed
-    id when it has one, else the first one within C.MECHANISM_LOOKAHEAD lines below it: a VCS assertion prints its
-    source and Offending lines before the UVM_ERROR that names the property. Bounded so a later, unrelated error
-    is never attributed to this one."""
-    for i in range(idx - 1, min(idx - 1 + 1 + C.MECHANISM_LOOKAHEAD, len(lines))):
+def mechanism_id(lines: list[str], idx: int, name: str | None = None) -> str | None:
+    """The name of the mechanism the failing line at idx (1-based) belongs to, or None.
+
+    Its OWN bracketed id whatever the class. A FOLLOWING line's id only for C.MECHANISM_LOOKAHEAD_CLASS, because
+    only the VCS assertion shape puts the name below the reported line (source line, Offending line, then the
+    UVM_ERROR that names the property). Any other class takes its own id or none, so a bracketed error a couple of
+    lines below an unrelated failure is never borrowed as that failure's mechanism."""
+    own = C.MECHANISM_ID_RE.match(lines[idx - 1]) if 0 < idx <= len(lines) else None
+    if own:
+        return own.group(1)
+    if name != C.MECHANISM_LOOKAHEAD_CLASS:
+        return None
+    for i in range(idx, min(idx + C.MECHANISM_LOOKAHEAD, len(lines))):
         m = C.MECHANISM_ID_RE.match(lines[i])
         if m:
             return m.group(1)
@@ -281,7 +288,7 @@ def self_test() -> int:
     # the fcov check.
     fcov_reason = f"{C.FCOV_UNMET_REASON}: 1 declared bin(s) not hit ['gen_ic_ecc_cg.cp_ram.data']"
     # The reason carries no regex metacharacter, so it goes in unescaped: re.escape would escape the
-    # spaces and the loader's rt37 rule, which looks for the reason as a substring, would no longer see it.
+    # spaces and the loader's rule that looks for the reason as a substring would no longer see it.
     fcov_sig = C.FCOV_UNMET_REASON + r": [0-9]+ declared bin\(s\) not hit .*gen_ic_ecc_cg\.cp_ram\.data"
     r_ok = grade_red_fixture({"verdict": C.VERDICT_FAIL, "reason": fcov_reason, "evidence_line": fcov_reason}, fcov_sig)
     cond = r_ok["verdict"] == C.VERDICT_RED_OK
@@ -387,13 +394,25 @@ def self_test() -> int:
                          "GEN_TEST_PASS", False, 0, C.BUILD_CONFIG, [])
     r_own = decide_lines(["UVM_ERROR @ 5: reporter [isa_insn] mismatch", "GEN_TEST_PASS"],
                          "GEN_TEST_PASS", False, 0, C.BUILD_CONFIG, [])
+    # A DIFFERENT failure class must not borrow a bracketed id from a line below it.
+    r_other = decide_lines(["Error-[FCIBH] Illegal bin hit", "filler",
+                            "UVM_ERROR @ 9: reporter [irq_entry] unrelated", "GEN_TEST_PASS"],
+                           "GEN_TEST_PASS", False, 0, C.BUILD_CONFIG, [])
+    r_bare = decide_lines(["UVM_ERROR @ 3: reporter no bracket here",
+                           "UVM_ERROR @ 9: reporter [irq_entry] unrelated", "GEN_TEST_PASS"],
+                          "GEN_TEST_PASS", False, 0, C.BUILD_CONFIG, [])
     cond = ("sva_rvfi_irq_valid_exclusive" in r_near["reason"] and r_near["evidence_line"] == sva[1]
             and "sva_rvfi_irq_valid_exclusive" not in r_far["reason"]
-            and "(isa_insn)" in r_own["reason"])
+            and "(isa_insn)" in r_own["reason"]
+            and "irq_entry" not in r_other["reason"] and "irq_entry" not in r_bare["reason"])
     ok &= cond
-    print(f"SELF-TEST {'ok ' if cond else 'BAD'} fabricated: the reason names the mechanism from the next lines when its own line has none, "
-          f"never from beyond {C.MECHANISM_LOOKAHEAD} lines, and the evidence line is unchanged: "
-          f"near {r_near['reason']!r}; far {r_far['reason']!r}; own {r_own['reason']!r}")
+    print(f"SELF-TEST {'ok ' if cond else 'BAD'} fabricated: only the {C.MECHANISM_LOOKAHEAD_CLASS} shape takes a name from the next "
+          f"lines, never from beyond {C.MECHANISM_LOOKAHEAD}, never for another class, and its own bracketed id always wins: "
+          f"near {r_near['reason']!r}; far {r_far['reason']!r}; own {r_own['reason']!r}; other-class {r_other['reason']!r}; "
+          f"bare {r_bare['reason']!r}")
+    cond = C.MECHANISM_LOOKAHEAD_CLASS in {n for n, _ in C.FAIL_PATTERNS}
+    ok &= cond
+    print(f"SELF-TEST {'ok ' if cond else 'BAD'} the look-ahead class names a real FAIL_PATTERNS entry ({C.MECHANISM_LOOKAHEAD_CLASS})")
     print("SELF-TEST: cases named 'real ...' are verbatim excerpts of runs on this site (LSF job ids given); "
           "'real-shaped ...' are bash kill reports captured from the job-script form with a stand-in simv; "
           "'fabricated ...' pin a rule on synthetic text until a real run exists")

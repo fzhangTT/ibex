@@ -1,4 +1,7 @@
 block: 'irq checker fix 2 re-runs at b9e5fad: the three red seeds and the 258-fire seed'
+corrigendum_2026_09_05T14_14Z:
+  export_origin_absent_not_null: the four result files have no export_origin KEY; checked on all four. Raised by
+    the Critic on the flow follow-ups range.
 counting_rule: a firing is a UVM_ERROR line carrying [irq_entry]; lines mentioning the identifier are not firings
 driver: a detached archive of b9e5fad; its gen_run.py hashes to 7632eca5b10f840c, equal to the committed blob at
   that commit, so no uncommitted flow code took part in these four runs
@@ -10,10 +13,9 @@ fresh_outdir: true
 head_sha: b9e5fad36c4d7f643a02c76f333ee00bfa22bc6a
 kind: unmeasured for the round; PINNED; rev60's Medium, a required row rather than a courtesy
 mirror_tree_sha256_prefix: e2ef252f23091d9a
-no_export_stream: 'export_origin is null on all four runs. The driver is the PINNED b9e5fad archive, which predates
-  the export default, so no record stream was written. Stated because I told the Orchestrator these runs would write
-  one: the pinned driver is the right choice for a verification block and the export run on this seed was released
-  as unnecessary.'
+no_export_stream: 'no record stream was written: the driver is the pinned b9e5fad archive, which predates the export
+  default. The four result.yaml files carry NO export_origin key at all; an earlier wording said ''export_origin
+  is null'', which was this record''s rendering of a missing key rather than a value any file holds.'
 outdir: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_reds2_b9e5fadB
 result:
   gen_test_irq_basic_1207954461:
