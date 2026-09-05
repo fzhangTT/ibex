@@ -192,8 +192,9 @@ the round under the standing rule, so the rule in 3.1 permits up to 40. I ask fo
 
 THIS TABLE IS A REQUEST, NOT THE ROUND'S PLAN, and Section 7 is what the round is accepted against. The
 seed counts here are what I ask the testlist to carry; the testlist does not carry them today, so Section 7's
-seed column shows what the selector actually returns and every row of it reads three. Applying this table
-without the testlist touch would produce twelve-seed runs against Section 7 rows that state three, and
+seed column shows what the selector actually returns and every row of it reads three. Applying this table IS
+the testlist touch; doing it without restating Section 7 would leave twelve-seed runs against rows that state
+three, and
 Section 11 accepts the round against Section 7. If the Runtime Manager lands the seed rise, Section 7 is
 restated from a fresh selector call before dispatch and the acceptance follows the restated rows.
 
@@ -326,8 +327,13 @@ gen_test_pmp_mseccfg, come from the PMP step-1b block. TWO OF THE NINE ARE NARRO
 AND THIS PLAN'S OWN RULE IS WHAT NARROWS THEM. gen_test_bit_ratified declares 654 bins of which 37 were added
 on the pair-fix block, a DIFFERENT generator from the one the wave measured, so under the Section 0 rule that
 a block is evidence for the generator it measured, the wave covers 617 of its 654 and the pair-fix block
-covers the other 37. gen_test_pmp_csr_warl produced a program at all forty seeds and one run refused its
-coverage, so its measurement is 39 of 40, which is the figure its provisional status cleared on. The four that were not measured over forty seeds
+covers the other 37, whose per-bin evidence is Section E of gen_fu_binv_pairfix.log rather than the block's
+index. gen_test_pmp_csr_warl IS measured at every one of forty seeds and an earlier sentence of mine said
+otherwise. The census reads 40 runs with 40 coverage reports and EVERY 178 of 179 declared bins, the one
+exception being a single cross leg at 39 of 40, and the manifest was re-rendered at 9c28944 to exactly those
+178. So the current declared set is measured at forty seeds. The 39-of-40 figure belongs to the PMP blocks at
+218e9f3 and 4cd3ff6, where the cause was a generator assert producing no program rather than any coverage
+refusal, and I carried it here from a message instead of reading the census. The four that were not measured over forty seeds
 are gen_test_csr_access, gen_test_csr_trap_setup, gen_test_isa_alu and gen_test_isa_cti, whose declared sets
 are the round-1 sets calibrated to three seeds.
 
@@ -337,12 +343,16 @@ seeds its manifest was measured over, so at this commit ELEVEN of the fifteen ar
 measured over forty fresh seeds in the wave at 4017573, plus gen_test_pmp_lock and gen_test_pmp_mseccfg from
 the PMP step-1b block - and the remaining FOUR are capped at THREE, those being gen_test_csr_access,
 gen_test_csr_trap_setup, gen_test_isa_alu and gen_test_isa_cti, whose declared sets are the round-1 sets
-calibrated to three seeds. So Section 3.5's request for twelve is permitted for the entries it names and is
-not permitted for those four, and it takes a testlist touch to become the round's plan. Until that lands the
+calibrated to three seeds. AND THAT DERIVATION CONFLICTS WITH THE PLAN AS WRITTEN, which this form states rather than resolves in its
+own favour: gen_fcov_plan.md:164-167 says the absent measured_seeds field caps an entry at the count its
+current declared sets were calibrated over, and no manifest carries the field today, so under the plan's own
+words all fifteen are capped at their calibrated count and NONE at forty. The blocks above are what those
+entries were measured over; they are not the field the rule reads. So this paragraph is the evidence for a
+future cap and not a licence for Section 3.5's twelve, and the licence arrives when the field does. Until that lands the
 rows above are the plan, and this section is restated from a fresh selector call if it does.
 
 TWO OPEN ITEMS THIS FORM DOES NOT CLAIM. The hart_id plusargs on gen_test_csr_access and gen_test_rst_boot
-are a Runtime Manager testlist touch that has not landed, so no row above claims them and the round does not
+are an ask of mine rather than an item any record owes, so no row above claims them and the round does not
 depend on them. And the coverage criterion remains with the owner: this form does not state one.
 
 THE FIVE UNMEASURED ENTRIES of the twenty carry a null fcov_expectation_file and are selected for their runs
@@ -352,9 +362,9 @@ this form records rather than re-argues, each with its status at this commit.
 
 | # | condition | status |
 |---|---|---|
-| a | the irq_entry checker item classified and fixed | checker half fixed at b9e5fad, cross-model APPROVE-WITH-CHANGES with rows owed and the Critic's re-verdict pending |
+| a | the irq_entry checker item classified and fixed | fixed at b9e5fad; rev60 APPROVE-WITH-CHANGES with rows owed; the Critic's re-verdict REQUEST-CHANGES confined to one records sentence; the companion answering it landed at fab8a61; the Critic's confirmation pending |
 | b | its red fixture RED-OK at three of three rather than masked | REOPENED: the three-of-three was measured on a 9c7f8f6 build and the fix moved to b9e5fad, so it is re-run on a b9e5fad build |
-| c | the fixed cocotb timeout in the stimulus path replaced by a seed-independent bound | fixed at 6b894ab, re-review pending |
+| c | the fixed cocotb timeout in the stimulus path replaced by a seed-independent bound | CLOSED: fixed at 6b894ab, rev64 APPROVE-WITH-CHANGES at 348e4ae with its rows at 2c63b83, no re-review owed |
 | d | a fresh forty-seed sweep at the fix commit with its manifest rendered FROM that sweep | open |
 | e | a regime-independent end-of-test expectation covering the case a per-record bound cannot judge | open, and LOAD-BEARING rather than provisional: the storm-regime vacuity closes only by that reconciliation |
 | f | no run of the entry wedges the core | open: one wave run diverges from the model 6447 cycles before its first checker fire (the cited record reads 6443; the figure here is re-derived from the run and a one-line corrigendum on that record is owed), with 23387 instruction mismatches already reported and the core executing zeros |

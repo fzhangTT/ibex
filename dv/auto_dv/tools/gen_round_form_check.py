@@ -175,6 +175,9 @@ def check_selection(c):
         c.check(f"{t['name']} built", s_built, len(built))
         c.check(f"{t['name']} covergroups", s_cgs, len(cgs))
     c.check('declared total', r'declared sets total (\d+) bins', total)
+    # The per-entry checks find each row by name, so an EXTRA row is invisible to them; count the table.
+    rows = re.findall(r'\| gen_\w+ \| \d+ \| \d+ \| \d+ of \d+ \|', c.flat)
+    c.check('Section 7 row count', len(rows), len(meas))
 
 
 def run_checks(form_text, manifest, preflight_text, quiet=False):
@@ -312,7 +315,7 @@ def run_checks(form_text, manifest, preflight_text, quiet=False):
 
 
 def _cwd_self_test():
-    """M-1's own control: the tool must give the same verdict from a different working directory."""
+    """The tool must give the same verdict from any working directory: paths resolve against the root."""
     import os, tempfile
     here = os.getcwd()
     try:
@@ -349,9 +352,8 @@ def self_test():
         ('a wrong share fails', r'\| gen_test_mul_mul \| 338 \| 244 \| 72\.2%', '| gen_test_mul_mul | 338 | 244 | 62.2%'),
         ('a dropped claim fails, it does not silently pass', r'\| runs \| 53 \|\n', ''),
         ('naming the wrong four with margin fails', r"priority: csr_access, isa_cti", "priority: mul_mul, isa_cti"),
-        # The three below are the controls for check_selection's claims. The five above predate them and
-        # perturb Sections 3 and 4, so without these the seventy selection claims could pass a form whose
-        # selection figures were wrong and nothing would report it.
+        # Controls for the selection claims: without them a form whose selection figures were wrong would
+        # pass, because the other cases perturb Sections 3 and 4 only.
         ('a wrong Section 7 declared count fails', r'\| gen_test_mul_div \| 3 \| 190 \|',
          '| gen_test_mul_div | 3 | 194 |'),
         ('a dropped Section 7 row fails', r'\| gen_test_rst_boot \| 3 \| 6 \| 3 of 3 \|[^\n]*\n', ''),
