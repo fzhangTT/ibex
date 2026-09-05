@@ -1,0 +1,32 @@
+# MUT-STALEADDR: the instruction-bus driver reads the transaction address one clock edge BEFORE the accepting
+# edge, leaving the grant handshake genuine so the outstanding count stays right. A wrong word for a transaction
+# the core DID book, which is the second of the two arms. It prints every capture with both instants, so the
+# perturbation can be counted rather than assumed.
+# Applied to an out-of-tree archive only; the committed gen_agents_pkg.sv is never edited.
+# Line ranges are against gen_agents_pkg.sv at 2e9b734 (blob fb3eb9f1716ee56b). Apply with:
+#   git apply gen_mut_staleaddr.diff
+# What it produces: the mutated file sha256 e3933271ab144725..., and build_sources_sha256 6df6e3d2530ee80c
+# against d9a0553bd4e0b326 for the same tree without it.
+--- a/dv/auto_dv/env/gen_agents_pkg.sv
++++ b/dv/auto_dv/env/gen_agents_pkg.sv
+@@ -307,6 +307,7 @@
+             gen_bus_pend_t p;
+             logic [38:0] enc;
+             int unsigned gnt_stamp;
++            logic [31:0] a_neg;   // MUT-STALEADDR
+             p.gnt_delay = cycle - req_cycle; p.cycle_req = req_cycle; p.cycle_gnt = cycle; p.outstanding_at_gnt = pend.size(); p.stamp_gnt = bvif.cycle_count;
+             gnt_stamp = ev_on() ? sink.cycle() : 0;   // the export cycle base of THIS edge, before the wait below
+             if (first_pending) begin first_since = req_cycle - release_cycle + 1; first_pending = 0; end   // cycles from the release edge to the request (the driver counts from the first post-release negedge, so +1 gives the RTL's count)
+@@ -317,8 +318,11 @@
+             // bus address is combinational, so a driver writing a DUT input at this falling edge moves it and a
+             // value read here would be a mid-cycle transient the core never presented at any clock edge. Every
+             // figure above is taken at the granting edge, so this moves the value and not the time.
++            a_neg = vif.addr;   // MUT-STALEADDR: the value one edge before the accepting edge
+             @(posedge vif.clk);
+-            p.addr = vif.addr; p.we = req_we(); p.be = req_be();
++            p.addr = (!cfg.is_data) ? a_neg : vif.addr; p.we = req_we(); p.be = req_be();   // MUT-STALEADDR
++            if (!cfg.is_data && a_neg !== vif.addr) $display("MUT-STALEADDR differs at cycle %0d neg %08x pos %08x", cycle, a_neg, vif.addr);   // MUT-STALEADDR
++            if (!cfg.is_data) $display("MUT-STALEADDR capture at cycle %0d neg %08x pos %08x", cycle, a_neg, vif.addr);   // MUT-STALEADDR
+             p.wdata = cfg.is_data ? vif.wdata[31:0] : '0;
+             p.err = 0; p.injected = 0; p.intg_bad = 0;
+             if (armed_hit(GEN_MEM_ERR_ARM_KIND_ERR, p.addr) || (cfg.err_rate > 0 && cfg.in_err_window(p.addr) && ($urandom_range(999, 0) < cfg.err_rate))) begin

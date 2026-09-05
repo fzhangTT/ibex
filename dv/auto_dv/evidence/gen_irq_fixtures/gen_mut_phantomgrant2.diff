@@ -1,0 +1,52 @@
+# MUT-PHANTOMGRANT2: the same phantom grant as MUT-PHANTOMGRANT, narrowed to fire only when the instruction
+# request is low AND a fill is already in flight. That is the condition under which a surplus response can move
+# a later assignment, because the cache pairs an incoming response to the oldest fill buffer expecting one by
+# AGE with no address term. It is the shape that produced the arm-A measurement.
+# The census lines are part of the mutation on purpose: they report how many idle cycles the run had and how
+# many of those had any fill in flight, so a green result can be told apart from an absent injection.
+# Applied to an out-of-tree archive only; the committed gen_agents_pkg.sv is never edited.
+# Line ranges are against gen_agents_pkg.sv at 2e9b734 (blob fb3eb9f1716ee56b). Apply with:
+#   git apply gen_mut_phantomgrant2.diff
+# What it produces: the mutated file sha256 90a64e8767ba9ec0..., and build_sources_sha256 984932f3ed20d87f
+# against d9a0553bd4e0b326 for the same tree without it.
+--- a/dv/auto_dv/env/gen_agents_pkg.sv
++++ b/dv/auto_dv/env/gen_agents_pkg.sv
+@@ -260,6 +260,7 @@
+       int unsigned last_due = 0;
+       int unsigned data_w = $bits(vif.rdata);
+       bit released = 0, first_pending = 1, first_written = 0; int unsigned release_cycle = 0, first_since = 0;   // the boot-to-request distance (CG-RST-001)
++      bit mut_a_done = 0; int unsigned mut_a_req_hi = 0, mut_a_reqlow = 0, mut_a_reqlow_busy = 0;   // MUT-PHANTOMGRANT2 counters
+       vif.gnt = 1'b0; vif.rvalid = 1'b0; vif.err = 1'b0; vif.rdata = '0; vif.intg_corrupt = 1'b0;
+       forever begin
+         @(negedge vif.clk);
+@@ -290,9 +291,11 @@
+           t.outstanding_at_gnt = p.outstanding_at_gnt;
+           ap.write(t);
+         end
++        if (!cfg.is_data && !vif.req && cycle >= 300) begin mut_a_reqlow++; if (pend.size() > 0) mut_a_reqlow_busy++; end   // MUT-PHANTOMGRANT2
++        if (!cfg.is_data && (cycle % 250) == 0) $display("MUT-PHANTOMGRANT2 census at cycle %0d: req-low %0d req-low-with-fills %0d grants %0d", cycle, mut_a_reqlow, mut_a_reqlow_busy, mut_a_req_hi);   // MUT-PHANTOMGRANT2
+         // ---- request side
+         vif.gnt = 1'b0;
+-        if (vif.req) begin
++        if (vif.req || (!cfg.is_data && !mut_a_done && cycle >= 300 && pend.size() > 0)) begin   // MUT-PHANTOMGRANT2
+           if (!gnt_armed) begin
+             gnt_armed = 1;
+             req_cycle = cycle;
+@@ -303,7 +306,7 @@
+                                            : gen_export_line_ibus_req(req_stamp, vif.addr, req_we(), req_be()));
+             end
+           end
+-          if (gnt_wait == 0 && pend.size() < cfg.max_outstanding) begin
++          if ((gnt_wait == 0 || !vif.req) && pend.size() < cfg.max_outstanding) begin   // MUT-PHANTOMGRANT2
+             gen_bus_pend_t p;
+             logic [38:0] enc;
+             int unsigned gnt_stamp;
+@@ -311,6 +314,8 @@
+             gnt_stamp = ev_on() ? sink.cycle() : 0;   // the export cycle base of THIS edge, before the wait below
+             if (first_pending) begin first_since = req_cycle - release_cycle + 1; first_pending = 0; end   // cycles from the release edge to the request (the driver counts from the first post-release negedge, so +1 gives the RTL's count)
+             vif.gnt = 1'b1;
++            if (!vif.req) begin mut_a_done = 1; $display("MUT-PHANTOMGRANT2 granted with req low at cycle %0d, fills in flight %0d", cycle, pend.size()); end   // MUT-PHANTOMGRANT2
++            if (!cfg.is_data) mut_a_req_hi++;   // MUT-PHANTOMGRANT2
+             grants++;
+             if (cfg.is_data) bvif.evt_dbus_grants <= bvif.evt_dbus_grants + 32'd1; else bvif.evt_ibus_grants <= bvif.evt_ibus_grants + 32'd1;
+             // the request is READ at the accepting edge, where req and gnt are both sampled high: the core's

@@ -1,0 +1,164 @@
+# gen_fu_l63_separation_fixtures.log -- the two separation fixtures for the instruction-bus grant defect, run
+# against the COMMITTED driver before any repair, as the DV Lead ruled (TB Infra, 2026-09-05). Landing 63,
+# feature group "ibus grant". It answers the ruling's question -- does the core retire a word from an address
+# it never requested -- for each of the two arms. It also records where the reproduction the repair needs
+# actually lives, and why a local sweep of mine could not have found it.
+# S is the team scratchpad this session shares; run roots are given below by their absolute path with that
+# prefix written as S. Every mutation here is retained beside this log as an appliable diff. Two quoted lines
+# run past this log's width because they are whole run lines, which a review faulted a previous log for
+# cutting.
+#
+# ================ THE THING WORTH SAYING FIRST ==========================================================
+# THE FIRST SHAPE PASSED AND THE PASS WAS EMPTY. MUT-PHANTOMGRANT grants while the instruction request is low;
+# on the irq program it never fired once, because that program's instruction request is NEVER low: 0 idle
+# cycles against 1002 grants over 3000 cycles. The run passed for want of an injection, not for want of an
+# effect, and nothing in the verdict or the error count says which.
+# The census that caught it is INSIDE the mutation, not beside it: a counter for the injection's precondition
+# and a print when the injection actually happens. That is why the mutations are retained with their census
+# lines intact rather than tidied out. A green mutation run is not evidence until the injection is shown to
+# have occurred, which is the same rule as an ablation that must be able to fail.
+#
+# ================ ROW 1: the builds, the fixture and the controls ========================================
+# One program for every run below: S/irq1_prog/prog.vmem, crc32 8e882c5b, 156 words, tohost 800002d0, and the
+# plusarg set is identical in every run header, +gen_boot_addr=80000000 and +gen_fetch_en_at_reset=0 included.
+# Two cocotb modules: gen_ut_fetch_en, which toggles the fetch enable so the instruction bus goes idle, and
+# gen_ut_irq, where it does not. Seed 1 unless a row says otherwise.
+#   build               tree                                        role
+#   d9a0553bd4e0b326    an archive of HEAD, unmutated               the control
+#   65e054d9522d6259    the same plus MUT-PHANTOMGRANT              arm A, first shape
+#   984932f3ed20d87f    the same plus MUT-PHANTOMGRANT2             arm A, the shape that measured
+#   6df6e3d2530ee80c    the same plus MUT-STALEADDR                 arm B
+# EVERY ONE OF THOSE IDENTITIES IS DERIVABLE WITHOUT A COMPILE, and I derived them that way as a check: the
+# identity is the first 16 of sha256 of the build's sources_sha256.txt, and each mutant differs from the
+# control in one line of that file. Substituting the mutated file's sha256 into the control's list and
+# re-hashing reproduces all three measured identities exactly.
+# THE CONTROLS RUN BOTH WAYS. The unmutated build PASSES with zero real errors on BOTH modules. The arm-A
+# build PASSES with zero errors and zero fires on gen_ut_irq, the module where its precondition is absent. So
+# the firings in Row 2 belong to the mutation and not to the module.
+#
+# ================ ROW 2: ARM A, the surplus with a correct address =======================================
+# WHAT IT BOUNDS, stated first because it is easy to overclaim. This fixture bounds the PROTOCOL consequence
+# and NOT the data consequence. The surplus was injected carrying a CORRECT address, so when the cache
+# consumed it against the one fill in flight the data was right BY CONSTRUCTION. "No wrong retirement" here
+# follows from the injection's own shape, not from the cache tolerating a surplus.
+# The run: build 984932f3ed20d87f, module gen_ut_fetch_en, seed 1, root
+# S/l63/r4A2/dv/auto_dv/out_l63/fetch_en/.
+#   # run fetch_en: 2026-09-05T15:53:24Z host=soc-l-11 seed=1
+#     module=dv.auto_dv.gen_tb.gen_tests.gen_ut_fetch_en build_sources_sha256=984932f3ed20d87f
+#     plusargs=[+gen_mem_image=S/irq1_prog/prog.vmem +gen_mem_image_crc32=8e882c5b +gen_mem_image_words=156
+#     +gen_boot_addr=80000000 +gen_tohost_addr=800002d0 +gen_fetch_en_at_reset=0]
+#   verdict: FAIL
+#   reason: assertion_failure at sim.log:38 (sva_ibus_gnt_only_with_req)
+# THE INJECTION, from the mutation's own print:
+#   MUT-PHANTOMGRANT2 granted with req low at cycle 990, fills in flight 1
+# THE THREE FIRINGS, whole:
+#   UVM_ERROR @ 994500: reporter [sva_ibus_gnt_only_with_req] GEN_PROTO sva_ibus_gnt_only_with_req: protocol property violated at cycle 990
+#   UVM_ERROR @ 996500: reporter [sva_rvalid_legal] ibus: rvalid with no outstanding grant at cycle 992
+#   UVM_ERROR @ 996500: reporter [sva_ibus_rvalid_outstanding] GEN_PROTO sva_ibus_rvalid_outstanding: protocol property violated at cycle 992
+# Three real UVM_ERRORs in the run and no others: no isa_*, no crash_dump. THE RUN COMPLETED rather than
+# stopping at the error, and it is the same length as its control, 1488 assertion attempts against the
+# control's 1490, so roughly five hundred cycles ran after the surplus was delivered with nothing wrong
+# retired.
+# SO THE RESULT IS: a surplus response is CAUGHT AT THE INTERFACE by three of our own properties at depth one.
+# THE DEPTH AT WHICH IT COULD CORRUPT A WORD WAS NOT REACHABLE HERE. Corruption needs the response and the
+# fill to disagree: a surplus carrying a different word, or a second fill for the shift to move into, the
+# cache pairing an incoming response to the oldest fill buffer expecting one by AGE with no address term. My
+# own census bounds both out of reach on this program: of the run's idle cycles only TWO had any fill in
+# flight at all, and the most in flight at such a cycle was ONE.
+#   MUT-PHANTOMGRANT2 census at cycle 1250: req-low 261 req-low-with-fills 2 grants 335
+# One injection, not a rate, and a bound on the depth rather than a verdict on the mechanism.
+#
+# ================ ROW 3: ARM B, the stale capture, with the scope its zero must carry =====================
+# MUT-STALEADDR leaves the handshake genuine so the outstanding count stays right, and moves ONLY the instant
+# the address is read, one clock edge before the accepting edge. THE PERTURBATION IS EMPTY on these fixtures,
+# and that is measured rather than assumed: over 1447 instruction-bus captures the value at the earlier edge
+# equalled the value at the accepting edge EVERY time.
+#   build 6df6e3d2530ee80c   gen_ut_irq       1049 captures   0 differ   verdict PASS   0 real UVM_ERROR
+#   build 6df6e3d2530ee80c   gen_ut_fetch_en   398 captures   0 differ   verdict PASS   0 real UVM_ERROR
+# The mutation prints both instants at every capture, which is what makes the zero a count instead of a claim.
+# THE SCOPE THAT ZERO MUST CARRY, AND IT IS NOT MINE. My first wording said the route is empty because the
+# driver's address does not move across that half cycle. THE TREE ALREADY KNOWS OTHERWISE.
+# gen_ibus_props_irq_signature_reading.md Section 11.3 measures the two lines differing in a real run: at
+# export cycle 18333 the request line names 0x80000350 and the grant line names 0x80000168, the only cycle in
+# the twenty from 18320 to 18340 where they differ, with the pin reading 0x80000350, 0x80000168, 0x80000154
+# and 0x80000158 at 183375, 183380, 183385 and 183395 ns. The two lines are the same pin one half cycle apart.
+# SO THE ZERO IS ABOUT MY FIXTURE, NOT ABOUT THE DRIVER. The address CAN move across that half cycle; what my
+# 1447 captures show is that MY FIXTURE NEVER CREATED THE PRECONDITION, which in the real run is a branch
+# redirect landing exactly on the falling edge. A reader must not take this row as proof that the driver
+# cannot capture a stale address, because the tree holds a measured case where it did.
+# WHAT WOULD MAKE IT NON-EMPTY, so the next person builds instead of rediscovering: a program whose redirect
+# lands on that falling edge. In the measured case the address presented there was an interrupt vector entry,
+# so the fixture needs interrupt vectoring and the phase schedule that drives it, not merely a seed.
+# ONE FURTHER DISTINCTION, because the two are not the same event. Section 11.3's case carries a SURPLUS as
+# well: the core's own request was low at the accepting edge, so it booked nothing and the driver enqueued
+# anyway. My arm B is the stale capture WITHOUT a surplus, and that no-surplus variant is precisely what the
+# fixture could not construct.
+# WHAT IT SUPPORTS, kept narrower than the reading it invites. rtl-arch reads the null as stronger than a
+# null: if a stale capture is not reachable without a surplus, the two symptoms are ONE event rather than two
+# mechanisms, and a gated shape that removes the surplus removes both. That is its call to make and this row
+# supports only the narrower half: within the window my fixture could construct, no stale capture occurred
+# without a surplus. The case that would test the general claim is the one my fixture never built and the
+# wave already holds.
+# Arm B is therefore CLOSED BY CONSTRUCTION with its reason measured and its scope stated: not that the arm is
+# benign, and not that the addresses cannot differ, but that this fixture's perturbation is empty because the
+# precondition never arose in it.
+#
+# ================ ROW 4: the local sweep, and the claim it does NOT reach ================================
+# THE SWEEP, first, as a measurement. On the control build d9a0553bd4e0b326, 22 seeds on each of the two
+# modules:
+#   seeds       1 to 20, plus 165313640 and 1207954461
+#   44 runs     44 PASS, 0 real UVM_ERROR in aggregate, 0 firings of sva_ibus_gnt_only_with_req
+# Re-derived from the 44 run directories rather than from the sweep's own log, because that log's count line
+# was split by a shell quirk and would have been read wrong.
+# I FIRST WROTE THAT UP AS "no local reproduction exists". IT DOES NOT REACH THAT CLAIM, and the correction is
+# rtl-arch's from the held waveform. THE FIRING CONDITION IS INTERRUPT-VECTORING SPECIFIC: at the granting
+# negedge the core presented 0x80000350, which in that run's own disassembly is a jump into gen_irq_vectors.
+# The redirect that withdrew the request half a cycle before the accepting edge was an interrupt vector fetch.
+# So 44 zeros on two modules that do not vector interrupts is the EXPECTED result at any seed, and it is
+# evidence about those modules rather than about reproduction.
+# AND A SEED IS NOT A RUN. "the two wave seeds included" must not be read as the wave RUNS: the wave runs are
+# gen_test_irq_basic at 165313640 and 1207954461, and that seed on a different cocotb module is a different
+# program with a different interrupt schedule and a different fetch stream. gen_test_irq_basic was never in
+# this sweep, so those two seeds were not the two wave runs in any sense that matters.
+# WHERE THE REPRODUCTION ACTUALLY IS: gen_test_irq_basic at those two seeds in the regression flow, one
+# firing of the grant obligation per run in both the re-dump and the original retained logs, which is the
+# committed pair record the DV Lead ruled meets the reproduction precondition. Nothing here weakens it.
+# WHY A HAND-BUILT FIXTURE COULD NOT GET THERE, so the next person does not repeat the attempt: the stimulus
+# is not fixed by the seed either. That run's banner opens with the irq regime quiet and the phase schedule
+# moves the regime at 70500 and again at 71500, so a fixture has to reproduce the phase schedule, not only the
+# seed and the program.
+# WHAT FOLLOWS FOR THE REPAIR, as the DV Lead ruled it. The reproduction precondition is met by the committed
+# pair record, so no fresh reproduction is owed before the repair is written. The acceptance splits in two:
+# a local mutation pair proves the GATE, and the flow re-run on the SAME two seeds proves the DEFECT. The flow
+# half is a TRIPLE, because zero firings alone is a trap that a driver granting less would also satisfy: zero
+# firings; grant and retirement counts inside the range the pair record gives for the committed agent; and
+# lockstep and referee clean, with the error lines compared against that record's own committed-agent column.
+# Same flow, same seeds, or it is not a comparison.
+#
+# ================ ROW 5: what this settles, and what it does not =========================================
+# SETTLED: the surplus arm is reachable, and our own properties see it. Three of them fire on a single
+# injection, so the detector for this defect class exists and works.
+# SETTLED, within its precondition: the stale-capture arm cannot be excited by moving the capture one edge,
+# over 1447 samples, on fixtures that never create the redirect the real case needs. Row 3 carries the scope.
+# NOT SETTLED, and I will not let the record read as if it were: whether a surplus at greater depth, or one
+# carrying a different word, makes the core retire a word it never requested. That is the case the wave's
+# wrong word would need, and it was out of reach on these programs.
+# NOT A FINDING OF MINE AT ALL, per Row 4: whether the defect reproduces locally. My sweep swept modules that
+# do not vector interrupts, so it could not have answered that either way. The reproduction is the committed
+# flow pair, and the DV Lead has ruled the precondition met by it.
+# The classification that follows, as the DV Lead rules it: the driver defect stays a row of its own with its
+# own mechanism, its own detector and its own repair, which arm A confirms. The older caveat about a second
+# mechanism sharing the fingerprint is NARROWED and not closed: arm B empties the stale-capture route by
+# measurement, arm A shows the surplus route is caught and harmless at the only depth reachable here, and the
+# deep-shift case remains unreached.
+#
+# ================ ROW 6: retention =======================================================================
+# All three mutations are retained beside this log as appliable diffs with real hunks, each header naming the
+# base blob and the two digests it produces:
+#   gen_mut_phantomgrant.diff    -> file sha256 9a7b28a5b3b19eed...   build 65e054d9522d6259
+#   gen_mut_phantomgrant2.diff   -> file sha256 90a64e8767ba9ec0...   build 984932f3ed20d87f
+#   gen_mut_staleaddr.diff       -> file sha256 e3933271ab144725...   build 6df6e3d2530ee80c
+# The first is retained although it produced no firing, because its empty pass is the finding at the top of
+# this log and a record that cites a mutation without retaining it is the defect landing 62 closed.
+# Every mutation was applied to an out-of-tree archive only. The committed gen_agents_pkg.sv was never edited:
+# it reads md5 3690968c in the clone throughout this work.
