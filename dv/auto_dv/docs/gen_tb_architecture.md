@@ -1190,6 +1190,11 @@ Adopted 2026-09-03 07:04 UTC. TB Infra's Sections 1-7 are taken as written; the 
 additions, rulings and disagreements. Each names the section it qualifies; TB Infra revises its v2
 component sections file, not this document, and the DV Lead re-adopts.
 
+Defects in this testbench are registered in dv/auto_dv/evidence/gen_tb_defects.md, not in gen_bug_log.md, whose
+scope is the DUT against its specification. A row there names what failed, the mechanism with a file:line
+citation, and evidence that survives the fix, because a divergence usually stops reproducing once its defect is
+fixed and a row resting on the symptom goes stale.
+
 ### 8.1 Rulings recorded in this document
 1. Coverage scope (Section 5; intervention log Q-014): two inner instances gated through `cov_trees`,
    wrapper reported informationally through `info_trees`; gate row by the per-metric summing rule.
