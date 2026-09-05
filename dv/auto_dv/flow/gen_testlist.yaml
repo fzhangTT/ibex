@@ -2432,3 +2432,70 @@ tests:
     red_expect: 'fcov expectation unmet: [0-9]+ declared bin\(s\) not hit .*gen_ic_ecc_cg\.cp_ram\.data'
     component: gen_misc_monitor
     measured: false
+  - name: gen_test_irq_basic
+    description: TP-IRQ-001/002/003/004 plain interrupt entry and return on all four line classes; the test drives
+      each line alone through the bridge IRQ_SET command with the until-ack hold and the per-seed program
+      gen_irq_basic_prog.py takes it through a vectored mtvec table, the handler reporting five raw words per entry
+      (vector index, mcause, mepc, mtval, mstatus), releasing the line at the ack MMIO and returning with mret; only
+      the first entry through a vector reports, so the report count is 92 under every irq regime; no debug-request
+      and no NMI shape (line_mix pinned away from with_nmi, whose cause has no slot in the vector table); measured
+      false with a null manifest until CG-IRQ-001/003/010/011 are rendered (Test Writer)
+    tier: smoke
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs:
+    - +gen_fetch_en_at_reset=0
+    - +gen_knob_irq_line_mix=single
+    program:
+      generator: dv/auto_dv/tests/gen_programs/gen_irq_basic_prog.py
+      generator_args: []
+      seed: run
+      extra_args:
+      - --gcc-opts=-Idv/auto_dv/tests/gen_programs
+    seeds: 3
+    fcov_expectation_file: null
+    timeout_s: 900
+    owner: test-writer
+    pass_marker: GEN_TEST_PASS
+    feature_groups:
+    - irq
+    - gen_irq_basic
+    cocotb_module: dv.auto_dv.tests.gen_test_irq_basic
+    expected_fail: false
+    component: gen_tb_top
+    measured: false
+  - name: gen_test_irq_basic_red
+    description: 'TDD red fixture of gen_test_irq_basic, pinned to TP-IRQ-002 (generator --red --red-item
+      TP-IRQ-002): the reported mcause has its interrupt bit cleared on vector 7 only, so exactly fire_tp_irq_002
+      FAILs by design (RED-OK) while fire_tp_irq_001, 003 and 004 pass; the deviation is guarded by the vector index,
+      which is what makes the red attributable to one item'
+    red_fixture: true
+    red_expect: 'GEN_TEST_FAIL gen_test_irq_basic: [0-9]+ fire-check failure\(s\):.*\bfire_tp_irq_002(?!\d)'
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs:
+    - +gen_fetch_en_at_reset=0
+    - +gen_knob_irq_line_mix=single
+    program:
+      generator: dv/auto_dv/tests/gen_programs/gen_irq_basic_prog.py
+      generator_args:
+      - --red
+      - --red-item
+      - TP-IRQ-002
+      seed: run
+      extra_args:
+      - --gcc-opts=-Idv/auto_dv/tests/gen_programs
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 300
+    owner: test-writer
+    pass_marker: GEN_TEST_PASS
+    feature_groups:
+    - irq
+    - gen_irq_basic
+    - red
+    cocotb_module: dv.auto_dv.tests.gen_test_irq_basic
+    expected_fail: false
+    component: gen_tb_top
+    measured: false
