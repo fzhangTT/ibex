@@ -175,6 +175,10 @@ def check_selection(c):
         c.check(f"{t['name']} built", s_built, len(built))
         c.check(f"{t['name']} covergroups", s_cgs, len(cgs))
     c.check('declared total', r'declared sets total (\d+) bins', total)
+    # The form cites the cap rule by NAME rather than by line, which is robust only while the name is there.
+    plan = (R / 'dv/auto_dv/docs/gen_fcov_plan.md').read_text(encoding='ascii')
+    c.check('cap rule name present in the plan',
+            len(re.findall(r'^- Seeds against the guarantee', plan, re.M)), 1)
     # The per-entry checks find each row by name, so an EXTRA row is invisible to them; count the table.
     rows = re.findall(r'\| gen_\w+ \| \d+ \| \d+ \| \d+ of \d+ \|', c.flat)
     c.check('Section 7 row count', len(rows), len(meas))
@@ -314,6 +318,22 @@ def run_checks(form_text, manifest, preflight_text, quiet=False):
     return c
 
 
+def _rule_rename_self_test():
+    """Renaming the cap rule must fail the citation claim: a name-based citation needs a name check."""
+    plan = R / 'dv/auto_dv/docs/gen_fcov_plan.md'
+    original = plan.read_bytes()
+    try:
+        plan.write_bytes(original.replace(b'- Seeds against the guarantee', b'- Seeds versus the guarantee', 1))
+        c = run_checks(FORM_DEFAULT.read_text(encoding='ascii'), yaml.safe_load(open(MANIFEST_DEFAULT)),
+                       PREFLIGHT_DEFAULT.read_text(encoding='ascii'), quiet=True)
+        bad = any('cap rule name' in b for b in c.bad)
+        print(f"SELF-TEST {'ok  ' if bad else 'FAIL'} renaming the cap rule fails the citation claim: "
+              f"{'fail' if bad else 'pass'}, want fail")
+        return bad
+    finally:
+        plan.write_bytes(original)
+
+
 def _cwd_self_test():
     """The tool must give the same verdict from any working directory: paths resolve against the root."""
     import os, tempfile
@@ -375,6 +395,7 @@ def self_test():
         detail = '' if got_pass else f' ({c.bad[0]})'
         print(f'SELF-TEST {"ok " if good else "BAD"}  {name}: {"pass" if got_pass else "fail"}, '
               f'want {"pass" if want_pass else "fail"}{"" if good else detail}')
+    ok = _rule_rename_self_test() and ok
     ok = _cwd_self_test() and ok
     print('gen_round_form_check --self-test:', 'PASS' if ok else 'FAIL')
     return 0 if ok else 1

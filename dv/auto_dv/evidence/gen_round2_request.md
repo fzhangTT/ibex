@@ -372,16 +372,17 @@ this form records rather than re-argues, each with its status at this commit.
 
 | # | condition | status |
 |---|---|---|
-| a | the irq_entry checker item classified and fixed | fixed at b9e5fad; rev60 APPROVE-WITH-CHANGES with rows owed; the Critic's re-verdict REQUEST-CHANGES confined to one records sentence; the Critic's form verdict at 55d784a records that M-3 and the companion answering it landed at fab8a61, so no Critic confirmation is outstanding on it; the rows of rev60 are owed inside fix 3 |
+| a | the irq_entry checker item classified and fixed | fixed at b9e5fad; rev60 APPROVE-WITH-CHANGES with rows owed; the Critic's re-verdict REQUEST-CHANGES confined to one records sentence; OPEN on the gating record: gen_critic_irq_checker_fix.md for 65b7cb0..b9e5fad still reads REQUEST-CHANGES confined to M-3, and the only record of the lift is a clause in the Critic's form verdict at 55d784a, which is not that artifact. The append to the gating record is requested; this row says CLOSED and names that record when it lands. rev60's rows are owed inside fix 3 |
 | b | its red fixture RED-OK at three of three rather than masked | CLOSED at 67c6ac1: the three seeds re-run on a b9e5fad build read 3 of 3 RED-OK with zero irq_entry firings, beside the earlier block with its records untouched |
 | c | the fixed cocotb timeout in the stimulus path replaced by a seed-independent bound | CLOSED: fixed at 6b894ab, rev64 APPROVE-WITH-CHANGES at 348e4ae with its rows at 2c63b83, no re-review owed |
 | d | a fresh forty-seed sweep at the fix commit with its manifest rendered FROM that sweep | open |
 | e | a regime-independent end-of-test expectation covering the case a per-record bound cannot judge | open, and LOAD-BEARING rather than provisional: the storm-regime vacuity closes only by that reconciliation |
 | f | no run of the entry wedges the core | open: one wave run diverges from the model 6447 cycles before its first checker fire (the cited record read 6443; the figure here is re-derived from the run, and the corrigendum landed at 29daef3 where gen_chkfix_reruns/gen_index.md:80-85 now reads 6447), with 23387 instruction mismatches already reported and the core executing zeros |
 
-CONDITION (b) REOPENED ITSELF UNDER THIS PLAN'S OWN RULE, which is worth stating rather than quietly
-re-listing. Section 0 says a block is evidence for what it measured and no other; the reds were measured on
-one build and the fix has moved, so that evidence certifies a build the round will not run. That is not the manifest rule by analogy: a red
+CONDITION (b) HAD REOPENED ITSELF UNDER THIS PLAN'S OWN RULE, which is worth keeping rather than quietly
+dropping now that it is closed. Section 0 says a block is evidence for what it measured and no other; the
+reds had been measured on one build and the fix had moved, so that evidence certified a build the round would
+not run, and the re-run at 67c6ac1 is what closed it. That is not the manifest rule by analogy: a red
 measures the CHECKER against the stimulus, so a checker change alters the thing that was measured even though
 the stimulus is byte-identical, which is the same reasoning reaching a different half of the pair.
 
