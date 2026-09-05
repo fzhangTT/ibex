@@ -2485,3 +2485,20 @@ irq red entry landed before its retained red log (the library self-test is red u
 it; fix forward, no back-out), and its committed module registers no cocotb test (a self-test gap: a module with no registered test passed; fixed
 forward with a new self-test case); the Critic's exclusion final-file verdict is APPROVE (9c1de66) with the measured merge's constfile.txt to be
 retained gzip -n under gen_round_0 (all 495 annotations cite it as EC-2).
+
+## LOG-098 - 2026-09-05 02:59Z - Round 1 accepted under its request form's Section 10; the per-run guarantee label retired
+
+Acceptance: the round-1 request form (gen_round1_request.md, v5f at 693fb1c) accepts the round when the credit report, promotion table and
+covergroup set are regenerated at the round's commit. They are: gen_round1_credit/, gen_round1_promotion_table.md and gen_round1_covergroup_set.md/.csv
+regenerated at 4a00702 inside a detached archive (0203c6e), reviewed by the cross-model range review 156dac5 (APPROVE-WITH-CHANGES, rows answered
+in the PMP plan touch) and by the Critic (gen_critic_regen_round1.md, e6ed6d8, APPROVE: the printed commands reproduce all six records byte for
+byte; the baseline gen_round0_* records byte-identical). CR-40 M-1 is lifted; the round-1 record is complete and accepted as a measurement: 53 of
+53 runs, 36 of 36 per-run coverage expectations met, plan credit 66 of 185 hosted items, the code-coverage gate row as recorded in LOG-092, the
+functional-coverage group gate NOT claimed (LOG-097 addendum 4: the criterion is the owner's decision). The Critic's M-1 on the unbuilt-mark verifier
+(gen_unbuilt_mark_check.py:64 matches prose in gen_fcov_pkg.sv, printing 28 rendered for 26) is fixed in the DV Lead's held PMP plan touch (anchored
+match, new self-test case) and lands with the PMP step-1 family; no verdict relies on the verifier until then, and 28 is not quoted anywhere.
+Label: the team's message label "P-07" for the per-run guarantee policy collides with a committed unrelated item (gen_t029_smoke_red_runs.md:34)
+and is RETIRED; the policy gets a recorded name in the plan set with the DV Lead's next plan touch, cited to gen_fcov.py's per-run check and
+gen_regress.py:237-260 (fcov_policy_failures). Also this window: rtl-arch retained the measured merge's constfile.txt and the no-op join under
+gen_precheck/ with gen_excl_f1_pass.py retaining both at every pass (7fb1aeb; the chain self-test had been red since pass 14 and is now a
+classifier); URG object ids are per-build ordinals, recorded as the reason the exclusion file is regenerated per round.
