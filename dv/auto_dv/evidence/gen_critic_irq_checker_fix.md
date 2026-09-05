@@ -189,3 +189,158 @@ and corrects one sentence; checked against my own retained records under dv/auto
 - A counting note for anyone re-deriving my totals: a `grep -c UVM_ERROR` over a sim.log counts the UVM summary tally
   line as well and reads one high. My retained "all UVM_ERROR" counts excluded it (seed 159577667: 17 fires and 17
   errors; the NMI control: 2), so no figure above moves; the 693238 total is reproduced by tb-infra-2 exactly.
+
+## 7. Recorded re-verdict on 65b7cb0..b9e5fad, the irq checker group (landings 52 and 54, the re-run block; HOLD sent to the Orchestrator first; Sections 1-6 and the corrigendum unchanged)
+
+Artifacts at b9e5fad (sha256 first 16 hex): dv/auto_dv/env/gen_checkers_pkg.sv 8e412507010d6fd0; dv/auto_dv/env/gen_fcov_pkg.sv
+a397c8fcf0201eb6; dv/auto_dv/tb/unit/gen_ut_knobs_codegen.py f869797e5cc74fb1;
+dv/auto_dv/evidence/gen_tdd_logs/fcov/gen_fu_l54_irq_nmi_mask_accrual.log 76959296e8897242;
+dv/auto_dv/evidence/gen_tdd_logs/fcov/gen_fu_l52_commands_corrigendum.log 5f4c3f03c8acdbbe; dv/auto_dv/evidence/gen_tdd_logs/gen_manifest.md
+4345983379320a55. Method: the checker diff read against rtl/ibex_controller.sv:490-500; both reds re-run by me on my own compiles of
+detached worktrees of b9e5fad (clean 861209d7f0fd1ed1; the NMI input tied low 1fdf071ecc24a5bc; every interrupt input tied low
+88ac45f0791b01e7; the external line alone tied low df807317bf3d36fe) and of c045115 with the same all-lines mutation (854a96f43286b4d2;
+its checker is byte-identical to 9c7f8f6), with
+the landing's toggle program rebuilt by me from the source in the shared scratch (md5 equal to the log's, image md5 equal) and the l52 long-handler fixture from the same scratch (image md5 equal to the
+commands corrigendum's); the six smokes, the wave seed and the standing irq red fixture re-run on the clean build; the records
+checked against the blobs. Exposure: the Orchestrator's earlier
+messages named rev59's rows and tb-infra-2's landing message summarised the fix before this section; rev60 is read only in Section 8.
+Logs: dv/auto_dv/work/critic/irqchk2/.
+
+### 7.1 M-1, the NMI term: closed
+
+The mask is decided per expectation (gen_checkers_pkg.sv:140-141 at b9e5fad) with the MIE term qualified on !expects[i].nmi, which
+is the fix I named; nmi_mode and debug_mode still mask every expectation, matching ~nmi_mode_q and ~debug_mode_q at
+rtl/ibex_controller.sv:498. Re-derived by me (Red A, gen_ut_irq_nmi_long on the reset-reads program, the NMI input tied low): the
+fixed build fires nmi_entry once with the line "lines 40000 (enable bits 00000000) raised at cycle 1361 (order 200) not taken within
+17 records (now order 218, takeable records 18, mie 00000000 mstatus 00000080)", the same cycle and order numbers as the
+pre-landing-52 checker in my Section 2 measurement; with +gen_chk_nmi_entry=0 the run carries zero errors, so the named rule is the
+fire; the pre-fix arm is my 9c7f8f6 record (zero fires, zero errors, blind). Closed.
+
+### 7.2 M-2, accrual: closed, with the semantics the plan needs
+
+expect_t carries an unmasked count (:39-41) incremented once per record in which that expectation could have been taken, reset only
+at the entry restart (:118), incremented at :143 and compared against the bound (:144); masked records neither spend nor judge (:142). Re-derived by me (Red
+B, gen_ut_lockstep on the MIE-toggle program, six takeable records then six masked, six times, every line tied low): the fixed build
+fires irq_entry once with "raised at cycle 181 (order 40) not taken within 17 records (now order 82, takeable records 18, mie 7fff0888
+mstatus 00000088)", forty-two records elapsed and eighteen takeable, the composition 408 [irq_pending] + 1 [irq_entry] against 408
+with the named check off; the pre-fix build with the same mutation and program fires zero times (408 [irq_pending] only), because
+its restart needed eighteen consecutive takeable records and the longest run is six. That is the numerical separation of the two
+semantics I asked for, and it is the case the plan's set_pending bin asserts. The l52 vacuity regime (no takeable stretch of 18) is
+therefore no longer vacuous: the accrued count judges it. Closed. The DV Lead's owed second expectation (end-of-test reconciliation)
+is a promotion condition, not this landing's, and the log carries forward the constraint that the NMI's reconciliation term is
+nmi_mode and debug mode only, which is right.
+
+### 7.3 L-1..L-5 and the seed
+
+- L-1: gen_fu_l52_commands_corrigendum.log names five builds where the l52 log claimed one, the common fixture's plusargs, each
+  block's out directory, stamp, fire count, verdict and reason, and states that the quiet fixture is a scratch cocotb module not in
+  the clone, with its md5 and the placement a reproducer needs. Its tally-corrected totals (3002/3001) are stated with the rule.
+  FIXED, and better than asked.
+- L-2: single step is counted (step_records, :64-67, :138, :286-287) rather than masked on the model's dcsr copy, for the reason the log
+  gives (a mask on a mirror not proved to track the pin is the shape this landing removes); Zcmp stays a named exclusion. Measured
+  zero in my six smokes. A named, observable exclusion is the second option I offered. FIXED as an exclusion with an observable.
+- L-3: prev_trapped = st.is_trap && !st.debug_mode (gen_fcov_pkg.sv, the trapped-predecessor route), with the comment stating that
+  both arms are now structurally zero and the referee guards the classifier and the post-step publication, not the DUT. FIXED, and
+  the log says plainly what the referee can and cannot fire on.
+- L-4: the seed 1207954461 diagnosis is produced from the run's own log: the first model-versus-DUT divergence 6447 cycles before the
+  first irq_entry fire, 23387 isa_insn mismatches by then, the core executing zeros at pc 0x80000022; the fires are the checker
+  reporting a takeable interrupt a wedged core did not take. Consistent with my L-4 attribution and my Section 3 counts, which the log
+  reproduces exactly; the log also corrects my "same firing counts" sentence (my corrigendum above) and runtime-2's "fires 6 times"
+  (three fires; the assertion-source lines are not fires). FIXED as a records diagnosis.
+- L-5: the parser cases write under the repo-local SCRATCH root and clean up (gen_ut_knobs_codegen.py). FIXED.
+
+### 7.4 Smokes, records, what I noticed
+
+Six smokes on my clean build: storm, lines, dbgstorm, fetchen, rr, nmilong all PASS with zero real errors, zero GEN_FCOV_REF, zero
+irq_entry and nmi_entry fires, step_records 0, entries 173/6/39/15/0/2 (one NMI in nmilong). Wave seed 159577667 (gen_test_irq_basic on the wave run's own image and plusargs, 17 irq_entry fires before landing 52, 0 at 9c7f8f6): on the fixed build 0 irq_entry fires, 0 real UVM_ERROR, GEN_TEST_PASS printed (in the cocotb stdout capture), so the accrual change does not re-open the seed landing 52 closed.
+The manifest holds 3513 rows and the two new rows equal the blobs (20012 bytes / 051ea7b9061b5f80874ecbc5f0b0eb8d; 7506 bytes /
+44ed232180fc5db85d8f7403c8d6a26e); both logs ASCII. The l54 log names its six builds by identity, the mutation by port and file, the
+fixture by module, image digest and plusargs, and the verdict path, which is the shape my L-1 asked for. Its "WHAT I GOT WRONG" note
+(the consequence asserted to the Orchestrator without a derivation) is the right kind of record.
+- L-6 (Low, records; tb-infra-2). The toggle program gen_irq_mie_toggle.S is named by scratch path and md5 only and is not in the
+  tree; Red B is therefore reproducible only while that scratch survives. Fold the 40-line source into the log's next companion or
+  commit it under dv/auto_dv/tests/gen_programs/ with a header naming it a checker fixture.
+- L-7 (Low, records). The log's "SAME cycle and the SAME two order numbers the Critic quotes" refers to my Section 2 measurement on
+  the 65b7cb0 build; my Section 3 sentence on the clean control was wrong in the way the log states and my corrigendum above corrects.
+  Nothing owed by tb-infra-2; recorded so the two files read together.
+
+### 7.4a Three measurements the range's records need
+
+- THE STORM-ARM VACUITY IS NOT REMOVED. gen_fu_l52_commands_corrigendum.log:56-57 says of the l52 storm arm "This is the
+  block the DV Lead later ruled VACUOUS rather than less sensitive ... and landing 54 removes the shape that caused it".
+  Measured by me on the fixed checker with the external line tied low, on the l52 log's own storm fixture (the
+  long-handler program, storm, hold through_handler, the corrigendum's plusargs): catch 0 irq_entry fires and 0 real
+  errors, ablation 0 and 0, both runs ending at the alive timeout on the test's own "no tohost store" exactly as the l52
+  arm did. The same mutation on the P_NMI storm smoke fires 12 times on the fixed checker (ablation 0), so the checker is
+  not blind to a withheld external line in general; it is blind in that fixture, and the landing's own log says why in
+  its last paragraph: the entry restart at gen_checkers_pkg.sv:118 resets every surviving expectation's count to zero at
+  every interrupt entry, "so in a regime where entries recur the accrued count never builds". Landing 54's accrual
+  removes the masked-record restart (the MIE-toggle case) and leaves the entry restart, so under a storm whose entries
+  recur inside the bound the check still cannot fire whatever the DUT does. The corrigendum's sentence is false, the log's
+  paragraph is right, and the two are in one landing (M-3). The remedy stays the DV Lead's end-of-test expectation; the
+  vacuity corrigendum's regime statement should name the entry restart as the mechanism.
+- THE NMI-MODE MIRROR IS DEEPER THAN THE RTL. rtl/ibex_controller.sv:958-960 clears nmi_mode_q on ANY mret while in NMI
+  mode, nesting or none; the checker's mirror (gen_checkers_pkg.sv:162-164) increments a depth on every trap or interrupt
+  inside NMI mode and leaves nmi_mode set until as many mrets have retired. After a trap inside the NMI handler and its
+  handler's mret, the RTL is out of NMI mode and takes an enabled interrupt or a second NMI, while the checker still masks
+  every expectation until the NMI handler's own mret: a withheld line in that window is not judged. The mirror predates
+  the range (landing 2a) and no committed fixture drives a trap inside an NMI handler; the landing's log claims only that
+  the mask carries the ~nmi_mode_q term, not that the mirror equals nmi_mode_q. Low (L-8): exit the mirror on the first
+  mret as the RTL does, or count the divergence as step_records counts single step.
+- THE STANDING RED FIXTURE ON THE FIXED CHECKER. The range's re-run block (69eb33f) reads gen_test_irq_basic_red RED-OK
+  3 of 3 on the 9c7f8f6 checker, which landing 54 supersedes; nothing in the range re-measures it. Measured by me on the fixed clean build at runtime-2's seed 1038372995 (the entry's program
+  regenerated with its --red --red-item TP-IRQ-002 arguments, the entry's plusargs, PASS_MARKER GEN_TEST_PASS): the designed
+  red is the only failing fire check (fire_tp_irq_002, "vector 7 carried mcause 0x00000007, expected 0x80000007"), the
+  entry's red_expect matches the GEN_TEST_FAIL line, irq_entry fires 0, real errors 0, which is RED-OK under the flow's
+  grading rule. The range's figure holds on the fixed checker; the record should carry the re-measurement (L-9, Low,
+  records; runtime-2 or tb-infra-2).
+
+### 7.5 Verdict
+
+CRITIC VERDICT: REQUEST-CHANGES on 65b7cb0..b9e5fad, confined to M-3 (records). M-1 and M-2 are CLOSED by mechanism and by my own
+re-run of both reds with their controls, and the REQUEST-CHANGES of Section 5 on them is lifted; L-1..L-5 FIXED as stated; L-6..L-9
+owed as disclosed (L-10..L-13 join them from 7.6). What remains is one sentence: the commands corrigendum says landing 54 removes the storm-shape vacuity and the
+measurement and the landing's own log say it does not (the entry restart). A companion correcting that sentence, naming the entry
+restart as the mechanism and the end-of-test expectation as the remedy, closes M-3 and the group. Promotion of the irq entry remains
+gated on that expectation, which under this measurement is not optional: the per-record bound is vacuous under every storm whose
+entries recur inside the bound.
+
+### 7.6 Reconciliation with the cross-model artifact rev60
+
+Read after 7.1-7.5 were written: dv/auto_dv/reviews/2026-09-05-claude-diff-65b7cb00-b9e5fad3.md at 775847f (claude CLI
+fallback under A-001; APPROVE-WITH-CHANGES; three Mediums, five Lows). Its verified list agrees with 7.1-7.4 on every shared
+point (the per-expectation mask against :490 and :498-500, the dropped fire-side clause implied by the mask, the reset points of
+the count, both reds' internals to the bit and the order, the 258-seed timestamps, the manifest rows, the parser cases) and adds
+two checks I record as its: the release path (:239-244) drops lines and keeps the count, and st.debug_mode is the DUT's pin and
+not a model mirror, which is why masking on it is consistent with not masking on st.dcsr.
+
+- Its Medium 1 (the nmi_mode mirror deeper than nmi_mode_q) is my L-8, found independently. It adds that the coverage package
+  carries the same mirror (gen_fcov_pkg.sv:499-501, irq_nmi_depth), which I verified. I hold the grade at Low: the mirror
+  predates the range, no committed fixture drives a trap inside an NMI handler, and the landing claims the mask's terms rather
+  than the mirror's equality with nmi_mode_q; the fix it names (first-mret exit, or a counted divergence) is the one I named.
+- Its Medium 2 (the commands corrigendum's "landing 54 removes the shape") is my M-3, found independently; rev60 reasoned it from
+  the entry restart and the log's own paragraph, my 7.4a measures it on the l52 storm fixture (0 fires on the fixed checker with
+  the line withheld, ablation 0) and shows the same mutation firing 12 times on a storm whose entries leave gaps. Same fix.
+- Its Medium 3 (RED-OK measured on the superseded checker) is my L-9, which I measured: RED-OK reproduces at seed 1038372995 on
+  the fixed checker (7.4a). I hold it at Low because the figure now exists; the record beside the 69eb33f block is what stays
+  owed, and its request to re-run the 258 seed on a b9e5fad build is reasonable but not gating: that seed's fires follow a wedge
+  the checker cannot judge, on either semantics.
+- Its Low 1 (the per-line mie bit is not a mask term, so a line raised with its enable bit clear accrues takeable records and is
+  dropped silently at the bound, or fires on the record whose csrw enables it) is verified on :140-152: the mask has no per-line
+  enable term and the still test at :148 requires the bit set. Pre-existing; the new comment's "COULD have been taken" makes it
+  a stated-semantics mismatch. Adopted as L-10 (Low; tb-infra-2): a per-line enable term for single-line expectations, or the
+  exclusion named in the comment.
+- Its Low 2 (the log's "the checker telling the truth: the interrupt was takeable" overstates after the lockstep divergence, since
+  the takeability is judged on model state that no longer tracks the DUT) is right and adopted as L-11 (Low, records).
+- Its Low 3 (GEN_DCSR_STEP_BIT hand-encoded in the checker while gen_tb_pkg.sv:280-281 is the dcsr bit home and gen_fcov_pkg.sv
+  reads a bare st.dcsr[2] at :336 and :568) is verified and adopted as L-12 (Low, code): one home for the step bit.
+- Its Low 4 (the mutant diffs and the toggle source retained only as scratch paths with md5s) is my L-6, with the mutant-diff
+  half added to it.
+- Its Low 5 (single step is not an exclusion but a counted, judged term, so "named exclusion" is a misnomer; step_records is a
+  print-only counter) is right on the code (:138 counts, the mask at :140-141 carries no step term) and adopted as L-13 (Low,
+  wording): "unmasked and counted", with a fixture-side assertion on the count when a step fixture arrives.
+- On the verdict we agree on every finding and differ on the form: rev60 approves with changes; under my rules a sentence in the
+  landing's own record that reverses what the landing achieved for the promotion decision is REQUEST-CHANGES until the
+  companion lands. M-1 and M-2 are closed in both reviews.
+
+Verdict unchanged: REQUEST-CHANGES on 65b7cb0..b9e5fad confined to M-3; M-1 and M-2 closed; L-1..L-5 fixed; L-6..L-13 owed.
