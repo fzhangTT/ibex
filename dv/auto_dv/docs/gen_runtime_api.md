@@ -161,6 +161,14 @@ gen_run.py --build-dir DIR --test NAME --seed N --run-dir DIR [--cov-dir VDB | -
   FAIL on any collected mechanism in `sim.log` (UVM_FATAL/UVM_ERROR summary count > 0 or an
   `UVM_FATAL`/`UVM_ERROR` message line, `Fatal:`/`$fatal`/`GEN_*_FAIL`, `Error-[...]`/`Error:`, cocotb
   `CRITICAL` or a `** TESTS=... FAIL=n` summary with n > 0 or PASS=0, `Assertion ... failed`/`Offending`);
+  THE REASON NAMES THE MECHANISM, not just its class and position: the verdict reports the EARLIEST failing
+  line, and a VCS assertion prints its source line and its `Offending` line before the `UVM_ERROR` that
+  names the property, so a reason built from the reported line alone would read `assertion_failure at
+  sim.log:45` for a failure whose name is one line below. When the reported line carries no bracketed id
+  the reason takes one from the next `C.MECHANISM_LOOKAHEAD` lines and appends it in parentheses; beyond
+  that window nothing is attributed, so a later unrelated error is never read as this one. Only the reason
+  string changes: not the verdict, not `evidence`, and not `evidence_line`, which is what `red_expect`
+  matches against;
   FAIL when the end-of-test marker is missing (the test's `pass_marker`, matched as the last whole
   token of a line, or `$finish` when null); FAIL when the time-zero banner line
   `GEN_CONFIG_BANNER build_config=opentitan` is missing from sim.log (the rule cannot be switched

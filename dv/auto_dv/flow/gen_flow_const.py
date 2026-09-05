@@ -500,6 +500,11 @@ FAIL_PATTERNS = (
     ("assertion_failure", re.compile(r"Assertion .* failed|Offending")),
 )
 UVM_SUMMARY_RE = re.compile(r"^UVM_(FATAL|ERROR|WARNING|INFO)\s*:\s*(\d+)")
+# A VCS assertion failure prints its source line and an Offending line before the UVM_ERROR that NAMES the
+# property, and the verdict reports the earliest failing line, so the name is one or two lines below the line
+# it quotes. When the reported line carries no id, the reason takes one from the next few lines.
+MECHANISM_ID_RE = re.compile(r"^UVM_(?:FATAL|ERROR)\s[^\[]*\[([^\]]+)\]")
+MECHANISM_LOOKAHEAD = 3
 COCOTB_SUMMARY_RE = re.compile(r"\*\*\s+TESTS=(\d+)\s+PASS=(\d+)\s+FAIL=(\d+)\s+SKIP=(\d+)")
 FINISH_RE = re.compile(r"^\$finish (at simulation time|called)")
 

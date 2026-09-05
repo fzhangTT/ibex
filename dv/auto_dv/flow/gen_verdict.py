@@ -80,7 +80,9 @@ def scan_log(lines: list[str], pass_marker: str | None, build_config: str,
         # without it the index into the scanned text is all there is.
         where = f"{origins[idx - 1][0]}:{origins[idx - 1][1]}" if origins and idx <= len(origins) else f"log line {idx}"
         # evidence is the display form (300 chars); evidence_line is the full line the red_expect regex sees.
-        out.update(verdict=C.VERDICT_FAIL, reason=f"{name} at {where}", evidence=line[:300], evidence_line=line)
+        mech = mechanism_id(lines, idx)
+        out.update(verdict=C.VERDICT_FAIL, reason=f"{name} at {where}" + (f" ({mech})" if mech else ""),
+                   evidence=line[:300], evidence_line=line)
         return out
     marker_ok = marker_seen if pass_marker else finish_seen
     if not marker_ok:
@@ -126,6 +128,18 @@ def grade_red_fixture(res: dict[str, Any], red_expect: str | None) -> dict[str, 
     elif res["verdict"] == C.VERDICT_PASS:
         res.update(verdict=C.VERDICT_FAIL, reason="red fixture passed unexpectedly: the failure it exists to show did not occur")
     return res
+
+
+def mechanism_id(lines: list[str], idx: int) -> str | None:
+    """The name of the mechanism the failing line at idx (1-based) belongs to, or None. The line's own bracketed
+    id when it has one, else the first one within C.MECHANISM_LOOKAHEAD lines below it: a VCS assertion prints its
+    source and Offending lines before the UVM_ERROR that names the property. Bounded so a later, unrelated error
+    is never attributed to this one."""
+    for i in range(idx - 1, min(idx - 1 + 1 + C.MECHANISM_LOOKAHEAD, len(lines))):
+        m = C.MECHANISM_ID_RE.match(lines[i])
+        if m:
+            return m.group(1)
+    return None
 
 
 def decide_lines(lines: list[str], pass_marker: str | None, timed_out: bool, rc: int | None,
@@ -361,6 +375,25 @@ def self_test() -> int:
         cond = True
     ok &= cond
     print(f"SELF-TEST {'ok ' if cond else 'BAD'} fabricated: banner rule not skippable (empty build_config raises)")
+
+    # A VCS assertion failure names its property one or two lines BELOW the line the earliest-hit rule reports,
+    # so the reason takes the name from there; a distant unrelated error must not be taken.
+    sva = ['"gen_protocol_props.sv", 299: gen_tb_top.u_dut.p_i.sva_rvfi_irq_valid_exclusive: started at 65915000ps failed at 65915000ps',
+           "\tOffending '(!rvfi_valid)'",
+           "UVM_ERROR @ 6591500: reporter [sva_rvfi_irq_valid_exclusive] GEN_PROTO: protocol property violated at cycle 6587",
+           "GEN_TEST_PASS"]
+    r_near = decide_lines(sva, "GEN_TEST_PASS", False, 0, C.BUILD_CONFIG, [])
+    r_far = decide_lines(sva[:2] + ["filler"] * (C.MECHANISM_LOOKAHEAD + 2) + [sva[2], sva[3]],
+                         "GEN_TEST_PASS", False, 0, C.BUILD_CONFIG, [])
+    r_own = decide_lines(["UVM_ERROR @ 5: reporter [isa_insn] mismatch", "GEN_TEST_PASS"],
+                         "GEN_TEST_PASS", False, 0, C.BUILD_CONFIG, [])
+    cond = ("sva_rvfi_irq_valid_exclusive" in r_near["reason"] and r_near["evidence_line"] == sva[1]
+            and "sva_rvfi_irq_valid_exclusive" not in r_far["reason"]
+            and "(isa_insn)" in r_own["reason"])
+    ok &= cond
+    print(f"SELF-TEST {'ok ' if cond else 'BAD'} fabricated: the reason names the mechanism from the next lines when its own line has none, "
+          f"never from beyond {C.MECHANISM_LOOKAHEAD} lines, and the evidence line is unchanged: "
+          f"near {r_near['reason']!r}; far {r_far['reason']!r}; own {r_own['reason']!r}")
     print("SELF-TEST: cases named 'real ...' are verbatim excerpts of runs on this site (LSF job ids given); "
           "'real-shaped ...' are bash kill reports captured from the job-script form with a stand-in simv; "
           "'fabricated ...' pin a rule on synthetic text until a real run exists")

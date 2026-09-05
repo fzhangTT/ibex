@@ -1,0 +1,80 @@
+# The verdict reason names its mechanism: the red, the control and the population, Runtime flow
+#
+# WHAT LANDS. gen_verdict reports the EARLIEST failing line in the log. A VCS assertion prints its source
+# line and its Offending line BEFORE the UVM_ERROR that names the property, so the earliest-line rule always
+# quotes the least informative of the three and the reason carries a class and a position but no name. When
+# the reported line has no bracketed id, the reason now takes one from the next C.MECHANISM_LOOKAHEAD lines.
+#
+# WHY IT MATTERS, and it is the reason this item exists. Seed 1207954461's record reads "assertion_failure at
+# sim.log:45" with evidence "Offending '(!rvfi_valid)'", and sim.log:46 says sva_rvfi_irq_valid_exclusive.
+# That record was read across the team as the verdict naming the wrong thing, when in fact it had named the
+# EARLIEST thing and simply had not said which. The flow's selection rule was never the defect.
+#
+# WHAT DOES NOT CHANGE: the verdict, `evidence`, and `evidence_line`, which is what red_expect matches, so no
+# red fixture can regrade. Checked at both consumers rather than assumed: gen_verdict.grade_red_fixture reads
+# evidence_line, and gen_flow_util.red_signature_check reads the verdict and the evidence.
+
+================================================================
+# SECTION 1: THE RED, run against the COMMITTED code before any fix was written
+# stamp 2026-09-05T13:07:13Z  host soc-l-11  tree 4b8d667fd05002677675b2a9749aee5e34a3a0b6
+#
+# Input: the three-line shape taken verbatim from the 258-fire run's sim.log lines 44-46, paths shortened.
+
+  verdict : FAIL
+  reason  : assertion_failure at log line 3
+  evidence: Offending '(!rvfi_valid)'
+  SELF-TEST BAD the reason names the property that fired: False
+  CONTROL reason: assertion_failure at log line 3
+  SELF-TEST ok  a distant unrelated error is not attributed: True
+  rc=2
+
+The red FAILS against the committed code, which is the point: the reason names no property. Its CONTROL
+passes already, so the control can catch a fix that reaches too far rather than only proving one reaches.
+
+================================================================
+# SECTION 2: the same red after the change
+# stamp 2026-09-05T13:07:13Z
+
+  verdict : FAIL
+  reason  : assertion_failure at log line 3 (sva_rvfi_irq_valid_exclusive)
+  evidence: Offending '(!rvfi_valid)'
+  SELF-TEST ok  the reason names the property that fired: True
+  CONTROL reason: assertion_failure at log line 3
+  SELF-TEST ok  a distant unrelated error is not attributed: True
+
+================================================================
+# SECTION 3: the self-test, three directions in one case
+# stamp 2026-09-05T13:07:13Z
+
+  SELF-TEST ok  fabricated: the reason names the mechanism from the next lines when its own line has none, never from beyond 3 lines, and the evidence line is unchanged: near 'assertion_failure at log line 2 (sva_rvfi_irq_valid_exclusive)'; far 'assertion_failure at log line 2'; own 'uvm_error at log line 1 (isa_insn)'
+  SELF-TEST: PASS
+
+  The three directions: the name is taken from a following line when the reported line has none; it is NOT
+  taken from beyond the window; and it is taken from the reported line's own id when it has one.
+
+================================================================
+# SECTION 4: THE POPULATION, every non-fcov failure of the 403-run wave re-decided
+# stamp 2026-09-05T13:07:13Z
+#
+# fcov-expectation failures are excluded because their reason comes from the coverage checker, not from the
+# log scan, so this change cannot touch them.
+
+  non-fcov failures re-decided: 22
+    verdict unchanged: 22    verdict changed: 0
+    reasons that gained a mechanism name: 20
+        15  irq_entry
+         5  sva_rvfi_irq_valid_exclusive
+    reasons unchanged (no UVM id within the window): 2
+       gen_test_irq_basic_1800473338: cocotb_summary at sim_stdout.log:205
+       gen_test_irq_basic_red_552432658: red fixture failed as designed (red_expect matched): gen_fail_marker a
+
+A FALSE RESULT I CAUGHT IN MY OWN HARNESS, recorded because it is the kind that gets published. The first
+pass over these runs reported ONE verdict changed, which is precisely what this change promised could not
+happen. The cause was my re-decide script calling the verdict without red_fixture and red_expect, so a RED-OK
+fixture graded as a plain FAIL. Supplying the two arguments the run actually had gives 22 of 22 unchanged. I
+checked which of the two it was rather than explaining the one away.
+
+A SECOND ONE, in the same session and the same shape. I first reported the split as 13 irq_entry; it is 15.
+My counting regex required the name at the END of the reason string and silently dropped the two red-fixture
+reasons that carry text after it. The totals were right and only the split was wrong.
+
