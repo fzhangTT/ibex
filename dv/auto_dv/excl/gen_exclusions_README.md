@@ -187,19 +187,32 @@ Flow records (Runtime Manager, purpose-2 elcheck; times verbatim from the manife
 - rtl-arch-003 (received 2026-09-03T08:50:30Z): refused in writing, reason `invalid request: tests must
   be a non-empty list, a comma list, or a tier word (empty only with elcheck)` (the request lacked the
   `elcheck` mapping).
-- runtime-007 (pre-flight) and dv/auto_dv/work/runtime/results/rtl-arch-004/manifest.yaml (received
+What these four records are, and are not: they are the retained REQUEST records of passes 9 to 13,
+carrying what their server wrote at the time. Unlike gen_elcheck_rtl_arch_009.yaml, none carries a
+served block with the verdict, the received and finished stamps, the return codes and the six gated
+rows; each carries the request fields and a notes paragraph quoting a return code. The stamps and
+figures in the four bullets below come from their results manifests, which are not retained, so those
+values are not re-derivable from this repository the way the pass-14 row's are. Raising the four to the
+009 standard is a separate item, not done here.
+
+- runtime-007 (pre-flight) and request rtl-arch-004, record retained at
+  dv/auto_dv/evidence/gen_round_0/gen_elcheck_rtl_arch_004.yaml (served figures below from its results
+  manifest, received
   08:58:25Z, finished 08:58:31Z): the dca91fd file, urg rc 0, 0 violations, gated row LINE 1694/4057
   COND 2547/9220 TOGGLE 1682/20596 FSM 6/74 BRANCH 798/2320 ASSERT 143/175.
-- dv/auto_dv/work/runtime/results/rtl-arch-005/manifest.yaml (received 09:13:43Z, finished 09:13:52Z):
+- request rtl-arch-005, record retained at dv/auto_dv/evidence/gen_round_0/gen_elcheck_rtl_arch_005.yaml
+  (served figures below from its results manifest, received 09:13:43Z, finished 09:13:52Z):
   the pass-10 file (sha256 e43c2dcb50ffd9a23655c11a56e01ca263b321e44cc3029db764579015636039), verdict ok,
   urg rc 0 on both merges, 0 violations, empty merge_warnings, gated row LINE 1694/4134 COND 2547/9319
   TOGGLE 1682/20596 FSM 6/74 BRANCH 798/2353 ASSERT 143/175, excluded counts 217/247/3942/12/65/3.
-- dv/auto_dv/work/runtime/results/rtl-arch-006/manifest.yaml (received 2026-09-03T09:30:41Z, finished 2026-09-03T09:30:49Z): THIS
+- request rtl-arch-006, record retained at dv/auto_dv/evidence/gen_round_0/gen_elcheck_rtl_arch_006.yaml
+  (served figures below from its results manifest, received 2026-09-03T09:30:41Z, finished 2026-09-03T09:30:49Z): THIS
   file (pass 12, sha256 103eb06933839dec301bff6c9cf68dbf20f1143ae921db330a364fad5bb52e5a), verdict ok, urg rc 0 on both merges, 0 violations, empty
   merge_warnings, full_exclusions dump written, gated row LINE 1694/4154 COND 2547/9319 TOGGLE
   1682/20596 FSM 6/74 BRANCH 798/2353 ASSERT 143/175, excluded counts 197/247/3942/12/65/3: identical
   to the pass-12 pre-check: the formal record of commit 4125c36.
-- dv/auto_dv/work/runtime/results/rtl-arch-007/manifest.yaml (received 2026-09-03T09:50:02Z, finished
+- request rtl-arch-007, record retained at dv/auto_dv/evidence/gen_round_0/gen_elcheck_rtl_arch_007.yaml
+  (served figures below from its results manifest, received 2026-09-03T09:50:02Z, finished
   2026-09-03T09:50:08Z): THIS file (pass 13, sha256
   3a815ffc68358b5e4499af0d45106936bbd9d3173350be076805ccd8f5331839), verdict ok, urg rc 0 on both
   merges, 0 violations, empty merge_warnings, full_exclusions dump written, gated row LINE 1694/4154
