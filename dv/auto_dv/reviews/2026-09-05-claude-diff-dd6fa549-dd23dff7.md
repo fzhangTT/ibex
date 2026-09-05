@@ -1,0 +1,50 @@
+# Cross-model review - committed diff dd6fa549..dd23dff7
+
+**Reviewer:** claude CLI 2.1.261 (Claude Code); run-reported model: claude-fable-5-1,claude-haiku-4-5-20251001; requested effort: high (the CLI does not report the effective setting); fresh session db7bae1c-0b73-4b95-b63c-89fc48a9f2cd; sandbox: bubblewrap, working directory = detached read-only checkout of commit dd23dff7546af55e10541b50dd47c0d616365abe (the live working tree is not read), filesystem read-only except this run's own output directory, scratch HOME (no access to the executing model's settings, instructions or memory), private PID namespace; network open for the model API, web tools disallowed by policy (fallback reviewer per owner ruling A-001)
+**Codex unavailable because:** ERROR: You hit your spend cap set by the owner of your workspace. Ask an owner to increase your spend cap to continue.
+**Wrapper:** dv/auto_dv/tools/gen_cross_review.sh blob 713e8c09 (the copy executed; equals the wrapper committed at the reviewed commit); reviewed commit dd23dff7546af55e10541b50dd47c0d616365abe
+**Date:** 2026-09-05
+**Target:** committed diff dd6fa549..dd23dff7 (echo at raw line 1)
+
+---
+
+TARGET: dd6fa549170d8e7cfea4c26c4a679cfcce588ded..dd23dff7546af55e10541b50dd47c0d616365abe
+
+Reviewer: Claude Fable 5.1 (claude-fable-5-1), fresh session, detached read-only checkout of dd23dff; the live clone was not read. Range: one commit (dd23dff), six paths, no `rtl/` lines.
+
+**What I verified against the repository**
+
+- Both mutant diffs apply mechanically. On a clean `git archive dd23dff` export of `gen_dut_top.sv`, `gen_mut_irqwithholdall.diff` and `gen_mut_nmiwithhold.diff` apply cleanly with `git apply -v` and with `patch -p1` (dry-run and real), to the file they name, with real ranges (`@@ -328,10 +328,10 @@` at `:8 @dd23dff` and `@@ -332,7 +332,7 @@` at `:8 @dd23dff`); the git-apply and patch results are byte-identical. The committed `gen_dut_top.sv` blob (1fc7498) is unchanged since 3c623e5, so "against 38b729a" in both headers names the same bytes c045115 carried.
+- The digests reproduce from committed trees. I recomputed `build_sources_sha256` by the recipe at `gen_tb_local.sh:72-73` (find over env/tb/isa/gen_tb, sort, sha256sum, first 16 hex) over `git archive` exports: c045115 clean = 665d62e97890e7ca, c045115 + irqwithholdall = c28c0c5bbd137fc5, c045115 + nmiwithhold = 0bd1ad2cd1602077, all three equal to the l54 log's PRE row (`gen_fu_l54_irq_nmi_mask_accrual.log:10`). For the companion's table (`gen_fu_l59_l57_artifacts_companion.log:20-24 @dd23dff`): ccd755d = 2f874eb63deeb6bb (a_clean), ccd755d + irqwithholdall = 5bcfb9424b692b13 (a_mut), 38b729a = b7067f660ed88693 (c_clean), 38b729a + irqwithholdall = 4baea273ea4d6723 (c_mut = c_abl). All six digests named in the range resolve to committed trees plus the retained diff. The manifest claim "getting back the mutant digest the landing-54 build matrix recorded" holds for the PRE baseline.
+- dcsr accesses: `grep -n dcsr` over both packages finds every field access using the constants: `gen_checkers_pkg.sv:142,341,344,347 @dd23dff` and `gen_fcov_pkg.sv:336,567,596 @dd23dff`; no `[2]`, `[1:0]` or literal mask remains. The constants' home is `gen_tb_knobs.yaml:229-231` rendered into `gen_tb_pkg.sv:280-282`, which `gen_fcov_pkg.sv:9` imports.
+- The counter's condition (`gen_checkers_pkg.sv:150-152 @dd23dff`) is `!nmi && !line_enabled && !nmi_mode && !debug_mode && (MIE || prv != M)`, i.e. the mask at `:146-148` is true with every non-per-line term false: exactly "held by its own bit alone, nothing else masking". `line_enabled` at `:145` is an OR over the expectation's lines, so any-of is what the code does and the comment at `:143` says so. The counter is a per-run cumulative like `step_records`, printed in `report_phase` at `:299-300`, the summary line the companion quotes.
+- Ablation precision: `expect_fail++` at `:164` precedes the `gen_chk_en` gate at `:165`, so bound failures are counted before the error is suppressed; the companion's c_mut/c_abl rows both read bound failures=5 and the l57 log's table (`gen_fu_l57_perline_enable.log:44-47`) gives 329 errors un-ablated and 324 ablated, consistent with "zero irq_entry errors, five detections".
+- The five fires are internally consistent with `gen_irq_mie_bit` (`gen_agents_pkg.sv:517-523`): lines 04000/00002/00020/10000/00100 map to mie bits 27/7/18/29/21 = the enable-bit words quoted; the fifth matches the l57 log `:50-51` verbatim. The fires cannot be confirmed in the named `sim.log` files: the paths are `<scratch>/...` placeholders on out-of-tree roots, and no excerpt of the four common fires is retained in the tree.
+- Manifest: the three changed/new rows match the blobs (887/13fd25d9…, 685/bdc5aaf6…, 5439/5290beaf…); the l57 log is untouched at 8426/66e1064e… as the companion states.
+- rev71 disposition: Low 1 (artifacts) answered by the companion; Low 2 (hunk headers) fixed by the regenerated diffs; Low 3 (`st.dcsr[1:0]`) fixed at `gen_fcov_pkg.sv:596`; Info 1 (separate counter) and Info 2 (any-of comment) both taken. Critic Section 8's Lows carried by this landing are L-6 (appliable mutant diffs) and L-12 (dcsr one home, now complete); L-7, L-8, L-9, L-11 are not touched and not claimed.
+
+**Findings**
+
+[Medium][dv/auto_dv/evidence/gen_tdd_logs/fcov/gen_fu_l59_l57_artifacts_companion.log:61-64 @dd23dff] The counter's figures, "reads 250" on the fixture and "0" on "all six regression smokes", are stated with no run root, build digest, sim.log path or smoke names. The five rows the log does source (`:20-24`) are builds of ccd755d and 38b729a, neither of which contains `bit_clear_records`, so the 250 and the six zeros come from a sixth and further builds the log never names (the committed dd23dff env digests to c684bc82a9d070dc by the recipe; the log does not say so). This is the exact gap the log's own header (`:5-9`) says it exists to close. - Add a row per counter run: smoke name and module, plusargs or the recipe log they follow, out directory, `build_sources_sha256`, sim.log path, and the summary line's `records held by a clear per-line enable alone=` field quoted.
+
+[Low][dv/auto_dv/evidence/gen_tdd_logs/fcov/gen_fu_l57_perline_enable.log:96-97 @dd23dff] ROW 4 still lists `gen_mut_irqwithholdall.diff md5 6bb801ed…` and `gen_mut_nmiwithhold.diff md5 49bf2735…`, values no file in the tree carries after this landing (now 13fd25d9… and bdc5aaf6…). The companion says the l57 log's bytes are untouched but does not record that these two lines are superseded, so a reader who md5-checks the retained fixtures against the l57 log gets a mismatch with no explanation. - Add one sentence to the companion naming the two superseded md5s and the regenerated values (the team's corrigendum convention, bytes of the older log untouched).
+
+[Low][dv/auto_dv/env/gen_checkers_pkg.sv:65-69 @dd23dff] The counter increments once per expectation per record (inside `foreach (expects[i])` at `:143`), so two expectations both held on one record count 2, while the declaration comment and the summary label (`:299`) say "records ... held". - Say "expectation-records" or count once per record with a flag set inside the loop; either way make the label match the quantity.
+
+[Low][dv/auto_dv/env/gen_checkers_pkg.sv:66-68 @dd23dff] "Before that term existed the checker spent them and dropped the expectation at the bound, and a later enable was never judged; this is that lost coverage as a number in every run rather than a fact established once on one fixture" is history narration ("previously X") and an evidence-process reference in a code comment, against the repo's intent-only comment rule. - Keep the intent: "counts the coverage the bound would otherwise hide: an expectation whose line is raised with its own enable bit clear is held, not spent, and a later enable is still judged".
+
+[Low][dv/auto_dv/evidence/gen_tdd_logs/fcov/gen_fu_l59_l57_artifacts_companion.log:2 @dd23dff] The landing names only "rev71's Low" and nowhere maps its work to the Critic's owed Lows L-6..L-13 (`gen_critic_irq_checker_fix.md:360-364`), although the commit answers L-6 (appliable diffs) and L-12 (the last bare dcsr literal) and leaves L-7, L-8, L-9, L-11 untouched. - Record the disposition per Critic Low in the companion or the group's response document: fixed with a citation, or explicitly not this landing's.
+
+[Info][dv/auto_dv/evidence/gen_irq_fixtures/gen_mut_irqwithholdall.diff:3-4 @dd23dff] "Line ranges are against gen_dut_top.sv at 38b729a" is true but the l54 digests these diffs reproduce were built on c045115; the two commits share the `gen_dut_top.sv` blob 1fc7498, which the header could name instead of a commit so the claim survives any commit that leaves the file alone. No change required.
+
+[Info][commit message dd23dff] "the hand's own verification applies both inside the assembled tree so a diff that stops applying fails the hand" is a process claim: no committed script or check references the two diff files outside `evidence/`, so it is not verifiable from the tree. Not a defect in the landing; noted so the claim is not read as a committed gate.
+
+**Rubric results**
+
+- ai-slop-comments: `{"status": "FAIL", "summary": "one added comment narrates history and evidence process", "comments": [{"file": "dv/auto_dv/env/gen_checkers_pkg.sv", "line": 66, "quote": "Before that term existed the checker spent them and dropped the expectation at the bound", "comment": "history narration in a code comment; state the intent only", "confidence": 75}]}`
+- rtl-purity: `{"status": "PASS"}` (no `rtl/` lines in the range)
+- magic-numbers: `{"status": "PASS"}` (the one changed field access moves to the yaml-rendered constants; the `18` loop bound is the package's existing convention)
+- forces-and-hier-access: `{"status": "PASS"}`
+- assertion-integrity: `{"status": "PASS"}` (the mask expression at `:146-148` is unchanged; the added branch only counts before the existing `continue`; the `gen_chk_en` gate and `expect_fail` ordering are unchanged; the ablation is a plusarg on out-of-tree builds, not committed)
+
+Final verdict: APPROVE-WITH-CHANGES
