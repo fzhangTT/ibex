@@ -21,11 +21,15 @@ check tier is absent from that map with its own branch that only a tier of exact
 
 | tier | entries | runs | of which measured |
 |---|---|---|---|
-| smoke | 16 | 44 | 36 |
+| smoke | 17 | 47 | 36 |
 | targeted | 3 | 9 | 0 |
-| THE STATE AT 0203c6e | 19 | 53 | 36 |
+| THE STATE AT 6407118 | 20 | 56 | 36 |
 
-That table is the state at 0203c6e, NOT the round's plan. Round 2's entry set is whatever the selector returns
+Restated at this form's own commit rather than at the one where it was first derived: 6407118 selects 20
+entries over 56 runs, three more runs than 0203c6e because gen_test_irq_basic entered at tier smoke with
+three seeds and measured false, so the measured set is unchanged at 12 entries over 36 runs.
+
+That table is the state at 6407118, NOT the round's plan. Round 2's entry set is whatever the selector returns
 at the round's own commit, and the round-2 scope (LOG-097) expects these to land first: PMP step 1 (four
 covergroups and the flip of `gen_test_pmp_csr_warl`, `gen_test_pmp_mseccfg` and `gen_test_pmp_lock` to
 measured), IRQ step 1 (four covergroups, a new owning entry and its manifest), the generator fixes, the
@@ -58,7 +62,20 @@ construction. Raising the seed count without re-measuring the manifests does not
 measurement; it makes it a wager on 2895 declared bins that nobody has priced. Section 3.2 prices it.
 
 The rule already exists for new entries, where it is stated as the 40-seed manifest measurement. This
-generalises it to entries that already exist, and makes it checkable.
+generalises it to entries that already exist.
+
+WHAT THE RULE NEEDS BEFORE IT CAN BE ENFORCED, and it does not exist today. I called this rule checkable in
+the first version of this form and that was wrong: nothing in the tree records the number it reads. The 24
+manifests under dv/auto_dv/fcov_expectations/ carry `test`, `owner`, `bins` and `anti_vacuity` and no
+measurement provenance at all, so today the rule is a policy a human applies, not a gate. Two things close
+that, and neither is mine:
+1. A manifest field, `measured_seeds`, recording the seed count the declared set was measured over and the
+   commit that measured it. The Test Writer owns the manifests and the 40-seed sweep that would fill it.
+2. A comparison that refuses a measured round when an entry's testlist `seeds` exceeds its manifest's
+   `measured_seeds`. That belongs in the testlist loader or in gen_regress beside the other fcov policy
+   checks, and it is a FLOW item owed by the Runtime Manager's next plan, not by this form.
+Until both exist, treat the per-entry counts in 3.3 and 3.5 as a decision this form records and a reviewer
+checks by hand, not as one the flow enforces.
 
 ### 3.2 How much margin each declared set actually has
 
@@ -72,10 +89,10 @@ and nothing in the round establishes that it occurs in a fourth run.
 
 | entry | declared bins | bins hit exactly once in their thinnest run | share | median smallest count |
 |---|---|---|---|---|
-| gen_test_csr_access | 4 | 0 | 0.0% | 80 |
+| gen_test_csr_access | 4 | 0 | 0.0% | 47.5 |
 | gen_test_isa_cti | 184 | 1 | 0.5% | 118 |
 | gen_test_isa_alu | 563 | 30 | 5.3% | 33 |
-| gen_test_csr_trap_setup | 146 | 12 | 8.2% | 14 |
+| gen_test_csr_trap_setup | 146 | 12 | 8.2% | 13.5 |
 | gen_test_cmp_zca | 300 | 81 | 27.0% | 5 |
 | gen_test_mul_div | 196 | 55 | 28.1% | 4 |
 | gen_test_isa_shift | 120 | 35 | 29.2% | 5 |
@@ -101,13 +118,15 @@ bit_ratified, cmp_zcmp_basic, rst_boot and mul_mul, every one of them between 27
 bins.
 
 FOUR have real margin and are the pre-flight's priority: csr_access, isa_cti, isa_alu and csr_trap_setup, all
-at or below 8.2 percent zero-margin bins, with median smallest counts of 80, 118, 33 and 14. A 12-seed
+at or below 8.2 percent zero-margin bins, with median smallest counts of 47.5, 118, 33 and 13.5. A 12-seed
 pre-flight over just those four costs 12 x 102.9 = about 1234 s of run time (section 4), after which the rule
 in 3.1 permits them at twelve seeds. I am not asking to raise them in round 2 ahead of that measurement, and
 the split above is what makes the pre-flight small enough to be worth running.
 
-Of the four, csr_trap_setup is the one with a measured payoff rather than a hoped-for one, and it is the
-cheapest entry in the set at 10.0 s per run. Section 5 gives its 0.25-rate bin.
+Of the four, csr_trap_setup is the one with a measured payoff rather than a hoped-for one, and it is cheap
+to run: csr_trap_setup at 10.0 s per run, against csr_access at 9.7 s per run, which is the cheapest of the
+four. It is not the cheapest entry in the round, which is cmp_zcb at 8.2 s per run. Section 5 gives
+csr_trap_setup's 0.25-rate bin.
 
 ### 3.4 Why the seed-dependent set is not the argument for more seeds
 
@@ -130,13 +149,15 @@ A seed-dependent bin was HIT at one of the three seeds, so the MERGED report alr
 credited; the class-B exclusion reason says exactly that. The 123 seed-dependent bins sit on four entries
 (cmp_zcb 8, cmp_zcmp_basic 73, isa_alu 33, mul_div 9); the other two headings in the work list carry zero.
 
-The bins the merge is MISSING are the 123 stable ones, and the Test Writer root-caused those test by test,
+The bins the merge is MISSING are the 123 stable ones of the pre-flight's unmet set, which is the eight
+tier-full manifest-naming entries and not the whole declared population, and the Test Writer root-caused those test by test,
 each cause covering many bins: compressed branches and `jalr` with rs1 = x0 never emitted (isa_cti, 16);
 data-independent timing never enabled, divide-by-zero dividend classes never produced and `c.mul` never
 emitted (mul_div, 19); writer-then-x0-read orderings never placed (isa_alu, 6); a `rand` catch-all the program
 deliberately avoids, which is a declaration defect (cmp_zcb, 6); the insn-by-rlist-by-spimm product the
-stimulus never reaches (cmp_zcmp_basic, 57 of 74); and two boundary values needing an owner ruling on
-drivability (rst_boot, 2).
+stimulus never reaches (cmp_zcmp_basic, 57 of 74); and rst_boot's 2, of which ONE needs an owner ruling on
+drivability. The pre-flight record's own Corrigenda (:126-127) withdrew the other half: cp_bit8_readback.zero
+has a cause nameable from the TB and needs no ruling, and only cp_boot_addr.zero still stands as written.
 
 Every one of those is decided by what the program generator emits. A different seed does not change it.
 
@@ -227,7 +248,7 @@ case for more seeds anywhere.
 Second, its size is unknown and this form does not estimate it. Six stable bins were audited over 40 seeds and
 one was reclassified. That is not a rate: the six were chosen because their reasons had been written by
 READING the generator rather than running it, so they are the sample most likely to be wrong, not a random
-sample of the stable set. Anyone converting 1 of 6 into a projection over the 123 stable bins is reading a
+sample of that set. Anyone converting 1 of 6 into a projection over the pre-flight's 123 stable bins is reading a
 biased sample as an unbiased one. The honest statement is that the population exists, its size is unmeasured,
 and the cheap way to measure it is a generator sweep over the stable set rather than simulation seeds.
 
@@ -248,11 +269,16 @@ bins that miss move out under the class-B reason, and only then does the rule in
 
 ## 7. The measured entries and their expected outcomes
 
-Stated per entry before dispatch, once the round-2 landings are in and the selector has been called at the
-round's commit. The shape each row must carry: the entry, its seed count, its declared bin count, whether its
+NOT STATED YET, and this form must not be read as accepting a round against an empty section. Section 1
+promises an expected outcome for every selected run and Section 11 accepts the round against this section, so
+until it is filled the acceptance has nothing to test. It is filled once the round-2 landings are in and the
+selector has been called at the round's commit, and the filled version is a FORM V3 that takes its own
+pre-execution review before dispatch: v3 restates Section 1 from that selector call and Section 7 from the
+entries it returns, and no round is dispatched on this v2. The shape each row must carry: the entry, its seed count, its declared bin count, whether its
 covergroups are built, and what the round expects the fcov check to say. An entry whose declared set would be
 empty is not measured at all: the checker returns unverifiable rather than PASS for a manifest that declares
-no bins (gen_fcov.py:328-331), so an empty declared set is a defect, not a pass.
+no bins: gen_fcov.py:328-331 names the cause and :361 returns the unverifiable verdict carrying it. So an
+empty declared set is a defect, not a pass.
 
 ## 8. Standing gates, named
 
@@ -276,6 +302,11 @@ for round 2 is added to the HEADINGS table in the same landing that writes the r
 name a heading the tool does not carry.
 
 ## 11. Acceptance
+
+The numbers in this form are checked by dv/auto_dv/tools/gen_round_form_check.py, which parses each claim
+it covers out of this document and recomputes it from the round's committed regression manifest, the
+pre-flight record or arithmetic; it covers the claims listed in its run_checks and not every numeral here,
+and it says so.
 
 The round is accepted when every selected run is clean, the merge and the fcov checks complete, every measured
 entry meets the expectation stated for it in section 7 on all of its runs, and the credit report, promotion
