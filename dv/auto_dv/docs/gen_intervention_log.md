@@ -2396,3 +2396,33 @@ Rules in force from this entry:
 Expected effect: the per-covergroup cost drops from hours (red fixture, mutation run, retained logs) to the sampling and reachability work; the
 182 unbuilt covergroups (1267 coverpoints across 25 families) become about a dozen family landings. The pause of LOG-093/094 is unchanged;
 preparation in scratch (family plans, sampling notes) is allowed, hand-offs are not, until the owner lifts it.
+
+## LOG-097 - 2026-09-05 01:42Z - Owner directive: pause lifted; complete the round-1 record; adjust iterations; run round 2, analyse, pause again
+
+Owner (verbatim): "Life the pause. Start with creating a record for the current regression coverage run (save the report / metrics) so we can
+revisit later. Also adjust test iterations if needed. I noticed that the agents provide heart beat messages - when paused, is there a way to
+disable these for that as well? Continue with remaining items into anothe coverage run, analyse then pause again"
+
+Applied:
+- The LOG-093/094 pause is LIFTED at 01:42Z; the LOG-085 freeze ends with it. Hand-offs resume under LOG-095 (one review and one verdict per
+  feature group) and LOG-096 (covergroups by family, no trust triad for covergroups).
+- Round-1 record completion, first: (a) the DV Lead regenerates the credit report, promotion table and covergroup set at the round's commit
+  4a00702 as round evidence (CR-40 M-1, the acceptance) with the gen_unbuilt_mark_check.py ledger blind spot fixed in the same group; the
+  Critic's re-review lifts the acceptance gate. (b) runtime-2 archives the run for later revisiting: the merged vdb and the full urg report
+  directory of /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_1 preserved with a KEEP note and a committed retention manifest under
+  gen_round_0 (paths, sizes, sha256 of the vdb archive and report files, the command to re-open them), so the round's metrics can be re-read
+  from the vdb and not only from the text tables already committed (d29d5db, 702d3ba, a6f811a, 91360ab).
+- Test iterations: round 1 ran 3 seeds per measured entry. The DV Lead decides the round-2 seed count PER ENTRY in the round-2 request form
+  from the measured rates (19 seed-dependent bins in the re-scope; the Test Writer's 40-seed audit rates such as 10 of 40), stating the
+  derivation and the run budget; runtime-2 checks the selector derives the planned run count before dispatch. "If needed" means a per-entry
+  decision, not a blanket increase.
+- Heartbeats during a pause: the idle notices are emitted by the harness whenever a teammate ends a turn and cannot be switched off by the
+  Orchestrator; what produces them during a pause is the watchdog nudge-and-restamp cycle. Rule for the NEXT pause: a role with nothing in
+  flight does not restamp on a timer and is not nudged by the watchdog; STATUS age is a stall signal only for a role with a task in flight;
+  roles end their turn once at the pause and stay silent until the lift. This removes the traffic the owner saw.
+- Round-2 scope (Orchestrator's reading of "remaining items", stated for the owner to correct): Phase A (record completion, the five-item flow
+  plan rt39/rt40, the pass-14 strict re-load, records rows, mirror prune, rt37) and Phase B items 6-10 (PMP step 1: five table-only covergroups
+  with the testlist flip of the three PMP entries and measured manifests as one joint group; IRQ step 1: four covergroups with a new owning irq
+  entry; the generator fixes; the LSU, ECC-knob and timing shapes; the per-run vs cumulative manifest semantics). Then round 2 is dispatched,
+  analysed as round 1 was (LOG-093 shape), and the team pauses for the owner. PMP step 2, IRQ steps 2 and 3, EXC and DBG, and tb-infra's held
+  rows follow after that review unless the owner widens the scope.
