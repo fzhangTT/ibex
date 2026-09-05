@@ -2426,3 +2426,9 @@ Applied:
   entry; the generator fixes; the LSU, ECC-knob and timing shapes; the per-run vs cumulative manifest semantics). Then round 2 is dispatched,
   analysed as round 1 was (LOG-093 shape), and the team pauses for the owner. PMP step 2, IRQ steps 2 and 3, EXC and DBG, and tb-infra's held
   rows follow after that review unless the owner widens the scope.
+
+### LOG-097 addendum (01:48Z, owner): bug candidates
+Owner (verbatim): "we will review the bug list later, but the handling is correct (they should fail, and we should expect them to fail)". The
+expected_fail mechanism stands as the policy for bug candidates: a candidate's test fails and is reported XFAIL; a pass is reported as an
+unexpected pass; XFAIL vdbs merge when the entry is measured. The disposition pass over the bug log (the 15 open candidates, S1-S5) waits for the
+owner's review and is not queued.
