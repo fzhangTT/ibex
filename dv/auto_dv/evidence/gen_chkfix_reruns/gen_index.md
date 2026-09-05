@@ -9,7 +9,7 @@ does not track.
 
 | file | bytes | sha256 |
 |---|---|---|
-| `gen_chkfix_reruns.yaml` | 3020 | `196378403d16e4329c10e55e997c02d169e9dffdc8105c6921faee80efed3aa7` |
+| `gen_chkfix_reruns.yaml` | 5424 | `23e1dfea5fe2c0858bdbdc3a95555e1fa79d780a5e06fd93acbfbf8b843a1153` |
 
 Pinned to 9c7f8f63957d153d9c67cd1a61d44f88b3c94c69, head-mode mirror, driver a detached archive of that commit
 whose `gen_run.py` hashes to the committed blob. Fresh output directory, since the testbench sources changed.
@@ -46,9 +46,36 @@ The delta range is the same family as the window the fix addresses, and the accr
 two red seeds went to zero on the same build. So whatever withholds these interrupts is not what the reds were
 hitting. The diagnosis belongs to tb-infra-2; this record states the measurement only.
 
-One fact kept separate because it has a different owner: the same run fires `sva_rvfi_irq_valid_exclusive` six
-times, the property already ruled wrong and unchanged, and that property rather than the checker decided the run's
-verdict.
+One fact kept separate because it has a different owner: the same run fires `sva_rvfi_irq_valid_exclusive` three
+times, the property already ruled wrong and unchanged, and that property rather than the checker decided the
+run's verdict.
+
+## Corrigendum 2026-09-05T11:47Z
+
+TWO CORRECTIONS, the first a repeat of an error closed the same hour.
+
+THE FIRING COUNT WAS WRONG. This page and the record first said the property fires SIX times. It fires THREE.
+Six lines mention the identifier and they pair up: each firing emits a VCS assertion-source line naming
+`gen_protocol_props.sv:299` and then a UVM_ERROR line. Counting only the UVM_ERROR lines gives 3, which is also
+what rtl-arch's ibus-signature table records for this seed. Found by tb-infra-2.
+
+It is the same shape as the 343-against-334 count on the irq_entry fires, closed earlier the same hour, where
+nine of 343 were end-of-simulation tally lines rather than fires. The rule was written down and then broken
+again in a different disguise: A LINE MENTIONING AN IDENTIFIER IS NOT A FIRING.
+
+THE SEED IS DIAGNOSED AND IT IS NOT A CHECKER DEFECT, so this page's "second mechanism" framing is superseded.
+Every figure above reproduces exactly on tb-infra-2's own read. The answer is ordering: the first
+model-versus-DUT instruction divergence is at 9290500, about 6443 cycles BEFORE the first fire at 15737500,
+with 23387 instruction mismatches already reported and the core executing zero at `pc 0x80000022` while the
+model is at `0x80000154`; a bus anomaly precedes even that. The fires are DOWNSTREAM of a fetch and execution
+breakdown, and at every one of them the interrupt was takeable and a running core would have taken it. The
+checker is telling the truth, and tb-infra-2's landing neither fixes nor claims this seed.
+
+The three timing figures were re-derived here rather than adopted, and one near-miss is recorded with them:
+the gap was first computed as 64470 cycles by dividing the tick difference by 100, where the tick is 10 ps
+against a 10 ns clock so the divisor is 1000. Caught before it was written down.
+
+The export run on this seed is no longer needed for the diagnosis and no slot was spent on it.
 
 ## Method
 

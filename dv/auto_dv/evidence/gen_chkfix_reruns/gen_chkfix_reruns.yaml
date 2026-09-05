@@ -14,7 +14,7 @@ expectation_filed_before_the_runs: >
 result:
   gen_test_irq_basic_red_1038372995: {verdict: RED-OK, fire: fire_tp_irq_002, irq_entry_fires: 0}
   gen_test_irq_basic_red_1382184738: {verdict: RED-OK, fire: fire_tp_irq_002, irq_entry_fires: 0}
-  gen_test_irq_basic_1207954461: {verdict: FAIL, irq_entry_fires: 258, decided_by: 'sva_rvfi_irq_valid_exclusive, the already-ruled property, which fires 6 times'}
+  gen_test_irq_basic_1207954461: {verdict: FAIL, irq_entry_fires: 258, decided_by: 'sva_rvfi_irq_valid_exclusive, the already-ruled property, which fires 3 times (see the corrigendum)'}
 the_reds_are_closed: >
   3 of 3. The masking is gone: both seeds that previously failed for an undeclared reason now read RED-OK on
   the declared reason with ZERO checker fires.
@@ -37,3 +37,31 @@ method_note: >
   Fires counted with the not-taken pattern, not by lines mentioning the id, because the id also appears on
   UVM end-of-simulation per-id tally lines. This run carries zero tally lines and both counts agree at 258,
   but it was checked rather than assumed.
+
+corrigendum_2026_09_05T11_47Z:
+  fire_count: >
+    The record first said the deciding property fires 6 TIMES. IT FIRES 3. Six lines in that run's sim.log
+    mention the identifier and they PAIR UP: each firing emits a VCS assertion-source line naming
+    gen_protocol_props.sv:299 and then a UVM_ERROR line. Counting only the UVM_ERROR lines gives 3, which is
+    also what rtl-arch's ibus-signature table records for this seed. Found by tb-infra-2.
+    THIS IS A REPEAT OF AN ERROR THE RUNTIME MANAGER HAD ALREADY CLOSED THE SAME HOUR: the 343-against-334
+    count on the irq_entry fires, where nine of 343 were UVM end-of-simulation tally lines rather than fires.
+    The rule was written down and then broken again in a different disguise. A line mentioning an identifier
+    is not a firing; count the lines that ARE the event.
+  the_seed_is_diagnosed_and_it_is_not_a_checker_defect: >
+    This record framed the 258 fires as a second mechanism for tb-infra-2's checker. That framing is
+    SUPERSEDED. tb-infra-2 read the run in one pass and every figure in this block reproduces exactly (258
+    fires, 18 distinct raised bitmaps, mstatus 00000088 and mie 7fff0888 at every fire, deltas 18 to 23
+    distributed 153/67/23/7/3/5). The answer is ORDERING: the first model-versus-DUT instruction divergence is
+    at 9290500, about 6443 cycles BEFORE the first irq_entry fire at 15737500, with 23387 isa_insn mismatches
+    already reported by then; the core is executing 0x00000000 at pc 0x80000022 while the model is at
+    0x80000154, and a bus anomaly precedes even that. So the fires are DOWNSTREAM of a fetch and execution
+    breakdown, and at every one of them the interrupt was takeable and a running core would have taken it.
+    The checker is telling the truth. tb-infra-2's landing neither fixes nor claims this seed, and this record
+    should not have implied that it was its to fix.
+    The Runtime Manager re-derived the three timing figures rather than adopt them, and records a near-miss
+    while doing so: the gap was first computed as 64470 cycles by dividing the tick difference by 100, where
+    the tick is 10 ps against a 10 ns clock so the divisor is 1000. Caught before it was written down.
+  export_run_not_spent: >
+    The export run on this seed is no longer needed for the diagnosis and tb-infra-2 has released it. No slot
+    was spent on it.
