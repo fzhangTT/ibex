@@ -230,6 +230,10 @@ here before dispatch. I am not guessing a number for entries that do not exist y
 
 ### 3.7 Do not pass `--seeds N`
 
+AND THE SEED VALUES OF 3.5 ARE NOT APPLIED BY ANY MEANS UNTIL measured_seeds LANDS, which this section
+repeats because a Runtime Manager may read it without 3.5: Section 7 records that no entry is licensed above
+its calibrated count while the field is absent from every manifest.
+
 It is not a measured-only knob. `seeds_for_test` takes the override ahead of the entry's own count for every
 selected entry (gen_flow_util.py:1634-1638), so the flag also multiplies the unmeasured runs, including the two
 one-seed entries whose program image is a fixed assembly file and whose extra runs would compile the same
@@ -327,7 +331,7 @@ NO ENTRY EXPECTS A FAILURE, and that is a claim this round tests rather than an 
 the fifteen were measured in the wave at 4017573, and six of those nine were RE-RENDERED to that wave's
 every-seed set after refusing on declared bins unhit at some seeds; two more, gen_test_pmp_lock and
 gen_test_pmp_mseccfg, come from the PMP step-1b block. ONE OF THE NINE IS NARROWER THAN "forty fresh seeds"
-AND THIS PLAN'S OWN RULE IS WHAT NARROWS THEM. gen_test_bit_ratified declares 654 bins of which 37 were added
+AND THIS PLAN'S OWN RULE IS WHAT NARROWS IT. gen_test_bit_ratified declares 654 bins of which 37 were added
 on the pair-fix block, a DIFFERENT generator from the one the wave measured, so under the Section 0 rule that
 a block is evidence for the generator it measured, the wave covers 617 of its 654 and the pair-fix block
 covers the other 37, whose per-bin evidence is Section E of gen_fu_binv_pairfix.log rather than the block's
@@ -347,13 +351,13 @@ measured over forty fresh seeds in the wave at 4017573, plus gen_test_pmp_lock a
 the PMP step-1b block - and the remaining FOUR are capped at THREE, those being gen_test_csr_access,
 gen_test_csr_trap_setup, gen_test_isa_alu and gen_test_isa_cti, whose declared sets are the round-1 sets
 calibrated to three seeds. AND THAT DERIVATION CONFLICTS WITH THE PLAN AS WRITTEN, which this form states rather than resolves in its
-own favour: gen_fcov_plan.md:164-167 says the absent measured_seeds field caps an entry at the count its
+own favour: gen_fcov_plan.md Section 0, the "Seeds against the guarantee" rule, says the absent measured_seeds field caps an entry at the count its
 current declared sets were calibrated over, and no manifest carries the field today, so under the plan's own
 words all fifteen are capped at their calibrated count and NONE at forty. The blocks above are what those
 entries were measured over; they are not the field the rule reads. So this paragraph is the evidence for a
 future cap and not a licence for Section 3.5's twelve, and the licence arrives when the field does. THE CAP
 IS APPLIED BY HAND TODAY: the plan places it in a single testlist-header value beside
-fcov_manifest_required_tiers (gen_fcov_plan.md:165-167), and that value is absent from gen_testlist.yaml:59,
+fcov_manifest_required_tiers (the same Section 0 rule), and that value is absent from gen_testlist.yaml:59,
 so nothing in the flow reads it and a reviewer checks this by hand until it exists. Until that lands the
 rows above are the plan, and this section is restated from a fresh selector call if it does.
 
@@ -368,8 +372,8 @@ this form records rather than re-argues, each with its status at this commit.
 
 | # | condition | status |
 |---|---|---|
-| a | the irq_entry checker item classified and fixed | fixed at b9e5fad; rev60 APPROVE-WITH-CHANGES with rows owed; the Critic's re-verdict REQUEST-CHANGES confined to one records sentence; the companion answering it landed at fab8a61; the Critic's confirmation pending |
-| b | its red fixture RED-OK at three of three rather than masked | REOPENED: the three-of-three was measured on a 9c7f8f6 build and the fix moved to b9e5fad, so it is re-run on a b9e5fad build |
+| a | the irq_entry checker item classified and fixed | fixed at b9e5fad; rev60 APPROVE-WITH-CHANGES with rows owed; the Critic's re-verdict REQUEST-CHANGES confined to one records sentence; the Critic's form verdict at 55d784a records that M-3 and the companion answering it landed at fab8a61, so no Critic confirmation is outstanding on it; the rows of rev60 are owed inside fix 3 |
+| b | its red fixture RED-OK at three of three rather than masked | CLOSED at 67c6ac1: the three seeds re-run on a b9e5fad build read 3 of 3 RED-OK with zero irq_entry firings, beside the earlier block with its records untouched |
 | c | the fixed cocotb timeout in the stimulus path replaced by a seed-independent bound | CLOSED: fixed at 6b894ab, rev64 APPROVE-WITH-CHANGES at 348e4ae with its rows at 2c63b83, no re-review owed |
 | d | a fresh forty-seed sweep at the fix commit with its manifest rendered FROM that sweep | open |
 | e | a regime-independent end-of-test expectation covering the case a per-record bound cannot judge | open, and LOAD-BEARING rather than provisional: the storm-regime vacuity closes only by that reconciliation |
@@ -377,14 +381,15 @@ this form records rather than re-argues, each with its status at this commit.
 
 CONDITION (b) REOPENED ITSELF UNDER THIS PLAN'S OWN RULE, which is worth stating rather than quietly
 re-listing. Section 0 says a block is evidence for what it measured and no other; the reds were measured on
-one build and the fix has moved, so that evidence certifies a build the round will not run. The same rule
-that governs a manifest after a generator change governs a red after a checker change.
+one build and the fix has moved, so that evidence certifies a build the round will not run. That is not the manifest rule by analogy: a red
+measures the CHECKER against the stimulus, so a checker change alters the thing that was measured even though
+the stimulus is byte-identical, which is the same reasoning reaching a different half of the pair.
 
 CONDITION (f) IS NOT A FOOTNOTE TO (a). A wedged run's coverage measures nothing and its failures mask every
 other signal in it, so no promotion can rest on a run set containing one. Whether the wedge is a design
 finding or a testbench one is being classified and does not change the condition.
 
-Four of the six are open at this commit, and the round runs the entry unmeasured, exactly as the wave did.
+Three of the six are open at this commit, and the round runs the entry unmeasured, exactly as the wave did.
 
 ## 8. Standing gates, named
 
