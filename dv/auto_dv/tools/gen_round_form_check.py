@@ -112,8 +112,64 @@ def named_entries(flat, pattern):
     return {'gen_test_' + n for n in re.findall(r'[a-z][a-z0-9_]*', m.group(1)) if n != 'and'}
 
 
+def check_selection(c):
+    """Section 1's restated table and Section 7's rows, recomputed by CALLING the flow.
+
+    An import failure is a FAILURE and not a skip: a form whose selection figures cannot be verified must not
+    pass on the strength of the ones that can.
+    """
+    sys.path.insert(0, str(R / 'dv/auto_dv/flow'))
+    try:
+        import gen_flow_util as U
+        import gen_fcov as F
+    except Exception as e:                                  # noqa: BLE001 - reported, never swallowed
+        c.fail(f'selection checks: the flow would not import ({e})')
+        return
+    tl = U.load_testlist(R / 'dv/auto_dv/flow/gen_testlist.yaml')
+    sel = U.select_tests(tl, 'full', None, None)
+    base = 20260904
+    seeds = {t['name']: len(U.seeds_for_test(t, None, base)) for t in sel}
+    meas = sorted([t for t in sel if t.get('fcov_expectation_file')], key=lambda x: x['name'])
+    rendered = set(re.findall(r'covergroup\s+(gen_\w+_cg)\b',
+                              (R / 'dv/auto_dv/env/gen_fcov_groups.svh').read_text(encoding='utf-8')))
+    for tier, label in (('smoke', 'smoke at 9c28944'), ('targeted', 'targeted at 9c28944')):
+        ents = [t for t in sel if t['tier'] == tier]
+        c.check(f'{label} entries', rf'\| {re.escape(label)} \| (\d+) \|', len(ents))
+        c.check(f'{label} runs', rf'\| {re.escape(label)} \| \d+ \| (\d+) \|', sum(seeds[t['name']] for t in ents))
+        c.check(f'{label} measured runs', rf'\| {re.escape(label)} \| \d+ \| \d+ \| (\d+) \|',
+                sum(seeds[t['name']] for t in ents if t.get('fcov_expectation_file')))
+    c.check("plan entries", r"\| THE ROUND'S PLAN AT \w+ \| (\d+) \|", len(sel))
+    c.check("plan runs", r"\| THE ROUND'S PLAN AT \w+ \| \d+ \| (\d+) \|", sum(seeds.values()))
+    c.check("plan measured runs", r"\| THE ROUND'S PLAN AT \w+ \| \d+ \| \d+ \| (\d+) \|",
+            sum(seeds[t['name']] for t in meas))
+    total = 0
+    for t in meas:
+        man, errs = F.validate_manifest(pathlib.Path(t['fcov_expectation_file']), t['name'])
+        if man is None or errs:
+            c.fail(f"{t['name']}: manifest does not validate ({'; '.join(errs)})")
+            continue
+        bins = man.get('bins') or []
+        total += len(bins)
+        cgs = sorted({b.split('.')[0] for b in bins})
+        built = [g for g in cgs if g in rendered]
+        n = re.escape(t['name'])
+        # The four-column shape with its "N of M" built cell is unique to Section 7; a bare
+        # "| <entry> | <seeds> |" also matches Section 3's per-entry tables, so it is not usable here.
+        rows = re.findall(rf'\| {n} \| (\d+) \| (\d+) \| (\d+) of (\d+) \|', c.flat)
+        if len(rows) != 1:
+            c.fail(f"{t['name']} row: {len(rows)} Section 7 rows in the form, want exactly 1")
+            continue
+        s_seeds, s_decl, s_built, s_cgs = (int(x) for x in rows[0])
+        c.check(f"{t['name']} seeds", s_seeds, seeds[t['name']])
+        c.check(f"{t['name']} declared", s_decl, len(bins))
+        c.check(f"{t['name']} built", s_built, len(built))
+        c.check(f"{t['name']} covergroups", s_cgs, len(cgs))
+    c.check('declared total', r'declared sets total (\d+) bins', total)
+
+
 def run_checks(form_text, manifest, preflight_text, quiet=False):
     c = Checker(form_text, quiet)
+    check_selection(c)
     runs = manifest['runs']
     walls = [r['wall_s'] for r in runs]
     summary = manifest.get('summary') or {}

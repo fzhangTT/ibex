@@ -29,6 +29,20 @@ Restated at this form's own commit rather than at the one where it was first der
 entries over 56 runs, three more runs than 0203c6e because gen_test_irq_basic entered at tier smoke with
 three seeds and measured false, so the measured set is unchanged at 12 entries over 36 runs.
 
+RESTATED AT THIS FORM'S COMMIT by calling the selector again, which is what v2 promised and not a stored
+list. Called at 9c28944 with base seed 20260904:
+
+| tier | entries | runs | of which measured |
+|---|---|---|---|
+| smoke at 9c28944 | 17 | 47 | 39 |
+| targeted at 9c28944 | 3 | 9 | 6 |
+| THE ROUND'S PLAN AT 9c28944 | 20 | 56 | 45 |
+
+The measured set moved from 12 entries over 36 runs to 15 over 45 because the three PMP entries flipped to
+measured, which is the PMP step-1 landing v2 named in its round-2 scope. Fifteen manifests are named and all
+fifteen validate: gen_fcov.py's own validate_manifest returns no error for any of them, and their declared
+sets total 3171 bins.
+
 That table is the state at 6407118, NOT the round's plan. Round 2's entry set is whatever the selector returns
 at the round's own commit, and the round-2 scope (LOG-097) expects these to land first: PMP step 1 (four
 covergroups and the flip of `gen_test_pmp_csr_warl`, `gen_test_pmp_mseccfg` and `gen_test_pmp_lock` to
@@ -269,16 +283,65 @@ bins that miss move out under the class-B reason, and only then does the rule in
 
 ## 7. The measured entries and their expected outcomes
 
-NOT STATED YET, and this form must not be read as accepting a round against an empty section. Section 1
-promises an expected outcome for every selected run and Section 11 accepts the round against this section, so
-until it is filled the acceptance has nothing to test. It is filled once the round-2 landings are in and the
-selector has been called at the round's commit, and the filled version is a FORM V3 that takes its own
-pre-execution review before dispatch: v3 restates Section 1 from that selector call and Section 7 from the
-entries it returns, and no round is dispatched on this v2. The shape each row must carry: the entry, its seed count, its declared bin count, whether its
-covergroups are built, and what the round expects the fcov check to say. An entry whose declared set would be
-empty is not measured at all: the checker returns unverifiable rather than PASS for a manifest that declares
-no bins: gen_fcov.py:328-331 names the cause and :361 returns the unverifiable verdict carrying it. So an
-empty declared set is a defect, not a pass.
+FILLED AT 9c28944. Every figure below is derived by calling the flow's own code at that commit, not read from
+a record: the entry set and seed counts from select_tests and seeds_for_test, the declared counts from
+gen_fcov.py's validate_manifest, and the built column by resolving each manifest's covergroups against the
+rendered set in gen_fcov_groups.svh.
+
+| entry | seeds | declared bins | covergroups built | expected fcov verdict |
+|---|---|---|---|---|
+| gen_test_bit_ratified | 3 | 654 | 5 of 5 | PASS, every declared bin in every run |
+| gen_test_cmp_zca | 3 | 321 | 4 of 4 | PASS |
+| gen_test_cmp_zcb | 3 | 87 | 2 of 2 | PASS |
+| gen_test_cmp_zcmp_basic | 3 | 319 | 3 of 3 | PASS |
+| gen_test_csr_access | 3 | 4 | 1 of 1 | PASS |
+| gen_test_csr_trap_setup | 3 | 146 | 1 of 1 | PASS |
+| gen_test_isa_alu | 3 | 563 | 5 of 5 | PASS |
+| gen_test_isa_cti | 3 | 184 | 3 of 3 | PASS |
+| gen_test_isa_shift | 3 | 116 | 1 of 1 | PASS |
+| gen_test_mul_div | 3 | 190 | 4 of 4 | PASS |
+| gen_test_mul_mul | 3 | 336 | 3 of 3 | PASS |
+| gen_test_pmp_csr_warl | 3 | 178 | 3 of 3 | PASS |
+| gen_test_pmp_lock | 3 | 41 | 2 of 2 | PASS |
+| gen_test_pmp_mseccfg | 3 | 26 | 2 of 2 | PASS |
+| gen_test_rst_boot | 3 | 6 | 3 of 3 | PASS |
+
+EVERY MEASURED ENTRY'S COVERGROUPS ARE BUILT, which round 1 could not say: there its two Test Writer entries
+included one whose six groups were unrendered, so it expected "declarations missing from the report" as a
+designed outcome. No entry expects that here. A group left unrendered would be a defect and not an expected
+row, because an unbuilt covergroup fails every seed.
+
+NO ENTRY EXPECTS A FAILURE, and that is a claim this round tests rather than an assumption it makes. Nine of
+the fifteen were measured over forty fresh seeds in the wave at 4017573, and six of those nine were RE-RENDERED
+to that wave's every-seed set after refusing on declared bins unhit at some seeds; two more, gen_test_pmp_lock
+and gen_test_pmp_mseccfg, come from the PMP step-1b block. The four that were not measured over forty seeds
+are gen_test_csr_access, gen_test_csr_trap_setup, gen_test_isa_alu and gen_test_isa_cti, whose declared sets
+are the round-1 sets calibrated to three seeds.
+
+THE FIVE UNMEASURED ENTRIES of the twenty carry a null fcov_expectation_file and are selected for their runs
+rather than their coverage: gen_boot_zc, gen_test_bit_draft, gen_test_csr_reset, gen_ut_lockstep, and
+gen_test_irq_basic. The irq entry is unmeasured DELIBERATELY and stays so until five conditions are met, which
+this form records rather than re-argues, each with its status at this commit.
+
+| # | condition | status |
+|---|---|---|
+| a | the irq_entry checker item classified and fixed | checker half fixed at b9e5fad, cross-model APPROVE-WITH-CHANGES with rows owed and the Critic's re-verdict pending |
+| b | its red fixture RED-OK at three of three rather than masked | REOPENED: the three-of-three was measured on a 9c7f8f6 build and the fix moved to b9e5fad, so it is re-run on a b9e5fad build |
+| c | the fixed cocotb timeout in the stimulus path replaced by a seed-independent bound | fixed at 6b894ab, re-review pending |
+| d | a fresh forty-seed sweep at the fix commit with its manifest rendered FROM that sweep | open |
+| e | a regime-independent end-of-test expectation covering the case a per-record bound cannot judge | open, and LOAD-BEARING rather than provisional: the storm-regime vacuity closes only by that reconciliation |
+| f | no run of the entry wedges the core | open: one wave run diverges from the model 6447 cycles before its first checker fire, with 23387 instruction mismatches already reported and the core executing zeros |
+
+CONDITION (b) REOPENED ITSELF UNDER THIS PLAN'S OWN RULE, which is worth stating rather than quietly
+re-listing. Section 0 says a block is evidence for what it measured and no other; the reds were measured on
+one build and the fix has moved, so that evidence certifies a build the round will not run. The same rule
+that governs a manifest after a generator change governs a red after a checker change.
+
+CONDITION (f) IS NOT A FOOTNOTE TO (a). A wedged run's coverage measures nothing and its failures mask every
+other signal in it, so no promotion can rest on a run set containing one. Whether the wedge is a design
+finding or a testbench one is being classified and does not change the condition.
+
+Four of the six are open at this commit, and the round runs the entry unmeasured, exactly as the wave did.
 
 ## 8. Standing gates, named
 
