@@ -1,9 +1,13 @@
 # MUT-IRQWITHHOLDALL: the core's four regular interrupt inputs tied low in the DUT wrapper, so a raised
 # line reaches the checker and never the design. The NMI input is left alive. Applied to an out-of-tree
-# archive only; the committed gen_dut_top.sv is never edited.
+# archive only; the committed gen_dut_top.sv is never edited. Line ranges are against gen_dut_top.sv at
+# 38b729a; apply with: git apply gen_mut_irqwithholdall.diff
 --- a/dv/auto_dv/tb/gen_dut_top.sv
 +++ b/dv/auto_dv/tb/gen_dut_top.sv
-@@ port map @@
+@@ -328,10 +328,10 @@
+     .ic_scr_key_valid_i,
+     .ic_scr_key_req_o,
+ 
 -    .irq_software_i,
 -    .irq_timer_i,
 -    .irq_external_i,
@@ -13,3 +17,5 @@
 +    .irq_external_i (1'b0),   // MUT-IRQWITHHOLDALL
 +    .irq_fast_i ('0),   // MUT-IRQWITHHOLDALL: the pins reach the checker but never the core
      .irq_nm_i,
+     .irq_pending_o,
+ 

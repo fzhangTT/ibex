@@ -1,0 +1,66 @@
+# gen_fu_l59_l57_artifacts_companion.log -- the artifacts behind every figure in gen_fu_l57_perline_enable.log
+# (TB Infra, 2026-09-05). Landing 59, answering rev71's Low. The l57 log's bytes are untouched
+# (md5 66e1064ea9a3ec4702065fc1834f6e95, 8426 bytes).
+#
+# WHY THIS EXISTS, and the reason is not flattering. I wrote a companion whose whole purpose was faulting an
+# older log for stating figures without the fixture, plusargs, out directory and verdict path they came from.
+# Then I wrote the l57 log with a five-run table, a fault-free observable and four fires said to be common to
+# both builds, and named none of the artifacts. Knowing the rule and having just enforced it on someone else's
+# log did not stop me repeating it, which is why the check is now in my pre-hand list rather than in my head.
+#
+# THE FIVE RUNS. All five use ONE fixture and ONE plusarg set; only the build differs.
+#   module    dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep      seed 1
+#   plusargs  +gen_mem_image=<scratch>/l59/prog/prog.vmem +gen_mem_image_crc32=33ec7bd6
+#             +gen_mem_image_words=150 +gen_boot_addr=80000000 +gen_tohost_addr=800002b8
+#             +gen_fetch_en_at_reset=0 +gen_ut_boot_retire=100 +gen_knob_irq_regime=storm
+#             +gen_knob_irq_hold=until_taken
+#   the ablation run adds +gen_chk_irq_entry=0 and changes nothing else
+#   program   gen_irq_perline_directed.S, retained at dv/auto_dv/evidence/gen_irq_fixtures/
+#
+#   run        out directory                              build_sources_sha256   sim.log
+#   a_clean    <scratch>/l57/rootA/dv/auto_dv/out_clean    2f874eb63deeb6bb       <that>/a_clean/sim.log
+#   a_mut      <scratch>/l57/rootA/dv/auto_dv/out_mut      5bcfb9424b692b13       <that>/a_mut/sim.log
+#   c_clean    <scratch>/l59/rootC/dv/auto_dv/out_clean    b7067f660ed88693       <that>/c_clean/sim.log
+#   c_mut      <scratch>/l59/rootC/dv/auto_dv/out_mut      4baea273ea4d6723       <that>/c_mut/sim.log
+#   c_abl      <scratch>/l59/rootC/dv/auto_dv/out_mut      4baea273ea4d6723       <that>/c_abl/sim.log
+# c_mut and c_abl share a build, as they must: the ablation is a plusarg, not a recompile.
+# Verdicts are read from <out>/<run>/verdict.txt, never from an exit code.
+#
+# THE CHECKER'S OWN SUMMARY LINE, quoted from each run's sim.log rather than paraphrased. The fields that
+# carry the l57 log's two claims are "bound failures" and "open expectations":
+#   a_clean  bound failures=0  expectations released=0  open expectations=1  open after the drain=0
+#   a_mut    bound failures=4  expectations released=0  open expectations=1  open after the drain=1
+#   c_clean  bound failures=0  expectations released=0  open expectations=5  open after the drain=0
+#   c_mut    bound failures=5  expectations released=0  open expectations=1  open after the drain=1
+#   c_abl    bound failures=5  expectations released=0  open expectations=1  open after the drain=1
+#
+# ONE READING THE l57 LOG DOES NOT GIVE AND A READER COULD GET WRONG. The ablation run reports bound
+# failures=5, the SAME as the un-ablated run, while its irq_entry error count is zero. That is not a
+# contradiction and it is not the check failing to detect: expect_fail is incremented BEFORE the gen_chk_en
+# gate, so disabling the named check suppresses the uvm_error and leaves the detection counted. So the
+# ablation proves the named rule is what REPORTS the five, which is what a mutation control has to show; it
+# does not and cannot show the rule stopped detecting them. The l57 log's "ablation 0" is a count of errors,
+# not of detections, and this companion says which.
+#
+# THE FOUR FIRES COMMON TO BOTH BUILDS, listed because the l57 log asserts they are common without naming
+# them. From a_mut, and each appears in c_mut with the same lines, enable bits, raise cycle and raise order:
+#   lines 04000 (enable bits 08000000) raised at cycle 230 (order 39)
+#   lines 00002 (enable bits 00000080) raised at cycle 303 (order 58)
+#   lines 00020 (enable bits 00040000) raised at cycle 336 (order 65)
+#   lines 10000 (enable bits 20000000) raised at cycle 447 (order 95)
+# The fifth, present only in c_mut, is the one the landing is about:
+#   lines 00100 (enable bits 00200000) raised at cycle 181 (order 28) not taken within 17 records
+#   (now order 68, takeable records 18, mie 7fff0888 mstatus 00000088)
+# It is the EARLIEST raise of the five, which is the point: it is the one whose window with its own enable
+# bit clear was long enough for the pre-fix checker to spend the bound and delete the expectation.
+#
+# WHAT THE FAULT-FREE OBSERVABLE IS READ FROM. The one-versus-five is the "open expectations" field of the
+# two CLEAN rows above, a_clean at 1 and c_clean at 5, in runs with no mutation and a correct design. The
+# four extra are expectations the pre-fix checker deleted at the bound during a window in which the design
+# was right to withhold; the fixed one masks those records and keeps them.
+#
+# A NUMBER THAT DID NOT EXIST WHEN THE l57 LOG WAS WRITTEN. The checker now counts records in which an
+# expectation was held ONLY by its own clear enable bit, and prints it in the same summary line. On this
+# fixture it reads 250; on all six regression smokes it reads 0. Six zeros with a nonzero control means the
+# zeros are measured rather than structural, which is what the l57 log's observable lacked: it established
+# the consequence once, on one fixture, and left every other run silent about it.

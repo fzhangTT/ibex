@@ -593,7 +593,7 @@ package gen_fcov_pkg;
         dbgw_mode = !st.debug_mode ? GEN_FC_IRQ_DEBUG_INTERPLAY_CP_MODE_STEP_OUTSIDE :
                     irq_nmi_mode   ? GEN_FC_IRQ_DEBUG_INTERPLAY_CP_MODE_DEBUG_IN_NMI_HANDLER
                                    : GEN_FC_IRQ_DEBUG_INTERPLAY_CP_MODE_DEBUG_MODE;
-        dbgw_prv = (st.dcsr[1:0] == ibex_pkg::PRIV_LVL_U) ? GEN_FC_IRQ_DEBUG_INTERPLAY_CP_DCSR_PRV_U
+        dbgw_prv = (st.dcsr[GEN_DCSR_PRV_BIT_HIGH:GEN_DCSR_PRV_BIT_LOW] == ibex_pkg::PRIV_LVL_U) ? GEN_FC_IRQ_DEBUG_INTERPLAY_CP_DCSR_PRV_U
                                                           : GEN_FC_IRQ_DEBUG_INTERPLAY_CP_DCSR_PRV_M;
         dbgw_nmi = (dbgw_mode == GEN_FC_IRQ_DEBUG_INTERPLAY_CP_MODE_DEBUG_IN_NMI_HANDLER);
         dbgw_nmip = -1; dbgw_exit = -1; dbgw_held = 1; dbgw_mret_seen = 0;
