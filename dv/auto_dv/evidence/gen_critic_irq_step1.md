@@ -225,3 +225,126 @@ and 4b5730e (landing 43, Section 3), inside 27212cb..4b5730e. The header's "Rang
 git range semantics (it is the parent of 253f08e); the range review rev51 (253f08e..4b5730e) did not judge it either,
 and it sat unnamed inside rev49's range. It is named here explicitly and was judged on its own retained evidence.
 Section 6's artifact hash 71f2d4001fc47e03 is the one committed at 24da095; no corrigendum on its content is needed.
+
+## Section 7. Recorded re-review of the named range 27212cb..55ef529: IRQ step 1b at 55ef529 (written 2026-09-05T08:40:35Z)
+
+Scope. The group is e1bee86, d09ff58 and 4b5730e (judged above) plus the fix landing 55ef529 (twelve files:
+gen_checkers_pkg.sv, gen_fcov_pkg.sv, gen_tb_pkg.sv, gen_tb_top.sv, gen_fcov_codegen.py, gen_ut_fcov_codegen.py,
+gen_irq_reset_reads_directed.S and gen_ut_irq_reset_reads.py (new), gen_fu_l46_irq_step1b.log and
+gen_fu_l43_irq_step1_corrigendum.log (new), gen_manifest.md, gen_tdd_step2b.md). The range also carries a148548 (the
+irq entry's manifest re-render, 66 declarations on unrendered covergroups removed: the L-3 disposition, judged with
+the irq-entry group), the DV Lead's plan touches 8559958, 73e94d7 and f11fc3d (read here only as the classifiers'
+reference), records (269415a row T5, 2c6366c) and my own verdicts. Method: the diff read in full; every classifier
+traced against the RTL terms it names; the landing's figures re-derived on my own compile of a detached worktree of
+55ef529 (TB-source identity 1a2c9707a8a108e9, the log's), one fixture run, two smoke shapes, a lines run, the mutation
+re-fired on a second worktree, urg on each run's own vdb; logs retained under dv/auto_dv/work/critic/irq1b/. Exposure:
+the Orchestrator's range message summarised the landing's claims; rev54 runs on the same range and is not read; its
+reconciliation is owed as a Section 8 when it lands. dv_principles.md re-hashed d9c27db18f511411, unchanged.
+
+7.1 Gates and identities. gen_fcov_codegen --check up to date, gen_knobs_codegen --check up to date,
+GEN_UT_FCOV_CODEGEN PASS (0 failures), gen_unbuilt_mark_check PASS, all on the 55ef529 worktree. gen_fcov_groups.svh is
+byte-identical between 4b5730e and 55ef529 (git diff empty): no bin moved, as claimed. Gate key fc6a99f777d55b3d at
+55ef529 (449f0e66969bd42b at 4cd3ff6 and 721bab8); TB-source digest 1a2c9707a8a108e9 equals the retained log's compile
+identity and my own compile printed the same. No manifest under fcov_expectations or tests names mret_mpie1_pending,
+boot_insn, boot_pc or a pre_post_mip bin (git grep), so the bin that went dark and the bins freed move no entry.
+All twelve files ASCII-clean. gen_tb_pkg.sv at 55ef529 has md5 049c0fe4f1e93bb5f6ef5e56abe45434, the value the log
+gives before and after the mutation, and no MUT-MIEVIEW1 marker exists under dv/auto_dv outside the log and the record.
+
+7.2 The five Mediums, each traced and reproduced.
+- M-1 (mip line-indexed against bit-positioned) FIXED. The expected word is built by setting bit gen_irq_mie_bit(l) for
+  each high pin l < 18 and compared whole (gen_fcov_pkg.sv, cp_reset_reads arm). gen_irq_mie_bit (gen_agents_pkg.sv:517-523)
+  maps 0/1/2 to CSR_MSIX_BIT 3, CSR_MTIX_BIT 7, CSR_MEIX_BIT 11 and 3..17 to CSR_MFIX_BIT_LOW 16 + (l-3), the positions
+  ibex_cs_registers.sv:497-500 reads mip through (ibex_pkg.sv:712-716); line 18 (nm) is outside the loop, and the RTL
+  keeps no mip bit for it. The arm is guarded on irq_view_ok, the one reset read that needs the view. REPRODUCED: the
+  fixture built from the worktree (24 words, crc32 0x69379b6e, entry 0x80000080, the log's three figures) run on my
+  build reads mstatus 00000080, mie 00000000, mtvec 80000001, mip 00000800 with line 2 raised before fetch enable,
+  retired 10 compared 10 mismatches 0, verdict PASS, referee 0; urg on that run alone (Total tests in report: 1):
+  cp_reset_reads expected 4 covered 4 (mip_reflects_pins, mtvec_boot_page, mie_0, mstatus_0x80 one hit each).
+- M-2 (boot_insn against the raw boot address) FIXED. cp_first_event compares pc_rdata with gen_reset_pc(cfg.boot_addr)
+  = {boot_addr[31:8], GEN_MM_BOOT_RESET_OFFSET[7:0]} with the offset 32'h80 (gen_tb_pkg.sv:293), the RTL's PC_BOOT
+  fetch address {boot_addr_i[31:8], 8'h80} (ibex_if_stage.sv:243). REPRODUCED: the same run covers cp_first_event 1 of 3
+  (boot_insn hit, debug_before_insn and nmi_before_insn uncovered), the log's figures; the fixture's ELF entry is
+  0x80000080 in my sidecar too.
+- M-3 (boot_pc, same defect) FIXED IN CODE, BIN UNHIT FOR THE STATED REASON. Both arms of irq_mepc_bin compare mepc with
+  gen_reset_pc, the shared helper. The layout argument holds term by term: mtvec after reset is
+  {boot_addr_i[31:8], 6'b0, 1'b0, 1} (ibex_cs_registers.sv:739-743 with CheriotEnable = IbexMuBiOff at gen_dut_top.sv:206,
+  so the mode bit is 1, vectored); a vectored entry fetches {mtvec[31:8], 1'b0, irq_vec[4:0], 2'b00} (ibex_if_stage.sv:
+  EXC_PC_IRQ arm), so the external NMI (cause 31) vectors to boot_page + 0x7c; gen_link.ld (dv/auto_dv/stim/
+  gen_riscv_dv_target/gen_link.ld) declares PROG at ORIGIN 0x80000080, so no program byte can sit at 0x80000000..7f.
+  The plan's cross ignores every line but nmi_ext with boot_pc (gen_fcov_plan.md:2229), consistent. Reachable with no
+  stimulus built, the fourth category; not declaration-class. The remedy (a second region) is the Test Writer's.
+- M-4 (relation bins unreachable by construction) FIXED. The relation t.ext_pre_mip == t.ext_post_mip (gen_rvfi_pkg.sv:27,
+  :122, the monitor's copy of rvfi_ext_pre_mip/post_mip) is emitted as a second sample under the same v_line with every
+  other argument -1, which every coverpoint ignores (ignore_bins na = {-1}, svh:5206 ff.), so only cp_rvfi_marks and
+  cr_line_marks see it; n_irq_entry_rel counts the second samples and the summary prints it. REPRODUCED: gen_ut_fetch_en
+  on the NMI-long program under the storm regime (my recipe, PASS, referee 0): cp_rvfi_marks 7 expected 4 uncovered 3
+  covered, the log's 42.86, with pre_post_mip_differ 18 and pre_post_mip_equal 42 hits; a storm-shaped gen_ut_lockstep
+  run hits the cross timer_pre_post_mip_differ twice. entry_rel equalled entry in every run (60/60, 6/6).
+- M-5 (window opened late; page compare) FIXED. irq_off_take() now runs in write_ibus before irq_off_first_fetch, so the
+  window is open at the first fetch; irq_addr_is_vector tests membership of the 32-entry table {base + 4k} with base =
+  {mtvec[31:2], 2'b00} (equal to {mtvec[31:8], 8'h00} because the RTL zeroes mtvec[7:2]), against irq_mtvec_base after a
+  retirement or gen_mtvec_reset(boot_addr) before one, which is the plan line at 8559958. REPRODUCED: the fetch-enable run
+  covers cp_fetch_on_after 1 of 2 with handler_fetched_at_on hit and resume_at_on uncovered, the log's row; the cross
+  irq_arrives_while_off_handler_fetched_at_on is hit with it.
+
+7.3 The Lows of Section 5 and the Info.
+- L-1 CLOSED: the corrigendum log stands beside the landing-43 log, whose blob at 55ef529 has md5
+  a707ba4376d747172559ba8590210728 as it says, and quotes gen_fcov_plan.md:2380 correctly (checked verbatim).
+- L-2 NOT IN THIS LANDING (records: the 35 "other" census refusals between d09ff58 and 4b5730e); stands as owed where
+  the census is kept.
+- L-3 ROUTED and acted: a148548 removed the 66 declarations; the promotion is the DV Lead's conditional.
+- L-4 CLOSED, REPRODUCED EXACTLY: on a second 55ef529 worktree I mutated gen_irq_view::mie_at to answer every query with
+  no line enabled, compiled (identity 9ce30e7bbe118715) and ran gen_ut_irq on the directed interrupt program (156 words,
+  crc32 0x8e882c5b): verdict FAIL, 62 UVM_ERROR lines all [irq_pending], the first "gen_checkers_pkg.sv(247) @ 1494500
+  ... cycle 1486: irq_pending_o=1 expected 0 (pins 00040 mie 00000000)", the log's line byte for byte; the same mutant
+  with +gen_chk_irq_pending=0: PASS, 0 UVM_ERROR; the same recipe on the unmutated build: PASS, 0 UVM_ERROR, with the
+  lines smoke's own figures entry=6 edge=12 access=1 reset=1 fetch_off=0 (the log's "lines" row) and mie_global=1 with
+  six mrets counted as MIE-already-set.
+- L-5 CLOSED: the referee for gen_irq_reset_fetch_en_cg is gated on (n_irq_rst + n_irq_off) > 0.
+- L-6 CLOSED: cp_others reads irq_pins_at(irq_commit_cycle(st)); see L-15 for the miss case.
+- L-7 CLOSED: a view miss skips only the NMI-mode bookkeeping, irq_edge_mie, irq_access_sample and irq_mie_global_sample;
+  irq_dbg_record, irq_rst_record and irq_off_take run, and the miss is counted.
+- L-8 CLOSED: mret_mpie1_pending requires now && !was; !now books mret_mpie0_pending; MIE 1 -> 1 across an mret is
+  counted (n_irq_mret_noedge) and printed by name. The 173-to-1 argument is sound: mret_mpie0_pending uncovered in both
+  builds means MIE was set after each mret; all 173 booking no-edge means it was set before; my fetch-enable run counts
+  60 such mrets with the bin at 0. The two missing combinations are the DV Lead's plan touch, as the log says.
+- L-9 CLOSED: the fifth unit check is renamed to what it verifies (a cross of three coverpoints renders).
+- L-10 CLOSED with one residue (L-14): CSR numbers and mstatus indices now come from ibex_pkg; GEN_RV32_MRET/DRET/WFI are
+  composed from OPCODE_SYSTEM beside GEN_RV32_NOP; the dead helper is gone; the displaced and misnamed comments fixed.
+- Info (cycle-0 Off window) CLOSED: fe_off_valid beside fe_off_cycle at the three sites (gen_checkers_pkg.sv:450, :539,
+  :540); the register row T5 at 269415a records it; my fetch-enable and storm shapes read fetch_off=1 where landing 43's
+  storm read 0.
+
+7.4 New findings on 55ef529.
+- L-11 (low, sampler; undisclosed count effect). irq_rst_emit samples the reset group with irq_rst_lines and irq_rst_first
+  on EVERY emission, so cp_lines_at_reset and cp_first_event take one hit per reset-group sample: in my fixture run
+  boot_insn and none read 5 hits from one event (reset=5: the first event plus four reads). The covered set is right;
+  per-bin counts overstate events the way the log discloses for entry_rel but not here. Pass -1 for those two on the
+  read emits, or disclose the effect beside entry_rel.
+- L-12 (low, classifier precision vs the log's wording). irq_addr_is_vector accepts any of the 32 table slots, because the
+  cause is unknown at fetch time; the plan says "the base plus four times the cause" and the log calls the test "the
+  exact vector". State the accepted set as the table, or bind the slot to the entry record's cause when it arrives.
+  Info: the direct-mode arm is dead in this DUT (mtvec_d forces the mode bit to 1).
+- L-13 (low, records). The smoke table names shapes, not commands: no plusargs, image or seed are retained for storm,
+  lines, dbgstorm and fetchen. I reproduced lines exactly and the fetch-enable bins exactly, but two storm attempts of
+  mine (with and without the NMI line mix) time out at the tohost store and cannot confirm entry=173. Retain the four
+  commands beside the table.
+- L-14 (low, hygiene; L-10 residue). gen_fcov_pkg.sv:404 still compares csr with 12'h344 and 12'h304 two lines above the
+  ibex_pkg::CSR_MIP compare.
+- L-15 (low, classifier on a view miss). irq_entry_sample is not gated on irq_view_ok, and irq_pins_at returns '0 on a
+  miss, so cp_others is then decided from an all-low pin vector (only_this or others_enabled_idle) rather than skipped;
+  the miss is counted but the bin is booked. Return -1 for cp_others when the view has no sample at the commit cycle.
+- L-16 (low, checker triad). The drain check at gen_checkers_pkg.sv:450 now also judges windows opened at cycle 0. No red
+  shows the rule firing for such a window; the broadening cannot hide a failure, so this is owed, not blocking.
+- Observation (not this landing's). My fetch-enable shape with the NMI line mix fires sva_rvfi_irq_valid_exclusive at
+  cycle 11 (gen_protocol_props.sv:299, ruled legitimate DUT behaviour in gen_rvfi_irq_valid_exclusive_ruling.md; the
+  property replacement is frozen under LOG-085); without the NMI mix the same shape is clean.
+- Conformance (dv_principles.md): the classifiers remain reporting-only and the collected mechanisms (referee, checker)
+  decide; the mret bin removed is honesty over green; the code comments trimmed to mechanism; L-16 is the one triad gap.
+
+7.5 Verdict on 55ef529. All five Mediums of Section 5 are fixed as classifier changes with no bin moved, each reproduced
+on my own build from the landing's own fixture or an equivalent shape; L-1, L-3..L-10 and the Info are closed; L-2 stands
+where the census lives; L-11..L-16 are new Lows, none blocking. CRITIC VERDICT: APPROVE for 55ef529. The
+REQUEST-CHANGES of Section 5 on the group e1bee86, d09ff58, 4b5730e is LIFTED on this record: the irq-step1-samplers
+group stands approved with L-2 and L-11..L-16 owed as disclosed. Sections 1-6 and the corrigendum above are
+byte-identical to the d355f7f commit (a17ace6ae10690e8).
