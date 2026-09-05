@@ -1,0 +1,45 @@
+# Build-identity rows: the RED, and the three fixes proved
+# stamp 2026-09-05T11:20:12Z  host soc-l-11  tree acbb40dfaae61a9cf2ede11c6a1594eb45120eaf
+#
+# THE RED, measured on COMMITTED data (the round-0 build manifest), read through the flow's own loader.
+
+committed round-0 build manifest read through the flow's own loader
+  identity keys present : ['filelists', 'source_count', 'sources_sha256']
+  sources_sha256        : bc0cd7778e382b13991bbae9 ...
+  source_count          : 117
+ok   RED part 1: the identity dict names the VPI library 0 time(s) (expected 0 for the pre-change record): []
+ok   RED part 2: the compile command loads 1 shared object(s), so the binary depends on it: ['libcocotbvpi_vcs.so']
+       full path: /proj_soc/user_dev/fzhang/ibex_dv_mirror/.venv/lib/python3.12/site-packages/cocotb/libs/libcocotbvpi_vcs.so
+ok   RED part 3: with the VPI library swapped for a different Python's, the identity is UNCHANGED (bc0cd7778e382b13 both sides). Two builds against different cocotb libraries are indistinguishable by identity
+ok   CONTROL: the identity is not inert - a different sources digest is a different value, so part 3 is the library being ignored and not the field being dead
+RED PROVEN
+
+================================================================
+# ROW 1 and ROW 3 PROVED: a real build with the changed flow, head mode, pinned c88474284f81.
+#   out /proj_soc/user_dev/fzhang/ibex_dv_out/regress_bid3, vcs rc=0
+  vpi_lib.path                  = /proj_soc/user_dev/fzhang/ibex_dv_mirror/.venv/lib/python3.12/site-packages/cocotb/libs/libcocotbvpi_vcs.so
+  vpi_lib.sha256                = 3c34c8f93234ba1994ca387589bae8f6691cd35dcde10e3d9335ebb9c5d6f492
+  vpi_lib.present               = True
+  tools.cocotb_config           = /localdev/fzhang/ws/ibex-challenge/.venv/bin/cocotb-config
+  tools.cocotb_config_is_pinned_venv = False
+
+# The pinned flag reads False there because the build ran from an ARCHIVE, whose tree has no .venv, so
+# no cocotb-config can be its pinned one. That is the honest reading: from an archive you cannot verify
+# pinning. From the clone the same predicate reads True (control below).
+  control, from the clone: cocotb-config /localdev/fzhang/ws/ibex-challenge/.venv/bin/cocotb-config, inside venv? True
+
+================================================================
+# ROW 2 PROVED: --local-cocotb refuses BEFORE compiling, with the reason named.
+  ERROR: cocotb-config '/localdev/fzhang/ws/ibex-challenge/.venv/bin/cocotb-config' is not the clone's
+  pinned venv's (<archive>/.venv); it would link another Python's VPI library into this build.
+  Activate the venv (ci/env.sh) or drop --local-cocotb
+
+  THE REFUSAL IS BEFORE THE COMPILE, which is the whole point: the out-tree holds
+  cm_hier.cfg gen_pli.tab gen_rtl.f gen_tb.f lib pre_build_0.log
+  and NO compile.log and NO vcs_simv. The pre-change path would have failed inside vcs after a full
+  compile, or (with the variable unset) produced a binary linked against the wrong Python.
+
+================================================================
+# SELF-TESTS on a detached WORKTREE of HEAD with the two changed files staged in (the recipe):
+#   gen_flow_util, gen_verdict, gen_run, gen_regress, gen_fcov, gen_mirror, gen_round, gen_build,
+#   gen_cov_report all PASS; CONST-CHECK PASS. gen_mirror skips one case, no mirror_root in a worktree.

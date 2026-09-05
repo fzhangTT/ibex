@@ -39,13 +39,22 @@ def cocotb_lib(a: argparse.Namespace) -> tuple[str, dict[str, Any] | None]:
     """VPI library the simv loads at run time. LSF hosts see only the shared mirror, so the
     default is the mirror venv (fresh mirror required); --local-cocotb takes the clone venv."""
     if a.local_cocotb:
+        # Presence, return code and is_file are all satisfied by a SITE cocotb-config answering for the
+        # pinned one, which links another Python's VPI library. Compare resolved paths the way
+        # gen_mirror.venv_info does, and refuse BEFORE compiling rather than failing inside vcs.
+        venv = (C.REPO_ROOT / ".venv").resolve()
         cc = shutil.which("cocotb-config")
         if not cc:
             U.die("cocotb-config not on PATH; the venv is not active (ci/env.sh)")
+        if str(venv) not in str(Path(cc).resolve()):
+            U.die(f"cocotb-config {cc!r} is not the clone's pinned venv's ({venv}); it would link another "
+                  f"Python's VPI library into this build. Activate the venv (ci/env.sh) or drop --local-cocotb")
         r = subprocess.run([cc, "--lib-name-path", "vpi", "vcs"], capture_output=True, text=True)
         lib = r.stdout.strip()
         if r.returncode != 0 or not Path(lib).is_file():
             U.die(f"cocotb VPI library not found: {lib!r}")
+        if str(venv) not in str(Path(lib).resolve()):
+            U.die(f"cocotb VPI library {lib!r} resolves outside the clone's pinned venv ({venv})")
         return lib, None
     root = M.mirror_root()
     if root is None:
@@ -140,6 +149,7 @@ def compose_command(build: dict[str, Any], outdir: Path, a: argparse.Namespace) 
         tab = outdir / C.PLI_TAB.name
         shutil.copyfile(C.PLI_TAB, tab)
         lib, a.mirror_record = cocotb_lib(a)
+        a.cocotb_lib_path = lib     # carried to the manifest so the identity can name it
         groups["cocotb"] = [C.COCOTB_DEFINE, "+vpi", "-P", str(tab), "-load", lib]
     extra = list(build.get("extra_vcs_args") or []) + list(a.vcs_arg or [])
     if not a.coverage:
@@ -404,6 +414,9 @@ def main() -> int:
         **compile_config(argv), "constfile": str(outdir / "constfile.txt") if a.coverage and not a.no_diag_noconst else None,
         "command": " ".join(shlex.quote(x) for x in argv), "flag_groups": groups,
         "inputs": U.filelist_digest([C.SOURCE_ROOT / f for f in build["filelists"]]),
+        # The binary depends on the VPI library it links, so the identity names it: two builds against
+        # different cocotb libraries must not share an identity (the sources digest alone cannot tell them apart).
+        "vpi_lib": U.vpi_lib_identity(getattr(a, "cocotb_lib_path", None)),
         "covergroup_files": cg_files, C.COVERGROUPS_DECLARED_KEY: bool(cg_files),
         C.B8_PROBE_KNOB_DEFAULT_KEY: U.knob_default_on(C.B8_PROBE_KNOB), C.B8_PROBE_SV_DEFAULT_KEY: U.b8_probe_sv_default_on(),
         "source_root": str(C.SOURCE_ROOT), **source_facts(), **U.export_facts(),

@@ -277,12 +277,39 @@ def tool_versions() -> dict[str, str]:
     m = re.search(r"URG Version (\S+)", r.stdout + r.stderr)
     out["urg"] = m.group(1) if m else "unknown"
     out["python"] = sys.version.split()[0]
+    # Which cocotb-config answered, not just its version: a site install on PATH answers for the pinned
+    # venv's and reports a different toolchain under the same key.
     cc = shutil.which("cocotb-config")
     if cc:
         r = subprocess.run([cc, "--version"], capture_output=True, text=True)
         out["cocotb"] = r.stdout.strip() or "unknown"
+        out["cocotb_config"] = cc
+        out["cocotb_config_is_pinned_venv"] = str(_cocotb_config_is_pinned(cc))
     out["vcs_home"] = os.environ.get("VCS_HOME", "")
     return out
+
+
+def vpi_lib_identity(path: str | None) -> dict[str, Any] | None:
+    """The linked VPI library as an identity term: its path and the digest of its bytes.
+
+    A build's binary depends on this library, so two builds that link different ones are different
+    builds; the sources digest covers the SystemVerilog only and cannot tell them apart. None when the
+    build links no VPI library (a non-cocotb build), which is a fact rather than a missing value.
+    """
+    if not path:
+        return None
+    p = Path(path)
+    if not p.is_file():
+        return {"path": str(p), "sha256": None, "present": False}
+    return {"path": str(p), "sha256": sha256_file(p), "present": True}
+
+
+def _cocotb_config_is_pinned(cc: str) -> bool:
+    """True when this cocotb-config is the clone's pinned venv's, resolved paths compared."""
+    try:
+        return str((C.REPO_ROOT / ".venv").resolve()) in str(Path(cc).resolve())
+    except OSError:
+        return False
 
 
 def require_env(*tools: str) -> None:
