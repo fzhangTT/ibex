@@ -358,6 +358,9 @@ def self_test():
          '| gen_test_mul_div | 3 | 194 |'),
         ('a dropped Section 7 row fails', r'\| gen_test_rst_boot \| 3 \| 6 \| 3 of 3 \|[^\n]*\n', ''),
         ('a wrong restated plan run count fails', r"(\| THE ROUND'S PLAN AT \w+ \| 20 \| )56 \|", r'\g<1>57 |'),
+        # The per-entry checks look each row up by name, so only a count catches an EXTRA row.
+        ('an extra Section 7 row fails', r'(\| gen_test_rst_boot \| 3 \| 6 \| 3 of 3 \|[^\n]*\n)',
+         r'\g<1>| gen_test_ghost | 3 | 9 | 1 of 1 | PASS |\n'),
     ]:
         t = bump(pat, rep)
         if t is not None:

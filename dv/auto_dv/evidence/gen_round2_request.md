@@ -196,7 +196,10 @@ seed column shows what the selector actually returns and every row of it reads t
 the testlist touch; doing it without restating Section 7 would leave twelve-seed runs against rows that state
 three, and
 Section 11 accepts the round against Section 7. If the Runtime Manager lands the seed rise, Section 7 is
-restated from a fresh selector call before dispatch and the acceptance follows the restated rows.
+restated from a fresh selector call before dispatch and the acceptance follows the restated rows. AND THE
+VALUES HERE ARE NOT APPLIED UNTIL THE PROVENANCE FIELD LANDS: Section 7 records that no entry is licensed
+above its calibrated count while measured_seeds is absent from every manifest, so this table is a request
+waiting on that field and not a path the Runtime Manager may take today.
 
 Twelve is derived, not round. With n seeds and no hit, the 95 percent upper bound on a bin's per-seed rate is
 1 - 0.05^(1/n):
@@ -323,7 +326,7 @@ row, because an unbuilt covergroup fails every seed.
 NO ENTRY EXPECTS A FAILURE, and that is a claim this round tests rather than an assumption it makes. Nine of
 the fifteen were measured in the wave at 4017573, and six of those nine were RE-RENDERED to that wave's
 every-seed set after refusing on declared bins unhit at some seeds; two more, gen_test_pmp_lock and
-gen_test_pmp_mseccfg, come from the PMP step-1b block. TWO OF THE NINE ARE NARROWER THAN "forty fresh seeds"
+gen_test_pmp_mseccfg, come from the PMP step-1b block. ONE OF THE NINE IS NARROWER THAN "forty fresh seeds"
 AND THIS PLAN'S OWN RULE IS WHAT NARROWS THEM. gen_test_bit_ratified declares 654 bins of which 37 were added
 on the pair-fix block, a DIFFERENT generator from the one the wave measured, so under the Section 0 rule that
 a block is evidence for the generator it measured, the wave covers 617 of its 654 and the pair-fix block
@@ -348,7 +351,10 @@ own favour: gen_fcov_plan.md:164-167 says the absent measured_seeds field caps a
 current declared sets were calibrated over, and no manifest carries the field today, so under the plan's own
 words all fifteen are capped at their calibrated count and NONE at forty. The blocks above are what those
 entries were measured over; they are not the field the rule reads. So this paragraph is the evidence for a
-future cap and not a licence for Section 3.5's twelve, and the licence arrives when the field does. Until that lands the
+future cap and not a licence for Section 3.5's twelve, and the licence arrives when the field does. THE CAP
+IS APPLIED BY HAND TODAY: the plan places it in a single testlist-header value beside
+fcov_manifest_required_tiers (gen_fcov_plan.md:165-167), and that value is absent from gen_testlist.yaml:59,
+so nothing in the flow reads it and a reviewer checks this by hand until it exists. Until that lands the
 rows above are the plan, and this section is restated from a fresh selector call if it does.
 
 TWO OPEN ITEMS THIS FORM DOES NOT CLAIM. The hart_id plusargs on gen_test_csr_access and gen_test_rst_boot
@@ -367,7 +373,7 @@ this form records rather than re-argues, each with its status at this commit.
 | c | the fixed cocotb timeout in the stimulus path replaced by a seed-independent bound | CLOSED: fixed at 6b894ab, rev64 APPROVE-WITH-CHANGES at 348e4ae with its rows at 2c63b83, no re-review owed |
 | d | a fresh forty-seed sweep at the fix commit with its manifest rendered FROM that sweep | open |
 | e | a regime-independent end-of-test expectation covering the case a per-record bound cannot judge | open, and LOAD-BEARING rather than provisional: the storm-regime vacuity closes only by that reconciliation |
-| f | no run of the entry wedges the core | open: one wave run diverges from the model 6447 cycles before its first checker fire (the cited record reads 6443; the figure here is re-derived from the run and a one-line corrigendum on that record is owed), with 23387 instruction mismatches already reported and the core executing zeros |
+| f | no run of the entry wedges the core | open: one wave run diverges from the model 6447 cycles before its first checker fire (the cited record read 6443; the figure here is re-derived from the run, and the corrigendum landed at 29daef3 where gen_chkfix_reruns/gen_index.md:80-85 now reads 6447), with 23387 instruction mismatches already reported and the core executing zeros |
 
 CONDITION (b) REOPENED ITSELF UNDER THIS PLAN'S OWN RULE, which is worth stating rather than quietly
 re-listing. Section 0 says a block is evidence for what it measured and no other; the reds were measured on
