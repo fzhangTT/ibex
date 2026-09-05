@@ -2369,3 +2369,30 @@ review and every diff a post-execution review, and REQUEST-CHANGES still gates p
 Expected effect: today's cadence of about 45 review launches and 40 Critic files for one round falls to roughly one review and one verdict per
 feature group; a landing's wait for its gates drops from 20-40 minutes per commit to one cycle per feature. The owner's pause (LOG-093/094)
 remains in force until the owner lifts it; this entry changes cadence, not the pause.
+
+## LOG-096 - 2026-09-05 00:2xZ - Owner directive: no trust triad for functional covergroups; build covergroups by family
+
+Owner (verbatim): "we do not need the trust triad for FCOV (they are part of the requirement for the test they are measuring OR they are bins that we
+expect random tests to hit). We should also build them by families instead of one at a time."
+
+Facts stated to the owner with the directive: the functional covergroups are SystemVerilog (dv/auto_dv/env/gen_fcov_groups.svh, 25 covergroups,
+plus the ledger covergroup in gen_fcov_pkg.sv), rendered by the codegen from the plan and marked do-not-edit, each declared "with function sample(...)"
+whose arguments the samplers in gen_fcov_pkg.sv fill from RVFI and DUT signals; they compile into the gen_tb build and URG scores them. The tests are
+cocotb programs driving that build; there is no Python-side functional coverage, and the UVM package is compiled for macros only, not as an
+environment.
+
+Rules in force from this entry:
+- A covergroup landing needs NO red fixture and NO mutation proof. docs/dv/dv_principles.md:137 lists covergroups under the trust triad; the owner's
+  ruling narrows that for this program: a covergroup is validated by (a) the fcov-expectation manifest of the test whose requirement it measures
+  (the test guarantees the bins per run, checked every measured run under P-07), or (b) its bins being hit by the random tests in a measured round.
+  What a covergroup landing still carries: it compiles in the head-mode build, the codegen render is up to date and its unit test passes, the
+  sampling point and field semantics are stated in the landing note (event, signal source, the RVFI field caveats), and bins unreachable at this
+  configuration are marked or excluded with the reason. The trust triad stands unchanged for tests, checkers and assertions.
+- Covergroups are built BY FAMILY (the plan's CG-<FAMILY> prefix): one landing per family, one feature group under LOG-095, one cross-model review
+  and one Critic verdict per family; never one covergroup at a time. Order of families follows the round-2 stimulus plan (PMP, IRQ, EXC, DBG first,
+  since their tests are the round-2 levers), decided by the DV Lead with the owner's carve-outs applied (CHERI out of scope).
+- Before a family is built, the DV Lead prunes its plan coverpoints that are unreachable at this configuration (BranchPredictor=0, dummy
+  instructions off, the ruled carve-outs) so nobody builds bins that can never fire.
+Expected effect: the per-covergroup cost drops from hours (red fixture, mutation run, retained logs) to the sampling and reachability work; the
+182 unbuilt covergroups (1267 coverpoints across 25 families) become about a dozen family landings. The pause of LOG-093/094 is unchanged;
+preparation in scratch (family plans, sampling notes) is allowed, hand-offs are not, until the owner lifts it.
