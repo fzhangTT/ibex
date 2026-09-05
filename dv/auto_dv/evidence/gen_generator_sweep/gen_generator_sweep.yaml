@@ -1,0 +1,68 @@
+sweep: Test Writer generator 40-seed sweep, cmp_zca and WARL parts
+served_utc: '2026-09-05T06:26:43Z'
+served_by: runtime-2
+kind: unmeasured for the round; coverage on; NOT PINNABLE (uncommitted generator files)
+source_root: /proj_soc/user_dev/fzhang/ibex_dv_probe/gensweep
+source_root_is: >
+  an archive of the head commit plus exactly three uncommitted generator files
+  (gen_bit_ratified_prog.py, gen_cmp_zca_prog.py, gen_pmp_csr_warl_prog.py). It is ITS OWN mirror:
+  its manifest records source worktree with head_sha NULL and its own tree_sha256, and its site file
+  points mirror_root at itself, so the program, the testbench and the Python all come from one tree.
+  It builds with no --allow-stale-mirror, which is the proof of self-consistency.
+import_path_verified: PYTHONPATH=/proj_soc/user_dev/fzhang/ibex_dv_probe/gensweep, read from each run's own run_cmd.sh
+outdir: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_gensweep2
+cmp_zca:
+  runs: 40
+  pass: 25
+  non_pass: 15
+  every_non_pass: 'fcov expectation unmet: 1 declared bin(s) not hit; no fire-check failure in any of the forty'
+  bins: {gen_cmp_zca_cg.cr_insn_rdfull.c_swsp_x8_15: 9 runs, gen_cmp_zca_cg.cr_insn_rdfull.c_swsp_x3_7: 6 runs}
+  classification: >
+    Both are c_swsp legs. The case the Test Writer asked me to watch for, an arithmetic form's leg its
+    reader believed it could place, did NOT occur. Whether the misses are acceptable is the Test
+    Writer's and the DV Lead's call, not mine: a declared bin that misses is a broken per-run guarantee.
+  correction_from_the_test_writer: >
+    My first reading of this, that the simulation agreed with the Test Writer's model-level reading and
+    its instrument was therefore sound, was TOO GENEROUS and it corrected me. Its prediction named the
+    twelve memory-form ALIGNMENT legs; these fifteen are cr_insn_rdfull legs, register-range crosses of
+    the same form family but a different cross, and its reader does not model cr_insn_rdfull at all. Of
+    cmp_zca's 300 declared bins its mapper covers 83, and the rdfull family is among the 217 it never
+    examines. So the guard did not fail to place these bins, it never looked at them, and the memory
+    form is a coincidence of which bins are thin rather than a confirmation of the alignment argument.
+    The honest statement is narrower: the simulation found a real broken per-run guarantee in a family
+    the model-level instrument is blind to.
+  requirement_this_creates_for_later_blocks: >
+    A count of bins under the every-seed bar is worthless without the count of declared bins the
+    model-level reader could not examine at all. Every per-entry block of the 320-run robustness sweep
+    carries both numbers, not the second as a parenthetical.
+warl:
+  runs: 14
+  pass: 14
+  non_pass: 0
+  four_never_simulated_seeds: {230969025: PASS, 218090405: PASS, 218090460: PASS, 218090484: PASS}
+  ten_byte_identical_seeds: 10 PASS of 10
+  meaning: >
+    The four programs the fix creates, where the committed generator asserted and produced none, both
+    exist and execute. Model level said they exist; these runs say they run. The ten seeds whose
+    programs the fix leaves byte-identical all pass, so the fix changed nothing else.
+bit_ratified:
+  runs: 40
+  pass: 17
+  non_pass: 23
+  served_utc: '2026-09-05T07:03:20Z'
+  supersedes: 'the HELD line this key carried until 07:03Z; the forty ran after the Test Writer released the hold'
+  every_non_pass: 'fcov expectation unmet; no fire-check failure, no UVM error and no cocotb failure in any of the forty'
+  bins: 7 distinct declared bins, unhit at 12, 8, 5, 4, 3, 3 and 2 of 40 respectively
+  per_bin_per_seed: dv/auto_dv/work/runtime/done/gen_bitr40_bins.txt
+  mapper_column: >
+    All seven are OUTSIDE the 74 declared bins gen_shape_check.py models; its bit_shape_of returns None for
+    each, and the 74 reproduces exactly (cr_op_eq 23, cr_op_same 22, cr_op_rd_x0 29). Zero overlap with the
+    eight bins the Test Writer found and fixed, which are all INSIDE. Every one of the seven is hit in at
+    least 28 of 40 runs, so none is unreachable by this stimulus.
+retraction: >
+  An earlier set of 55 runs under a different route is WITHDRAWN and is not part of this block. That
+  route's site file pointed mirror_root at the shared worktree mirror to obtain the cocotb VPI library
+  on shared storage, and that setting also became the PYTHONPATH, so every run generated its program
+  from the archive root and checked it with library, template, test-module and plan code imported from
+  a tree synced 2026-09-03. The tells were cmp_zca at 0 of 40 and WARL failing at exactly the four
+  changed seeds on the very assertion the fix removes.

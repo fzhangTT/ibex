@@ -1,0 +1,63 @@
+bit_ratified 40-seed sweep: the seven thin declared bins, per-bin per-seed
+served_by: runtime-2   written 2026-09-05T07:03:20Z
+outdir:      /proj_soc/user_dev/fzhang/ibex_dv_out/regress_gensweep2/runs/gen_test_bit_ratified_<seed>
+source_root: /proj_soc/user_dev/fzhang/ibex_dv_probe/gensweep   (self-mirror: own manifest, mirror_root = itself)
+import path: PYTHONPATH=/proj_soc/user_dev/fzhang/ibex_dv_probe/gensweep, read from each run's own run_cmd.sh, 40 of 40
+generator:   gen_bit_ratified_prog.py md5 1bed9e902389d0fbabc68cd8ae9abd40  (PRE-FIX; HEAD 4b5730e has eecf5b81..., the
+             clone working tree now has b262e2d0...)
+manifest:    gen_test_bit_ratified.fcov.yaml md5 62d640791b3009c33a5d066014115217, 617 declared bins.  The committed
+             copy, the sweep-root copy and each run's fcov_manifest_used.yaml are byte-identical.
+NOT PINNABLE: the generator was uncommitted when it ran.
+
+RUN INTEGRITY
+  40 planned, 40 dispatched, 40 result.yaml.  No censoring class applies.
+  17 PASS, 23 FAIL.  Every FAIL reason is "fcov expectation unmet"; none is a harness or checker line.
+  Pooled over the forty: UVM_ERROR 0, UVM_FATAL 0, cocotb failed 0.  24643 bin checks HIT, 37 UNHIT.
+  The coverage check is the only refusing mechanism in the whole sample.
+
+THE SEVEN  (hits and misses out of 40 runs; "count" is the bin's own occurrence count in a run that hit it)
+  bin                                                UNHIT  HIT   count min/max/median
+  gen_bit_zba_zbb_ops_cg.cr_op_rs1.zext_h_pos_rand    12     28    1 / 4 / 1
+  gen_bit_zba_zbb_ops_cg.cr_op_rs1.max_neg_rand        8     32    1 / 5 / 2
+  gen_bit_zba_zbb_ops_cg.cr_op_rs1.sh3add_neg_rand     5     35    1 / 4 / 2
+  gen_bit_count_cg.cr_op_result.cpop_other             4     36    1 / 4 / 2
+  gen_bit_zba_zbb_ops_cg.cr_op_rs1.andn_pos_rand       3     37    1 / 5 / 2
+  gen_bit_zba_zbb_ops_cg.cr_op_rs1.xnor_pos_rand       3     37    1 / 7 / 3
+  gen_bit_zba_zbb_ops_cg.cr_op_rs1.orn_pos_rand        2     38    1 / 5 / 2
+  No bin was ABSENT from any run's report: all seven are declared, built and sampled in all forty.
+  Every one is HIT in at least 28 of the 40 runs, so none of the seven is unreachable by this stimulus.
+
+SEEDS THAT MISSED EACH BIN (base seed 1909560559, Random.randrange(1, 2**31-1) x 40)
+  zext_h_pos_rand   92323106 344452718 448662092 565961228 1215209764 1631749354 1726346280 1729176035
+                    1769436266 1941946916 1995413240 2123343883
+  max_neg_rand      167254026 1215209764 1293875807 1332439550 1631749354 1729176035 1995413240 2126119925
+  sh3add_neg_rand   50719603 448662092 1495399162 1729176035 1769436266
+  cpop_other        50719603 448662092 1293875807 1380253444
+  andn_pos_rand     1547420391 1769436266 2030624739
+  xnor_pos_rand     50719603 1380253444 2105423911
+  orn_pos_rand      588464133 1941946916
+
+INSIDE OR OUTSIDE THE MAPPER'S 74
+  Instrument: the Test Writer's gen_shape_check.py (md5 c1c788010c3b76a3961d3da829133944), the reader that
+  printed "74 of 617 modelled here".  Method: its own bit_shape_of() called over all 617 declared bin names.
+  Reproduced: 74 modelled, 543 unmodelled, exactly the published split.
+  The 74 are three crosses and nothing else: cr_op_eq 23, cr_op_same 22, cr_op_rd_x0 29.
+  ALL SEVEN ARE OUTSIDE.  bit_shape_of returns None for each.  Six live on cr_op_rs1 and the seventh on
+  gen_bit_count_cg.cr_op_result; the reader's regex admits only cr_op_(same|eq|rd_x0) on one covergroup.
+  OVERLAP WITH THE TEST WRITER'S EIGHT: NONE.  Its eight (cr_op_eq.pack_no/packh_no/packu_no and
+  cr_op_same.{max,minu,sh1add,sh2add,sh3add}_rs1_eq_rs2) are all INSIDE the 74.  The names max and sh3add
+  appear in both lists on DIFFERENT crosses with different second legs; they are not the same bins.
+
+A SEPARATE INSTRUMENT, AND IT IS WRONG IN BOTH DIRECTIONS ON THIS ENTRY
+  gen_declared_guard.py is the Test Writer's newer every-seed reader (a different tool from the 74's).  Run
+  against the same pre-fix generator it resolves 151 of the 617 and leaves 466 unread.  Measured against these
+  forty runs as the control:
+    OVER-CLEARS  cr_op_rs1.zext_h_pos_rand: the guard resolves it to tag cls=pos_rand and reports 40 of 40.
+                 The simulation on that same generator hit it in 28 of 40.  The guard models the generator's
+                 LABEL, not the sampler's value classifier, which is the same defect the bin itself has.
+    FALSE-ALARMS gen_bit_count_cg.cp_single_pos.p16: the guard reports 6 of 40.  The simulation hit it in
+                 40 of 40, 3 to 5 times per run.
+    BLIND        to the other six of the seven: the two-operand ops carry no rs1-class tag on their op record,
+                 so resolve() returns None for max, sh3add, andn, xnor and orn.
+  The guard's own calibration control cannot catch either case: it flags only a resolved bin read at exactly
+  zero that the round report says is hit.

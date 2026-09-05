@@ -1,0 +1,65 @@
+sweep: Test Writer generator re-run block on the fixed generators (bit_ratified and cmp_zca)
+served_utc: '2026-09-05T07:37:45Z'
+served_by: runtime-2
+kind: unmeasured for the round; coverage on; NOT PINNABLE (uncommitted generator files)
+pinned_to_digests:
+  gen_bit_ratified_prog.py: 14405978b07d
+  gen_cmp_zca_prog.py: b31555f595b4
+  gen_pmp_csr_warl_prog.py: 964e232edfb4
+  named_by: the Test Writer, with no further edits planned and a promise of a message if that changes
+  verified: sha256 first-12 recomputed INSIDE the source root after it was built, all three exact
+source_root: /proj_soc/user_dev/fzhang/ibex_dv_probe/gensweep_fix
+source_root_is: >
+  an archive of commit 274a89afc40b1107ee626109c8c93b5ce5be0dc9 plus exactly the three generator files above.
+  It is ITS OWN mirror: manifest source worktree, head_sha null, mirror_root itself, tree_sha256
+  642e176b04d5a6f8bc7e0f94c15b48f70524d6774bee2118165065ff157874b1 over 118 runtime files. It built with no
+  --allow-stale-mirror, which is the self-consistency proof.
+import_path_verified: PYTHONPATH=/proj_soc/user_dev/fzhang/ibex_dv_probe/gensweep_fix, read from each run's own run_cmd.sh, 80 of 80
+outdir: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_gsfix2
+seed_sets: >
+  byte-identical to the pre-fix sweep, checked by diff before submitting (bit_ratified base 1909560559,
+  cmp_zca base 218090305, 40 draws each). Before and after are ONE measurement over the same seeds, not two
+  samples. The Test Writer's own seeds are 0..39 and remain a separate, non-numeric agreement.
+bit_ratified:
+  runs: 40
+  pass: 40
+  non_pass: 0
+  bin_checks: 617 declared bins in every run, 24680 checks pooled, all HIT, none UNHIT and none absent
+  the_seven:
+    gen_bit_zba_zbb_ops_cg.cr_op_rs1.zext_h_pos_rand: {before: 12 of 40 unhit, after: 0 of 40}
+    gen_bit_zba_zbb_ops_cg.cr_op_rs1.max_neg_rand: {before: 8 of 40 unhit, after: 0 of 40}
+    gen_bit_zba_zbb_ops_cg.cr_op_rs1.sh3add_neg_rand: {before: 5 of 40 unhit, after: 0 of 40}
+    gen_bit_count_cg.cr_op_result.cpop_other: {before: 4 of 40 unhit, after: 0 of 40}
+    gen_bit_zba_zbb_ops_cg.cr_op_rs1.andn_pos_rand: {before: 3 of 40 unhit, after: 0 of 40}
+    gen_bit_zba_zbb_ops_cg.cr_op_rs1.xnor_pos_rand: {before: 3 of 40 unhit, after: 0 of 40}
+    gen_bit_zba_zbb_ops_cg.cr_op_rs1.orn_pos_rand: {before: 2 of 40 unhit, after: 0 of 40}
+  no_new_bin_under_the_bar: 'zero declared bins are unhit anywhere in the forty, so nothing traded'
+cmp_zca:
+  runs: 40
+  pass: 40
+  non_pass: 0
+  bin_checks: 300 declared bins in every run, 12000 checks pooled, all HIT
+  the_two_c_swsp_legs:
+    gen_cmp_zca_cg.cr_insn_rdfull.c_swsp_x8_15: {before: 9 of 40 unhit, after: 0 of 40}
+    gen_cmp_zca_cg.cr_insn_rdfull.c_swsp_x3_7: {before: 6 of 40 unhit, after: 0 of 40}
+  alignment_regression_watch: >
+    The Test Writer asked me to watch that the alignment block's move regressed no alignment leg. The manifest
+    declares 61 alignment legs (cr_insn_align 51, cr_op_align 10) and every one is HIT in every one of the forty.
+    That is a corollary of the stronger fact: zero of the 300 declared bins missed in any run.
+warl:
+  status: HELD
+  condition: the flip commit, as before
+build:
+  where: submit host, vcs rc=0, 26 s, coverage and cocotb on
+  lsf_attempts_that_failed: >
+    Two LSF build attempts failed first and are kept for anyone who wants them. The first, out-tree
+    regress_gensweep_fix/build/gen_tb, exited 127 because the bsub line carried the CLONE's interpreter
+    (/localdev/.../.venv/bin/python3), which no compute host can see; the flow propagates sys.executable into the
+    job line, so launching gen_build with the clone python is what put it there. The second, out-tree
+    regress_gsfix/build/gen_tb, exited 1 with an EMPTY stdout and empty lsf.err after the pre-build shim linked
+    and before any compile.log existed. The identical command run on the submit host succeeded. The proven recipe
+    for a self-mirror root is a submit-host build: the pre-fix sweep's build has no lsf files either, so the
+    deviation was mine. Flagged to the Orchestrator as LOG-099 adjacent in shape but NOT the same symptom, since
+    no compile ran at all.
+integrity: 'pooled over all 80 runs: UVM_ERROR 0, UVM_FATAL 0, cocotb failed 0, no fire-check failure'
+supersedes: nothing; the pre-fix block in gen_generator_sweep.yaml stands as the before half of this measurement
