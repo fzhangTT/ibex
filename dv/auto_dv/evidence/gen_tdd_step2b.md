@@ -1462,3 +1462,53 @@ combination is counted nowhere, so the numbers can falsify these changes but can
 classifier reading what the RTL reads.
 
 Retained: gen_tdd_logs/fcov/gen_fu_l44_pmp_step1b.log and gen_fu_pmp1_covergroups_corrigendum.log. Two manifest rows.
+
+## Landing 46: IRQ step 1b, five classifiers that could not fail, and a bin that should never have been lit
+
+The cross-model review of the IRQ step-1 range returned REQUEST-CHANGES on five sampler defects. They share a shape
+worth naming, because it is the same shape the PMP review found and it is not a coding mistake: each classifier was
+SELF-CONSISTENT and therefore could never fail a run. A slice compared against a slice, a pc compared against the
+address a comment said it was not, a preference chain asked for a bin it structurally could not return, a page
+compared where the bin's own words say vector. Nothing in a passing regression can report any of that. Only reading
+the classifier against the thing it claims to classify finds it, which is what a review is for.
+
+TWO CLASSIFIERS SHARED ONE DEFECT AND NOW SHARE ONE FIX. Both compared a program counter against the raw boot
+address, when the DUT's first fetch forces the low byte. The fix is a single helper in the TB package, built from the
+constant already in the memory map, so neither classifier carries a copy of an RTL expression. The build then agreed
+without being asked: the fixture program's ELF entry is the forced address, and the DUT's reset mtvec read back
+exactly the value the RTL's initialisation expression produces, which is also what the new reset-mtvec helper returns.
+
+THE WINDOW DEFECT IS A TB MODELLING DEFECT WITH A MEASURED CONSEQUENCE, and it is not in the sampler that reported it.
+The checker that publishes fetch-enable Off windows initialises its Off cycle to zero and three separate places read a
+zero as "no window is open". A window that opens at reset release IS cycle zero. Since every measured entry holds
+fetch enable Off at reset release, every one of those windows has been dropped before any sampler could see it. The
+valid flag belongs beside the cycle in the checker; a sentinel in the sampler would have papered over it. This is a
+T-class fact: a mechanism, and a measured effect on committed coverage.
+
+A COVERED BIN WENT DARK AND THAT IS THE POINT. The plan's line says an mret RESTORES the interrupt enable, using the
+arrow notation of the four bins beside it, so it states an edge. The classifier read a level, and reported the bin 173
+times in one run. Two builds pin those 173 without a third: the companion bin is uncovered in both, so the enable was
+set after every one of those mrets; all 173 classify as no-edge once fixed, so it was set before them too. An mret
+that finds the bit already set does not restore it. The coverpoint fell from two of six to one of six and the sample
+count from 174 to one, and that is honesty-over-green rather than a regression.
+
+WHAT THAT EVIDENCE THEN FOUND WAS IN THE PLAN, NOT THE CODE, and it is the DV Lead's finding. Those 173 records are
+the enable already set across an mret. The coverpoint names two of the four combinations its own Sample clause admits,
+so the case that actually happens, in every one of these programs, has no bin at all. The run summary now carries that
+count by name so it is visible rather than silent, and the missing bins are a plan touch that follows this landing.
+
+A BIN LEFT UNHIT FOR A REASON THAT IS NOT ABOUT THE DESIGN. The reset-pc classifier is fixed and proved through its
+twin, but its own bin needs an interrupt taken before anything retires, which would vector through mtvec as reset
+leaves it, based at the boot page. The linker script's single program region begins above that range, so no directed
+program can place a handler where those vectors point. That is why every existing interrupt program sets mtvec after
+its first instruction and none of them reaches this bin. It is recorded as reachable-with-no-stimulus-built, not as a
+declaration-class exclusion, and the additive remedy belongs to the shared stimulus infrastructure rather than here.
+
+THE RED WAS RE-FIRED WHERE THE REFACTOR MOVED IT. Landing 43 moved the checker's enable history into a shared holder
+without re-firing its red, so the mutation for this landing was placed in that holder's read path: the path the
+checker depends on now and did not before. The named rule caught it 62 times; the same mutant with that one rule
+ablated produced nothing, which is what separates evidence from a failing run. The mutation was reverted and the file
+verified byte-identical.
+
+Retained: gen_tdd_logs/fcov/gen_fu_l46_irq_step1b.log and gen_fu_l43_irq_step1_corrigendum.log. Two manifest rows, and
+one manifest row corrected in place because its description repeated a divergence the plan ended.

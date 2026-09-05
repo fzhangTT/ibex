@@ -1,0 +1,34 @@
+# gen_fu_l43_irq_step1_corrigendum.log -- corrigendum to gen_fu_l43_irq_step1_covergroups.log (TB Infra)
+#
+# The retained log's bytes are UNCHANGED. Its md5 is a707ba4376d747172559ba8590210728, the value it was
+# committed with, and this file stands beside it rather than editing it. Raised by the cross-model review of
+# 253f08e..4b5730e (dv/auto_dv/reviews/2026-09-05-claude-diff-253f08ef-4b5730ec.md).
+#
+# ================ WHAT IS CORRECTED ================
+# Lines 116 to 119 of the retained log carry a paragraph headed "KNOWN DIVERGENCE FROM THE PLAN TEXT", which
+# says the plan qualifies both cp_post_exit bins by dpc while the sampler classifies on the first record
+# after the exit. Its manifest row describes the same divergence.
+#
+# THERE IS NO LONGER A DIVERGENCE. The plan was changed at 109b654 and now states the sampler's rule as its
+# own. gen_fcov_plan.md:2380 reads, in the cp_post_exit line:
+#
+#   "classified AFTER the sampling event: the sample is taken at the window end and the bin is decided by
+#    the FIRST RVFI RECORD AFTER THE EXIT in record ORDER, not by comparing an address to dpc"
+#
+# So the plan and the sampler now say the same thing, and the paragraph describes a disagreement that ended
+# before this correction was written.
+#
+# ================ WHAT IS NOT CORRECTED, AND WHY IT MATTERS ================
+# The REASON the retained log gives is still correct and is worth keeping: a step window's next retirement
+# is in the debug ROM at an address BELOW the program's, so a dpc comparison cannot discriminate there. That
+# sentence is why the plan changed. What is stale is only the claim that the plan disagrees.
+#
+# The sampler's behaviour did NOT change for this correction and no run moves because of it. This is a
+# record correction, not a code correction: nothing in gen_fcov_pkg.sv was edited on account of it, and the
+# covergroups render identically before and after.
+#
+# ================ SCOPE ================
+# This corrigendum corrects the retained log's lines 116-119 and the manifest row that repeats them. Every
+# other figure, command and caveat in that log stands as retained, including the CAVEATS paragraph directly
+# above it, which describes a real defect the smoke caught and which was fixed in that landing.
+# END.

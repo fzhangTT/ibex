@@ -1,0 +1,187 @@
+# gen_fu_l46_irq_step1b.log -- IRQ step 1b: the CM227 sampler fixes (TB Infra, 2026-09-05)
+#
+# WHAT THIS IS. The fix landing for the REQUEST-CHANGES verdict on 253f08e..4b5730e
+# (dv/auto_dv/reviews/2026-09-05-claude-diff-253f08ef-4b5730ec.md): five Major sampler-semantics defects in
+# gen_fcov_pkg.sv, the Minors beside them, the DV Lead's reset-time Off-window ruling, and the Critic's L-4
+# re-fired red on the mie-history refactor. Under LOG-096 a covergroup landing carries no trust triad, but
+# a REQUEST-CHANGES fix carries something stronger and more specific: for each fixed classifier, a run whose
+# OWN coverage shows the bin that classifier could not previously reach.
+#
+# THE ONE BUILD EVERY FIGURE BELOW COMES FROM
+# $ bash dv/auto_dv/tb/gen_tb_local.sh compile <root>/dv/auto_dv/out_irq1b_final
+#   compile rc=0   sources sha256 (dv/auto_dv env, tb, isa, gen_tb) 1a2c9707a8a108e9
+#
+# ================ HOW COVERAGE IS READ HERE, BECAUSE I READ IT WRONG FIRST ================
+# Each run OVERWRITES vcs_simv.vdb in its build directory; it does not merge into it. Every urg report below
+# says "Total tests in report: 1" and that line is quoted with each figure. An earlier draft of this work
+# described a four-smoke merged result from what was in fact the last run alone. The claims survived, since
+# one run covering a bin is stronger than four, but the description was wrong and the form here is the
+# corrected one: one fixture, one run, its own coverage.
+#
+# ================ THE FIVE MAJORS: WHAT WAS WRONG, THE FIX, AND THE BIN IT FREED ================
+#
+# M1  cp_reset_reads.mip_reflects_pins compared mip's low 18 bits against pins[17:0]. The pins are
+#     LINE-INDEXED (0 sw, 1 timer, 2 ext, 3..17 fast) and mip is BIT-POSITIONED (3, 7, 11, 16..30), so the
+#     two agreed only when every pin was low. FIX: build the expected mip by mapping each line through
+#     gen_irq_mie_bit and compare whole words. A narrower slice would not have been a fix; the slicing was
+#     the defect.
+# M2  cp_first_event.boot_insn tested st.pc_rdata == cfg.boot_addr, but the DUT's first fetch is
+#     {boot_addr_i[31:8], 8'h80} (rtl/ibex_if_stage.sv:243), which gen_tb_pkg.sv:812 already stated eight
+#     hundred lines away in the package the sampler imports. The bin and its crosses were unreachable and
+#     the reset group had no referee, so the -1 passed silently.
+# M3  cp_mepc_src.boot_pc had the same defect for a reset-time entry's mepc, taking boot_pc and the cross
+#     nmi_ext_boot_pc with it.
+#     M2 and M3 SHARE ONE FIX: gen_reset_pc() in gen_tb_pkg.sv, built from the existing
+#     GEN_MM_BOOT_RESET_OFFSET, so the two classifiers ask one function instead of copying an RTL expression.
+# M4  irq_marks_bin is a FIRST-MATCH preference chain, so it could never return pre_post_mip_equal or
+#     pre_post_mip_differ however the arms were ordered, though the record carries ext_pre_mip and
+#     ext_post_mip. Two rendered bins and the cross timer_pre_post_mip_differ were unreachable BY
+#     CONSTRUCTION, and the landing-43 log's unreachable list did not name them. FIX: the relation is a fact
+#     of its own, emitted as a SECOND sample under the same line so cr_line_marks can see it.
+#     DISCLOSED CONSEQUENCE: the entry group now samples twice for a record carrying a relation, so per-bin
+#     HIT COUNTS on that group rise where the covered SET does not. The count is in the run summary as
+#     "entry_rel" rather than left to be inferred.
+# M5  cp_fetch_on_after was not decided by the first fetch after the return to On: irq_off_take() was called
+#     only from irq_pend_record, so a window opened only at a record and earlier fetches passed undecided;
+#     and the address test compared PAGES (b.addr[31:8] == irq_mtvec_base[31:8]), which cannot tell the
+#     vector from boot code sharing its page. FIX: irq_off_take() is called in write_ibus where the fetches
+#     arrive, and irq_addr_is_vector() tests the vector itself - the exact aligned base in direct mode, or
+#     base + 4*cause within the 32-entry table in vectored mode.
+#
+# ================ THE FETCH-WINDOW BASE, AND THE HOLE THE DV LEAD FOUND IN ITS OWN CLAUSE ================
+# The DV Lead ruled reset-time Off windows into CG-IRQ-011's scope, then found that its own committed text
+# said the comparison base is "mtvec as of the last retired record" - which is undefined for exactly the
+# window it had just ruled in, because nothing has retired. Its answer, from the RTL rather than convention:
+# ibex_cs_registers.sv:739-743 takes mtvec_d = {boot_addr_i[31:8], 6'b0, 1'b0, ~((BaseIsa ==
+# BaseIsaRV32IorCHERIoT) & (cheriot_enable_i == IbexMuBiOn))} on csr_mtvec_init_i, and gen_dut_top.sv:206
+# ties CheriotEnable to IbexMuBiOff, so that last term is 0 and the mode bit is 1: vectored.
+# gen_mtvec_reset() renders exactly that, and the base is now the model's mtvec after a retirement or the
+# hardware-initialised value before one.
+# MEASURED CONFIRMATION I DID NOT SET OUT TO GET: the M1 fixture reads mtvec out of reset and the DUT
+# returns 80000001, which is that expression evaluated. The helper was written from the RTL and the silicon
+# agreed independently.
+#
+# ================ THE Off-WINDOW VALID FLAG IS A TB DEFECT WITH A MEASURED CONSEQUENCE ================
+# The cycle-0 collision is NOT in the sampler. gen_checkers_pkg.sv:398 initialises the Off cycle to 0 and
+# three places read a 0 as "no window": the drain check at :449, the publish at :538 and the clear at :539.
+# A window that opens at reset release IS cycle 0, so it set the variable to 0 and was never published.
+# With all fifteen measured entries holding fetch_enable Off at reset release, EVERY one of those windows
+# has been dropped before any sampler saw it. The valid flag belongs beside the cycle in the checker and
+# the sampler keeps no sentinel of its own. Recorded in step 2b as a T-class TB modelling defect: it rests
+# on a mechanism and it had a measured effect on committed coverage.
+#
+# ================ THE MINORS ================
+#   - gen_irq_reset_fetch_en_cg had NO referee, though the landing-43 log says the referee fires for any fed
+#     group. Added, gated on (n_irq_rst + n_irq_off).
+#   - cp_others read irq_lines_now at record time; it now reads the pins at irq_commit_cycle from the view.
+#   - a view miss returned before irq_dbg_record, irq_rst_record and irq_off_take, dropping those records
+#     for someone else's miss. Only the view-FED judgements are skipped now; the mip reset-read is the one
+#     reset bin that needs the view and is guarded on it.
+#   - mret_mpie1_pending lacked the edge the plan states. See the two-build comparison below.
+#   - hand-encoded CSR numbers, mstatus field indices and the mret/dret/wfi encodings: 11 sites now use
+#     ibex_pkg names, and GEN_RV32_MRET/DRET/WFI are composed once in gen_tb_pkg.sv from OPCODE_SYSTEM
+#     beside the existing GEN_RV32_NOP.
+#   - gen_fcov_codegen.py: the dead _unused_split_cross_bin removed (15 lines).
+#   - gen_ut_fcov_codegen.py: the fifth check was named for a parenthesised comment before the colon that NO
+#     plan cross line carries, and passed because the group rendered at all. Renamed to what it verifies.
+#   - two jammed comments split; the misc_vif comments in gen_fcov_pkg.sv and gen_tb_top.sv named
+#     irq_pending_o when the only field this subscriber reads from that bundle is core_busy; the history
+#     narration removed from the view-depth parameter.
+#
+# ================ THE MRET EDGE FIX REMOVES A COVERED BIN, AND WHY THAT IS RIGHT ================
+# The plan's line reads "mret restores MIE 0 -> 1 (MPIE = 1, MPP = M)", the same arrow notation as the four
+# mstatus bins beside it, so it states an EDGE. The old classifier read a LEVEL. Fixing it costs a bin:
+#   cp_mie_global_edge, before the fix   2 of 6 covered, 174 samples in the storm run
+#   cp_mie_global_edge, after  the fix   1 of 6 covered,   1 sample  in the storm run
+# THE TWO BUILDS PIN THE 173 WITHOUT A THIRD RUN. mret_mpie0_pending is uncovered in BOTH builds, so every
+# one of the 173 mret samples had MIE SET AFTER the mret. All 173 classify as no-edge in the fixed build, so
+# MIE was SET BEFORE it as well. An mret that finds MIE already set does not set it, so the plan's scenario
+# never occurred and the old classifier reported it 173 times because it read the wrong thing. This is
+# false coverage removed, and the DV Lead confirmed the reading against its own line.
+# WHAT THE EVIDENCE THEN FOUND IN THE PLAN, which is the DV Lead's finding and not mine: those 173 are
+# MIE 1 -> 1 across an mret, and cp_mie_global_edge names two of the four MIE-before/MPIE combinations while
+# its Sample clause admits every mret. So the common case has no bin at all. The DV Lead adds the two
+# missing bins in a plan touch after this landing. The run summary now carries that count by name
+# ("mret with MIE already set, no edge and no bin"), so the case is visible rather than silent.
+#
+# ================ THE RE-FIRED RED ON THE REFACTORED PATH (the Critic's L-4) ================
+# Landing 43 moved the checker's mie history into the shared holder gen_irq_view without re-firing the red,
+# so the red is re-fired here against the refactored path, with its ablation control.
+# MUTATION MUT-MIEVIEW1, in the SHARED HOLDER that landing 43 introduced, gen_tb_pkg.sv gen_irq_view::mie_at:
+# the read answers every query with no line enabled. That is the path the checker now depends on and did not
+# before, which is precisely what the review asked to see exercised.
+# $ gen_ut_irq on the mutant, rule enabled
+#   verdict: FAIL   UVM_ERROR ... [irq_pending] 62
+#   UVM_ERROR dv/auto_dv/env/gen_checkers_pkg.sv(247) @ 1494500: uvm_test_top.env.irq_chk [irq_pending]
+#     cycle 1486: irq_pending_o=1 expected 0 (pins 00040 mie 00000000)
+# $ the SAME mutant, the named rule ablated (+gen_chk_irq_pending=0)
+#   verdict: PASS   [irq_pending] errors 0
+# The ablation is what makes this evidence rather than a failing run: with the named rule off, the same
+# mutant produces nothing, so no hidden referee is doing the work. The mutation was then reverted and the
+# file verified byte-identical: md5 049c0fe4f1e93bb5f6ef5e56abe45434 before and after, and no MUT-MIEVIEW1
+# marker remains anywhere under dv/auto_dv.
+#
+# ================ THE FIXTURE, AND WHY IT ASSERTS A LINE ================
+# gen_irq_reset_reads_directed.S (24 words, crc32 0x69379b6e, entry 0x80000080) reads mstatus, mie, mtvec
+# and mip as its first four instructions. gen_ut_irq_reset_reads.py raises the EXTERNAL line while
+# fetch_enable is still Off, so the line is at level for the very first record.
+# THE ASSERTED LINE IS THE POINT. With every pin low, a line-indexed comparison and a bit-positioned one
+# AGREE, so a fixture with no line raised cannot tell the fixed classifier from the broken one. The test
+# asserts BOTH that mip carries bit 11 and that it does NOT carry bit 2.
+# $ the fixture on the build above
+#   verdict: PASS   GEN_FCOV_REF errors 0   retired 10, compared 10, mismatches 0
+#   mstatus 00000080   mie 00000000   mtvec 80000001   mip 00000800
+# The program's ENTRY address, 0x80000080, is the reset pc with its low byte forced: the premise of the
+# M2/M3 fix showing up in a build artifact rather than only in a comment.
+#
+# ================ FOUR MAJORS PROVED, EACH FROM ONE RUN'S OWN COVERAGE ================
+# $ urg -dir <out>/vcs_simv.vdb -format text   [after the fixture run; "Total tests in report: 1"]
+#   cp_reset_reads      expected 4  uncovered 0  covered 4  100.00     -> M1
+#   cp_first_event      expected 3  uncovered 2  covered 1   33.33     -> M2 (uncovered: debug_before_insn,
+#                                                                          nmi_before_insn)
+# $ urg -dir <out>/vcs_simv.vdb -format text   [after the fetch-enable run; "Total tests in report: 1"]
+#   cp_rvfi_marks       expected 7  uncovered 4  covered 3   42.86     -> M4 (uncovered are the four FLAG
+#                                                        bins, so BOTH relation bins are covered)
+#   cp_fetch_on_after   expected 2  uncovered 1  covered 1   50.00     -> M5 (uncovered: resume_at_on)
+#
+# ================ M3's BIN IS UNHIT FOR A LAYOUT REASON, NOT A DESIGN ONE ================
+# cp_mepc_src.boot_pc and the cross nmi_ext_boot_pc stay unhit. The CLASSIFIER is fixed and is the same
+# shared gen_reset_pc() that M2 proves; what is missing is stimulus, and it is missing for a reason that is
+# worth stating precisely rather than as "no test does this yet".
+# The bin needs an interrupt taken BEFORE THE FIRST RETIREMENT, so that mepc is the reset pc. The core would
+# then vector through mtvec AS RESET LEAVES IT, whose base is the boot page, putting cause c at
+# boot_page + 4c. But gen_link.ld:17 declares the one program region as
+#   PROG (rwx) : ORIGIN = 0x80000080, LENGTH = 0x000FFF80
+# so the whole range 0x80000000..0x8000007f where those vectors live is OUTSIDE it. No directed program can
+# place a handler there today, which is exactly why every existing interrupt program sets mtvec itself AFTER
+# its first instruction and none of them reaches this bin.
+# CLASSIFICATION: reachable-with-no-stimulus-built, the DV Lead's fourth category. NOT declaration-class:
+# no manifest may declare it until the stimulus exists.
+# THE REMEDY IS SCHEDULED AND IS NOT MINE TO APPLY: an additive second region of 0x80 bytes at the boot page
+# (exactly 32 four-byte entries, ending where PROG begins) and a section for programs that opt in, with one
+# program and test that use it. gen_link.ld is the Test Writer's shared stimulus infrastructure, and moving
+# PROG's ORIGIN instead would relink every program in the tree, so this landing does not touch it.
+#
+# ================ GATES, ALL FROM THE BUILD NAMED ABOVE ================
+# $ python3 dv/auto_dv/tb/gen_fcov_codegen.py --check      -> gen_fcov_codegen --check: up to date
+#   THE RENDER DID NOT MOVE, which is the expected result and was predicted before the work: every Major is
+#   a CLASSIFIER fix, not a bin change. gen_fcov_groups.svh is therefore not in this landing.
+# $ python3 dv/auto_dv/tb/gen_knobs_codegen.py --check     -> gen_knobs_codegen --check: up to date
+# $ python3 dv/auto_dv/tb/unit/gen_ut_fcov_codegen.py      -> GEN_UT_FCOV_CODEGEN PASS (0 failures)
+# $ python3 dv/auto_dv/tools/gen_unbuilt_mark_check.py     -> gen_unbuilt_mark_check: PASS
+# $ four smokes, verdicts from each run's own verdict.txt, GEN_FCOV_REF errors from its sim.log
+#   storm     PASS  ref 0   entry=173 entry_rel=173 edge=348 reset=1 fetch_off=1 view misses 0
+#   lines     PASS  ref 0   entry=6   entry_rel=6   edge=12  reset=1 fetch_off=0 view misses 0
+#   dbgstorm  PASS  ref 0   entry=39  entry_rel=39  edge=80  reset=1 fetch_off=0 view misses 0  debug_window=1
+#   fetchen   PASS  ref 0   entry=15  entry_rel=15  edge=33  reset=1 fetch_off=1 view misses 0
+#   rr        PASS  ref 0   (the M1/M2 fixture)
+#
+# ================ WHAT THIS LANDING DOES NOT CONTAIN ================
+#   - rev52's L-4, the hold enum through the knobs codegen. Every yaml constant renders into SystemVerilog
+#     as well as Python, so adding the hold values there would create a SECOND definition of names
+#     gen_agents_pkg.sv:489 already declares - the second authority the row exists to remove. Agreed shape:
+#     the enum stays the authority and the codegen derives the Python names from it, as its own touch.
+#   - the handler-with-interrupts-disabled fixture that would return mret_mpie1_pending honestly. Owed, with
+#     me as owner.
+#   - gen_link.ld and any change to program layout, per the ruling above.
+# END. Every figure above is produced by the command printed above its block, on the one build named at the top.

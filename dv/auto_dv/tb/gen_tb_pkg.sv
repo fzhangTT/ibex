@@ -576,7 +576,7 @@ package gen_tb_pkg;
   // second history with its own timestamp convention. Written by gen_irq_checker, read by the coverage class;
   // it lives here because gen_fcov_pkg compiles before gen_checkers_pkg and cannot hold a handle to it.
   parameter int unsigned GEN_IRQ_VIEW_SAMPLES = 256;   // cycles of pin samples kept; a read older than this fails and the caller says so
-  parameter int unsigned GEN_IRQ_VIEW_MIE = 64;        // mie updates kept, the depth the checker used before this was shared
+  parameter int unsigned GEN_IRQ_VIEW_MIE = 64;        // mie updates kept; a read older than this fails and the caller says so
   class gen_irq_view;
     typedef struct { int unsigned cycle; logic [18:0] pins; bit pending; } smp_t;
     typedef struct { int unsigned eff_cycle; logic [31:0] mie; } mie_t;
@@ -813,8 +813,26 @@ package gen_tb_pkg;
   // The first fetch is {boot_addr_i[31:8], 8'h80} (rtl/ibex_if_stage.sv:243); gen_link.ld places the
   // program entry at GEN_MM_BOOT_PAGE + GEN_MM_BOOT_RESET_OFFSET (checked by gen_program.py and gen_knobs_codegen.py).
 
+  // The DUT's first fetch after reset forces the low byte (rtl/ibex_if_stage.sv:243), so a classifier
+  // comparing a pc against the raw boot address never matches.
+  function automatic logic [31:0] gen_reset_pc(logic [31:0] boot_addr);
+    return {boot_addr[31:8], GEN_MM_BOOT_RESET_OFFSET[7:0]};
+  endfunction
+
   // RV32I NOP = addi x0, x0, 0, composed from the ibex_pkg opcode so no encoding is re-typed.
   parameter logic [31:0] GEN_RV32_NOP = {12'd0, 5'd0, 3'b000, 5'd0, OPCODE_OP_IMM};
+  // mtvec as hardware initialises it, which exists before anything retires: ibex_cs_registers.sv:739-743
+  // takes {boot_addr_i[31:8], 6'b0, 1'b0, ~((BaseIsa == BaseIsaRV32IorCHERIoT) & (cheriot_enable_i ==
+  // IbexMuBiOn))} on csr_mtvec_init_i, and gen_dut_top.sv:206 ties CheriotEnable to IbexMuBiOff, so that
+  // last term is 0 and the mode bit is 1: vectored.
+  function automatic logic [31:0] gen_mtvec_reset(logic [31:0] boot_addr);
+    return {boot_addr[31:8], 6'b0, 1'b0, 1'b1};
+  endfunction
+
+  // the three SYSTEM instructions the samplers classify against, composed the same way
+  parameter logic [31:0] GEN_RV32_MRET = {12'h302, 5'd0, 3'b000, 5'd0, OPCODE_SYSTEM};
+  parameter logic [31:0] GEN_RV32_DRET = {12'h7b2, 5'd0, 3'b000, 5'd0, OPCODE_SYSTEM};
+  parameter logic [31:0] GEN_RV32_WFI  = {12'h105, 5'd0, 3'b000, 5'd0, OPCODE_SYSTEM};
 
   // Cache RAM geometry the TB models must follow (ibex_pkg).
   parameter int unsigned GEN_IC_NUM_WAYS  = IC_NUM_WAYS;

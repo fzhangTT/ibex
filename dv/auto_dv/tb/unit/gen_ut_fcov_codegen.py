@@ -62,7 +62,7 @@ def main():
           "binsof(cp_line.fast[5])" in text)
     check("an iff guard holding a comparison does not swallow the bins list",
           "cp_u_path: coverpoint" in text or "cp_u_pending_at_return: coverpoint" in text)
-    check("a cross whose plan line carries a parenthesised comment before the colon still renders",
+    check("a cross of three coverpoints renders under its own name",
           "cr_line_mode_post:" in text)
 
     root = scratch_tree("nested_brace_value")

@@ -396,6 +396,7 @@ package gen_checkers_pkg;
     int unsigned cd_checked = 0, cd_late = 0, cd_early = 0, cd_mismatch = 0;
     // fetch_enable: the cycle it left On (0 = never / back On) and the records seen after the drain window
     int unsigned fe_off_cycle = 0, fe_records_after_off = 0, fe_late_records = 0; bit fe_on_q = 1;
+    bit fe_off_valid = 0;   // a window opening at cycle 0 is a real window: the cycle alone cannot say so
     function new(string name, uvm_component parent);
       super.new(name, parent);
       imp_state = new("imp_state", this);
@@ -446,7 +447,7 @@ package gen_checkers_pkg;
       end
       cd_epc_prev = st.mepc; cd_addr_prev = st.mtval;
       // fetch_en: after fetch_enable_i leaves On only the in-flight instructions retire, within GEN_FETCH_EN_DRAIN_CYCLES
-      if (fe_off_cycle != 0) begin
+      if (fe_off_valid) begin
         fe_records_after_off++;
         if (st.cycle > fe_off_cycle + GEN_FETCH_EN_DRAIN_CYCLES) begin
           fe_late_records++;
@@ -532,11 +533,11 @@ package gen_checkers_pkg;
         end
         begin   // fetch_enable_i: remember the cycle it left On; back On clears the window
           bit fe_on = (misc.fetch_enable == ibex_pkg::IbexMuBiOn);
-          if (fe_on_q && !fe_on) fe_off_cycle = misc.cycle;
+          if (fe_on_q && !fe_on) begin fe_off_cycle = misc.cycle; fe_off_valid = 1; end
           // the window's END, which the drain check never needed and a covergroup does: publish it on the
           // return to On, before the Off cycle is cleared
-          if (!fe_on_q && fe_on && fe_off_cycle != 0) gen_fetch_en_windows::publish(fe_off_cycle, misc.cycle);
-          if (fe_on) fe_off_cycle = 0;
+          if (!fe_on_q && fe_on && fe_off_valid) gen_fetch_en_windows::publish(fe_off_cycle, misc.cycle);
+          if (fe_on) begin fe_off_cycle = 0; fe_off_valid = 0; end
           fe_on_q = fe_on;
         end
         if (misc.double_fault_seen) begin

@@ -176,21 +176,6 @@ def split_cross_bin(name, comp_bins):
     return rec(name, 0)
 
 
-def _unused_split_cross_bin(name, comp_bins):
-    def rec(rest, k):
-        if k == len(comp_bins):
-            return [] if rest == "" else None
-        for b in sorted(comp_bins[k], key=len, reverse=True):
-            if rest == b and k == len(comp_bins) - 1:
-                return [b]
-            if rest.startswith(b + "_"):
-                tail = rec(rest[len(b) + 1:], k + 1)
-                if tail is not None:
-                    return [b] + tail
-        return None
-    return rec(name, 0)
-
-
 # bin names that are SystemVerilog keywords (xor, or, and, ...) render as escaped identifiers: `\\xor ` (the trailing space ends it)
 SV_KEYWORDS = frozenset(['accept_on', 'always', 'always_comb', 'always_ff', 'always_latch', 'and', 'assert', 'assign', 'assume', 'automatic', 'before', 'begin', 'bins', 'bit', 'break', 'buf', 'bufif0', 'bufif1', 'byte', 'case', 'casex', 'casez', 'cell', 'chandle', 'checker', 'class', 'clocking', 'cmos', 'config', 'const', 'constraint', 'context', 'continue', 'cover', 'covergroup', 'coverpoint', 'cross', 'deassign', 'default', 'defparam', 'design', 'disable', 'dist', 'do', 'edge', 'else', 'end', 'endcase', 'enum', 'event', 'eventually', 'expect', 'export', 'extends', 'final', 'first_match', 'for', 'force', 'forever', 'fork', 'function', 'generate', 'genvar', 'global', 'highz0', 'highz1', 'if', 'iff', 'ignore_bins', 'illegal_bins', 'implements', 'implies', 'import', 'incdir', 'include', 'initial', 'inout', 'input', 'inside', 'instance', 'int', 'integer', 'interconnect', 'interface', 'intersect', 'join', 'join_any', 'join_none', 'large', 'let', 'liblist', 'library', 'local', 'localparam', 'logic', 'longint', 'matches', 'medium', 'modport', 'module', 'nand', 'negedge', 'nettype', 'new', 'nexttime', 'nmos', 'nor', 'not', 'notif0', 'notif1', 'null', 'option', 'or', 'output', 'package', 'parameter', 'pmos', 'posedge', 'primitive', 'priority', 'program', 'property', 'protected', 'pull0', 'pull1', 'pulldown', 'pullup', 'pure', 'rand', 'randc', 'randomize', 'rcmos', 'real', 'realtime', 'ref', 'reg', 'reject_on', 'release', 'repeat', 'restrict', 'return', 'rnmos', 'rpmos', 'rtran', 'rtranif0', 'rtranif1', 's_always', 's_eventually', 's_nexttime', 's_until', 'scalared', 'sequence', 'shortint', 'shortreal', 'signed', 'small', 'soft', 'solve', 'specify', 'static', 'string', 'strong0', 'strong1', 'struct', 'super', 'supply0', 'supply1', 'sync_accept_on', 'sync_reject_on', 'table', 'tagged', 'task', 'this', 'throughout', 'time', 'tran', 'tranif0', 'tranif1', 'tri', 'tri0', 'tri1', 'triand', 'trior', 'trireg', 'type', 'typedef', 'union', 'unique', 'unsigned', 'until', 'untyped', 'use', 'uwire', 'var', 'vectored', 'virtual', 'void', 'wait', 'wand', 'weak0', 'weak1', 'while', 'wire', 'with', 'within', 'wor', 'xnor', 'xor'])
 
