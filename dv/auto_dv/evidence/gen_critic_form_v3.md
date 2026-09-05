@@ -233,3 +233,51 @@ Reconciliation with rev72 (read after the rows above were fixed; every row verif
 - Verdict after reconciliation: unchanged, APPROVE on e95a4c9..b7fefd7, with L-4, L-6, L-7, L-8, L-9 and I-1 owed to the
   form's next touch as disclosed. rev72 rates the three status and citation rows Medium; I keep them at Low as the class of
   L-2 and L-3, a stale status or cite at the commit rather than a claim the tree contradicts. Both agree there is no Major.
+
+## 9. v3.4 at ef2385a: the owed rows answered; APPROVE on e95a4c9..ef2385a (2026-09-05T14:16:00Z)
+
+Artifacts at ef2385a: gen_round2_request.md 2f3e1e37bb4e6051, gen_round_form_check.py 07c32212798e985f (unchanged from b7fefd7),
+gen_fcov_plan.md, gen_test_plan.md, gen_feature_list.md; rev74 (dv/auto_dv/reviews/2026-09-05-claude-diff-b7fefd71-ef2385a2.md at
+4bd933f). Method: a detached archive of ef2385a (dv/auto_dv/work/critic/form3/v33_checks.sh ef2385a, log v34_checks.log): the checker
+passes 204 claims from the archive root and from a foreign directory, --self-test passes its eleven cases, my sixteen-row control
+still fails on the row count; the owed rows read against the text; rev74 read after the findings were fixed (the Orchestrator's
+messages had relayed its Medium, on the irq gating record, which Section 8 of gen_critic_irq_checker_fix.md answers, and four Lows).
+
+- L-7 CLOSED: condition (b) (:376) reads CLOSED at 67c6ac1, three of six open, the block I verified in gen_critic_flow_followups.md
+  Section 7. L-8 CLOSED: condition (a) (:375) is restated from this file's Section 4 at 55d784a and fab8a61 and says no Critic
+  confirmation is outstanding, which is what Section 8 of the gating record now states in that record's own words; the row can
+  cite it. L-9 CLOSED: both plan citations name the rule ("Section 0, the Seeds against the guarantee rule"), a phrase that occurs
+  once in gen_fcov_plan.md and once in the form, so a later plan edit cannot move it. L-6 CLOSED: Section 3.7 opens with the values
+  not applied until measured_seeds lands (:233-235). I-1 CLOSED by the (a) restatement. rev72's plural is fixed ("NARROWS IT",
+  :334). The (b) paragraph no longer leans on the manifest rule by analogy (:383-386).
+- Rule (b)'s recording sentence (gen_fcov_plan.md:156-160): a RED FORM is defined as any variant of the entry the block also
+  measured, and the comparison is recorded beside the block with the seeds, the red forms, the per-seed result and the script. That
+  is the home my genfix follow-up L-2 asked for and the recording rev72's Low asked for; my own comparison for the pair-fix
+  carry-over is retained in gen_critic_genfix_followup.md, which is where a reader finds it until the block gains the record.
+- L-4 OPEN, unchanged: :342 still reads "rather than any coverage refusal" while the wave index's PASS column for csr_warl is 39 of
+  40 by each run's own verdict (Section 7); the sentence is true of the PMP blocks only. Owed to the next touch.
+- The three documents' digest headers read f9a685486369 and agree with each other (b7fefd7 carried 266624bb25d4). The commit message's
+  account of why they moved, and its parts-only digest 916cc594a845, I did not verify; the headers' agreement is what a reader of
+  the tree can check and it holds.
+
+CRITIC VERDICT: APPROVE on e95a4c9..ef2385a. The checker reproduces all 204 claims from any working directory with its eleven-case
+self-test; L-6, L-7, L-8, L-9 and I-1 are CLOSED at ef2385a; L-4 is owed as disclosed.
+
+Reconciliation with rev74 (read after the rows above were fixed; rows checked at ef2385a, v34_checks.log):
+- Its Medium is the irq gating record still reading REQUEST-CHANGES with no lifting section; Section 8 of
+  gen_critic_irq_checker_fix.md, handed under a HOLD before this section, is that lift, and the (a) row's next touch can cite it
+  and say CLOSED for the Critic's part in one word, as rev74 asks.
+- Its Low on the rule's motivating case, VERIFIED and agreed (DV Lead with the Test Writer): gen_bit_ratified_pairfix/gen_index.md
+  mentions neither rev58 nor the emitted-bytes comparison (its one "byte-identical" at :11 says env/ equals the wave root), the
+  comparison lives in
+  gen_tdd_logs/test_writer/gen_fu_bit_ratified_rev58.log and its script sidecar, and the red forms compared there are the 18 items at
+  seeds 1 to 3, not the block's forty seeds; only my own re-derivation in gen_critic_genfix_followup.md covered the TP-BIT-018 red at
+  seed 1. The rule should say at which seeds red forms are compared, and the block's index should point at the record.
+- Its Low on the rule name being unenforced, VERIFIED and agreed: gen_round_form_check.py at ef2385a reads no plan citation (0
+  occurrences of gen_fcov_plan or the rule name), so "occurs once" is a grep fact; one claim in the checker with a renaming case.
+- Its Low on the present tense at :382-384 ("REOPENED ITSELF ... the fix has moved, so that evidence certifies a build the round will
+  not run") two lines below the CLOSED row, VERIFIED and agreed. Its Low on the commit message's parts-only digest 916cc594a845 is
+  what my digest paragraph says: unverifiable from the tree; agreed. Its Info (the :238 cite gen_flow_util.py:1634-1638 where
+  seeds_for_test is at :1757) VERIFIED.
+- Verdict after reconciliation: unchanged, APPROVE on e95a4c9..ef2385a with L-4 owed; the rev74 rows are the DV Lead's for v3.5 or
+  the round record, none of them a claim the tree contradicts. Both agree there is no Major.
