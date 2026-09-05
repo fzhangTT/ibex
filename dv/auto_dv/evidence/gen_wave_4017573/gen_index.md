@@ -47,8 +47,19 @@ GENERATORS. For the nine entries with manifests the inline check covers every de
 and the declared count coincide and no separate unexamined count arises.
 
 ONE OBSERVATION FOR THE CROSS-OPERAND RULE. Of the 28 declared bins under the every-seed bar across the whole
-wave, 24 are CROSS LEGS. The fragility is concentrated in crosses, which is what the rule predicts and which the
+wave, 23 are CROSS LEGS. The fragility is concentrated in crosses, which is what the rule predicts and which the
 per-bin listing lets a reader check.
+
+CORRIGENDUM 2026-09-05T11:42Z (rev63 Low). This sentence first read "24 are CROSS LEGS". IT IS 23, and the
+error was in the prose only: the table above and the census file beside this one both said 23 throughout.
+Re-derived by summing the per-entry BELOW-the-bar figures in gen_wave_census.txt, which are cmp_zcb 6,
+cmp_zcmp_basic 5, isa_shift 4, mul_div 5, mul_mul 2 and pmp_csr_warl 1. The 28 total is correct. The claim the
+sentence supports is unaffected: 23 of 28 is still a concentration in crosses and still what the rule predicts.
+
+THE WRONG FIGURE PROPAGATED, which is why this row says more than the number. The Test Writer's record
+attributed the 24 to the Runtime Manager's hand-off message alone, so a figure wrong in prose here reached
+another role's record without passing through the table that would have contradicted it. Corrected to that
+role directly as well as here.
 
 ## The irq entry: 19 of 40 fail on mechanisms, not coverage
 
