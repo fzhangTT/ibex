@@ -1,0 +1,288 @@
+# gen_fu_generator_fix_sweep: the four generator fixes measured in simulation, before and after
+
+WHAT THIS CLAIMS. Every declared bin of gen_test_bit_ratified and gen_test_cmp_zca is hit at
+every one of forty seeds with the handed generators, where the same seeds on the same manifests
+left nine bins short before them; and the WARL backstop's four new programs run. NOT claimed:
+anything about a bin these two entries do not declare, and nothing about the round's coverage,
+which no unmeasured sweep can speak to. Every figure below was read by me from the run
+directories named here, not taken from a report.
+
+PROVENANCE, and why before and after are one measurement.
+  post-fix runs   /proj_soc/user_dev/fzhang/ibex_dv_out/regress_gsfix2/runs
+  pre-fix runs    /proj_soc/user_dev/fzhang/ibex_dv_out/regress_gensweep2/runs
+  The seed sets are identical set for set in both sweeps, 40 and 40 for each entry.
+  Each entry's fcov_manifest_used.yaml carries ONE md5 across all its runs in both sweeps, and
+  that md5 equals the committed manifest, so the bar did not move between them.
+
+THE BUILDS ARE NOT THE SAME, which is the honest caveat and the reason for a control. The fix
+root was archived from a later HEAD, so the two sweeps built different testbench sources. The
+control is below: the three covergroups these bins live on, and the sampler call sites that feed
+them, are byte-identical across the two roots, so the testbench delta cannot account for the
+change. That makes this a controlled comparison of the generators, not a single-variable one of
+the whole tree.
+
+INPUTS BY DIGEST (sha256 first 12).
+  gen_bit_ratified_prog.py     handed 14405978b07d  post-fix root 14405978b07d  pre-fix root 7f3ec33390c2
+  gen_cmp_zca_prog.py          handed b31555f595b4  post-fix root b31555f595b4  pre-fix root aaa8e29f7370
+  gen_pmp_csr_warl_prog.py     handed 964e232edfb4  post-fix root 964e232edfb4  pre-fix root 964e232edfb4
+  The pre-fix root's WARL generator is already the handed one: its leg ran there, which is why
+  the WARL section below reads that sweep and not the later one.
+  manifest gen_test_bit_ratified.fcov.yaml  sha256 dda87ebf1a76  md5 62d640791b3009c33a5d066014115217
+  manifest gen_test_cmp_zca.fcov.yaml  sha256 2f87dd57681d  md5 9348080762767c92f7d693841d000e24
+  manifest gen_test_pmp_csr_warl.fcov.yaml  sha256 7fa08b320202  md5 faf7e54976f4c947f85c7a2eb778513c
+  reader gen_shape_check.py is a different instrument and is not used here; the two analysis
+  scripts of this log are printed in full at the end (grade.py 44d75d6f6a88,
+  integrity.py b8005d90a5b9).
+
+================================================================================================
+PRE-FIX   /proj_soc/user_dev/fzhang/ibex_dv_out/regress_gensweep2
+================================================================================================
+gen_test_bit_ratified: 40 runs, 23 FAIL, 17 PASS
+    the refusing mechanism on 13 of them: fcov expectation unmet: 1 declared bin(s) not hit; the bins are listed below
+    the refusing mechanism on 6 of them: fcov expectation unmet: 2 declared bin(s) not hit; the bins are listed below
+    the refusing mechanism on 4 of them: fcov expectation unmet: 3 declared bin(s) not hit; the bins are listed below
+    pooled: UVM_ERROR 0, UVM_FATAL 0, cocotb failed 0, slow rounds 0, timed out 0, end marker seen 40/40
+    probe roots named by the run commands: /proj_soc/user_dev/fzhang/ibex_dv_probe/gensweep
+    fcov_manifest_used.yaml md5: 62d640791b3009c33a5d066014115217
+    declared bins 617, bin checks 24680, bins short on at least one seed 7
+      gen_bit_zba_zbb_ops_cg.cr_op_rs1.zext_h_pos_rand         unhit at 12 of 40 seeds
+        seeds: 92323106 344452718 448662092 565961228 1215209764 1631749354 1726346280 1729176035 1769436266 1941946916 1995413240 2123343883
+      gen_bit_zba_zbb_ops_cg.cr_op_rs1.max_neg_rand            unhit at  8 of 40 seeds
+        seeds: 167254026 1215209764 1293875807 1332439550 1631749354 1729176035 1995413240 2126119925
+      gen_bit_zba_zbb_ops_cg.cr_op_rs1.sh3add_neg_rand         unhit at  5 of 40 seeds
+        seeds: 50719603 448662092 1495399162 1729176035 1769436266
+      gen_bit_count_cg.cr_op_result.cpop_other                 unhit at  4 of 40 seeds
+        seeds: 50719603 448662092 1293875807 1380253444
+      gen_bit_zba_zbb_ops_cg.cr_op_rs1.andn_pos_rand           unhit at  3 of 40 seeds
+        seeds: 1547420391 1769436266 2030624739
+      gen_bit_zba_zbb_ops_cg.cr_op_rs1.xnor_pos_rand           unhit at  3 of 40 seeds
+        seeds: 50719603 1380253444 2105423911
+      gen_bit_zba_zbb_ops_cg.cr_op_rs1.orn_pos_rand            unhit at  2 of 40 seeds
+        seeds: 588464133 1941946916
+
+gen_test_cmp_zca: 40 runs, 15 FAIL, 25 PASS
+    the refusing mechanism on 15 of them: fcov expectation unmet: 1 declared bin(s) not hit; the bins are listed below
+    pooled: UVM_ERROR 0, UVM_FATAL 0, cocotb failed 0, slow rounds 0, timed out 0, end marker seen 40/40
+    probe roots named by the run commands: /proj_soc/user_dev/fzhang/ibex_dv_probe/gensweep
+    fcov_manifest_used.yaml md5: 9348080762767c92f7d693841d000e24
+    declared bins 300, bin checks 12000, bins short on at least one seed 2
+      gen_cmp_zca_cg.cr_insn_rdfull.c_swsp_x8_15               unhit at  9 of 40 seeds
+        seeds: 150367227 365821296 1086242162 1088072172 1261642853 1624806699 1903076011 2026012692 2135827214
+      gen_cmp_zca_cg.cr_insn_rdfull.c_swsp_x3_7                unhit at  6 of 40 seeds
+        seeds: 221999105 867562006 903716924 1360024520 1619306376 1695030713
+
+================================================================================================
+POST-FIX   /proj_soc/user_dev/fzhang/ibex_dv_out/regress_gsfix2
+================================================================================================
+gen_test_bit_ratified: 40 runs, 40 PASS
+    pooled: UVM_ERROR 0, UVM_FATAL 0, cocotb failed 0, slow rounds 0, timed out 0, end marker seen 40/40
+    probe roots named by the run commands: /proj_soc/user_dev/fzhang/ibex_dv_probe/gensweep_fix
+    fcov_manifest_used.yaml md5: 62d640791b3009c33a5d066014115217
+    declared bins 617, bin checks 24680, bins short on at least one seed 0
+
+gen_test_cmp_zca: 40 runs, 40 PASS
+    pooled: UVM_ERROR 0, UVM_FATAL 0, cocotb failed 0, slow rounds 0, timed out 0, end marker seen 40/40
+    probe roots named by the run commands: /proj_soc/user_dev/fzhang/ibex_dv_probe/gensweep_fix
+    fcov_manifest_used.yaml md5: 9348080762767c92f7d693841d000e24
+    declared bins 300, bin checks 12000, bins short on at least one seed 0
+
+================================================================================================
+THE NINE BINS THE FIXES TARGET, side by side
+================================================================================================
+bin                                                    pre-fix        post-fix
+gen_bit_zba_zbb_ops_cg.cr_op_rs1.zext_h_pos_rand       28/40 (1-4)   40/40 (1-5)
+gen_bit_zba_zbb_ops_cg.cr_op_rs1.max_neg_rand          32/40 (1-5)   40/40 (1-6)
+gen_bit_zba_zbb_ops_cg.cr_op_rs1.sh3add_neg_rand       35/40 (1-4)   40/40 (2-6)
+gen_bit_count_cg.cr_op_result.cpop_other               36/40 (1-4)   40/40 (1-6)
+gen_bit_zba_zbb_ops_cg.cr_op_rs1.andn_pos_rand         37/40 (1-5)   40/40 (1-7)
+gen_bit_zba_zbb_ops_cg.cr_op_rs1.xnor_pos_rand         37/40 (1-7)   40/40 (1-7)
+gen_bit_zba_zbb_ops_cg.cr_op_rs1.orn_pos_rand          38/40 (1-5)   40/40 (2-7)
+gen_bit_count_cg.cp_single_pos.p16                     40/40 (3-5)   40/40 (3-5)  <- the control: fine before and after
+gen_cmp_zca_cg.cr_insn_rdfull.c_swsp_x8_15             31/40 (1-9)   40/40 (1-10)
+gen_cmp_zca_cg.cr_insn_rdfull.c_swsp_x3_7              34/40 (1-4)   40/40 (1-5)
+
+The bracketed pair is the bin's own occurrence count in a run that hit it, smallest and largest.
+The control row is the bin an earlier withdrawn model-level reader called a false alarm at 6 of
+40: simulation hits it in all forty runs of both sweeps, three to five times each. It is printed
+here so that the corrigendum in the record cites a retained measurement rather than prose.
+
+================================================================================================
+THE TESTBENCH-DELTA CONTROL
+================================================================================================
+  pre-fix build  sources_sha256 32f878987926e4e22c4ab2b1b7aba2a3ecceb14ea5ecd6d8385146f683c07526
+  post-fix build sources_sha256 9879ca90c6beba35b7cc0fe18d600a81a4796c3a470b41c109917513b92c11d8
+  They differ. What the bins rest on does not:
+    covergroup gen_bit_zba_zbb_ops_cg   pre b67e0c54134d  post b67e0c54134d  IDENTICAL
+    covergroup gen_bit_count_cg         pre f94b68ab3d64  post f94b68ab3d64  IDENTICAL
+    covergroup gen_cmp_zca_cg           pre 95ebdcd2a32b  post 95ebdcd2a32b  IDENTICAL
+    sampler call sites naming bit_cg, cnt_cg or zca_cg: pre 7 lines 6276e3053b69, post 7 lines 6276e3053b69, IDENTICAL
+    The only changed line naming any of the three adds four irq covergroups to the same
+    construction statement; the three constructions themselves are unchanged.
+
+================================================================================================
+THE WARL LEG
+================================================================================================
+gen_test_pmp_csr_warl in the pre-fix root, whose WARL generator is the handed one:
+  14 runs, 14 PASS; UVM_ERROR 0, cocotb failed 0
+  declared bins 179, bin checks 2506, bins short on any seed 0
+  the four seeds that exist only because of the backstop, each PASS: 218090405 218090460 218090484 230969025
+  the other 10 seeds all pass too. They lie inside the 300 consecutive seeds
+  from base 218090305 that the model-level comparison covered, and none of them is one of the four
+  that assert, so each is one of the 297 whose program that comparison found identical.
+  The model-level half of this leg, the 301-seed comparison, is the separate retained log
+  gen_fu_warl_res_backstop.log; this section is only the claim that the new programs execute.
+
+================================================================================================
+THE ANALYSIS SCRIPTS, in full
+================================================================================================
+---- grade.py (44d75d6f6a88) ----------------------------------------
+"""Grade the post-fix sweep from the run directories, independent of any report."""
+import hashlib, os, re, sys, collections
+
+O = "/proj_soc/user_dev/fzhang/ibex_dv_out/regress_gsfix2/runs"
+FIXROOT = "/proj_soc/user_dev/fzhang/ibex_dv_probe/gensweep_fix"
+CLONE = "/localdev/fzhang/ws/ibex-challenge"
+
+SEVEN = [
+    "gen_bit_zba_zbb_ops_cg.cr_op_rs1.zext_h_pos_rand",
+    "gen_bit_zba_zbb_ops_cg.cr_op_rs1.max_neg_rand",
+    "gen_bit_zba_zbb_ops_cg.cr_op_rs1.sh3add_neg_rand",
+    "gen_bit_count_cg.cr_op_result.cpop_other",
+    "gen_bit_zba_zbb_ops_cg.cr_op_rs1.andn_pos_rand",
+    "gen_bit_zba_zbb_ops_cg.cr_op_rs1.xnor_pos_rand",
+    "gen_bit_zba_zbb_ops_cg.cr_op_rs1.orn_pos_rand",
+]
+
+def md5(p):
+    h = hashlib.md5()
+    with open(p, "rb") as f:
+        for b in iter(lambda: f.read(1 << 16), b""):
+            h.update(b)
+    return h.hexdigest()
+
+def head_fields(p):
+    d = {}
+    with open(p, encoding="utf-8", errors="replace") as f:
+        for line in f:
+            m = re.match(r"^([a-z_]+): (.*)$", line.rstrip("\n"))
+            if m and m.group(1) in ("test", "seed", "verdict", "reason", "evidence"):
+                d[m.group(1)] = m.group(2).strip().strip("'")
+            if len(d) == 5:
+                break
+    return d
+
+runs = sorted(os.listdir(O))
+by_test = collections.defaultdict(list)
+prov_bad = []
+bins = collections.defaultdict(dict)   # test -> bin -> {seed: (state,count)}
+manifest_md5 = collections.defaultdict(set)
+
+for r in runs:
+    d = os.path.join(O, r)
+    res = os.path.join(d, "result.yaml")
+    if not os.path.exists(res):
+        prov_bad.append((r, "no result.yaml")); continue
+    f = head_fields(res)
+    test, seed = f["test"], int(f["seed"])
+    by_test[test].append((seed, f["verdict"], f["reason"]))
+    cmd = open(os.path.join(d, "run_cmd.sh"), encoding="utf-8", errors="replace").read()
+    paths = set(re.findall(r"/proj_soc/user_dev/fzhang/ibex_dv_probe/\w+", cmd))
+    if paths != {FIXROOT}:
+        prov_bad.append((r, "roots " + ",".join(sorted(paths))))
+    mu = os.path.join(d, "fcov_manifest_used.yaml")
+    if os.path.exists(mu):
+        manifest_md5[test].add(md5(mu))
+    fc = os.path.join(d, "fcov_check.log")
+    if os.path.exists(fc):
+        for line in open(fc, encoding="utf-8", errors="replace"):
+            m = re.match(r"^FCOV-EXPECTATION: (\S+) = (HIT|UNHIT|ABSENT|NOT_BUILT)(?: \(count=(\d+)\))?", line)
+            if m:
+                bins[test][m.group(1)] = bins[test].get(m.group(1), {})
+                bins[test][m.group(1)][seed] = (m.group(2), int(m.group(3) or 0))
+
+print("=== provenance ===")
+print("runs:", len(runs), "  provenance problems:", len(prov_bad))
+for r, why in prov_bad[:10]:
+    print("  BAD", r, why)
+for t in sorted(manifest_md5):
+    print(f"  {t}: fcov_manifest_used.yaml md5 set = {sorted(manifest_md5[t])}")
+
+print()
+print("=== verdicts ===")
+for t in sorted(by_test):
+    rows = by_test[t]
+    npass = sum(1 for _, v, _ in rows if v == "PASS")
+    print(f"{t}: {len(rows)} runs, {npass} PASS, {len(rows)-npass} FAIL")
+    reasons = collections.Counter(rs for _, v, rs in rows if v != "PASS")
+    for rs, n in reasons.most_common():
+        print(f"    FAIL x{n}: {rs}")
+
+print()
+print("=== the seven thin bins, post-fix ===")
+bt = bins.get("gen_test_bit_ratified", {})
+seeds_bt = sorted({s for b in bt.values() for s in b})
+print("seeds carrying a bin report:", len(seeds_bt))
+for b in SEVEN:
+    per = bt.get(b, {})
+    unhit = sorted(s for s, (st, _) in per.items() if st != "HIT")
+    counts = sorted(c for st, c in per.values() if st == "HIT")
+    lo = counts[0] if counts else 0
+    hi = counts[-1] if counts else 0
+    print(f"  {b:52s} reported {len(per):2d}  UNHIT {len(unhit):2d}  count min/max {lo}/{hi}")
+    if unhit:
+        print("      unhit seeds:", " ".join(str(s) for s in unhit[:12]))
+
+print()
+print("=== every bin unhit on any seed, per test ===")
+for t in sorted(bins):
+    tot = len(bins[t])
+    nseeds = len({s for b in bins[t].values() for s in b})
+    bad = {b: sorted(s for s, (st, _) in per.items() if st != "HIT") for b, per in bins[t].items()}
+    bad = {b: v for b, v in bad.items() if v}
+    print(f"{t}: {tot} declared bins over {nseeds} seeds; {len(bad)} bin(s) missed on at least one seed")
+    for b, ss in sorted(bad.items(), key=lambda kv: (-len(kv[1]), kv[0])):
+        print(f"    {b:60s} unhit on {len(ss):2d} seed(s)")
+
+---- integrity.py (b8005d90a5b9) ----------------------------------------
+"""Run integrity over the post-fix sweep: no failure mechanism anywhere but the coverage check."""
+import os, re, collections
+O = "/proj_soc/user_dev/fzhang/ibex_dv_out/regress_gsfix2/runs"
+agg = collections.Counter()
+per = collections.defaultdict(collections.Counter)
+missing = []
+for r in sorted(os.listdir(O)):
+    p = os.path.join(O, r, "result.yaml")
+    if not os.path.exists(p):
+        missing.append(r); continue
+    txt = open(p, encoding="utf-8", errors="replace").read()
+    test = re.search(r"^test: (\S+)", txt, re.M).group(1)
+    def num(pat):
+        m = re.search(pat, txt, re.M)
+        return int(m.group(1)) if m else -1
+    uvm_e = num(r"^  ERROR: (\d+)")
+    uvm_f = num(r"^  FATAL: (\d+)")
+    cf = num(r"^  failed: (\d+)")
+    cp = num(r"^  passed: (\d+)")
+    rounds = num(r"^  rounds: (\d+)")
+    to = re.search(r"^timed_out: (\S+)", txt, re.M).group(1)
+    fin = re.search(r"^finish_seen: (\S+)", txt, re.M).group(1)
+    mark = re.search(r"^marker_seen: (\S+)", txt, re.M).group(1)
+    ec = re.search(r"^exit_code: (\S+)", txt, re.M).group(1)
+    per[test]["runs"] += 1
+    per[test]["uvm_error"] += uvm_e
+    per[test]["uvm_fatal"] += uvm_f
+    per[test]["cocotb_failed"] += cf
+    per[test]["cocotb_passed"] += cp
+    per[test]["slow_rounds"] += rounds
+    per[test]["timed_out"] += (to == "true")
+    per[test]["finish_seen"] += (fin == "true")
+    per[test]["marker_seen"] += (mark == "true")
+    per[test]["exit0"] += (ec == "0")
+print("missing result.yaml:", missing)
+for t in sorted(per):
+    c = per[t]
+    print(f"{t}: runs {c['runs']}  UVM_ERROR {c['uvm_error']}  UVM_FATAL {c['uvm_fatal']}  "
+          f"cocotb failed {c['cocotb_failed']} passed {c['cocotb_passed']}  slow rounds {c['slow_rounds']}  "
+          f"timed_out {c['timed_out']}  finish_seen {c['finish_seen']}/{c['runs']}  "
+          f"marker_seen {c['marker_seen']}/{c['runs']}  exit0 {c['exit0']}/{c['runs']}")
+

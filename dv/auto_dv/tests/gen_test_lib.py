@@ -1033,7 +1033,7 @@ def _self_test():
     seed = 12345
     names = list(TIMING_ONLY_KNOBS)   # the mechanics are tested independent of the consumer gate
     # CycleWaiters: the bridge has one cycle-threshold slot and every waiter shares it, so a near
-    # target used to destroy a pending far one. Two concurrent waiters, near and far:
+    # target must not destroy a pending far one. Two concurrent waiters, near and far:
     w = CycleWaiters()
     w.add(11664, "runner")
     w.add(85, "poll")

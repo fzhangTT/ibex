@@ -70,13 +70,14 @@ FORMS = {"sh1add": "r", "sh2add": "r", "sh3add": "r", "andn": "r", "orn": "r", "
          "cpop": "u", "min": "r", "max": "r", "minu": "r", "maxu": "r", "sext.b": "u", "sext.h": "u", "zext.h": "u",
          "orc.b": "u", "rev8": "u", "bclr": "r", "bset": "r", "binv": "r", "bext": "r", "bclri": "i", "bseti": "i",
          "binvi": "i", "bexti": "i", "clmul": "r", "clmulh": "r", "clmulr": "r", "rol": "r", "ror": "r", "rori": "i",
-         "c_sext_b": "c", "c_sext_h": "c", "c_zext_h": "c"}
+         "c_sext_b": "c", "c_sext_h": "c", "c_zext_h": "c",
+         "pack": "r", "packh": "r", "packu": "r"}
 C_BASE = {"c_sext_b": "sext.b", "c_sext_h": "sext.h", "c_zext_h": "zext.h"}
 IMM_BITS = {"bclri": 5, "bseti": 5, "binvi": 5, "bexti": 5, "rori": 5}
 # Smoke items own the mnemonics the extras draw from.
 ITEM_OPS = {"TP-BIT-002": ("sh1add", "sh2add", "sh3add"), "TP-BIT-004": ("andn", "orn", "xnor"),
             "TP-BIT-005": ("clz", "ctz", "cpop"), "TP-BIT-007": ("min", "max", "minu", "maxu"),
-            "TP-BIT-009": ("sext.b", "sext.h", "c_sext_b", "c_sext_h"), "TP-BIT-010": ("zext.h", "c_zext_h"),
+            "TP-BIT-009": ("sext.b", "sext.h", "c_sext_b", "c_sext_h"), "TP-BIT-010": ("zext.h", "c_zext_h", "pack", "packh", "packu"),
             "TP-BIT-014": ("orc.b",), "TP-BIT-015": ("rev8",), "TP-BIT-017": ("bclr", "bset", "binv", "bext"),
             "TP-BIT-018": ("bclri", "bseti", "binvi", "bexti"), "TP-BIT-020": ("clmul", "clmulh", "clmulr")}
 SHADD_N = {"sh1add": 1, "sh2add": 2, "sh3add": 3}
@@ -108,12 +109,14 @@ CLMUL_CLASSES = ("zero", "one", "all_ones", "single_bit", "rand")
 SEXT_CLASSES = ("bit7_set", "bit7_clear", "bit15_set", "bit15_clear", "zero", "all_ones", "rand")
 SEXT_EXACT = {"sext.b": (0x80, 0x7F), "sext.h": (0x8000,)}
 # TP-BIT-038: every legal Zb* mnemonic (ratified set of this test, the rotates, the draft set the shim serves).
-X0_RATIFIED = tuple(k for k in FORMS if FORMS[k] != "c")
 X0_DRAFT = {"grev": "r", "gorc": "r", "grevi": "i5", "gorci": "i5", "shfl": "r", "unshfl": "r", "shfli": "i4",
             "unshfli": "i4", "xperm.n": "r", "xperm.b": "r", "xperm.h": "r", "pack": "r", "packh": "r", "packu": "r",
             "slo": "r", "sro": "r", "sloi": "i5", "sroi": "i5", "fsl": "r4", "fsr": "r4", "fsri": "r4i", "bfp": "r",
             "cmov": "r4", "cmix": "r4", "crc32.b": "u", "crc32.h": "u", "crc32.w": "u", "crc32c.b": "u",
             "crc32c.h": "u", "crc32c.w": "u"}
+# A mnemonic the draft set already probes is not probed twice: pack, packh and packu are draft
+# encodings this test also emits normally, and two probes of one mnemonic is not a second shape.
+X0_RATIFIED = tuple(k for k in FORMS if FORMS[k] != "c" and k not in X0_DRAFT)
 
 
 # ---- references (zb.adoc Operation blocks) -----------------------------------------------------------------------------
@@ -181,6 +184,8 @@ def ror32(a, sh):
 
 def reference(kind, rs1, rs2=0, imm=0):
     """Expected rd of one ratified op; rs2 carries the register operand, imm the immediate (index forms use bits 4:0)."""
+    if kind in PACK_REF:
+        return PACK_REF[kind](rs1, rs2)
     kind = C_BASE.get(kind, kind)
     k = imm if FORMS[kind] == "i" else rs2
     if kind in SHADD_N:
@@ -236,6 +241,15 @@ def reference(kind, rs1, rs2=0, imm=0):
     raise ValueError(kind)
 
 
+PACK_REF = {
+    # rtl/ibex_alu.sv:565-567: packu {b[31:16], a[31:16]}, packh {16'h0, b[7:0], a[7:0]},
+    # pack (the default arm) {b[15:0], a[15:0]}. zext.h is this same encoding with rs2 = x0.
+    "pack":  lambda a, b: (((b & 0xFFFF) << 16) | (a & 0xFFFF)) & MASK32,
+    "packu": lambda a, b: ((b & 0xFFFF0000) | ((a >> 16) & 0xFFFF)) & MASK32,
+    "packh": lambda a, b: (((b & 0xFF) << 8) | (a & 0xFF)) & MASK32,
+}
+
+
 def shadd_wrap(kind, rs1, rs2):
     """CG-BIT-001 cp_wrap: carry out of rs2 + (rs1 << n) on 32 bits."""
     return ((rs1 << SHADD_N[kind]) & MASK32) + rs2 > MASK32
@@ -244,6 +258,22 @@ def shadd_wrap(kind, rs1, rs2):
 def weighted(rng, table):
     names = list(table)
     return rng.choices(names, weights=[table[n] for n in names], k=1)[0]
+
+
+# The coverage classifies an operand by VALUE (gen_fcov_pkg.sv bit_rs1_cls): six exact values are
+# their own classes, and any other value whose bit 7 and bit 15 differ is byte_msb or half_msb. A
+# draw that ignores that is classified as some other class, so the op's pos_rand or neg_rand leg goes
+# unhit at the seeds where every draw for that op happened to land elsewhere.
+_NAMED_EXACT = (0x00000000, 0xFFFFFFFF, 0x80000000, 0x7FFFFFFF, 0x00000001, 0xE0000000)
+
+
+def _plain_rand(rng, lo, hi):
+    """A value the coverage will classify as pos_rand / neg_rand rather than as a named class."""
+    for _ in range(64):
+        v = rng.randrange(lo, hi)
+        if v not in _NAMED_EXACT and ((v >> 7) & 1) == ((v >> 15) & 1):
+            return v
+    raise AssertionError("no plain random value in 64 draws")
 
 
 def operand_value(rng, cls):
@@ -285,9 +315,9 @@ def operand_value(rng, cls):
             v = (v << 4) | nib
         return v
     if cls == "pos_rand":
-        return rng.randrange(1, 0x80000000)
+        return _plain_rand(rng, 1, 0x80000000)
     if cls == "neg_rand":
-        return rng.randrange(0x80000000, 1 << 32)
+        return _plain_rand(rng, 0x80000000, 1 << 32)
     if cls == "rand":
         return rng.randrange(1 << 32)
     if cls == "bit7_set":
@@ -350,6 +380,8 @@ class Spec:
     chain: bool = False        # rs1 = the previous op's rd (value = prev.expect)
     follow: bool = False       # same unit as the previous op (adjacent, no value chain)
     same_rs: bool = False      # rs2 is the rs1 register
+    same_all: bool = False     # rd, rs1 and rs2 are one register (cp_same_regs.all_same)
+    same_rd: bool = False      # rd is the previous op's rd (with chain: the same rd AND index)
     rd_x0: bool = False
 
 
@@ -497,6 +529,14 @@ def _spec_005(rng):
                     x |= 1 << b
             assert reference(kind, x) == want, (kind, want, hex(x))
             specs.append(Spec("TP-BIT-005", kind, x, rs1_class="result", tags={"result": f"r{want}"}))
+    # cp_result.other for cpop: the operand classes above weigh 0, 1, 16, 31 or 32 bits and the two
+    # directed results are 1 and 16, so the remaining result bin rested on whatever a random operand
+    # happened to weigh. Five bits is in no other bin.
+    x = 0
+    for b in rng.sample(range(32), 5):
+        x |= 1 << b
+    assert reference("cpop", x) == 5, hex(x)
+    specs.append(Spec("TP-BIT-005", "cpop", x, rs1_class="rand", tags={"cls": "rand", "result": "other"}))
     return specs
 
 
@@ -777,6 +817,8 @@ def _place(rng, pool, cpool, idx, spec, prev, table, keep):
         rs1, rs1_val, chained = prev.rd, prev.expects[0], True
     else:
         rs1, rs1_val, chained = (0 if spec.rs1_class == "x0_src" else rng.choice(free)), spec.rs1_val, False
+    if spec.same_rd:
+        assert prev is not None and prev.rd != 0, f"same_rd without a previous rd at op {idx}"
     if kind.startswith("addr_"):
         base = kind[5:]
         rd = rng.choice([r for r in free if r != rs1])
@@ -812,10 +854,13 @@ def _place(rng, pool, cpool, idx, spec, prev, table, keep):
     if form == "c":
         rd = rs1 = rng.choice([r for r in cpool if r not in keep])
     else:
-        rd = 0 if spec.rd_x0 else rng.choice(free)
+        # same_rs means the rs1_eq_rs2 shape, which needs rd != rs1: an rd draw that happened to
+        # pick rs1 turned the op into all_same instead, at a few seeds per op
+        rd_pool = [r for r in free if r != rs1] if spec.same_rs else free
+        rd = prev.rd if spec.same_rd else (rs1 if spec.same_all else (0 if spec.rd_x0 else rng.choice(rd_pool)))
     if form == "r":
-        rs2 = rs1 if spec.same_rs else rng.choice([r for r in free if r != rs1])
-        if spec.same_rs:
+        rs2 = rs1 if (spec.same_rs or spec.same_all) else rng.choice([r for r in free if r != rs1])
+        if spec.same_rs or spec.same_all:
             rs2_val = rs1_val
     expect = reference(kind, rs1_val, rs2_val, imm) if rd != 0 else 0
     return Op(idx, spec.item, kind, rd, rs1, rs2, rs1_val, rs2_val, imm, [expect], spec.floor, spec.rs1_class, spec.rs2_class, tags, chained)
@@ -1010,6 +1055,48 @@ def _insn_count(lines):
     return sum(1 for ln in lines if ln.startswith("  ") and not ln.lstrip().startswith("#"))
 
 
+# every r-form op in the cross's own cp_op bin set, not just the ones that happened to fail: the
+# sweep is scoped to the coverpoint, so a bin that is merely rare today cannot slip out of it
+SWEEP_OPS = ("andn", "max", "maxu", "min", "minu", "orn", "pack", "packh", "packu",
+             "sh1add", "sh2add", "sh3add", "xnor")
+SWEEP_ITEM = {op: item for item, ops in ITEM_OPS.items() for op in ops if op in SWEEP_OPS}
+
+
+def _binv_twice_pair(rng):
+    """binv/binvi applied twice to the SAME rd and index (CG-BIT gen_bit_sbit_cg.cp_binv_twice).
+
+    The second op restores the bit, which is why nothing else in the program produces this shape:
+    every other single-bit sequence moves on to a different index or a different destination. The
+    pair is chained and shares rd, so the two ops are adjacent and operate on one register.
+    """
+    idx = rng.randrange(32)
+    c, v = _nonzero(rng)
+    first = Spec("TP-BIT-018", "binvi", v, imm=idx, rs1_class=c, tags={"case": "binv_twice_first"})
+    second = Spec("TP-BIT-018", "binvi", v, imm=idx, rs1_class=c,
+                  tags={"case": "binv_twice_second"}, chain=True, same_rd=True)
+    return [first, second]
+
+
+def _relationship_sweep(rng):
+    """Directed sweep of the op x register-relationship product (CG-BIT-001 cr_op_same).
+
+    The allocator draws rd and rs2 independently of the op, so an op and a register relationship
+    each appear across a run while their combination is left to coincidence: the all_same shapes
+    that did turn up varied with any change to the draw stream. These specs pair each op with each
+    relationship directly, which is what makes the cross a per-run fact rather than a lucky draw.
+    """
+    specs = []
+    for op in SWEEP_OPS:
+        item = SWEEP_ITEM[op]
+        c, v = _nonzero(rng)
+        specs.append(Spec(item, op, v, v, rs1_class=c, rs2_class=c,
+                          tags={"case": "all_same", "sweep": True}, same_all=True))
+        c, v = _nonzero(rng)
+        specs.append(Spec(item, op, v, v, rs1_class=c, rs2_class=c,
+                          tags={"case": "same", "sweep": True}, same_rs=True))
+    return specs
+
+
 def plan(seed, red=False, red_item=None):
     rng = program_rng(seed)
     eot_reg = rng.randrange(5, 32)
@@ -1028,6 +1115,8 @@ def plan(seed, red=False, red_item=None):
                     units.append(unit)
                 unit = [spec]
         units.append(unit)
+    units += [[s] for s in _relationship_sweep(rng)]
+    units.append(_binv_twice_pair(rng))
     units += [[_extra(rng)] for _ in range(rng.randint(*N_EXTRAS))]
     rng.shuffle(units)
     ops = []

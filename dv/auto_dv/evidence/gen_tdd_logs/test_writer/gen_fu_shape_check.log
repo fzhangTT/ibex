@@ -1,0 +1,668 @@
+# gen_fu_shape_check: every shape the manifests declare as a stimulus gap, at every seed
+
+WHAT THIS CLAIMS. Two runs of one checker over 40 seeds each. The RED run reads the generators
+committed at 8559958805f7c942f9c2feeafe87aec03a7118a3 and fails; the GREEN run reads the same two
+generators with this touch's edits and passes. Both runs read their targets from the SAME two
+manifests, which this touch does not modify, so the runs differ in the generators alone. This is
+a MODEL-LEVEL claim about the instruction shapes the programs emit, not a claim that any bin is
+hit. The bins themselves are settled by simulation in the companion retained log
+gen_fu_generator_fix_sweep.log, where both entries hit every declared bin at all forty seeds.
+
+INPUTS BY DIGEST (sha256 first 12).
+  checker gen_shape_check.py, printed in full below   7c0036f6e79e
+  generator gen_bit_ratified_prog.py   handed  14405978b07d
+  generator gen_bit_ratified_prog.py   in the archive the red reads  c1580d22a361
+  generator gen_cmp_zca_prog.py        handed  b31555f595b4
+  generator gen_cmp_zca_prog.py        in the archive the red reads  125ef1a1cf5d
+  manifest gen_test_bit_ratified.fcov.yaml, unmodified by this touch  dda87ebf1a76
+  manifest gen_test_cmp_zca.fcov.yaml, unmodified by this touch  2f87dd57681d
+
+COMMANDS, as run, from the scratch working directory with PYTHONPATH cleared:
+  git archive HEAD dv | tar -x -C shape_head3        # detached archive of 8559958805f7c942f9c2feeafe87aec03a7118a3
+  python3 gen_shape_check.py --root <scratch>/shape_head3 --seeds 40        -> exit 1
+  python3 gen_shape_check.py --root /localdev/fzhang/ws/ibex-challenge --seeds 40  -> exit 0
+
+WHAT THE RED SAYS BEYOND ITS EXIT CODE. Every control reads 40 of 40 seeds in both runs, so a
+zero in the red is attributable to the pairing the bin names and not to a missing operation or a
+broken reader. 56 bins fail at that commit, in three classes:
+  35 produced at exactly 0 of 40 seeds
+  10 produced but rare. 10 of the 10 carry the word 'never' about the very
+     pairing measured here, which the measurement contradicts (checked by reading each bin's own
+     not_hit line in the manifest, not by recollection):
+       gen_bit_sbit_cg.cp_binv_twice.yes                    1/40 seeds, 1 emission(s) in all, reason says never
+       gen_bit_zba_zbb_ops_cg.cr_op_eq.packh_yes            1/40 seeds, 1 emission(s) in all, reason says never
+       gen_bit_zba_zbb_ops_cg.cr_op_eq.packu_yes            1/40 seeds, 1 emission(s) in all, reason says never
+       gen_bit_zba_zbb_ops_cg.cr_op_same.max_all_same       1/40 seeds, 1 emission(s) in all, reason says never
+       gen_bit_zba_zbb_ops_cg.cr_op_same.minu_all_same      1/40 seeds, 1 emission(s) in all, reason says never
+       gen_bit_zba_zbb_ops_cg.cr_op_same.sh1add_all_same    1/40 seeds, 1 emission(s) in all, reason says never
+       gen_bit_zba_zbb_ops_cg.cr_op_eq.pack_yes             2/40 seeds, 2 emission(s) in all, reason says never
+       gen_bit_zba_zbb_ops_cg.cr_op_same.sh2add_all_same    2/40 seeds, 2 emission(s) in all, reason says never
+       gen_bit_zba_zbb_ops_cg.cr_op_same.sh3add_all_same    5/40 seeds, 5 emission(s) in all, reason says never
+       gen_bit_zba_zbb_ops_cg.cr_op_same.xnor_rs1_eq_rs2    8/40 seeds, 9 emission(s) in all, reason says never
+  11 produced at most seeds but not all, which is the same failure under the every-seed bar:
+       gen_cmp_zca_cg.cr_insn_next.c_j_n16                  6/40 seeds
+       gen_bit_zba_zbb_ops_cg.cr_op_same.sh3add_rs1_eq_rs2  35/40 seeds
+       gen_cmp_zca_cg.cr_insn_next.c_addi_n16               37/40 seeds
+       gen_bit_zba_zbb_ops_cg.cr_op_eq.pack_no              38/40 seeds
+       gen_bit_zba_zbb_ops_cg.cr_op_eq.packh_no             39/40 seeds
+       gen_bit_zba_zbb_ops_cg.cr_op_eq.packu_no             39/40 seeds
+       gen_bit_zba_zbb_ops_cg.cr_op_same.max_rs1_eq_rs2     39/40 seeds
+       gen_bit_zba_zbb_ops_cg.cr_op_same.minu_rs1_eq_rs2    39/40 seeds
+       gen_bit_zba_zbb_ops_cg.cr_op_same.sh1add_rs1_eq_rs2  39/40 seeds
+       gen_bit_zba_zbb_ops_cg.cr_op_same.sh2add_rs1_eq_rs2  39/40 seeds
+       gen_cmp_zca_cg.cr_insn_next.c_slli_n16               39/40 seeds
+The ten rare rows are the reason the bar is every seed and not 'seen once'. Their reason texts go
+with the bins when the manifests are re-rendered; the correction is recorded here because the
+file that carried the wrong word will not exist to carry the correction.
+
+ONE BIN IS NOT MEASURED HERE, named in the checker's UNMEASURABLE table so that an unmapped bin
+fails the run instead of passing quietly:
+  gen_cmp_imm_edges_cg.cp_cj_off.self
+My first reading of it was WRONG and is corrected here rather than quietly dropped. I argued that
+a compressed jump with a zero offset branches to itself and is therefore exclusive with program
+termination. The committed round-1 merged report refutes that: gen_round_0/gen_grpinfo.txt, User
+Defined Bins for cp_cj_off, reads self 398 beside pos_rand 308 and neg_rand 114, five bins
+expected and none uncovered. A jump to itself is the park-here idiom a test ends with, and the
+testbench ends the run, so the program never has to leave the loop. What my measurement supports
+is ENTRY-SCOPED and nothing more: this entry's programs emit compressed jumps, none with a zero
+offset, the non-zero offsets being the control. The bin is credited from the merge.
+
+THE ALIGNMENT READING COUNTS ONLY WHAT IT CAN PROVE. cr_insn_align bins are properties of the
+assembled address, so the checker walks the generator's own line_size model from each .balign 4
+anchor. That walk is exact only while every line since the anchor has a size the assembler cannot
+change: a plain mnemonic inside .option rvc may be compressed, and the walk cannot know. The
+reader therefore stops placing instances after the first such line and reports the shortfall as
+UNPROVEN rather than as a failure. The GREEN run carries UNPROVEN rows for the memory forms for
+exactly this reason, and they are NOT a claim that those bins are short. The simulation settles
+them: in the companion log both entries hit every declared bin, alignment bins included, at all
+forty seeds.
+
+================================================================================================
+THE RED RUN, in full
+================================================================================================
+root: /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/test_writer_r3/shape_head3
+== gen_test_bit_ratified: 24 stimulus-class bins declared, 40 seeds ==
+  MISS  gen_bit_sbit_cg.cp_binv_twice.yes                          seeds  1/40  emissions     1  control 40/40
+  MISS  gen_bit_zba_zbb_ops_cg.cr_op_eq.pack_yes                   seeds  2/40  emissions     2  control 40/40
+  MISS  gen_bit_zba_zbb_ops_cg.cr_op_eq.packh_yes                  seeds  1/40  emissions     1  control 40/40
+  MISS  gen_bit_zba_zbb_ops_cg.cr_op_eq.packu_yes                  seeds  1/40  emissions     1  control 40/40
+  MISS  gen_bit_zba_zbb_ops_cg.cr_op_rd_x0.pack_no                 seeds  0/40  emissions     0  control 40/40
+  MISS  gen_bit_zba_zbb_ops_cg.cr_op_rd_x0.packh_no                seeds  0/40  emissions     0  control 40/40
+  MISS  gen_bit_zba_zbb_ops_cg.cr_op_rd_x0.packu_no                seeds  0/40  emissions     0  control 40/40
+  MISS  gen_bit_zba_zbb_ops_cg.cr_op_same.andn_all_same            seeds  0/40  emissions     0  control 40/40
+  MISS  gen_bit_zba_zbb_ops_cg.cr_op_same.andn_rs1_eq_rs2          seeds  0/40  emissions     0  control 40/40
+  MISS  gen_bit_zba_zbb_ops_cg.cr_op_same.max_all_same             seeds  1/40  emissions     1  control 40/40
+  MISS  gen_bit_zba_zbb_ops_cg.cr_op_same.min_all_same             seeds  0/40  emissions     0  control 40/40
+  MISS  gen_bit_zba_zbb_ops_cg.cr_op_same.minu_all_same            seeds  1/40  emissions     1  control 40/40
+  MISS  gen_bit_zba_zbb_ops_cg.cr_op_same.orn_all_same             seeds  0/40  emissions     0  control 40/40
+  MISS  gen_bit_zba_zbb_ops_cg.cr_op_same.pack_all_same            seeds  0/40  emissions     0  control 40/40
+  MISS  gen_bit_zba_zbb_ops_cg.cr_op_same.pack_rs1_eq_rs2          seeds  0/40  emissions     0  control 40/40
+  MISS  gen_bit_zba_zbb_ops_cg.cr_op_same.packh_all_same           seeds  0/40  emissions     0  control 40/40
+  MISS  gen_bit_zba_zbb_ops_cg.cr_op_same.packh_rs1_eq_rs2         seeds  0/40  emissions     0  control 40/40
+  MISS  gen_bit_zba_zbb_ops_cg.cr_op_same.packu_all_same           seeds  0/40  emissions     0  control 40/40
+  MISS  gen_bit_zba_zbb_ops_cg.cr_op_same.packu_rs1_eq_rs2         seeds  0/40  emissions     0  control 40/40
+  MISS  gen_bit_zba_zbb_ops_cg.cr_op_same.sh1add_all_same          seeds  1/40  emissions     1  control 40/40
+  MISS  gen_bit_zba_zbb_ops_cg.cr_op_same.sh2add_all_same          seeds  2/40  emissions     2  control 40/40
+  MISS  gen_bit_zba_zbb_ops_cg.cr_op_same.sh3add_all_same          seeds  5/40  emissions     5  control 40/40
+  MISS  gen_bit_zba_zbb_ops_cg.cr_op_same.xnor_all_same            seeds  0/40  emissions     0  control 40/40
+  MISS  gen_bit_zba_zbb_ops_cg.cr_op_same.xnor_rs1_eq_rs2          seeds  8/40  emissions     9  control 40/40
+  declared bins: 74 of 617 modelled here, 8 below 40 seeds (0 of them alignment bins this reader cannot place, which are for the simulation to decide)
+== gen_test_cmp_zca: 22 stimulus-class bins declared, 40 seeds ==
+  SKIP  gen_cmp_imm_edges_cg.cp_cj_off.self                        not measurable here
+  MISS  gen_cmp_zca_cg.cr_insn_align.c_jalr_half                   seeds  0/40  emissions     0  control 40/40
+  MISS  gen_cmp_zca_cg.cr_insn_next.c_add_n16                      seeds  0/40  emissions     0  control 40/40
+  MISS  gen_cmp_zca_cg.cr_insn_next.c_addi4spn_n16                 seeds  0/40  emissions     0  control 40/40
+  MISS  gen_cmp_zca_cg.cr_insn_next.c_and_n16                      seeds  0/40  emissions     0  control 40/40
+  MISS  gen_cmp_zca_cg.cr_insn_next.c_andi_n16                     seeds  0/40  emissions     0  control 40/40
+  MISS  gen_cmp_zca_cg.cr_insn_next.c_beqz_n16                     seeds  0/40  emissions     0  control 40/40
+  MISS  gen_cmp_zca_cg.cr_insn_next.c_bnez_n16                     seeds  0/40  emissions     0  control 40/40
+  MISS  gen_cmp_zca_cg.cr_insn_next.c_jal_n16                      seeds  0/40  emissions     0  control 40/40
+  MISS  gen_cmp_zca_cg.cr_insn_next.c_jalr_n16                     seeds  0/40  emissions     0  control 40/40
+  MISS  gen_cmp_zca_cg.cr_insn_next.c_jr_n16                       seeds  0/40  emissions     0  control 40/40
+  MISS  gen_cmp_zca_cg.cr_insn_next.c_lui_n16                      seeds  0/40  emissions     0  control 40/40
+  MISS  gen_cmp_zca_cg.cr_insn_next.c_lw_n16                       seeds  0/40  emissions     0  control 40/40
+  MISS  gen_cmp_zca_cg.cr_insn_next.c_lwsp_n16                     seeds  0/40  emissions     0  control 40/40
+  MISS  gen_cmp_zca_cg.cr_insn_next.c_mv_n16                       seeds  0/40  emissions     0  control 40/40
+  MISS  gen_cmp_zca_cg.cr_insn_next.c_or_n16                       seeds  0/40  emissions     0  control 40/40
+  MISS  gen_cmp_zca_cg.cr_insn_next.c_srai_n16                     seeds  0/40  emissions     0  control 40/40
+  MISS  gen_cmp_zca_cg.cr_insn_next.c_srli_n16                     seeds  0/40  emissions     0  control 40/40
+  MISS  gen_cmp_zca_cg.cr_insn_next.c_sub_n16                      seeds  0/40  emissions     0  control 40/40
+  MISS  gen_cmp_zca_cg.cr_insn_next.c_sw_n16                       seeds  0/40  emissions     0  control 40/40
+  MISS  gen_cmp_zca_cg.cr_insn_next.c_swsp_n16                     seeds  0/40  emissions     0  control 40/40
+  MISS  gen_cmp_zca_cg.cr_insn_next.c_xor_n16                      seeds  0/40  emissions     0  control 40/40
+  CTRL  n32 successor kept for c.add                               seeds 40/40
+  CTRL  n32 successor kept for c.addi4spn                          seeds 40/40
+  CTRL  n32 successor kept for c.and                               seeds 40/40
+  CTRL  n32 successor kept for c.andi                              seeds 40/40
+  CTRL  n32 successor kept for c.beqz                              seeds 40/40
+  CTRL  n32 successor kept for c.bnez                              seeds 40/40
+  CTRL  n32 successor kept for c.jal                               seeds 40/40
+  CTRL  n32 successor kept for c.jalr                              seeds 40/40
+  CTRL  n32 successor kept for c.jr                                seeds 40/40
+  CTRL  n32 successor kept for c.lui                               seeds 40/40
+  CTRL  n32 successor kept for c.lw                                seeds 40/40
+  CTRL  n32 successor kept for c.lwsp                              seeds 40/40
+  CTRL  n32 successor kept for c.mv                                seeds 40/40
+  CTRL  n32 successor kept for c.or                                seeds 40/40
+  CTRL  n32 successor kept for c.srai                              seeds 40/40
+  CTRL  n32 successor kept for c.srli                              seeds 40/40
+  CTRL  n32 successor kept for c.sub                               seeds 40/40
+  CTRL  n32 successor kept for c.sw                                seeds 40/40
+  CTRL  n32 successor kept for c.swsp                              seeds 40/40
+  CTRL  n32 successor kept for c.xor                               seeds 40/40
+  declared bins: 83 of 300 modelled here, 29 below 40 seeds (26 of them alignment bins this reader cannot place, which are for the simulation to decide)
+  UNPROVEN gen_cmp_zca_cg.cr_insn_align.c_addi16sp_half: placed at 38 of 40 seeds by a reader that skips any instance whose address the assembler may move
+  UNPROVEN gen_cmp_zca_cg.cr_insn_align.c_addi16sp_word: placed at 34 of 40 seeds by a reader that skips any instance whose address the assembler may move
+  UNPROVEN gen_cmp_zca_cg.cr_insn_align.c_addi4spn_half: placed at 35 of 40 seeds by a reader that skips any instance whose address the assembler may move
+  UNPROVEN gen_cmp_zca_cg.cr_insn_align.c_addi4spn_word: placed at 36 of 40 seeds by a reader that skips any instance whose address the assembler may move
+  UNPROVEN gen_cmp_zca_cg.cr_insn_align.c_and_half: placed at 30 of 40 seeds by a reader that skips any instance whose address the assembler may move
+  UNPROVEN gen_cmp_zca_cg.cr_insn_align.c_and_word: placed at 33 of 40 seeds by a reader that skips any instance whose address the assembler may move
+  UNPROVEN gen_cmp_zca_cg.cr_insn_align.c_andi_half: placed at 29 of 40 seeds by a reader that skips any instance whose address the assembler may move
+  UNPROVEN gen_cmp_zca_cg.cr_insn_align.c_andi_word: placed at 37 of 40 seeds by a reader that skips any instance whose address the assembler may move
+  UNPROVEN gen_cmp_zca_cg.cr_insn_align.c_lw_half: placed at 35 of 40 seeds by a reader that skips any instance whose address the assembler may move
+  UNPROVEN gen_cmp_zca_cg.cr_insn_align.c_lw_word: placed at 33 of 40 seeds by a reader that skips any instance whose address the assembler may move
+  UNPROVEN gen_cmp_zca_cg.cr_insn_align.c_lwsp_half: placed at 29 of 40 seeds by a reader that skips any instance whose address the assembler may move
+  UNPROVEN gen_cmp_zca_cg.cr_insn_align.c_lwsp_word: placed at 31 of 40 seeds by a reader that skips any instance whose address the assembler may move
+  UNPROVEN gen_cmp_zca_cg.cr_insn_align.c_or_half: placed at 28 of 40 seeds by a reader that skips any instance whose address the assembler may move
+  UNPROVEN gen_cmp_zca_cg.cr_insn_align.c_or_word: placed at 32 of 40 seeds by a reader that skips any instance whose address the assembler may move
+  UNPROVEN gen_cmp_zca_cg.cr_insn_align.c_srai_half: placed at 35 of 40 seeds by a reader that skips any instance whose address the assembler may move
+  UNPROVEN gen_cmp_zca_cg.cr_insn_align.c_srai_word: placed at 35 of 40 seeds by a reader that skips any instance whose address the assembler may move
+  UNPROVEN gen_cmp_zca_cg.cr_insn_align.c_srli_half: placed at 34 of 40 seeds by a reader that skips any instance whose address the assembler may move
+  UNPROVEN gen_cmp_zca_cg.cr_insn_align.c_srli_word: placed at 35 of 40 seeds by a reader that skips any instance whose address the assembler may move
+  UNPROVEN gen_cmp_zca_cg.cr_insn_align.c_sub_half: placed at 30 of 40 seeds by a reader that skips any instance whose address the assembler may move
+  UNPROVEN gen_cmp_zca_cg.cr_insn_align.c_sub_word: placed at 36 of 40 seeds by a reader that skips any instance whose address the assembler may move
+  UNPROVEN gen_cmp_zca_cg.cr_insn_align.c_sw_half: placed at 33 of 40 seeds by a reader that skips any instance whose address the assembler may move
+  UNPROVEN gen_cmp_zca_cg.cr_insn_align.c_sw_word: placed at 35 of 40 seeds by a reader that skips any instance whose address the assembler may move
+  UNPROVEN gen_cmp_zca_cg.cr_insn_align.c_swsp_half: placed at 25 of 40 seeds by a reader that skips any instance whose address the assembler may move
+  UNPROVEN gen_cmp_zca_cg.cr_insn_align.c_swsp_word: placed at 29 of 40 seeds by a reader that skips any instance whose address the assembler may move
+  UNPROVEN gen_cmp_zca_cg.cr_insn_align.c_xor_half: placed at 36 of 40 seeds by a reader that skips any instance whose address the assembler may move
+  UNPROVEN gen_cmp_zca_cg.cr_insn_align.c_xor_word: placed at 29 of 40 seeds by a reader that skips any instance whose address the assembler may move
+
+RED: 56 failure(s)
+  gen_bit_sbit_cg.cp_binv_twice.yes: shape at 1 of 40 seeds (control ('sbit_records',) at 40 seeds)
+  gen_bit_zba_zbb_ops_cg.cr_op_eq.pack_yes: shape at 2 of 40 seeds (control ('emitted', 'pack') at 40 seeds)
+  gen_bit_zba_zbb_ops_cg.cr_op_eq.packh_yes: shape at 1 of 40 seeds (control ('emitted', 'packh') at 40 seeds)
+  gen_bit_zba_zbb_ops_cg.cr_op_eq.packu_yes: shape at 1 of 40 seeds (control ('emitted', 'packu') at 40 seeds)
+  gen_bit_zba_zbb_ops_cg.cr_op_rd_x0.pack_no: shape at 0 of 40 seeds (control ('emitted', 'pack') at 40 seeds)
+  gen_bit_zba_zbb_ops_cg.cr_op_rd_x0.packh_no: shape at 0 of 40 seeds (control ('emitted', 'packh') at 40 seeds)
+  gen_bit_zba_zbb_ops_cg.cr_op_rd_x0.packu_no: shape at 0 of 40 seeds (control ('emitted', 'packu') at 40 seeds)
+  gen_bit_zba_zbb_ops_cg.cr_op_same.andn_all_same: shape at 0 of 40 seeds (control ('emitted', 'andn') at 40 seeds)
+  gen_bit_zba_zbb_ops_cg.cr_op_same.andn_rs1_eq_rs2: shape at 0 of 40 seeds (control ('emitted', 'andn') at 40 seeds)
+  gen_bit_zba_zbb_ops_cg.cr_op_same.max_all_same: shape at 1 of 40 seeds (control ('emitted', 'max') at 40 seeds)
+  gen_bit_zba_zbb_ops_cg.cr_op_same.min_all_same: shape at 0 of 40 seeds (control ('emitted', 'min') at 40 seeds)
+  gen_bit_zba_zbb_ops_cg.cr_op_same.minu_all_same: shape at 1 of 40 seeds (control ('emitted', 'minu') at 40 seeds)
+  gen_bit_zba_zbb_ops_cg.cr_op_same.orn_all_same: shape at 0 of 40 seeds (control ('emitted', 'orn') at 40 seeds)
+  gen_bit_zba_zbb_ops_cg.cr_op_same.pack_all_same: shape at 0 of 40 seeds (control ('emitted', 'pack') at 40 seeds)
+  gen_bit_zba_zbb_ops_cg.cr_op_same.pack_rs1_eq_rs2: shape at 0 of 40 seeds (control ('emitted', 'pack') at 40 seeds)
+  gen_bit_zba_zbb_ops_cg.cr_op_same.packh_all_same: shape at 0 of 40 seeds (control ('emitted', 'packh') at 40 seeds)
+  gen_bit_zba_zbb_ops_cg.cr_op_same.packh_rs1_eq_rs2: shape at 0 of 40 seeds (control ('emitted', 'packh') at 40 seeds)
+  gen_bit_zba_zbb_ops_cg.cr_op_same.packu_all_same: shape at 0 of 40 seeds (control ('emitted', 'packu') at 40 seeds)
+  gen_bit_zba_zbb_ops_cg.cr_op_same.packu_rs1_eq_rs2: shape at 0 of 40 seeds (control ('emitted', 'packu') at 40 seeds)
+  gen_bit_zba_zbb_ops_cg.cr_op_same.sh1add_all_same: shape at 1 of 40 seeds (control ('emitted', 'sh1add') at 40 seeds)
+  gen_bit_zba_zbb_ops_cg.cr_op_same.sh2add_all_same: shape at 2 of 40 seeds (control ('emitted', 'sh2add') at 40 seeds)
+  gen_bit_zba_zbb_ops_cg.cr_op_same.sh3add_all_same: shape at 5 of 40 seeds (control ('emitted', 'sh3add') at 40 seeds)
+  gen_bit_zba_zbb_ops_cg.cr_op_same.xnor_all_same: shape at 0 of 40 seeds (control ('emitted', 'xnor') at 40 seeds)
+  gen_bit_zba_zbb_ops_cg.cr_op_same.xnor_rs1_eq_rs2: shape at 8 of 40 seeds (control ('emitted', 'xnor') at 40 seeds)
+  DECLARED gen_bit_zba_zbb_ops_cg.cr_op_eq.pack_no: produced at 38 of 40 seeds; this bin is required, not optional
+  DECLARED gen_bit_zba_zbb_ops_cg.cr_op_eq.packh_no: produced at 39 of 40 seeds; this bin is required, not optional
+  DECLARED gen_bit_zba_zbb_ops_cg.cr_op_eq.packu_no: produced at 39 of 40 seeds; this bin is required, not optional
+  DECLARED gen_bit_zba_zbb_ops_cg.cr_op_same.max_rs1_eq_rs2: produced at 39 of 40 seeds; this bin is required, not optional
+  DECLARED gen_bit_zba_zbb_ops_cg.cr_op_same.minu_rs1_eq_rs2: produced at 39 of 40 seeds; this bin is required, not optional
+  DECLARED gen_bit_zba_zbb_ops_cg.cr_op_same.sh1add_rs1_eq_rs2: produced at 39 of 40 seeds; this bin is required, not optional
+  DECLARED gen_bit_zba_zbb_ops_cg.cr_op_same.sh2add_rs1_eq_rs2: produced at 39 of 40 seeds; this bin is required, not optional
+  DECLARED gen_bit_zba_zbb_ops_cg.cr_op_same.sh3add_rs1_eq_rs2: produced at 35 of 40 seeds; this bin is required, not optional
+  gen_cmp_zca_cg.cr_insn_align.c_jalr_half: shape at 0 of 40 seeds (control ('align', 'c.jr', 'half') at 40 seeds)
+  gen_cmp_zca_cg.cr_insn_next.c_add_n16: shape at 0 of 40 seeds (control ('emitted', 'c.add') at 40 seeds)
+  gen_cmp_zca_cg.cr_insn_next.c_addi4spn_n16: shape at 0 of 40 seeds (control ('emitted', 'c.addi4spn') at 40 seeds)
+  gen_cmp_zca_cg.cr_insn_next.c_and_n16: shape at 0 of 40 seeds (control ('emitted', 'c.and') at 40 seeds)
+  gen_cmp_zca_cg.cr_insn_next.c_andi_n16: shape at 0 of 40 seeds (control ('emitted', 'c.andi') at 40 seeds)
+  gen_cmp_zca_cg.cr_insn_next.c_beqz_n16: shape at 0 of 40 seeds (control ('emitted', 'c.beqz') at 40 seeds)
+  gen_cmp_zca_cg.cr_insn_next.c_bnez_n16: shape at 0 of 40 seeds (control ('emitted', 'c.bnez') at 40 seeds)
+  gen_cmp_zca_cg.cr_insn_next.c_jal_n16: shape at 0 of 40 seeds (control ('emitted', 'c.jal') at 40 seeds)
+  gen_cmp_zca_cg.cr_insn_next.c_jalr_n16: shape at 0 of 40 seeds (control ('emitted', 'c.jalr') at 40 seeds)
+  gen_cmp_zca_cg.cr_insn_next.c_jr_n16: shape at 0 of 40 seeds (control ('emitted', 'c.jr') at 40 seeds)
+  gen_cmp_zca_cg.cr_insn_next.c_lui_n16: shape at 0 of 40 seeds (control ('emitted', 'c.lui') at 40 seeds)
+  gen_cmp_zca_cg.cr_insn_next.c_lw_n16: shape at 0 of 40 seeds (control ('emitted', 'c.lw') at 40 seeds)
+  gen_cmp_zca_cg.cr_insn_next.c_lwsp_n16: shape at 0 of 40 seeds (control ('emitted', 'c.lwsp') at 40 seeds)
+  gen_cmp_zca_cg.cr_insn_next.c_mv_n16: shape at 0 of 40 seeds (control ('emitted', 'c.mv') at 40 seeds)
+  gen_cmp_zca_cg.cr_insn_next.c_or_n16: shape at 0 of 40 seeds (control ('emitted', 'c.or') at 40 seeds)
+  gen_cmp_zca_cg.cr_insn_next.c_srai_n16: shape at 0 of 40 seeds (control ('emitted', 'c.srai') at 40 seeds)
+  gen_cmp_zca_cg.cr_insn_next.c_srli_n16: shape at 0 of 40 seeds (control ('emitted', 'c.srli') at 40 seeds)
+  gen_cmp_zca_cg.cr_insn_next.c_sub_n16: shape at 0 of 40 seeds (control ('emitted', 'c.sub') at 40 seeds)
+  gen_cmp_zca_cg.cr_insn_next.c_sw_n16: shape at 0 of 40 seeds (control ('emitted', 'c.sw') at 40 seeds)
+  gen_cmp_zca_cg.cr_insn_next.c_swsp_n16: shape at 0 of 40 seeds (control ('emitted', 'c.swsp') at 40 seeds)
+  gen_cmp_zca_cg.cr_insn_next.c_xor_n16: shape at 0 of 40 seeds (control ('emitted', 'c.xor') at 40 seeds)
+  DECLARED gen_cmp_zca_cg.cr_insn_next.c_addi_n16: produced at 37 of 40 seeds; this bin is required, not optional
+  DECLARED gen_cmp_zca_cg.cr_insn_next.c_j_n16: produced at 6 of 40 seeds; this bin is required, not optional
+  DECLARED gen_cmp_zca_cg.cr_insn_next.c_slli_n16: produced at 39 of 40 seeds; this bin is required, not optional
+
+================================================================================================
+THE GREEN RUN, in full
+================================================================================================
+root: /localdev/fzhang/ws/ibex-challenge
+== gen_test_bit_ratified: 24 stimulus-class bins declared, 40 seeds ==
+  OK    gen_bit_sbit_cg.cp_binv_twice.yes                          seeds 40/40  emissions    40  control 40/40
+  OK    gen_bit_zba_zbb_ops_cg.cr_op_eq.pack_yes                   seeds 40/40  emissions   125  control 40/40
+  OK    gen_bit_zba_zbb_ops_cg.cr_op_eq.packh_yes                  seeds 40/40  emissions   128  control 40/40
+  OK    gen_bit_zba_zbb_ops_cg.cr_op_eq.packu_yes                  seeds 40/40  emissions   122  control 40/40
+  OK    gen_bit_zba_zbb_ops_cg.cr_op_rd_x0.pack_no                 seeds 40/40  emissions   519  control 40/40
+  OK    gen_bit_zba_zbb_ops_cg.cr_op_rd_x0.packh_no                seeds 40/40  emissions   518  control 40/40
+  OK    gen_bit_zba_zbb_ops_cg.cr_op_rd_x0.packu_no                seeds 40/40  emissions   514  control 40/40
+  OK    gen_bit_zba_zbb_ops_cg.cr_op_same.andn_all_same            seeds 40/40  emissions    40  control 40/40
+  OK    gen_bit_zba_zbb_ops_cg.cr_op_same.andn_rs1_eq_rs2          seeds 40/40  emissions    42  control 40/40
+  OK    gen_bit_zba_zbb_ops_cg.cr_op_same.max_all_same             seeds 40/40  emissions    40  control 40/40
+  OK    gen_bit_zba_zbb_ops_cg.cr_op_same.min_all_same             seeds 40/40  emissions    40  control 40/40
+  OK    gen_bit_zba_zbb_ops_cg.cr_op_same.minu_all_same            seeds 40/40  emissions    40  control 40/40
+  OK    gen_bit_zba_zbb_ops_cg.cr_op_same.orn_all_same             seeds 40/40  emissions    40  control 40/40
+  OK    gen_bit_zba_zbb_ops_cg.cr_op_same.pack_all_same            seeds 40/40  emissions    40  control 40/40
+  OK    gen_bit_zba_zbb_ops_cg.cr_op_same.pack_rs1_eq_rs2          seeds 40/40  emissions    42  control 40/40
+  OK    gen_bit_zba_zbb_ops_cg.cr_op_same.packh_all_same           seeds 40/40  emissions    40  control 40/40
+  OK    gen_bit_zba_zbb_ops_cg.cr_op_same.packh_rs1_eq_rs2         seeds 40/40  emissions    45  control 40/40
+  OK    gen_bit_zba_zbb_ops_cg.cr_op_same.packu_all_same           seeds 40/40  emissions    40  control 40/40
+  OK    gen_bit_zba_zbb_ops_cg.cr_op_same.packu_rs1_eq_rs2         seeds 40/40  emissions    41  control 40/40
+  OK    gen_bit_zba_zbb_ops_cg.cr_op_same.sh1add_all_same          seeds 40/40  emissions    40  control 40/40
+  OK    gen_bit_zba_zbb_ops_cg.cr_op_same.sh2add_all_same          seeds 40/40  emissions    40  control 40/40
+  OK    gen_bit_zba_zbb_ops_cg.cr_op_same.sh3add_all_same          seeds 40/40  emissions    40  control 40/40
+  OK    gen_bit_zba_zbb_ops_cg.cr_op_same.xnor_all_same            seeds 40/40  emissions    40  control 40/40
+  OK    gen_bit_zba_zbb_ops_cg.cr_op_same.xnor_rs1_eq_rs2          seeds 40/40  emissions    46  control 40/40
+  declared bins: 74 of 617 modelled here, 0 below 40 seeds (0 of them alignment bins this reader cannot place, which are for the simulation to decide)
+== gen_test_cmp_zca: 22 stimulus-class bins declared, 40 seeds ==
+  SKIP  gen_cmp_imm_edges_cg.cp_cj_off.self                        not measurable here
+  OK    gen_cmp_zca_cg.cr_insn_align.c_jalr_half                   seeds 40/40  emissions    40  control 40/40
+  OK    gen_cmp_zca_cg.cr_insn_next.c_add_n16                      seeds 40/40  emissions   120  control 40/40
+  OK    gen_cmp_zca_cg.cr_insn_next.c_addi4spn_n16                 seeds 40/40  emissions    40  control 40/40
+  OK    gen_cmp_zca_cg.cr_insn_next.c_and_n16                      seeds 40/40  emissions   120  control 40/40
+  OK    gen_cmp_zca_cg.cr_insn_next.c_andi_n16                     seeds 40/40  emissions   120  control 40/40
+  OK    gen_cmp_zca_cg.cr_insn_next.c_beqz_n16                     seeds 40/40  emissions    40  control 40/40
+  OK    gen_cmp_zca_cg.cr_insn_next.c_bnez_n16                     seeds 40/40  emissions    40  control 40/40
+  OK    gen_cmp_zca_cg.cr_insn_next.c_jal_n16                      seeds 40/40  emissions    40  control 40/40
+  OK    gen_cmp_zca_cg.cr_insn_next.c_jalr_n16                     seeds 40/40  emissions    40  control 40/40
+  OK    gen_cmp_zca_cg.cr_insn_next.c_jr_n16                       seeds 40/40  emissions    40  control 40/40
+  OK    gen_cmp_zca_cg.cr_insn_next.c_lui_n16                      seeds 40/40  emissions   120  control 40/40
+  OK    gen_cmp_zca_cg.cr_insn_next.c_lw_n16                       seeds 40/40  emissions    40  control 40/40
+  OK    gen_cmp_zca_cg.cr_insn_next.c_lwsp_n16                     seeds 40/40  emissions   111  control 40/40
+  OK    gen_cmp_zca_cg.cr_insn_next.c_mv_n16                       seeds 40/40  emissions   120  control 40/40
+  OK    gen_cmp_zca_cg.cr_insn_next.c_or_n16                       seeds 40/40  emissions   120  control 40/40
+  OK    gen_cmp_zca_cg.cr_insn_next.c_srai_n16                     seeds 40/40  emissions   120  control 40/40
+  OK    gen_cmp_zca_cg.cr_insn_next.c_srli_n16                     seeds 40/40  emissions   120  control 40/40
+  OK    gen_cmp_zca_cg.cr_insn_next.c_sub_n16                      seeds 40/40  emissions   120  control 40/40
+  OK    gen_cmp_zca_cg.cr_insn_next.c_sw_n16                       seeds 40/40  emissions    40  control 40/40
+  OK    gen_cmp_zca_cg.cr_insn_next.c_swsp_n16                     seeds 40/40  emissions   122  control 40/40
+  OK    gen_cmp_zca_cg.cr_insn_next.c_xor_n16                      seeds 40/40  emissions   120  control 40/40
+  CTRL  n32 successor kept for c.add                               seeds 40/40
+  CTRL  n32 successor kept for c.addi4spn                          seeds 40/40
+  CTRL  n32 successor kept for c.and                               seeds 40/40
+  CTRL  n32 successor kept for c.andi                              seeds 40/40
+  CTRL  n32 successor kept for c.beqz                              seeds 40/40
+  CTRL  n32 successor kept for c.bnez                              seeds 40/40
+  CTRL  n32 successor kept for c.jal                               seeds 40/40
+  CTRL  n32 successor kept for c.jalr                              seeds 40/40
+  CTRL  n32 successor kept for c.jr                                seeds 40/40
+  CTRL  n32 successor kept for c.lui                               seeds 40/40
+  CTRL  n32 successor kept for c.lw                                seeds 40/40
+  CTRL  n32 successor kept for c.lwsp                              seeds 40/40
+  CTRL  n32 successor kept for c.mv                                seeds 40/40
+  CTRL  n32 successor kept for c.or                                seeds 40/40
+  CTRL  n32 successor kept for c.srai                              seeds 40/40
+  CTRL  n32 successor kept for c.srli                              seeds 40/40
+  CTRL  n32 successor kept for c.sub                               seeds 40/40
+  CTRL  n32 successor kept for c.sw                                seeds 40/40
+  CTRL  n32 successor kept for c.swsp                              seeds 40/40
+  CTRL  n32 successor kept for c.xor                               seeds 40/40
+  declared bins: 83 of 300 modelled here, 12 below 40 seeds (12 of them alignment bins this reader cannot place, which are for the simulation to decide)
+  UNPROVEN gen_cmp_zca_cg.cr_insn_align.c_addi16sp_half: placed at 35 of 40 seeds by a reader that skips any instance whose address the assembler may move
+  UNPROVEN gen_cmp_zca_cg.cr_insn_align.c_addi16sp_word: placed at 39 of 40 seeds by a reader that skips any instance whose address the assembler may move
+  UNPROVEN gen_cmp_zca_cg.cr_insn_align.c_addi4spn_half: placed at 35 of 40 seeds by a reader that skips any instance whose address the assembler may move
+  UNPROVEN gen_cmp_zca_cg.cr_insn_align.c_addi4spn_word: placed at 35 of 40 seeds by a reader that skips any instance whose address the assembler may move
+  UNPROVEN gen_cmp_zca_cg.cr_insn_align.c_lw_half: placed at 33 of 40 seeds by a reader that skips any instance whose address the assembler may move
+  UNPROVEN gen_cmp_zca_cg.cr_insn_align.c_lw_word: placed at 37 of 40 seeds by a reader that skips any instance whose address the assembler may move
+  UNPROVEN gen_cmp_zca_cg.cr_insn_align.c_lwsp_half: placed at 33 of 40 seeds by a reader that skips any instance whose address the assembler may move
+  UNPROVEN gen_cmp_zca_cg.cr_insn_align.c_lwsp_word: placed at 35 of 40 seeds by a reader that skips any instance whose address the assembler may move
+  UNPROVEN gen_cmp_zca_cg.cr_insn_align.c_sw_half: placed at 37 of 40 seeds by a reader that skips any instance whose address the assembler may move
+  UNPROVEN gen_cmp_zca_cg.cr_insn_align.c_sw_word: placed at 34 of 40 seeds by a reader that skips any instance whose address the assembler may move
+  UNPROVEN gen_cmp_zca_cg.cr_insn_align.c_swsp_half: placed at 34 of 40 seeds by a reader that skips any instance whose address the assembler may move
+  UNPROVEN gen_cmp_zca_cg.cr_insn_align.c_swsp_word: placed at 38 of 40 seeds by a reader that skips any instance whose address the assembler may move
+
+GREEN: every declared stimulus shape is produced at every seed, controls live
+
+================================================================================================
+THE CHECKER, in full
+================================================================================================
+"""Assert that the generators produce every shape the committed manifests declare as a stimulus gap.
+
+This is the green half of the generator fixes and carries its own red. Three disciplines:
+
+  * The targets are DERIVED from the manifests' `# not_hit <bin>: stimulus:` lines, not typed here,
+    so a bin nobody mapped to a shape fails the run instead of passing silently.
+  * A target must appear at EVERY seed, which is the same bar a bin must clear to leave a manifest;
+    a shape at 39 of 40 seeds is a seed-dependent bin, not a closed one.
+  * Every target family carries a control that must stay non-zero: an op that stopped being
+    emitted, or a 32-bit successor an additive change took away, is a red here, not a quiet pass.
+
+Shapes are read from the plan's own Op records and the emitted text, and each classifier is the
+one the coverage uses (gen_fcov_pkg.sv bit_same, the sbit twice tracker, the CJ/next-length rules).
+
+Usage: python3 gen_shape_check.py --root <clone or archive root> [--seeds 40]
+Exit 0 when every target and control passes, 1 otherwise.
+"""
+import argparse
+import collections
+import importlib
+import os
+import re
+import sys
+
+BIT_MOD = "dv.auto_dv.tests.gen_programs.gen_bit_ratified_prog"
+ZCA_MOD = "dv.auto_dv.tests.gen_programs.gen_cmp_zca_prog"
+BIT_MANIFEST = "dv/auto_dv/fcov_expectations/gen_test_bit_ratified.fcov.yaml"
+ZCA_MANIFEST = "dv/auto_dv/fcov_expectations/gen_test_cmp_zca.fcov.yaml"
+
+# Bins whose shape no model-level reading can settle, each with the reason it is not measured here.
+# They are named rather than skipped: an unlisted unmapped bin is a failure.
+UNMEASURABLE = {
+    "gen_cmp_imm_edges_cg.cp_cj_off.self":
+        "this entry's programs emit no compressed jump whose target is itself; the shape is the "
+        "park-here idiom a test ends with, hit 398 times in the round-1 merged report, so the bin "
+        "is credited from the merge and the statement here is entry-scoped, not a reachability "
+        "claim",
+}
+
+SBIT_KINDS = ("bclr", "bset", "binv", "bext", "bclri", "bseti", "binvi", "bexti")
+BINV_KINDS = ("binv", "binvi")
+IMM_SBIT = ("bclri", "bseti", "binvi", "bexti")
+
+# gen_fcov_pkg.sv:402-406 bit_same, the classifier the coverage itself uses
+def same_regs_class(rd, rs1, rs2):
+    if rs1 == rs2 and rs2 == rd and rd != 0:
+        return "all_same"
+    if rs1 == rs2 and rs1 != rd:
+        return "rs1_eq_rs2"
+    return "distinct"
+
+
+RVC_Q1 = {0b001: "c.jal", 0b101: "c.j", 0b110: "c.beqz", 0b111: "c.bnez"}
+
+
+def decode_c(word):
+    """The Q1 control transfers by funct3, which the generator emits as raw half-words."""
+    if word & 3 != 1:
+        return None
+    return RVC_Q1.get((word >> 13) & 7)
+
+
+def raw_form(tok):
+    if not tok.startswith(".2byte"):
+        return None
+    try:
+        return decode_c(int(tok.split(None, 1)[1].strip().rstrip(","), 0) & 0xFFFF)
+    except (ValueError, IndexError):
+        return None
+
+
+def read_manifest_targets(path):
+    """The stimulus-class not_hit bins of one manifest, in file order."""
+    out = []
+    with open(path) as fh:
+        for line in fh:
+            m = re.match(r"# not_hit (\S+): (\w[\w -]*?): ", line)
+            if m and m.group(2) == "stimulus":
+                out.append(m.group(1))
+    return out
+
+
+def read_manifest_declared(path):
+    """The bins the manifest DECLARES hit: the entry fails a run that misses any of them."""
+    import yaml
+    return list(yaml.safe_load(open(path))["bins"])
+
+
+def check_declared(label, declared, per_seed, shape_of, seeds):
+    """Every declared bin this model can read must still be produced at every seed.
+
+    An additive generator change can take a declared bin away (the pack family's x0 path is the
+    example: adding a normal path changes how often the x0 path is drawn), and that is a regression
+    the run would only find after the farm slot is spent.
+    """
+    fails, unproven, modelled = [], [], 0
+    for binname in declared:
+        keys = shape_of(binname)
+        if keys is None:
+            continue
+        modelled += 1
+        shape, _ = keys
+        hit = sum(1 for s in per_seed if s[shape])
+        if hit == seeds:
+            continue
+        if shape[0] == "align":
+            # an alignment shortfall means this reader could not PLACE an instance, since it counts
+            # only addresses it can prove; the simulation decides these, not the model
+            unproven.append("UNPROVEN %s: placed at %d of %d seeds by a reader that skips any "
+                            "instance whose address the assembler may move" % (binname, hit, seeds))
+        else:
+            fails.append("DECLARED %s: produced at %d of %d seeds; this bin is required, not optional"
+                         % (binname, hit, seeds))
+    print("  declared bins: %d of %d modelled here, %d below %d seeds (%d of them alignment bins "
+          "this reader cannot place, which are for the simulation to decide)"
+          % (modelled, len(declared), len(fails) + len(unproven), seeds, len(unproven)))
+    for u in unproven:
+        print("  " + u)
+    return fails
+
+
+def load(root, mod):
+    for name in list(sys.modules):
+        if name.startswith("dv.auto_dv"):
+            del sys.modules[name]
+    sys.path.insert(0, root)
+    try:
+        return importlib.import_module(mod)
+    finally:
+        sys.path.remove(root)
+
+
+def norm_kind(m, kind):
+    """The mnemonic the coverage sees: the x0 probe path and the compressed forms share a bin."""
+    if kind.startswith("x0_"):
+        kind = kind[3:]
+    kind = m.C_BASE.get(kind, kind)
+    return kind.replace(".", "_")
+
+
+def measure_bit(m, seeds):
+    """Per seed, the shapes present in the bit_ratified plan."""
+    per_seed = []
+    for seed in range(seeds):
+        shapes = collections.Counter()
+        prev_binv = None
+        for op in m.plan(seed).ops:
+            tok = norm_kind(m, op.kind)
+            shapes[("emitted", tok)] += 1
+            shapes[("same", tok, same_regs_class(op.rd, op.rs1, op.rs2))] += 1
+            if op.rs1_val == op.rs2_val:
+                shapes[("eq", tok, "yes")] += 1
+            else:
+                shapes[("eq", tok, "no")] += 1
+            shapes[("rd_x0", tok, "yes" if op.rd == 0 else "no")] += 1
+            base = op.kind[3:] if op.kind.startswith("x0_") else op.kind
+            if base in SBIT_KINDS:
+                idx = (op.imm & 31) if base in IMM_SBIT else (op.rs2_val & 31)
+                shapes[("sbit_records",)] += 1
+                if (prev_binv is not None and base in BINV_KINDS
+                        and prev_binv == (op.rd, idx)):
+                    shapes[("binv_twice",)] += 1
+                prev_binv = (op.rd, idx) if base in BINV_KINDS else None
+        per_seed.append(shapes)
+    return per_seed
+
+
+def zca_tokens(m, seed):
+    """The emitted instruction stream as (form, length_class, addr_mod_4) triples.
+
+    Alignment comes from the generator's OWN size model (line_size) walked from each .balign 4,
+    which is what Builder.region anchors its offsets on. It is EXACT only while every line since
+    the anchor has a size the assembler cannot change: a plain mnemonic inside an .option rvc
+    region may be compressed to two bytes, so the walk stops trusting itself there and reports no
+    alignment until the next anchor. Validated against built images in the retained log.
+
+    length_class is "16" for an explicit compressed mnemonic or raw half-word, "32" outside an
+    .option rvc region, and "16?" for a plain mnemonic inside one, where the assembler decides.
+    An uncertain successor never satisfies a target.
+    """
+    toks = []
+    rvc = False
+    off = 0
+    exact = True
+    for line in m.emit(m.plan(seed)).splitlines():
+        s = line.split("#")[0].strip()
+        if s.startswith((".balign", ".align")):
+            off = (off + 3) & ~3          # every anchor in this generator is 4-byte
+            exact = True
+            continue
+        if not s or s.endswith(":") or s.startswith((".globl", ".section", ".include")):
+            continue
+        if s.startswith(".option"):
+            rvc = s.endswith("rvc") and not s.endswith("norvc")
+            continue
+        here = off
+        off += m.line_size(s)
+        if s.startswith("."):
+            form = raw_form(s)
+            toks.append((form, "16" if form or s.startswith(".2byte") else None, here % 4))
+            continue
+        mn = s.split()[0]
+        if mn.startswith("c."):
+            toks.append((mn, "16", here % 4 if exact else None))
+        else:
+            toks.append((None, "16?" if rvc else "32", here % 4 if exact else None))
+            if rvc:
+                exact = False   # the assembler decides this line's size, so offsets stop being exact
+    return toks
+
+
+def measure_zca(m, seeds):
+    per_seed = []
+    for seed in range(seeds):
+        shapes = collections.Counter()
+        toks = zca_tokens(m, seed)
+        for form, _, amod in toks:
+            if form is not None and amod is not None:
+                shapes[("align", form, "half" if amod == 2 else "word")] += 1
+        for (form, _, _), (_, nlen, _) in zip(toks, toks[1:]):
+            if form is None:
+                continue
+            shapes[("emitted", form)] += 1
+            if nlen is not None:
+                shapes[("next", form, nlen)] += 1
+        per_seed.append(shapes)
+    return per_seed
+
+
+def bit_shape_of(binname):
+    """The shape key and its control key for one bit_ratified bin, or None if unmapped."""
+    if binname == "gen_bit_sbit_cg.cp_binv_twice.yes":
+        return ("binv_twice",), ("sbit_records",)
+    m = re.match(r"gen_bit_zba_zbb_ops_cg\.cr_op_(same|eq|rd_x0)\.(.+)$", binname)
+    if not m:
+        return None
+    cross, leg = m.group(1), m.group(2)
+    if cross == "same":
+        for cls in ("all_same", "rs1_eq_rs2", "distinct"):
+            if leg.endswith("_" + cls):
+                tok = leg[: -len(cls) - 1]
+                return ("same", tok, cls), ("emitted", tok)
+        return None
+    tok, _, val = leg.rpartition("_")
+    if cross == "eq" and val in ("yes", "no"):
+        return ("eq", tok, val), ("emitted", tok)
+    if cross == "rd_x0" and val in ("yes", "no"):
+        return ("rd_x0", tok, val), ("emitted", tok)
+    return None
+
+
+def zca_shape_of(binname):
+    m = re.match(r"gen_cmp_zca_cg\.cr_insn_next\.(.+)_n(16|32)$", binname)
+    if m:
+        form = m.group(1).replace("_", ".", 1)
+        return ("next", form, m.group(2)), ("emitted", form)
+    m = re.match(r"gen_cmp_zca_cg\.cr_insn_align\.(.+)_(half|word)$", binname)
+    if m:
+        # the control is the OTHER alignment of a form the coverage already reports as hit, so a
+        # zero here cannot be a broken offset model
+        form = m.group(1).replace("_", ".", 1)
+        return ("align", form, m.group(2)), ("align", "c.jr", "half")
+    return None
+
+
+def check(label, targets, per_seed, shape_of, extra_controls, seeds):
+    """Report one module; return the list of failure lines."""
+    fails = []
+    print("== %s: %d stimulus-class bins declared, %d seeds ==" % (label, len(targets), seeds))
+    for binname in targets:
+        if binname in UNMEASURABLE:
+            print("  SKIP  %-58s %s" % (binname, "not measurable here"))
+            continue
+        keys = shape_of(binname)
+        if keys is None:
+            fails.append("UNMAPPED %s: no shape rule and not in UNMEASURABLE" % binname)
+            print("  UNMAP %s" % binname)
+            continue
+        shape, control = keys
+        hit = sum(1 for s in per_seed if s[shape])
+        ctrl = sum(1 for s in per_seed if s[control])
+        total = sum(s[shape] for s in per_seed)
+        status = "OK  " if hit == seeds else "MISS"
+        if hit != seeds:
+            fails.append("%s: shape at %d of %d seeds (control %s at %d seeds)"
+                         % (binname, hit, seeds, control, ctrl))
+        if ctrl != seeds:
+            fails.append("CONTROL %s: %s present at only %d of %d seeds, so a zero above is not "
+                         "attributable to the pairing" % (binname, control, ctrl, seeds))
+        print("  %s  %-58s seeds %2d/%d  emissions %5d  control %2d/%d"
+              % (status, binname, hit, seeds, total, ctrl, seeds))
+    for name, key in extra_controls:
+        hit = sum(1 for s in per_seed if s[key])
+        if hit != seeds:
+            fails.append("CONTROL %s: %s at %d of %d seeds" % (name, key, hit, seeds))
+        print("  CTRL  %-58s seeds %2d/%d" % (name, hit, seeds))
+    return fails
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--root", required=True, help="clone root or detached archive root")
+    ap.add_argument("--seeds", type=int, default=40)
+    args = ap.parse_args()
+    root = os.path.abspath(args.root)
+
+    bit_targets = read_manifest_targets(os.path.join(root, BIT_MANIFEST))
+    zca_targets = read_manifest_targets(os.path.join(root, ZCA_MANIFEST))
+    bit_declared = read_manifest_declared(os.path.join(root, BIT_MANIFEST))
+    zca_declared = read_manifest_declared(os.path.join(root, ZCA_MANIFEST))
+    print("root: %s" % root)
+
+    fails = []
+    m = load(root, BIT_MOD)
+    bit_seen = measure_bit(m, args.seeds)
+    fails += check("gen_test_bit_ratified", bit_targets, bit_seen, bit_shape_of, [], args.seeds)
+    fails += check_declared("gen_test_bit_ratified", bit_declared, bit_seen, bit_shape_of, args.seeds)
+    m = load(root, ZCA_MOD)
+    zca = measure_zca(m, args.seeds)
+    # the additive property: every form whose n16 leg is a target keeps a definite 32-bit successor
+    extra = [("n32 successor kept for " + b.split(".")[-1][:-4].replace("_", ".", 1),
+              ("next", b.split(".")[-1][:-4].replace("_", ".", 1), "32"))
+             for b in zca_targets if b.endswith("_n16")]
+    fails += check("gen_test_cmp_zca", zca_targets, zca, zca_shape_of, extra, args.seeds)
+    fails += check_declared("gen_test_cmp_zca", zca_declared, zca, zca_shape_of, args.seeds)
+
+    print("")
+    if fails:
+        print("RED: %d failure(s)" % len(fails))
+        for f in fails:
+            print("  " + f)
+        return 1
+    print("GREEN: every declared stimulus shape is produced at every seed, controls live")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

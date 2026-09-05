@@ -83,6 +83,12 @@ W4_SAME_REG = 8
 FILLER_TEMPLATES = ("addi x5, x5, {imm12}", "xori x6, x6, {imm12}", "slli x7, x7, {sh}", "add x5, x6, x7",
                     "sub x7, x5, x6", "lui x6, {imm20}", "andi x5, x5, {imm12}", "or x6, x6, x7", "nop")
 CA_OPS = ("c.sub", "c.xor", "c.or", "c.and")
+# Compressed forms the directed alignment block emits at both alignments: no memory operand and no
+# live register, since the destinations are the n16_ct unit's own two scratch registers.
+ALIGN_FORMS = ("c.nop", "c.li x{r}, 0", "c.mv x{r}, x{c}", "c.add x{r}, x{c}", "c.sub x{c}, x{c}",
+               "c.xor x{c}, x{c}", "c.or x{c}, x{c}", "c.and x{c}, x{c}", "c.andi x{c}, 1",
+               "c.srli x{c}, 1", "c.srai x{c}, 1", "c.slli x{r}, 1", "c.lui x{r}, 1",
+               "c.addi x{r}, 1")
 SHIFT_OPS = ("c.srli", "c.srai")
 BR_OPS = ("c.beqz", "c.bnez")
 BR_VALUE_CLASSES = ("zero", "nonzero", "int_min")
@@ -437,6 +443,7 @@ class Builder:
         rd, spv, imm = op.p["rd"], op.p["sp"], self.v(op, "imm")
         self.li(2, spv)
         self.c(f"  c.addi4spn x{rd}, sp, {imm}")
+        self.next16(op)
         self.rep(rd, I002, spv + imm, f"c.addi4spn x{rd} sp=0x{spv:08x} nzuimm={imm}")
         if op.p["twin"]:
             self.twin(f"addi x{{t}}, x2, {op.p['imm']}", None, self.twin_reg(rd), I002, spv + op.p["imm"], f"addi x2 + {op.p['imm']}")
@@ -449,6 +456,7 @@ class Builder:
             self.ln(f"  addi x{rs1}, x{rs1}, {base_s}")
         self.li(rs2, data)
         self.c(f"  c.sw x{rs2}, {uimm_s}(x{rs1})")
+        self.next16(op)   # the store's own successor, not the readback's
         ea = base_s + uimm_s
         self.mem_lw[ea:ea + 4] = (data & MASK32).to_bytes(4, "little")
         ea_i = op.p["base_s"] + op.p["uimm_s"]
@@ -457,6 +465,7 @@ class Builder:
             self.ln(f"  addi x{rs1b}, x{rs1b}, {base_l}")
         self.c(f"  c.lw x{rd}, {uimm_l}(x{rs1b})")
         word = int.from_bytes(self.mem_lw[ea_i:ea_i + 4], "little")
+        self.next16(op)
         self.rep(rd, I004, word, f"c.sw x{rs2},{op.p['uimm_s']}(x{rs1}) ea={ea_i} then c.lw x{rd},{uimm_l}(x{rs1b})")
         self.la(TMP, SCR_LW)
         self.ln(f"  lw x{ANC}, {ea_i}(x{TMP})")
@@ -486,12 +495,14 @@ class Builder:
                     val = sub["data"]
                     self.li(reg, val)
                 self.c(f"  c.swsp x{reg}, {uimm}(sp)")
+                self.next16(op)   # the store's own successor, not the readback's
                 self.mem_sp[base + uimm] = val
                 self.ln(f"  lw x{ANC}, {sub['uimm']}(sp)")
                 self.rep(ANC, I005, self.word_sp(w), f"lw readback after c.swsp x{reg},{sub['uimm']}(sp) ea={w}")
             else:
                 self.c(f"  c.lwsp x{reg}, {uimm}(sp)")
                 self.wrote(reg)
+                self.next16(op)
                 self.rep(reg, I005, self.word_sp(w), f"c.lwsp x{reg},{sub['uimm']}(sp) ea={w}")
 
     def word_sp(self, w):
@@ -524,9 +535,21 @@ class Builder:
             tw = f"{form[2:]} x{{t}}, x{{t}}, {i0}"
             tv = val
         self.wrote(rd)
+        self.next16(op)
         self.rep(rd, item, exp, f"{form} x{rd} imm={i0}" + (f" val=0x{val:08x}" if val is not None else ""))
         if op.p["twin"]:
             self.twin(tw, tv, self.twin_reg(rd), item, exp_t, f"{form} x{rd} 32-bit form")
+
+    def next16(self, op):
+        """Put a compressed instruction between a compressed op and its report store.
+
+        cp_next_len is the length of the NEXT RETIRED instruction. Every renderer here reports
+        straight after its compressed op, and rep() emits a 32-bit `sw`, which is why the n32 legs
+        of cr_insn_next are all hit and the n16 legs are not. This is opt-in per unit: making it
+        global would take the n32 legs away.
+        """
+        if op.p.get("next16"):
+            self.c("  c.nop")
 
     def r_ca(self, op):
         rd, rs2, a, b = op.p["rd"], op.p["rs2"], op.p["a"], op.p["b"]
@@ -538,6 +561,7 @@ class Builder:
         if op.p["twin"]:
             self.twin(f"{op.p['form'][2:]} x{{t}}, x{{t}}, x{rs2}", a, self.twin_reg(rd, rs2), I021, ca_result(op.p["form"], a, bb), f"{op.p['form']} 32-bit form")
         self.c(f"  {f} x{rd}, x{rs2}")
+        self.next16(op)
         self.rep(rd, I021, ca_result(f, a, bb), f"{op.p['form']} x{rd},x{rs2} 0x{a:08x},0x{bb:08x}")
 
     def r_mv_add(self, op):
@@ -566,6 +590,7 @@ class Builder:
             self.twins += 1
         self.c(f"  {form} x{rd}, x{rs2}")
         self.wrote(rd)
+        self.next16(op)
         self.rep(rd, item, exp, f"{form} x{rd},x{rs2} 0x{a:08x},0x{bb:08x}")
         if op.p["twin"]:
             self.rep(xt, item, exp, f"{form} 32-bit form")
@@ -809,6 +834,55 @@ class Builder:
         self.rep(tr, I032, self.trace_of([op.p["m_s"], op.p["m_r"]]), f"c.jalr x{rs1} call and c.jr x1 return path")
         self.end_region()
 
+    def r_n16_ct(self, op):
+        """The cr_insn_next n16 legs of the control transfers (CG-CMP gen_cmp_zca_cg).
+
+        Their retired successor is the TARGET when taken and the fall-through when not, so the
+        filler that serves the ordinary forms does nothing for them. Self-contained on purpose:
+        it owns its region and its labels, emits no report, and touches no other unit's offsets,
+        so the branch and link expectations elsewhere are untouched. Each branch is arranged NOT
+        taken, which puts its compressed fall-through in the retired stream; each jump falls into
+        a target whose first instruction is compressed.
+        """
+        cr, jr = op.p["creg"], op.p["jreg"]
+        self.region()
+        b1, b2 = self.label("n16b"), self.label("n16b")
+        l1, l2, l3, l4 = (self.label("n16j"), self.label("n16j"), self.label("n16j"),
+                          self.label("n16j"))
+        self.li(cr, 1)                 # non-zero, so c.beqz is not taken
+        self.ct("c.beqz", b1, cr)
+        self.c("  c.nop")              # the 16-bit successor of c.beqz
+        self.put_label(b1)
+        self.li(cr, 0)                 # zero, so c.bnez is not taken
+        self.ct("c.bnez", b2, cr)
+        self.c("  c.nop")              # the 16-bit successor of c.bnez
+        self.put_label(b2)
+        self.la(jr, l1)
+        self.c(f"  c.jr x{jr}")
+        self.put_label(l1)
+        self.c("  c.nop")              # the 16-bit successor of c.jr
+        self.la(jr, l2)
+        if self.off % 4 == 0:
+            self.c("  c.nop")          # the c.jalr retires half-word aligned (cr_insn_align)
+        self.c(f"  c.jalr x{jr}")
+        self.put_label(l2)
+        self.c("  c.nop")              # the 16-bit successor of c.jalr
+        self.ct("c.jal", l3)
+        self.put_label(l3)
+        self.c("  c.nop")              # the 16-bit successor of c.jal
+        self.ct("c.j", l4)
+        self.put_label(l4)
+        self.c("  c.nop")              # the 16-bit successor of c.j
+        # one instance of each safe form at BOTH alignments: the alignment legs are declared bins,
+        # and an instance whose address is left to the surrounding stream is a coincidence that
+        # holds at most seeds and fails at the rest
+        for form in ALIGN_FORMS:
+            for want in (0, 2):
+                if self.off % 4 != want:
+                    self.c("  c.nop")
+                self.c("  " + form.format(c=cr, r=jr))
+        self.end_region()
+
     def r_filler(self, op):
         if op.p["rvc"]:
             self.ln(".option rvc")
@@ -820,7 +894,8 @@ class Builder:
     RENDER = {"probe": "r_probe", "addi4spn": "r_addi4spn", "lw_sw": "r_lw_sw", "sp_ls": "r_sp_ls", "ci": "r_ci",
               "ca": "r_ca", "mv_add": "r_mv_add", "addi16sp": "r_addi16sp", "addi16sp_base": "r_addi16sp_base",
               "illegal16sp": "r_illegal16sp", "ebreak": "r_ebreak", "cj": "r_cj", "cj_ext": "r_cj_extreme", "cb": "r_cb",
-              "cjr": "r_cjr", "cjalr": "r_cjalr", "filler": "r_filler"}
+              "cjr": "r_cjr", "cjalr": "r_cjalr", "filler": "r_filler",
+              "n16_ct": "r_n16_ct"}
 
     def render(self, ops):
         self.ln(f"  la x{TMP}, {TRAP_VEC}")
@@ -836,6 +911,39 @@ class Builder:
 # ---- plan: the units of every item ---------------------------------------------------------------------------
 def marks(rng, n):
     return rng.sample(range(1, 16), n)
+
+
+def n16_clones(rng, U):
+    """One directed clone per unit family with next16 set (cr_insn_next n16 legs).
+
+    A clone of a real unit rather than a hand-built parameter dict: the parameters are valid by
+    construction, so a directed instance cannot differ from a working one in some field nobody
+    checked. Additive only -- every original keeps its 32-bit report store as its retired
+    successor, which is what keeps the n32 legs hit.
+    """
+    import copy
+    out = []
+    for kind, form_key in (("addi4spn", None), ("lw_sw", None), ("ci", "form"), ("mv_add", "form")):
+        seen = set()
+        for o in U:
+            if o.kind != kind:
+                continue
+            key = o.p.get(form_key) if form_key else kind
+            if key in seen:
+                continue
+            seen.add(key)
+            c = copy.deepcopy(o)
+            c.p["next16"] = True
+            out.append(c)
+    # sp_ls emits one compressed op per SUB, so cloning the kind does not guarantee both forms:
+    # a unit whose subs happen to be all swsp leaves c.lwsp short at that seed. Select by sub kind.
+    for want in ("swsp", "lwsp"):
+        o = next((o for o in U if o.kind == "sp_ls" and any(s["kind"] == want for s in o.p["subs"])), None)
+        if o is not None:
+            c = copy.deepcopy(o)
+            c.p["next16"] = True
+            out.append(c)
+    return out
 
 
 def build_units(rng):
@@ -904,6 +1012,16 @@ def build_units(rng):
                     break      # c.lwsp x2 replaces sp: last sub-op of its unit
         if subs:
             U.append(Op(I005, "sp_ls", {"base": 4 * rng.randint(0, 32), "subs": subs}))
+    # cr_insn_rdfull: one c.swsp source register in each register range that the draw above leaves to
+    # chance. The stores are sampled, so a range can go unused at a seed; a declared bin cannot rest
+    # on that. x1 and x2 are left to the draw on purpose: the renderer gives them the anchor and
+    # sp-value paths, and a directed instance would duplicate that bookkeeping rather than a shape.
+    _uimms = [4 * u for u in rng.sample(range(64), 3)]
+    U.append(Op(I005, "sp_ls", {"base": 4 * rng.randint(0, 32), "subs": [
+        {"kind": "swsp", "reg": rng.randrange(3, 5), "uimm": _uimms[0], "data": operand(rng, weighted(rng, W1))},
+        {"kind": "swsp", "reg": rng.choice(CREGS), "uimm": _uimms[1], "data": operand(rng, weighted(rng, W1))},
+        {"kind": "swsp", "reg": rng.randrange(16, 28), "uimm": _uimms[2], "data": operand(rng, weighted(rng, W1))},
+    ]}))
 
     # TP-CMP-008 c.addi (every rd, imm classes), TP-CMP-012 c.li (every rd, imm classes incl 0),
     # TP-CMP-014 c.lui (rd not x0/x2, nzimm classes), TP-CMP-024 c.slli (every rd, shamt classes)
@@ -949,6 +1067,15 @@ def build_units(rng):
         r = rng.choice(CREGS)      # rd' == rs2'
         U.append(Op(I021, "ca", {"form": form, "rd": r, "rs2": r, "a": operand(rng, weighted(rng, W1)), "b": 0, "twin": rng.getrandbits(1) == 1}))
     U.append(Op(I021, "ca", {"form": "c.sub", "rd": rng.choice(CREGS), "rs2": rng.choice(CREGS), "a": 0, "b": 1, "twin": True}))
+    # cr_insn_next n16 legs: one directed instance per form whose retired successor is 16-bit.
+    # Additive on purpose -- every instance above keeps its 32-bit report store as the successor,
+    # so the n32 legs stay hit; a global change would trade one set of bins for the other.
+    for form in CA_OPS:
+        rd = rng.choice(CREGS)
+        U.append(Op(I021, "ca", {"form": form, "rd": rd, "rs2": rng.choice([r for r in CREGS if r != rd]),
+                                 "a": operand(rng, weighted(rng, W1)) or rng.getrandbits(32),
+                                 "b": operand(rng, weighted(rng, W1)) or rng.getrandbits(32),
+                                 "twin": False, "next16": True}))
     # TP-CMP-026 c.mv, TP-CMP-030 c.add: every rd, both rd groups, rd == rs2, wrap pairs
     for form, item in (("c.mv", I026), ("c.add", I030)):
         rs2s = list(ALLREGS)
@@ -1016,6 +1143,9 @@ def build_units(rng):
         U.append(Op(I028, "cjr", {"form": "c.jr", "rs1": rs1, "odd": False, "pad": 2 * rng.randint(0, 20), "link": rng.getrandbits(32) | 1, "m_shadow": m[0], "m_t": m[1]}))
         m = marks(rng, 2)
         U.append(Op(I032, "cjalr", {"rs1": rs1, "pad": 2 * rng.randint(0, 20), "m_r": m[0], "m_s": m[1]}))
+    U += n16_clones(rng, U)
+    U.append(Op(I010, "n16_ct", {"creg": rng.choice(CREGS),
+                                "jreg": rng.choice([r for r in ALLREGS if r not in (EOT_REG, 1, 2) and r not in FILLER_REGS])}))
     return U
 
 

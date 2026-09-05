@@ -1,0 +1,284 @@
+# gen_fu_irq_red_observability: the irq entry's designed fault, seen through the entry's own check
+
+WHAT THIS CLAIMS. The fault gen_irq_basic_prog.py injects in its red form is OBSERVABLE through
+gen_test_irq_basic's own line_facts, at every seed and for every red item, and it is attributable
+to one item because no other line class fails. NOT claimed: any simulation. This is the
+model-level half of the generator hand-off rule; the simulated 40-seed green sweep is the other
+half and belongs to the Runtime Manager.
+
+HOW IT AVOIDS BEING A MODEL OF ITSELF, which is what this kind of check invites:
+  * The predicate is the ENTRY'S OWN line_facts, imported rather than copied, so a check that
+    drifted from the test would not pass this.
+  * The fault is PARSED out of the emitted program text, not read from the generator's own
+    RED_VECTOR table, and a deviation block the reader does not recognise raises instead of being
+    guessed at. Reading the table would have made the check agree with itself.
+  * Every seed and every red item: a fault observable at most seeds is a fixture that passes at
+    the rest, which the flow reports as a red fixture passing unexpectedly.
+  * The green stream is the control on every armed line, so a checker that failed everything
+    would not pass either.
+
+INPUTS BY DIGEST (sha256 first 12).
+  checker gen_irq_red_check.py, printed in full below  fe9e3dedbf8c
+  generator gen_irq_basic_prog.py at HEAD              a350edcbb6d0
+  entry gen_test_irq_basic.py at HEAD                  1c9052978c7c
+  HEAD                                                 8e7e18ff8b9895cc51403279859a3be6406c998a
+
+================================================================================================
+THE GREEN RUN: the committed generator and the committed entry, 40 seeds
+================================================================================================
+  PYTHONPATH=<clone> python3 gen_irq_red_check.py --seeds 40   -> exit 0
+seeds 40, items 4, armed lines per seed 18
+checks 4600, failures 0
+RED-OBSERVABILITY: PASS
+
+================================================================================================
+THREE NEGATIVE CONTROLS, on a detached archive of HEAD, one mutation at a time
+================================================================================================
+A green result means nothing without these. Each removes one link in the chain the claim rests
+on, and each is caught with its own diagnosis rather than a generic failure. Between controls the
+mutated file is restored from HEAD, so these are three independent single-mutation runs.
+
+---- MUT-NORED: the fixture injects nothing, so the red program is the green one
+     file dv/auto_dv/tests/gen_programs/gen_irq_basic_prog.py
+     edit red_vec = RED_VECTOR[p.red_item] if (p.red and p.red_item in RED_VECTOR) else None
+       -> red_vec = None
+     PYTHONPATH=<archive of HEAD + this one mutation> ... --seeds 5   -> exit 1
+     seeds 5, items 4, armed lines per seed 18
+     checks 175, failures 20
+       seed 1 TP-IRQ-001: the emitted red injects no fault at all
+       seed 1 TP-IRQ-002: the emitted red injects no fault at all
+       seed 1 TP-IRQ-003: the emitted red injects no fault at all
+       seed 1 TP-IRQ-004: the emitted red injects no fault at all
+       seed 2 TP-IRQ-001: the emitted red injects no fault at all
+       seed 2 TP-IRQ-002: the emitted red injects no fault at all
+       seed 2 TP-IRQ-003: the emitted red injects no fault at all
+       seed 2 TP-IRQ-004: the emitted red injects no fault at all
+       seed 3 TP-IRQ-001: the emitted red injects no fault at all
+       seed 3 TP-IRQ-002: the emitted red injects no fault at all
+       seed 3 TP-IRQ-003: the emitted red injects no fault at all
+       seed 3 TP-IRQ-004: the emitted red injects no fault at all
+       seed 4 TP-IRQ-001: the emitted red injects no fault at all
+       seed 4 TP-IRQ-002: the emitted red injects no fault at all
+       seed 4 TP-IRQ-003: the emitted red injects no fault at all
+       seed 4 TP-IRQ-004: the emitted red injects no fault at all
+       seed 5 TP-IRQ-001: the emitted red injects no fault at all
+       seed 5 TP-IRQ-002: the emitted red injects no fault at all
+       seed 5 TP-IRQ-003: the emitted red injects no fault at all
+       seed 5 TP-IRQ-004: the emitted red injects no fault at all
+     RED-OBSERVABILITY: FAIL
+
+---- MUT-ALL: the guard never skips, so the deviation is not pinned to one vector
+     file dv/auto_dv/tests/gen_programs/gen_irq_basic_prog.py
+     edit "  bne  a3, t2, gen_irq_no_red",
+       -> "  bne  a3, a3, gen_irq_no_red",
+     PYTHONPATH=<archive of HEAD + this one mutation> ... --seeds 5   -> exit 1
+     seeds 5, items 4, armed lines per seed 18
+     checks 155, failures 20
+       seed 1 TP-IRQ-001: unrecognised deviation block: li   t2, 3 / bne  a3, a3, gen_irq_no_red / li   t2, 0x80000000 / xor  a4, a4, t2 / gen_irq_no_red:
+       seed 1 TP-IRQ-002: unrecognised deviation block: li   t2, 7 / bne  a3, a3, gen_irq_no_red / li   t2, 0x80000000 / xor  a4, a4, t2 / gen_irq_no_red:
+       seed 1 TP-IRQ-003: unrecognised deviation block: li   t2, 11 / bne  a3, a3, gen_irq_no_red / li   t2, 0x80000000 / xor  a4, a4, t2 / gen_irq_no_red:
+       seed 1 TP-IRQ-004: unrecognised deviation block: li   t2, 16 / bne  a3, a3, gen_irq_no_red / li   t2, 0x80000000 / xor  a4, a4, t2 / gen_irq_no_red:
+       seed 2 TP-IRQ-001: unrecognised deviation block: li   t2, 3 / bne  a3, a3, gen_irq_no_red / li   t2, 0x80000000 / xor  a4, a4, t2 / gen_irq_no_red:
+       seed 2 TP-IRQ-002: unrecognised deviation block: li   t2, 7 / bne  a3, a3, gen_irq_no_red / li   t2, 0x80000000 / xor  a4, a4, t2 / gen_irq_no_red:
+       seed 2 TP-IRQ-003: unrecognised deviation block: li   t2, 11 / bne  a3, a3, gen_irq_no_red / li   t2, 0x80000000 / xor  a4, a4, t2 / gen_irq_no_red:
+       seed 2 TP-IRQ-004: unrecognised deviation block: li   t2, 16 / bne  a3, a3, gen_irq_no_red / li   t2, 0x80000000 / xor  a4, a4, t2 / gen_irq_no_red:
+       seed 3 TP-IRQ-001: unrecognised deviation block: li   t2, 3 / bne  a3, a3, gen_irq_no_red / li   t2, 0x80000000 / xor  a4, a4, t2 / gen_irq_no_red:
+       seed 3 TP-IRQ-002: unrecognised deviation block: li   t2, 7 / bne  a3, a3, gen_irq_no_red / li   t2, 0x80000000 / xor  a4, a4, t2 / gen_irq_no_red:
+       seed 3 TP-IRQ-003: unrecognised deviation block: li   t2, 11 / bne  a3, a3, gen_irq_no_red / li   t2, 0x80000000 / xor  a4, a4, t2 / gen_irq_no_red:
+       seed 3 TP-IRQ-004: unrecognised deviation block: li   t2, 16 / bne  a3, a3, gen_irq_no_red / li   t2, 0x80000000 / xor  a4, a4, t2 / gen_irq_no_red:
+       seed 4 TP-IRQ-001: unrecognised deviation block: li   t2, 3 / bne  a3, a3, gen_irq_no_red / li   t2, 0x80000000 / xor  a4, a4, t2 / gen_irq_no_red:
+       seed 4 TP-IRQ-002: unrecognised deviation block: li   t2, 7 / bne  a3, a3, gen_irq_no_red / li   t2, 0x80000000 / xor  a4, a4, t2 / gen_irq_no_red:
+       seed 4 TP-IRQ-003: unrecognised deviation block: li   t2, 11 / bne  a3, a3, gen_irq_no_red / li   t2, 0x80000000 / xor  a4, a4, t2 / gen_irq_no_red:
+       seed 4 TP-IRQ-004: unrecognised deviation block: li   t2, 16 / bne  a3, a3, gen_irq_no_red / li   t2, 0x80000000 / xor  a4, a4, t2 / gen_irq_no_red:
+       seed 5 TP-IRQ-001: unrecognised deviation block: li   t2, 3 / bne  a3, a3, gen_irq_no_red / li   t2, 0x80000000 / xor  a4, a4, t2 / gen_irq_no_red:
+       seed 5 TP-IRQ-002: unrecognised deviation block: li   t2, 7 / bne  a3, a3, gen_irq_no_red / li   t2, 0x80000000 / xor  a4, a4, t2 / gen_irq_no_red:
+       seed 5 TP-IRQ-003: unrecognised deviation block: li   t2, 11 / bne  a3, a3, gen_irq_no_red / li   t2, 0x80000000 / xor  a4, a4, t2 / gen_irq_no_red:
+       seed 5 TP-IRQ-004: unrecognised deviation block: li   t2, 16 / bne  a3, a3, gen_irq_no_red / li   t2, 0x80000000 / xor  a4, a4, t2 / gen_irq_no_red:
+     RED-OBSERVABILITY: FAIL
+
+---- MUT-NOCHECK: the entry's mcause fact is deleted, so the fault is emitted and nothing reads it
+     file dv/auto_dv/tests/gen_test_irq_basic.py
+     edit (mcause == want, f"{label}: vector {idx} carried mcause 0x{mcause:08x}, expected 0x{want
+       -> (the line removed)
+     PYTHONPATH=<archive of HEAD + this one mutation> ... --seeds 5   -> exit 1
+     seeds 5, items 4, armed lines per seed 18
+     checks 575, failures 20
+       seed 1 TP-IRQ-001: the red vector's failing facts are []
+       seed 1 TP-IRQ-002: the red vector's failing facts are []
+       seed 1 TP-IRQ-003: the red vector's failing facts are []
+       seed 1 TP-IRQ-004: the red vector's failing facts are []
+       seed 2 TP-IRQ-001: the red vector's failing facts are []
+       seed 2 TP-IRQ-002: the red vector's failing facts are []
+       seed 2 TP-IRQ-003: the red vector's failing facts are []
+       seed 2 TP-IRQ-004: the red vector's failing facts are []
+       seed 3 TP-IRQ-001: the red vector's failing facts are []
+       seed 3 TP-IRQ-002: the red vector's failing facts are []
+       seed 3 TP-IRQ-003: the red vector's failing facts are []
+       seed 3 TP-IRQ-004: the red vector's failing facts are []
+       seed 4 TP-IRQ-001: the red vector's failing facts are []
+       seed 4 TP-IRQ-002: the red vector's failing facts are []
+       seed 4 TP-IRQ-003: the red vector's failing facts are []
+       seed 4 TP-IRQ-004: the red vector's failing facts are []
+       seed 5 TP-IRQ-001: the red vector's failing facts are []
+       seed 5 TP-IRQ-002: the red vector's failing facts are []
+       seed 5 TP-IRQ-003: the red vector's failing facts are []
+       seed 5 TP-IRQ-004: the red vector's failing facts are []
+     RED-OBSERVABILITY: FAIL
+
+The archive is restored to HEAD after the last control and deleted once this log is written.
+
+================================================================================================
+THE CHECKER, in full
+================================================================================================
+"""Assert that the irq entry's designed fault is OBSERVABLE through the entry's own check.
+
+The red-observability half of the generator hand-off rule for gen_irq_basic_prog.py (Critic L-6).
+Three disciplines, all of them model level, no simulation:
+
+  * The predicate is the ENTRY'S OWN line_facts, imported from gen_test_irq_basic, not a copy of it
+    written here: a check that drifts from the test would pass this and miss the real thing.
+  * Every seed and every red item, because a fault that is observable at most seeds is a red
+    fixture that passes at the rest, which the flow reads as "red fixture passed unexpectedly".
+  * A control per claim: the green stream must satisfy every fact, and the red must fail exactly
+    one fact on exactly one vector, so a checker that failed everything would not pass this.
+
+Usage: python3 gen_irq_red_check.py [--seeds 40]
+Exit 0 when every seed and item is observable with its controls, 1 otherwise.
+"""
+import argparse
+import re
+import sys
+
+from dv.auto_dv.tests import gen_test_irq_basic as test
+from dv.auto_dv.tests.gen_programs import gen_irq_basic_prog as prog
+
+SPIN = 0x8000_0154          # any address: the stream is synthetic and mepc is not what the red moves
+NOMINAL_MSTATUS = test.MSTATUS_MPIE | test.MSTATUS_MPP_M      # MIE clear, MPIE set, MPP = M
+LINE_CAUSES = (prog.CAUSE_SOFTWARE, prog.CAUSE_TIMER, prog.CAUSE_EXTERNAL) + prog.FAST_CAUSES
+
+
+DEVIATION_END = "gen_irq_no_red:"
+
+
+def deviation_vectors(text, armed):
+    """Which armed vectors the EMITTED program deviates on, read from the text it emits.
+
+    The fault is not modelled here: it is parsed. A block this reader does not recognise raises,
+    because a guess about an unfamiliar guard would turn an unobservable red into a pass.
+    """
+    if DEVIATION_END not in text:
+        return set()
+    head = text.index("  csrr t1, mstatus")
+    body = text[head:text.index(DEVIATION_END, head) + len(DEVIATION_END)]
+    lines = [l.strip() for l in body.split("\n")[1:] if l.strip()]
+    m = re.match(r"^li\s+t2,\s*(\d+)$", lines[0] or "")
+    shape = [
+        lines[1] == "bne  a3, t2, gen_irq_no_red",
+        lines[2] == "li   t2, 0x80000000",
+        lines[3] == "xor  a4, a4, t2",
+        lines[4] == DEVIATION_END,
+        len(lines) == 5,
+    ]
+    if not m or not all(shape):
+        raise ValueError("unrecognised deviation block: " + " / ".join(lines[:6]))
+    return {int(m.group(1))} & armed if int(m.group(1)) in armed else {int(m.group(1))}
+
+
+def stream(p, deviate_on=()):
+    """The report words a correct device produces for this program, with the emitted fault in.
+
+    The handler stores (vector, mcause, mepc, mtval, mstatus) per entry between the armed marker and
+    the final unexpected-trap count. On a deviating vector the program XORs bit 31 out of the mcause
+    it reports, which is the whole of the injected fault.
+    """
+    words = [0xA5A5_0001]
+    for e in p.entries:
+        mcause = prog.MCAUSE_INTERRUPT | e.cause
+        if e.cause in deviate_on:
+            mcause ^= prog.MCAUSE_INTERRUPT
+        words += [e.cause, mcause, SPIN, 0, NOMINAL_MSTATUS]
+    words.append(0)
+    return words
+
+
+def facts_false(reports, cause):
+    return [d for ok, d in test.line_facts(reports, cause, "probe") if not ok]
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--seeds", type=int, default=40)
+    a = ap.parse_args()
+    fails, checks = [], 0
+
+    for seed in range(1, a.seeds + 1):
+        green = prog.plan(seed)
+        armed = {e.cause for e in green.entries}
+
+        # CONTROL 1: the green stream satisfies every fact on every armed line, so a red below is
+        # the program's fault and not a defect of this stream.
+        for cause in LINE_CAUSES:
+            checks += 1
+            bad = facts_false(stream(green), cause)
+            if bad:
+                fails.append(f"seed {seed}: GREEN control fails on cause {cause}: {bad[0]}")
+
+        for item in prog.RED_ITEMS:
+            vec = prog.RED_VECTOR[item]
+            p = prog.plan(seed, red=True, red_item=item)
+            checks += 1
+            if p.red_item != item:
+                fails.append(f"seed {seed} {item}: plan returned red_item {p.red_item}")
+            # the fault is unreachable unless the vector it is pinned to is armed at this seed
+            checks += 1
+            if vec not in armed:
+                fails.append(f"seed {seed} {item}: red vector {vec} is not armed, the fixture is vacuous")
+
+            red_text, green_text = prog.emit(p), prog.emit(green)
+            checks += 1
+            try:
+                applied = deviation_vectors(red_text, armed)
+            except ValueError as exc:
+                fails.append(f"seed {seed} {item}: {exc}")
+                continue
+            checks += 1
+            if not applied:
+                fails.append(f"seed {seed} {item}: the emitted red injects no fault at all")
+                continue
+            checks += 1
+            if applied != {vec}:
+                fails.append(f"seed {seed} {item}: the emitted fault applies to {sorted(applied)}, not to {{{vec}}}")
+
+            words = stream(p, deviate_on=applied)
+            checks += 1
+            bad = facts_false(words, vec)
+            if len(bad) != 1 or "carried mcause" not in bad[0]:
+                fails.append(f"seed {seed} {item}: the red vector's failing facts are {bad}")
+            # ATTRIBUTABLE: no other line class may fail, or the red would not name one fire method
+            for cause in LINE_CAUSES:
+                if cause == vec:
+                    continue
+                checks += 1
+                other = facts_false(words, cause)
+                if other:
+                    fails.append(f"seed {seed} {item}: cause {cause} also fails: {other[0]}")
+
+            checks += 1
+            if deviation_vectors(green_text, armed):
+                fails.append(f"seed {seed} {item}: the emitted GREEN carries a deviation block")
+
+        # the unnamed red draws one of the four items, so the flow's default red is one of these
+        checks += 1
+        if prog.plan(seed, red=True).red_item not in prog.RED_ITEMS:
+            fails.append(f"seed {seed}: the drawn red item is outside RED_ITEMS")
+
+    print(f"seeds {a.seeds}, items {len(prog.RED_ITEMS)}, armed lines per seed {len(LINE_CAUSES)}")
+    print(f"checks {checks}, failures {len(fails)}")
+    for f in fails[:40]:
+        print("  " + f)
+    print("RED-OBSERVABILITY: " + ("PASS" if not fails else "FAIL"))
+    return 1 if fails else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

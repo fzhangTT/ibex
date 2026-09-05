@@ -612,6 +612,22 @@ class Gen:
             if res_lanes:
                 meta["res_writes"].append((idx, n, res_lanes, self.m.mml))
             self.filler(2)
+        if not any(w[3] == (1 if phase == "mml1" else 0) for w in meta["res_writes"]):
+            # Every draw above can be a clear-type write, which cannot present reserved bits at all:
+            # they read zero, so csrrc combines to zero there. One directed set-type write keeps the
+            # item's intent at such a seed; it draws only when the loop produced none, so every other
+            # seed's program is unchanged.
+            cands = [(e // 4, e % 4) for e in entries_ok]
+            n = cands[0][0]
+            lanes = [ln for nn, ln in cands if nn == n]
+            value = sum(0x60 << (8 * ln) for ln in lanes)
+            comb = self.m.combined("csrrs", pmpcfg(n), value)
+            res_lanes = [ln for ln in range(4) if comb is not None and (comb >> (8 * ln)) & 0x60]
+            _o, idx = self.csr_op("csrrs", pmpcfg(n), value, "TP-PMP-003",
+                                  f"{phase} csrrs reserved-bit backstop", red_bits=cfg_bits(lanes[0], 2))
+            meta["ops"].append((idx, n, "csrrs", phase))
+            meta["res_writes"].append((idx, n, res_lanes, self.m.mml))
+            self.filler(2)
         assert any(w[3] == (1 if phase == "mml1" else 0) for w in meta["res_writes"]), f"TP-PMP-003 {phase}: no reserved-bit write drawn"
 
     # --- TP-PMP-004 (MML=0) -------------------------------------------------------------------------

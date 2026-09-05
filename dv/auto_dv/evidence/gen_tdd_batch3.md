@@ -627,6 +627,12 @@ mis-resolution but an alarm about a bin that is fine. And it is blind to the oth
 two-operand ops carry no class tag. The control that would have caught both is a second calibration
 arm flagging any resolved bin whose predicted rate disagrees with a measured one; those forty runs
 are the ready control for it. The tool stays withdrawn either way.
+THE ARTIFACT THOSE FIGURES COME FROM, named here because the corrigendum first cited them as prose:
+gen_tdd_logs/test_writer/gen_fu_generator_fix_sweep.log reads them from the forty pre-fix runs
+themselves (gen_test_bit_ratified at forty seeds in regress_gensweep2, on the generator whose md5 is
+1bed9e902389d0fbabc68cd8ae9abd40): cr_op_rs1.zext_h_pos_rand hit in 28 of the 40 runs, and
+cp_single_pos.p16 in all 40 at three to five occurrences each. The p16 row is printed in that log as
+the sweep's control for exactly this reason.
 
 Its calibration could not catch either: the control flags a resolved bin at zero that the report says
 was hit, and a mis-resolution landing at 6 of 40 passes that test. So the ten entries have no
@@ -729,3 +735,92 @@ ONE PROCESS NOTE FROM THE RUN, worth carrying because the failure mode is a refu
 wrong answer: the mirror for this run was first synced with an abbreviated sha and the flow refused
 it, because it pins the full forty characters and looks for a tree of that name. The commit and the
 mirror name have to agree.
+
+## 16. Group generator-fixes: four fixes in three generators, one model-level red and one simulated one
+
+WHAT THE GROUP IS. Three stimulus generators, none of them a checker, changed so that bins their own
+entries DECLARE are produced at every seed instead of at most seeds. gen_bit_ratified_prog.py gains
+the pack family with its reference, a directed relationship sweep over the op x register-aliasing
+product, a binv-twice pair, a value-drawing rule for the random operand classes and a directed cpop
+whose result falls in no other bin. gen_cmp_zca_prog.py gains a compressed successor per unit family
+(opt-in, so the 32-bit legs keep their instances), a self-contained control-transfer unit that also
+places every safe form at both alignments, and one c.swsp source register in each register range the
+draw left to chance. gen_pmp_csr_warl_prog.py gains a backstop that draws one set-type write when the
+loop's own draw produced none.
+
+TWO INSTRUMENTS, AND NEITHER ONE ALONE IS THE EVIDENCE.
+  MODEL LEVEL   gen_fu_shape_check.log. A checker whose targets are DERIVED from the manifests' own
+                stimulus-class not_hit lines, so a bin nobody mapped fails the run rather than passing
+                quietly; each target must appear at EVERY seed; each family carries a control that
+                must stay non-zero. Red at the committed generators (56 bins fail, exit 1), green on
+                the handed ones (exit 0). It says a SHAPE is emitted. It cannot say a bin is hit.
+  SIMULATION    gen_fu_generator_fix_sweep.log. Eighty runs on the two entries, forty seeds each, the
+                same seed sets and the same committed manifests before and after. Before: 17 of 40
+                and 25 of 40 pass, with nine declared bins short. After: 40 of 40 and 40 of 40, with
+                every declared bin hit at every seed, 24680 and 12000 bin checks. It says the bins are
+                hit. It says nothing about the round's coverage, which no unmeasured sweep can.
+
+THE ONE CAUSE BEHIND SIX OF THE SEVEN bit_ratified BINS is the same shape as the retirement floor's
+inequality between values equal by construction: a generator that satisfies its own label rather than
+the consumer's rule. The coverage classifies an operand by VALUE (six exact constants are their own
+classes, and any other value whose bit 7 and bit 15 differ is byte_msb or half_msb), so a draw labelled
+pos_rand that happens to land on one of those is classified as something else and the op's pos_rand leg
+goes unhit at that seed. The fix is a draw that rejects the classifier's other classes, not a relabel.
+The seventh, cpop's result bin, was a directed-value gap: the operand classes weigh 0, 1, 16, 31 or 32
+bits and the two directed results are 1 and 16, so "other" rested on what a random operand happened to
+weigh; a five-bit operand is in no other bin.
+
+THE TWO cmp_zca BINS CAME FROM SIMULATION AND NOT FROM ME, and that is worth stating plainly. My
+model-level reader covers 83 of that entry's 300 declared bins and the register-range family is among
+the 217 it never examines, so it did not fail to place those bins, it never looked at them. The
+prediction I filed before the sweep, that the alignment legs would be the ones to miss, was wrong.
+A count of bins under the every-seed bar is worth little without the count of declared bins the reader
+could not examine at all; both numbers are in the sweep log.
+
+WHAT THE ALIGNMENT READER REFUSES TO CLAIM. cr_insn_align bins are properties of the assembled
+address, so the reader walks the generator's line_size model from each .balign 4 anchor and stops at
+the first line whose size the assembler may change (a plain mnemonic under .option rvc may compress).
+Shortfalls past that point are reported UNPROVEN, not FAILED. The green run carries UNPROVEN rows for
+the memory forms; the simulation settles them, hitting every alignment bin at all forty seeds.
+
+THE BUILDS DIFFER AND THE CONTROL IS IN THE LOG. The post-fix root was archived from a later commit,
+so the two sweeps built different testbench sources (32f8789879 and 9879ca90c6). Rather than call the
+pair a single-variable experiment, the log measures what the bins rest on: the three covergroups are
+byte-identical across the two roots and the set of sampler call sites naming them hashes identically,
+the only changed line adding four irq covergroups to the same construction statement. The testbench
+delta cannot account for the change.
+
+THE WARL LEG IS TWO CLAIMS, kept apart. Model level: 4 of 301 seeds cannot produce a program at the
+committed generator, because a phase whose every draw is a clear-type write can present no reserved
+bits (this implementation stores no reserved pmpcfg field, so the read-back is zero and csrrc keeps it
+zero), and its own assertion refuses; with the backstop none assert and the other 297 programs are
+byte-identical. Simulation: those four seeds and ten of the identical ones run, 14 of 14 pass, 2506
+bin checks with none short. The first says the programs exist, the second says they execute.
+
+WHAT WAS WITHDRAWN. A second, generic model-level reader was built to resolve declared bins from any
+generator's plan tags and is withdrawn as unsound: it matched on spelling rather than semantics, and
+one added rule (refuse a value carried by more than one tag key) moved one entry from 367 resolved to
+172. A number that halves when a single guess is removed was never a measurement. Its two measured
+defects are recorded in Section 14 with the artifact they were measured on.
+
+L-6'S MODEL HALF RIDES THIS GROUP because it is the same rule these three generators are held to: a
+generator hand-off carries a 40-seed green sweep and a model-level red-observability assertion.
+gen_fu_irq_red_observability.log is that assertion for gen_irq_basic_prog.py. It runs the entry's OWN
+line_facts, imported rather than copied, over the report stream the red program produces, at every
+seed and for all four red items, and requires the failing fact to be the mcause one on the red vector
+and no other line class to fail, so the red names a single fire method. The fault is PARSED out of
+the emitted program text rather than read from the generator's RED_VECTOR table, and a deviation
+block the reader does not recognise raises instead of being guessed at; reading the table would have
+made the check agree with itself. Three single-mutation controls, each restored before the next,
+each caught with its own diagnosis: the fixture injecting nothing, the guard never skipping so the
+deviation is unpinned, and the entry's mcause fact deleted. The third is the one worth having, since
+that is the state in which a red fixture passes in simulation and the flow reports an unexpected
+pass. The simulated half is the wave's forty runs of the entry and is not claimed here.
+
+ROWS CARRIED BY THIS TOUCH. The Critic's L-5 on the irq-entry range was recorded closed; one line
+survived it and is fixed here (gen_test_lib.py, a comment that narrated an incident now states the
+rule). L-7 is answered beside the mepc log rather than inside it, because a retained log is never
+reopened: gen_fu_mepc_identity_sidecar.md gives the path-free identity of the sidecar that log names,
+measured on two builds of mine whose file digests differ and whose symbols-block digests agree. L-8 is
+answered by citation: Section 14's corrigendum now names the retained sweep log that carries the
+figures it quotes.

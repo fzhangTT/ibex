@@ -1,0 +1,67 @@
+# gen_fu_warl_res_backstop: the WARL generator asserted on its own draw at 4 of 301 seeds
+
+WHAT THIS CLAIMS. gen_pmp_csr_warl_prog.py can draw a TP-PMP-003 phase in which no write
+presents reserved pmpcfg bits, and its own assertion then refuses to produce a program. The
+backstop adds one directed set-type write in exactly that case. Claimed here: the assertion
+reproduces, the backstop removes it, and no other seed's program changes. NOT claimed: any
+simulation result; the fix rides the generator group's sweep for that.
+
+THE MECHANISM, from the committed source. tp003 draws 4 to 8 writes and marks one as a
+reserved-bit write when the COMBINED value carries bits 6:5 in some lane. A clear-type write
+cannot: combined() returns old & ~operand for csrrc, and this implementation stores no
+reserved pmpcfg field (ibex_pkg pmp_cfg_t carries lock, mode, exec, write and read only), so
+the read-back has bits 6:5 zero and the AND-NOT keeps them zero. A phase whose every draw
+picks csrrc therefore has no qualifying write, and the assertion at the end of tp003 fires.
+With one form of three drawn per write and 4 to 8 writes, that is about one seed in fifty.
+
+THE FIX draws only when the loop produced none, which is what keeps every other seed's
+program byte-identical: it is placed before the assertion, inside tp003, so it covers both
+phases; it picks the first entry group the phase already judged writable, sets bits 6:5 in
+its lanes with a csrrs, and records the op the same way the loop does.
+
+INPUTS BY DIGEST (sha256 first 12).
+  generator at HEAD, the subject of the red                7f062657722d
+  generator with the backstop (working tree, uncommitted)  964e232edfb4
+
+THE SWEEP: 301 seeds, runtime-2's failing seed 230969025 first, then 300 consecutive seeds
+from the block's own base seed 218090305. Both generators are loaded as modules side by side
+and each seed's emitted text is hashed, so a difference is a difference in the PROGRAM, not
+in a rendering. An earlier run of this same comparison was INVALID and is named here rather
+than dropped: a copy loop overwrote the extracted HEAD generator with the working-tree one,
+so both sides were the fixed generator and the sweep reported no assertion at all. The
+digests above are printed by the sweep for that reason.
+
+RESULT. 4 of 301 seeds assert at HEAD and none with the backstop; the 297 seeds that build
+at HEAD produce byte-identical programs either way. Both phases appear among the four, which
+is why the backstop sits inside tp003 rather than at one call site.
+
+================================================================================================
+THE SWEEP OUTPUT
+================================================================================================
+compared 301 | identical 297 | different 4 | HEAD asserted 4 | fixed asserted 0
+  HEAD asserts at seed 230969025: TP-PMP-003 mml0: no reserved-bit write drawn
+  HEAD asserts at seed 218090405: TP-PMP-003 mml1: no reserved-bit write drawn
+  HEAD asserts at seed 218090460: TP-PMP-003 mml0: no reserved-bit write drawn
+  HEAD asserts at seed 218090484: TP-PMP-003 mml0: no reserved-bit write drawn
+
+================================================================================================
+THE BACKSTOP, as it stands in the working tree
+================================================================================================
+
+        if not any(w[3] == (1 if phase == "mml1" else 0) for w in meta["res_writes"]):
+            # Every draw above can be a clear-type write, which cannot present reserved bits at all:
+            # they read zero, so csrrc combines to zero there. One directed set-type write keeps the
+            # item's intent at such a seed; it draws only when the loop produced none, so every other
+            # seed's program is unchanged.
+            cands = [(e // 4, e % 4) for e in entries_ok]
+            n = cands[0][0]
+            lanes = [ln for nn, ln in cands if nn == n]
+            value = sum(0x60 << (8 * ln) for ln in lanes)
+            comb = self.m.combined("csrrs", pmpcfg(n), value)
+            res_lanes = [ln for ln in range(4) if comb is not None and (comb >> (8 * ln)) & 0x60]
+            _o, idx = self.csr_op("csrrs", pmpcfg(n), value, "TP-PMP-003",
+                                  f"{phase} csrrs reserved-bit backstop", red_bits=cfg_bits(lanes[0], 2))
+            meta["ops"].append((idx, n, "csrrs", phase))
+            meta["res_writes"].append((idx, n, res_lanes, self.m.mml))
+            self.filler(2)
+        assert any(w[3] == (1 if phase == "mml1" else 0) for w in meta["res_writes"]), f"TP-PMP-003 {phase}: no reserved-bit write drawn"
