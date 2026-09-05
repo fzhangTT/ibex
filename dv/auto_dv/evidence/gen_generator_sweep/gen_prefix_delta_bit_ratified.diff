@@ -1,0 +1,52 @@
+--- pre-fix root (measured as the BEFORE half)
++++ committed at 4017573
+@@ -260,6 +260,22 @@
+     return rng.choices(names, weights=[table[n] for n in names], k=1)[0]
+ 
+ 
++# The coverage classifies an operand by VALUE (gen_fcov_pkg.sv bit_rs1_cls): six exact values are
++# their own classes, and any other value whose bit 7 and bit 15 differ is byte_msb or half_msb. A
++# draw that ignores that is classified as some other class, so the op's pos_rand or neg_rand leg goes
++# unhit at the seeds where every draw for that op happened to land elsewhere.
++_NAMED_EXACT = (0x00000000, 0xFFFFFFFF, 0x80000000, 0x7FFFFFFF, 0x00000001, 0xE0000000)
++
++
++def _plain_rand(rng, lo, hi):
++    """A value the coverage will classify as pos_rand / neg_rand rather than as a named class."""
++    for _ in range(64):
++        v = rng.randrange(lo, hi)
++        if v not in _NAMED_EXACT and ((v >> 7) & 1) == ((v >> 15) & 1):
++            return v
++    raise AssertionError("no plain random value in 64 draws")
++
++
+ def operand_value(rng, cls):
+     if cls == "zero":
+         return 0
+@@ -299,9 +315,9 @@
+             v = (v << 4) | nib
+         return v
+     if cls == "pos_rand":
+-        return rng.randrange(1, 0x80000000)
++        return _plain_rand(rng, 1, 0x80000000)
+     if cls == "neg_rand":
+-        return rng.randrange(0x80000000, 1 << 32)
++        return _plain_rand(rng, 0x80000000, 1 << 32)
+     if cls == "rand":
+         return rng.randrange(1 << 32)
+     if cls == "bit7_set":
+@@ -513,6 +529,14 @@
+                     x |= 1 << b
+             assert reference(kind, x) == want, (kind, want, hex(x))
+             specs.append(Spec("TP-BIT-005", kind, x, rs1_class="result", tags={"result": f"r{want}"}))
++    # cp_result.other for cpop: the operand classes above weigh 0, 1, 16, 31 or 32 bits and the two
++    # directed results are 1 and 16, so the remaining result bin rested on whatever a random operand
++    # happened to weigh. Five bits is in no other bin.
++    x = 0
++    for b in rng.sample(range(32), 5):
++        x |= 1 << b
++    assert reference("cpop", x) == 5, hex(x)
++    specs.append(Spec("TP-BIT-005", "cpop", x, rs1_class="rand", tags={"cls": "rand", "result": "other"}))
+     return specs
+ 
+ 

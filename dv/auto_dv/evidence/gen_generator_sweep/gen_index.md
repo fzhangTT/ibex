@@ -132,6 +132,43 @@ round report says is hit, so a 40-against-28 over-clearance and a 6-against-40 f
 Source artifacts for both rows: the per-seed table in `gen_bitr40_bins.txt` beside this file (the simulation
 column, including the missing-seed lists) and `gen_generator_sweep.yaml` (the sweep the runs belong to).
 
+## Corrigendum (2026-09-05T08:38Z): the BEFORE half ran an INTERMEDIATE generator, and here is the delta
+
+Raised as a Low on the generator-fixes review (rev55). The paragraph above says the pre-fix root is "an archive of
+a commit plus three uncommitted generator files" and leaves a reader unable to tell WHICH uncommitted files, so the
+seven-plus-two bin turnover could not be attributed to specific edits. The digests, all sha256 first-12:
+
+| generator | pre-fix root (the BEFORE half) | parent commit de60b81 | committed at 4017573 (the AFTER half) |
+|---|---|---|---|
+| `gen_bit_ratified_prog.py` | `7f3ec33390c2` | `c1580d22a361` | `14405978b07d` |
+| `gen_cmp_zca_prog.py` | `aaa8e29f7370` | `125ef1a1cf5d` | `b31555f595b4` |
+| `gen_pmp_csr_warl_prog.py` | `964e232edfb4` | `7f062657722d` | `964e232edfb4` |
+
+So for TWO of the three the before half ran a working state that is neither the parent's committed blob nor the
+committed one. The review's correction is right, and it applies to two generators rather than three: the csr_warl
+generator in the pre-fix root is ALREADY the committed blob, byte-identical at `964e232edfb4`, so its 14 runs were
+on the final bytes and nothing about them is intermediate.
+
+THE DELTA IS RETAINED RATHER THAN DESCRIBED, in `gen_prefix_delta_bit_ratified.diff` and
+`gen_prefix_delta_cmp_zca.diff` beside this file, each a unified diff from the pre-fix root's file to the committed
+one. They are small enough to read whole: 24 changed lines and 10.
+
+| file | bytes | sha256 |
+|---|---|---|
+| `gen_prefix_delta_bit_ratified.diff` | 2212 | `09f7864cbd39f165408bc28010c0a39767f70685824a563d8196878c7fff7733` |
+| `gen_prefix_delta_cmp_zca.diff` | 1372 | `e6d277bf3b2d895ac84ddaa787afb3f1687af21aee4764e87980f63986015767` |
+
+What they contain, so the attribution is checkable rather than asserted. gen_bit_ratified_prog gains `_plain_rand`,
+which rejects any draw the sampler would classify as one of six named exact values or as `byte_msb` / `half_msb`,
+and routes the `pos_rand` and `neg_rand` operand classes through it; that is the six `cr_op_rs1` legs. It also gains
+one directed five-bit `cpop` operand, whose result lands in no other result bin; that is
+`gen_bit_count_cg.cr_op_result.cpop_other`. gen_cmp_zca_prog gains one directed `c.swsp` source register in each
+register range the random draw leaves to chance; that is the two `cr_insn_rdfull` legs. Nine bins, nine edits, and
+the diffs are the evidence.
+
+A reader should still treat the pair as a comparison with a bounded second variable, per the section above: the
+builds differ as well as the generators, and the covergroup and sampler control is what bounds that.
+
 ## Two failed LSF build attempts, kept
 
 The after-sweep's build was made on the SUBMIT HOST, which is the proven recipe for a self-mirror root: the

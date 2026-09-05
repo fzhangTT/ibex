@@ -1,0 +1,19 @@
+--- pre-fix root (measured as the BEFORE half)
++++ committed at 4017573
+@@ -1012,6 +1012,16 @@
+                     break      # c.lwsp x2 replaces sp: last sub-op of its unit
+         if subs:
+             U.append(Op(I005, "sp_ls", {"base": 4 * rng.randint(0, 32), "subs": subs}))
++    # cr_insn_rdfull: one c.swsp source register in each register range that the draw above leaves to
++    # chance. The stores are sampled, so a range can go unused at a seed; a declared bin cannot rest
++    # on that. x1 and x2 are left to the draw on purpose: the renderer gives them the anchor and
++    # sp-value paths, and a directed instance would duplicate that bookkeeping rather than a shape.
++    _uimms = [4 * u for u in rng.sample(range(64), 3)]
++    U.append(Op(I005, "sp_ls", {"base": 4 * rng.randint(0, 32), "subs": [
++        {"kind": "swsp", "reg": rng.randrange(3, 5), "uimm": _uimms[0], "data": operand(rng, weighted(rng, W1))},
++        {"kind": "swsp", "reg": rng.choice(CREGS), "uimm": _uimms[1], "data": operand(rng, weighted(rng, W1))},
++        {"kind": "swsp", "reg": rng.randrange(16, 28), "uimm": _uimms[2], "data": operand(rng, weighted(rng, W1))},
++    ]}))
+ 
+     # TP-CMP-008 c.addi (every rd, imm classes), TP-CMP-012 c.li (every rd, imm classes incl 0),
+     # TP-CMP-014 c.lui (rd not x0/x2, nzimm classes), TP-CMP-024 c.slli (every rd, shamt classes)
