@@ -2592,3 +2592,47 @@ silent build, not a silent run through this runner. Consequences: the runner's r
 the pinned venv is a correctness fix, not a diagnostic; the build-identity item (record and check the linked VPI
 library's path and digest) returns to runtime-2's flow list for the build artifact; the question to the owner about
 ci/env.sh stands, sharpened: the guard is silent both when it assigns an empty string and when it is skipped.
+
+## LOG-100 - 2026-09-05 19:05Z - Owner decisions: the functional-coverage gate quantity (LOG-097 addendum 4) and the ci/env.sh masked export (LOG-099); the team paused and stopped for a handoff
+
+Owner (verbatim, 19:05Z): "For the decisions: 1. Agree that A should be the gate, use option C as recommended. 2. Agree on
+fail loud with recommendation. Please resolve the following 2 decisions and keep the agents paused (if they consume tokens
+while paused, please stop them for now and create a handoff. We can create new team when we resume)." The options the owner
+chose from were put by the Orchestrator at 18:5xZ: (A) the bin fraction with the witness ledger out of both terms, the
+prompt's literal condition and URG's own bin counts; (B) the plan's per-family equal-weight group score; (C) gate on A and
+report B beside it as the secondary metric; (D) dispatch with the gate unclaimed and decide on the merged data.
+
+Decision 1, the criterion. The functional-coverage GATE is the bin fraction: hit bins in gate scope over declared bins in
+gate scope, the witness ledger covergroup (gen_wit_cycle_clause_cg / CG-WIT-001) out of BOTH terms, at or above 80 percent;
+authority DV_prompt.txt:112-113 ("at least 80% of declared bins hit") with :110 ("the URG report is the number") holding
+because both terms are URG's own bin counts. For round 1 that is 3477/4048 = 85.89, so round 1's first functional condition
+PASSES; the second condition (traceability completeness confirmed by a reviewer other than the author, DV_prompt.txt:112-115)
+remains a separate finding and is not claimed here. The plan's equal-weight group score is REPORTED BESIDE the gate as the
+secondary "push higher" metric (the prompt's secondary goal), computed per family (spec-derived and adopted totals separately)
+as the plan defines it, never as the gate; no artifact computes it today, so it is owed as a tool item. The DV Lead's
+suspended ruling of 02:15Z (LOG-097 addendum 3) is REINSTATED as the gate's definition with its mechanics: the percent emitted
+with its denominator and a scope string naming what is in and out, the same string in the summary header and the dashboard;
+both terms from ONE filtered covergroup list; the content-dependent fallback at gen_cov_report.py:138 removed; the stored
+round-1 figure restated 81.47 -> 85.89 (3477/4048) in the index entry beside the stored value in the same landing that
+changes the definition (collected files byte-identical per LOG-092). The plan set's criterion text (gen_fcov_plan.md:50-52,
+:97-99, :6731-6735) is rewritten to this definition with the group score as the secondary metric; the round-2 request form's
+Section 11 acceptance and the round-1 record's group-gate cell ("not claimed") are updated to cite LOG-100. Owners at resume:
+the DV Lead (plan set, form, round-1 record) and runtime-2 (gen_cov_report / gen_round / the dashboard, the per-family score
+tool); one joint group, one review, one Critic verdict.
+
+Decision 2, the export. ci/env.sh derives LIBPYTHON_LOC from THIS clone's venv path ($IBEX_CI_ROOT/.venv/bin/cocotb-config)
+and fails loud: when that cocotb-config exists but --libpython fails or returns nothing, the script prints an error and
+returns 1 (the masked "export VAR=$(...)" is gone); when the venv does not exist yet (the bootstrap shape before
+ci/setup-venv.sh, and the committer gate's fresh worktree before its smoke links a venv) it prints a WARN naming
+setup-venv.sh and leaves any inherited value alone, so bootstrap and the gate keep working while the miss is no longer silent.
+ci/env.sh is a site file outside dv/auto_dv; this edit is made by the Orchestrator under the owner's decision as a recorded
+exception to the contract (dv/auto_dv/contract/README.md), tested in three subshell shapes (venv present, venv absent, venv
+present with a failing cocotb-config) and committed directly. The team's route-arounds stay (the gate's own export;
+gen_tb_local.sh's refusal at 592ab6c); the linked-VPI-library identity item stays on runtime-2's flow list.
+
+Team state. All six roles were PAUSED at clean points by 19:0xZ on the owner's directive of 18:52Z (every hand in flight
+landed: 36011ea landing 63, 5dcee83 the census tool, 9cdbe8d and 5642609 the Critic's lifts, 08d2a5c the fence guard;
+the Critic's form Section 13 on e4aef00..2f92709 is the one written-but-unhanded item). Per the owner, the agents are now
+STOPPED and a handoff written: each role's STATUS.md carries its state and owed items; the Orchestrator's handoff is
+dv/auto_dv/work/orchestrator/HANDOFF_2026-09-05.md with the chain scripts copied out of the session scratchpad into
+dv/auto_dv/work/orchestrator/chains/. A new team may be created at resume.
