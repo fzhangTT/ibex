@@ -2576,3 +2576,19 @@ is five measurements of the bad shape and none passes. The build identity theref
 item asking it to cover the linked VPI library is withdrawn. The refusal guard is kept as a diagnostic: a named
 message saying which cocotb-config answered and where the pinned one is, in place of a codec error printed after
 a full vcs command line. The question to the owner about ci/env.sh's masked export is unchanged.
+
+### LOG-099 fourth corrigendum (2026-09-05 09:01Z, Orchestrator; from tb-infra-2's measurement with the binary in hand)
+The third corrigendum said no wrong-toolchain compile passes. It generalised from two of three states of the
+library-location variable. tb-infra-2 measured the third: with the site cocotb-config for Python 3.9 answering
+and LIBPYTHON_LOC UNSET (no cocotb-config on PATH when ci/env.sh is sourced, so its guard is skipped and nothing is
+assigned; the shape of a fresh worktree with no venv), the committed runner's compile exits 0 and produces a
+simulator binary whose command line carries the Python 3.9 VPI library, with no Python error in the log. With the
+variable EMPTY (the guard taken against the site tool) or GOOD, the same compile fails inside vcs, which is what
+the third corrigendum measured. The Orchestrator's A/B, whose variant without the export failed loudly, ran with
+the worktree venv's Python 3.12 cocotb-config pinned first on PATH, so its library needed the variable; the site
+library finds its own. So a wrong-toolchain BUILD passes silently in the gate's shape and its sources digest does
+not distinguish it; the runner's run path refuses on the failed --libpython call, so the hazard measured is a
+silent build, not a silent run through this runner. Consequences: the runner's refusal of a cocotb-config outside
+the pinned venv is a correctness fix, not a diagnostic; the build-identity item (record and check the linked VPI
+library's path and digest) returns to runtime-2's flow list for the build artifact; the question to the owner about
+ci/env.sh stands, sharpened: the guard is silent both when it assigns an empty string and when it is skipped.
