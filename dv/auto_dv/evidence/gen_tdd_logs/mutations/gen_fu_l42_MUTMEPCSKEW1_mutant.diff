@@ -1,0 +1,11 @@
+--- a/dv/auto_dv/env/gen_rvfi_pkg.sv
++++ b/dv/auto_dv/env/gen_rvfi_pkg.sv
+@@ -201,7 +201,7 @@
+       int unsigned a, v;
+       st.order = t.order; st.cycle = t.cycle; st.pc_after = pc_a; st.insn = t.insn; st.prv = prv[1:0];
+       st.mie = gen_isa_read_csr(ibex_pkg::CSR_MIE); st.mstatus = gen_isa_read_csr(ibex_pkg::CSR_MSTATUS);
+-      st.mcause = gen_isa_read_csr(ibex_pkg::CSR_MCAUSE); st.mepc = gen_isa_read_csr(ibex_pkg::CSR_MEPC);
++      st.mcause = gen_isa_read_csr(ibex_pkg::CSR_MCAUSE); st.mepc = gen_isa_read_csr(ibex_pkg::CSR_MEPC) + 32'd4;   // MUT-MEPCSKEW1
+       st.mtval = gen_isa_read_csr(ibex_pkg::CSR_MTVAL); st.dcsr = gen_isa_read_csr(ibex_pkg::CSR_DCSR); st.dpc = gen_isa_read_csr(ibex_pkg::CSR_DPC);
+       st.pc_rdata = t.pc_rdata; st.mode = t.mode[1:0];
+       st.is_trap = t.trap; st.is_intr = intr; st.debug_mode = t.ext_debug_mode;

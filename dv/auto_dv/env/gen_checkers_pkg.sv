@@ -297,10 +297,19 @@ package gen_checkers_pkg;
     endfunction
     function void write_state(gen_model_state st);
       // dbg_dret: the record after a dret is fetched from the model's dpc in the mode dcsr.prv named (rtl/ibex_if_stage.sv:247;
-      // a request held through the dret re-enters debug first and that record is the debug ROM's, judged by the entry rule)
+      // a request held through the dret re-enters debug first and that record is the debug ROM's, judged by the entry rule).
+      // An interrupt enabled at the dret is taken before the instruction at dpc retires, so the record after the dret is
+      // then the vector and its mode is M whatever dcsr.prv names; the resume point the entry displaced is in mepc, and a
+      // wrong-target entry still fails through that.
       if (have_st && dret_q && !st.debug_mode) begin
         dret_checked++;
-        if (st.pc_rdata != dpc_q || st.mode != dcsr_q[GEN_DCSR_PRV_BIT_HIGH:GEN_DCSR_PRV_BIT_LOW]) begin
+        if (st.is_intr) begin
+          if (st.mepc != dpc_q) begin
+            dret_fail++;
+            if (gen_chk_en(cfg, cfg.chk_dbg_dret, cfg.chk_dbg_dret_set))
+              `uvm_error("dbg_dret", $sformatf("interrupt entry at the dret target (order %0d): mepc %08h, dpc %08h", st.order, st.mepc, dpc_q))
+          end
+        end else if (st.pc_rdata != dpc_q || st.mode != dcsr_q[GEN_DCSR_PRV_BIT_HIGH:GEN_DCSR_PRV_BIT_LOW]) begin
           dret_fail++;
           if (gen_chk_en(cfg, cfg.chk_dbg_dret, cfg.chk_dbg_dret_set))
             `uvm_error("dbg_dret", $sformatf("record after dret (order %0d): pc %08h mode %0d, dpc %08h dcsr.prv %0d", st.order, st.pc_rdata, st.mode, dpc_q, dcsr_q[GEN_DCSR_PRV_BIT_HIGH:GEN_DCSR_PRV_BIT_LOW]))

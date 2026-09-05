@@ -1334,3 +1334,34 @@ irq regime all PASS with zero UVM errors.
 
 Retained: gen_tdd_logs/lockstep/gen_fu_l41_irq_ack_target.log and gen_fu_l41_bus_latch_instant.log with the two
 mutant diffs under gen_tdd_logs/mutations/. Four manifest rows.
+
+## Landing 42: dbg_dret called a legitimate interrupt entry a dret mismatch
+
+Found by exercising the CG-IRQ-010 window sampler, not by reading the rule. The rule required the record after a
+dret to be at dpc in the mode dcsr.prv names and exempted only a debug re-entry. But an interrupt enabled at the
+dret is taken before the instruction at dpc retires, so the record after the dret is then the trap vector, and the
+rule called that a mismatch. It is the coverage plan's own cp_post_exit.taken_before_first_insn case, so the checker
+forbade a behaviour the plan expects to cover.
+
+THE ARITHMETIC THAT SAYS THE FLAGGED RECORD IS LEGITIMATE, which is what turns an opinion into a finding: in the
+fixture's image gen_vec sits at 0x80000200 and the vectored entry for cause 17 (fast[1]) is 0x80000200 + 4*17 =
+0x80000244, which is exactly the pc the rule flagged, against a dpc of 0x8000011e. The run compared 460 records with
+zero ISA mismatches, so the ISA model produced the same record. Nothing about it is a fault.
+
+THE FIX exempts an entry from the pc and mode comparison and checks the resume point through mepc instead. Dropping
+the mode comparison for that case is deliberate: an interrupt entry goes to M whatever dcsr.prv names. Checking mepc
+rather than nothing is what keeps the rule a rule: a wrong-target entry still fails, and MUT-MEPCSKEW1 proves it by
+moving an entry's published mepc four bytes and being caught with every other Zone A check off. The non-interrupt
+branch is byte-identical, and both dret paths ran in every run of the transcript.
+
+THE BASE WAS RE-MEASURED RATHER THAN CARRIED OVER. An earlier pass of the four runs was taken before landing 41's
+agent fixes were committed. The sampling-instant fix changes which word a fetch receives in the same class of
+same-cycle race that produced the order-548 divergence, so the fixture could not be ASSUMED to still produce the
+false failure. Every run in the transcript is on the commit that carries both fixes, and the red reproduces byte for
+byte at the same order, pc and dpc.
+
+REACHABILITY, so nobody reads this as a round-1 regression: no round-1 run drew a debug regime at all, so the false
+failure was unreachable there. It gates round 2 through the IRQ step-1 samplers.
+
+Retained: gen_tdd_logs/lockstep/gen_fu_l42_dbg_dret_entry.log with the mutant diff under gen_tdd_logs/mutations/.
+Two manifest rows.

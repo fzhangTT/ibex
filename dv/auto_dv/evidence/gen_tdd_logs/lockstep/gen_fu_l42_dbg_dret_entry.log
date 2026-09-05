@@ -1,0 +1,86 @@
+# gen_fu_l42_dbg_dret_entry.log -- TDD red/green and MUT-MEPCSKEW1 for the dret-target rule
+# Produced 2026-09-05T05:14:04Z on soc-l-11 from a detached archive of 27212cb with this
+# landing's file applied.
+#
+# THE DEFECT, measured before it was fixed: dbg_dret required the record after a dret to be at dpc and
+# exempted only a debug re-entry, so an interrupt taken at the dret target was called a mismatch. That entry
+# is the coverage plan's own cp_post_exit.taken_before_first_insn case, so the checker forbade a case the plan
+# expects to cover. It was unreachable in round 1, which took zero interrupt entries.
+#
+# THE FIXTURE: gen_ut_dbg on the directed interrupt program under a storm irq regime, which is the only shape
+# in the tree today that puts a pending line and a debug session in the same run.
+#   image dv/auto_dv/stim/gen_directed/gen_irq_directed.S, 156 words, crc32 0x8e882c5b, tohost 0x800002d0
+#   plusargs: +gen_fetch_en_at_reset=0 +gen_knob_irq_regime=storm
+# THE ARITHMETIC that says the flagged record is a legitimate entry and not a wrong target: gen_vec is at
+# 0x80000200 in that image and the vectored entry for cause 17 (fast[1]) is 0x80000200 + 4*17 = 0x80000244,
+# which is the pc the committed checker flagged. The run compared 460 records with ZERO ISA mismatches, so
+# the model produced the same record.
+#
+# BUILDS (dv/auto_dv/tb/gen_tb_local.sh compile), differing only as stated:
+#   outRed  gen_checkers_pkg.sv exactly as committed at 27212cb
+#   outFix  with the fix
+#   outMut  the fix, plus MUT-MEPCSKEW1 in gen_rvfi_pkg.sv
+#
+# ------------------------------------------------------------------------------------------------
+
+== RED: the committed rule flags the entry
+# run red: 2026-09-05T05:11:13Z host=soc-l-11 seed=1 module=dv.auto_dv.gen_tb.gen_tests.gen_ut_dbg build_sources_sha256=642b5e3a243fd342 plusargs=[+gen_mem_image=irq1_prog/prog.vmem +gen_mem_image_crc32=8e882c5b +gen_mem_image_words=156 +gen_boot_addr=80000000 +gen_tohost_addr=800002d0 +gen_fetch_en_at_reset=0 +gen_knob_irq_regime=storm]
+UVM_ERRORs: 1
+dbg_dret] record after dret (order 384): pc 80000244 mode 3, dpc 8000011e dcsr.prv 3
+dbg_dret]     1
+debug entries=2 bound failures=0 masked failures=0 dret checked=2 failures=1
+verdict: FAIL
+reason: uvm_error at sim.log:32
+
+== GREEN: the fix, same fixture, all checks on
+# run green: 2026-09-05T05:12:02Z host=soc-l-11 seed=1 module=dv.auto_dv.gen_tb.gen_tests.gen_ut_dbg build_sources_sha256=f391b509233c88cf plusargs=[+gen_mem_image=irq1_prog/prog.vmem +gen_mem_image_crc32=8e882c5b +gen_mem_image_words=156 +gen_boot_addr=80000000 +gen_tohost_addr=800002d0 +gen_fetch_en_at_reset=0 +gen_knob_irq_regime=storm]
+UVM_ERRORs: 0
+debug entries=2 bound failures=0 masked failures=0 dret checked=2 failures=0
+verdict: PASS
+reason: no collected failure mechanism; end marker and config banner present
+
+== MUT-MEPCSKEW1 caught by the NAMED check, hidden referees inert (+gen_chk_all=0 +gen_chk_dbg_dret=1)
+# run mut_named: 2026-09-05T05:12:52Z host=soc-l-11 seed=1 module=dv.auto_dv.gen_tb.gen_tests.gen_ut_dbg build_sources_sha256=c75ecf93c8ace43d plusargs=[+gen_mem_image=irq1_prog/prog.vmem +gen_mem_image_crc32=8e882c5b +gen_mem_image_words=156 +gen_boot_addr=80000000 +gen_tohost_addr=800002d0 +gen_fetch_en_at_reset=0 +gen_knob_irq_regime=storm +gen_chk_all=0 +gen_chk_dbg_dret=1]
+UVM_ERRORs: 1
+dbg_dret] interrupt entry at the dret target (order 384): mepc 80000122, dpc 8000011e
+dbg_dret]     1
+debug entries=2 bound failures=0 masked failures=0 dret checked=2 failures=1
+verdict: FAIL
+reason: uvm_error at sim.log:33
+
+== MUT-MEPCSKEW1 ABLATION CONTROL: the named check not enabled (+gen_chk_all=0), the mutation survives
+# run mut_ablated: 2026-09-05T05:12:59Z host=soc-l-11 seed=1 module=dv.auto_dv.gen_tb.gen_tests.gen_ut_dbg build_sources_sha256=c75ecf93c8ace43d plusargs=[+gen_mem_image=irq1_prog/prog.vmem +gen_mem_image_crc32=8e882c5b +gen_mem_image_words=156 +gen_boot_addr=80000000 +gen_tohost_addr=800002d0 +gen_fetch_en_at_reset=0 +gen_knob_irq_regime=storm +gen_chk_all=0]
+UVM_ERRORs: 0
+debug entries=2 bound failures=0 masked failures=0 dret checked=2 failures=1
+verdict: PASS
+reason: no collected failure mechanism; end marker and config banner present
+
+# ------------------------------------------------------------------------------------------------
+# MUTATION RECORD
+#   id: MUT-MEPCSKEW1
+#   file:line: dv/auto_dv/env/gen_rvfi_pkg.sv, publish_state's mepc read
+#   original: st.mepc = gen_isa_read_csr(ibex_pkg::CSR_MEPC);
+#   mutated:  st.mepc = gen_isa_read_csr(ibex_pkg::CSR_MEPC) + 32'd4;
+#   expected detector: the dbg_dret rule's NEW positive check, that an entry at the dret target carries
+#     mepc == dpc; the message names both values
+#   caught: outMut/mut_named, one UVM_ERROR, mepc 80000122 against dpc 8000011e, which is the skew exactly
+#   ablation control: outMut/mut_ablated, the same build and fixture with the named check not enabled:
+#     zero UVM_ERRORs, so the mutation survives and the verdict belongs to the named check alone
+#   The mutation proves the fix is not merely an exemption: a wrong-target entry still fails.
+#   READ THE ABLATION'S COUNTER CAREFULLY: its report line still says failures=1. The rule DETECTED the
+#   mutation and did not REPORT it, because gen_chk_en gates only the uvm_error and not the counting. That is
+#   what an ablation is meant to show, and the run's verdict is PASS with zero UVM_ERRORs.
+#
+# NOT CHANGED: the non-interrupt branch of the rule is byte-identical, so a record after a dret that is not
+# an entry is still required to be at dpc in the mode dcsr.prv names. Both dret paths ran in every run
+# above (dret checked=2).
+#
+# THE BASE MATTERS AND WAS RE-MEASURED: an earlier pass of these four runs was taken on an archive of
+# 218e9f3, before the two agent fixes of landing 41 were committed. The sampling-instant fix changes which
+# word a fetch receives in the same class of same-cycle race that produced the order-548 divergence, so the
+# fixture could not be assumed to still produce the false failure. Every run above is on 27212cb with both
+# fixes in, and the RED reproduces byte for byte: order 384, pc 80000244, dpc 8000011e.
+#
+# A RUN WITH NO DEBUG SESSION is unaffected, since the rule only judges the record after a dret:
+#   outFix/nodebug   PASS  UVM_ERRORs 0
+#   (gen_ut_lockstep on the NMI-long program under a storm irq regime, no debug request in the run)
