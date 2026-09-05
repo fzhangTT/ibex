@@ -1,0 +1,51 @@
+measurement: PMP 40-seed manifest-shaping sweep
+served_utc: '2026-09-05T05:15:53Z'
+served_by: runtime-2
+kind: unmeasured, coverage on, no manifest row; PINNED
+head_sha: 218e9f32316cb37cd66f1946ae36734578c9d3ff
+source_root: /proj_soc/user_dev/fzhang/ibex_dv_mirror_head/218e9f32316c
+driver: detached archive of 218e9f3 (committed flow code); the regression manifest's own git field is
+  empty because that archive has no .git, while source.head_sha carries the pin
+outdir: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_pmp_40seed
+base_seed: 218090305
+planned_runs: 120
+ran: 119
+not_run: 1
+not_run_detail: >
+  gen_test_pmp_csr_warl seed 230969025 never started: the COMMITTED generator
+  gen_pmp_csr_warl_prog.py asserts on its own draw at that seed,
+  "AssertionError: TP-PMP-003 mml0: no reserved-bit write drawn" (line 615, reached from build() at
+  :1066 through the tp003 block at :1062). No program was generated, so gen_run wrote no result.yaml.
+  Consequence for the numbers below: gen_test_pmp_csr_warl is measured over 39 seeds, not 40.
+verdicts: all 119 runs FAIL, every one on the same rule
+verdict_detail: >
+  "GEN_TEST_LIB: <entry> declares N bins but has no manifest fcov_expectations/<entry>.fcov.yaml".
+  declare_bins() returns bins now that the covergroups are built, and finish() refuses an entry that
+  declares bins with no rendered manifest. The rule fires AFTER sampling, so the coverage is real: the
+  positive control run's own database carries all four covergroups with non-zero counts.
+positive_control: >
+  urg on a run at 218e9f3 reports 30 covergroup names, with gen_pmp_addr_write_cg, gen_pmp_cfg_write_cg,
+  gen_pmp_csr_access_cg and gen_pmp_table_state_cg present. The identical control at 2d87642 this
+  morning reported 26 and no gen_pmp name. Same tool, same command, opposite answer.
+method: >
+  Per-seed attribution comes from ONE urg report PER TEST, selected by full path with -tests. A single
+  merged report cannot answer this: its per-bin TEST column caps at ten tests with no marker whatever
+  -show maxtests is set to, which made every bin look inconsistently hit and produced a false "0 bins
+  hit at every seed" before I checked. The bin parser is the reviewed
+  dv/auto_dv/tools/gen_read_keyed.py parse_report, not a new one, and every per-test report's own
+  covergroup totals are cross-checked against that report's groups.txt row before its bins are counted.
+reports_read: 119
+reports_rejected: 0
+bins_in_family: 407
+per_entry:
+  gen_test_pmp_csr_warl: {seeds: 39, hit_every_seed: 215, hit_some_seeds: 119, never_hit: 73}
+  gen_test_pmp_lock:     {seeds: 40, hit_every_seed: 139, hit_some_seeds: 174, never_hit: 94}
+  gen_test_pmp_mseccfg:  {seeds: 40, hit_every_seed: 175, hit_some_seeds: 81,  never_hit: 151}
+called_out:
+  gen_pmp_cfg_write_cg.cp_mml.mml1: {csr_warl: 39/39, lock: 18/40, mseccfg: 40/40}
+  gen_pmp_cfg_write_cg.cp_rlb.rlb1: {csr_warl: 32/39, lock: 40/40, mseccfg: 40/40}
+rule_for_the_test_writer: >
+  Only a bin at the full seed count of its entry may leave that entry's manifest. A bin below it stays
+  declared with a seed-dependent reason. A bin at 0 of N is a covergroup the entry's stimulus does not
+  reach and is a manifest fact to declare, not a failing run, as the Test Writer pre-registered.
+full_listing: dv/auto_dv/work/runtime/done/gen_pmp_40seed_bins.txt
