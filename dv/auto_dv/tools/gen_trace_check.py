@@ -74,7 +74,7 @@ for c, b in cgs.items():
         else: named.add(canon(i))
     cg_cps[c] = set(re.findall(r'^\s*- (c[pr]_[a-z0-9_]+)\b', b, re.M))
     ad = re.search(r'^- Adopted \(riscv-dv\): (.*)$', b, re.M); cg_adopted[c] = bool(ad and not ad.group(1).strip().lower().startswith('none'))
-# reverse of condition 2 (Critic W-4): every ACTIVE feature is named by at least one non-ledger covergroup's Features field
+# reverse of condition 2: every ACTIVE feature is named by at least one non-ledger covergroup's Features field
 unnamed = [f for f in active if f not in named]
 # per-bin rule: every CSV bin name occurs in its covergroup block (after joining wrapped lines); array bins name[N] match name[
 bin_missing = []; adopted_bad = []

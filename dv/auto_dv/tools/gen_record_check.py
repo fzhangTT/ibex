@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Check declared CONTRADICTION PAIRS in the plan records: two statements that cannot both be true.
 
-A per-phrase check cannot find this class, because each phrase is individually true; CM205-Medium-1 was a
-record asserting both that the fcov leg had run all nine entries and that no entry had been exercised by a
+A per-phrase check cannot find this class, because each phrase is individually true; one record asserted
+both that the fcov leg had run all nine entries and that no entry had been exercised by a
 flow run. Each pair below names a record, the two phrases, and why they conflict. Text is FLATTENED before
 matching, so a clause wrapped across lines is still seen, and EXACTLY ONE of the pair must be present, so
 a pair whose phrases were both edited away fails instead of passing vacuously.

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate the per-round tier-ruling table dv/auto_dv/evidence/gen_<label>_promotion_table.md from the plan and the testlist (Critic v9 CR9-M-1: the held-items
+"""Generate the per-round tier-ruling table dv/auto_dv/evidence/gen_<label>_promotion_table.md from the plan and the testlist (the held-items
 column is derived from the hold sections present in gen_test_plan.md ("## 1.<n> Items under the T-<xxx> measurement hold"), never written by hand).
 
 Per built testlist entry (gen_test_<x>, red fixtures excluded; gen_test_boot_retire stays at tier check): the plan group
