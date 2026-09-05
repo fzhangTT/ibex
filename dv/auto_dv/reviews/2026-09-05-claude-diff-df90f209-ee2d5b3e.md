@@ -1,0 +1,42 @@
+# Cross-model review - committed diff df90f209..ee2d5b3e
+
+**Reviewer:** claude CLI 2.1.261 (Claude Code); run-reported model: claude-fable-5-1,claude-haiku-4-5-20251001; requested effort: high (the CLI does not report the effective setting); fresh session 89c2f011-031d-4a7d-b98d-3a63265017df; sandbox: bubblewrap, working directory = detached read-only checkout of commit ee2d5b3ef0b2693c0949f409e8de5957b51de525 (the live working tree is not read), filesystem read-only except this run's own output directory, scratch HOME (no access to the executing model's settings, instructions or memory), private PID namespace; network open for the model API, web tools disallowed by policy (fallback reviewer per owner ruling A-001)
+**Codex unavailable because:** ERROR: You hit your spend cap set by the owner of your workspace. Ask an owner to increase your spend cap to continue.
+**Wrapper:** dv/auto_dv/tools/gen_cross_review.sh blob 713e8c09 (the copy executed; equals the wrapper committed at the reviewed commit); reviewed commit ee2d5b3ef0b2693c0949f409e8de5957b51de525
+**Date:** 2026-09-05
+**Target:** committed diff df90f209..ee2d5b3e (echo at raw line 1)
+
+---
+
+TARGET: df90f20915f2c21d4af4c203cb46c575201530c3..ee2d5b3ef0b2693c0949f409e8de5957b51de525
+
+Reviewer: Claude (claude-fable-5-1), fresh detached read-only session at ee2d5b3; scope reviewed: commit ee2d5b3 (the only commit in the range touching the two named paths), the other 60 commits read as context only.
+
+**What was verified (all against the tree, by commit and line)**
+
+- Log figures, `gen_fu_l60_nmi_mode_exit.log` at 139c325 (byte-identical at HEAD): raise at order 206 in both builds, judged at 267 and 225 (:49-50), the ablation row (:51), "FORTY-TWO RECORDS APART" (:52), "Takeable reads 18 in both" (:54), the DV Lead's ruling attributed (:60), "expect_fail is incremented BEFORE the gen_chk_en gate, so disabling the named check suppresses the uvm_error and leaves the detection counted" (:61-62, with :63 the continuation), six smokes PASS (:67), 4.29 million error lines on a bus-agent restructure (:68-69). Every figure and citation in Section 22 (gen_tdd_test_template.md:724-728 at ee2d5b3) matches. 267-225=42.
+- Checker citations: `git log -- dv/auto_dv/env/gen_checkers_pkg.sv` shows 41bcbe8 as the last change; the file is byte-identical at HEAD. At 41bcbe8 :162 is `expect_fail++;` and :163 is `if (gen_chk_en(cfg, expects[i].nmi ? cfg.chk_nmi_entry : cfg.chk_irq_entry, ...))` guarding only the `uvm_error`. The counter increments before the gate, so instance 1's ordering statement is true. The earlier positions are as recorded: :164/:165 at d8bed4e, :163/:164 at 139c325.
+- Section 20 de-indent: the 2c63b83 block with `s/^    //` applied diffs against the HEAD block only in one trailing blank line, which is the whitespace-only `    ` line becoming empty plus the pre-existing blank before Section 21 (Section 21 did not exist at 2c63b83). Content byte-identical minus four spaces. The rev64 row section likewise, except the trailing whitespace-only line without a newline at EOF was dropped rather than de-indented (see Info below).
+- Headers 17 through 22 all sit at column 0 at :545, :562, :641, :651, :668, :680 and number sequentially; `grep -nE '^\s+(##|\|)'` on both files returns nothing. Both files are pure ASCII. The response file now ends with a newline.
+- Section 20 was still indented at HEAD~1 (:651), so this commit is what fixes it; 2c63b83 is confirmed as the commit that landed both indented blocks.
+- Work-directory paths: Section 22 cites none. The only out-tree mention in the diff is the pre-existing Section 20 text saying an out-tree path is not a citation.
+- Rule applicability: instance 1 states the reading to write, names the counter/gate position requirement, and states what the control still establishes (:687-693). Instance 3 states the two forms that qualify as "could have failed" and rules smokes out (:713-721). Instance 2 is judged below.
+- Rubrics: none of the five Zone A rubrics has a filter matching `dv/auto_dv/evidence/*.md`; no RTL, SV, Python or ci lines are in this commit. All five: `{"status": "PASS"}`.
+
+**Findings**
+
+[Low][dv/auto_dv/evidence/gen_tdd_test_template.md:743-744] The companion line names "the plan chain's section-number check, which every plan-class hand of this file runs and which a reader can run", but no such check exists in the tree: nothing under `dv/auto_dv/tools`, `ci`, or `.claude` references `gen_tdd_test_template.md` or checks `## N.` headers for sequential numbering (the only header regexes are the TP/CG/hold-section ones in gen_plan_holds.py, gen_promotion_table.py, gen_round_credit.py, gen_trace_check.py, gen_unbuilt_mark_check.py). The check is described in words precisely enough to re-run with a grep, and it would indeed have caught the HEAD~1 state (19, 21 at column 0 with 20 indented), so the claim about what it catches is true - but "a reader can run" it is only true of the description, not of a named tool. Recommend: either commit the check (a few lines in `dv/auto_dv/tools`) or reword to say it is a hand-side script outside the tree and give the one-line grep the reader runs.
+
+[Low][dv/auto_dv/evidence/gen_tdd_test_template.md:733-734] "the hand's verifier re-derives both numbers from the handed HEAD and refuses the hand when the record's numbers differ" names a verifier that is not in the tree (no tool under `dv/auto_dv/tools` or `ci` mentions `expect_fail`). The pinned line numbers themselves are correct, so this is not a correctness defect, but the record leans on an uncommitted guard as the reason the numbers can be trusted. Recommend: state that the verifier is the hand's uncommitted script, or commit it; the line-number verification a reader can do (`git show 41bcbe8:dv/auto_dv/env/gen_checkers_pkg.sv | sed -n 162,163p`) is what actually carries the claim.
+
+[Low][dv/auto_dv/evidence/gen_tdd_test_template.md:700-707] Instance 2 states when a count difference is NOT acceptable (it appears only because the run was shortened) and which red to prefer, but never states positively when a count difference is an acceptable red (both builds run the same length, the count moves with no truncation). A future test writer applying the rule to a fixture where the count does move without truncation has to infer that from "the one that holds its confounders equal wins". Since the sentences are the DV Lead's verbatim and cannot be edited, recommend a one-sentence Test Writer's gloss after the instance, marked as such, giving the positive condition.
+
+[Low][dv/auto_dv/evidence/gen_tdd_test_template.md:719 vs the commit message] The commit message and the owner's landing claim say instance 3's example is "the six smokes and eight-seed comparison that passed on a driver producing 4.29 million error lines". The record's instance 3 says six smokes only, and the cited log (:67-69) says six smokes only; the eight-seed comparison appears in the tree only as a quotation in `dv/auto_dv/evidence/gen_agentfix_pair/gen_release_widened.md:38`. The record is right and faithful to its cited log; the commit message overstates what the record carries. No change to the record needed; note it so the next hand does not "correct" the record toward the message.
+
+[Info][dv/auto_dv/evidence/gen_tdd_test_template.md:687-688] "The ablation-reading rule this section first carried on its own is instance 1" describes a drafting state that never existed in the tree (Section 22 first appears in this commit, already with three instances). Harmless, but it is history narration a reader cannot verify. Recommend dropping the sentence or rewording to "the ablation-reading rule, received first, is instance 1".
+
+[Info][dv/auto_dv/evidence/gen_critic_response_test_template.md:207] The 2c63b83 block ended with a whitespace-only `    ` line and no newline at EOF; the de-indent dropped that line and added the terminating newline rather than producing an empty line. The claim "byte for byte minus the four leading spaces" is true of every content line; only the trailing whitespace line differs. No action needed.
+
+**Rubric responses**: ai-slop-comments `{"status": "PASS"}` (no comment lines in filtered paths); rtl-purity `{"status": "PASS"}` (no rtl/ changes); magic-numbers `{"status": "PASS"}`; forces-and-hier-access `{"status": "PASS"}`; assertion-integrity `{"status": "PASS"}` (no assertion or checker lines touched; the checker package is byte-identical from 41bcbe8 to HEAD).
+
+Final verdict: APPROVE-WITH-CHANGES
