@@ -82,13 +82,36 @@ during C+3 (:2140) and irq_valid[2], which is the port, during C+4 (:2198, :1837
 exactly when rvfi_wb_done was high during C+3 (:1868, :2069). Nothing in Section 4 prevents that, so the
 coincidence is a timing alignment, not an illegal state.
 
-This is why the trigger shape decides whether the property fires. A notification raised at the same time as the
-interrupt drains the pipeline and leaves the four following cycles empty of retirements, so the raise-triggered
-shape never aligns. A notification raised a short delay after an interrupt entry leaves the pipeline refilling,
-so a retirement can complete at C+3 and the port coincides at C+4. The 36 firings across the two knob values are
-consistent with that alignment. Section 7 settles which alignment the run took and corrects a guess made here
-before the wave was read: this text first named a handler retirement as the likely coincident record, and in the
-run no handler executes at all.
+This is why the trigger shape decides whether the property fires. A notification raised a short delay after an
+interrupt entry leaves the pipeline refilling, so a retirement can complete at C+3 and the port coincides at
+C+4. The 36 firings across the two knob values are consistent with that alignment. Section 7 settles which
+alignment the run took and corrects a guess made here before the wave was read: this text first named a
+handler retirement as the likely coincident record, and in the run no handler executes at all.
+
+CORRIGENDUM (2026-09-05, rtl-arch). This section first said that a notification raised at the same time as the
+interrupt drains the pipeline and leaves the four following cycles empty of retirements, "so the raise-triggered
+shape never aligns". That claim is withdrawn: it is refuted by a run of exactly that shape. The Critic's
+re-review of IRQ step 1b compiled a detached worktree of 55ef529 (TB-source identity 1a2c9707a8a108e9) and ran
+gen_ut_fetch_en at seed 1 with +gen_fetch_en_at_reset=0 +gen_knob_irq_regime=storm +gen_knob_irq_line_mix=with_nmi,
+whose committed driver arm at dv/auto_dv/env/gen_agents_pkg.sv:632 is
+`m[$urandom_range(17, 0)] = 1'b1; if ($urandom_range(3, 0) == 0) m[18] = 1'b1;`, raising the NMI in the same mask
+and the same event as the non-NMI line; the take-triggered arms exist only in an uncommitted diff. That run fired
+this property at cycle 11, with the consequent itself the offending term `(!rvfi_valid)`, so both signals were
+high in one cycle. The record is dv/auto_dv/evidence/gen_critic_t044_fetchen_nmi_firing.md. Reset is not the
+explanation: the macro at dv/auto_dv/tb/gen_protocol_props.sv:111 carries `disable iff (!rst_ni || !en_rvfi)`, and
+that record shows `fetch_enable_i <= On` at 5000 ps, so cycle 11 is after both the release and fetch enable.
+
+What the corrigendum does NOT claim: no wave was dumped for that run, so which line raised the notification is
+undecided. The pulse condition at rtl/ibex_core.sv:1965-1970 is
+`~instr_valid_id & ~new_debug_req & (new_irq | new_nmi | new_nmi_int) & ready_wb & ~captured_valid`, so a regular
+interrupt arriving with an empty ID stage raises the same notification an NMI would. What is settled is the
+shape-level claim, that a raise-coincident shape can align, and not the alignment of that particular firing.
+
+The ruling in Section 1 is unchanged and is not reopened by this: exclusivity is still not a design invariant,
+the firing is still not a DUT defect, and no bug row follows. The consequence falls on Section 6 instead. Every
+firing this ruling analysed before was take-triggered, under a knob that is not committed; the property now fires
+in the DEFAULT committed shape, so the replacement proposed there matters more than it did when it was written,
+while it stays parked behind round 2 with the other frozen items.
 
 ## 6. What to assert instead
 
