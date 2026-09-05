@@ -321,3 +321,30 @@ Reconciliation with rev75 and rev78 (read after the rows above were fixed):
 
 CRITIC VERDICT: APPROVE on 001c302..c1239af. Nothing of mine is open on the form but L-4 and the L-10 note; the checker reproduces all
 206 claims from any working directory with a twelve-case self-test whose two new controls fail as they should.
+
+## 11. The rev78 answer at 9a8d852, c1239af..9a8d852: L-4 and L-10 closed, the checker classifies every status cell; APPROVE (2026-09-05T15:10:51Z)
+
+Artifacts at 9a8d852: gen_round2_request.md d59543aac9dea447, gen_round_form_check.py 31fcbcbe3214f870, gen_plan_digest_provenance.md,
+the three plan documents. No review of 9a8d852 exists at HEAD 6a9a549 (rev83 is running), so none is read here. Method: a detached
+archive of 9a8d852 (form3/v33_checks.sh 9a8d852, log v37_checks.log): the checker passes 208 claims from the archive root and from a
+foreign directory; --self-test passes fifteen cases, the three new ones among them (a wrong open-condition count, a condition cell
+that begins with neither open nor closed, a dropped condition row); my sixteen-row control still fails the row count; my degenerate
+cell ("fixed at deadbee; OPEN on the sweep record" in row d) now fails three claims, the first naming the row ("condition (d) status:
+the cell begins 'fixed at deadbee; OP', not open or closed"), where at c1239af it counted as closed; the csr_warl sentence read
+against the wave record; the (a) row, the headers and the provenance record read.
+
+- L-4 CLOSED on my own reading of the wave record: the sentence (:341-348) now separates the two 39-of-40 figures as the record has
+  them. The entry's own row (runs 40, pass 39, declared 179, every_seed 178, under_bar 1, each run's own checker verdict per the
+  index) is a coverage refusal on the single cross leg under the 179-bin set, which left the set at the 9c28944 re-render to 178;
+  the generator-assert cause belongs to the PMP blocks at 218e9f3 and 4cd3ff6 and not to this entry, which produced a program at all
+  forty seeds. That is Section 7's L-4 stated in full, and the sentence says the earlier version merged the two.
+- L-10 CLOSED, and the stronger remedy was taken: every status cell must begin with open or closed, a cell beginning with neither
+  fails and is named by its row letter, the classified count must equal the number of rows, and the form states the convention under
+  the table (:405); the DV Lead reports reproducing the hole with v3.5's (a) row before fixing it, and my own degenerate cell shows the
+  same hole closed.
+- Condition (a) (:387) opens "CLOSED at 5f9bea6:" and cites this file's companion record correctly. The three plan headers carry inputs
+  digest cdb6e3abfe31 and each names gen_plan_digest_provenance.md; the record's parts-only digest and the digest's inputs I do not
+  recompute, the inputs being gitignored, as before.
+
+CRITIC VERDICT: APPROVE on c1239af..9a8d852. Nothing of mine is open on the round-2 request form: L-4 and L-10 are CLOSED; the checker
+reproduces all 208 claims from any working directory with a fifteen-case self-test whose new controls fail as they should.
