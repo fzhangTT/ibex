@@ -400,3 +400,46 @@ the digests unverifiable, as before. Both agree there is no Major and no Medium.
 
 CRITIC VERDICT: APPROVE on 9a8d852..e4aef00. L-11 is CLOSED and nothing of mine is open on the round-2 request form; L-12 and L-13
 are owed on the plan's Section 0 text, I-2 on the form's wording.
+
+## 13. The rev88 answer at 2f92709, e4aef00..2f92709: the comment rule's four cases; L-12, L-13 and I-2 closed; rev92's two Lows adopted as
+L-14 and L-15; APPROVE (2026-09-05T19:03:41Z)
+
+Artifacts at 2f92709: gen_test_plan.md Section 0 (the comment-rule entry), gen_round2_request.md 10e98b98e6cdc855, gen_round_form_check.py
+4eca651ad56e4cab (unchanged in content, the identity carried), gen_plan_digest_provenance.md, gen_trace_check.py, the three plan
+headers. No review of the commit existed when the rows below were fixed (rev92 was running; it landed at 697280e and is
+reconciled below). Method: a detached archive of 2f92709 (form3/v33_checks.sh 2f92709, log v39_checks.log): the checker passes 208 claims
+from the archive root and from a foreign directory, --self-test passes fifteen cases, my sixteen-row control still fails the row count;
+the Section 0 entry and the csr_warl sentence read; findings fixed before any review of the commit (form3/draft_s13_prerev.txt).
+
+- L-12 CLOSED: the excluded class reads "review ids, plan-item tags, row labels, reviewer and Critic labels, and owner-question ids".
+  L-13 CLOSED: the entry opens "Ruled by the Orchestrator on 2026-09-05, widened the same day and agreed by the DV Lead". I-2 CLOSED:
+  the csr_warl sentence (:350) pins the wave to 4017573 as "the commit that landed" the backstop.
+- The entry now states four cases in one place: what may stay (a standing owner ruling as the lookup key for a constraint stated
+  beside it; an identifier cited as the source of a name or value), what goes, what a fact-stating comment cites (where the fact can be
+  verified, an identifier only where a ruling made the fact hold), and the scope (comments and docstrings; strings out of the rule save a
+  heading of a generated record). That is the rule the flow sweeps have been applying, now written where a reader finds it; rev88's Info
+  on the source-of-a-name identifier is the second stay case, and the fact category runtime-2's 555f17a cited ahead of its landing (my
+  flow L-25) now exists at this commit.
+- The three headers read inputs digest 9606552cc192 and the provenance table gains a row for it, the previous row now keyed to e4aef00.
+  The trace checker's comment changes are read from the diff and not exercised here; the DV Lead's controls (trace check PASS, the
+  coverage code generator up to date, the documents reproducing from the generator) are its own.
+
+Reconciliation with rev92 (697280e, read after the rows above were fixed): its verification agrees with mine (208 claims, the trace check
+PASS, the coverage code generator up to date, the header lines and the Section 0 entry the only plan changes, the provenance row re-keyed
+to e4aef00, the csr_warl sentence against 4017573's own hunk). Two Lows, both VERIFIED on the 2f92709 tree and adopted. L-14 (Low, plan;
+DV Lead): WHAT GOES (:48) names no task or work-package id, while this landing drops two task ids under the rule and 555f17a dropped ten;
+a T-nnn is not a plan-item tag by shape, and the second stay case pulls the other way at gen_tb_pkg.sv:234-254 (T-051, eight times, as
+the source of the predicted constants), gen_protocol_props.sv:308 (T-017) and gen_trace_check.py:161 (T-140 as a field shape), so the
+entry should name task and work-package ids and say which identifiers the second case admits as a value's source. L-15 (Low, tool; DV
+Lead): gen_trace_check.py:12 (the module docstring) and :161 (a trailing comment) still carry T-140 and :111 carries WP-8, all in scope
+by the entry's own SCOPE line; the verify log's "comment hits: clean" (dv/auto_dv/work/dv-lead/rev88_verify.log) was a scan of
+whole-line comments, as its control shows (three hits on the committed copy, each a line beginning "#"), so the commit message's "drops
+the two Orchestrator task ids ... from its comments" holds for the :27-28 block alone. My own miss: my pre-review read of the trace
+checker was of the diff and not the id-family sweep over the whole file that I hold the flow sweeps to (the T-215 inline comment of the
+flow record's L-22 is the same shape); that sweep, run now on the 2f92709 blob (form3/v40_trace_sweep.log), finds :12, :111 and :161 in
+scope and :30, :168, :173, :177, :179 and :205 inside strings. Its Infos: rev88 I-3's first half (record the tb sites gen_smoke_run.sh:9-10
+as owed) is neither done nor declined by this landing; both Critic labels are still at :9-10 of 2f92709 and the owner is tb-infra-2, as
+Section 12 says, and whether the plan owner's response record carries a row for another group's site is the Orchestrator's call rather
+than a plan finding; the digests unverifiable from a checkout, standing. Both agree there is no Major and no Medium.
+CRITIC VERDICT: APPROVE on e4aef00..2f92709. L-12, L-13 and I-2 are CLOSED and nothing of mine is open on the round-2 request form; L-14 and
+L-15 are owed on the plan's Section 0 text and on the trace checker's docstring and trailing comment.
