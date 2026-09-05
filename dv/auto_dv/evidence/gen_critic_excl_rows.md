@@ -74,3 +74,26 @@ CRITIC VERDICT: APPROVE. The landing retains the two artefacts the exclusion ver
 corrects every stale README statement I named and four more of the same class, replaces a self-test that had been red
 since pass 14 with a classifier that refuses what it cannot explain, and leaves the exclusion file untouched. My M-1, L-1
 and L-2 of gen_critic_excl_final.md are CLOSED; L-1 here is a pre-existing usability defect, not a condition.
+
+## 6. Reconciliation with the cross-model range review (written by corrigendum, HOLD sent first)
+dv/auto_dv/reviews/2026-09-05-claude-diff-e6ed6d8c-7fb1aeb8.md at aa86922 (97e6b4f7d4cf5b1b, APPROVE-WITH-CHANGES; one
+Medium, four Lows), read at 2026-09-05T06:51:53Z after this verdict was committed (07653dd). The reviewer verified what Sections 1-2
+verified (the constfile archive reproduces through gzip_n(), the join footer matches the README, the .el untouched at
+1424 entries, the self-test passes on a git-archive copy).
+- Medium (gen_excl_f1_pass.py:515 and the retained-artifact names): no duplicate-pass-label refusal exists; --pass-label
+  is only printed (:378, :424, :522) and the retained artifacts are keyed by the round tag alone (:356, :513-515), so a
+  second non-rehearsal pass on one round directory overwrites the urg log, the dashboard, the join and the constfile
+  archive silently. Verified by reading the script; my run of the pass was a rehearsal and did not probe a second
+  pass. ADOPTED as M-1 of this verdict, OWED and disclosed (the APPROVE stands: the committed round-0 artefacts are the
+  first pass's and their hashes are recorded in the README); remedy with rtl-arch's next excl touch (CM225): refuse a
+  non-rehearsal pass whose retained artefacts for the tag already exist unless a re-pass is stated.
+- Low (the "every one of the 495 annotations cites EC-2" figure): mine; measured 270 of 495 (272 mention EC-2). Corrected
+  in gen_critic_excl_final.md's corrigendum in the same hand; rtl-arch's row, docstring and subject follow under CM225.
+- Low ("gzip -n" reads as the CLI, whose bytes differ): the README wording; my Section 1 named the helper's call
+  explicitly. Adopted as L-2.
+- Low (entry_set_delta matches held-out entries by kind and count only, :157 and :537): verified; a class-D arm wrongly
+  emitted plus an unrelated dropped Block still counts 3. Adopted as L-3: match the three arms by checksum and text.
+- Low (a missing constfile source in a non-rehearsal pass records None and continues, :344-364): verified; adopted as
+  L-4: die() when not a dry run and the build manifest's constfile is absent, since retention is the point of the pass.
+- Not in the review: my L-1 (the out-of-tree --work-dir crash), already matched by rtl-arch's own finding.
+The verdict stands: APPROVE with M-1 owed under CM225; L-1..L-4.

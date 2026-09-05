@@ -170,3 +170,14 @@ no entry, so per the Orchestrator's ruling it is judged by its own range review 
   a strict-load guard), the positive control that makes the 0-rejection statement discriminating, and the RTL reading of
   the class-D arms, guards and enums. The verdict stands as in Section 5: APPROVE with M-1 owed; open records rows L-1 (F-1
   and F-6 rows) and L-2; L-3 and L-4 closed at HEAD.
+
+## Corrigendum (2026-09-05T06:51:53Z, HOLD sent to the Orchestrator first; the verdict above is unchanged)
+M-1 above says "Every one of the 495 annotations cites 'EC-2 constfile' as an evidence class". That sentence was an
+inference from my measurement that no annotation lacks an evidence token, not a count of EC-2 itself. Measured now on
+the committed file (91dbc8c7ff9ce60b, unchanged since 98b643e), by the same annotation parser: 270 of 495 annotation
+groups contain "EC-2 constfile" (272 mention EC-2 at all); the 217 cheriot-out-of-scope Class T groups and the six
+Class D groups cite no EC-2. The range review of the excl-critic-rows landing (aa86922, rev50) measured the same 270
+and traced the "495" in rtl-arch's response row CR-FF-M1, the 7fb1aeb commit subject and the constfiles() docstring
+back to my text; those three carry my error and are corrected under CM225 (rtl-arch's next excl touch). What M-1
+required is unchanged: the constfile is the EC-2 evidence the 270 annotations cite, and it is retained (7fb1aeb, my
+verdict gen_critic_excl_rows.md). Lesson recorded: a figure I hand is a figure I counted.
