@@ -38,7 +38,8 @@ random extras with rd = x0 and x0 sources, whose compares are vacuous and counte
 delays (the items' Knobs lines) through lib.TIMING_ONLY_KNOBS, varied by the template's layers 2/3 when the build
 consumes them. Pinned knobs: none.
 
-Fire-checks per seed: every non-vacuous op of an item reports its reference value (fire_tp_bit_<nnn>_ops); every
+Fire-checks per seed: every reporting non-vacuous op of an item reports its reference value (fire_tp_bit_<nnn>_ops; the
+binv pair's first op stores nothing and is checked through the chained second op, counted apart); every
 exhaustive set the item names has a carrier whose report matched (fire_tp_bit_<nnn>_<set>); TP-BIT-021 adds the
 0x55555555 results and the identity word; TP-BIT-040 checks the misa bits on the actual report words;
 fire_program_verdict: tohost pass code, retirement floor reached, report count k. declare_bins() takes the template
@@ -75,9 +76,10 @@ class BitRatified(GenTest):
     def fire_check(self):
         self._p = prog.plan(self.seed)
         got = self.reports
-        # an op matched when every one of its report words equals the plan's
+        # an op matched when it stores at least one report word and every one of them equals the plan's; a no-report op
+        # (the binv pair's first) never matches by itself and is checked through the chained op its value feeds
         self._ok = {op.idx for op in self._p.ops
-                    if op.rep + len(op.expects) <= len(got) and got[op.rep:op.rep + len(op.expects)] == op.expects}
+                    if op.expects and op.rep + len(op.expects) <= len(got) and got[op.rep:op.rep + len(op.expects)] == op.expects}
         self._want = prog.wanted()
         self.fire_tp_bit_002()
         self.fire_tp_bit_003()
@@ -101,12 +103,13 @@ class BitRatified(GenTest):
 
     # ---- shared per-item checks (the `what` prefix names the calling item) ----------------------------------------
     def fire_ops(self, pre, item):
-        """Every non-vacuous op of the item reports its reference value; vacuous compares are counted apart."""
+        """Every reporting non-vacuous op of the item reports its reference value; vacuous compares and the no-report op
+        (checked through its chained successor) are counted apart."""
         exp = self._p.items[item]
         idxs = exp["ops"]
         bad = [i for i in idxs if i not in self._ok]
-        detail = (f"{len(idxs)} ops ({len(exp['floor'])} floor, {len(exp['vacuous'])} vacuous rd = x0 counted apart), "
-                  f"{len(bad)} mismatches")
+        detail = (f"{len(idxs)} ops ({len(exp['floor'])} floor, {len(exp['vacuous'])} vacuous rd = x0 and "
+                  f"{len(exp['unreported'])} no-report counted apart), {len(bad)} mismatches")
         if bad:
             op = self._p.ops[bad[0]]
             got = self.reports[op.rep:op.rep + len(op.expects)]

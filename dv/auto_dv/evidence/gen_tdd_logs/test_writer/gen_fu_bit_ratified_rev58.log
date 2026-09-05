@@ -1,0 +1,22 @@
+# gen_fu_bit_ratified_rev58: the rev58 follow-up on gen_bit_ratified_prog.py and gen_test_bit_ratified.py leaves every emitted program byte-identical
+written 2026-09-05T12:04:13Z by the Test Writer; clone HEAD df490cc (df490cc85444e44fdd04a23437d6f737124d6763); python 3.12.10
+committed generator (the export's copy) sha256 70f318080711d7845c88341a012461bd21d57695536daf2db33189a675a3b8d0; candidate b8a99dc827c3
+  ok    the export's generator is HEAD's blob and the block's pin 70f31808
+
+## A. GREEN PROGRAMS at 80 seeds (1..40 and the block's forty from gen_pairfix_seeds.txt): emitted text, reports, k, min_retired
+  ok    emitted program byte-identical at 80 of 80 seeds
+  ok    report words, k and min_retired identical at 80 of 80 seeds
+  ok    exactly one no-report op per program counted apart (80 over 80 seeds: the binv pair's first)
+  ok    every item's ops list is the committed list minus its no-report member, nothing else moved
+
+## B. RED FORMS: every red item at three seeds, emitted text and reports identical
+  ok    red programs byte-identical at 54 of 54 (item, seed) pairs
+
+## C. THE TEST'S MATCH RULE: the no-report op never enters _ok, before and after, on the plan's own report stream
+  ok    gen_test_bit_ratified.py: _ok requires a report word
+  ok    at seed 140681439 the committed rule admits the no-report op [432] on an empty slice; the new rule does not, and nothing else changes
+
+## D. THE COMMENT SPELLING: the emitted comment names the chained value in plain text in both versions
+  ok    the chr()-spelled key is gone from the source; the emitted comment line is unchanged: # op 432: TP-BIT-018 binvi imm=0 floor rs1=distinct_lanes 0xcf49bd28 -> 0xcf49bd29 (not re
+
+RESULT: PASS, every expectation above holds

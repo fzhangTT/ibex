@@ -1088,3 +1088,47 @@ not joint with the DV Lead.
 RECORDS. CM229-M-1's declaring half closes for gen_test_cmp_zca here (its bit_ratified half closed in Section 18). One
 figure in a hand-off message did not survive the files: the census hand-off spoke of 24 cross legs under the bar; the
 census file and the index table both give 23 (1 + 2 + 4 + 5 + 6 + 5), which is the figure this landing uses.
+
+## 20. Companion lines to Section 19 (rev63, two Lows)
+
+COMPANION LINES TO SECTION 19 (rev63, two Lows). (1) Its RECORDS paragraph says the 24-cross-leg figure lived only in a
+hand-off message; the committed wave index gen_index.md:50 (1fb417f) also says "24 are CROSS LEGS" in prose while its
+own table sums to 23, so the figure is a prose-versus-table inconsistency of that index (runtime-2's corrigendum, committed
+at 2c2fd8d) and not a message-only slip; this landing used the table's 23. (2) The apply_handB.py text folded into
+gen_fu_wave_rerender.log carries cp_cj_off.self's reason as it stood when the log was written, ending "(398 merged hits
+in round 0)"; the committed module and manifest carry the later wording that names the file, "(..., gen_round_0/
+gen_grpinfo.txt)"; the log's Section C checked the reason by substrings and so did not see the difference. The
+committed text is the one that stands; the log is retained and not reopened.
+
+The mul_div label-defect fix that first stood here as Section 20 is PARKED, not landed: the DV Lead ruled that the fix, its
+forty-seed block at the fix's commit and the re-render restoring the four cr_op_divisor pos_rand legs land AFTER round 2,
+because a fix landed before the round without its block would leave mul_div declaring 190 bins measured on a superseded
+generator (the rule committed at 81355d1). The candidate, its calibrated model-level red (the reader agreeing with the
+wave seed for seed, 40 of 40) and its record text wait complete in the Test Writer's work directory and return as their
+own landing after the round.
+
+## 21. The rev58 follow-up on gen_test_bit_ratified: two code Lows closed without touching a program, one Info
+
+The cross-model re-review of the generator-fixes second landing (rev58, e309af3, APPROVE-WITH-CHANGES) left two code Lows
+and one Info with the Test Writer. Both code changes are proven to leave every emitted program byte-identical to the
+generator the block measured, so the entry's block authority (Section 18) is untouched: gen_fu_bit_ratified_rev58.log
+loads the committed generator (the export's copy, sha256 the pin 70f318080711...) and the candidate side by side and
+compares the emitted text, the report words, k and min_retired at 80 seeds (1..40 and the block's forty from
+gen_pairfix_seeds.txt) and the emitted text and reports of every red item at three seeds (54 pairs): identical at every
+one. No bin of the entry moves and no measurement is owed.
+
+(1) gen_bit_ratified_prog.py spelled the key "value" as chr(118)+chr(97)+... inside an f-string to avoid nesting the
+same quote, which the pinned Python 3.12 would allow but a 3.9 reader would not; the emitted comment line is now built
+from a plain local (`shown`) and reads exactly as before. (2) The binv pair's first op stores no report word, so the
+test's match rule admitted it on an empty slice and it counted in the item's ops and floor totals while fire_ops's
+docstring said every non-vacuous op reports. The plan's items now count a no-report op apart ("unreported", beside
+"vacuous"), the test's _ok requires at least one report word, fire_ops's detail names the count, and the module
+docstring says the pair's first op is checked through the chained second op, whose value it feeds; the log's Section C
+shows the committed rule admitting op 432 of seed 140681439 on the empty slice and the new rule refusing it, nothing
+else changing. (3) Info: Section 18 clause (c) cites ":864-865" for the sweep specs making rs2's value rs1's; the rs2
+VALUE assignment is :866 (`rs2_val = rs1_val`), :864 being the register assignment; the log's Section H prints :861-866,
+so the range printed already contains the line and the citation should read :866. Section 18 is committed and not
+reopened; this line is its companion. (4) The Critic's L-9 and rev58's third Low: the two DV Lead rules Section 18 rests
+on (a manifest declares guarantees and a count is only evidence; a block calibrated on one generator is evidence for
+that generator alone) had no committed home when Section 18 was written; the DV Lead recorded them in the coverage
+plan's Section 0 at 81355d1, and Section 18's clauses are to be read against that text.

@@ -882,15 +882,20 @@ def _items(ops):
     def add(d, key, op):
         d.setdefault(key, []).append(op.idx)
 
-    items = {i: {"ops": [], "vacuous": [], "floor": []} for i in BUILT_ITEMS}
+    items = {i: {"ops": [], "vacuous": [], "unreported": [], "floor": []} for i in BUILT_ITEMS}
     f = {i: {} for i in BUILT_ITEMS}
     for op in ops:
         it = items[op.item]
-        (it["vacuous"] if op.vacuous else it["ops"]).append(op.idx)
-        if op.floor and not op.vacuous:
-            it["floor"].append(op.idx)
         if op.vacuous:
+            it["vacuous"].append(op.idx)
             continue
+        if op.no_report:
+            # stores nothing, so no report word can match it: checked through the chained successor its value feeds
+            it["unreported"].append(op.idx)
+            continue
+        it["ops"].append(op.idx)
+        if op.floor:
+            it["floor"].append(op.idx)
         t = op.tags
         d = f[op.item]
         if op.item == "TP-BIT-002":
@@ -1236,9 +1241,9 @@ def _body(p):
     for op in p.ops:
         red_mark = "  RED: deviates" if (p.red and op.idx == p.red_idx) else ""
         srcs = f"rs1={op.rs1_class} 0x{op.rs1_val:08x}" + (f" rs2={op.rs2_class} 0x{op.rs2_val:08x}" if op.rs2 else "")
+        shown = " ".join(f"0x{w:08x}" for w in op.expects) or f"0x{op.aux['value']:08x}"   # a no-report op shows the value it chains
         out.append(f"  # op {op.idx}: {op.item} {op.kind}{' imm=' + str(op.imm) if op.imm >= 0 else ''} "
-                   f"{'floor' if op.floor else 'extra'} {srcs} -> "
-                   f"{' '.join(f'0x{w:08x}' for w in op.expects) or f'0x{op.aux[chr(118)+chr(97)+chr(108)+chr(117)+chr(101)]:08x}'}"
+                   f"{'floor' if op.floor else 'extra'} {srcs} -> {shown}"
                    f"{' (not reported: the next op must retire immediately after this one)' if op.no_report else ''}{red_mark}")
         out += [f"  {f}" for f in op.fillers]
         out += _op_lines(p, op)

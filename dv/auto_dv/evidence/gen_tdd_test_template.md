@@ -637,3 +637,13 @@ fresh forty-seed sweep at a fix commit, runtime-2's run; this section closes (c)
 entries' behaviour under the changed drain bound: their stimulus() bodies end before the program does (the pinned
 sweeps and the wave show it), and a stimulus that legitimately outlives the program by more than the finish budget
 would be a defect this bound now names rather than hides.
+
+## 19. Counting rule: count events, not the lines that report them
+
+The DV Lead's rule, recorded here as its committed home at the DV Lead's request: count EVENTS, not the lines that
+report them; a grep -c of a log is a line count, and a log may print several lines per event. A VCS assertion firing
+prints an assertion-source line and a UVM_ERROR line, and a run ends with a per-id tally line that is a count and not
+an event; four figures in this group's history were inflated exactly that way (a 343 that was 334 checker fires plus
+nine tally lines; two headline figures of a counters log that were line counts labelled as fires). A retained count
+names the pattern it matched and what one match IS, so a reader can re-derive it; a count without its pattern is a
+number, not a measurement.
