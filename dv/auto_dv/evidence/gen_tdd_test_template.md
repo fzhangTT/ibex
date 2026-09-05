@@ -648,22 +648,22 @@ nine tally lines; two headline figures of a counters log that were line counts l
 names the pattern it matched and what one match IS, so a reader can re-derive it; a count without its pattern is a
 number, not a measurement.
 
-    ## 20. Companion lines to Section 18 (rev64, two Lows and one deferral)
+## 20. Companion lines to Section 18 (rev64, two Lows and one deferral)
 
-    (1) Section 18's cycle-level facts about the wave's failing run (the final store at cycle 12368, 17 of 18 entries driven,
-    the c15223 phase applied at cycle 100069) are read from the re-run's own retained lines, gen_tmo_irq_1800473338_red_stdout.log
-    on the build of 9c28944, which reproduce the wave's run to the nanosecond; the committed wave index (gen_wave_4017573/ at
-    1fb417f) carries only the failure message and the 1123735 ns against the typical 65420 ns, not those cycle figures. The
-    wave run's own sim_stdout.log in the out-tree carries them too, and is where I first read them, but an out-tree path is
-    not a citation; the retained re-run is. (2) The fixture's far target sits twenty budgets past the program's end and never
-    becomes reachable, so gen_ut_wait_past_eot exercises the abandoned-waiter defect through the join timeout and the answer
-    timing, not through the wave's other face of it, a wait that reads True because its target passed during its sleep. That
-    face is exercised by the seed-level red (the runner's wait for c15223 returning True at cycle 100069 and applying the
-    phase after the program ended); a third fixture wait with a target inside one budget past the end would exercise it at
-    fixture level too, and is deferred to the next template touch rather than re-opening this landing's fixture runs and
-    retained logs inside a records hand. (3) The API document's wait_cycles row now says a post-end call consumes no
-    simulation time, so a loop over it must test the return value or eot_seen (rev64 L-3).
-    
+(1) Section 18's cycle-level facts about the wave's failing run (the final store at cycle 12368, 17 of 18 entries driven,
+the c15223 phase applied at cycle 100069) are read from the re-run's own retained lines, gen_tmo_irq_1800473338_red_stdout.log
+on the build of 9c28944, which reproduce the wave's run to the nanosecond; the committed wave index (gen_wave_4017573/ at
+1fb417f) carries only the failure message and the 1123735 ns against the typical 65420 ns, not those cycle figures. The
+wave run's own sim_stdout.log in the out-tree carries them too, and is where I first read them, but an out-tree path is
+not a citation; the retained re-run is. (2) The fixture's far target sits twenty budgets past the program's end and never
+becomes reachable, so gen_ut_wait_past_eot exercises the abandoned-waiter defect through the join timeout and the answer
+timing, not through the wave's other face of it, a wait that reads True because its target passed during its sleep. That
+face is exercised by the seed-level red (the runner's wait for c15223 returning True at cycle 100069 and applying the
+phase after the program ended); a third fixture wait with a target inside one budget past the end would exercise it at
+fixture level too, and is deferred to the next template touch rather than re-opening this landing's fixture runs and
+retained logs inside a records hand. (3) The API document's wait_cycles row now says a post-end call consumes no
+simulation time, so a loop over it must test the return value or eot_seen (rev64 L-3).
+
 
 ## 21. Companion lines to Section 19 (rev67): the four figures, cited
 
@@ -676,3 +676,71 @@ gen_fu_l53_outstanding_saturate.log's two headline figures, line counts labelled
 gen_fu_l55_bus_if_saturate.log:109 (5285 error lines against 3 firings under wrapping plus mutation) and :112 (a bound
 property count of 2642 against a response-obligation count of 1). Each is a retained record; the pattern each count
 matched is in the file named.
+
+## 22. An evidence set must be shown capable of failing
+
+The DV Lead's rule, recorded here beside the counting rule (Section 19) in the DV Lead's own words: the leading
+sentence and instance 1 from its message received 14:40Z (one section, three instances, the ablation rule folded in
+as instance 1); instances 2 and 3 from its second message, received after the 14:42Z re-hand and before the 14:45Z
+WITHDRAW, which supersedes the first for those two and cites their figures to a committed log. This record adds the
+section number to the header and the numbering and titles of instances 2 and 3; the sentences are the DV Lead's,
+checked word for word against the messages as received. The ablation-reading rule this section first carried on its
+own is instance 1.
+
+An evidence set must be shown CAPABLE OF FAILING, not merely observed to pass. A set that passes is evidence
+only once something establishes it could have failed. Three instances:
+
+1. THE ABLATION READING. "Ablation 0" means zero ERRORS from the named check, not zero DETECTIONS, wherever
+   the detection counter increments before the enable gate, as it does in the irq_entry checker today: the
+   failure counter increments and the gate guards only the uvm_error, so disabling the named check suppresses
+   the message and leaves the detection counted. Write the result as "zero errors from the named check,
+   detections unchanged" and name where the counter sits relative to the gate. The control still establishes
+   what it must: with the named check disabled and the failure count unchanged, the named check is what
+   reported the fires. The defect is the reading, not the control.
+
+2. THE RED CRITERION. When two candidate reds are available for the same defect, the one that holds its
+   confounders equal wins, even where the other looks starker. A difference in a count that appears only
+   because a run was shortened confounds the defect with the truncation: the zero is explained by the run
+   ending as well as by the defect. A difference in timing, or in the order in which judgments are made,
+   measured on one fixture with the same raise in both builds and the bound-related quantity equal in both,
+   isolates the defect. Prefer it, and say in the record why the count does not discriminate on that
+   fixture, rather than building a second fixture whose only merit is that a count moves on it. The
+   instance on record is landing 60's NMI-mode item, retained at
+   dv/auto_dv/evidence/gen_tdd_logs/fcov/gen_fu_l60_nmi_mode_exit.log (commit 139c325): one raise in both
+   builds, judged forty-two records apart, takeable records eighteen in both, so the bound is held equal
+   and the mask is what moved. The one-against-zero form of the same evidence would have needed a shortened
+   run and would have proved less.
+
+3. THE EVIDENCE SET FOR A SHARED CHANGE. A pre-hand evidence set for a change to a shared stimulus
+   component, or to a checker other roles depend on, must include at least one run that could have failed
+   had the change been wrong. Two forms qualify: a run of a real program whose output is compared against
+   the committed component on the same seed, where a difference would have been reported; or a fixture
+   demonstrated to fail on the defect class the change addresses. A smoke set is not one of them. A smoke
+   pass bounds only what the smokes exercise: the log named above records six smokes passing on a bus-agent
+   restructure that then produced 4.29 million error lines on a real regression program. State in the
+   hand-off what the passing set could have caught, not only that it passed.
+
+Every figure in instances 2 and 3 (forty-two records, eighteen takeable, six smokes, 4.29 million error lines) is
+quoted from that one committed log, dv/auto_dv/evidence/gen_tdd_logs/fcov/gen_fu_l60_nmi_mode_exit.log at 139c325, and
+was re-read there for this touch: the same raise at order 206 in both builds, judged at 267 and 225 (:49-52), takeable
+18 in both (:54), the reasoning attributed to the DV Lead in the log's own words (:60), six smokes PASS (:67), the 4.29
+million lines on a bus-agent restructure (:68-69). A retained log is never reopened, so the figures stay recomputable.
+
+The mechanism instance 1 names, read in the tree rather than taken from the relay, cited by identifier and pinned to
+the commit that last changed the file: in dv/auto_dv/env/gen_checkers_pkg.sv at 41bcbe8 (tb-infra-2's landing 61, the
+package's latest change at this hand) the irq/nmi entry checker increments its detection counter `expect_fail++` at
+:162 and gates the `uvm_error` alone behind `if (gen_chk_en(cfg, ...))` at :163. The two lines sat at :164/:165 at
+d8bed4e and :163/:164 at 139c325; landings 60 and 61 each removed a line above them, which is why the hand's verifier
+re-derives both numbers from the handed HEAD and refuses the hand when the record's numbers differ. The same log
+states the mechanism in prose at :61-63 ("expect_fail is incremented BEFORE the gen_chk_en gate, so disabling the
+named check suppresses the uvm_error and leaves the detection counted"), a citation that does not move with the
+file's layout. The rule text names the checker and not a line by the DV Lead's choice, so that the rule outlives the
+file's layout; this paragraph is pinned to a commit for the same reason.
+
+COMPANION LINE (this touch): Section 20 of this record and the rev64 row section of gen_critic_response_test_template.md
+were committed at 2c63b83 indented by four spaces, the output of a patch script split in two by re-indenting its lines,
+which re-indented the quoted text along with the code; markdown rendered both as code blocks, and a section check reading
+"## " at column 0 could not see Section 20. The plan chain's section-number check, which every plan-class hand of this file
+runs and which a reader can run (the headers of this file, matched at column 0, must number sequentially), would have caught
+it on this touch; it was found by the same grep a step earlier. Both blocks are de-indented in this touch with their content
+unchanged, proven byte for byte minus the four leading spaces.
