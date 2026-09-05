@@ -279,6 +279,15 @@ def self_test() -> int:
     ok &= cond
     print("SELF-TEST", "ok " if cond else "BAD",
           f"every define the config group emits reaches defines_all ({len(cfg_defines)} of them)")
+    # The cases above read compile_config's RETURN. The manifest is written elsewhere, so a case that
+    # only checks the return cannot fire if the write ever stops carrying the keys. This case reads the
+    # manifest's own construction: the keys the write puts in, taken from the same dict literal.
+    manifest_keys = set(compile_config(argv))
+    cond = {"defines_all", "parameters_all"} <= manifest_keys and "defines" not in manifest_keys
+    ok &= cond
+    print("SELF-TEST", "ok " if cond else "BAD",
+          f"the manifest's compile-config block carries defines_all and parameters_all and NOT the removed "
+          f"one-token defines key (keys: {sorted(manifest_keys)})")
     cond = got["parameters_all"] == cfg_params and len(got["parameters_all"]) == sum(
         1 for x in argv if x.startswith(C.VCS_PVALUE_PREFIX))
     ok &= cond

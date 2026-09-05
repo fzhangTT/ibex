@@ -279,6 +279,8 @@ all of those commits.
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_fu_guard_fcov_red.log | (tb-infra) composed from runtime's scratchpad guard/g1 and guard/g2 runs | 8126 | 5c59feb272c40be64b45b271937b4472 |
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_rt35_supplement_corrigendum.log | (runtime scratchpad) cr33/gen_rt35_supplement_corrigendum.log | 8583 | 0d79e9d5372c50174451c5109feef32b |
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_fu_guard_fcov_red_corrigendum.log | (runtime scratchpad) rt35c/gen_fu_guard_fcov_red_corrigendum.log | 6344 | 264f58f704cf4012ac2883ec44be16cd |
-| dv/auto_dv/evidence/gen_tdd_logs/flow/gen_rt39_reds.log | (runtime scratchpad) rt39logs/gen_rt39_reds.log | 4735 | 2eeafa46418bc666095eaaabed5e2190 |
-| dv/auto_dv/evidence/gen_tdd_logs/flow/gen_rt37_red.log | (runtime scratchpad) rt39logs/gen_rt37_red.log | 2138 | ba58bbc48d36985e3bfdc9002bc3481c |
+| dv/auto_dv/evidence/gen_tdd_logs/flow/gen_rt39_reds.log | (runtime scratchpad) rt39logs/gen_rt39_reds.log; basis and the cited line are in gen_rt39_reds_basis.log, which accompanies it (the log's bytes are unchanged) | 4735 | 2eeafa46418bc666095eaaabed5e2190 |
+| dv/auto_dv/evidence/gen_tdd_logs/flow/gen_rt37_red.log | (runtime scratchpad) rt39logs/gen_rt37_red.log; basis and the cited line are in gen_rt37_red_case13.log, which accompanies it (the log's bytes are unchanged) | 2138 | ba58bbc48d36985e3bfdc9002bc3481c |
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_build_identity_red.log | (runtime scratchpad) bid/gen_build_identity_red.log | 3363 | 91acc5453864c548c60ee7f336cfac14 |
+| dv/auto_dv/evidence/gen_tdd_logs/flow/gen_rt39_reds_basis.log | companion to gen_rt39_reds.log, written in place (no scratchpad source) | 1766 | 22b707b8a9ed9219539c7dc550a8886d |
+| dv/auto_dv/evidence/gen_tdd_logs/flow/gen_rt37_red_case13.log | companion to gen_rt37_red.log, written in place (no scratchpad source) | 1893 | ad77e384c2617406817b54966c2534de |

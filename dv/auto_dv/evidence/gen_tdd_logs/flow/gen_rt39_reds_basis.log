@@ -1,0 +1,27 @@
+# Companion to gen_rt39_reds.log: the basis its transcript ran on
+#
+# This file accompanies dv/auto_dv/evidence/gen_tdd_logs/flow/gen_rt39_reds.log and changes none of its bytes.
+# It exists because that log's section headers name a tree, and the tree alone would mislead a reader who
+# tried to reproduce the runs. Raised as rev62 Medium 2.
+#
+# WHAT THE LOG SAYS: its two section headers read
+#     stamp 2026-09-05T10:50:26Z  host soc-l-11  tree 9c7f8f63957d153d9c67cd1a61d44f88b3c94c69
+#     stamp 2026-09-05T10:50:31Z  host soc-l-11  tree 9c7f8f63957d153d9c67cd1a61d44f88b3c94c69
+#
+# WHAT THAT TREE CONTAINS: none of the rt39 code. Commit 9c7f8f6 is tb-infra-2's irq checker fix; the rt39
+# flow changes were still uncommitted working-tree files at the time, and landed later at a58f562.
+#
+# SO THE BASIS IS: the scripts ran against the rt39 changes as UNCOMMITTED WORKING-TREE FILES over that HEAD.
+# The stamps and the tree sha in the log are correct as recorded; what the log does not say is that the code
+# under test was not in that tree.
+#
+# TO REPRODUCE: check out 9c7f8f63957d153d9c67cd1a61d44f88b3c94c69, apply the rt39 diff (committed at
+# a58f562), then run the scripts named in the log's section headers by their recorded md5s. The figures the
+# log reports are properties of the rt39 code, not of 9c7f8f6.
+#
+# WHY THIS IS A COMPANION AND NOT AN EDIT: retained logs are never reopened, not even to add a basis line.
+# The log's bytes are unchanged and its manifest row still verifies against them.
+#
+# ONE NOTE AGAINST MYSELF: gen_rt37_red.log, which I wrote LATER the same day, states its basis exactly this
+# way in its own header. So this is not a shape I learned from the review; it is one I had and did not carry
+# back to the earlier artefact.

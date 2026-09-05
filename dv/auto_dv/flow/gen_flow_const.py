@@ -565,6 +565,16 @@ GROUP_SCOPE_URG_TOTAL = "URG's own report-wide group total, as printed in the da
 # (LOG-097 addenda 3 and 4); this records the open question rather than answering it, and moving
 # the flow to another quantity is a one-token change here.
 GROUP_CELL_FIELD = "group_bins_all"
+
+GROUP_SCOPE_BY_FIELD = {"group_bins_gate": GROUP_SCOPE_GATE, "group_bins_all": GROUP_SCOPE_ALL,
+                        "group_score_weighted": GROUP_SCOPE_WEIGHTED}
+
+
+def group_cell_scope() -> str:
+    """Scope string of the field the selector reads. Labels derive from this rather than restating a
+    definition, so changing GROUP_CELL_FIELD moves every label with it (CM219 MINOR-2)."""
+    return GROUP_SCOPE_BY_FIELD[GROUP_CELL_FIELD]
+
 GROUP_CELL_SELECTOR_NOTE = ("selected by gen_cov_report.group_cell; the criterion ruling naming the "
                             "gate quantity is suspended, so this names the report-wide bins and the "
                             "other quantities are recorded beside it unchanged")

@@ -704,8 +704,12 @@ def main() -> int:
             U.log(f"urg merge (measured) of {len(measured_vdbs)} vdb(s)" + (" with exclusion dump" if dump else ""))
             cov = R.merge(outdir / "cov", sorted(measured_vdbs), a.elfile, dut_scopes=dut_scopes, dump_exclusions=dump,
                           info_scopes=info_scopes)
-            cov["build_defines"] = {n: b.get("defines_all") for n, b in builds.items()}
-            cov["build_parameters"] = {n: b.get("parameters_all") for n, b in builds.items()}
+            # NEW KEYS for the full sets. The pre-existing build_defines/build_parameters keys held the
+            # one-token group in committed manifests; writing the full set under the same name would put
+            # two populations behind one key, which is the defect CM222 L-1 fixed for the build manifest.
+            # The old keys are not written at all, so a reader sees them absent rather than changed.
+            cov["build_defines_all"] = {n: b.get("defines_all") for n, b in builds.items()}
+            cov["build_parameters_all"] = {n: b.get("parameters_all") for n, b in builds.items()}
             cov["glitch_filter"] = {n: b.get("glitch_filter") for n, b in builds.items()}
             cov["rulings"] = {"scope": C.ruling_scope_text(dut_scopes, info_scopes), "glitch": C.RULING_GLITCH}
             cov["constfiles"] = {n: b.get("constfile") for n, b in builds.items()}

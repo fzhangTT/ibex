@@ -60,8 +60,13 @@ Three definers exist today and all three must end up reading the ruled quantity:
 THE CHANGE. gen_cov_report emits three explicitly named fields, each with the denominator that produced
 it: `group_bins_gate` (hit-in-scope / declared-in-scope, ledger out of both terms) with its ratio and a
 scope string; `group_bins_all` with its ratio; `group_score_weighted` with its covergroup count and no
-ratio. gen_round and gen_dashboard both select `group_bins_gate`, carry its scope string into the row
-they print, and never substitute. The content-dependent fallback at `:138` disappears.
+ratio. gen_round and gen_dashboard both read ONE selector and never substitute, carrying the selected
+field's scope string into the row they print. The content-dependent fallback at `:138` disappears.
+
+CORRECTION 2026-09-05T11:33Z (rev62 Medium). This paragraph said the two select `group_bins_gate`.
+THEY DO NOT: the shipped selector reads `group_bins_all` (gen_flow_const.py `GROUP_CELL_FIELD`, per the
+LOG-097 addendum 4 ruling that suspended the criterion field). The three fields and the one-selector
+design are as described; only the field the selector names differs, and it is one token.
 
 SCOPE BOTH TERMS, and the ruling says why this round hides the bug: the ledger was 0 of 220, so the
 numerator 3477 is right either way, and a fix that scoped only the denominator would pass its round-1
@@ -72,11 +77,15 @@ The scope string names the population in words, in and out, e.g. "functional bin
 scope, witness ledger gen_wit_cycle_clause_cg excluded (220 clauses)". `gen_round.py:139` and `:311-312`
 hardcode the label "bins >= 80"; derive it from the selected field's scope string (CM219 MINOR-2).
 
-THE RESTATEMENT IS PART OF THIS LANDING (CM219 MAJOR-1). The round-0 entry stores 81.47. `gen_round.py:
-120-124` computes per-metric deltas against the previous entry and `:317` prints them, so a round-2
-delta would otherwise read +4.42 points of coverage that are entirely a change of rule. The same commit
-restates the stored figure as 85.89 (3477/4048) with a line saying it is a restatement of the same
-measurement under the ruled quantity, not a new measurement, so no delta spans two rules.
+THE RESTATEMENT WAS PLANNED FOR THIS LANDING (CM219 MAJOR-1) AND WAS NOT DONE.
+
+CORRECTION 2026-09-05T11:33Z (rev62 Medium). What follows describes a restatement the landing does NOT
+make, and it is kept only to say so. Because the selector reads `group_bins_all`, which is the same
+quantity the round-0 entry already stores as 81.47, there is no rule change for a delta to span and
+nothing to restate. The landing restates nothing. The paragraph's reasoning still holds for the day the
+selector moves to `group_bins_gate`: the stored 81.47 would then need restating as 85.89 (3477/4048)
+with a line saying it is the same measurement under a different rule, or a later delta would read
++4.42 points of coverage that are entirely a change of rule.
 
 THE RED, rewritten because v1's could not be run (Critic G-2): the regression manifest carries no gate
 verdict to compare with the summary, so "the two artefacts disagree" is not directly observable. The red

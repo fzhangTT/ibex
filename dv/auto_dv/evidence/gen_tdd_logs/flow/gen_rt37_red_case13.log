@@ -1,0 +1,29 @@
+# Companion to gen_rt37_red.log: the case-13 line a response row cites
+#
+# This file accompanies dv/auto_dv/evidence/gen_tdd_logs/flow/gen_rt37_red.log and changes none of its bytes.
+# Raised as rev62 Low 3: a response row cites a case-13 "ok ([])" line that the retained excerpt does not
+# contain.
+#
+# WHY THE LINE IS MISSING FROM THE LOG: it was measured, not invented, and then lost to my own output filter.
+# The transcript was assembled from a run whose output I filtered to the lines naming rt37 and the SELF-TEST
+# verdicts, and the case-13 line matches neither pattern. The log is therefore correct in what it prints and
+# incomplete relative to the claim made about it.
+#
+# THE LINE, as measured in the same detached-worktree session that produced that transcript, on 2026-09-05
+# shortly before 11:01Z, in the worktree of HEAD 5df6403ddc90877fa424e9bb9c77d2c3f09f21eb:
+#
+#   SELF-TEST ok  build-input gate case 13: every listed non-input is tracked and each glob class matches a
+#                 tracked file ([]); list sha256 80d4a7081e03
+#
+# THE CONTRAST that makes it worth citing: the same case, run on a detached ARCHIVE of the same commit,
+# reports BAD with the problem list holding
+#
+#   git ls-files failed: not a git repository (or any parent up to mount point /)
+#
+# because an archive carries no .git and the case shells git ls-files. That is why an archive run of the flow
+# self-tests ends "SELF-TEST: FAIL" for a reason that is not the code, and why the archive-taken transcript of
+# this red was discarded rather than retained.
+#
+# WHAT WOULD BE BETTER, stated rather than done: a re-run retained as a NEW log would carry the line in its own
+# transcript rather than in a companion. That was offered and this companion chosen, because the response row
+# already cites the existing log by path and a new log would leave that citation pointing at the wrong artefact.

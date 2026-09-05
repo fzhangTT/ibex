@@ -92,7 +92,6 @@ def metric_row(cov: dict[str, Any]) -> dict[str, Any]:
     gen_cov_report.group_cell, the one selector, so the percent and its denominator always come from the
     same named quantity; n/a kept. Never the grand total for code metrics: a missing or unparsed gate row
     is a hard error naming what is missing."""
-    totals = cov.get("totals") or {}
     gate = cov.get("gate_row")
     scopes = cov.get("dut_scope") or {}
     if not scopes:
@@ -142,7 +141,9 @@ def gate_status(row: dict[str, Any]) -> dict[str, Any]:
         if not isinstance(v, float):
             out[m] = "n/a (not reported by URG; excluded from the gate)"
         elif m == "group":
-            out[m] = ("bins >= 80" if v >= C.GATE_PCT else "bins below 80") + " (traceability not checked here)"
+            # Derived from the SELECTED field rather than restating a threshold and a definition here.
+            out[m] = (f"{C.GROUP_CELL_FIELD} >= {C.GATE_PCT:g}" if v >= C.GATE_PCT
+                      else f"{C.GROUP_CELL_FIELD} below {C.GATE_PCT:g}") + " (traceability not checked here)"
         else:
             out[m] = "PASS" if v >= C.GATE_PCT else "below gate"
     return out
@@ -268,12 +269,18 @@ def collect(outdir: Path, round_no: int, dry_run: bool, label: str | None,
     # rt39 item four: the canary's identity against the round's. Both values travel with the compare
     # result, so a reader of the commit never has to open a path under work/ that git does not track.
     canary = man.get("canary_build") or {}
-    round_sources = None
+    round_sources_all: list[str] = []
     for _b in (man.get("builds") or {}).values():
         _bm = U.load_yaml(Path(_b.get("manifest"))) if _b.get("manifest") and Path(_b["manifest"]).is_file() else {}
-        round_sources = round_sources or ((_bm.get("inputs") or {}).get("sources_sha256"))
+        _d = (_bm.get("inputs") or {}).get("sources_sha256")
+        if _d:
+            round_sources_all.append(_d)
     canary_sources = canary.get("sources_sha256")
-    sources_match = (canary_sources == round_sources) if (canary_sources and round_sources) else None
+    # Every build's digest, not just the first: a round with two builds of different sources would
+    # otherwise compare the canary against one of them and report a match that covers half the round.
+    uniq = sorted(set(round_sources_all))
+    round_sources = uniq[0] if len(uniq) == 1 else None
+    sources_match = ((canary_sources in uniq) and len(uniq) == 1) if (canary_sources and uniq) else None
     prev = index["rounds"][-1] if (index["rounds"] and not dry_run) else None
     gain = gain_against(prev["metrics"] if prev else None, row)
     streak = 0 if (prev is None or gain["shows_gain"]) else int(prev.get("no_gain_streak", 0)) + 1
@@ -282,6 +289,7 @@ def collect(outdir: Path, round_no: int, dry_run: bool, label: str | None,
              "regress_outdir": str(outdir), "regress_tag": man.get("tag"), "git_head": git.get("head"),
              "canary_build": man.get("canary_build"),
              "canary_sources_sha256": canary_sources, "round_sources_sha256": round_sources,
+             "round_sources_sha256_all": uniq,
              "sources_sha256_match": sources_match, "sources_sha256_scope": C.SOURCES_DIGEST_SCOPE,
              "git_dirty_tracked_files": git.get("dirty_tracked_files"),
              "dirty_tracked_tree": git.get("dirty_tracked_tree"),
@@ -343,8 +351,9 @@ def render_summary(e: dict[str, Any], prev: dict[str, Any] | None) -> str:
           f"glitch = {e.get('rulings', {}).get('glitch', 'n/a')}. Glitch filter (-cm_glitch 0) on the builds of this "
           f"merge: {e.get('glitch_filter')}; FSM coverage is not glitch-filtered (VCS Warning-[VCM-OPTIGN]).", "",
           f"## Metrics (gate row = `{e['metrics'].get('scope')}` combined: {e['metrics'].get('combining_rule')}; "
-          "n/a = URG did not report the metric: excluded from gate and gain; group is gated by bins >= 80 AND "
-          "traceability, the latter not checked here, and never counts toward the gain)", "",
+          f"n/a = URG did not report the metric: excluded from gate and gain; group is gated by "
+          f"{C.GROUP_CELL_FIELD} >= {C.GATE_PCT:g} ({C.group_cell_scope()}) AND traceability, the latter "
+          "not checked here, and never counts toward the gain)", "",
           "| Metric | Percent | covered/total | Gate (80) | Delta vs previous round |", "|---|---|---|---|---|"]
     for m in C.URG_METRICS:
         v = e["metrics"].get(m)

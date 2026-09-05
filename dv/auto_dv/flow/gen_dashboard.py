@@ -75,7 +75,6 @@ def dut_scope_row(m: dict[str, Any]) -> dict[str, Any]:
     cov = m.get("coverage") or {}
     if not cov.get("dashboard_txt") and (cov.get("unmeasured") or {}).get("dashboard_txt"):
         cov = cov["unmeasured"]
-    totals = cov.get("totals") or {}
     gate = cov.get("gate_row")
     row: dict[str, Any] = {}
     if isinstance(gate, dict) and "parse_error" not in gate:
