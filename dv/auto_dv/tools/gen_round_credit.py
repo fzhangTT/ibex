@@ -22,6 +22,10 @@ sys.path.insert(0, str(R / 'dv/auto_dv/tools')); from gen_plan_holds import hold
 WIT_CG_PLAN = 'CG-WIT-001'
 HEADINGS = {  # fixed heading texts by id, so the printed invocation carries the id instead of quoted free text (a semicolon inside quotes broke a naive copy)
     'round0-probe': 'Round-0 PROBE crediting (probe of 37c7ecb refused as a round, LOG-046; 0 credited, every hosted item NOT-RUN-CLEAN)',
+    # The team calls this round 1; the flow indexes measured rounds from zero, so its evidence directory
+    # is gen_round_0 and its regression tag is round_1. Both names in one heading, because a reader who
+    # meets a bare "Round-0 credit" beside the round-0 PROBE heading cannot tell which round either means.
+    'round1-measured': 'Round-1 credit, the first measured coverage run (the flow indexes it as measured round 0: evidence gen_round_0, regression tag round_1)',
 }
 
 def plan_inputs_digest(plan_dir):
@@ -227,7 +231,7 @@ def self_test():
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--regress-manifest'); ap.add_argument('--plan-dir', default=str(R / 'dv/auto_dv/docs')); ap.add_argument('--fcov-dir', default=str(R / 'dv/auto_dv/fcov_expectations'))
-    ap.add_argument('--csv'); ap.add_argument('--md'); ap.add_argument('--round', type=int, default=0); ap.add_argument('--plan-sha', default='unlabelled', help='landing label printed in the report header; not a claim about which commit was read (the header prints the input digest)'); ap.add_argument('--heading', default=None, help='section title override (free text; prefer --heading-id, whose id prints in the invocation)'); ap.add_argument('--heading-id', default=None, choices=sorted(HEADINGS), help='a fixed heading from the HEADINGS table'); ap.add_argument('--self-test', action='store_true')
+    ap.add_argument('--csv'); ap.add_argument('--md'); ap.add_argument('--round', type=int, default=0); ap.add_argument('--plan-sha', default='unlabelled', help='landing label printed in the report header; not a claim about which commit was read (the header prints the input digest)'); ap.add_argument('--heading', default=None, help='section title override (free text; prefer --heading-id, whose id prints in the invocation)'); ap.add_argument('--heading-id', default=None, choices=sorted(HEADINGS), help='a fixed heading from the HEADINGS table'); ap.add_argument('--note', default=None, help='provenance sentence printed in the header and echoed in the invocation; asserted by the invoker, not checked by the tool (the inputs digest is the checked part)'); ap.add_argument('--self-test', action='store_true')
     a = ap.parse_args()
     if a.self_test: sys.exit(self_test())
     if not a.regress_manifest: sys.exit('usage: --regress-manifest <manifest.yaml> or --self-test')
@@ -242,10 +246,11 @@ def main():
     def rel(p):  # the invocation names the files it wrote, clone-relative when they live in the clone
         q = pathlib.Path(p).resolve()
         return str(q.relative_to(R.resolve())) if q.is_relative_to(R.resolve()) else str(q)
-    inv = (f"Invocation, byte for byte (copy the whole line; a quoted heading may contain semicolons): python3 dv/auto_dv/tools/gen_round_credit.py --regress-manifest {shlex.quote(a.regress_manifest)} --plan-sha {shlex.quote(a.plan_sha)} --round {a.round}"
+    cmd = (f"python3 dv/auto_dv/tools/gen_round_credit.py --regress-manifest {shlex.quote(a.regress_manifest)} --plan-sha {shlex.quote(a.plan_sha)} --round {a.round}"
            + (f" --heading-id {a.heading_id}" if a.heading_id else (f" --heading {shlex.quote(a.heading)}" if a.heading else ''))
-           + (f" --csv {shlex.quote(rel(a.csv))}" if a.csv else '') + (f" --md {shlex.quote(rel(a.md))}" if a.md else '') + f"; regression manifest sha256 {hashlib.sha256(open(a.regress_manifest, 'rb').read()).hexdigest()}; plan inputs read (item headers with group / tier / expected, hold sections, carve-out sections and rows with item / tag / until / reason, gen_trace_tp_bin.csv, gen_trace_witness_ids.csv) digest {plan_inputs_digest(pathlib.Path(a.plan_dir))}; carve-out rows read {len(carveouts)} ({sum(1 for r in rows if r['carve'])} hosted in this round; the UNCREDITED / COUNTED-ONLY columns count carved items that would otherwise have credited, a carved item that is UNHIT or NOT-RUN-CLEAN keeps that state and shows its tag in the Carve-out column); landing label {a.plan_sha} (the --plan-sha argument, a label only, not the commit whose plan was read). ")
-    hdr = round_header(man, runs, inv)
+           + (f" --csv {shlex.quote(rel(a.csv))}" if a.csv else '') + (f" --md {shlex.quote(rel(a.md))}" if a.md else '') + (f" --note {shlex.quote(a.note)}" if a.note else ''))
+    inv = (f"Invocation, byte for byte from the commit that carries these inputs (copy the whole line below; a quoted heading or note may contain semicolons):\n{cmd}\n\n" + f"Regression manifest sha256 {hashlib.sha256(open(a.regress_manifest, 'rb').read()).hexdigest()}; plan inputs read (item headers with group / tier / expected, hold sections, carve-out sections and rows with item / tag / until / reason, gen_trace_tp_bin.csv, gen_trace_witness_ids.csv) digest {plan_inputs_digest(pathlib.Path(a.plan_dir))}; carve-out rows read {len(carveouts)} ({sum(1 for r in rows if r['carve'])} hosted in this round; the UNCREDITED / COUNTED-ONLY columns count carved items that would otherwise have credited, a carved item that is UNHIT or NOT-RUN-CLEAN keeps that state and shows its tag in the Carve-out column); landing label {a.plan_sha} (the --plan-sha argument, a label only, not the commit whose plan was read). ")
+    hdr = ('' if not a.note else f'RECORD NOTE: {a.note}\n\n') + round_header(man, runs, inv)
     md = render_md(rows, a.round, hdr, tests, a.heading)
     if a.md:
         lines = md.splitlines(); summ = []; skip_sep = False

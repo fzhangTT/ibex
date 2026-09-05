@@ -9,7 +9,7 @@ the manifests that reference it and how many bins each, and the ledger covergrou
 covergroup it references exists, so the report also lists per manifest the covergroups it needs and the cumulative rank at which it is
 complete.
 
-Usage: gen_covergroup_set.py [--testlist F] [--fcov-dir D] [--fcov-plan F] [--md OUT.md] [--csv OUT.csv] [--plan-sha SHA]
+Usage: gen_covergroup_set.py (--label ROUND | --md OUT.md --csv OUT.csv) [--testlist F] [--fcov-dir D] [--fcov-plan F] [--plan-sha SHA] [--note TEXT]
 
 --fcov-dir D redirects every manifest the tool reads, the testlist-named ones by basename and the extra scan, so a rehearsal directory
 stands in for the tree. A named manifest whose testlist path is outside the manifest home (FCOV_HOME) is a proof manifest kept as
@@ -18,7 +18,7 @@ testlist's fcov_manifest_required_tiers, and refuses with a non-zero exit when t
 defaults to true, as the testlist schema and the loader read it). The header names the override directory and the printed regeneration
 command carries it.
 """
-import re, csv, sys, argparse, pathlib, collections, hashlib, yaml
+import re, csv, sys, shlex, argparse, pathlib, collections, hashlib, yaml
 R = pathlib.Path(__file__).resolve()
 while not (R / 'dv/auto_dv/contract').is_dir():
     if R.parent == R: sys.exit('repo root not found (no dv/auto_dv/contract above this file)')
@@ -28,13 +28,31 @@ from gen_flow_const import LEDGER_COVERGROUPS, WITNESS_CSV  # the ledger SV name
 import gen_fcov_manifest
 from gen_fcov_manifest import WITNESS_CG as LEDGER_PLAN, impl_cg_name, module_items, FCOV_HOME  # plan id, the plan-to-SV name rule, the manifest home
 TESTS_HOME = pathlib.Path(gen_fcov_manifest.__file__).resolve().parent   # the test modules live beside the manifest generator
+EVIDENCE_HOME = R / 'dv/auto_dv/evidence'
+
+def out_paths(a):
+    """The record's own location, from --label or from explicit paths. There is no default, so a bare run writes nowhere
+    instead of over whichever record a default happens to name."""
+    if a.label and (a.md or a.csv): sys.exit('--label and explicit --md / --csv are exclusive: pass one or the other')
+    if a.label:
+        if not re.fullmatch(r'[A-Za-z0-9_]+', a.label): sys.exit(f'--label {a.label!r}: the label becomes a file name, so letters, digits and underscore only')
+        return str(EVIDENCE_HOME / f'gen_{a.label}_covergroup_set.md'), str(EVIDENCE_HOME / f'gen_{a.label}_covergroup_set.csv')
+    if a.md and a.csv: return a.md, a.csv
+    sys.exit('no output location: pass --label <team round name>, or both --md and --csv')
+
+def clone_rel(p):
+    q = pathlib.Path(p).resolve()
+    return str(q.relative_to(R.resolve())) if q.is_relative_to(R.resolve()) else str(q)
 
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--testlist', default=str(R / 'dv/auto_dv/flow/gen_testlist.yaml')); ap.add_argument('--fcov-dir', default=str(FCOV_HOME))
-    ap.add_argument('--fcov-plan', default=str(R / 'dv/auto_dv/docs/gen_fcov_plan.md')); ap.add_argument('--md', default=str(R / 'dv/auto_dv/evidence/gen_round0_covergroup_set.md'))
-    ap.add_argument('--csv', default=str(R / 'dv/auto_dv/evidence/gen_round0_covergroup_set.csv')); ap.add_argument('--plan-sha', default='unlabelled', help='landing label printed in the header; not a claim about which commit was read (the header prints the input digest)')
+    ap.add_argument('--fcov-plan', default=str(R / 'dv/auto_dv/docs/gen_fcov_plan.md')); ap.add_argument('--md', default=None); ap.add_argument('--csv', default=None)
+    ap.add_argument('--label', default=None, help='team round name; it names the record files gen_<label>_covergroup_set.md / .csv under dv/auto_dv/evidence (exclusive with --md / --csv, and there is no default)')
+    ap.add_argument('--plan-sha', default='unlabelled', help='landing label printed in the header; not a claim about which commit was read (the header prints the input digest)')
+    ap.add_argument('--note', default=None, help='provenance sentence printed in the header and echoed in the regeneration command; asserted by the invoker, not checked by the tool (the inputs digest is the checked part)')
     a = ap.parse_args()
+    md_out, csv_out = out_paths(a)
     plan = pathlib.Path(a.fcov_plan).read_text()
     dig = hashlib.sha256(); dig.update(plan.encode()); dig.update(pathlib.Path(a.testlist).read_bytes())
     plan_of_impl = {}; anchor = {}
@@ -93,13 +111,19 @@ def main():
     default_dir = pathlib.Path(a.fcov_dir).resolve() == pathlib.Path(FCOV_HOME).resolve()
     dir_txt = 'dv/auto_dv/fcov_expectations/' if default_dir else f'{a.fcov_dir} (--fcov-dir override)'
     dir_arg = '' if default_dir else f' --fcov-dir {a.fcov_dir}'
+    out_arg = f' --label {a.label}' if a.label else f' --md {md_out} --csv {csv_out}'
+    note_arg = '' if not a.note else f' --note {shlex.quote(a.note)}'
+    said = ([f'record label {a.label} (--label), written to {clone_rel(md_out)} and {clone_rel(csv_out)}'] if a.label else []) + ([a.note] if a.note else [])
+    note_txt = '' if not said else '\nRECORD NOTE: ' + '; '.join(said) + '\n'
     hdr = f"""# Minimum covergroup set referenced by the promoted fcov manifests (T-204; implementation order for TB Infra, T-205)
-
+{note_txt}
 GENERATED by dv/auto_dv/tools/gen_covergroup_set.py from dv/auto_dv/flow/gen_testlist.yaml, the {files_txt} it names under
 {dir_txt}{share_txt} and gen_fcov_plan.md as read at generation (inputs digest {dig.hexdigest()[:12]} over the fcov plan, the testlist and
-the named manifests; landing label {a.plan_sha}; regeneration command, byte for byte from the commit that carries these inputs: python3
-dv/auto_dv/tools/gen_covergroup_set.py --plan-sha {a.plan_sha}{dir_arg}; the label is the --plan-sha argument alone and claims nothing about which commit's
-plan was read). Ranking: distinct bins referenced across the manifests (a bin is counted once per covergroup even when several
+the named manifests; landing label {a.plan_sha}, the --plan-sha argument alone, which claims nothing about which commit's plan was read).
+Regeneration command, byte for byte from the commit that carries these inputs (copy the whole line; a quoted note may contain semicolons):
+python3 dv/auto_dv/tools/gen_covergroup_set.py{out_arg} --plan-sha {a.plan_sha}{dir_arg}{note_arg}
+
+Ranking: distinct bins referenced across the manifests (a bin is counted once per covergroup even when several
 manifests declare it); bins under a manifest's "# not_hit" header are excluded and not counted. A manifest is verifiable only when every
 covergroup it references exists (a missing covergroup makes the per-test URG report lack the group, LOG-046), so the column "manifests
 completed at this rank" names the manifests that become fully verifiable once the covergroups ranked 1..N exist. The ledger covergroup
@@ -157,9 +181,9 @@ Totals: {len(rows)} covergroups, {total_bins} distinct referenced bins, {files_t
                ". It enters this set the moment a promoted manifest declares a witness bin; its implementation is T-179 regardless, because the witness score (gen_test_plan.md Section 0) depends on it.\n")
     out = hdr + body + mt
     assert not [c for c in out.encode() if c > 127]
-    pathlib.Path(a.md).write_text(out)
-    with open(a.csv, 'w', newline='') as f:
+    pathlib.Path(md_out).write_text(out)
+    with open(csv_out, 'w', newline='') as f:
         w = csv.DictWriter(f, fieldnames=list(rows[0].keys())); w.writeheader(); w.writerows(rows)
-    print(f'{len(rows)} covergroups, {total_bins} referenced bins, {len(entries) - len(outside)} manifests; extra committed manifests {len(extra)}; ledger in ranking {any(cg in ledger_impls for cg in per_cg)}; unknown {unknown}; wrote {a.md}, {a.csv}')
+    print(f'{len(rows)} covergroups, {total_bins} referenced bins, {len(entries) - len(outside)} manifests; extra committed manifests {len(extra)}; ledger in ranking {any(cg in ledger_impls for cg in per_cg)}; unknown {unknown}; wrote {md_out}, {csv_out}')
 
 if __name__ == '__main__': main()

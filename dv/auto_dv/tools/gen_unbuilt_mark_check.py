@@ -45,13 +45,24 @@ def repo_root(start: pathlib.Path) -> pathlib.Path:
     return r
 
 
+# Covergroups are not all in the rendered file: the witness ledger lives in the package beside it, so a reader
+# that opens only gen_fcov_groups.svh calls a built covergroup unbuilt. Both files, and the rendered one must
+# exist because its absence means the codegen has not run.
+COVERGROUP_SOURCES = ("dv/auto_dv/env/gen_fcov_groups.svh", "dv/auto_dv/env/gen_fcov_pkg.sv")
+
+
 def rendered_covergroups(root: pathlib.Path) -> set[str]:
-    """The covergroup names the TB actually builds, read from the rendered file the simulator compiles."""
-    svh = root / "dv/auto_dv/env/gen_fcov_groups.svh"
-    if not svh.is_file():
-        print(f"{svh}: not a file")
+    """Every covergroup name the TB actually builds, over all the files that define one."""
+    required = root / COVERGROUP_SOURCES[0]
+    if not required.is_file():
+        print(f"{required}: not a file")
         sys.exit(2)
-    return set(re.findall(r"covergroup\s+(\w+)", svh.read_text(encoding="ascii")))
+    names: set[str] = set()
+    for rel in COVERGROUP_SOURCES:
+        f = root / rel
+        if f.is_file():
+            names |= set(re.findall(r"covergroup\s+(\w+)", f.read_text(encoding="ascii")))
+    return names
 
 
 def marked_coverpoints(root: pathlib.Path) -> list[tuple[str, str, str, int]]:
@@ -127,12 +138,13 @@ def check(root: pathlib.Path) -> int:
     return 1 if bad else 0
 
 
-def _tree(td: pathlib.Path, plan: str, svh: str, manifests: dict[str, str]) -> pathlib.Path:
+def _tree(td: pathlib.Path, plan: str, svh: str, manifests: dict[str, str], pkg: str = "") -> pathlib.Path:
     (td / "dv/auto_dv/docs").mkdir(parents=True)
     (td / "dv/auto_dv/env").mkdir(parents=True)
     (td / "dv/auto_dv/fcov_expectations").mkdir(parents=True)
     (td / "dv/auto_dv/docs/gen_fcov_plan.md").write_text(plan, encoding="ascii")
     (td / "dv/auto_dv/env/gen_fcov_groups.svh").write_text(svh, encoding="ascii")
+    (td / "dv/auto_dv/env/gen_fcov_pkg.sv").write_text(pkg, encoding="ascii")
     for n, t in manifests.items():
         (td / "dv/auto_dv/fcov_expectations" / n).write_text(t, encoding="ascii")
     return td
@@ -151,16 +163,20 @@ def self_test() -> int:
     MAN_CLEAN = "test: gen_test_x\nbins:\n  - gen_gamma_cg.cp_z.hit\n"
     MAN_DIRTY = "test: gen_test_y\nbins:\n  - gen_alpha_cg.cp_one.a\n"
     cases = [
-        ("mark on an unbuilt covergroup passes", PLAN_MARKED, SVH_NEITHER, {"a.fcov.yaml": MAN_CLEAN}, 0),
-        ("mark on a BUILT covergroup fails", PLAN_MARKED, SVH_ALPHA, {"a.fcov.yaml": MAN_CLEAN}, 1),
+        ("mark on an unbuilt covergroup passes", PLAN_MARKED, SVH_NEITHER, {"a.fcov.yaml": MAN_CLEAN}, 0, ""),
+        ("mark on a BUILT covergroup fails", PLAN_MARKED, SVH_ALPHA, {"a.fcov.yaml": MAN_CLEAN}, 1, ""),
+        # The blind spot: alpha is built, but in the PACKAGE rather than the rendered file. Before the fix this
+        # case passed, which is the whole defect: a built covergroup read as unbuilt.
+        ("mark on a covergroup built in the PACKAGE fails", PLAN_MARKED, SVH_NEITHER,
+         {"a.fcov.yaml": MAN_CLEAN}, 1, "package gen_fcov_pkg;\ncovergroup gen_alpha_cg;\nendgroup\nendpackage\n"),
         ("a manifest declaring an unrendered bin fails", PLAN_MARKED, SVH_NEITHER,
-         {"a.fcov.yaml": MAN_CLEAN, "b.fcov.yaml": MAN_DIRTY}, 1),
+         {"a.fcov.yaml": MAN_CLEAN, "b.fcov.yaml": MAN_DIRTY}, 1, ""),
         ("no marks and clean manifests pass", "### CG-XXX-002: gen_cg_beta\n  - cp_two = t: bins c{0}\n",
-         SVH_NEITHER, {"a.fcov.yaml": MAN_CLEAN}, 0),
+         SVH_NEITHER, {"a.fcov.yaml": MAN_CLEAN}, 0, ""),
     ]
-    for name, plan, svh, mans, want in cases:
+    for name, plan, svh, mans, want, pkg in cases:
         with tempfile.TemporaryDirectory(prefix="gen_unbuilt_mark_") as td:
-            root = _tree(pathlib.Path(td), plan, svh, mans)
+            root = _tree(pathlib.Path(td), plan, svh, mans, pkg)
             got = check(root)
         good = got == want
         ok &= good
