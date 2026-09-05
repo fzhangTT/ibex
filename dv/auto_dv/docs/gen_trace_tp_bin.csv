@@ -12757,6 +12757,7 @@ TP-IRQ-001,CG-EXC-012,cr_kind_bit1,irq_bit1_1,0
 TP-IRQ-001,CG-EXC-012,cr_kind_mie_priv,irq_mie1_m,0
 TP-IRQ-001,CG-EXC-012,cr_kind_mtval,irq_zero,0
 TP-IRQ-001,CG-IRQ-001,cp_line,software,0
+TP-IRQ-001,CG-IRQ-001,cp_priv_pre,m,0
 TP-IRQ-001,CG-IRQ-001,cr_line_marks,software_intr_with_pre_mip,0
 TP-IRQ-001,CG-IRQ-001,cr_line_mepc,software_sequential,0
 TP-IRQ-001,CG-IRQ-001,cr_line_others,software_only_this,0
@@ -13127,7 +13128,9 @@ TP-IRQ-029,CG-IRQ-001,cr_upath_pending,dret_prv_u_arrived_later_mie1,0
 TP-IRQ-029,CG-IRQ-004,cr_ctx_outcome,id_dret_taken,0
 TP-IRQ-029,CG-IRQ-010,cp_dcsr_prv,m,0
 TP-IRQ-029,CG-IRQ-010,cp_dcsr_prv,u,0
+TP-IRQ-029,CG-IRQ-010,cp_exit_kind,dret,0
 TP-IRQ-029,CG-IRQ-010,cp_line,irq,0
+TP-IRQ-029,CG-IRQ-010,cp_post_exit,taken_before_first_insn,0
 TP-IRQ-029,CG-IRQ-010,cr_dur_post,held_through_exit_taken_before_first_insn,0
 TP-IRQ-029,CG-IRQ-010,cr_line_exit,irq_dret,0
 TP-IRQ-029,CG-IRQ-010,cr_line_mode_post,irq_debug_mode_not_taken,0
@@ -13245,6 +13248,7 @@ TP-IRQ-040,CG-IRQ-007,cr_handler_mstack,exc_taken_nested_exc_context_lost,0
 TP-IRQ-041,CG-IRQ-010,cp_duration,dropped_before_exit,0
 TP-IRQ-041,CG-IRQ-010,cp_nmip_read,read_with_nmi_high,0
 TP-IRQ-041,CG-IRQ-010,cp_nmip_read,read_with_nmi_low,0
+TP-IRQ-041,CG-IRQ-010,cp_post_exit,not_taken,0
 TP-IRQ-041,CG-IRQ-010,cr_dur_post,dropped_before_exit_not_taken,0
 TP-IRQ-041,CG-IRQ-010,cr_line_mode_post,nmi_ext_debug_mode_not_taken,0
 TP-IRQ-041,CG-WIT-001,cp_clause,w_tp_irq_041,0

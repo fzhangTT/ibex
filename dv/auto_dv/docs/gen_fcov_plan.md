@@ -109,6 +109,57 @@ ibex_pkg; compiled with +define+RVFI; cheriot_enable_i tied IbexMuBiOff inside t
   and a staged manifest would then be read and would fail DECL (gen_unbuilt_mark_check.py:126). CG-IRQ-001, CG-IRQ-003, CG-IRQ-010 and CG-IRQ-011
   are in that state until the IRQ step-1 landing flips their entry.
 
+- PER-RUN-MANIFEST (the per-run guarantee): a test's fcov-expectation manifest declares what that test
+  guarantees PER RUN, so every declared bin must be hit in EVERY run of that entry; a bin hit at some seeds and
+  not others leaves the declared set under its bins_not_hit reason and is credited from the merged report
+  instead; and a measured entry on a tier named by the testlist header's fcov_manifest_required_tiers may not
+  carry a null manifest. The mechanisms are the authority, not a review row: gen_fcov.py makes any declared bin
+  whose state is not HIT an unmet bin and sets the run's unmet reason (:152-159 at 218e9f3), and
+  fcov_policy_failures in gen_regress.py refuses the null manifest (:237-260 at 218e9f3; the range is pinned
+  because rt39 edits that file above it). Lineage, so the trail survives: this rule was carried in messages and
+  rulings as "P-07", which is a review-LOCAL finding number (the Critic's t010 v2 row P-07, recorded at
+  gen_runtime_api.md:299-303 and in LOG-091's title). P-nn ids are per-artifact and several artifacts have their
+  own P-07, so the rule is named here and that label is retired for it.
+- Seeds against the guarantee, the mechanism that makes the seed half checkable: a manifest may carry
+  measured_seeds{count, base_seed, commit, bins_sha256}, claiming every bin in that file's bins list was hit in
+  every one of `count` runs OF THAT ENTRY, never a bin credited from the merged report or hit by another entry,
+  at base_seed against the test, its generator and the TB at commit. bins_sha256 comes from one shared helper
+  both the renderer and the loader import, computing sha256 over the sorted bin names of the same file, so an
+  edit to `bins:` after the sweep makes the claim detectably STALE rather than quietly false, and a stale claim
+  degrades to unmeasured rather than licensing a seed rise. The field is ABSENT until an entry has been measured
+  against a commit, because a new entry's sweep necessarily precedes the commit carrying its test; absence caps
+  the entry at the seed count the current declared sets were calibrated over, a value carried in the testlist
+  header beside fcov_manifest_required_tiers, where someone changing a seed count sees it. This entry stays the
+  authority for why that number is what it is and for the condition under which the cap is removed: once every
+  measured entry carries the field there is no live case left. Rendering it is the Test Writer's
+  (gen_fcov_manifest.py); reading it and refusing seeds above count is the Runtime Manager's.
+- IRQ cause derivation, a sampling caveat for every covergroup that uses it: the interrupt cause the TB samples
+  is DERIVED from pc_rdata (gen_rvfi_pkg.sv:359 at 218e9f3, (pc_rdata - base) >> 2), not read from a cause
+  field, so it is valid only while mtvec MODE reads vectored. That holds BY HARDWARE rather than by program
+  convention: every write to mtvec, from the boot init or from software, forces the low byte
+  (rtl/ibex_cs_registers.sv:739-743 at 218e9f3 builds both branches as {addr[31:8], 6'b0, 1'b0, ~((BaseIsa ==
+  BaseIsaRV32IorCHERIoT) & (cheriot_enable_i == IbexMuBiOn))}), so the base is 256-byte aligned and MODE is 1.
+  The MODE bit is vectored only because the wrapper ties cheriot_enable_i Off (gen_dut_top.sv:206 at 218e9f3);
+  were that tie ever changed to On, MODE would be 0 and the derivation would compute cause 0 for every
+  interrupt, silently. Nothing checks the tie-off, and a TB-side assertion that mtvec[0] reads 1 is tb-infra's
+  to take or decline.
+- Sample-clause completeness: every Sample clause must admit every bin the block declares, including bins
+  decided after the sampling event, for which the clause states the deferral and the end of the observation
+  window; a bin the clause cannot reach is a plan defect, not a stimulus gap. The check belongs to the
+  family-composition step, because two of the three instances found so far surfaced only when someone wrote the
+  sampler against the block. Two variants have bitten: a clause that excludes a bin outright (CG-IRQ-003's
+  ev_mie admitted only an mret that changes MIE while the block declares one that does not), and a clause that
+  admits the sample while the bin is decided later with no deferral stated (CG-IRQ-010's post-exit bins,
+  CG-IRQ-011's first fetch after the window). A bin an item owns is the material case: it makes that item
+  permanently uncreditable.
+
+
+Two readings in this area were examined against the Sample-clause rule and deliberately left as they stand.
+CG-IRQ-010's cp_line describes lines as "pending-and-enabled", which sits oddly with an NMI, since an NMI has
+no enable; nothing is excluded, because an NMI is always enabled. CG-IRQ-011's cp_boot_mret guard extends past
+ev_reset through an explicit conjunction ("ev_reset && an mret retires before any trap"), so it states its own
+extra condition where a reader will see it. Recorded so the next audit does not re-open them.
+
 # 1. Completeness measure (definition; DV_prompt.txt Section 4)
 
 The functional-coverage gate is: the URG functional-group score over the spec-derived and adopted covergroups (equal group
@@ -2182,14 +2233,14 @@ Conventions
 - TP items: TP-IRQ-014, TP-IRQ-015, TP-IRQ-016, TP-IRQ-031, TP-IRQ-038, TP-IRQ-045, TP-IRQ-065, TP-IRQ-071, TP-IRQ-073
 ### CG-IRQ-003: gen_cg_irq_pending_model
 - Features: F-IRQ-003, F-IRQ-004, F-IRQ-005, F-IRQ-006, F-IRQ-007, F-IRQ-060
-- Sample: ev_edge = a cycle in which any irq pin changes or a retired write to mie commits (irq monitor + CSR model); ev_access = a retired csrr mip / csrrw-csrrs-csrrc mip / csrr mie / csrw-csrs-csrc mie; ev_mie = a retired mstatus write or mret that changes mstatus.MIE (CSR model), with irq_pending_o sampled in the commit cycle; condition: an edge, an access or an MIE change; anti-vacuity: quiescent cycles do not sample, so a hit proves an edge, an access or a global-enable change was compared against the irq_pending_o / mip model.
+- Sample: ev_edge = a cycle in which any irq pin changes or a retired write to mie commits (irq monitor + CSR model); ev_access = a retired csrr mip / csrrw-csrrs-csrrc mip / csrr mie / csrw-csrs-csrc mie; ev_mie = a retired mstatus write that changes mstatus.MIE, or ANY retired mret (CSR model), with the irq_pending value taken WINDOWED as the checker takes it, not read live from the pin: a CSR-write record arrives GEN_CSR_WRITE_TO_RVFI_OFFSET = 2 cycles after its commit (gen_tb_pkg.sv:240 at 218e9f3) and is not back-dated, and the irq_pending checker windows by exactly that (gen_checkers_pkg.sv:4 and :96 at 218e9f3), so a covergroup reading the pin would judge the same event at a different cycle from the checker. Any mret qualifies because cp_mie_global_edge declares mret_mpie0_pending, an mret that leaves MIE clear; admitting only MIE-changing mrets would make that bin unreachable and TP-IRQ-028, which owns it, permanently uncreditable; condition: an edge, an access or an MIE change; anti-vacuity: quiescent cycles do not sample, so a hit proves an edge, an access or a global-enable change was compared against the irq_pending_o / mip model.
 - Coverpoints:
   - cp_transition iff ev_edge = irq_pending_o model transition: bins rise_enabled{pin 0 -> 1 with its mie bit set: irq_pending_o 0 -> 1}, rise_disabled{pin rise with the mie bit clear: stays 0}, rise_enabled_other_high{pin rise while irq_pending_o already 1}, fall_last{last enabled pin drops: 1 -> 0}, fall_not_last, mie_set_pin_high{mie write enables an already-high pin: 0 -> 1}, mie_clear_pin_high{mie write disables a pending line}, nmi_only_rise{irq_nm_i rises alone: irq_pending_o unchanged}
-  - cp_state = core state at the edge: bins mie0_m, mie1_m, u_mode, debug_mode, nmi_mode, step, sleep
+  - cp_state = core state at whichever of the three events fired (UNGUARDED on purpose: cr_access_state crosses it with cp_mip_access, which fills only at ev_access, so guarding cp_state to ev_edge would leave that cross permanently empty). At a pin edge it is the last retired record's state, except sleep, read from core_busy at that cycle; records are the only source of mstatus, prv, debug_mode and dcsr: bins mie0_m, mie1_m, u_mode, debug_mode, nmi_mode, step, sleep
   - cp_line_kind iff ev_edge = line class (pin monitor): bins software, timer, external, fast_low{index < $bits(irqs_t.irq_fast)/3}, fast_mid{$bits(irqs_t.irq_fast)/3 <= index < 2*$bits(irqs_t.irq_fast)/3}, fast_high{index >= 2*$bits(irqs_t.irq_fast)/3}
   - cp_mip_access iff ev_access = mip access class (rvfi_insn): bins read_mie0_pins_high{csrr mip with mie = 0 and >= 1 pin high}, read_partial_mie{some pins enabled, some not}, read_all_low, write_csrrw_ignored, write_csrrs_ignored, write_csrrc_ignored
   - cp_mie_write iff (ev_access && the access is a write to mie) = mie write value class (rvfi_rs1_rdata): bins all_ones{wdata 32'hFFFFFFFF reads MIE_WARL_MASK}, zero{wdata 0}, random_masked{wdata & ~MIE_WARL_MASK != 0: those bits read 0}, fast_only{wdata & MIE_WARL_MASK confined to [CSR_MFIX_BIT_HIGH:CSR_MFIX_BIT_LOW]}
-  - cp_mie_global_edge iff ev_mie = mstatus.MIE edge with the pending state (S-12): bins set_pending{MIE 0 -> 1 by csrs/csrw mstatus in M-mode with irq_pending_o == 1: the entry follows before the next retirement}, clear_pending{MIE 1 -> 0 by csrc/csrw mstatus with irq_pending_o == 1: no entry while MIE stays 0 in M-mode}, set_idle{MIE 0 -> 1 with irq_pending_o == 0}, clear_idle{MIE 1 -> 0 with irq_pending_o == 0}, mret_mpie1_pending{mret restores MIE 0 -> 1 (MPIE = 1, MPP = M) with irq_pending_o == 1: entry before the target retires}, mret_mpie0_pending{mret keeps MIE 0 (MPIE = 0, MPP = M) with irq_pending_o == 1: no entry}
+  - cp_mie_global_edge iff ev_mie = the global-enable event with the pending state, which is an mstatus.MIE edge OR an mret whose MPIE leaves MIE unchanged (the name keeps "edge" for continuity with the trace CSV, the manifests and the built sampler; the bin set is what governs) (S-12): bins set_pending{MIE 0 -> 1 by csrs/csrw mstatus in M-mode with irq_pending_o == 1: the entry follows before the next retirement}, clear_pending{MIE 1 -> 0 by csrc/csrw mstatus with irq_pending_o == 1: no entry while MIE stays 0 in M-mode}, set_idle{MIE 0 -> 1 with irq_pending_o == 0}, clear_idle{MIE 1 -> 0 with irq_pending_o == 0}, mret_mpie1_pending{mret restores MIE 0 -> 1 (MPIE = 1, MPP = M) with irq_pending_o == 1: entry before the target retires}, mret_mpie0_pending{mret keeps MIE 0 (MPIE = 0, MPP = M) with irq_pending_o == 1: no entry}
 - Crosses:
   - cr_transition_state = cp_transition x cp_state: bins {rise_enabled_mie0_m, rise_enabled_mie1_m, rise_enabled_u_mode, rise_enabled_debug_mode, rise_enabled_nmi_mode, rise_enabled_step, rise_enabled_sleep, fall_last_mie0_m, fall_last_mie1_m, fall_last_debug_mode, mie_clear_pin_high_mie1_m, mie_set_pin_high_mie0_m, mie_set_pin_high_mie1_m, nmi_only_rise_mie1_m, nmi_only_rise_sleep, rise_disabled_mie1_m, rise_disabled_sleep}; ignore fall_last/fall_not_last/rise_enabled_other_high x sleep: irq_pending_o == 1 ends the sleep in the same cycle (rtl/ibex_controller.sv:615), so a pending line never persists in the sleep state; ignore mie_set_pin_high/mie_clear_pin_high x sleep: no CSR write retires while asleep
   - cr_transition_line = cp_transition x cp_line_kind: bins {rise_enabled_software, rise_enabled_timer, rise_enabled_external, rise_enabled_fast_low, rise_enabled_fast_mid, rise_enabled_fast_high, fall_last_software, fall_last_timer, fall_last_external, fall_last_fast_low, fall_last_fast_high, rise_disabled_fast_mid, mie_clear_pin_high_external}
@@ -2304,12 +2355,12 @@ Conventions
 ### CG-IRQ-010: gen_cg_irq_debug_interplay
 - Features: F-IRQ-024, F-IRQ-037, F-IRQ-038, F-IRQ-039, F-IRQ-050, F-IRQ-051, F-IRQ-066, F-IRQ-030
   (parent of folded bins hosted here)
-- Sample: an interrupt/NMI line pending-and-enabled while rvfi_ext_debug_mode == 1, or while dcsr.step == 1 outside debug mode, and each dret retirement with a pending line; for cp_mode.debug_in_nmi_handler the window is a debug session opened while the gen_chk_nmi model has nmi_mode set (entry after a base + 0x7C vector fetch and before the matching mret); condition: a line asserted inside such a window; anti-vacuity: samples only in debug/step windows with a line asserted, so a hit proves the masking and the post-exit behaviour were exercised.
+- Sample: an interrupt/NMI line pending-and-enabled while rvfi_ext_debug_mode == 1, or while dcsr.step == 1 outside debug mode, and each END OF SUCH A WINDOW, however it ends, which includes each dret retirement with a pending line and a step completion (the window end is itself a sample point; without that cp_exit_kind.step_complete, owned by TP-IRQ-043 and TP-IRQ-069, could never fire); for cp_mode.debug_in_nmi_handler the window is a debug session opened while the gen_chk_nmi model has nmi_mode set (entry after a base + 0x7C vector fetch and before the matching mret); condition: a line asserted inside such a window; anti-vacuity: samples only in debug/step windows with a line asserted, so a hit proves the masking and the post-exit behaviour were exercised.
 - Coverpoints:
   - cp_line = line class (pin monitor): bins irq, nmi_ext, nmi_int
   - cp_mode = debug or step window (rvfi_ext_debug_mode, CSR model): bins debug_mode, step_outside, debug_in_nmi_handler{debug window opened while nmi_mode is set: the NMI handler is running (F-IRQ-066); post_exit not_taken until the handler's mret}
   - cp_duration = line held or dropped before the exit (pin monitor): bins held_through_exit, dropped_before_exit
-  - cp_post_exit = behaviour after the exit (RVFI): bins taken_before_first_insn{entry with no retirement at dpc}, not_taken{>= 1 retirement at/after dpc with the line still asserted and no entry}, taken_after_nmi_mret{debug_in_nmi_handler only: not taken at the dret, taken directly after the NMI handler's mret (F-IRQ-066)}
+  - cp_post_exit = behaviour after the exit (RVFI), classified AFTER the sampling event: the sample is taken at the window end and the bin is decided by what follows, so the observation runs to the first retirement at or after dpc, or for taken_after_nmi_mret to the NMI handler's mret, whichever the bin names; a window whose observation has not closed is not sampled: bins taken_before_first_insn{entry with no retirement at dpc}, not_taken{>= 1 retirement at/after dpc with the line still asserted and no entry}, taken_after_nmi_mret{debug_in_nmi_handler only: not taken at the dret, taken directly after the NMI handler's mret (F-IRQ-066)}
   - cp_dcsr_prv = dcsr.prv (CSR model): bins m, u
   - cp_nmip_read iff (a csrr dcsr retires in the window) = irq_nm_i at the read: bins read_with_nmi_high, read_with_nmi_low (bit 3 is compared by the B5 owner item TP-DBG-021 only; TP-IRQ-041 masks it)
   - cp_exit_kind iff (the window ended) = how the window ended (RVFI): bins dret, step_complete{stepped instruction retires; debug re-entry}
@@ -2323,14 +2374,14 @@ Conventions
 - TP items: TP-IRQ-029, TP-IRQ-041, TP-IRQ-042, TP-IRQ-043, TP-IRQ-054, TP-IRQ-069, TP-IRQ-075, TP-IRQ-078
 ### CG-IRQ-011: gen_cg_irq_reset_fetch_en
 - Features: F-IRQ-014, F-IRQ-055, F-IRQ-056, F-IRQ-065
-- Sample: ev_reset = reset release (first cycle with rst_ni high) with the irq/debug pin state and the first csrr mstatus/mie/mtvec/mip retirements; ev_off = every fetch_enable_i != On window of >= 20 cycles (fetch_enable monitor), with the irq monitor state inside it; condition: one sample per reset and per Off window; anti-vacuity: samples only at reset release and in Off windows, so a hit proves the reset-time / fetch-disabled interrupt path was exercised; none_pending_while_off is a stimulus-qualified control (an Off window occurred with no line), not an always-true witness (S-3b).
+- Sample: ev_reset = reset release (first cycle with rst_ni high) with the irq/debug pin state and the first csrr mstatus/mie/mtvec/mip retirements; ev_off = every fetch_enable_i != On window of >= 20 cycles (gen_misc_monitor, gen_checkers_pkg.sv:337 at 218e9f3, which holds the window itself at :393 and :529-532 and feeds the chk_fetch_en drain check at :443-449 in the same component, so the coverage class consumes the window rather than detecting it), with the irq monitor state inside it; condition: one sample per reset and per Off window; anti-vacuity: samples only at reset release and in Off windows, so a hit proves the reset-time / fetch-disabled interrupt path was exercised; none_pending_while_off is a stimulus-qualified control (an Off window occurred with no line), not an always-true witness (S-3b).
 - Coverpoints:
   - cp_lines_at_reset iff ev_reset = lines asserted at reset release (pin monitor): bins none, regular_only, nmi_only, nmi_and_regular, debug_and_nmi, debug_and_regular
   - cp_first_event iff ev_reset = first architectural event after reset: bins boot_insn{first retirement at the boot pc}, nmi_before_insn, debug_before_insn
   - cp_reset_reads iff ev_reset = first CSR read-backs after reset: bins mstatus_0x80, mie_0, mtvec_boot_page, mip_reflects_pins
   - cp_boot_mret iff (ev_reset && an mret retires before any trap) = boot-time mret (RVFI): bins to_u_mie1{mret as an early instruction: U-mode, MIE = 1}
   - cp_fetch_off iff ev_off = interrupt situation in the Off window: bins irq_pending_while_off_csr_updated{line pending-and-enabled before the window: entry decided while Off, mepc/mcause change without instr_req_o}, irq_arrives_while_off{line rises inside the window}, nmi_while_off{irq_nm_i rises inside the window}, none_pending_while_off{no line asserted for the whole window}
-  - cp_fetch_on_after iff ev_off = first fetch after fetch_enable_i returns to On (ibus monitor): bins handler_fetched_at_on{first instr_req_o after On is the vector}, resume_at_on
+  - cp_fetch_on_after iff ev_off = first fetch after fetch_enable_i returns to On (ibus monitor), which is decided AFTER the Off window its guard names: the observation extends past the window to that first instr_req_o, and a window whose first fetch has not arrived is not sampled: bins handler_fetched_at_on{first instr_req_o after On is the vector}, resume_at_on
 - Crosses:
   - cr_lines_first = cp_lines_at_reset x cp_first_event: bins {none_boot_insn, regular_only_boot_insn, nmi_only_nmi_before_insn, nmi_and_regular_nmi_before_insn, debug_and_nmi_debug_before_insn, debug_and_regular_debug_before_insn}; ignore every other combination: the first event is a function of the pin pattern (regular lines are masked at reset, debug beats NMI); a mismatch is a gen_chk_nmi/gen_chk_debug failure
   - cr_off_on = cp_fetch_off x cp_fetch_on_after: bins {irq_pending_while_off_csr_updated_handler_fetched_at_on, nmi_while_off_handler_fetched_at_on, irq_arrives_while_off_handler_fetched_at_on, none_pending_while_off_resume_at_on}; ignore none_pending_while_off x handler_fetched_at_on and irq_*/nmi_while_off x resume_at_on: the first fetch after On is fixed by the pending state (Q-DL-8 default)

@@ -6,6 +6,7 @@ bins:
   - gen_exc_trap_csrs_cg.cr_kind_mie_priv.irq_mie1_m
   - gen_exc_trap_csrs_cg.cr_kind_mtval.irq_zero
   - gen_irq_entry_cg.cp_line.software
+  - gen_irq_entry_cg.cp_priv_pre.m
   - gen_irq_entry_cg.cr_line_marks.software_intr_with_pre_mip
   - gen_irq_entry_cg.cr_line_mepc.software_sequential
   - gen_irq_entry_cg.cr_line_others.software_only_this
@@ -77,6 +78,7 @@ anti_vacuity:
   gen_exc_trap_csrs_cg.cr_kind_mie_priv.irq_mie1_m: "CG-EXC-012: samples once per trap whose handler reads the CSRs, so a hit proves the read-back records were observed; the comparison of their values is the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance)"
   gen_exc_trap_csrs_cg.cr_kind_mtval.irq_zero: "CG-EXC-012: samples once per trap whose handler reads the CSRs, so a hit proves the read-back records were observed; the comparison of their values is the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance)"
   gen_irq_entry_cg.cp_line.software: "CG-IRQ-001: rvfi_intr is 0 on every instruction that is not the first of an interrupt handler (exception handlers do not set it), so a hit proves an interrupt entry"
+  gen_irq_entry_cg.cp_priv_pre.m: "CG-IRQ-001: rvfi_intr is 0 on every instruction that is not the first of an interrupt handler (exception handlers do not set it), so a hit proves an interrupt entry"
   gen_irq_entry_cg.cr_line_marks.software_intr_with_pre_mip: "CG-IRQ-001: rvfi_intr is 0 on every instruction that is not the first of an interrupt handler (exception handlers do not set it), so a hit proves an interrupt entry"
   gen_irq_entry_cg.cr_line_mepc.software_sequential: "CG-IRQ-001: rvfi_intr is 0 on every instruction that is not the first of an interrupt handler (exception handlers do not set it), so a hit proves an interrupt entry"
   gen_irq_entry_cg.cr_line_others.software_only_this: "CG-IRQ-001: rvfi_intr is 0 on every instruction that is not the first of an interrupt handler (exception handlers do not set it), so a hit proves an interrupt entry"
