@@ -1,0 +1,60 @@
+# gen_fu_l49_fixture_corrigendum.log -- corrigendum to gen_fu_l49_mret_prestate_fix.log (TB Infra)
+#
+# The retained log's bytes are UNCHANGED. This file stands beside it and corrects its lines 55-56.
+#
+# ================ WHAT IS CORRECTED ================
+# gen_fu_l49_mret_prestate_fix.log:55-56 reads, verbatim:
+#   "THE FIXTURE MUST WRITE mstatus.MIE BEFORE THE mret, with a line pending at the mret. That is the only path
+#    to (now && was)."
+# The first sentence describes a shape that DOES NOT REACH the bin. The second, "that is the only path", is
+# WITHDRAWN: it was written from a trace and the measurement below contradicts it.
+#
+# ================ TWO PROBE PAIRS EXIST; THE SECOND IS THE ONE RETAINED ================
+# PAIR 1 (superseded, named because the DV Lead's first reading used it). Program: a handler that re-enables
+# MIE and returns, driven through gen_ut_lockstep under knob_irq_regime=storm.
+#   through_handler hold  FAIL, no end-of-test store   new bin UNHIT
+#   until_taken hold      FAIL, no end-of-test store   new bin HIT   <- the ONLY hit of this bin to date
+# Both runs timed out, so both are coverage readings from incomplete runs. Sparse re-runs of the same pair
+# produced ZERO interrupt entries and are UNINFORMATIVE; they are not offered as data.
+# PAIR 2 (RETAINED). Program: the same handler with an added REPORT of every entry before it re-enables, so
+# "does the mret retire" is counted rather than inferred; a handler that re-enters reports without bound while
+# the main loop makes no progress. Driven through a purpose-written probe test, shape selected by seed.
+#
+# ================ THE RETAINED PAIR, PER SHAPE ================
+#   seed 1  STICKY  one line raised and HELD 3000 cycles, so a line IS pending when MIE is set
+#     verdict PASS (this run COMPLETED)   151 handler entries, 607 records retired, 0 mismatches
+#     mie_global=156   entry=136   mrets that are a handler's first instruction: 0
+#     cp_mie_global_edge  expected 7  covered 2
+#     UNCOVERED: mret_mie1_mpie1_pending, mret_mpie0_pending, mret_mpie1_pending, clear_idle, clear_pending
+#   seed 2  PULSES  thirty short CYCLES holds 97 cycles apart, so a line may ARRIVE after MIE is set
+#     verdict FAIL, the finish wait timed out (this run did NOT complete; it executed and its coverage is real)
+#     24 handler entries, 770 records retired, 0 mismatches   mie_global=25   entry=24
+#     cp_mie_global_edge  expected 7  covered 1
+#     UNCOVERED: the same five plus set_pending
+#
+# ================ THE FACT THAT MATTERS MOST ================
+# IN BOTH SHAPES ALL THREE mret BINS ARE UNCOVERED AND THE mret ARM NEVER FIRED. The samples that landed are
+# the handler's OWN csrsi mstatus write (set_pending, set_idle): 156 samples against 151 entries in the sticky
+# shape is one per handler, which is the csrsi and not the return. The arm's guard is
+# `if (!pend || st.prv != PRIV_LVL_M) return;`, so every mret that retired had NOTHING PENDING.
+# With 151 entries in 3000 cycles that is the re-entry ibex_controller.sv:498 predicts, whose take condition
+# asserts on (irq_nm | (irq_pending_i & irq_enabled)) with irq_enabled at :490 being the enable bit or U-mode.
+# SO THE BIN'S ONLY HIT TO DATE IS PAIR 1's INCIDENTAL ONE, in a timed-out storm run. Two purpose-built shapes
+# missed it.
+#
+# ================ THE CONSEQUENCE, WHICH IS THE DV LEAD'S AND IS WHY THIS MATTERS ================
+# The reachable shape is a WINDOW, so a fixture would hit it at some seeds and not others. Under the per-run
+# rule a bin hit at some seeds CANNOT BE DECLARED. So building that fixture buys merged-report credit and
+# NEVER a declared bin. That is worth knowing before anyone budgets the work.
+# The bin's CLASS is unchanged: not-built-stimulus, because no committed entry produces it at ANY seed - every
+# vector in the tree is a bare mret, so nothing drives the window at all.
+#
+# ================ WHAT THIS DOES NOT SHOW ================
+#   - The MECHANISM is inferred from the entry count and the absence of mret samples. No waveform was captured
+#     showing the re-entry beating the mret to retirement.
+#   - Seed 2's run did not complete. Seed 1's did.
+#   - The pulse spacing (30 pulses, 3-cycle hold, 97 cycles apart) is ARBITRARY. Absence here is not proof the
+#     windowed shape cannot be built, only that this spacing did not reach it.
+# No TB source changed for any of this. Both probe programs and the probe test are scratch; the test was
+# removed from the tree after its runs.
+# END.
