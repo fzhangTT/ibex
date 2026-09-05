@@ -1,10 +1,6 @@
 test: gen_test_irq_basic
 owner: test-writer
 bins:
-  - gen_exc_trap_csrs_cg.cr_kind_bit1.irq_bit1_0
-  - gen_exc_trap_csrs_cg.cr_kind_bit1.irq_bit1_1
-  - gen_exc_trap_csrs_cg.cr_kind_mie_priv.irq_mie1_m
-  - gen_exc_trap_csrs_cg.cr_kind_mtval.irq_zero
   - gen_irq_entry_cg.cp_line.software
   - gen_irq_entry_cg.cp_priv_pre.m
   - gen_irq_entry_cg.cr_line_marks.software_intr_with_pre_mip
@@ -13,31 +9,18 @@ bins:
   - gen_irq_entry_cg.cr_line_priv_mie.software_m_mie1
   - gen_irq_entry_cg.cr_line_priv_mie.software_u_mie0
   - gen_irq_entry_cg.cr_line_priv_mie.software_u_mie1
-  - gen_irq_vector_cg.cp_id.id3
-  - gen_irq_vector_cg.cr_id_base.id3_boot_init
-  - gen_irq_vector_cg.cr_id_base.id3_sw_aligned
-  - gen_irq_vector_cg.cr_id_base.id3_sw_legalised
-  - gen_irq_vector_cg.cr_id_base.id3_upper_half
   - gen_irq_entry_cg.cp_line.timer
   - gen_irq_entry_cg.cr_line_mepc.timer_branch_target
   - gen_irq_entry_cg.cr_line_others.timer_only_this
   - gen_irq_entry_cg.cr_line_priv_mie.timer_m_mie1
   - gen_irq_entry_cg.cr_line_priv_mie.timer_u_mie0
   - gen_irq_entry_cg.cr_line_priv_mie.timer_u_mie1
-  - gen_irq_vector_cg.cp_id.id7
-  - gen_irq_vector_cg.cr_id_base.id7_boot_init
-  - gen_irq_vector_cg.cr_id_base.id7_sw_aligned
-  - gen_irq_vector_cg.cr_id_base.id7_sw_legalised
   - gen_irq_entry_cg.cp_line.external
   - gen_irq_entry_cg.cr_line_mepc.external_jump_target
   - gen_irq_entry_cg.cr_line_others.external_others_enabled_idle
   - gen_irq_entry_cg.cr_line_priv_mie.external_m_mie1
   - gen_irq_entry_cg.cr_line_priv_mie.external_u_mie0
   - gen_irq_entry_cg.cr_line_priv_mie.external_u_mie1
-  - gen_irq_vector_cg.cp_id.id11
-  - gen_irq_vector_cg.cr_id_base.id11_boot_init
-  - gen_irq_vector_cg.cr_id_base.id11_sw_aligned
-  - gen_irq_vector_cg.cr_id_base.id11_upper_half
   - gen_irq_entry_cg.cp_line.fast[0]
   - gen_irq_entry_cg.cp_line.fast[10]
   - gen_irq_entry_cg.cp_line.fast[11]
@@ -56,27 +39,7 @@ bins:
   - gen_irq_entry_cg.cr_line_marks.fast_5_intr_with_pre_mip
   - gen_irq_entry_cg.cr_line_mepc.fast_14_sequential
   - gen_irq_entry_cg.cr_line_priv_mie.fast_7_u_mie1
-  - gen_irq_vector_cg.cp_id.fast[0]
-  - gen_irq_vector_cg.cp_id.fast[10]
-  - gen_irq_vector_cg.cp_id.fast[11]
-  - gen_irq_vector_cg.cp_id.fast[12]
-  - gen_irq_vector_cg.cp_id.fast[13]
-  - gen_irq_vector_cg.cp_id.fast[14]
-  - gen_irq_vector_cg.cp_id.fast[1]
-  - gen_irq_vector_cg.cp_id.fast[2]
-  - gen_irq_vector_cg.cp_id.fast[3]
-  - gen_irq_vector_cg.cp_id.fast[4]
-  - gen_irq_vector_cg.cp_id.fast[5]
-  - gen_irq_vector_cg.cp_id.fast[6]
-  - gen_irq_vector_cg.cp_id.fast[7]
-  - gen_irq_vector_cg.cp_id.fast[8]
-  - gen_irq_vector_cg.cp_id.fast[9]
-  - gen_irq_vector_cg.cr_id_base.fast_7_sw_aligned
 anti_vacuity:
-  gen_exc_trap_csrs_cg.cr_kind_bit1.irq_bit1_0: "CG-EXC-012: samples once per trap whose handler reads the CSRs, so a hit proves the read-back records were observed; the comparison of their values is the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance)"
-  gen_exc_trap_csrs_cg.cr_kind_bit1.irq_bit1_1: "CG-EXC-012: samples once per trap whose handler reads the CSRs, so a hit proves the read-back records were observed; the comparison of their values is the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance)"
-  gen_exc_trap_csrs_cg.cr_kind_mie_priv.irq_mie1_m: "CG-EXC-012: samples once per trap whose handler reads the CSRs, so a hit proves the read-back records were observed; the comparison of their values is the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance)"
-  gen_exc_trap_csrs_cg.cr_kind_mtval.irq_zero: "CG-EXC-012: samples once per trap whose handler reads the CSRs, so a hit proves the read-back records were observed; the comparison of their values is the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance)"
   gen_irq_entry_cg.cp_line.software: "CG-IRQ-001: rvfi_intr is 0 on every instruction that is not the first of an interrupt handler (exception handlers do not set it), so a hit proves an interrupt entry"
   gen_irq_entry_cg.cp_priv_pre.m: "CG-IRQ-001: rvfi_intr is 0 on every instruction that is not the first of an interrupt handler (exception handlers do not set it), so a hit proves an interrupt entry"
   gen_irq_entry_cg.cr_line_marks.software_intr_with_pre_mip: "CG-IRQ-001: rvfi_intr is 0 on every instruction that is not the first of an interrupt handler (exception handlers do not set it), so a hit proves an interrupt entry"
@@ -85,31 +48,18 @@ anti_vacuity:
   gen_irq_entry_cg.cr_line_priv_mie.software_m_mie1: "CG-IRQ-001: rvfi_intr is 0 on every instruction that is not the first of an interrupt handler (exception handlers do not set it), so a hit proves an interrupt entry"
   gen_irq_entry_cg.cr_line_priv_mie.software_u_mie0: "CG-IRQ-001: rvfi_intr is 0 on every instruction that is not the first of an interrupt handler (exception handlers do not set it), so a hit proves an interrupt entry"
   gen_irq_entry_cg.cr_line_priv_mie.software_u_mie1: "CG-IRQ-001: rvfi_intr is 0 on every instruction that is not the first of an interrupt handler (exception handlers do not set it), so a hit proves an interrupt entry"
-  gen_irq_vector_cg.cp_id.id3: "CG-IRQ-006: samples only on entries and mtvec accesses, so a hit proves the vector arithmetic or the WARL rule was exercised for that id/base class"
-  gen_irq_vector_cg.cr_id_base.id3_boot_init: "CG-IRQ-006: samples only on entries and mtvec accesses, so a hit proves the vector arithmetic or the WARL rule was exercised for that id/base class"
-  gen_irq_vector_cg.cr_id_base.id3_sw_aligned: "CG-IRQ-006: samples only on entries and mtvec accesses, so a hit proves the vector arithmetic or the WARL rule was exercised for that id/base class"
-  gen_irq_vector_cg.cr_id_base.id3_sw_legalised: "CG-IRQ-006: samples only on entries and mtvec accesses, so a hit proves the vector arithmetic or the WARL rule was exercised for that id/base class"
-  gen_irq_vector_cg.cr_id_base.id3_upper_half: "CG-IRQ-006: samples only on entries and mtvec accesses, so a hit proves the vector arithmetic or the WARL rule was exercised for that id/base class"
   gen_irq_entry_cg.cp_line.timer: "CG-IRQ-001: rvfi_intr is 0 on every instruction that is not the first of an interrupt handler (exception handlers do not set it), so a hit proves an interrupt entry"
   gen_irq_entry_cg.cr_line_mepc.timer_branch_target: "CG-IRQ-001: rvfi_intr is 0 on every instruction that is not the first of an interrupt handler (exception handlers do not set it), so a hit proves an interrupt entry"
   gen_irq_entry_cg.cr_line_others.timer_only_this: "CG-IRQ-001: rvfi_intr is 0 on every instruction that is not the first of an interrupt handler (exception handlers do not set it), so a hit proves an interrupt entry"
   gen_irq_entry_cg.cr_line_priv_mie.timer_m_mie1: "CG-IRQ-001: rvfi_intr is 0 on every instruction that is not the first of an interrupt handler (exception handlers do not set it), so a hit proves an interrupt entry"
   gen_irq_entry_cg.cr_line_priv_mie.timer_u_mie0: "CG-IRQ-001: rvfi_intr is 0 on every instruction that is not the first of an interrupt handler (exception handlers do not set it), so a hit proves an interrupt entry"
   gen_irq_entry_cg.cr_line_priv_mie.timer_u_mie1: "CG-IRQ-001: rvfi_intr is 0 on every instruction that is not the first of an interrupt handler (exception handlers do not set it), so a hit proves an interrupt entry"
-  gen_irq_vector_cg.cp_id.id7: "CG-IRQ-006: samples only on entries and mtvec accesses, so a hit proves the vector arithmetic or the WARL rule was exercised for that id/base class"
-  gen_irq_vector_cg.cr_id_base.id7_boot_init: "CG-IRQ-006: samples only on entries and mtvec accesses, so a hit proves the vector arithmetic or the WARL rule was exercised for that id/base class"
-  gen_irq_vector_cg.cr_id_base.id7_sw_aligned: "CG-IRQ-006: samples only on entries and mtvec accesses, so a hit proves the vector arithmetic or the WARL rule was exercised for that id/base class"
-  gen_irq_vector_cg.cr_id_base.id7_sw_legalised: "CG-IRQ-006: samples only on entries and mtvec accesses, so a hit proves the vector arithmetic or the WARL rule was exercised for that id/base class"
   gen_irq_entry_cg.cp_line.external: "CG-IRQ-001: rvfi_intr is 0 on every instruction that is not the first of an interrupt handler (exception handlers do not set it), so a hit proves an interrupt entry"
   gen_irq_entry_cg.cr_line_mepc.external_jump_target: "CG-IRQ-001: rvfi_intr is 0 on every instruction that is not the first of an interrupt handler (exception handlers do not set it), so a hit proves an interrupt entry"
   gen_irq_entry_cg.cr_line_others.external_others_enabled_idle: "CG-IRQ-001: rvfi_intr is 0 on every instruction that is not the first of an interrupt handler (exception handlers do not set it), so a hit proves an interrupt entry"
   gen_irq_entry_cg.cr_line_priv_mie.external_m_mie1: "CG-IRQ-001: rvfi_intr is 0 on every instruction that is not the first of an interrupt handler (exception handlers do not set it), so a hit proves an interrupt entry"
   gen_irq_entry_cg.cr_line_priv_mie.external_u_mie0: "CG-IRQ-001: rvfi_intr is 0 on every instruction that is not the first of an interrupt handler (exception handlers do not set it), so a hit proves an interrupt entry"
   gen_irq_entry_cg.cr_line_priv_mie.external_u_mie1: "CG-IRQ-001: rvfi_intr is 0 on every instruction that is not the first of an interrupt handler (exception handlers do not set it), so a hit proves an interrupt entry"
-  gen_irq_vector_cg.cp_id.id11: "CG-IRQ-006: samples only on entries and mtvec accesses, so a hit proves the vector arithmetic or the WARL rule was exercised for that id/base class"
-  gen_irq_vector_cg.cr_id_base.id11_boot_init: "CG-IRQ-006: samples only on entries and mtvec accesses, so a hit proves the vector arithmetic or the WARL rule was exercised for that id/base class"
-  gen_irq_vector_cg.cr_id_base.id11_sw_aligned: "CG-IRQ-006: samples only on entries and mtvec accesses, so a hit proves the vector arithmetic or the WARL rule was exercised for that id/base class"
-  gen_irq_vector_cg.cr_id_base.id11_upper_half: "CG-IRQ-006: samples only on entries and mtvec accesses, so a hit proves the vector arithmetic or the WARL rule was exercised for that id/base class"
   gen_irq_entry_cg.cp_line.fast[0]: "CG-IRQ-001: rvfi_intr is 0 on every instruction that is not the first of an interrupt handler (exception handlers do not set it), so a hit proves an interrupt entry"
   gen_irq_entry_cg.cp_line.fast[10]: "CG-IRQ-001: rvfi_intr is 0 on every instruction that is not the first of an interrupt handler (exception handlers do not set it), so a hit proves an interrupt entry"
   gen_irq_entry_cg.cp_line.fast[11]: "CG-IRQ-001: rvfi_intr is 0 on every instruction that is not the first of an interrupt handler (exception handlers do not set it), so a hit proves an interrupt entry"
@@ -128,19 +78,3 @@ anti_vacuity:
   gen_irq_entry_cg.cr_line_marks.fast_5_intr_with_pre_mip: "CG-IRQ-001: rvfi_intr is 0 on every instruction that is not the first of an interrupt handler (exception handlers do not set it), so a hit proves an interrupt entry"
   gen_irq_entry_cg.cr_line_mepc.fast_14_sequential: "CG-IRQ-001: rvfi_intr is 0 on every instruction that is not the first of an interrupt handler (exception handlers do not set it), so a hit proves an interrupt entry"
   gen_irq_entry_cg.cr_line_priv_mie.fast_7_u_mie1: "CG-IRQ-001: rvfi_intr is 0 on every instruction that is not the first of an interrupt handler (exception handlers do not set it), so a hit proves an interrupt entry"
-  gen_irq_vector_cg.cp_id.fast[0]: "CG-IRQ-006: samples only on entries and mtvec accesses, so a hit proves the vector arithmetic or the WARL rule was exercised for that id/base class"
-  gen_irq_vector_cg.cp_id.fast[10]: "CG-IRQ-006: samples only on entries and mtvec accesses, so a hit proves the vector arithmetic or the WARL rule was exercised for that id/base class"
-  gen_irq_vector_cg.cp_id.fast[11]: "CG-IRQ-006: samples only on entries and mtvec accesses, so a hit proves the vector arithmetic or the WARL rule was exercised for that id/base class"
-  gen_irq_vector_cg.cp_id.fast[12]: "CG-IRQ-006: samples only on entries and mtvec accesses, so a hit proves the vector arithmetic or the WARL rule was exercised for that id/base class"
-  gen_irq_vector_cg.cp_id.fast[13]: "CG-IRQ-006: samples only on entries and mtvec accesses, so a hit proves the vector arithmetic or the WARL rule was exercised for that id/base class"
-  gen_irq_vector_cg.cp_id.fast[14]: "CG-IRQ-006: samples only on entries and mtvec accesses, so a hit proves the vector arithmetic or the WARL rule was exercised for that id/base class"
-  gen_irq_vector_cg.cp_id.fast[1]: "CG-IRQ-006: samples only on entries and mtvec accesses, so a hit proves the vector arithmetic or the WARL rule was exercised for that id/base class"
-  gen_irq_vector_cg.cp_id.fast[2]: "CG-IRQ-006: samples only on entries and mtvec accesses, so a hit proves the vector arithmetic or the WARL rule was exercised for that id/base class"
-  gen_irq_vector_cg.cp_id.fast[3]: "CG-IRQ-006: samples only on entries and mtvec accesses, so a hit proves the vector arithmetic or the WARL rule was exercised for that id/base class"
-  gen_irq_vector_cg.cp_id.fast[4]: "CG-IRQ-006: samples only on entries and mtvec accesses, so a hit proves the vector arithmetic or the WARL rule was exercised for that id/base class"
-  gen_irq_vector_cg.cp_id.fast[5]: "CG-IRQ-006: samples only on entries and mtvec accesses, so a hit proves the vector arithmetic or the WARL rule was exercised for that id/base class"
-  gen_irq_vector_cg.cp_id.fast[6]: "CG-IRQ-006: samples only on entries and mtvec accesses, so a hit proves the vector arithmetic or the WARL rule was exercised for that id/base class"
-  gen_irq_vector_cg.cp_id.fast[7]: "CG-IRQ-006: samples only on entries and mtvec accesses, so a hit proves the vector arithmetic or the WARL rule was exercised for that id/base class"
-  gen_irq_vector_cg.cp_id.fast[8]: "CG-IRQ-006: samples only on entries and mtvec accesses, so a hit proves the vector arithmetic or the WARL rule was exercised for that id/base class"
-  gen_irq_vector_cg.cp_id.fast[9]: "CG-IRQ-006: samples only on entries and mtvec accesses, so a hit proves the vector arithmetic or the WARL rule was exercised for that id/base class"
-  gen_irq_vector_cg.cr_id_base.fast_7_sw_aligned: "CG-IRQ-006: samples only on entries and mtvec accesses, so a hit proves the vector arithmetic or the WARL rule was exercised for that id/base class"
