@@ -21,6 +21,7 @@ mcause it must carry, so a wrong-line entry fails its own tuple rather than bein
 """
 
 import cocotb
+from cocotb.triggers import Edge, with_timeout
 
 from dv.auto_dv.tests.gen_programs import gen_irq_basic_prog as prog
 from dv.auto_dv.tests.gen_test_template import GenTest
@@ -29,8 +30,9 @@ HOLD_UNTIL_ACK = 1        # gen_irq_hold_e: {CYCLES, UNTIL_ACK, UNTIL_TAKEN, STI
 NMI_DRIVER_BIT = 18       # never driven here: this entry owns no NMI shape
 MSTATUS_MIE = 1 << 3
 MSTATUS_MPIE = 1 << 7
-ENTRY_SETTLE_CYCLES = 4000   # a commanded line is taken well inside this; the budget check owns the tail
-POLL_CYCLES = 8              # granularity of the report-count poll
+# a phase group applies one command per cycle from its trigger, at most k of them (lib.Schedule
+# k_range), so this covers the whole group plus the bridge command round trip
+PHASE_SETTLE_CYCLES = 64
 
 
 def entries_of(reports):
@@ -69,17 +71,52 @@ async def await_reports(test, n):
     """Wait until the program has stored at least n report words, so the next line is driven only
     after the previous entry has completed and released its line.
 
-    wait_cycles takes an ABSOLUTE cycle, not a delay, so the target is computed from the current
-    cycle each time round; it returns False when the program ended first, which ends the wait
-    rather than spinning to the deadline.
+    Driven by the report edge rather than by a poll on the bridge cycle slot: that slot is shared
+    with the schedule runner and every arm suppresses one cycle's compare, so a poll that re-arms
+    it every few cycles can cost the runner a boundary. Lateness is judged by retirement, the way
+    the report collector judges it, because a bus regime stretches a program many times over and a
+    fixed cycle budget fails a healthy run at some seeds and not others.
     """
-    deadline = test.cycle() + ENTRY_SETTLE_CYCLES
+    b = test.h.b
+    final = test.report_count() + 1        # the last store is the end of test, not a report word
+    rounds, last_retired = 0, test.retired()
     while test.eot_count() < n:
-        assert test.cycle() < deadline, (
-            f"GEN_TEST_IRQ: {test.eot_count()} report words at cycle {test.cycle()}, expected {n} "
-            f"by cycle {deadline}")
-        if not await test.wait_cycles(test.cycle() + POLL_CYCLES):
+        if test.eot_count() >= final:
             return   # the program reached end of test; wait_eot owns the verdict from here
+        try:
+            await with_timeout(Edge(b.evt_eot_seen), test.program_budget_cycles * test.period_ns, "ns")
+        except Exception as exc:   # cocotb SimTimeoutError
+            now_retired = test.retired()
+            assert now_retired > last_retired, (
+                f"GEN_TEST_IRQ: {test.eot_count()} report words at cycle {test.cycle()}, expected {n}, "
+                f"and no retirement for {test.program_budget_cycles} cycles ({type(exc).__name__})")
+            rounds += 1
+            assert rounds < test.progress_rounds_max, (
+                f"GEN_TEST_IRQ: {test.eot_count()} report words at cycle {test.cycle()}, expected {n}, "
+                f"after {rounds} x {test.program_budget_cycles} cycles although the core keeps retiring")
+            last_retired = now_retired
+
+
+async def hold_for_last_phase(test):
+    """Hold the final entry until every scheduled phase has been applied; False if the program ended.
+
+    The program spins until every armed vector has been entered, so this costs simulation time and
+    not an entry. Without it a whole schedule can be applied after the last entry was taken, and
+    the knob values the schedule sets would never be in force while an interrupt is taken.
+    """
+    phases = test.schedule.phases
+    last = max((ph.count for ph in phases), default=0)
+    if last == 0:
+        return True
+    kind = phases[0].kind                  # lib.Schedule allows one trigger kind per schedule
+    if kind == "c":
+        reached = await test.wait_cycles(last, timeout_cycles=test.program_budget_cycles)
+    else:
+        reached = await test.wait_retired(last, timeout_cycles=test.program_budget_cycles)
+    if not reached:
+        return False
+    return await test.wait_cycles(test.cycle() + PHASE_SETTLE_CYCLES,
+                                  timeout_cycles=test.program_budget_cycles)
 
 
 class IrqBasic(GenTest):
@@ -111,6 +148,8 @@ class IrqBasic(GenTest):
         self.rng.shuffle(order)              # the drive order is this test's, not the program's
         for i, e in enumerate(order):
             assert e.driver_bit != NMI_DRIVER_BIT, "gen_test_irq_basic drives no NMI"
+            if i == len(order) - 1 and not await hold_for_last_phase(self):
+                return                   # the program ended first; wait_eot owns the verdict
             await self.cmd("IRQ_SET", (1 << e.driver_bit, HOLD_UNTIL_ACK, 0, 0))
             self.log.info("GEN_TEST_IRQ drove %s (driver bit %d, cause %d), entry %d of %d",
                           e.line, e.driver_bit, e.cause, i + 1, len(order))

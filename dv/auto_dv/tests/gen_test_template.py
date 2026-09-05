@@ -205,10 +205,10 @@ class GenTest:
         if count <= self.cycle():
             return True
         ev = Event()
-        self._cycle_waiters.add(count, ev)
+        rearm = self._cycle_waiters.add_arms(count, ev)
         if self._cycle_service is None:
             self._cycle_service = cocotb.start_soon(self._cycle_slot_service())
-        else:
+        elif rearm:
             self._arm_cycle_slot()                     # a nearer target than the armed one
         budget = timeout_cycles if timeout_cycles is not None else max(count - self.cycle(), 0) + 100
         try:

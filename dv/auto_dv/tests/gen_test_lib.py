@@ -77,6 +77,17 @@ class CycleWaiters:
     def add(self, target, key):
         self._pending.append((int(target), key))
 
+    def add_arms(self, target, key):
+        """Register a waiter and say whether the bridge slot must be re-armed for it.
+
+        An arm edge suppresses that cycle's compare, so arming for a target the slot already
+        carries can drop the hit a pending waiter is waiting for: only a new earliest target
+        is worth an arm.
+        """
+        before = self.armed_target()
+        self.add(target, key)
+        return self.armed_target() != before
+
     def armed_target(self):
         """The target the bridge should carry: the earliest pending, or None when nothing waits."""
         return min((t for t, _ in self._pending), default=None)
@@ -1030,6 +1041,14 @@ def _self_test():
     w4.drop(far)
     assert len(w4) == 1 and w4.armed_target() == 85, "dropping the far waiter leaves the near one armed"
     assert w4.on_hit(85) == [near], "the near waiter still wakes after the far one gave up"
+    # an arm costs that cycle its compare, so only a new earliest target may arm; the rule the
+    # template used, arming on every add, is the red here
+    w5 = CycleWaiters()
+    served = [w5.add_arms(t, object()) for t in (500, 900, 200)]
+    naive = [True, True, True]
+    assert served == [True, False, True], f"add_arms re-arms only for a nearer target, got {served}"
+    assert served != naive, "arming on every add re-arms for a target the slot already carries"
+    assert w5.armed_target() == 200, "the earliest of the three targets is the armed one"
     empty = Schedule.derive(seed, [])
     assert empty.k == 0 and empty.text() == "" and empty.phases == [], "empty schedule"
     s1 = Schedule.derive(seed, names)
