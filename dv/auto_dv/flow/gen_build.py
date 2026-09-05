@@ -249,9 +249,61 @@ def summarize_compile_log(log: Path) -> dict[str, Any]:
             "cm_hier_note": bool(re.search(r"cm_hier|portsonly", text, re.I))}
 
 
+def compile_config(argv: list[str]) -> dict[str, list[str]]:
+    """Every compile-time define and parameter in the assembled command, in command order. The build
+    entry's own `defines` group is one of several sources (the uvm, config and cocotb groups emit more),
+    so a field populated from that group alone describes the entry rather than the compile."""
+    return {"defines_all": [x for x in argv if x.startswith(C.VCS_DEFINE_PREFIX)],
+            "parameters_all": [x for x in argv if x.startswith(C.VCS_PVALUE_PREFIX)]}
+
+
+def self_test() -> int:
+    """compile_config over a fabricated command and over the committed round-0 build record. No compile."""
+    ok = True
+    cfg = config_opts()
+    argv = ["vcs", "-full64", "+define+UVM", *cfg, "+define+COCOTB_SIM", "-o", "simv"]
+    got = compile_config(argv)
+    cfg_defines = [x for x in cfg if x.startswith(C.VCS_DEFINE_PREFIX)]
+    cfg_params = [x for x in cfg if x.startswith(C.VCS_PVALUE_PREFIX)]
+    cond = bool(cfg_defines) and all(d in got["defines_all"] for d in cfg_defines)
+    ok &= cond
+    print("SELF-TEST", "ok " if cond else "BAD",
+          f"every define the config group emits reaches defines_all ({len(cfg_defines)} of them)")
+    cond = got["parameters_all"] == cfg_params and len(got["parameters_all"]) == sum(
+        1 for x in argv if x.startswith(C.VCS_PVALUE_PREFIX))
+    ok &= cond
+    print("SELF-TEST", "ok " if cond else "BAD",
+          f"parameters_all is every -pvalue in the command, in order ({len(got['parameters_all'])})")
+    cond = got["defines_all"][0] == "+define+UVM" and got["defines_all"][-1] == "+define+COCOTB_SIM"
+    ok &= cond
+    print("SELF-TEST", "ok " if cond else "BAD", "defines_all keeps command order")
+    cond = "defines" not in got
+    ok &= cond
+    print("SELF-TEST", "ok " if cond else "BAD",
+          "the old `defines` key is gone: one name never means two populations (CM222 L-1)")
+    # Control on real committed bytes: the round-0 build record's own command.
+    rec = C.EVIDENCE_DIR / "gen_round_0" / "gen_build_manifest_gen_tb.yaml"
+    if rec.is_file():
+        man = U.load_yaml(rec)
+        cmd = shlex.split(man.get("command") or "")
+        real = compile_config(cmd)
+        old = list(man.get("defines") or [])
+        cond = (len(real["defines_all"]) > len(old) and all(d in real["defines_all"] for d in old)
+                and len(real["parameters_all"]) > 0)
+        ok &= cond
+        print("SELF-TEST", "ok " if cond else "BAD",
+              f"committed round-0 record: the old key held {len(old)} define(s) of the "
+              f"{len(real['defines_all'])} the command carries, with {len(real['parameters_all'])} parameter(s)")
+    else:
+        print("SELF-TEST ok  committed round-0 build record absent here: control skipped, stated not silent")
+    print("SELF-TEST:", "PASS" if ok else "FAIL")
+    return 0 if ok else 2
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--build", required=True, help="build name from gen_testlist.yaml")
+    ap.add_argument("--self-test", action="store_true", help="compile_config cases, no compile")
+    ap.add_argument("--build", help="build name from gen_testlist.yaml")
     ap.add_argument("--testlist", type=Path, default=C.TESTLIST_YAML)
     ap.add_argument("--outdir", type=Path, help="default: work/runtime/out/<build>-<utc stamp>")
     ap.add_argument("--coverage", action="store_true", help="SIM_RECIPE Section 3 instrumentation")
@@ -275,6 +327,10 @@ def main() -> int:
                          "clone-relative layout (e.g. <dir>/rtl/ibex_alu.sv); DV never edits rtl/ in place")
     ap.add_argument("--mutation-id", help="mutation identifier recorded with --rtl-root (required with it)")
     a = ap.parse_args()
+    if a.self_test:
+        return self_test()
+    if not a.build:
+        ap.error("--build is required")
     if os.environ.get(C.ENV_SOURCE_ROOT):
         M.lease_if_head_tree(C.SOURCE_ROOT, f'build_{a.build}')   # standalone head-tree consumer: prune must skip the tree
     if (a.rtl_root is None) != (a.mutation_id is None):
@@ -345,7 +401,7 @@ def main() -> int:
         "cocotb": bool(a.cocotb or build.get("cocotb")), "waves": bool(a.waves), "mirror": a.mirror_record,
         "pre_build": pre_build, "ldflags": groups["ldflags"][1], "runtime_lib_dirs": runtime_lib_dirs(build, build_fields(a, outdir)),
         "dropped_cm_args_no_coverage": a.dropped_cm_args,
-        "defines": groups["defines"], "constfile": str(outdir / "constfile.txt") if a.coverage and not a.no_diag_noconst else None,
+        **compile_config(argv), "constfile": str(outdir / "constfile.txt") if a.coverage and not a.no_diag_noconst else None,
         "command": " ".join(shlex.quote(x) for x in argv), "flag_groups": groups,
         "inputs": U.filelist_digest([C.SOURCE_ROOT / f for f in build["filelists"]]),
         "covergroup_files": cg_files, C.COVERGROUPS_DECLARED_KEY: bool(cg_files),

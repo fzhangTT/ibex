@@ -1028,3 +1028,44 @@ directory: the loader refuses `..` or absolute values, and the pruner refuses an
 outside the run directory, recording it under `pruned_refused`), and the manifest's `retention` block records the rule,
 the plusarg, the planned and pruned counts and the runs spared by `keep_artifacts`. A TB without the
 export knob makes the step a recorded no-op.
+
+## 10. Record fields rt39 adds or changes
+
+Five items, each a record field a reader may meet. The rule they share: a field answers exactly the
+question its name asks, and where two questions were previously answered by one field, the field is split
+rather than widened.
+
+THE GROUP QUANTITY IS NAMED, AND THERE IS ONE SELECTOR. `gen_cov_report` exposes three fields rather than
+one number whose definition lives in prose: `group_bins_gate` (hit bins over declared bins with the witness
+ledger out of BOTH terms, the gate's ruled quantity), `group_bins_all` (the same ratio over every
+covergroup, which reproduces urg's own report-wide figure), and `group_score_weighted` (urg's weighted
+score, which carries NO ratio and must not be shown with one). `group_cell()` is THE ONE SELECTOR; both
+`gen_round` and `gen_dashboard` read it, and moving the flow to another quantity is one token in
+`C.GROUP_CELL_FIELD`. There is no content-dependent fallback: a reader never has to work out which
+definition produced a cell. On the committed round-0 report the three read 85.89 (3477/4048), 81.47
+(3477/4268) and 78.29, and the shipped self-test reproduces all three from that committed artefact.
+
+THE BUILD MANIFEST SPLITS ITS COMPILE OPTIONS. `defines_all` and `parameters_all` replace the old `defines`
+key, which is removed rather than kept alongside. The motivating case is worth the sentence: `defines` read
+a single token, `['+define+RVFI']`, while the recorded `command` carried nine defines including the bitmanip
+extension, and a live diagnosis nearly concluded a correct build was missing that extension. A field that
+answers a narrower question than its name suggests is worse than no field.
+
+THE DIRTY-TREE FACTS CARRY THEIR SCOPE AND THEIR STAMP. `git_head()` returns `dirty_tracked_tree` (the
+porcelain list), `dirty_scope` and `dirty_stamp_utc` beside the boolean, and the round index entry carries
+both the regression-start and collect-time readings, each with its own scope string and stamp. No refusal is
+added: the facts are recorded so a reader can judge, not enforced.
+
+THE CANARY AND THE ROUND ARE COMPARED BY SOURCES DIGEST. The index entry carries
+`canary_sources_sha256`, `round_sources_sha256` and `sources_sha256_match`, with `C.SOURCES_DIGEST_SCOPE`
+stating what the digest covers: THE FILELIST SOURCES ONLY, not the defines, the parameters or any other
+compile option. A canary of other sources records its own digest and the match reads false rather than the
+comparison being silently absent, which is what the pre-change record did.
+
+RETENTION OF COMPRESSED ARTEFACTS IS REPRODUCIBLE. `retain_gz` shells `gzip -n` rather than using Python's
+gzip, and the collect retains `modlist.txt` and `modinfo.txt` with a `gz_copied` count. Python's
+`GzipFile(filename="", mtime=0)` is reproducible but does NOT reproduce the committed archives, because GNU
+gzip and zlib emit different XFL/OS bytes and different deflate output; the committed pair came from the
+shell tool and the positive control reproduces it byte for byte. The shape is GNU gzip's (site version 1.9),
+which the record states, since another version could differ. No committed archive is converted: the new
+shape applies only to files written from now on.

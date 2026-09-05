@@ -265,8 +265,10 @@ def self_test() -> int:
     # A red fixture whose only failure is an unmet fcov expectation: the sim log PASSES by construction, so the
     # reason is the only evidence. Graded through grade_red_fixture directly, which is how gen_run reaches it after
     # the fcov check.
-    fcov_reason = "fcov expectation unmet: 1 declared bin(s) not hit ['gen_ic_ecc_cg.cp_ram.data']"
-    fcov_sig = r"fcov expectation unmet: [0-9]+ declared bin\(s\) not hit .*gen_ic_ecc_cg\.cp_ram\.data"
+    fcov_reason = f"{C.FCOV_UNMET_REASON}: 1 declared bin(s) not hit ['gen_ic_ecc_cg.cp_ram.data']"
+    # The reason carries no regex metacharacter, so it goes in unescaped: re.escape would escape the
+    # spaces and the loader's rt37 rule, which looks for the reason as a substring, would no longer see it.
+    fcov_sig = C.FCOV_UNMET_REASON + r": [0-9]+ declared bin\(s\) not hit .*gen_ic_ecc_cg\.cp_ram\.data"
     r_ok = grade_red_fixture({"verdict": C.VERDICT_FAIL, "reason": fcov_reason, "evidence_line": fcov_reason}, fcov_sig)
     cond = r_ok["verdict"] == C.VERDICT_RED_OK
     ok &= cond

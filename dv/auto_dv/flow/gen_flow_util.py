@@ -178,7 +178,11 @@ def canary_build_facts(path: Path | None) -> dict[str, Any] | None:
     return {"path": str(path), "manifest": str(mp), "manifest_present": bool(man), "build": man.get("build"),
             "source_mode": man.get("source_mode"), "head_sha": man.get("head_sha"),
             C.COVERGROUPS_DECLARED_KEY: man.get(C.COVERGROUPS_DECLARED_KEY), "covergroup_files": man.get("covergroup_files"),
-            C.B8_PROBE_KNOB_DEFAULT_KEY: man.get(C.B8_PROBE_KNOB_DEFAULT_KEY), C.B8_PROBE_SV_DEFAULT_KEY: man.get(C.B8_PROBE_SV_DEFAULT_KEY)}
+            C.B8_PROBE_KNOB_DEFAULT_KEY: man.get(C.B8_PROBE_KNOB_DEFAULT_KEY), C.B8_PROBE_SV_DEFAULT_KEY: man.get(C.B8_PROBE_SV_DEFAULT_KEY),
+            # Identity, not just the gate's inputs: a path under work/ is git-invisible, so a reader of the
+            # commit could not tell whether the canary and the round compiled the same sources.
+            "sources_sha256": ((man.get("inputs") or {}).get("sources_sha256")),
+            "sources_sha256_scope": C.SOURCES_DIGEST_SCOPE}
 
 
 def remove_tree_guarded(path: Path, roots: tuple[Path, ...], what: str) -> int:
@@ -212,8 +216,12 @@ def git_head() -> dict[str, Any]:
         r = subprocess.run(["git", *args], cwd=C.REPO_ROOT, capture_output=True, text=True)
         return r.stdout.strip() if r.returncode == 0 else ""
     dirty = run(["status", "--porcelain", "--untracked-files=no"])
+    lines = [l.rstrip() for l in dirty.splitlines() if l.strip()]
+    # The boolean alone cannot be read back: a later reader cannot tell WHICH files were dirty, nor when the
+    # answer was taken. Both travel with it, and the scope is named rather than left to the field name.
     return {"head": run(["rev-parse", "HEAD"]), "branch": run(["rev-parse", "--abbrev-ref", "HEAD"]),
-            "dirty_tracked_files": bool(dirty)}
+            "dirty_tracked_files": bool(dirty), "dirty_tracked_tree": lines,
+            "dirty_scope": C.DIRTY_SCOPE_TREE, "dirty_stamp_utc": now_utc()}
 
 
 def _matches_direct(path: str, pattern: str) -> bool:
@@ -429,7 +437,7 @@ def self_test() -> int:
                 ("red_expect matching the empty string (^)", lambda d: d["tests"][0].update(red_fixture=True, measured=False, red_expect="^")),
                 ("rt37: red_expect naming the fcov unmet reason with no fcov_expectation_file",
                     lambda d: d["tests"][0].update(red_fixture=True, measured=False, fcov_expectation_file=None,
-                                                   red_expect=r"fcov expectation unmet: [0-9]+ declared bin\(s\) not hit .*gen_x_cg\.cp_y\.b")),
+                                                   red_expect=C.FCOV_UNMET_REASON + r": [0-9]+ declared bin\(s\) not hit .*gen_x_cg\.cp_y\.b")),
                 ("program with generator and directed", lambda d: d["tests"][0].update(program={"generator": "dv/auto_dv/flow/gen_stim.py", "directed": ["x.S"], "seed": "run"})),
                 ("program.generator naming a missing script", lambda d: d["tests"][0].update(program={"generator": "dv/auto_dv/tests/gen_programs/gen_missing_prog.py", "seed": "run"})),
                 ("program.generator_args without generator", lambda d: d["tests"][0].update(program={"directed": ["dv/auto_dv/stim/gen_directed/gen_zc_directed.S"], "generator_args": ["--red"], "seed": "run"})),
@@ -968,6 +976,41 @@ def self_test() -> int:
         cond = got is want
         ok &= cond
         print("SELF-TEST", "ok " if cond else "BAD", f"red_grading_deferred: {label} (got {got})")
+    # item three: git_head names the dirty files, their scope and the stamp the answer was taken at.
+    # Fabricated repository, two tracked files modified: the list must name both and only both.
+    with tempfile.TemporaryDirectory() as td_git:
+        g = Path(td_git)
+        gitc = ["git", "-c", "user.email=t@t", "-c", "user.name=t", "-c", "commit.gpgsign=false"]
+        subprocess.run([*gitc, "init", "-q", str(g)], capture_output=True)
+        (g / "one.txt").write_text("a\n", encoding="utf-8")
+        (g / "two.txt").write_text("b\n", encoding="utf-8")
+        (g / "three.txt").write_text("c\n", encoding="utf-8")
+        subprocess.run([*gitc, "add", "-A"], cwd=g, capture_output=True)
+        subprocess.run([*gitc, "commit", "-q", "-m", "x"], cwd=g, capture_output=True)
+        (g / "one.txt").write_text("a2\n", encoding="utf-8")
+        (g / "two.txt").write_text("b2\n", encoding="utf-8")
+        (g / "untracked.txt").write_text("d\n", encoding="utf-8")   # tracked-only scope must ignore this
+        saved_root = C.REPO_ROOT
+        try:
+            C.REPO_ROOT = g
+            gh = git_head()
+        finally:
+            C.REPO_ROOT = saved_root
+    names = sorted(l.split()[-1] for l in gh.get("dirty_tracked_tree") or [])
+    cond = (gh.get("dirty_tracked_files") is True and names == ["one.txt", "two.txt"]
+            and gh.get("dirty_scope") == C.DIRTY_SCOPE_TREE
+            and re.fullmatch(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z", str(gh.get("dirty_stamp_utc") or "")) is not None)
+    ok &= cond
+    print("SELF-TEST", "ok " if cond else "BAD",
+          f"git_head names the dirty tracked files with one scope and a stamp: {names}, "
+          f"stamp {gh.get('dirty_stamp_utc')}, untracked excluded")
+    # An older record carries the boolean and no list: it must READ, not raise, because the committed
+    # round-0 entry has exactly that shape and item three adds no refusal.
+    older = {"head": "a" * 40, "branch": "b", "dirty_tracked_files": True}
+    cond = older.get("dirty_tracked_tree") is None and older.get("dirty_scope") is None and older["dirty_tracked_files"] is True
+    ok &= cond
+    print("SELF-TEST", "ok " if cond else "BAD",
+          "an older record with the boolean and no list reads without error (absence of the list is the schema tell, not a refusal)")
     print("SELF-TEST:", "PASS" if ok else "FAIL")
     return 0 if ok else 2
 

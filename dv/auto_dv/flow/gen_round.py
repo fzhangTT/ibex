@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import argparse
 import gzip
+import subprocess
 import re
 import shutil
 import sys
@@ -88,7 +89,8 @@ def regression_verdict(man: dict[str, Any]) -> dict[str, Any]:
 def metric_row(cov: dict[str, Any]) -> dict[str, Any]:
     """The gate row: the gated DUT scopes combined per metric (DV Lead ruling, gen_tb_architecture.md
     Section 5: u_dut.u_ibex_core + u_dut.u_register_file, covered and total objects summed), group from
-    the grand total, n/a kept. Never the grand total for code metrics: a missing or unparsed gate row
+    gen_cov_report.group_cell, the one selector, so the percent and its denominator always come from the
+    same named quantity; n/a kept. Never the grand total for code metrics: a missing or unparsed gate row
     is a hard error naming what is missing."""
     totals = cov.get("totals") or {}
     gate = cov.get("gate_row")
@@ -103,10 +105,14 @@ def metric_row(cov: dict[str, Any]) -> dict[str, Any]:
                            "combining_rule": gate.get("rule")}
     for m in GATED_CODE_METRICS:
         row[m] = gate.get(m, C.NOT_APPLICABLE)
-    row["group"] = totals.get("group", C.NOT_APPLICABLE)
+    # One selector for the group cell (rt39 item one): the percent and the ratio always come from the
+    # same named quantity, so no consumer can pair a percent from one definition with another's denominator.
+    cell = R.group_cell(cov.get("group_quantities") or {})
+    row["group"] = cell.get("percent") if cell.get("percent") is not None else C.NOT_APPLICABLE
     ratios = dict(gate.get("ratios") or {})
-    if (totals.get("ratios") or {}).get("group"):
-        ratios["group"] = totals["ratios"]["group"]
+    if cell.get("ratio"):
+        ratios["group"] = cell["ratio"]
+    row["group_cell"] = cell
     row["ratios"] = ratios
     row["info_scopes"] = {k: {m: v.get(m) for m in C.URG_METRICS} | {"ratios": v.get("ratios")}
                           for k, v in (cov.get("info_scope") or {}).items() if isinstance(v, dict)}
@@ -215,6 +221,14 @@ def collect(outdir: Path, round_no: int, dry_run: bool, label: str | None,
         if src.is_file():
             shutil.copyfile(src, ev / C.round_evidence_name(f))
             copied.append(C.round_evidence_name(f))
+    # rt39 item five: the two large URG products, retained compressed with the reproducible shape.
+    gz_copied: list[str] = []
+    for f in C.ROUND_URG_GZ_FILES:
+        src = report / f
+        if src.is_file():
+            name = C.round_evidence_name(f) + ".gz"
+            retain_gz(src, ev / name)
+            gz_copied.append(name)
     scopes = [b.get("cov_scope") for b in (man.get("builds") or {}).values() if b.get("cov_scope")]
     for b in (man.get("builds") or {}).values():
         scopes += b.get("cov_scopes") or []
@@ -229,8 +243,7 @@ def collect(outdir: Path, round_no: int, dry_run: bool, label: str | None,
     if dump_dir.is_dir() and not dry_run:
         (ev / C.ROUND_EV_FULL_EXCL_DIR).mkdir()
         for f in sorted(dump_dir.glob(C.URG_DUMP_METRIC_GLOB)):
-            with f.open("rb") as src, gzip.open(ev / C.ROUND_EV_FULL_EXCL_DIR / C.round_evidence_name(f.name + ".gz"), "wb") as dst:
-                shutil.copyfileobj(src, dst)
+            retain_gz(f, ev / C.ROUND_EV_FULL_EXCL_DIR / C.round_evidence_name(f.name + ".gz"))
             dumped.append(C.round_evidence_name(f.name + ".gz"))
     merge_log = Path(cov.get("merge_log") or "")
     wc = warning_counts(merge_log)
@@ -242,11 +255,25 @@ def collect(outdir: Path, round_no: int, dry_run: bool, label: str | None,
         bm = Path(b.get("manifest") or "")
         if bm.is_file():
             shutil.copyfile(bm, ev / C.ROUND_EV_BUILD_MANIFEST_FMT.format(build=bname))
+    # CM222 M-3: the canary's build manifest is retained beside the round's, so the identity above can be re-derived from the commit.
+    _cm = Path((man.get("canary_build") or {}).get("manifest") or "")
+    if _cm.is_file():
+        shutil.copyfile(_cm, ev / C.ROUND_EV_CANARY_MANIFEST)
+        copied.append(C.ROUND_EV_CANARY_MANIFEST)
     shutil.copyfile(C.TESTLIST_YAML, ev / C.ROUND_EV_TESTLIST_SNAPSHOT)
     shutil.copyfile(outdir / "manifest.yaml", ev / C.ROUND_EV_REGRESS_MANIFEST)
     for e in cov.get("elfiles") or []:
         (ev / C.ROUND_EV_ELFILES_DIR).mkdir(exist_ok=True)
         shutil.copyfile(e, ev / C.ROUND_EV_ELFILES_DIR / C.round_evidence_name(Path(e).name))
+    # rt39 item four: the canary's identity against the round's. Both values travel with the compare
+    # result, so a reader of the commit never has to open a path under work/ that git does not track.
+    canary = man.get("canary_build") or {}
+    round_sources = None
+    for _b in (man.get("builds") or {}).values():
+        _bm = U.load_yaml(Path(_b.get("manifest"))) if _b.get("manifest") and Path(_b["manifest"]).is_file() else {}
+        round_sources = round_sources or ((_bm.get("inputs") or {}).get("sources_sha256"))
+    canary_sources = canary.get("sources_sha256")
+    sources_match = (canary_sources == round_sources) if (canary_sources and round_sources) else None
     prev = index["rounds"][-1] if (index["rounds"] and not dry_run) else None
     gain = gain_against(prev["metrics"] if prev else None, row)
     streak = 0 if (prev is None or gain["shows_gain"]) else int(prev.get("no_gain_streak", 0)) + 1
@@ -254,7 +281,15 @@ def collect(outdir: Path, round_no: int, dry_run: bool, label: str | None,
     entry = {"round": round_no, "dry_run": dry_run, "label": label, "date_utc": U.now_utc(), "evidence_dir": str(ev),
              "regress_outdir": str(outdir), "regress_tag": man.get("tag"), "git_head": git.get("head"),
              "canary_build": man.get("canary_build"),
-             "git_dirty_tracked_files": git.get("dirty_tracked_files"), "flow_git_status_now": flow_git_status(),
+             "canary_sources_sha256": canary_sources, "round_sources_sha256": round_sources,
+             "sources_sha256_match": sources_match, "sources_sha256_scope": C.SOURCES_DIGEST_SCOPE,
+             "git_dirty_tracked_files": git.get("dirty_tracked_files"),
+             "dirty_tracked_tree": git.get("dirty_tracked_tree"),
+             "dirty_tracked_tree_scope": git.get("dirty_scope"),
+             "dirty_tracked_tree_stamp_utc": git.get("dirty_stamp_utc"),
+             "flow_git_status_now": flow_git_status(),
+             "dirty_flow_dir_scope": C.DIRTY_SCOPE_FLOW_DIR,
+             "dirty_flow_dir_stamp_utc": U.now_utc(),
              "regression_verdict": reg_verdict,
              "build_config": man.get("build_config"), "source": source, "tests_in_report": (cov.get("totals") or {}).get("tests_in_report"),
              "runs": man.get("summary"), "metrics": row, "gate": gate_status(row), "gain": gain,
@@ -263,7 +298,7 @@ def collect(outdir: Path, round_no: int, dry_run: bool, label: str | None,
              "exclusion_files": cov.get("elfiles") or [], "excl_strict": cov.get("excl_strict"),
              "exclusion_violations": cov.get("exclusion_violations") or [], "merge_warnings": wc,
              "testlist": {"path": str(C.TESTLIST_YAML), "sha256": U.sha256_file(C.TESTLIST_YAML)},
-             "testlist_sha256": U.sha256_file(C.TESTLIST_YAML), "copied": copied, "full_exclusions_files": dumped,
+             "testlist_sha256": U.sha256_file(C.TESTLIST_YAML), "copied": copied, "gz_copied": gz_copied, "full_exclusions_files": dumped,
              "full_exclusions_note": ("dry run: dump not copied (stays in the out-tree)" if dry_run else
                                       "gzip copies in the evidence directory")}
     if dry_run:
@@ -278,8 +313,8 @@ def collect(outdir: Path, round_no: int, dry_run: bool, label: str | None,
 
 def flow_git_status() -> list[str]:
     """Uncommitted state of the flow at collect time (so a round produced from modified or untracked
-    flow files says so)."""
-    import subprocess
+    flow files says so). Its scope differs from git_head's: this one is flow-directory scoped and
+    includes untracked files, and the entry records both scopes and both stamps for that reason."""
     r = subprocess.run(["git", "status", "--porcelain", "dv/auto_dv/flow"], cwd=C.REPO_ROOT, capture_output=True, text=True)
     return [l.rstrip() for l in r.stdout.splitlines()]
 
@@ -350,6 +385,17 @@ def check_canary_build(path: Path, pinned_sha: str | None) -> tuple[int, str]:
                f"{C.COVERGROUPS_DECLARED_KEY} true ({len(man.get('covergroup_files') or [])} covergroup source(s)); measured dispatch allowed")
 
 
+def retain_gz(src: Path, dst: Path) -> None:
+    """Gzip a URG text product into the evidence directory reproducibly, through `gzip -n`, which is the
+    recipe the round record already documents and the shape the committed archives carry. Python's
+    GzipFile writes a different XFL/OS pair, so a record written one way and re-derived the other would
+    not match; gzip.open additionally stores the output name and the wall-clock mtime."""
+    out = subprocess.run([C.GZIP_BIN, "-n", "-c", str(src)], capture_output=True)
+    if out.returncode != 0:
+        U.die(f"{C.GZIP_BIN} -n failed on {src} (rc={out.returncode}): {out.stderr.decode('utf-8', 'replace')[:200]}")
+    dst.write_bytes(out.stdout)
+
+
 def self_test() -> int:
     """check_canary_build on fabricated build manifests (no simulation)."""
     import tempfile
@@ -374,6 +420,26 @@ def self_test() -> int:
     cond = rc == C.ROUND_EXIT_REFUSED and "no build manifest" in msg
     ok &= cond
     print("SELF-TEST", "ok " if cond else "BAD", f"missing canary build dir refuses: rc {rc}")
+    # item five: retain_gz is reproducible: the header carries no source name and no wall-clock mtime, so
+    # two collects of one source give one digest (gzip.open stores both and the two differ).
+    src = d / "modlist.txt"
+    src.write_bytes(b"module top\nmodule leaf\n" * 300)
+    a_gz, b_gz = d / "a.txt.gz", d / "b.txt.gz"
+    retain_gz(src, a_gz)
+    retain_gz(src, b_gz)
+    head_a, head_b = a_gz.read_bytes()[:10], b_gz.read_bytes()[:10]
+    mtime_a = int.from_bytes(head_a[4:8], "little")
+    mtime_b = int.from_bytes(head_b[4:8], "little")
+    named = bool(head_a[3] & 0x08) or bool(head_b[3] & 0x08)
+    same = U.sha256_file(a_gz) == U.sha256_file(b_gz)
+    cond = mtime_a == 0 and mtime_b == 0 and not named and same
+    ok &= cond
+    print("SELF-TEST", "ok " if cond else "BAD",
+          f"retain_gz is reproducible: mtime {mtime_a}/{mtime_b}, stored-name flag {named}, "
+          f"digests {'equal' if same else 'DIFFER'}")
+    cond = gzip.decompress(a_gz.read_bytes()) == src.read_bytes()
+    ok &= cond
+    print("SELF-TEST", "ok " if cond else "BAD", "retain_gz round-trips the source bytes unchanged")
     U.remove_selftest_tree(d)
     print("SELF-TEST:", "PASS" if ok else "FAIL")
     return 0 if ok else 2

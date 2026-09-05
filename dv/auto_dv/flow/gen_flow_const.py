@@ -543,8 +543,37 @@ ROUND_EV_HIERARCHY_DUT_ROWS = round_evidence_name("hierarchy_dut_rows.txt")
 ROUND_EV_GROUPS_SUMMARY = round_evidence_name("groups_summary.txt")
 ROUND_EV_MERGE_LOG = round_evidence_name("merge.log")
 ROUND_EV_MERGE_LOG_WARNINGS = round_evidence_name("merge_log_warnings.txt")
+ROUND_EV_CANARY_MANIFEST = round_evidence_name("canary_build_manifest.yaml")
 ROUND_EV_TESTLIST_SNAPSHOT = round_evidence_name("testlist_snapshot.yaml")
 ROUND_EV_BUILD_MANIFEST_FMT = EVIDENCE_FILE_PREFIX + "build_manifest_{build}.yaml"
+# Large URG text products: retained gzip-compressed rather than plain (modinfo is several MB).
+# Dirty-file facts: each recorder states ONE scope, in the field name and in words, so a
+# regression-start set is never read as a collect-time set.
+DIRTY_SCOPE_TREE = "whole tree, tracked files only, taken at this stamp"
+DIRTY_SCOPE_FLOW_DIR = "dv/auto_dv/flow only, tracked and untracked, taken at this stamp"
+SOURCES_DIGEST_SCOPE = ("the filelist sources only: not the defines, the parameters or any other "
+                       "compile option")
+# The three group quantities a coverage report can state, each named with the population that
+# produced it. They are different measurements: a percent from one never pairs with another's ratio.
+GROUP_SCOPE_GATE = ("functional bins, covergroups in gate scope, hit over declared, "
+                    "witness ledger excluded from BOTH terms (excluded: {excluded})")
+GROUP_SCOPE_ALL = "functional bins, every covergroup in the report, hit over declared, ledger included"
+GROUP_SCOPE_WEIGHTED = ("weight-averaged covergroup score with the ledger dropped: a percent over "
+                        "covergroups, with no bin denominator of its own")
+GROUP_SCOPE_URG_TOTAL = "URG's own report-wide group total, as printed in the dashboard"
+# Which quantity the consumers print. The criterion ruling that would decide this is SUSPENDED
+# (LOG-097 addenda 3 and 4); this records the open question rather than answering it, and moving
+# the flow to another quantity is a one-token change here.
+GROUP_CELL_FIELD = "group_bins_all"
+GROUP_CELL_SELECTOR_NOTE = ("selected by gen_cov_report.group_cell; the criterion ruling naming the "
+                            "gate quantity is suspended, so this names the report-wide bins and the "
+                            "other quantities are recorded beside it unchanged")
+VCS_DEFINE_PREFIX = "+define+"
+VCS_PVALUE_PREFIX = "-pvalue"
+GZIP_BIN = "gzip"   # retention uses `gzip -n`: the recipe the round record documents
+ROUND_URG_GZ_FILES = ("modlist.txt", "modinfo.txt")
+ROUND_EV_MODLIST = round_evidence_name("modlist.txt") + ".gz"
+ROUND_EV_MODINFO = round_evidence_name("modinfo.txt") + ".gz"
 ROUND_EV_FULL_EXCL_DIR = URG_DUMP_DIRNAME   # holds round_evidence_name(fullexclude.<metric>) + .gz
 ROUND_EV_ELFILES_DIR = "elfiles"
 ROUND_EV_SUMMARY = "gen_round_summary.md"

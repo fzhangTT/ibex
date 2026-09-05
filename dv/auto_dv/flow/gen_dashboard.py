@@ -21,6 +21,7 @@ from typing import Any
 
 import gen_flow_const as C
 import gen_flow_util as U
+import gen_cov_report as R
 
 
 def load_manifests(out_root: Path, results_dir: Path) -> tuple[list[dict[str, Any]], dict[str, dict[str, Any]]]:
@@ -67,7 +68,8 @@ def metric_cell(cov: dict[str, Any], key: str) -> str:
 def dut_scope_row(m: dict[str, Any]) -> dict[str, Any]:
     """Standing rule (gen_tb_architecture.md Section 5): code metrics from the gate row, the gated
     cov_trees rows of hierarchy.txt combined by summing covered and total objects; functional
-    coverage (GROUP) from the grand total, because covergroups are TB-side gen_ instances that never
+    coverage (GROUP) through gen_cov_report.group_cell, the one selector, because covergroups are
+    TB-side gen_ instances that never
     appear under the DUT instances. Never the grand total for code metrics: a missing gate row shows
     n/a with a parse_error note."""
     cov = m.get("coverage") or {}
@@ -86,11 +88,14 @@ def dut_scope_row(m: dict[str, Any]) -> dict[str, Any]:
                 row = dict(first)
     if not row:
         return {m: C.NOT_APPLICABLE for m in C.URG_METRICS} | {"ratios": {}, "parse_error": "gate row missing (no combined DUT-scope row)"}
-    row["group"] = totals.get("group", C.NOT_APPLICABLE)
+    # rt39 item one: the same selector the round uses, so the dashboard cannot print a third quantity.
+    cell = R.group_cell(cov.get("group_quantities") or {})
+    row["group"] = cell.get("percent") if cell.get("percent") is not None else C.NOT_APPLICABLE
     ratios = dict(row.get("ratios") or {})
-    if (totals.get("ratios") or {}).get("group"):
-        ratios["group"] = totals["ratios"]["group"]
+    if cell.get("ratio"):
+        ratios["group"] = cell["ratio"]
     row["ratios"] = ratios
+    row["group_cell"] = cell
     return row
 
 
@@ -109,7 +114,8 @@ def render(regs: list[dict[str, Any]], requests: dict[str, dict[str, Any]], out_
     L.append(f"Sources: {len(regs)} regression manifest(s), {len(requests)} run-request result(s). "
              f"Code-coverage numbers are the gate row: {C.RULING_SCOPE_TEMPLATE.format(gated='of each build entry', info='of each build entry')}. "
              f"Glitch filter: {C.RULING_GLITCH}. "
-             "Functional coverage (Group) is the grand total, the gen_ covergroups being TB-side; "
+             f"Functional coverage (Group) is {C.GROUP_CELL_FIELD}, selected by gen_cov_report.group_cell, "
+             "the gen_ covergroups being TB-side; the other group quantities are recorded beside it; "
              "`n/a` means URG did not report the metric (never 0 or 100, DV_prompt Section 4). "
              "Ratios are covered/total objects.")
     L.append("")

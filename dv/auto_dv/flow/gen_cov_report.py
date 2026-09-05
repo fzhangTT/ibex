@@ -122,6 +122,7 @@ def merge(cov_dir: Path, vdbs: list[Path], elfiles: list[Path] | None = None,
         rows = parse_groups(groups_txt.read_text(encoding="utf-8", errors="replace")) if groups_txt.is_file() else []
         res["group_score"] = group_score_excluding(rows, C.LEDGER_COVERGROUPS)
         res["group_score"]["urg_total"] = res["totals"].get("group", C.NOT_APPLICABLE)
+        res["group_quantities"] = group_quantities(rows, res["totals"], C.LEDGER_COVERGROUPS)
         res["ledger"] = ledger_summary(grpinfo_txt.read_text(encoding="utf-8", errors="replace"), C.LEDGER_COVERGROUPS) \
             if grpinfo_txt.is_file() else ledger_summary("", C.LEDGER_COVERGROUPS)
         # The plan says the ledger exists: a report with covergroups but no ledger row is a broken TB, not a pass.
@@ -134,10 +135,13 @@ def merge(cov_dir: Path, vdbs: list[Path], elfiles: list[Path] | None = None,
             res["ledger"]["error"] = f"no ledger covergroup {C.LEDGER_COVERGROUPS} among {len(rows)} covergroups"
         if dut_scopes and len(good) == len(dut_scopes):
             res["gate_row"] = combine_rows(good)
-            gs = res["group_score"]
-            res["gate_row"]["group"] = gs["score"] if gs["ledger_excluded"] and gs["score"] is not None else res["totals"].get("group", C.NOT_APPLICABLE)
-            if (res["totals"].get("ratios") or {}).get("group"):
-                res["gate_row"]["ratios"]["group"] = res["totals"]["ratios"]["group"]
+            # One selector, no fallback that depends on what the run contained: the percent and the
+            # denominator that produced it always come from the same named quantity.
+            cell = group_cell(res["group_quantities"])
+            res["gate_row"]["group"] = cell.get("percent") if cell.get("percent") is not None else C.NOT_APPLICABLE
+            if cell.get("ratio"):
+                res["gate_row"]["ratios"]["group"] = cell["ratio"]
+            res["gate_row"]["group_cell"] = cell
             res["gate_row"]["ledger"] = res["ledger"]["text"]
         else:
             res["gate_row"] = {"parse_error": f"{len(dut_scopes or [])} gated scope(s), {len(good)} parsed"}
@@ -223,7 +227,13 @@ def parse_groups(text: str) -> list[dict[str, Any]]:
                 weight = int(toks[cols.index("WEIGHT")])
             except (ValueError, IndexError):
                 continue
-            rows.append({"name": toks[-1].split("::")[-1], "score": score, "weight": weight})
+            def _int(col: str) -> int | None:
+                try:
+                    return int(toks[cols.index(col)])
+                except (ValueError, IndexError):
+                    return None
+            rows.append({"name": toks[-1].split("::")[-1], "score": score, "weight": weight,
+                         "covered": _int("COVERED"), "expected": _int("EXPECTED")})
     return rows
 
 
@@ -237,6 +247,63 @@ def group_score_excluding(rows: list[dict[str, Any]], excluded: tuple[str, ...])
     wsum = sum(g["weight"] for g in kept)
     score = round(sum(g["score"] * g["weight"] for g in kept) / wsum, 2) if wsum else None
     return {"score": score, "covergroups_scored": len(kept), "ledger_excluded": dropped}
+
+
+def group_quantities(rows: list[dict[str, Any]], totals: dict[str, Any], excluded: tuple[str, ...]) -> dict[str, Any]:
+    """The three group quantities this flow can state, each under its own name, each carrying the
+    denominator that produced it and a scope string in words. They are different measurements of one run
+    and are never interchangeable; nothing here decides which one a gate should read.
+
+    group_bins_gate   hit bins / declared bins over the covergroups in gate scope, the ledger out of BOTH
+                      terms (scoping only the denominator passes a round whose ledger is unhit and is wrong
+                      the moment a clause is witnessed)
+    group_bins_all    hit bins / declared bins over every covergroup URG reports, ledger included
+    group_score_weighted  URG's weight-averaged covergroup score with the ledger dropped: a percent with no
+                      bin denominator of its own, so it is emitted without a ratio
+    """
+    scored = [g for g in rows if g["name"] not in excluded]
+    dropped = sorted({g["name"] for g in rows if g["name"] in excluded})
+    def _sum(items: list[dict[str, Any]], key: str) -> int | None:
+        vals = [g[key] for g in items if g.get(key) is not None]
+        return sum(vals) if len(vals) == len(items) and items else None
+    hit_gate, dec_gate = _sum(scored, "covered"), _sum(scored, "expected")
+    hit_all, dec_all = _sum(rows, "covered"), _sum(rows, "expected")
+    weighted = group_score_excluding(rows, excluded)
+    ledger_bins = [(g.get("covered"), g.get("expected")) for g in rows if g["name"] in excluded]
+    return {
+        "group_bins_gate": {
+            "percent": round(100.0 * hit_gate / dec_gate, 2) if dec_gate else None,
+            "hit": hit_gate, "declared": dec_gate,
+            "ratio": f"{hit_gate}/{dec_gate}" if dec_gate else None,
+            "covergroups": len(scored), "excluded_covergroups": dropped,
+            "excluded_bins": ledger_bins,
+            "scope": C.GROUP_SCOPE_GATE.format(excluded=", ".join(dropped) or "none")},
+        "group_bins_all": {
+            "percent": round(100.0 * hit_all / dec_all, 2) if dec_all else None,
+            "hit": hit_all, "declared": dec_all,
+            "ratio": f"{hit_all}/{dec_all}" if dec_all else None,
+            "covergroups": len(rows), "scope": C.GROUP_SCOPE_ALL},
+        "group_score_weighted": {
+            "percent": weighted["score"], "ratio": None,
+            "covergroups": weighted["covergroups_scored"],
+            "excluded_covergroups": weighted["ledger_excluded"],
+            "scope": C.GROUP_SCOPE_WEIGHTED},
+        "urg_report_total": {"percent": totals.get("group"),
+                             "ratio": (totals.get("ratios") or {}).get("group"),
+                             "scope": C.GROUP_SCOPE_URG_TOTAL},
+    }
+
+
+def group_cell(quantities: dict[str, Any], field: str = None) -> dict[str, Any]:
+    """THE ONE SELECTOR. Every consumer that prints a group cell reads it through here, so the flow states
+    one quantity in one place instead of three modules each choosing. Which field it names is a question
+    for the criterion ruling, not for this code: the ruling is suspended (LOG-097 addenda 3 and 4), so the
+    default is recorded as the open question it is and changing it is a one-token change here."""
+    name = field or C.GROUP_CELL_FIELD
+    q = dict(quantities.get(name) or {})
+    q["field"] = name
+    q["selector_note"] = C.GROUP_CELL_SELECTOR_NOTE
+    return q
 
 
 def ledger_summary(grpinfo_text: str, ledger: tuple[str, ...]) -> dict[str, Any]:
@@ -388,6 +455,52 @@ def self_test() -> int:
     cond = led["witnessed"] == 2 and led["clauses"] == 3 and led["text"] == "witnessed clauses: 2 of 3 (CG-WIT-001)"
     ok &= cond
     print(f"SELF-TEST {'ok ' if cond else 'BAD'} fabricated grpinfo.txt: ledger bins counted only from the ledger covergroup: {led['text']}")
+    # rt39 item one: the three group quantities and the one selector.
+    rows39 = [{"name": "gen_a_cg", "score": 50.0, "weight": 1, "covered": 5, "expected": 10},
+              {"name": "gen_b_cg", "score": 100.0, "weight": 1, "covered": 10, "expected": 10},
+              {"name": C.LEDGER_COVERGROUPS[0], "score": 0.0, "weight": 1, "covered": 0, "expected": 80}]
+    tot39 = {"group": 15.0, "ratios": {"group": "15/100"}}
+    q = group_quantities(rows39, tot39, C.LEDGER_COVERGROUPS)
+    cond = q["group_bins_gate"]["ratio"] == "15/20" and q["group_bins_gate"]["percent"] == 75.0
+    ok &= cond
+    print(f"SELF-TEST {'ok ' if cond else 'BAD'} group_bins_gate takes the ledger out of BOTH terms: {q['group_bins_gate']['ratio']}")
+    cond = q["group_bins_all"]["ratio"] == "15/100" and q["group_bins_all"]["percent"] == 15.0
+    ok &= cond
+    print(f"SELF-TEST {'ok ' if cond else 'BAD'} group_bins_all keeps the ledger in both terms: {q['group_bins_all']['ratio']}")
+    cond = q["group_score_weighted"]["ratio"] is None and q["group_score_weighted"]["percent"] == 75.0
+    ok &= cond
+    print(f"SELF-TEST {'ok ' if cond else 'BAD'} group_score_weighted carries NO ratio: a percent over covergroups has no bin denominator")
+    witnessed = [dict(g) for g in rows39]
+    witnessed[-1]["covered"] = 7
+    qw = group_quantities(witnessed, tot39, C.LEDGER_COVERGROUPS)
+    denom_only = f"{sum(g['covered'] for g in witnessed)}/{qw['group_bins_gate']['declared']}"
+    cond = qw["group_bins_gate"]["ratio"] == "15/20" and denom_only == "22/20"
+    ok &= cond
+    print(f"SELF-TEST {'ok ' if cond else 'BAD'} a WITNESSED ledger leaves the gate figure at "
+          f"{qw['group_bins_gate']['ratio']}, where scoping only the denominator would give {denom_only}")
+    cell = group_cell(q)
+    cond = (cell["field"] == C.GROUP_CELL_FIELD and cell["percent"] == q[C.GROUP_CELL_FIELD]["percent"]
+            and cell["ratio"] == q[C.GROUP_CELL_FIELD]["ratio"] and cell["scope"] == q[C.GROUP_CELL_FIELD]["scope"])
+    ok &= cond
+    print(f"SELF-TEST {'ok ' if cond else 'BAD'} group_cell pairs one percent with its own ratio and scope: "
+          f"{cell['field']} {cell['percent']} ({cell['ratio']})")
+    cond = group_cell(q, "group_score_weighted")["field"] == "group_score_weighted"
+    ok &= cond
+    print(f"SELF-TEST {'ok ' if cond else 'BAD'} the selector names its field, so another quantity is one token away")
+    rec39 = C.EVIDENCE_DIR / "gen_round_0" / "gen_groups.txt"
+    if rec39.is_file():
+        real = group_quantities(parse_groups(rec39.read_text(encoding="utf-8", errors="replace")),
+                                {"group": 81.47, "ratios": {"group": "3477/4268"}}, C.LEDGER_COVERGROUPS)
+        cond = (real["group_bins_gate"]["ratio"] == "3477/4048" and real["group_bins_gate"]["percent"] == 85.89
+                and real["group_bins_all"]["ratio"] == "3477/4268" and real["group_bins_all"]["percent"] == 81.47
+                and real["group_score_weighted"]["percent"] == 78.29)
+        ok &= cond
+        print(f"SELF-TEST {'ok ' if cond else 'BAD'} COMMITTED round-0 report: gate "
+              f"{real['group_bins_gate']['percent']} ({real['group_bins_gate']['ratio']}), all "
+              f"{real['group_bins_all']['percent']} ({real['group_bins_all']['ratio']}), weighted "
+              f"{real['group_score_weighted']['percent']}")
+    else:
+        print("SELF-TEST ok  committed round-0 group report absent here: control skipped, stated not silent")
     print("SELF-TEST: rows named 'real ...' are verbatim hierarchy.txt excerpts of regress_req_runtime-004; the ledger cases are fabricated until a covergroup exists")
     print("SELF-TEST:", "PASS" if ok else "FAIL")
     return 0 if ok else 2

@@ -279,3 +279,5 @@ all of those commits.
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_fu_guard_fcov_red.log | (tb-infra) composed from runtime's scratchpad guard/g1 and guard/g2 runs | 8126 | 5c59feb272c40be64b45b271937b4472 |
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_rt35_supplement_corrigendum.log | (runtime scratchpad) cr33/gen_rt35_supplement_corrigendum.log | 8583 | 0d79e9d5372c50174451c5109feef32b |
 | dv/auto_dv/evidence/gen_tdd_logs/flow/gen_fu_guard_fcov_red_corrigendum.log | (runtime scratchpad) rt35c/gen_fu_guard_fcov_red_corrigendum.log | 6344 | 264f58f704cf4012ac2883ec44be16cd |
+| dv/auto_dv/evidence/gen_tdd_logs/flow/gen_rt39_reds.log | (runtime scratchpad) rt39logs/gen_rt39_reds.log | 4735 | 2eeafa46418bc666095eaaabed5e2190 |
+| dv/auto_dv/evidence/gen_tdd_logs/flow/gen_rt37_red.log | (runtime scratchpad) rt39logs/gen_rt37_red.log | 2138 | ba58bbc48d36985e3bfdc9002bc3481c |

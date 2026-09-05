@@ -1,0 +1,35 @@
+# rt37 L-1: the RED for the fcov-signature loader rule, on a DETACHED WORKTREE
+#
+# ENVIRONMENT, stated because it is the point of this transcript. This ran on a detached git worktree of
+# HEAD, NOT on a detached archive. A worktree carries .git, so the build-input gate's case 13, which shells
+# `git ls-files`, can run. An archive has no .git: that case reports BAD there and the run ends
+# "SELF-TEST: FAIL" for a reason that is not the code. An earlier transcript of this red was taken in an
+# archive and was confounded exactly that way; it is not retained, and this replaces it.
+#
+# THE RULE UNDER TEST (gen_flow_util, loader): a red_expect naming the fcov checker's unmet-bin reason on an
+# entry with no fcov_expectation_file is refused, because only the coverage check emits that line and without
+# a manifest the fixture is graded on its sim log, so the signature can never match.
+#
+# THE RED: build that case's red_expect with re.escape(C.FCOV_UNMET_REASON), which is the pre-fix shape. The
+# rule tests `C.FCOV_UNMET_REASON in rx`, a PLAIN SUBSTRING, and re.escape on this Python turns the reason
+# into 'fcov\ expectation\ unmet', which does not contain the bare substring. The refusal never fires and the
+# case that expects it goes BAD.
+#
+# ONE UNRELATED LINE APPEARS IN BOTH GREEN AND RED and is not part of either: "refusing to remove self-test
+# dir .../ci/env.sh: not an existing directory (A-002)". It is present identically before and after the
+# mutation, so it confounds nothing here; it is a separate observation about that self-test's cleanup being
+# handed a file path where it expects a directory.
+#
+# stamp 2026-09-05T11:02:38Z  host soc-l-11
+# worktree HEAD 5df6403ddc90877fa424e9bb9c77d2c3f09f21eb, plus the nine changed flow files from the clone
+
+GREEN, the derivation in place:
+    SELF-TEST: PASS
+
+RED, with re.escape applied to that case's red_expect:
+    re.escape('fcov expectation unmet') = 'fcov\\ expectation\\ unmet'
+    SELF-TEST BAD load_testlist refuses rt37: red_expect naming the fcov unmet reason with no fcov_expectation_file
+    SELF-TEST: FAIL
+
+REVERTED, green returns:
+    SELF-TEST: PASS

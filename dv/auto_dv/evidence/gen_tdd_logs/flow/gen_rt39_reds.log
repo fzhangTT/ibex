@@ -1,0 +1,67 @@
+# rt39 TDD reds and controls, Runtime flow
+#
+# WHAT THIS IS: a live re-run transcript, not a summary. The reds and controls were first run during
+# implementation but their output was never captured to a file, so every line below was produced by
+# re-running the same scripts at the tree and stamp in each section header. Script md5s are recorded so a
+# reader can re-run them.
+#
+# WHAT EACH SECTION PROVES
+#   item five RED  the retention shape gen_round.py writes today is NOT reproducible: two collects of one
+#                  source differ, because the member stores the output file name and the wall-clock mtime.
+#                  The changed shape gives mtime 0, no stored name, and one digest.
+#   controls       item five's POSITIVE control reproduces the two COMMITTED archives byte for byte, which
+#                  is what rules out "reproducible but different from what is already committed";
+#                  item one reproduces all three committed group figures from the committed artifact and
+#                  carries its own red; item four proves the sources digest is carried and compared, and
+#                  measures the pre-change defect on the committed index.
+#
+# SCRATCH ROOT: every control writes under the flow's own self-test root, never the shared /tmp (F-001).
+# An earlier version of control_item4 used the shared /tmp; moving it exposed that its own cleanup guard
+# had the same assumption and refused to remove a directory outside /tmp, so the guard was pointed at the
+# root the script actually writes to. Both are fixed here and the removal line below shows the new root.
+#
+
+================================================================
+# rt39 item five RED, re-run for retention
+# stamp 2026-09-05T10:50:26Z  host soc-l-11  tree 9c7f8f63957d153d9c67cd1a61d44f88b3c94c69
+# script rt39/red_item5.py  md5 bc05dc6b3c94a9e38c3e6fcd260c6d31
+# gzip: gzip 1.9
+
+SELF-TEST BAD  item5 retention reproducible [control]: mtime 1788605427/1788605427, stored-name flag True/True, digests DIFFER (b3d6f105b1e7 a3f84db71f98)
+SELF-TEST ok   item5 retention reproducible [changed]: mtime 0/0, stored-name flag False/False, digests equal (bb59a0cb2d55 bb59a0cb2d55)
+
+RED  (control, the shape gen_round.py:232 writes today): FAILS as required
+GREEN(changed, filename='' mtime=0): PASSES
+rc=0
+
+================================================================
+# rt39 CONTROLS, re-run for retention
+# stamp 2026-09-05T10:50:31Z  host soc-l-11  tree 9c7f8f63957d153d9c67cd1a61d44f88b3c94c69
+# gzip: gzip 1.9
+
+=== control_item5  md5 1482a2babc60e17ab1a375e2da07a0e1
+ok  modlist.txt: retain_gz 743b177c1065fddb / 2120 B  vs committed 743b177c1065fddb / 2120 B
+ok  modinfo.txt: retain_gz a5f939d2115e9693 / 347899 B  vs committed a5f939d2115e9693 / 347899 B
+POSITIVE CONTROL on the committed pair (a6f811a): PASS
+
+=== control_item1  md5 32cf188a17e9ce1c09c2f673d2859ea9
+covergroups parsed: 26; with COVERED/EXPECTED: 26
+  group_bins_gate        percent 85.89  ratio 3477/4048  covergroups 25
+  group_bins_all         percent 81.47  ratio 3477/4268  covergroups 26
+  group_score_weighted   percent 78.29  ratio None  covergroups 25
+  urg_report_total       percent 81.47  ratio 3477/4268  covergroups None
+ok   group_bins_all reproduces the report-wide figure 81.47 (3477/4268)
+ok   group_bins_gate is 85.89 (3477/4048): the ledger out of BOTH terms
+ok   group_score_weighted is 78.29 over 25 covergroups and carries NO ratio
+ok   the selector pairs one percent with ITS OWN ratio: group_bins_all 81.47 (3477/4268)
+ok   RED, a witnessed ledger: scoping BOTH terms gives 3477/4048, scoping only the denominator gives 3484/4048 - a figure that counts ledger hits it excluded
+ITEM ONE: PASS
+
+=== control_item4  md5 8521227799e22c5ad9af31d61b66a2eb
+round-0 build record sources_sha256 = bc0cd7778e382b13991bbae9...
+ok   POSITIVE CONTROL: canary_build_facts carries the digest (bc0cd7778e382b13), compare result True
+     scope recorded: the filelist sources only: not the defines, the parameters or any other compile option
+ok   RED: a canary of other sources records its OWN digest (ffffffffffffffff), so the compare result would be False, not silent
+ok   PRE-CHANGE DEFECT, measured on the committed index: the round-0 entry contains the sources digest 0 time(s); its canary_build keys are ['b8_probe_knob_default_on', 'b8_probe_sv_default_on', 'build', 'covergroup_files', 'covergroups_declared', 'head_sha', 'manifest', 'manifest_present', 'path', 'source_mode']
+[2026-09-05T10:50:32Z] removed item four self-test dir /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/runtime/selftest_tmp/rt39_item4_jsns0xa2 (1 entries) under /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/runtime/selftest_tmp
+ITEM FOUR: PASS

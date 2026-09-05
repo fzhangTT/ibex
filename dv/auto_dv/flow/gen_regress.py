@@ -81,7 +81,8 @@ def compile_build(name: str, outdir: Path, a: argparse.Namespace, coverage: bool
         shutil.copytree(man["build_vdb"], unmeasured_vdb)
     return {"dir": str(bdir), "manifest": str(man_path), "status": man.get("status", "failed"),
             "rc": rc, "wall_s": round(wall, 1), "timed_out": timed_out, "lsf": man.get("lsf"),
-            "cov_metrics": man.get("cov_metrics"), "defines": man.get("defines"), "constfile": man.get("constfile"),
+            "cov_metrics": man.get("cov_metrics"), "defines_all": man.get("defines_all"),
+            "parameters_all": man.get("parameters_all"), "constfile": man.get("constfile"),
             "cov_scope": man.get("cov_scope"), "cov_scopes": man.get("cov_scopes") or [],
             "info_scopes": man.get("info_scopes") or [], "glitch_filter": man.get("glitch_filter"), "vdb": None,
             "mutation_id": man.get("mutation_id"), "rtl_root_override": man.get("rtl_root_override"),
@@ -703,7 +704,8 @@ def main() -> int:
             U.log(f"urg merge (measured) of {len(measured_vdbs)} vdb(s)" + (" with exclusion dump" if dump else ""))
             cov = R.merge(outdir / "cov", sorted(measured_vdbs), a.elfile, dut_scopes=dut_scopes, dump_exclusions=dump,
                           info_scopes=info_scopes)
-            cov["build_defines"] = {n: b.get("defines") for n, b in builds.items()}
+            cov["build_defines"] = {n: b.get("defines_all") for n, b in builds.items()}
+            cov["build_parameters"] = {n: b.get("parameters_all") for n, b in builds.items()}
             cov["glitch_filter"] = {n: b.get("glitch_filter") for n, b in builds.items()}
             cov["rulings"] = {"scope": C.ruling_scope_text(dut_scopes, info_scopes), "glitch": C.RULING_GLITCH}
             cov["constfiles"] = {n: b.get("constfile") for n, b in builds.items()}

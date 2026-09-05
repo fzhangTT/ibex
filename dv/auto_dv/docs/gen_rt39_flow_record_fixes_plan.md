@@ -39,6 +39,12 @@ THE RULED QUANTITY (DV Lead criterion ruling, cited in the plan set). The gate's
 a BIN PERCENTAGE over the covergroups in gate scope: hit bins in scope over declared bins in scope,
 with the witness ledger out of BOTH terms. For team round 1 that is 3477/4048 = 85.89.
 
+NUMBERING, stated once here because this plan uses three names for two things (LOG-092 requires the
+mapping in every record): TEAM ROUND 1 IS THE FLOW'S MEASURED ROUND 0, evidence directory
+dv/auto_dv/evidence/gen_round_0, regression tag round_1. Every "round-0 entry" below means that same
+round's entry in the flow's index. "Round-2" below uses the TEAM numbering, so it is the round after
+team round 1 and would be the flow's measured round 1.
+
 Three definers exist today and all three must end up reading the ruled quantity:
 
 - `gen_cov_report.py:138` sets the cell to the weight-averaged covergroup score
@@ -76,8 +82,14 @@ THE RED, rewritten because v1's could not be run (Critic G-2): the regression ma
 verdict to compare with the summary, so "the two artefacts disagree" is not directly observable. The red
 is instead: for one fabricated coverage record, the ruled field, its denominator and its scope string
 must be identical in the manifest, the round summary and the dashboard row, and a record whose ledger is
-non-empty and partly hit must leave the gate figure unchanged when only the denominator is scoped. Both
-fail against the pre-change code.
+non-empty and partly hit must yield the both-terms figure 3477/4048 and NOT the larger figure a
+denominator-only scoping produces. Both fail against the pre-change code.
+
+The failing value is 3477 plus however many ledger bins are hit, because a denominator-only fix removes
+the ledger from the declared count while still counting its hits. The shipped control gives the ledger
+SEVEN hit bins and so measures 3484/4048 against 3477/4048. The plan review's rewrite named 3482/4048,
+which is the same mechanism with its own five-hit example (3477 + 5); the two figures are one claim, not
+two, and the control's value is the one to reproduce.
 
 WHAT THIS DOES NOT DO. It does not claim the functional gate passed: the criterion has two conditions
 and the second, traceability confirmed by someone other than the author, is a separate finding the DV

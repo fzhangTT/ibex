@@ -312,7 +312,7 @@ def self_test() -> int:
     print("SELF-TEST", "ok " if cond else "BAD",
           f"a deferred red no stage checked is NOT_RUN, not a dead-checker FAIL (got {r_unchecked['verdict']})")
     r_collected = {"verdict": C.VERDICT_FAIL, "reason": "UVM_FATAL seen",
-                   "evidence_line": "fcov expectation unmet: 2 declared bin(s) not hit ['a.b.c']"}
+                   "evidence_line": f"{C.FCOV_UNMET_REASON}: 2 declared bin(s) not hit ['a.b.c']"}
     finalize_deferred_red(r_collected, red_t)
     cond = r_collected["verdict"] == C.VERDICT_RED_OK
     ok &= cond
