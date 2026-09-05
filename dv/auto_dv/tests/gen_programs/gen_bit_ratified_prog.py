@@ -382,6 +382,7 @@ class Spec:
     same_rs: bool = False      # rs2 is the rs1 register
     same_all: bool = False     # rd, rs1 and rs2 are one register (cp_same_regs.all_same)
     same_rd: bool = False      # rd is the previous op's rd (with chain: the same rd AND index)
+    no_report: bool = False    # emit no report store: the next op must retire immediately after this one
     rd_x0: bool = False
 
 
@@ -402,6 +403,7 @@ class Op:
     rs2_class: str
     tags: dict
     chained: bool = False
+    no_report: bool = False    # its expected value still chains; it stores nothing, so the next op is consecutive
     rep: int = 0               # index of the first report word
     keep: tuple = ()           # registers live across this op's fillers (unit-local values)
     fillers: list = field(default_factory=list)
@@ -814,7 +816,7 @@ def _place(rng, pool, cpool, idx, spec, prev, table, keep):
     free = [r for r in pool if r not in keep]
     if spec.chain:
         assert prev is not None and prev.rd != 0, f"chain without a source at op {idx}"
-        rs1, rs1_val, chained = prev.rd, prev.expects[0], True
+        rs1, rs1_val, chained = prev.rd, (prev.expects[0] if prev.expects else prev.aux["value"]), True
     else:
         rs1, rs1_val, chained = (0 if spec.rs1_class == "x0_src" else rng.choice(free)), spec.rs1_val, False
     if spec.same_rd:
@@ -863,7 +865,13 @@ def _place(rng, pool, cpool, idx, spec, prev, table, keep):
         if spec.same_rs or spec.same_all:
             rs2_val = rs1_val
     expect = reference(kind, rs1_val, rs2_val, imm) if rd != 0 else 0
-    return Op(idx, spec.item, kind, rd, rs1, rs2, rs1_val, rs2_val, imm, [expect], spec.floor, spec.rs1_class, spec.rs2_class, tags, chained)
+    if spec.no_report:
+        # no report words at all: a consumer that slices reports[rep:rep+len(expects)] would otherwise
+        # read the NEXT op's word for this one. The value the chain needs lives in aux instead.
+        return Op(idx, spec.item, kind, rd, rs1, rs2, rs1_val, rs2_val, imm, [], spec.floor, spec.rs1_class,
+                  spec.rs2_class, tags, chained, True, aux={"value": expect})
+    return Op(idx, spec.item, kind, rd, rs1, rs2, rs1_val, rs2_val, imm, [expect], spec.floor, spec.rs1_class,
+              spec.rs2_class, tags, chained)
 
 
 def _items(ops):
@@ -1071,7 +1079,8 @@ def _binv_twice_pair(rng):
     """
     idx = rng.randrange(32)
     c, v = _nonzero(rng)
-    first = Spec("TP-BIT-018", "binvi", v, imm=idx, rs1_class=c, tags={"case": "binv_twice_first"})
+    first = Spec("TP-BIT-018", "binvi", v, imm=idx, rs1_class=c, tags={"case": "binv_twice_first"},
+                 no_report=True)
     second = Spec("TP-BIT-018", "binvi", v, imm=idx, rs1_class=c,
                   tags={"case": "binv_twice_second"}, chain=True, same_rd=True)
     return [first, second]
@@ -1133,7 +1142,10 @@ def plan(seed, red=False, red_item=None):
             keep = tuple(sorted(set(keep) | {op.rd} - {0}))
             op.keep = keep
             live = set(keep) | ({prev.rd} if op.chained else set())
-            op.fillers = [_filler(rng, [r for r in pool if r not in live]) for _ in range(rng.randrange(3))]
+            # an op after a no-report one must RETIRE next, so its fillers are dropped AFTER they are
+            # drawn: discarding the draw instead would shift every later op's registers and values
+            drawn = [_filler(rng, [r for r in pool if r not in live]) for _ in range(rng.randrange(3))]
+            op.fillers = [] if prev is not None and prev.no_report else drawn
             op.rep = rep
             rep += len(op.expects)
             ops.append(op)
@@ -1214,7 +1226,8 @@ def _op_lines(p, op):
         out.append(f"  {k} x{op.rd}, x{op.rs1}, x{op.rs2}")
     else:
         out.append(f"  {k} x{op.rd}, x{op.rs1}, {op.imm}")
-    out.append(f"  sw   x{op.rd}, 0(x{e})")
+    if op.expects:
+        out.append(f"  sw   x{op.rd}, 0(x{e})")
     return out
 
 
@@ -1224,7 +1237,9 @@ def _body(p):
         red_mark = "  RED: deviates" if (p.red and op.idx == p.red_idx) else ""
         srcs = f"rs1={op.rs1_class} 0x{op.rs1_val:08x}" + (f" rs2={op.rs2_class} 0x{op.rs2_val:08x}" if op.rs2 else "")
         out.append(f"  # op {op.idx}: {op.item} {op.kind}{' imm=' + str(op.imm) if op.imm >= 0 else ''} "
-                   f"{'floor' if op.floor else 'extra'} {srcs} -> {' '.join(f'0x{w:08x}' for w in op.expects)}{red_mark}")
+                   f"{'floor' if op.floor else 'extra'} {srcs} -> "
+                   f"{' '.join(f'0x{w:08x}' for w in op.expects) or f'0x{op.aux[chr(118)+chr(97)+chr(108)+chr(117)+chr(101)]:08x}'}"
+                   f"{' (not reported: the next op must retire immediately after this one)' if op.no_report else ''}{red_mark}")
         out += [f"  {f}" for f in op.fillers]
         out += _op_lines(p, op)
     return out

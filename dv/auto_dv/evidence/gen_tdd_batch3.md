@@ -889,3 +889,135 @@ line was dropped silently and the entry read as shorter than it is. That figure 
 was caught. It was the second hyphen-token defect of the day in a census of mine. The remedy applied to
 both is structural rather than attentive: count the raw marker lines and assert the parser consumed
 every one, so the next token that widens fails loudly instead of shrinking the input.
+
+## 18. Group generator-fixes, second landing: the binv pair reaches its bin, and gen_test_bit_ratified declares every bin its stimulus produces at every seed
+
+WHAT CHANGED. gen_bit_ratified_prog.py lands at sha256 70f318080711d7845c88341a012461bd21d57695536daf2db33189a675a3b8d0,
+the pin the Runtime Manager's block 2 ran (dv/auto_dv/evidence/gen_bit_ratified_pairfix/, commit aa75ecb; block 2 is the
+entry's authority under the DV Lead's rule that a block calibrated on one generator is evidence for that generator alone).
+The transfer check is in the retained log: the candidate and the generator inside block 2's built root are byte for byte
+the same file, and both pins the index names recompute inside their roots. The diff from the committed blob 14405978b07d
+is 21 lines added, 6 removed. gen_test_bit_ratified.py's bins_not_hit is emptied and the manifest re-rendered by the
+manifest generator from the test module: 617 declared (123 coverpoint, 494 cross) and 37 not_hit lines become 654
+declared (125 coverpoint, 529 cross) and none; the 37 added are 2 coverpoint bins (cp_binv_twice.yes,
+cp_same_regs.all_same) and 35 cross legs. The 176 bins the manifest rule drops are printed by the generator, not written,
+and are unchanged. The plan is untouched: it already traces every one of the 37 to its item, and the test's own
+bins_not_hit was what excluded them. The plan chain expects a zero render diff and the retained log verifies one.
+
+THE PAIR FIX, AND THE VERSION THAT HIT ITS BIN WHILE BREAKING THE ENTRY. The Critic's M-2 was right: the committed
+generator emits the first binvi's report store between the two binvi ops, the sampler's rule is over consecutive retired
+records (the caller of sbit_sample clears the predecessor state on any non-sbit record), and cp_binv_twice.yes read 0 in
+every run. The first fix dropped the first op's store but left its expected word in the plan, so every consumer slicing
+reports[rep : rep+len(expects)] read the NEXT op's word: block 1 (pin 557a4812) hit the bin at count 1 in every run and
+FAILED 40 of 40 on the entry's own fire check with exactly one binvi mismatch per run, the DUT value equal to the model's
+rs1 (gen_pairfix_red_lines.txt). The second fix reports once after the pair and keeps the report index whole: block 2 is
+40 of 40 PASS, every one of the 617 declared bins at every seed, cp_binv_twice.yes at 40 of 40, and the 23 carry-over
+shapes identical seed count for seed count to the wave's bit_ratified block, so the disagreement rule fired on the target
+bin alone (gen_pairfix_shapes.txt). The two versions are told apart without a simulator by a 2x2 of model-level checks in
+the retained log, each run on the exact bytes of all three generator versions plus the reconstruction my predecessor's
+first red ran on (sha256 f3116177bc2c, which is NOT block 1's bytes; the log says so and runs both):
+
+  report-slice check  (every op's slice of the plan's report stream is its own words)
+      HEAD 14405978b07d GREEN   block 1 557a4812 RED (40 of 40 seeds, one binvi slice holding its neighbour's word)
+      block 2 70f31808 GREEN    reconstruction f3116177bc2c RED
+  pair-consecutive check  (the two binvi with no instruction between them, read from the EMITTED text, not the plan)
+      HEAD 14405978b07d RED (2 to 4 instructions apart at every seed)   block 1 GREEN   block 2 GREEN
+
+The lesson this group keeps: a generator change that alters WHAT IS STORED needs a mapping check, not only a fault check.
+The red-observability assertion of Section 16 was green on block 1's program, whose every later op the entry could no
+longer check, because it asserts that the injected fault is observable and says nothing about the report index. Both
+checks above now stand beside it for this generator, and each verdict in the log is the script's own PASS or FAIL line,
+not an exit code: the first run of the check on HEAD's blob exited 1 on an import error from an incomplete archive, and
+the log's rule that "a traceback is not a red" is what caught it.
+
+THE READING THAT THE RE-RENDER RESTS ON. Every one of the 37 not_hit lines was read from block 2's forty per-run reports
+with the flow's own checker (ci/check_fcov_expectations.py --report-dir on each run's urgReport_variable_form, a
+synthetic 37-bin manifest), and the independent reader gen_read_keyed.parse_report read the same forty reports as the
+control: 1480 (run, bin) pairs, 1480 agreements. All 37 are hit at 40 of 40. The 24 stimulus-class shapes equal
+gen_pairfix_shapes.txt seed count for seed count. The 13 "seed-dependent" lines, which the brief expected to stay out,
+are at 40 of 40 as well and each has an emission site below: cp_same_regs.all_same at exactly 13 per run (the thirteen directed rd == rs1 == rs2 ops of the
+relationship sweep), the nine cr_op_rs1 *_neg_rand legs at 1 to 6 (the value-classifier draw _plain_rand that landed at
+4017573 is what made them stable), maxu_all_same at 1, maxu_rs1_eq_rs2 at 2 to 3, orn_rs1_eq_rs2 at 1 to 3. Their
+reasons were true when written, on the generator blob c1580d22a361 (8559958's), and stale from 4017573 on: the asymmetry Section 17 names,
+that a declared bin is checked every run while a not_hit reason is checked only when read. The block's run set is
+re-derived in the log rather than taken from the index: forty run directories, seeds equal to gen_pairfix_seeds.txt,
+every run_cmd.sh naming the binvfix2 root, forty result.yaml PASS, forty checker PASS lines with exactly 617 HIT rows.
+
+THE CONSTRUCTION CLAUSES, one per bin, under the DV Lead's rule that a manifest declares guarantees and a count is
+only evidence: a bin is declared here only because a named emission site in gen_bit_ratified_prog.py puts its shape
+into every program; a bin with a count but no site would be held in bins_not_hit with its count. The line numbers are
+lines of the generator AS THIS LANDING COMMITS IT (the blob sha256 70f318080711, landed in one commit with the
+manifest), not of any working tree, and every cited range is printed from the landing tree in Section H of
+gen_fu_binv_pairfix.log with the named construct asserted on it, the check the DV Lead asked for made mechanical; its
+control reads the same nineteen generator citations against the previous blob 14405978b07d and refuses six, so the
+check tells a moved line from a standing one. The gen_fcov_pkg.sv lines are those of the commit the log names as HEAD. All 37 have a site, so 37 are declared and none is held; my first hand stated the
+split from the count profile (fourteen at exactly one hit per run, thirteen ranging upward from one, ten with a floor
+of two) and that profile is not the rule: the range above one is random extras landing on top of a directed floor.
+
+  (a) cr_op_rs1 neg_rand legs, nine: andn, orn, xnor (_spec_004 :499-504), sh1add, sh2add (_spec_002 :455-460), maxu,
+      min, minu (_spec_007 :563-568), zext_h (_spec_010 :600-603). Each item's spec iterates EVERY RS1 class for EVERY
+      op of the item and emits one op per (op, class) pair. The neg_rand value is _plain_rand :270-276, which rejects
+      the six exact classes and any value whose bit 7 and bit 15 differ, the sampler's own bit_rs1_cls priority at
+      gen_fcov_pkg.sv:953-967, so the instance is booked neg_rand and not byte_msb or half_msb. The generator's
+      check_coverage :1014-1019 refuses a plan that misses any (op, RS1 class) of wanted() :972-1011 ("op_rs1" for
+      TP-BIT-002/004/007, "form_class" for TP-BIT-010). This is the classifier fix of 4017573; before it the same
+      directed instance could land in another class, which is why these nine read seed-dependent when their reasons
+      were written.
+  (b) cr_op_same legs, twenty: the thirteen *_all_same (andn, max, maxu, min, minu, orn, pack, packh, packu, sh1add,
+      sh2add, sh3add, xnor) and the seven *_rs1_eq_rs2 among the 37 (andn, maxu, orn, pack, packh, packu, xnor).
+      _relationship_sweep :1089-1107 emits, for each of the thirteen SWEEP_OPS :1068-1069, one spec with same_all
+      :1102 and one with same_rs :1105; _place :861-864 gives the same_all op rd = rs1 = rs2 with rd nonzero (drawn
+      from the pool 1..31) and the same_rs op rs2 = rs1 with rd drawn from a pool that excludes rs1. Those are the
+      sampler's index relations all_same and rs1_eq_rs2 at gen_fcov_pkg.sv:988-989. Anti-vacuity, to the DV Lead's
+      question: the rs1_eq_rs2 hit is the directed same_rs instance, not a register collision, and the cross is
+      what it claims, the op retired with two equal source registers and a distinct destination. Thirteen all_same
+      legs against seven rs1_eq_rs2 legs is a property of the not_hit list, not of the sweep: the sweep constructs
+      all thirteen rs1_eq_rs2 legs, and six of them (max, min, minu, sh1add, sh2add, sh3add) were already declared
+      at HEAD, so the seven here complete the set of thirteen the manifest now declares.
+  (c) cp_same_regs.all_same: forced by the thirteen all_same instances of (b), the cross-operand rule in the adding
+      direction (a run that hits a cross leg naming all_same has hit all_same in that run); its 13 per run in block 2
+      is exactly the sweep. cr_op_eq pack_yes, packh_yes, packu_yes: the same two sweep specs per pack op make rs2's
+      value rs1's (:864-865), so cp_eq_operands reads yes. cr_op_rd_x0 pack_no, packh_no, packu_no: _spec_010's ten
+      specs per op carry rd_x0 False (Spec :369-386) so rd is drawn nonzero (:862), plus the two sweep specs; the
+      floor of twelve per run is those twelve.
+  (d) cp_binv_twice.yes: _binv_twice_pair :1073-1086, two binvi on one rd and index (chain and same_rd), the first
+      no_report :1083 and the second's fillers dropped :1148, so the two retire consecutively as the sampler's rule
+      over consecutive records requires. THE FLIP, attributed BY COMMIT: the wave census retained at 1fb417f reads this
+      bin "0/40 ... NEVER, NOT declarable" (gen_wave_nothit.txt) and block 2 (retained at aa75ecb) reads 40 of 40 on
+      the SAME forty seeds. The census measured the PREVIOUS generator, the one committed at 4017573 (blob
+      14405978b07d), which placed the first binvi's report store between the pair (the pair-consecutive check above is
+      RED on that blob); block 2 measured the generator THIS COMMIT LANDS (blob 70f318080711), which emits the pair
+      adjacently (GREEN). The flip is that change and nothing else: the 23 other shapes are identical seed for seed
+      between the two blocks. A reader comparing the two committed records finds them measuring two generators, the
+      one before this commit and the one it lands, and this commit is what makes the second resolvable.
+
+THE EMPTY not_hit LIST IS A STRONG CLAIM, landed knowingly. It says this entry guarantees every declared bin of its
+covergroups in every run, and there is no reason field left to record a miss in: a bin that misses at a fresh seed
+is a hard failure of the entry, visible in the round, and its remedy is a generator fix with a fresh forty-seed block,
+never a re-worded reason. That is the correct semantics for a generator that constructs every bin, and it is the
+same asymmetry Section 17 names, read from the other side: a declared bin is checked every run.
+
+THE RECORDS CORRECTED, beside the retained logs rather than inside them. (1) Section 16's corrigendum and
+gen_fu_shape_check_corrigendum.md say the 46 stimulus-class reasons "are false for the committed generators". That is
+true in the present tense at 4017573 and reads as a claim about the moment they were written; they were true of the
+generator committed when they were authored (iteration 2, commit 3142adc on 2026-09-04, against the generator blob
+c1580d22a361, which stood from batch 2 to 4017573's parent) and became stale at 4017573, when the shape fixes landed
+without a re-render. The 37 of this entry are now declared from a measurement;
+cmp_zca's 22 follow in the wave re-render hand. (2) The Critic's L-2: gen_fu_generator_fix_sweep.log's pre-fix census
+says "gen_test_bit_ratified: 40 runs" while regress_gensweep2/runs holds a 41st result directory for that test,
+fixedroute_1909560559, a PASS probe run of a sweep seed on the same root, which the census excludes without saying so;
+the seed-set figures are unaffected. (3) The Critic's L-3: gen_fu_shape_check.log's class table calls ten shapes
+"produced but rare" whose reasons "the measurement contradicts"; the measurement it means is the reader's own, which is
+not a measurement of the bins (M-1), so that paragraph is WITHDRAWN here; the bins' measurement is Section E of the new
+log. (4) The log's "settled by simulation" sentence was corrected by the companion; the simulation that does settle
+these 37 now exists and is block 2, read bin by bin above.
+
+NOT CLAIMED HERE. Nothing about gen_test_cmp_zca or any wave re-render (the other hand). The shape checker is used as
+evidence nowhere in this landing, and its calibration against a simulated block stays owed before it is. The round-2
+behaviour of the thirteen drawn thin bins is a prediction, not a measurement.
+
+ROWS. The Critic's verdict on the generator-fixes range (gen_critic_genfix.md): M-2 closed by the pair fix with the
+bin hit on the runs' own reports at 40 of 40; M-1 closed for this entry by the re-render under the DV Lead's construction-clause rule and the wording
+above, the cmp_zca half riding the wave hand; L-1 by two header lines in gen_run_fixture.sh naming the two links a detached archive
+needs (tools/spike and .venv); L-2 and L-3 by the corrections above. CM229-M-1's declaring half closes for
+bit_ratified the same way. The rows are in gen_critic_response_batch3.md.

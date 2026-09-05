@@ -1,41 +1,4 @@
 # not_built TP-BIT-001: per-retirement rvfi_trap = 0 over the ENC table is an RVFI record fact (record export, TB Infra) and the U-mode leg leaves M-mode
-# not_hit gen_bit_sbit_cg.cp_binv_twice.yes: stimulus: the program never applies binv twice to the same bit position in one sequence
-# not_hit gen_bit_zba_zbb_ops_cg.cp_same_regs.all_same: seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
-# not_hit gen_bit_zba_zbb_ops_cg.cr_op_eq.pack_yes: stimulus: the operation is emitted and the equal-operand class is reached, but the program never pairs this operation with equal source registers
-# not_hit gen_bit_zba_zbb_ops_cg.cr_op_eq.packh_yes: stimulus: the operation is emitted and the equal-operand class is reached, but the program never pairs this operation with equal source registers
-# not_hit gen_bit_zba_zbb_ops_cg.cr_op_eq.packu_yes: stimulus: the operation is emitted and the equal-operand class is reached, but the program never pairs this operation with equal source registers
-# not_hit gen_bit_zba_zbb_ops_cg.cr_op_rd_x0.pack_no: stimulus: the operation is emitted, but the program never pairs it with this destination-register state
-# not_hit gen_bit_zba_zbb_ops_cg.cr_op_rd_x0.packh_no: stimulus: the operation is emitted, but the program never pairs it with this destination-register state
-# not_hit gen_bit_zba_zbb_ops_cg.cr_op_rd_x0.packu_no: stimulus: the operation is emitted, but the program never pairs it with this destination-register state
-# not_hit gen_bit_zba_zbb_ops_cg.cr_op_rs1.andn_neg_rand: seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
-# not_hit gen_bit_zba_zbb_ops_cg.cr_op_rs1.maxu_neg_rand: seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
-# not_hit gen_bit_zba_zbb_ops_cg.cr_op_rs1.min_neg_rand: seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
-# not_hit gen_bit_zba_zbb_ops_cg.cr_op_rs1.minu_neg_rand: seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
-# not_hit gen_bit_zba_zbb_ops_cg.cr_op_rs1.orn_neg_rand: seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
-# not_hit gen_bit_zba_zbb_ops_cg.cr_op_rs1.sh1add_neg_rand: seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
-# not_hit gen_bit_zba_zbb_ops_cg.cr_op_rs1.sh2add_neg_rand: seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
-# not_hit gen_bit_zba_zbb_ops_cg.cr_op_rs1.xnor_neg_rand: seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
-# not_hit gen_bit_zba_zbb_ops_cg.cr_op_rs1.zext_h_neg_rand: seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
-# not_hit gen_bit_zba_zbb_ops_cg.cr_op_same.andn_all_same: stimulus: the operation is emitted and this aliasing shape is reached at some seeds only (cp_same_regs.all_same is itself no per-run guarantee), and the program never pairs the two
-# not_hit gen_bit_zba_zbb_ops_cg.cr_op_same.andn_rs1_eq_rs2: stimulus: the operation is emitted and the register-aliasing classes are reached, but the program never pairs this operation with this aliasing shape
-# not_hit gen_bit_zba_zbb_ops_cg.cr_op_same.max_all_same: stimulus: the operation is emitted and this aliasing shape is reached at some seeds only (cp_same_regs.all_same is itself no per-run guarantee), and the program never pairs the two
-# not_hit gen_bit_zba_zbb_ops_cg.cr_op_same.maxu_all_same: seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
-# not_hit gen_bit_zba_zbb_ops_cg.cr_op_same.maxu_rs1_eq_rs2: seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
-# not_hit gen_bit_zba_zbb_ops_cg.cr_op_same.min_all_same: stimulus: the operation is emitted and this aliasing shape is reached at some seeds only (cp_same_regs.all_same is itself no per-run guarantee), and the program never pairs the two
-# not_hit gen_bit_zba_zbb_ops_cg.cr_op_same.minu_all_same: stimulus: the operation is emitted and this aliasing shape is reached at some seeds only (cp_same_regs.all_same is itself no per-run guarantee), and the program never pairs the two
-# not_hit gen_bit_zba_zbb_ops_cg.cr_op_same.orn_all_same: stimulus: the operation is emitted and this aliasing shape is reached at some seeds only (cp_same_regs.all_same is itself no per-run guarantee), and the program never pairs the two
-# not_hit gen_bit_zba_zbb_ops_cg.cr_op_same.orn_rs1_eq_rs2: seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
-# not_hit gen_bit_zba_zbb_ops_cg.cr_op_same.pack_all_same: stimulus: the operation is emitted and this aliasing shape is reached at some seeds only (cp_same_regs.all_same is itself no per-run guarantee), and the program never pairs the two
-# not_hit gen_bit_zba_zbb_ops_cg.cr_op_same.pack_rs1_eq_rs2: stimulus: the operation is emitted and the register-aliasing classes are reached, but the program never pairs this operation with this aliasing shape
-# not_hit gen_bit_zba_zbb_ops_cg.cr_op_same.packh_all_same: stimulus: the operation is emitted and this aliasing shape is reached at some seeds only (cp_same_regs.all_same is itself no per-run guarantee), and the program never pairs the two
-# not_hit gen_bit_zba_zbb_ops_cg.cr_op_same.packh_rs1_eq_rs2: stimulus: the operation is emitted and the register-aliasing classes are reached, but the program never pairs this operation with this aliasing shape
-# not_hit gen_bit_zba_zbb_ops_cg.cr_op_same.packu_all_same: stimulus: the operation is emitted and this aliasing shape is reached at some seeds only (cp_same_regs.all_same is itself no per-run guarantee), and the program never pairs the two
-# not_hit gen_bit_zba_zbb_ops_cg.cr_op_same.packu_rs1_eq_rs2: stimulus: the operation is emitted and the register-aliasing classes are reached, but the program never pairs this operation with this aliasing shape
-# not_hit gen_bit_zba_zbb_ops_cg.cr_op_same.sh1add_all_same: stimulus: the operation is emitted and this aliasing shape is reached at some seeds only (cp_same_regs.all_same is itself no per-run guarantee), and the program never pairs the two
-# not_hit gen_bit_zba_zbb_ops_cg.cr_op_same.sh2add_all_same: stimulus: the operation is emitted and this aliasing shape is reached at some seeds only (cp_same_regs.all_same is itself no per-run guarantee), and the program never pairs the two
-# not_hit gen_bit_zba_zbb_ops_cg.cr_op_same.sh3add_all_same: stimulus: the operation is emitted and this aliasing shape is reached at some seeds only (cp_same_regs.all_same is itself no per-run guarantee), and the program never pairs the two
-# not_hit gen_bit_zba_zbb_ops_cg.cr_op_same.xnor_all_same: stimulus: the operation is emitted and this aliasing shape is reached at some seeds only (cp_same_regs.all_same is itself no per-run guarantee), and the program never pairs the two
-# not_hit gen_bit_zba_zbb_ops_cg.cr_op_same.xnor_rs1_eq_rs2: stimulus: the operation is emitted and the register-aliasing classes are reached, but the program never pairs this operation with this aliasing shape
 test: gen_test_bit_ratified
 owner: test-writer
 bins:
@@ -65,6 +28,7 @@ bins:
   - gen_bit_zba_zbb_ops_cg.cr_op_rs1.sh1add_half_msb
   - gen_bit_zba_zbb_ops_cg.cr_op_rs1.sh1add_int_max
   - gen_bit_zba_zbb_ops_cg.cr_op_rs1.sh1add_int_min
+  - gen_bit_zba_zbb_ops_cg.cr_op_rs1.sh1add_neg_rand
   - gen_bit_zba_zbb_ops_cg.cr_op_rs1.sh1add_one
   - gen_bit_zba_zbb_ops_cg.cr_op_rs1.sh1add_pos_rand
   - gen_bit_zba_zbb_ops_cg.cr_op_rs1.sh1add_zero
@@ -74,6 +38,7 @@ bins:
   - gen_bit_zba_zbb_ops_cg.cr_op_rs1.sh2add_half_msb
   - gen_bit_zba_zbb_ops_cg.cr_op_rs1.sh2add_int_max
   - gen_bit_zba_zbb_ops_cg.cr_op_rs1.sh2add_int_min
+  - gen_bit_zba_zbb_ops_cg.cr_op_rs1.sh2add_neg_rand
   - gen_bit_zba_zbb_ops_cg.cr_op_rs1.sh2add_one
   - gen_bit_zba_zbb_ops_cg.cr_op_rs1.sh2add_pos_rand
   - gen_bit_zba_zbb_ops_cg.cr_op_rs1.sh2add_zero
@@ -123,6 +88,7 @@ bins:
   - gen_bit_zba_zbb_ops_cg.cp_op.sext_h
   - gen_bit_zba_zbb_ops_cg.cp_op.xnor
   - gen_bit_zba_zbb_ops_cg.cp_op.zext_h
+  - gen_bit_zba_zbb_ops_cg.cp_same_regs.all_same
   - gen_bit_zba_zbb_ops_cg.cp_same_regs.distinct
   - gen_bit_zba_zbb_ops_cg.cp_same_regs.rs1_eq_rs2
   - gen_bit_zba_zbb_ops_cg.cp_wrap.no
@@ -140,8 +106,11 @@ bins:
   - gen_bit_zba_zbb_ops_cg.cr_op_eq.orn_no
   - gen_bit_zba_zbb_ops_cg.cr_op_eq.orn_yes
   - gen_bit_zba_zbb_ops_cg.cr_op_eq.pack_no
+  - gen_bit_zba_zbb_ops_cg.cr_op_eq.pack_yes
   - gen_bit_zba_zbb_ops_cg.cr_op_eq.packh_no
+  - gen_bit_zba_zbb_ops_cg.cr_op_eq.packh_yes
   - gen_bit_zba_zbb_ops_cg.cr_op_eq.packu_no
+  - gen_bit_zba_zbb_ops_cg.cr_op_eq.packu_yes
   - gen_bit_zba_zbb_ops_cg.cr_op_eq.sh1add_no
   - gen_bit_zba_zbb_ops_cg.cr_op_eq.sh1add_yes
   - gen_bit_zba_zbb_ops_cg.cr_op_eq.sh2add_no
@@ -150,27 +119,47 @@ bins:
   - gen_bit_zba_zbb_ops_cg.cr_op_eq.sh3add_yes
   - gen_bit_zba_zbb_ops_cg.cr_op_eq.xnor_no
   - gen_bit_zba_zbb_ops_cg.cr_op_eq.xnor_yes
+  - gen_bit_zba_zbb_ops_cg.cr_op_same.andn_all_same
   - gen_bit_zba_zbb_ops_cg.cr_op_same.andn_distinct
+  - gen_bit_zba_zbb_ops_cg.cr_op_same.andn_rs1_eq_rs2
+  - gen_bit_zba_zbb_ops_cg.cr_op_same.max_all_same
   - gen_bit_zba_zbb_ops_cg.cr_op_same.max_distinct
   - gen_bit_zba_zbb_ops_cg.cr_op_same.max_rs1_eq_rs2
+  - gen_bit_zba_zbb_ops_cg.cr_op_same.maxu_all_same
   - gen_bit_zba_zbb_ops_cg.cr_op_same.maxu_distinct
+  - gen_bit_zba_zbb_ops_cg.cr_op_same.maxu_rs1_eq_rs2
+  - gen_bit_zba_zbb_ops_cg.cr_op_same.min_all_same
   - gen_bit_zba_zbb_ops_cg.cr_op_same.min_distinct
   - gen_bit_zba_zbb_ops_cg.cr_op_same.min_rs1_eq_rs2
+  - gen_bit_zba_zbb_ops_cg.cr_op_same.minu_all_same
   - gen_bit_zba_zbb_ops_cg.cr_op_same.minu_distinct
   - gen_bit_zba_zbb_ops_cg.cr_op_same.minu_rs1_eq_rs2
+  - gen_bit_zba_zbb_ops_cg.cr_op_same.orn_all_same
   - gen_bit_zba_zbb_ops_cg.cr_op_same.orn_distinct
+  - gen_bit_zba_zbb_ops_cg.cr_op_same.orn_rs1_eq_rs2
+  - gen_bit_zba_zbb_ops_cg.cr_op_same.pack_all_same
   - gen_bit_zba_zbb_ops_cg.cr_op_same.pack_distinct
+  - gen_bit_zba_zbb_ops_cg.cr_op_same.pack_rs1_eq_rs2
+  - gen_bit_zba_zbb_ops_cg.cr_op_same.packh_all_same
   - gen_bit_zba_zbb_ops_cg.cr_op_same.packh_distinct
+  - gen_bit_zba_zbb_ops_cg.cr_op_same.packh_rs1_eq_rs2
+  - gen_bit_zba_zbb_ops_cg.cr_op_same.packu_all_same
   - gen_bit_zba_zbb_ops_cg.cr_op_same.packu_distinct
+  - gen_bit_zba_zbb_ops_cg.cr_op_same.packu_rs1_eq_rs2
   - gen_bit_zba_zbb_ops_cg.cr_op_same.sext_b_distinct
   - gen_bit_zba_zbb_ops_cg.cr_op_same.sext_h_distinct
+  - gen_bit_zba_zbb_ops_cg.cr_op_same.sh1add_all_same
   - gen_bit_zba_zbb_ops_cg.cr_op_same.sh1add_distinct
   - gen_bit_zba_zbb_ops_cg.cr_op_same.sh1add_rs1_eq_rs2
+  - gen_bit_zba_zbb_ops_cg.cr_op_same.sh2add_all_same
   - gen_bit_zba_zbb_ops_cg.cr_op_same.sh2add_distinct
   - gen_bit_zba_zbb_ops_cg.cr_op_same.sh2add_rs1_eq_rs2
+  - gen_bit_zba_zbb_ops_cg.cr_op_same.sh3add_all_same
   - gen_bit_zba_zbb_ops_cg.cr_op_same.sh3add_distinct
   - gen_bit_zba_zbb_ops_cg.cr_op_same.sh3add_rs1_eq_rs2
+  - gen_bit_zba_zbb_ops_cg.cr_op_same.xnor_all_same
   - gen_bit_zba_zbb_ops_cg.cr_op_same.xnor_distinct
+  - gen_bit_zba_zbb_ops_cg.cr_op_same.xnor_rs1_eq_rs2
   - gen_bit_zba_zbb_ops_cg.cr_op_same.zext_h_distinct
   - gen_bit_zba_zbb_ops_cg.cr_shadd_wrap.sh1add_no
   - gen_bit_zba_zbb_ops_cg.cr_shadd_wrap.sh1add_yes
@@ -186,6 +175,7 @@ bins:
   - gen_bit_zba_zbb_ops_cg.cr_op_rs1.andn_half_msb
   - gen_bit_zba_zbb_ops_cg.cr_op_rs1.andn_int_max
   - gen_bit_zba_zbb_ops_cg.cr_op_rs1.andn_int_min
+  - gen_bit_zba_zbb_ops_cg.cr_op_rs1.andn_neg_rand
   - gen_bit_zba_zbb_ops_cg.cr_op_rs1.andn_one
   - gen_bit_zba_zbb_ops_cg.cr_op_rs1.andn_pos_rand
   - gen_bit_zba_zbb_ops_cg.cr_op_rs1.andn_zero
@@ -195,6 +185,7 @@ bins:
   - gen_bit_zba_zbb_ops_cg.cr_op_rs1.orn_half_msb
   - gen_bit_zba_zbb_ops_cg.cr_op_rs1.orn_int_max
   - gen_bit_zba_zbb_ops_cg.cr_op_rs1.orn_int_min
+  - gen_bit_zba_zbb_ops_cg.cr_op_rs1.orn_neg_rand
   - gen_bit_zba_zbb_ops_cg.cr_op_rs1.orn_one
   - gen_bit_zba_zbb_ops_cg.cr_op_rs1.orn_pos_rand
   - gen_bit_zba_zbb_ops_cg.cr_op_rs1.orn_zero
@@ -204,6 +195,7 @@ bins:
   - gen_bit_zba_zbb_ops_cg.cr_op_rs1.xnor_half_msb
   - gen_bit_zba_zbb_ops_cg.cr_op_rs1.xnor_int_max
   - gen_bit_zba_zbb_ops_cg.cr_op_rs1.xnor_int_min
+  - gen_bit_zba_zbb_ops_cg.cr_op_rs1.xnor_neg_rand
   - gen_bit_zba_zbb_ops_cg.cr_op_rs1.xnor_one
   - gen_bit_zba_zbb_ops_cg.cr_op_rs1.xnor_pos_rand
   - gen_bit_zba_zbb_ops_cg.cr_op_rs1.xnor_zero
@@ -455,6 +447,7 @@ bins:
   - gen_bit_zba_zbb_ops_cg.cr_op_rs1.maxu_half_msb
   - gen_bit_zba_zbb_ops_cg.cr_op_rs1.maxu_int_max
   - gen_bit_zba_zbb_ops_cg.cr_op_rs1.maxu_int_min
+  - gen_bit_zba_zbb_ops_cg.cr_op_rs1.maxu_neg_rand
   - gen_bit_zba_zbb_ops_cg.cr_op_rs1.maxu_one
   - gen_bit_zba_zbb_ops_cg.cr_op_rs1.maxu_pos_rand
   - gen_bit_zba_zbb_ops_cg.cr_op_rs1.maxu_zero
@@ -464,6 +457,7 @@ bins:
   - gen_bit_zba_zbb_ops_cg.cr_op_rs1.min_half_msb
   - gen_bit_zba_zbb_ops_cg.cr_op_rs1.min_int_max
   - gen_bit_zba_zbb_ops_cg.cr_op_rs1.min_int_min
+  - gen_bit_zba_zbb_ops_cg.cr_op_rs1.min_neg_rand
   - gen_bit_zba_zbb_ops_cg.cr_op_rs1.min_one
   - gen_bit_zba_zbb_ops_cg.cr_op_rs1.min_pos_rand
   - gen_bit_zba_zbb_ops_cg.cr_op_rs1.min_zero
@@ -473,6 +467,7 @@ bins:
   - gen_bit_zba_zbb_ops_cg.cr_op_rs1.minu_half_msb
   - gen_bit_zba_zbb_ops_cg.cr_op_rs1.minu_int_max
   - gen_bit_zba_zbb_ops_cg.cr_op_rs1.minu_int_min
+  - gen_bit_zba_zbb_ops_cg.cr_op_rs1.minu_neg_rand
   - gen_bit_zba_zbb_ops_cg.cr_op_rs1.minu_one
   - gen_bit_zba_zbb_ops_cg.cr_op_rs1.minu_pos_rand
   - gen_bit_zba_zbb_ops_cg.cr_op_rs1.minu_zero
@@ -512,6 +507,7 @@ bins:
   - gen_bit_zba_zbb_ops_cg.cr_op_rs1.zext_h_half_msb
   - gen_bit_zba_zbb_ops_cg.cr_op_rs1.zext_h_int_max
   - gen_bit_zba_zbb_ops_cg.cr_op_rs1.zext_h_int_min
+  - gen_bit_zba_zbb_ops_cg.cr_op_rs1.zext_h_neg_rand
   - gen_bit_zba_zbb_ops_cg.cr_op_rs1.zext_h_one
   - gen_bit_zba_zbb_ops_cg.cr_op_rs1.zext_h_pos_rand
   - gen_bit_zba_zbb_ops_cg.cr_op_rs1.zext_h_zero
@@ -592,6 +588,7 @@ bins:
   - gen_bit_sbit_cg.cr_op_operand.bseti_all_ones
   - gen_bit_sbit_cg.cr_op_operand.bseti_rand
   - gen_bit_sbit_cg.cr_op_operand.bseti_zero
+  - gen_bit_sbit_cg.cp_binv_twice.yes
   - gen_bit_sbit_cg.cp_rs2_upper.all_ones
   - gen_bit_sbit_cg.cr_reg_upper.bclr_all_ones
   - gen_bit_sbit_cg.cr_reg_upper.bext_all_ones
@@ -611,8 +608,11 @@ bins:
   - gen_bit_zba_zbb_ops_cg.cr_op_rd_x0.minu_yes
   - gen_bit_zba_zbb_ops_cg.cr_op_rd_x0.orn_no
   - gen_bit_zba_zbb_ops_cg.cr_op_rd_x0.orn_yes
+  - gen_bit_zba_zbb_ops_cg.cr_op_rd_x0.pack_no
   - gen_bit_zba_zbb_ops_cg.cr_op_rd_x0.pack_yes
+  - gen_bit_zba_zbb_ops_cg.cr_op_rd_x0.packh_no
   - gen_bit_zba_zbb_ops_cg.cr_op_rd_x0.packh_yes
+  - gen_bit_zba_zbb_ops_cg.cr_op_rd_x0.packu_no
   - gen_bit_zba_zbb_ops_cg.cr_op_rd_x0.packu_yes
   - gen_bit_zba_zbb_ops_cg.cr_op_rd_x0.sext_b_no
   - gen_bit_zba_zbb_ops_cg.cr_op_rd_x0.sext_b_yes
@@ -683,6 +683,7 @@ anti_vacuity:
   gen_bit_zba_zbb_ops_cg.cr_op_rs1.sh1add_half_msb: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cr_op_rs1.sh1add_int_max: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cr_op_rs1.sh1add_int_min: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
+  gen_bit_zba_zbb_ops_cg.cr_op_rs1.sh1add_neg_rand: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cr_op_rs1.sh1add_one: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cr_op_rs1.sh1add_pos_rand: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cr_op_rs1.sh1add_zero: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
@@ -692,6 +693,7 @@ anti_vacuity:
   gen_bit_zba_zbb_ops_cg.cr_op_rs1.sh2add_half_msb: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cr_op_rs1.sh2add_int_max: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cr_op_rs1.sh2add_int_min: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
+  gen_bit_zba_zbb_ops_cg.cr_op_rs1.sh2add_neg_rand: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cr_op_rs1.sh2add_one: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cr_op_rs1.sh2add_pos_rand: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cr_op_rs1.sh2add_zero: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
@@ -741,6 +743,7 @@ anti_vacuity:
   gen_bit_zba_zbb_ops_cg.cp_op.sext_h: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cp_op.xnor: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cp_op.zext_h: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
+  gen_bit_zba_zbb_ops_cg.cp_same_regs.all_same: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cp_same_regs.distinct: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cp_same_regs.rs1_eq_rs2: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cp_wrap.no: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
@@ -758,8 +761,11 @@ anti_vacuity:
   gen_bit_zba_zbb_ops_cg.cr_op_eq.orn_no: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cr_op_eq.orn_yes: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cr_op_eq.pack_no: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
+  gen_bit_zba_zbb_ops_cg.cr_op_eq.pack_yes: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cr_op_eq.packh_no: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
+  gen_bit_zba_zbb_ops_cg.cr_op_eq.packh_yes: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cr_op_eq.packu_no: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
+  gen_bit_zba_zbb_ops_cg.cr_op_eq.packu_yes: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cr_op_eq.sh1add_no: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cr_op_eq.sh1add_yes: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cr_op_eq.sh2add_no: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
@@ -768,27 +774,47 @@ anti_vacuity:
   gen_bit_zba_zbb_ops_cg.cr_op_eq.sh3add_yes: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cr_op_eq.xnor_no: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cr_op_eq.xnor_yes: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
+  gen_bit_zba_zbb_ops_cg.cr_op_same.andn_all_same: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cr_op_same.andn_distinct: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
+  gen_bit_zba_zbb_ops_cg.cr_op_same.andn_rs1_eq_rs2: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
+  gen_bit_zba_zbb_ops_cg.cr_op_same.max_all_same: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cr_op_same.max_distinct: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cr_op_same.max_rs1_eq_rs2: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
+  gen_bit_zba_zbb_ops_cg.cr_op_same.maxu_all_same: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cr_op_same.maxu_distinct: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
+  gen_bit_zba_zbb_ops_cg.cr_op_same.maxu_rs1_eq_rs2: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
+  gen_bit_zba_zbb_ops_cg.cr_op_same.min_all_same: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cr_op_same.min_distinct: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cr_op_same.min_rs1_eq_rs2: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
+  gen_bit_zba_zbb_ops_cg.cr_op_same.minu_all_same: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cr_op_same.minu_distinct: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cr_op_same.minu_rs1_eq_rs2: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
+  gen_bit_zba_zbb_ops_cg.cr_op_same.orn_all_same: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cr_op_same.orn_distinct: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
+  gen_bit_zba_zbb_ops_cg.cr_op_same.orn_rs1_eq_rs2: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
+  gen_bit_zba_zbb_ops_cg.cr_op_same.pack_all_same: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cr_op_same.pack_distinct: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
+  gen_bit_zba_zbb_ops_cg.cr_op_same.pack_rs1_eq_rs2: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
+  gen_bit_zba_zbb_ops_cg.cr_op_same.packh_all_same: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cr_op_same.packh_distinct: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
+  gen_bit_zba_zbb_ops_cg.cr_op_same.packh_rs1_eq_rs2: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
+  gen_bit_zba_zbb_ops_cg.cr_op_same.packu_all_same: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cr_op_same.packu_distinct: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
+  gen_bit_zba_zbb_ops_cg.cr_op_same.packu_rs1_eq_rs2: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cr_op_same.sext_b_distinct: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cr_op_same.sext_h_distinct: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
+  gen_bit_zba_zbb_ops_cg.cr_op_same.sh1add_all_same: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cr_op_same.sh1add_distinct: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cr_op_same.sh1add_rs1_eq_rs2: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
+  gen_bit_zba_zbb_ops_cg.cr_op_same.sh2add_all_same: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cr_op_same.sh2add_distinct: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cr_op_same.sh2add_rs1_eq_rs2: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
+  gen_bit_zba_zbb_ops_cg.cr_op_same.sh3add_all_same: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cr_op_same.sh3add_distinct: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cr_op_same.sh3add_rs1_eq_rs2: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
+  gen_bit_zba_zbb_ops_cg.cr_op_same.xnor_all_same: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cr_op_same.xnor_distinct: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
+  gen_bit_zba_zbb_ops_cg.cr_op_same.xnor_rs1_eq_rs2: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cr_op_same.zext_h_distinct: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cr_shadd_wrap.sh1add_no: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cr_shadd_wrap.sh1add_yes: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
@@ -804,6 +830,7 @@ anti_vacuity:
   gen_bit_zba_zbb_ops_cg.cr_op_rs1.andn_half_msb: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cr_op_rs1.andn_int_max: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cr_op_rs1.andn_int_min: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
+  gen_bit_zba_zbb_ops_cg.cr_op_rs1.andn_neg_rand: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cr_op_rs1.andn_one: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cr_op_rs1.andn_pos_rand: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cr_op_rs1.andn_zero: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
@@ -813,6 +840,7 @@ anti_vacuity:
   gen_bit_zba_zbb_ops_cg.cr_op_rs1.orn_half_msb: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cr_op_rs1.orn_int_max: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cr_op_rs1.orn_int_min: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
+  gen_bit_zba_zbb_ops_cg.cr_op_rs1.orn_neg_rand: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cr_op_rs1.orn_one: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cr_op_rs1.orn_pos_rand: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cr_op_rs1.orn_zero: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
@@ -822,6 +850,7 @@ anti_vacuity:
   gen_bit_zba_zbb_ops_cg.cr_op_rs1.xnor_half_msb: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cr_op_rs1.xnor_int_max: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cr_op_rs1.xnor_int_min: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
+  gen_bit_zba_zbb_ops_cg.cr_op_rs1.xnor_neg_rand: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cr_op_rs1.xnor_one: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cr_op_rs1.xnor_pos_rand: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cr_op_rs1.xnor_zero: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
@@ -1073,6 +1102,7 @@ anti_vacuity:
   gen_bit_zba_zbb_ops_cg.cr_op_rs1.maxu_half_msb: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cr_op_rs1.maxu_int_max: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cr_op_rs1.maxu_int_min: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
+  gen_bit_zba_zbb_ops_cg.cr_op_rs1.maxu_neg_rand: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cr_op_rs1.maxu_one: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cr_op_rs1.maxu_pos_rand: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cr_op_rs1.maxu_zero: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
@@ -1082,6 +1112,7 @@ anti_vacuity:
   gen_bit_zba_zbb_ops_cg.cr_op_rs1.min_half_msb: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cr_op_rs1.min_int_max: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cr_op_rs1.min_int_min: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
+  gen_bit_zba_zbb_ops_cg.cr_op_rs1.min_neg_rand: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cr_op_rs1.min_one: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cr_op_rs1.min_pos_rand: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cr_op_rs1.min_zero: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
@@ -1091,6 +1122,7 @@ anti_vacuity:
   gen_bit_zba_zbb_ops_cg.cr_op_rs1.minu_half_msb: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cr_op_rs1.minu_int_max: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cr_op_rs1.minu_int_min: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
+  gen_bit_zba_zbb_ops_cg.cr_op_rs1.minu_neg_rand: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cr_op_rs1.minu_one: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cr_op_rs1.minu_pos_rand: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cr_op_rs1.minu_zero: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
@@ -1130,6 +1162,7 @@ anti_vacuity:
   gen_bit_zba_zbb_ops_cg.cr_op_rs1.zext_h_half_msb: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cr_op_rs1.zext_h_int_max: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cr_op_rs1.zext_h_int_min: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
+  gen_bit_zba_zbb_ops_cg.cr_op_rs1.zext_h_neg_rand: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cr_op_rs1.zext_h_one: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cr_op_rs1.zext_h_pos_rand: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cr_op_rs1.zext_h_zero: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
@@ -1210,6 +1243,7 @@ anti_vacuity:
   gen_bit_sbit_cg.cr_op_operand.bseti_all_ones: "CG-BIT-006: the prior bit state is read from rvfi_rs1_rdata at the effective index; a hit proves the op acted on a bit in the sampled state"
   gen_bit_sbit_cg.cr_op_operand.bseti_rand: "CG-BIT-006: the prior bit state is read from rvfi_rs1_rdata at the effective index; a hit proves the op acted on a bit in the sampled state"
   gen_bit_sbit_cg.cr_op_operand.bseti_zero: "CG-BIT-006: the prior bit state is read from rvfi_rs1_rdata at the effective index; a hit proves the op acted on a bit in the sampled state"
+  gen_bit_sbit_cg.cp_binv_twice.yes: "CG-BIT-006: the prior bit state is read from rvfi_rs1_rdata at the effective index; a hit proves the op acted on a bit in the sampled state"
   gen_bit_sbit_cg.cp_rs2_upper.all_ones: "CG-BIT-006: the prior bit state is read from rvfi_rs1_rdata at the effective index; a hit proves the op acted on a bit in the sampled state"
   gen_bit_sbit_cg.cr_reg_upper.bclr_all_ones: "CG-BIT-006: the prior bit state is read from rvfi_rs1_rdata at the effective index; a hit proves the op acted on a bit in the sampled state"
   gen_bit_sbit_cg.cr_reg_upper.bext_all_ones: "CG-BIT-006: the prior bit state is read from rvfi_rs1_rdata at the effective index; a hit proves the op acted on a bit in the sampled state"
@@ -1229,8 +1263,11 @@ anti_vacuity:
   gen_bit_zba_zbb_ops_cg.cr_op_rd_x0.minu_yes: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cr_op_rd_x0.orn_no: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cr_op_rd_x0.orn_yes: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
+  gen_bit_zba_zbb_ops_cg.cr_op_rd_x0.pack_no: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cr_op_rd_x0.pack_yes: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
+  gen_bit_zba_zbb_ops_cg.cr_op_rd_x0.packh_no: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cr_op_rd_x0.packh_yes: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
+  gen_bit_zba_zbb_ops_cg.cr_op_rd_x0.packu_no: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cr_op_rd_x0.packu_yes: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cr_op_rd_x0.sext_b_no: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"
   gen_bit_zba_zbb_ops_cg.cr_op_rd_x0.sext_b_yes: "CG-BIT-001: Zb* funct7 values are excluded from base ALU sampling and vice versa; a hit proves the op retired with the sampled operand classes"

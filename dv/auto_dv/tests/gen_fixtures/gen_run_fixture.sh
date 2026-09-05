@@ -4,6 +4,8 @@
 # template and the test module by sha256 prefix
 # GEN_TB_PYROOT (optional): a tree whose dv/auto_dv/gen_tb (rendered knobs, bridge) matches the build, searched before the
 # clone; needed when the build is an export of HEAD and the clone's gen_tb is mid-edit (the export must not carry dv/auto_dv/tests).
+# A detached archive of the tree runs this script only with two links beside it that the clone has for real: tools/spike
+# (the shim's library dir below) and .venv (the pinned cocotb-config the check below resolves against, else exit 2 "no .venv").
 set -u
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../.." && pwd)"
 OUT=$1; NAME=$2; MODULE=$3; VMEM=$4; shift 4

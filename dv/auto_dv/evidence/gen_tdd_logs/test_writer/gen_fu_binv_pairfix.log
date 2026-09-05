@@ -1,0 +1,693 @@
+# gen_fu_binv_pairfix: the binv-pair fix's transfer check, its model-level reds, and the passing block read bin by bin
+written 2026-09-05T11:22:59Z by the Test Writer; clone HEAD 7930d04 (7930d04e209b9e4d2411eb615943fd34acdf13a7); python 3.12.10 (/localdev/fzhang/ws/ibex-challenge/.venv/bin/python3)
+tools: ci/check_fcov_expectations.py sha256 282127c9994d (the flow's own checker, the mechanism that decides a run);
+       dv/auto_dv/tools/gen_read_keyed.py sha256 e2db8c7ed954 (the independent reader, the control)
+block retention: dv/auto_dv/evidence/gen_bit_ratified_pairfix/ (commit aa75ecb; block 2 is the entry's authority per the DV Lead's rule);
+                 both blocks' roots are archives of 4017573 with the generator the only changed file; block 2 out /proj_soc/user_dev/fzhang/ibex_dv_out/regress_binv3
+
+## A. TRANSFER CHECK: the candidate generator is byte for byte the one block 2 ran
+  candidate  dv/auto_dv/tests/gen_programs/gen_bit_ratified_prog.py  sha256 70f318080711d7845c88341a012461bd21d57695536daf2db33189a675a3b8d0
+  block 2 root /proj_soc/user_dev/fzhang/ibex_dv_probe/binvfix2  sha256 70f318080711d7845c88341a012461bd21d57695536daf2db33189a675a3b8d0
+  block 1 root /proj_soc/user_dev/fzhang/ibex_dv_probe/binvfix  sha256 557a4812175aa171d16eaf52dc6f5a27ef99ac500da6a56e2427f5e0e7066bd0
+  ok    candidate hashes to the pin 70f31808 the index names for block 2
+  ok    block 2's built root holds the same bytes (cmp)
+  ok    block 1's built root hashes to the pin 557a4812 the index names for block 1
+  ok    both pins appear verbatim in the retained index gen_index.md
+  HEAD blob  14405978b07d  (the pre-fix committed generator; the fix is the diff HEAD -> candidate)
+  ok    HEAD's blob differs from the candidate (the hand carries a change)
+  git diff --numstat HEAD -- dv/auto_dv/tests/gen_programs/gen_bit_ratified_prog.py: 21	6	dv/auto_dv/tests/gen_programs/gen_bit_ratified_prog.py
+
+## B. THE BLOCK'S RUN SET, re-derived from the run directories, not from the index
+  ok    40 run directories (40)
+  ok    the run seeds equal gen_pairfix_seeds.txt (the wave's forty bit_ratified seeds)
+  ok    every run_cmd.sh names the block-2 root only (['binvfix2'])
+  ok    result.yaml verdict PASS in 40 of 40
+  ok    fcov_check.log ends with the checker's PASS line for all 617 declared bins in 40 of 40
+  ok    exactly 617 '= HIT' lines and no UNHIT or MISSING line in 40 of 40 (the census 'declared 617 | EVERY 617' re-derived)
+
+## C. REPORT-SLICE CHECK (the mapping red): every op's report slice must be its own words
+  script scratchpad/test_writer_r3/slicered/gen_report_slice_check.py, sha256 20043e2e7e13 (text folded in at the end of this log)
+  --- HEAD blob 14405978b07d (pre-fix, committed at 4017573): /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/test_writer_r3/handA/head_tests/dv/auto_dv/tests/gen_programs/gen_bit_ratified_prog.py sha256 14405978b07d -> exit 0
+      seeds 40, ops checked, mismatching slices 0
+      REPORT-SLICE: PASS
+  ok    HEAD blob 14405978b07d (pre-fix, committed at 4017573): generator hashes to 14405978b07d
+  ok    HEAD blob 14405978b07d (pre-fix, committed at 4017573): exit 0 and the script's own line 'REPORT-SLICE: PASS' (a traceback is not a red)
+  --- block 1 EXACT bytes: /proj_soc/user_dev/fzhang/ibex_dv_probe/binvfix/dv/auto_dv/tests/gen_programs/gen_bit_ratified_prog.py sha256 557a4812175a -> exit 1
+      seeds 40, ops checked, mismatching slices 40
+        seed 1 op 11 binvi: slice ['0x4720c350'] is not its own ['0x4720c3d0']
+        seed 2 op 43 binvi: slice ['0xffffffff'] is not its own ['0xfffeffff']
+        seed 3 op 678 binvi: slice ['0xe53d2d5f'] is not its own ['0xf53d2d5f']
+        seed 4 op 464 binvi: slice ['0x10000'] is not its own ['0x14000']
+      REPORT-SLICE: FAIL
+  ok    block 1 EXACT bytes: generator hashes to 557a4812175a
+  ok    block 1 EXACT bytes: exit 1 and the script's own line 'REPORT-SLICE: FAIL' (a traceback is not a red)
+  --- reconstruction the earlier red ran on: /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/test_writer_r3/slicered/inter/dv/auto_dv/tests/gen_programs/gen_bit_ratified_prog.py sha256 f3116177bc2c -> exit 1
+      seeds 40, ops checked, mismatching slices 40
+        seed 1 op 11 binvi: slice ['0x4720c350'] is not its own ['0x4720c3d0']
+        seed 2 op 43 binvi: slice ['0xffffffff'] is not its own ['0xfffeffff']
+        seed 3 op 678 binvi: slice ['0xe53d2d5f'] is not its own ['0xf53d2d5f']
+        seed 4 op 464 binvi: slice ['0x10000'] is not its own ['0x14000']
+      REPORT-SLICE: FAIL
+  ok    reconstruction the earlier red ran on: generator hashes to f3116177bc2c
+  ok    reconstruction the earlier red ran on: exit 1 and the script's own line 'REPORT-SLICE: FAIL' (a traceback is not a red)
+  --- block 2 root: /proj_soc/user_dev/fzhang/ibex_dv_probe/binvfix2/dv/auto_dv/tests/gen_programs/gen_bit_ratified_prog.py sha256 70f318080711 -> exit 0
+      seeds 40, ops checked, mismatching slices 0
+      REPORT-SLICE: PASS
+  ok    block 2 root: generator hashes to 70f318080711
+  ok    block 2 root: exit 0 and the script's own line 'REPORT-SLICE: PASS' (a traceback is not a red)
+  --- candidate (clone tree): /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/tests/gen_programs/gen_bit_ratified_prog.py sha256 70f318080711 -> exit 0
+      seeds 40, ops checked, mismatching slices 0
+      REPORT-SLICE: PASS
+  ok    candidate (clone tree): generator hashes to 70f318080711
+  ok    candidate (clone tree): exit 0 and the script's own line 'REPORT-SLICE: PASS' (a traceback is not a red)
+
+## D. PAIR-CONSECUTIVE CHECK: the two binvi retire with no record between them (read from the emitted text)
+  script scratchpad/test_writer_r3/binvpair/gen_binv_pair_check.py, sha256 686bf130af6e (text folded in at the end of this log)
+  the 2x2 with Section C: HEAD's blob maps every report to its op and places the first binvi's store between the pair (pair RED, slice GREEN);
+  block 1 removed that store and broke the report index (pair GREEN, slice RED); block 2 keeps the pair consecutive and the index whole (both GREEN)
+  --- HEAD blob 14405978b07d (pre-fix, committed at 4017573): sha256 14405978b07d -> exit 1
+      seeds 40, pairs checked 40, failures 40
+        seed 1: the pair on x28 index 7 is 4 instructions apart, not consecutive; the sampler's rule needs no record between them
+        seed 2: the pair on x2 index 16 is 4 instructions apart, not consecutive; the sampler's rule needs no record between them
+        seed 3: the pair on x11 index 28 is 2 instructions apart, not consecutive; the sampler's rule needs no record between them
+        seed 4: the pair on x14 index 14 is 2 instructions apart, not consecutive; the sampler's rule needs no record between them
+        seed 5: the pair on x4 index 20 is 3 instructions apart, not consecutive; the sampler's rule needs no record between them
+  ok    HEAD blob 14405978b07d (pre-fix, committed at 4017573): exit 1 and the script's own line 'BINV-PAIR-CONSECUTIVE: FAIL' (a traceback is not a red)
+  --- block 1 EXACT bytes: sha256 557a4812175a -> exit 0
+      seeds 40, pairs checked 40, failures 0
+      BINV-PAIR-CONSECUTIVE: PASS
+  ok    block 1 EXACT bytes: exit 0 and the script's own line 'BINV-PAIR-CONSECUTIVE: PASS' (a traceback is not a red)
+  --- block 2 root: sha256 70f318080711 -> exit 0
+      seeds 40, pairs checked 40, failures 0
+      BINV-PAIR-CONSECUTIVE: PASS
+  ok    block 2 root: exit 0 and the script's own line 'BINV-PAIR-CONSECUTIVE: PASS' (a traceback is not a red)
+  --- candidate (clone tree): sha256 70f318080711 -> exit 0
+      seeds 40, pairs checked 40, failures 0
+      BINV-PAIR-CONSECUTIVE: PASS
+  ok    candidate (clone tree): exit 0 and the script's own line 'BINV-PAIR-CONSECUTIVE: PASS' (a traceback is not a red)
+  ok    the HEAD-blob root holds the committed generator 14405978b07d
+
+## E. THE READING OF BLOCK 2's FORTY REPORTS for every not_hit line of the committed manifest at HEAD
+  ok    37 not_hit lines at HEAD, parsed 37 of 37 raw markers (the match count is asserted, not assumed)
+  ok    every reason opens with its class token (['seed-dependent', 'stimulus'])
+  synthetic manifest synthetic_not_hit_37.fcov.yaml sha256 ae9ddf6326c3: the 37 bins, read with the flow's checker against each run's urgReport_variable_form
+  ok    the independent reader agrees with the checker on every (run, bin): agree 1480, differ 0
+
+  bin                                                        class            hit at  count range   verdict
+  gen_bit_sbit_cg.cp_binv_twice.yes                          stimulus         40/40  1..1          DECLARABLE (every seed)
+  gen_bit_zba_zbb_ops_cg.cp_same_regs.all_same               seed-dependent   40/40  13..13        DECLARABLE (every seed)
+  gen_bit_zba_zbb_ops_cg.cr_op_eq.pack_yes                   stimulus         40/40  3..4          DECLARABLE (every seed)
+  gen_bit_zba_zbb_ops_cg.cr_op_eq.packh_yes                  stimulus         40/40  3..5          DECLARABLE (every seed)
+  gen_bit_zba_zbb_ops_cg.cr_op_eq.packu_yes                  stimulus         40/40  3..4          DECLARABLE (every seed)
+  gen_bit_zba_zbb_ops_cg.cr_op_rd_x0.pack_no                 stimulus         40/40  12..15        DECLARABLE (every seed)
+  gen_bit_zba_zbb_ops_cg.cr_op_rd_x0.packh_no                stimulus         40/40  12..14        DECLARABLE (every seed)
+  gen_bit_zba_zbb_ops_cg.cr_op_rd_x0.packu_no                stimulus         40/40  12..17        DECLARABLE (every seed)
+  gen_bit_zba_zbb_ops_cg.cr_op_rs1.andn_neg_rand             seed-dependent   40/40  1..4          DECLARABLE (every seed)
+  gen_bit_zba_zbb_ops_cg.cr_op_rs1.maxu_neg_rand             seed-dependent   40/40  1..6          DECLARABLE (every seed)
+  gen_bit_zba_zbb_ops_cg.cr_op_rs1.min_neg_rand              seed-dependent   40/40  1..5          DECLARABLE (every seed)
+  gen_bit_zba_zbb_ops_cg.cr_op_rs1.minu_neg_rand             seed-dependent   40/40  1..5          DECLARABLE (every seed)
+  gen_bit_zba_zbb_ops_cg.cr_op_rs1.orn_neg_rand              seed-dependent   40/40  1..5          DECLARABLE (every seed)
+  gen_bit_zba_zbb_ops_cg.cr_op_rs1.sh1add_neg_rand           seed-dependent   40/40  2..5          DECLARABLE (every seed)
+  gen_bit_zba_zbb_ops_cg.cr_op_rs1.sh2add_neg_rand           seed-dependent   40/40  2..6          DECLARABLE (every seed)
+  gen_bit_zba_zbb_ops_cg.cr_op_rs1.xnor_neg_rand             seed-dependent   40/40  1..5          DECLARABLE (every seed)
+  gen_bit_zba_zbb_ops_cg.cr_op_rs1.zext_h_neg_rand           seed-dependent   40/40  1..4          DECLARABLE (every seed)
+  gen_bit_zba_zbb_ops_cg.cr_op_same.andn_all_same            stimulus         40/40  1..1          DECLARABLE (every seed)
+  gen_bit_zba_zbb_ops_cg.cr_op_same.andn_rs1_eq_rs2          stimulus         40/40  1..2          DECLARABLE (every seed)
+  gen_bit_zba_zbb_ops_cg.cr_op_same.max_all_same             stimulus         40/40  1..1          DECLARABLE (every seed)
+  gen_bit_zba_zbb_ops_cg.cr_op_same.maxu_all_same            seed-dependent   40/40  1..1          DECLARABLE (every seed)
+  gen_bit_zba_zbb_ops_cg.cr_op_same.maxu_rs1_eq_rs2          seed-dependent   40/40  2..3          DECLARABLE (every seed)
+  gen_bit_zba_zbb_ops_cg.cr_op_same.min_all_same             stimulus         40/40  1..1          DECLARABLE (every seed)
+  gen_bit_zba_zbb_ops_cg.cr_op_same.minu_all_same            stimulus         40/40  1..1          DECLARABLE (every seed)
+  gen_bit_zba_zbb_ops_cg.cr_op_same.orn_all_same             stimulus         40/40  1..1          DECLARABLE (every seed)
+  gen_bit_zba_zbb_ops_cg.cr_op_same.orn_rs1_eq_rs2           seed-dependent   40/40  1..3          DECLARABLE (every seed)
+  gen_bit_zba_zbb_ops_cg.cr_op_same.pack_all_same            stimulus         40/40  1..1          DECLARABLE (every seed)
+  gen_bit_zba_zbb_ops_cg.cr_op_same.pack_rs1_eq_rs2          stimulus         40/40  1..2          DECLARABLE (every seed)
+  gen_bit_zba_zbb_ops_cg.cr_op_same.packh_all_same           stimulus         40/40  1..1          DECLARABLE (every seed)
+  gen_bit_zba_zbb_ops_cg.cr_op_same.packh_rs1_eq_rs2         stimulus         40/40  1..3          DECLARABLE (every seed)
+  gen_bit_zba_zbb_ops_cg.cr_op_same.packu_all_same           stimulus         40/40  1..1          DECLARABLE (every seed)
+  gen_bit_zba_zbb_ops_cg.cr_op_same.packu_rs1_eq_rs2         stimulus         40/40  1..2          DECLARABLE (every seed)
+  gen_bit_zba_zbb_ops_cg.cr_op_same.sh1add_all_same          stimulus         40/40  1..1          DECLARABLE (every seed)
+  gen_bit_zba_zbb_ops_cg.cr_op_same.sh2add_all_same          stimulus         40/40  1..1          DECLARABLE (every seed)
+  gen_bit_zba_zbb_ops_cg.cr_op_same.sh3add_all_same          stimulus         40/40  1..1          DECLARABLE (every seed)
+  gen_bit_zba_zbb_ops_cg.cr_op_same.xnor_all_same            stimulus         40/40  1..1          DECLARABLE (every seed)
+  gen_bit_zba_zbb_ops_cg.cr_op_same.xnor_rs1_eq_rs2          stimulus         40/40  1..2          DECLARABLE (every seed)
+
+  DECLARABLE at 40 of 40: 37   staying not_hit with their count: 0
+  ok    gen_pairfix_shapes.txt holds 24 shape rows (24)
+  ok    my reading of the 24 shapes equals the retained shapes table seed count for seed count (all 24 agree)
+  ok    the 24 stimulus-class lines are exactly the 24 shapes of the retained table
+  ok    all 24 shapes are at 40 of 40
+  cross-operand consistency: cp_same_regs.all_same 40/40 against its 13 cr_op_same *_all_same legs in this list, min over legs 40/40 (an operand bin is hit in every sample that hits one of its cross legs)
+
+## G. WHAT THE RE-RENDER PRODUCES, rendered by the manifest generator from the edited test module and compared to the tree
+  ok    gen_fcov_manifest.py --test-module exits 0 (0); 0 bins dropped by the manifest rule (printed, not written)
+  ok    the rendered text equals the tree's manifest byte for byte (zero render diff)
+  HEAD manifest: 617 declared (123 coverpoint, 494 cross), 37 not_hit lines
+  re-rendered  : 654 declared (125 coverpoint, 529 cross), 0 not_hit lines; sha256 2d08ebedcd88, 153263 bytes
+  ok    617 + 37 = 654 declared, no not_hit line left
+  ok    the 37 are 35 cross bins and 2 coverpoint bins (cp_binv_twice.yes, cp_same_regs.all_same)
+  ok    the test module's bins_not_hit is empty and not_built is TP-BIT-001 alone (gen_bit_ratified)
+  ok    the 37 bins added to the declared set are exactly the 37 not_hit lines read in Section E
+
+## H. THE CITED LINES, printed from the tree that lands (the DV Lead's condition: a clause cites lines of the COMMITTED file)
+  generator: the candidate in the assembled tree, byte-equal to the blob this landing commits (Section A); sampler: HEAD's gen_fcov_pkg.sv blob via git show
+  gen_bit_ratified_prog.py sha256 70f318080711 (1297 lines); gen_fcov_pkg.sv at HEAD 7930d04 (2937 lines)
+  ok    gen_bit_ratified_prog.py:369-386 carries 'rd_x0: bool = False' (Spec dataclass, rd_x0 default False)
+      gen_bit_ratified_prog.py:369: class Spec:
+      gen_bit_ratified_prog.py:370:     """One op before register allocation: values fixed, registers drawn later."""
+      gen_bit_ratified_prog.py:371:     item: str
+      gen_bit_ratified_prog.py:372:     kind: str                  # mnemonic key; special kinds: addr_<shNadd>, ident, illegal_<kind>, x0_<mnemonic>, misa_read, misa_write
+      gen_bit_ratified_prog.py:373:     rs1_val: int = 0
+      gen_bit_ratified_prog.py:374:     rs2_val: int = 0
+      gen_bit_ratified_prog.py:375:     imm: int = -1
+      gen_bit_ratified_prog.py:376:     rs1_class: str = "given"
+      gen_bit_ratified_prog.py:377:     rs2_class: str = "given"
+      gen_bit_ratified_prog.py:378:     tags: dict = field(default_factory=dict)
+      gen_bit_ratified_prog.py:379:     floor: bool = True
+      gen_bit_ratified_prog.py:380:     chain: bool = False        # rs1 = the previous op's rd (value = prev.expect)
+      gen_bit_ratified_prog.py:381:     follow: bool = False       # same unit as the previous op (adjacent, no value chain)
+      gen_bit_ratified_prog.py:382:     same_rs: bool = False      # rs2 is the rs1 register
+      gen_bit_ratified_prog.py:383:     same_all: bool = False     # rd, rs1 and rs2 are one register (cp_same_regs.all_same)
+      gen_bit_ratified_prog.py:384:     same_rd: bool = False      # rd is the previous op's rd (with chain: the same rd AND index)
+      gen_bit_ratified_prog.py:385:     no_report: bool = False    # emit no report store: the next op must retire immediately after this one
+      gen_bit_ratified_prog.py:386:     rd_x0: bool = False
+  ok    gen_bit_ratified_prog.py:270-276 carries 'def _plain_rand' (_plain_rand: rejects the six exact values and bit 7 != bit 15)
+      gen_bit_ratified_prog.py:270: def _plain_rand(rng, lo, hi):
+      gen_bit_ratified_prog.py:271:     """A value the coverage will classify as pos_rand / neg_rand rather than as a named class."""
+      gen_bit_ratified_prog.py:272:     for _ in range(64):
+      gen_bit_ratified_prog.py:273:         v = rng.randrange(lo, hi)
+      gen_bit_ratified_prog.py:274:         if v not in _NAMED_EXACT and ((v >> 7) & 1) == ((v >> 15) & 1):
+      gen_bit_ratified_prog.py:275:             return v
+      gen_bit_ratified_prog.py:276:     raise AssertionError("no plain random value in 64 draws")
+  ok    gen_bit_ratified_prog.py:270-276 carries '((v >> 7) & 1) == ((v >> 15) & 1)' (_plain_rand body)
+  ok    gen_bit_ratified_prog.py:319-320 carries '_plain_rand(rng, 0x80000000, 1 << 32)' (operand_value neg_rand -> _plain_rand over the bit-31-set range)
+      gen_bit_ratified_prog.py:319:     if cls == "neg_rand":
+      gen_bit_ratified_prog.py:320:         return _plain_rand(rng, 0x80000000, 1 << 32)
+  ok    gen_bit_ratified_prog.py:455-460 carries 'for i, c1 in enumerate(RS1_CLASSES)' (_spec_002: every RS1 class per shNadd op)
+      gen_bit_ratified_prog.py:455: def _spec_002(rng):
+      gen_bit_ratified_prog.py:456:     specs = []
+      gen_bit_ratified_prog.py:457:     shift = rng.randrange(len(RS2_CLASSES))
+      gen_bit_ratified_prog.py:458:     for kind in ITEM_OPS["TP-BIT-002"]:
+      gen_bit_ratified_prog.py:459:         for i, c1 in enumerate(RS1_CLASSES):
+      gen_bit_ratified_prog.py:460:             specs.append(_rs_pair(rng, "TP-BIT-002", kind, c1, RS2_CLASSES[(i + shift) % len(RS2_CLASSES)]))
+  ok    gen_bit_ratified_prog.py:499-504 carries 'for i, c1 in enumerate(RS1_CLASSES)' (_spec_004: every RS1 class per andn/orn/xnor)
+      gen_bit_ratified_prog.py:499: def _spec_004(rng):
+      gen_bit_ratified_prog.py:500:     specs = []
+      gen_bit_ratified_prog.py:501:     shift = rng.randrange(len(RS2_CLASSES))
+      gen_bit_ratified_prog.py:502:     for kind in ITEM_OPS["TP-BIT-004"]:
+      gen_bit_ratified_prog.py:503:         for i, c1 in enumerate(RS1_CLASSES):
+      gen_bit_ratified_prog.py:504:             specs.append(_rs_pair(rng, "TP-BIT-004", kind, c1, RS2_CLASSES[(i + shift) % len(RS2_CLASSES)]))
+  ok    gen_bit_ratified_prog.py:563-568 carries 'for i, c1 in enumerate(RS1_CLASSES)' (_spec_007: every RS1 class per min/max/minu/maxu)
+      gen_bit_ratified_prog.py:563: def _spec_007(rng):
+      gen_bit_ratified_prog.py:564:     specs = []
+      gen_bit_ratified_prog.py:565:     shift = rng.randrange(len(RS2_CLASSES))
+      gen_bit_ratified_prog.py:566:     for kind in ITEM_OPS["TP-BIT-007"]:
+      gen_bit_ratified_prog.py:567:         for i, c1 in enumerate(RS1_CLASSES):
+      gen_bit_ratified_prog.py:568:             specs.append(_rs_pair(rng, "TP-BIT-007", kind, c1, RS2_CLASSES[(i + shift) % len(RS2_CLASSES)]))
+  ok    gen_bit_ratified_prog.py:600-603 carries 'for kind in ITEM_OPS["TP-BIT-010"] for cls in RS1_CLASSES' (_spec_010: every RS1 class per zext.h/pack/packh/packu)
+      gen_bit_ratified_prog.py:600: def _spec_010(rng):
+      gen_bit_ratified_prog.py:601:     return [Spec("TP-BIT-010", kind, operand_value(rng, cls), rs1_class=cls, tags={"cls": cls})
+      gen_bit_ratified_prog.py:602:             for kind in ITEM_OPS["TP-BIT-010"] for cls in RS1_CLASSES]
+      gen_bit_ratified_prog.py:603: 
+  ok    gen_bit_ratified_prog.py:861-866 carries 'rd_pool = [r for r in free if r != rs1] if spec.same_rs else' (_place: same_rs rd pool excludes rs1; same_all rd = rs1; rs2 = rs1; rs2 value = rs1 value)
+      gen_bit_ratified_prog.py:861:         rd_pool = [r for r in free if r != rs1] if spec.same_rs else free
+      gen_bit_ratified_prog.py:862:         rd = prev.rd if spec.same_rd else (rs1 if spec.same_all else (0 if spec.rd_x0 else rng.choice(rd_pool)))
+      gen_bit_ratified_prog.py:863:     if form == "r":
+      gen_bit_ratified_prog.py:864:         rs2 = rs1 if (spec.same_rs or spec.same_all) else rng.choice([r for r in free if r != rs1])
+      gen_bit_ratified_prog.py:865:         if spec.same_rs or spec.same_all:
+      gen_bit_ratified_prog.py:866:             rs2_val = rs1_val
+  ok    gen_bit_ratified_prog.py:861-866 carries 'rs1 if spec.same_all else (0 if spec.rd_x0 else rng.choice(r' (_place rd line)
+  ok    gen_bit_ratified_prog.py:861-866 carries 'rs2 = rs1 if (spec.same_rs or spec.same_all)' (_place rs2 line)
+  ok    gen_bit_ratified_prog.py:972-1011 carries '"op_rs1": {(k, c) for k in ITEM_OPS["TP-BIT-004"] for c in R' (wanted(): the exhaustive sets, op_rs1 and form_class)
+      gen_bit_ratified_prog.py:972: def wanted():
+      gen_bit_ratified_prog.py:973:     """Every exhaustive set an item's fire-check names: item -> key -> the keys a plan must carry (the test asserts a
+      gen_bit_ratified_prog.py:974:     matched carrier per key, the generator refuses a plan that misses one)."""
+      gen_bit_ratified_prog.py:975:     return {
+      gen_bit_ratified_prog.py:976:         "TP-BIT-002": {"op_rs1": {(k, c) for k in ITEM_OPS["TP-BIT-002"] for c in RS1_CLASSES},
+      gen_bit_ratified_prog.py:977:                        "op_rs2": {(k, c) for k in ITEM_OPS["TP-BIT-002"] for c in RS2_CLASSES},
+      gen_bit_ratified_prog.py:978:                        "addr": set(ITEM_OPS["TP-BIT-002"])},
+      gen_bit_ratified_prog.py:979:         "TP-BIT-003": {"cases": {(k, c) for k in ITEM_OPS["TP-BIT-002"] for c in ("e0000000", "all_ones", "wrap", "same", "eq")}},
+      gen_bit_ratified_prog.py:980:         "TP-BIT-004": {"op_rs1": {(k, c) for k in ITEM_OPS["TP-BIT-004"] for c in RS1_CLASSES},
+      gen_bit_ratified_prog.py:981:                        "op_rs2": {(k, c) for k in ITEM_OPS["TP-BIT-004"] for c in RS2_CLASSES},
+      gen_bit_ratified_prog.py:982:                        "result": {(k, c) for k in ITEM_OPS["TP-BIT-004"] for c in ("zero", "all_ones")}},
+      gen_bit_ratified_prog.py:983:         "TP-BIT-005": {"op_operand": {(k, c) for k in ITEM_OPS["TP-BIT-005"] for c in COUNT_CLASSES},
+      gen_bit_ratified_prog.py:984:                        "result": {(k, r) for k in ITEM_OPS["TP-BIT-005"] for r in ("r1", "r16")}},
+      gen_bit_ratified_prog.py:985:         "TP-BIT-006": {"op_single": {(k, p) for k in ITEM_OPS["TP-BIT-005"] for p in range(32)},
+      gen_bit_ratified_prog.py:986:                        "result": {("clz", "r32"), ("ctz", "r32"), ("cpop", "r32"), ("clz", "r0"), ("ctz", "r0"), ("cpop", "r0"),
+      gen_bit_ratified_prog.py:987:                                   ("clz", "r31"), ("ctz", "r31"), ("cpop", "r31")}},
+      gen_bit_ratified_prog.py:988:         "TP-BIT-007": {"op_sign": {(k, s) for k in ITEM_OPS["TP-BIT-007"] for s in ("pp", "pn", "np", "nn")},
+      gen_bit_ratified_prog.py:989:                        "op_rs1": {(k, c) for k in ITEM_OPS["TP-BIT-007"] for c in RS1_CLASSES},
+      gen_bit_ratified_prog.py:990:                        "op_rs2": {(k, c) for k in ITEM_OPS["TP-BIT-007"] for c in RS2_CLASSES}},
+      gen_bit_ratified_prog.py:991:         "TP-BIT-008": {"op_sign": {(k, s) for k in ITEM_OPS["TP-BIT-007"] for s in ("pp", "pn", "np", "nn")},
+      gen_bit_ratified_prog.py:992:                        "cases": {(k, c) for k in ITEM_OPS["TP-BIT-007"] for c in ("same", "eq", "m1_p1", "min_max")}},
+      gen_bit_ratified_prog.py:993:         "TP-BIT-009": {"form_class": {(k, c) for k in ITEM_OPS["TP-BIT-009"] for c in SEXT_CLASSES},
+      gen_bit_ratified_prog.py:994:                        "exact": {(k, x) for k in ITEM_OPS["TP-BIT-009"] for x in SEXT_EXACT[C_BASE.get(k, k)]}},
+      gen_bit_ratified_prog.py:995:         "TP-BIT-010": {"form_class": {(k, c) for k in ITEM_OPS["TP-BIT-010"] for c in RS1_CLASSES}},
+      gen_bit_ratified_prog.py:996:         "TP-BIT-014": {"pattern": set(range(16))},
+      gen_bit_ratified_prog.py:997:         "TP-BIT-015": {"cases": {"bytes_01020304", "single_bit", "rand"}},
+      gen_bit_ratified_prog.py:998:         "TP-BIT-017": {"op_index_prior": {(k, i, p) for k in SBIT_REG for i in INDEX_CLASSES for p in (0, 1)}},
+      gen_bit_ratified_prog.py:999:         "TP-BIT-018": {"op_index_prior": {(k, i, p) for k in SBIT_IMM for i in INDEX_CLASSES for p in (0, 1)},
+      gen_bit_ratified_prog.py:1000:                        "op_operand": {(k, o) for k in SBIT_IMM for o in SBIT_OPERANDS}},
+      gen_bit_ratified_prog.py:1001:         "TP-BIT-019": {"op_index": {(k, i) for k in SBIT_REG + SBIT_IMM for i in (0, 31)},
+      gen_bit_ratified_prog.py:1002:                        "cases": {("bset", "set_on_set"), ("bclr", "clr_on_clr"), ("bseti", "set_on_set"), ("bclri", "clr_on_clr")},
+      gen_bit_ratified_prog.py:1003:                        "twice": {"binv", "binvi"}, "upper": {(k, u) for k in SBIT_REG for u in UPPER_NONZERO},
+      gen_bit_ratified_prog.py:1004:                        "illegal": set(SBIT_IMM)},
+      gen_bit_ratified_prog.py:1005:         "TP-BIT-020": {"op_rs1": {(k, c) for k in ITEM_OPS["TP-BIT-020"] for c in CLMUL_CLASSES},
+      gen_bit_ratified_prog.py:1006:                        "op_rs2": {(k, c) for k in ITEM_OPS["TP-BIT-020"] for c in CLMUL_CLASSES}},
+      gen_bit_ratified_prog.py:1007:         "TP-BIT-021": {"cases": {(k, c) for k in ITEM_OPS["TP-BIT-020"] for c in ("x_0", "x_1", "ones", "lt32", "ge32")},
+      gen_bit_ratified_prog.py:1008:                        "ident": {"check"}},
+      gen_bit_ratified_prog.py:1009:         ITEM_X0: {"mnemonic": set(X0_RATIFIED) | set(X0_DRAFT)},
+      gen_bit_ratified_prog.py:1010:         ITEM_MISA: {"when": {"plain", "write", "after_write"}},
+      gen_bit_ratified_prog.py:1011:     }
+  ok    gen_bit_ratified_prog.py:1014-1019 carries 'assert not missing' (check_coverage refuses a plan missing any key)
+      gen_bit_ratified_prog.py:1014: def check_coverage(items):
+      gen_bit_ratified_prog.py:1015:     want = wanted()
+      gen_bit_ratified_prog.py:1016:     for item, sets in want.items():
+      gen_bit_ratified_prog.py:1017:         for key, keys in sets.items():
+      gen_bit_ratified_prog.py:1018:             missing = keys - set(items[item].get(key, {}))
+      gen_bit_ratified_prog.py:1019:             assert not missing, f"{item} {key}: plan misses {sorted(missing, key=str)[:4]}"
+  ok    gen_bit_ratified_prog.py:1068-1069 carries '"sh1add", "sh2add", "sh3add", "xnor")' (SWEEP_OPS, the thirteen r-form ops)
+      gen_bit_ratified_prog.py:1068: SWEEP_OPS = ("andn", "max", "maxu", "min", "minu", "orn", "pack", "packh", "packu",
+      gen_bit_ratified_prog.py:1069:              "sh1add", "sh2add", "sh3add", "xnor")
+  ok    gen_bit_ratified_prog.py:1073-1086 carries 'no_report=True' (_binv_twice_pair: first op no_report, second chain + same_rd)
+      gen_bit_ratified_prog.py:1073: def _binv_twice_pair(rng):
+      gen_bit_ratified_prog.py:1074:     """binv/binvi applied twice to the SAME rd and index (CG-BIT gen_bit_sbit_cg.cp_binv_twice).
+      gen_bit_ratified_prog.py:1075: 
+      gen_bit_ratified_prog.py:1076:     The second op restores the bit, which is why nothing else in the program produces this shape:
+      gen_bit_ratified_prog.py:1077:     every other single-bit sequence moves on to a different index or a different destination. The
+      gen_bit_ratified_prog.py:1078:     pair is chained and shares rd, so the two ops are adjacent and operate on one register.
+      gen_bit_ratified_prog.py:1079:     """
+      gen_bit_ratified_prog.py:1080:     idx = rng.randrange(32)
+      gen_bit_ratified_prog.py:1081:     c, v = _nonzero(rng)
+      gen_bit_ratified_prog.py:1082:     first = Spec("TP-BIT-018", "binvi", v, imm=idx, rs1_class=c, tags={"case": "binv_twice_first"},
+      gen_bit_ratified_prog.py:1083:                  no_report=True)
+      gen_bit_ratified_prog.py:1084:     second = Spec("TP-BIT-018", "binvi", v, imm=idx, rs1_class=c,
+      gen_bit_ratified_prog.py:1085:                   tags={"case": "binv_twice_second"}, chain=True, same_rd=True)
+      gen_bit_ratified_prog.py:1086:     return [first, second]
+  ok    gen_bit_ratified_prog.py:1073-1086 carries 'chain=True, same_rd=True' (_binv_twice_pair second op)
+  ok    gen_bit_ratified_prog.py:1089-1107 carries 'same_all=True))' (_relationship_sweep: one same_all and one same_rs spec per op)
+      gen_bit_ratified_prog.py:1089: def _relationship_sweep(rng):
+      gen_bit_ratified_prog.py:1090:     """Directed sweep of the op x register-relationship product (CG-BIT-001 cr_op_same).
+      gen_bit_ratified_prog.py:1091: 
+      gen_bit_ratified_prog.py:1092:     The allocator draws rd and rs2 independently of the op, so an op and a register relationship
+      gen_bit_ratified_prog.py:1093:     each appear across a run while their combination is left to coincidence: the all_same shapes
+      gen_bit_ratified_prog.py:1094:     that did turn up varied with any change to the draw stream. These specs pair each op with each
+      gen_bit_ratified_prog.py:1095:     relationship directly, which is what makes the cross a per-run fact rather than a lucky draw.
+      gen_bit_ratified_prog.py:1096:     """
+      gen_bit_ratified_prog.py:1097:     specs = []
+      gen_bit_ratified_prog.py:1098:     for op in SWEEP_OPS:
+      gen_bit_ratified_prog.py:1099:         item = SWEEP_ITEM[op]
+      gen_bit_ratified_prog.py:1100:         c, v = _nonzero(rng)
+      gen_bit_ratified_prog.py:1101:         specs.append(Spec(item, op, v, v, rs1_class=c, rs2_class=c,
+      gen_bit_ratified_prog.py:1102:                           tags={"case": "all_same", "sweep": True}, same_all=True))
+      gen_bit_ratified_prog.py:1103:         c, v = _nonzero(rng)
+      gen_bit_ratified_prog.py:1104:         specs.append(Spec(item, op, v, v, rs1_class=c, rs2_class=c,
+      gen_bit_ratified_prog.py:1105:                           tags={"case": "same", "sweep": True}, same_rs=True))
+      gen_bit_ratified_prog.py:1106:     return specs
+      gen_bit_ratified_prog.py:1107: 
+  ok    gen_bit_ratified_prog.py:1089-1107 carries 'same_rs=True))' (_relationship_sweep same_rs)
+  ok    gen_bit_ratified_prog.py:1148-1148 carries 'op.fillers = [] if prev is not None and prev.no_report else ' (plan(): fillers dropped after a no-report op so the pair retires consecutively)
+      gen_bit_ratified_prog.py:1148:             op.fillers = [] if prev is not None and prev.no_report else drawn
+  ok    gen_fcov_pkg.sv@7930d04:953-967 carries 'function int bit_rs1_cls' (sampler bit_rs1_cls: six exact classes, then byte_msb/half_msb, then the sign class)
+      gen_fcov_pkg.sv@7930d04:953:     function int bit_rs1_cls(logic [31:0] v);
+      gen_fcov_pkg.sv@7930d04:954:       case (v)
+      gen_fcov_pkg.sv@7930d04:955:         32'h0000_0000: return GEN_FC_BIT_ZBA_ZBB_OPS_CP_RS1_CLASS_ZERO;
+      gen_fcov_pkg.sv@7930d04:956:         32'hFFFF_FFFF: return GEN_FC_BIT_ZBA_ZBB_OPS_CP_RS1_CLASS_ALL_ONES;
+      gen_fcov_pkg.sv@7930d04:957:         32'h8000_0000: return GEN_FC_BIT_ZBA_ZBB_OPS_CP_RS1_CLASS_INT_MIN;
+      gen_fcov_pkg.sv@7930d04:958:         32'h7FFF_FFFF: return GEN_FC_BIT_ZBA_ZBB_OPS_CP_RS1_CLASS_INT_MAX;
+      gen_fcov_pkg.sv@7930d04:959:         32'h0000_0001: return GEN_FC_BIT_ZBA_ZBB_OPS_CP_RS1_CLASS_ONE;
+      gen_fcov_pkg.sv@7930d04:960:         32'hE000_0000: return GEN_FC_BIT_ZBA_ZBB_OPS_CP_RS1_CLASS_E0000000;
+      gen_fcov_pkg.sv@7930d04:961:         default: begin
+      gen_fcov_pkg.sv@7930d04:962:           if (v[7] && !v[15]) return GEN_FC_BIT_ZBA_ZBB_OPS_CP_RS1_CLASS_BYTE_MSB;
+      gen_fcov_pkg.sv@7930d04:963:           if (v[15] && !v[7]) return GEN_FC_BIT_ZBA_ZBB_OPS_CP_RS1_CLASS_HALF_MSB;
+      gen_fcov_pkg.sv@7930d04:964:           return v[31] ? GEN_FC_BIT_ZBA_ZBB_OPS_CP_RS1_CLASS_NEG_RAND : GEN_FC_BIT_ZBA_ZBB_OPS_CP_RS1_CLASS_POS_RAND;
+      gen_fcov_pkg.sv@7930d04:965:         end
+      gen_fcov_pkg.sv@7930d04:966:       endcase
+      gen_fcov_pkg.sv@7930d04:967:     endfunction
+  ok    gen_fcov_pkg.sv@7930d04:953-967 carries 'return v[31] ? GEN_FC_BIT_ZBA_ZBB_OPS_CP_RS1_CLASS_NEG_RAND' (sampler bit_rs1_cls default case)
+  ok    gen_fcov_pkg.sv@7930d04:988-989 carries 'GEN_FC_BIT_ZBA_ZBB_OPS_CP_SAME_REGS_RS1_EQ_RS2' (sampler cp_same_regs: all_same needs rd != 0; rs1_eq_rs2 needs rs1 != rd)
+      gen_fcov_pkg.sv@7930d04:988:       if (rs1 == rs2 && rs2 == rd && rd != 0) return GEN_FC_BIT_ZBA_ZBB_OPS_CP_SAME_REGS_ALL_SAME;
+      gen_fcov_pkg.sv@7930d04:989:       if (rs1 == rs2 && rs1 != rd) return GEN_FC_BIT_ZBA_ZBB_OPS_CP_SAME_REGS_RS1_EQ_RS2;
+  control: the same 19 generator citations read against the PREVIOUS generator (HEAD's blob 14405978b07d): 6 refused
+      refused at :861-866: 'rd_pool = [r for r in free if r != rs1] if spec.same_rs else free'
+      refused at :861-866: 'rs1 if spec.same_all else (0 if spec.rd_x0 else rng.choice(rd_pool))'
+      refused at :1014-1019: 'assert not missing'
+      refused at :1068-1069: '"sh1add", "sh2add", "sh3add", "xnor")'
+      refused at :1073-1086: 'no_report=True'
+      refused at :1148-1148: 'op.fillers = [] if prev is not None and prev.no_report else drawn'
+  ok    the citation check refuses against the previous version of the file (it is sensitive to the landing's line moves)
+
+## F. SCRIPTS FOLDED IN (so this log is reproducible without the scratchpad)
+--- gen_report_slice_check.py sha256 20043e2e7e13dc331f0a593bcdac6d0ebac7f2bd5ca6486592e714545cacc4b9 ---
+"""Every op's report slice must be its OWN words: reports[rep : rep+len(expects)] == expects.
+
+The check that would have caught the binv-pair regression without a simulation. An op that stops
+storing a word while still declaring one makes every later slice read its neighbour's value, and the
+entry's fire checks then compare one op's expectation against another op's result.
+
+Usage: python3 gen_report_slice_check.py [--seeds 40]. Exit 0 when every slice matches.
+"""
+import argparse, sys
+from dv.auto_dv.tests.gen_programs import gen_bit_ratified_prog as prog
+
+ap = argparse.ArgumentParser(); ap.add_argument("--seeds", type=int, default=40)
+a = ap.parse_args()
+bad = []
+for seed in range(1, a.seeds + 1):
+    p = prog.plan(seed)
+    for op in p.ops:
+        got = p.reports[op.rep:op.rep + len(op.expects)]
+        if got != op.expects:
+            bad.append(f"seed {seed} op {op.idx} {op.kind}: slice {[hex(x) for x in got]} "
+                       f"is not its own {[hex(x) for x in op.expects]}")
+print(f"seeds {a.seeds}, ops checked, mismatching slices {len(bad)}")
+for b in bad[:4]:
+    print("  " + b)
+print("REPORT-SLICE: " + ("PASS" if not bad else "FAIL"))
+sys.exit(1 if bad else 0)
+--- end gen_report_slice_check.py ---
+--- gen_binv_pair_check.py sha256 686bf130af6e6a857543479733eb8fd2c37e478ee1dfbda47de00695614f4386 ---
+"""Assert the binv-twice pair retires as CONSECUTIVE records, which is what its bin requires.
+
+The sampler's rule is over consecutive retired records: gen_fcov_pkg.sv:1573 sets `twice` only when the
+previous sbit record was a binv on the same rd and index, and its caller at :2578 clears that state on
+ANY record that is not an sbit op. So one instruction between the two binvi ops -- the first op's own
+report store, in the emitted program -- defeats the bin.
+
+This reads the EMITTED TEXT, not the plan: the plan says the pair is adjacent and the plan is not what
+retires. Usage: python3 gen_binv_pair_check.py [--seeds 40]. Exit 0 when every seed's pair is
+consecutive, 1 otherwise.
+"""
+import argparse
+import re
+import sys
+
+from dv.auto_dv.tests.gen_programs import gen_bit_ratified_prog as prog
+
+INSN = re.compile(r"^\s{2}(?!#)(\S+)")          # an emitted instruction line, not a comment
+BINVI = re.compile(r"^\s+binvi\s+x(\d+),\s*x(\d+),\s*(\d+)\s*$")
+
+
+def pair_of(text):
+    """The (index, rd, idx) of each binvi in the emitted instruction stream, comments dropped."""
+    out = []
+    n = 0
+    for line in text.split("\n"):
+        if not line.startswith("  ") or line.lstrip().startswith("#") or not line.strip():
+            continue
+        n += 1
+        m = BINVI.match(line)
+        if m:
+            out.append((n, int(m.group(1)), int(m.group(3))))
+    return out
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--seeds", type=int, default=40)
+    a = ap.parse_args()
+    fails, checked = [], 0
+    for seed in range(1, a.seeds + 1):
+        p = prog.plan(seed)
+        pair = [op for op in p.ops if op.tags.get("case", "").startswith("binv_twice")]
+        if len(pair) != 2:
+            fails.append(f"seed {seed}: expected two binv_twice ops in the plan, found {len(pair)}")
+            continue
+        first, second = pair
+        if not (first.rd == second.rd and first.imm == second.imm):
+            fails.append(f"seed {seed}: the pair is not on one rd and index: {first.rd}/{first.imm} vs {second.rd}/{second.imm}")
+            continue
+        text = prog.emit(p)
+        seen = [t for t in pair_of(text) if t[1] == first.rd and t[2] == first.imm]
+        checked += 1
+        if len(seen) < 2:
+            fails.append(f"seed {seed}: fewer than two emitted binvi on x{first.rd} index {first.imm}")
+            continue
+        # the two the plan means are the adjacent-in-plan ones; find the closest emitted gap
+        gaps = [seen[i + 1][0] - seen[i][0] for i in range(len(seen) - 1)]
+        if min(gaps) != 1:
+            fails.append(f"seed {seed}: the pair on x{first.rd} index {first.imm} is {min(gaps)} instructions apart, "
+                         f"not consecutive; the sampler's rule needs no record between them")
+    print(f"seeds {a.seeds}, pairs checked {checked}, failures {len(fails)}")
+    for f in fails[:10]:
+        print("  " + f)
+    print("BINV-PAIR-CONSECUTIVE: " + ("PASS" if not fails else "FAIL"))
+    return 1 if fails else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
+--- end gen_binv_pair_check.py ---
+--- gen_fu_binv_pairfix_measure.py sha256 ef96b9aa310c1d53a78d4e58292fa4a5afd0ef6b5eb1db0cc3b67c3f2a1fcfaf ---
+"""Build gen_fu_binv_pairfix.log: the binv-pair fix's transfer check, its two model-level reds, and the
+reading of the passing block's own per-run reports that the bit_ratified re-render rests on.
+
+Every figure is re-derived here from the artifacts named; nothing is copied from another record. Run from
+the clone root with the clone's venv python. Exit 0 only when every expectation below holds.
+"""
+import hashlib, os, re, subprocess, sys, datetime, filecmp
+from pathlib import Path
+
+CLONE = Path("/localdev/fzhang/ws/ibex-challenge")
+S = Path("/tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/test_writer_r3")
+GEN_REL = "dv/auto_dv/tests/gen_programs/gen_bit_ratified_prog.py"
+ROOT_RED = Path("/proj_soc/user_dev/fzhang/ibex_dv_probe/binvfix")      # block 1's built root, pin 557a4812
+ROOT_GREEN = Path("/proj_soc/user_dev/fzhang/ibex_dv_probe/binvfix2")   # block 2's built root, pin 70f31808
+ROOT_RECON = S / "slicered/inter"                                        # the reconstruction the earlier red ran on
+ROOT_HEAD = S / "handA/head_tests"                                       # git archive HEAD dv/auto_dv: the committed pre-fix generator with its imports
+PIN_HEAD = "14405978b07de2a4c5a7f032a9f2d78d41ff72c0af19ac213f5f7b5a36ec4321"
+OUT2 = Path("/proj_soc/user_dev/fzhang/ibex_dv_out/regress_binv3")     # block 2's runs
+EVID = CLONE / "dv/auto_dv/evidence/gen_bit_ratified_pairfix"
+SLICE = S / "slicered/gen_report_slice_check.py"
+PAIR = S / "binvpair/gen_binv_pair_check.py"
+CHECKER = CLONE / "ci/check_fcov_expectations.py"
+PIN_RED = "557a4812175aa171d16eaf52dc6f5a27ef99ac500da6a56e2427f5e0e7066bd0"
+PIN_GREEN = "70f318080711d7845c88341a012461bd21d57695536daf2db33189a675a3b8d0"
+PIN_RECON = "f3116177bc2c473f8fd2252471a3f97c8b81d660116f4e32be778de4e142a136"
+DECLARED = 617
+
+sys.path.insert(0, str(CLONE / "dv/auto_dv/tools"))
+import gen_read_keyed  # noqa: E402  the reviewed independent reader, imported not copied
+
+fails = []
+def expect(cond, msg):
+    print(("  ok    " if cond else "  FAIL  ") + msg)
+    if not cond:
+        fails.append(msg)
+
+def sha(p): return hashlib.sha256(Path(p).read_bytes()).hexdigest()
+def git(*a): return subprocess.check_output(["git", "-C", str(CLONE), *a], text=True)
+def run(cmd, env_root):
+    env = dict(os.environ, PYTHONPATH=str(env_root))
+    r = subprocess.run(cmd, cwd=str(S / "handA"), env=env, text=True, capture_output=True)
+    return r.returncode, (r.stdout + r.stderr).rstrip("\n")
+
+head = git("rev-parse", "HEAD").strip()
+now = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+print(f"# gen_fu_binv_pairfix: the binv-pair fix's transfer check, its model-level reds, and the passing block read bin by bin")
+print(f"written {now} by the Test Writer; clone HEAD {head[:7]} ({head}); python {sys.version.split()[0]} ({sys.executable})")
+print(f"tools: ci/check_fcov_expectations.py sha256 {sha(CHECKER)[:12]} (the flow's own checker, the mechanism that decides a run);")
+print(f"       dv/auto_dv/tools/gen_read_keyed.py sha256 {sha(CLONE/'dv/auto_dv/tools/gen_read_keyed.py')[:12]} (the independent reader, the control)")
+print(f"block retention: dv/auto_dv/evidence/gen_bit_ratified_pairfix/ (commit aa75ecb; block 2 is the entry's authority per the DV Lead's rule);")
+print(f"                 both blocks' roots are archives of 4017573 with the generator the only changed file; block 2 out {OUT2}")
+print()
+
+print("## A. TRANSFER CHECK: the candidate generator is byte for byte the one block 2 ran")
+cand = CLONE / GEN_REL
+h_cand, h_green, h_red = sha(cand), sha(ROOT_GREEN / GEN_REL), sha(ROOT_RED / GEN_REL)
+print(f"  candidate  {GEN_REL}  sha256 {h_cand}")
+print(f"  block 2 root {ROOT_GREEN}  sha256 {h_green}")
+print(f"  block 1 root {ROOT_RED}  sha256 {h_red}")
+expect(h_cand == PIN_GREEN, "candidate hashes to the pin 70f31808 the index names for block 2")
+expect(h_green == PIN_GREEN and filecmp.cmp(cand, ROOT_GREEN / GEN_REL, shallow=False), "block 2's built root holds the same bytes (cmp)")
+expect(h_red == PIN_RED, "block 1's built root hashes to the pin 557a4812 the index names for block 1")
+idx = (EVID / "gen_index.md").read_text()
+expect(PIN_RED in idx and PIN_GREEN in idx, "both pins appear verbatim in the retained index gen_index.md")
+committed_now = git("show", f"HEAD:{GEN_REL}")
+h_head = hashlib.sha256(committed_now.encode()).hexdigest()
+print(f"  HEAD blob  {h_head[:12]}  (the pre-fix committed generator; the fix is the diff HEAD -> candidate)")
+expect(h_head != h_cand, "HEAD's blob differs from the candidate (the hand carries a change)")
+dstat = subprocess.run(["git", "-C", str(CLONE), "diff", "--numstat", "HEAD", "--", GEN_REL], text=True, capture_output=True).stdout.strip()
+print(f"  git diff --numstat HEAD -- {GEN_REL}: {dstat}")
+print()
+
+print("## B. THE BLOCK'S RUN SET, re-derived from the run directories, not from the index")
+runs = sorted(OUT2.glob("runs/gen_test_bit_ratified_*"))
+seeds_runs = sorted(int(r.name.rsplit("_", 1)[1]) for r in runs)
+seeds_file = sorted(int(x) for x in (EVID / "gen_pairfix_seeds.txt").read_text().split())
+expect(len(runs) == 40, f"40 run directories ({len(runs)})")
+expect(seeds_runs == seeds_file, "the run seeds equal gen_pairfix_seeds.txt (the wave's forty bit_ratified seeds)")
+roots = set()
+passes = fcov_pass = hit617 = 0
+for r in runs:
+    roots |= set(re.findall(r"ibex_dv_probe/(\w+)", (r / "run_cmd.sh").read_text()))
+    res = (r / "result.yaml").read_text()
+    passes += bool(re.search(r"^verdict: PASS$", res, re.M))
+    fc = (r / "fcov_check.log").read_text().splitlines()
+    fcov_pass += (fc[-1].startswith("FCOV-EXPECTATION: PASS") and f"all {DECLARED} declared bins hit" in fc[-1])  # the checker's dash is not ASCII
+    hit617 += (sum(1 for l in fc if " = HIT (" in l) == DECLARED and not any(" = UNHIT" in l or "MISSING-FROM-REPORT" in l for l in fc))
+expect(roots == {"binvfix2"}, f"every run_cmd.sh names the block-2 root only ({sorted(roots)})")
+expect(passes == 40, f"result.yaml verdict PASS in {passes} of 40")
+expect(fcov_pass == 40, f"fcov_check.log ends with the checker's PASS line for all {DECLARED} declared bins in {fcov_pass} of 40")
+expect(hit617 == 40, f"exactly {DECLARED} '= HIT' lines and no UNHIT or MISSING line in {hit617} of 40 (the census 'declared 617 | EVERY 617' re-derived)")
+print()
+
+print("## C. REPORT-SLICE CHECK (the mapping red): every op's report slice must be its own words")
+print("  script scratchpad/test_writer_r3/slicered/gen_report_slice_check.py, sha256", sha(SLICE)[:12], "(text folded in at the end of this log)")
+for label, root, pin, want in [("HEAD blob 14405978b07d (pre-fix, committed at 4017573)", ROOT_HEAD, PIN_HEAD, 0), ("block 1 EXACT bytes", ROOT_RED, PIN_RED, 1),
+                               ("reconstruction the earlier red ran on", ROOT_RECON, PIN_RECON, 1), ("block 2 root", ROOT_GREEN, PIN_GREEN, 0), ("candidate (clone tree)", CLONE, PIN_GREEN, 0)]:
+    h = sha(root / GEN_REL)
+    rc, out = run([sys.executable, str(SLICE), "--seeds", "40"], root)
+    print(f"  --- {label}: {root}/{GEN_REL} sha256 {h[:12]} -> exit {rc}")
+    for l in out.splitlines(): print("      " + l)
+    expect(h == pin, f"{label}: generator hashes to {pin[:12]}")
+    verdict = "REPORT-SLICE: " + ("FAIL" if want else "PASS")
+    expect(rc == want and verdict in out and "Traceback" not in out, f"{label}: exit {want} and the script's own line '{verdict}' (a traceback is not a red)")
+print()
+
+print("## D. PAIR-CONSECUTIVE CHECK: the two binvi retire with no record between them (read from the emitted text)")
+print("  script scratchpad/test_writer_r3/binvpair/gen_binv_pair_check.py, sha256", sha(PAIR)[:12], "(text folded in at the end of this log)")
+print("  the 2x2 with Section C: HEAD's blob maps every report to its op and places the first binvi's store between the pair (pair RED, slice GREEN);")
+print("  block 1 removed that store and broke the report index (pair GREEN, slice RED); block 2 keeps the pair consecutive and the index whole (both GREEN)")
+for label, root, want in [("HEAD blob 14405978b07d (pre-fix, committed at 4017573)", ROOT_HEAD, 1), ("block 1 EXACT bytes", ROOT_RED, 0), ("block 2 root", ROOT_GREEN, 0), ("candidate (clone tree)", CLONE, 0)]:
+    rc, out = run([sys.executable, str(PAIR), "--seeds", "40"], root)
+    print(f"  --- {label}: sha256 {sha(root/GEN_REL)[:12]} -> exit {rc}")
+    for l in out.splitlines()[:6]: print("      " + l)
+    verdict = "BINV-PAIR-CONSECUTIVE: " + ("FAIL" if want else "PASS")
+    expect(rc == want and verdict in out and "Traceback" not in out, f"{label}: exit {want} and the script's own line '{verdict}' (a traceback is not a red)")
+expect(sha(ROOT_HEAD / GEN_REL) == PIN_HEAD, "the HEAD-blob root holds the committed generator 14405978b07d")
+print()
+
+print("## E. THE READING OF BLOCK 2's FORTY REPORTS for every not_hit line of the committed manifest at HEAD")
+man = git("show", f"HEAD:dv/auto_dv/fcov_expectations/gen_test_bit_ratified.fcov.yaml")
+raw_markers = sum(1 for l in man.splitlines() if l.startswith("# not_hit "))
+nh = re.findall(r"^# not_hit (\S+): (.*)$", man, re.M)
+expect(len(nh) == raw_markers == 37, f"37 not_hit lines at HEAD, parsed {len(nh)} of {raw_markers} raw markers (the match count is asserted, not assumed)")
+klass = {b: ("stimulus" if why.startswith("stimulus:") else "seed-dependent" if why.startswith("seed-dependent:") else "OTHER") for b, why in nh}
+expect(set(klass.values()) <= {"stimulus", "seed-dependent"}, f"every reason opens with its class token ({sorted(set(klass.values()))})")
+synth = S / "handA/synthetic_not_hit_37.fcov.yaml"
+synth.write_text("test: gen_test_bit_ratified_not_hit_reading\nowner: test-writer\nbins:\n" + "".join(f"  - {b}\n" for b, _ in nh))
+print(f"  synthetic manifest {synth.name} sha256 {sha(synth)[:12]}: the 37 bins, read with the flow's checker against each run's urgReport_variable_form")
+hits = {b: [] for b, _ in nh}
+agree = differ = 0
+for r in runs:
+    rep = next(r.glob("fcovexp_*/urgReport_variable_form"))
+    p = subprocess.run([sys.executable, str(CHECKER), "--manifest", str(synth), "--report-dir", str(rep)], text=True, capture_output=True)
+    got = dict(re.findall(r"^FCOV-EXPECTATION: (\S+) = (\S+ \(count=[^)]*\))$", p.stdout, re.M))
+    expect(len(got) == 37, f"{r.name}: the checker reported all 37 bins") if len(got) != 37 else None
+    mine = gen_read_keyed.flatten(gen_read_keyed.parse_report(rep / "grpinfo.txt"))
+    for b in hits:
+        m = re.match(r"(HIT|UNHIT|MISSING-FROM-REPORT) \(count=(\S+)\)", got[b])
+        cnt = int(m.group(2)) if m.group(1) == "HIT" else 0
+        hits[b].append(cnt)
+        if str(mine.get(b, 0)) == m.group(2) or (m.group(1) != "HIT" and mine.get(b, 0) == 0): agree += 1
+        else: differ += 1
+expect(differ == 0, f"the independent reader agrees with the checker on every (run, bin): agree {agree}, differ {differ}")
+print()
+print(f"  {'bin':<58} {'class':<15} {'hit at':>7}  count range   verdict")
+declarable, stay = [], []
+for b, _ in nh:
+    n = sum(1 for c in hits[b] if c > 0)
+    rng = f"{min(hits[b])}..{max(hits[b])}" if n else "0"
+    v = "DECLARABLE (every seed)" if n == 40 else f"stays not_hit, {n} of 40"
+    (declarable if n == 40 else stay).append((b, n))
+    print(f"  {b:<58} {klass[b]:<15} {n:>3}/40  {rng:<12}  {v}")
+print()
+print(f"  DECLARABLE at 40 of 40: {len(declarable)}   staying not_hit with their count: {len(stay)}")
+shapes = re.findall(r"^(gen_\S+)\s+(\d+)/40\s+(\d+)/40\s+(\S+)$", (EVID / "gen_pairfix_shapes.txt").read_text(), re.M)
+expect(len(shapes) == 24, f"gen_pairfix_shapes.txt holds 24 shape rows ({len(shapes)})")
+mismatch = [(b, pf, sum(1 for c in hits[b] if c > 0)) for b, pf, _, _ in shapes if int(pf) != sum(1 for c in hits[b] if c > 0)]
+expect(not mismatch, f"my reading of the 24 shapes equals the retained shapes table seed count for seed count ({mismatch or 'all 24 agree'})")
+stim = [b for b, _ in nh if klass[b] == "stimulus"]
+expect(sorted(stim) == sorted(b for b, *_ in shapes), "the 24 stimulus-class lines are exactly the 24 shapes of the retained table")
+expect(all(n == 40 for b, n in declarable if klass[b] == "stimulus") and sum(1 for b, n in declarable if klass[b] == "stimulus") == 24, "all 24 shapes are at 40 of 40")
+cross_legs_of_all_same = [b for b, _ in nh if b.endswith("_all_same") and ".cr_op_same." in b]
+n_all_same = sum(1 for c in hits["gen_bit_zba_zbb_ops_cg.cp_same_regs.all_same"] if c > 0)
+print(f"  cross-operand consistency: cp_same_regs.all_same {n_all_same}/40 against its {len(cross_legs_of_all_same)} cr_op_same *_all_same legs in this list, "
+      f"min over legs {min(sum(1 for c in hits[b] if c > 0) for b in cross_legs_of_all_same)}/40 (an operand bin is hit in every sample that hits one of its cross legs)")
+print()
+print("## G. WHAT THE RE-RENDER PRODUCES, rendered by the manifest generator from the edited test module and compared to the tree")
+MAN = CLONE / "dv/auto_dv/fcov_expectations/gen_test_bit_ratified.fcov.yaml"
+TESTMOD = CLONE / "dv/auto_dv/tests/gen_test_bit_ratified.py"
+r = subprocess.run([sys.executable, str(CLONE / "dv/auto_dv/tests/gen_fcov_manifest.py"), "--test-module", str(TESTMOD), "--test", "gen_test_bit_ratified"],
+                   cwd=str(CLONE), env={k: v for k, v in os.environ.items() if k != "PYTHONPATH"}, text=True, capture_output=True)
+rendered = "".join(l for l in r.stdout.splitlines(True) if not l.startswith("# dropped "))
+dropped = sum(1 for l in r.stdout.splitlines() if l.startswith("# dropped "))
+tree = MAN.read_text()
+expect(r.returncode == 0, f"gen_fcov_manifest.py --test-module exits 0 ({r.returncode}); {dropped} bins dropped by the manifest rule (printed, not written)")
+expect(rendered == tree, "the rendered text equals the tree's manifest byte for byte (zero render diff)")
+def census(text):
+    bins = re.findall(r"^  - (\S+)$", text, re.M)
+    return len(bins), sum(1 for b in bins if ".cr_" in b), sum(1 for b in bins if ".cp_" in b), sum(1 for l in text.splitlines() if l.startswith("# not_hit "))
+new, old = census(tree), census(man)
+print(f"  HEAD manifest: {old[0]} declared ({old[2]} coverpoint, {old[1]} cross), {old[3]} not_hit lines")
+print(f"  re-rendered  : {new[0]} declared ({new[2]} coverpoint, {new[1]} cross), {new[3]} not_hit lines; sha256 {sha(MAN)[:12]}, {MAN.stat().st_size} bytes")
+expect(new[0] == old[0] + 37 and new[3] == 0, "617 + 37 = 654 declared, no not_hit line left")
+expect(new[1] - old[1] == 35 and new[2] - old[2] == 2, "the 37 are 35 cross bins and 2 coverpoint bins (cp_binv_twice.yes, cp_same_regs.all_same)")
+sys.path.insert(0, str(CLONE / "dv/auto_dv/tests"))
+import gen_fcov_manifest as gfm  # noqa: E402
+built, not_built, group = gfm.module_items(str(TESTMOD))
+expect(gfm.module_items.last_not_hit == {} and list(not_built) == ["TP-BIT-001"], f"the test module's bins_not_hit is empty and not_built is TP-BIT-001 alone ({group})")
+added = sorted(set(re.findall(r"^  - (\S+)$", tree, re.M)) - set(re.findall(r"^  - (\S+)$", man, re.M)))
+expect(added == sorted(b for b, _ in nh), "the 37 bins added to the declared set are exactly the 37 not_hit lines read in Section E")
+print()
+print("## H. THE CITED LINES, printed from the tree that lands (the DV Lead's condition: a clause cites lines of the COMMITTED file)")
+print("  generator: the candidate in the assembled tree, byte-equal to the blob this landing commits (Section A); sampler: HEAD's gen_fcov_pkg.sv blob via git show")
+CITES = [  # (label, source, lo, hi, token that must appear inside the cited range)
+    ("Spec dataclass, rd_x0 default False", "gen", 369, 386, "rd_x0: bool = False"),
+    ("_plain_rand: rejects the six exact values and bit 7 != bit 15", "gen", 270, 276, "def _plain_rand"),
+    ("_plain_rand body", "gen", 270, 276, "((v >> 7) & 1) == ((v >> 15) & 1)"),
+    ("operand_value neg_rand -> _plain_rand over the bit-31-set range", "gen", 319, 320, '_plain_rand(rng, 0x80000000, 1 << 32)'),
+    ("_spec_002: every RS1 class per shNadd op", "gen", 455, 460, "for i, c1 in enumerate(RS1_CLASSES)"),
+    ("_spec_004: every RS1 class per andn/orn/xnor", "gen", 499, 504, "for i, c1 in enumerate(RS1_CLASSES)"),
+    ("_spec_007: every RS1 class per min/max/minu/maxu", "gen", 563, 568, "for i, c1 in enumerate(RS1_CLASSES)"),
+    ("_spec_010: every RS1 class per zext.h/pack/packh/packu", "gen", 600, 603, 'for kind in ITEM_OPS["TP-BIT-010"] for cls in RS1_CLASSES'),
+    ("_place: same_rs rd pool excludes rs1; same_all rd = rs1; rs2 = rs1; rs2 value = rs1 value", "gen", 861, 866, "rd_pool = [r for r in free if r != rs1] if spec.same_rs else free"),
+    ("_place rd line", "gen", 861, 866, "rs1 if spec.same_all else (0 if spec.rd_x0 else rng.choice(rd_pool))"),
+    ("_place rs2 line", "gen", 861, 866, "rs2 = rs1 if (spec.same_rs or spec.same_all)"),
+    ("wanted(): the exhaustive sets, op_rs1 and form_class", "gen", 972, 1011, '"op_rs1": {(k, c) for k in ITEM_OPS["TP-BIT-004"] for c in RS1_CLASSES}'),
+    ("check_coverage refuses a plan missing any key", "gen", 1014, 1019, "assert not missing"),
+    ("SWEEP_OPS, the thirteen r-form ops", "gen", 1068, 1069, '"sh1add", "sh2add", "sh3add", "xnor")'),
+    ("_binv_twice_pair: first op no_report, second chain + same_rd", "gen", 1073, 1086, "no_report=True"),
+    ("_binv_twice_pair second op", "gen", 1073, 1086, "chain=True, same_rd=True"),
+    ("_relationship_sweep: one same_all and one same_rs spec per op", "gen", 1089, 1107, "same_all=True))"),
+    ("_relationship_sweep same_rs", "gen", 1089, 1107, "same_rs=True))"),
+    ("plan(): fillers dropped after a no-report op so the pair retires consecutively", "gen", 1148, 1148, "op.fillers = [] if prev is not None and prev.no_report else drawn"),
+    ("sampler bit_rs1_cls: six exact classes, then byte_msb/half_msb, then the sign class", "fcov", 953, 967, "function int bit_rs1_cls"),
+    ("sampler bit_rs1_cls default case", "fcov", 953, 967, "return v[31] ? GEN_FC_BIT_ZBA_ZBB_OPS_CP_RS1_CLASS_NEG_RAND"),
+    ("sampler cp_same_regs: all_same needs rd != 0; rs1_eq_rs2 needs rs1 != rd", "fcov", 988, 989, "GEN_FC_BIT_ZBA_ZBB_OPS_CP_SAME_REGS_RS1_EQ_RS2"),
+]
+gen_lines = cand.read_text().splitlines()
+fcov_lines = git("show", "HEAD:dv/auto_dv/env/gen_fcov_pkg.sv").splitlines()
+print(f"  gen_bit_ratified_prog.py sha256 {sha(cand)[:12]} ({len(gen_lines)} lines); gen_fcov_pkg.sv at HEAD {head[:7]} ({len(fcov_lines)} lines)")
+shown = set()
+for label, src, lo, hi, token in CITES:
+    lines = gen_lines if src == "gen" else fcov_lines
+    name = "gen_bit_ratified_prog.py" if src == "gen" else f"gen_fcov_pkg.sv@{head[:7]}"
+    seg = lines[lo - 1:hi]
+    hit = any(token in l for l in seg)
+    expect(hit, f"{name}:{lo}-{hi} carries '{token[:60]}' ({label})")
+    key = (src, lo, hi)
+    if key not in shown:
+        shown.add(key)
+        for i, l in enumerate(seg, lo):
+            print(f"      {name}:{i}: {l.rstrip()[:150]}")
+# the control the DV Lead asked for: the same list against the PREVIOUS generator (HEAD's blob) must refuse somewhere,
+# or the check could not tell a moved line from a standing one
+head_lines = (ROOT_HEAD / GEN_REL).read_text().splitlines()
+refused = [(lo, hi, token) for label, src, lo, hi, token in CITES if src == "gen" and not any(token in l for l in head_lines[lo - 1:hi])]
+print(f"  control: the same {sum(1 for c in CITES if c[1] == 'gen')} generator citations read against the PREVIOUS generator (HEAD's blob 14405978b07d): {len(refused)} refused")
+for lo, hi, token in refused: print(f"      refused at :{lo}-{hi}: '{token[:70]}'")
+expect(len(refused) > 0, "the citation check refuses against the previous version of the file (it is sensitive to the landing's line moves)")
+print()
+print("## F. SCRIPTS FOLDED IN (so this log is reproducible without the scratchpad)")
+for p in (SLICE, PAIR, Path(__file__).resolve()):
+    print(f"--- {p.name} sha256 {sha(p)} ---")
+    print(p.read_text().rstrip("\n"))
+    print(f"--- end {p.name} ---")
+print()
+print("RESULT: " + ("PASS, every expectation above holds" if not fails else f"FAIL, {len(fails)} expectation(s) missed: " + "; ".join(fails)))
+sys.exit(1 if fails else 0)
+--- end gen_fu_binv_pairfix_measure.py ---
+
+RESULT: PASS, every expectation above holds
