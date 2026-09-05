@@ -2448,3 +2448,21 @@ owner's review and is not queued.
   the served figures; the readme bullets cite them with the caveat that their quoted stamps and figures are not re-derivable from the commit until
   the results manifests are retained (runtime-2's next records touch), unlike rtl-arch-009 whose served block carries verdict, stamps, return
   codes and the six gated rows.
+
+### LOG-097 addendum 3 (02:38Z, Orchestrator): the DV Lead's criterion ruling for the functional-coverage gate cell (recorded so plans can cite it)
+Ruling (DV Lead, 02:15Z, for the rt39 flow fix; the plan-set touch carries the same text): the gate's functional condition is a BIN percentage,
+hit bins in gate scope over declared bins in gate scope, with the witness ledger covergroup (gen_wit_cycle_clause_cg / CG-WIT-001) out of
+BOTH terms; for team round 1 that is 3477/4048 = 85.89. Authority: DV_prompt.txt:112-113 ("at least 80% of declared bins hit"); excluding the
+ledger is a scope decision of the kind DV_prompt.txt:104-105 authorizes for test equipment, and both terms remain URG's own bin counts, so
+DV_prompt.txt:110 ("the URG report is the number") holds. The two other quantities the round-1 record carries are wrong for the criterion's
+words: 78.29 is a weighted mean of per-covergroup scores (gen_cov_report.py:230-239) with no bin denominator, so it can move with no bin
+changing state; 81.47 puts the ledger's 220 clauses in the denominator although they contributed nothing to the numerator (gen_groups.txt:11,
+0 covered of 220; gen_regress_manifest.yaml "witnessed clauses: 0 of 220"). Emit the percent with its denominator and a scope string naming
+what is in and out, the same string in the summary header and the dashboard; remove the content-dependent fallback at gen_cov_report.py:138;
+both terms come from ONE filtered covergroup list (a denominator-only fix passes the round-1 number by accident, since the ledger scored 0,
+and is wrong the first time a witnessed clause is hit: REQUEST-CHANGES if seen); the stored round-1 figure is restated 81.47 -> 85.89
+(3477/4048) in the same landing that changes the definition, in the index entry beside the stored value (the collected files stay
+byte-identical per LOG-092), so no round-to-round delta spans two rules. Not ruled: whether the functional gate PASSED; DV_prompt.txt:112-115
+requires a second condition, traceability completeness confirmed by a reviewer other than the author, which is a separate finding.
+Ruling for rt39 item five (replan review 2cfb6fd M-2): the eight committed full_exclusions gzip archives are not converted; the reproducible
+gzip shape (GzipFile(filename="", mtime=0)) applies to files written from now on.
