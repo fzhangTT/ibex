@@ -242,3 +242,14 @@ Medium, three Lows).
   grant case, the readers after the change, the two design bounds against the LSU and the icache, the classifier
   term's unreachability, the verbatim quotation, the manifest rows, the resolved old line numbers, the mutation
   absent from the tree). rev61 did not run the code; every measured figure in this file is mine.
+
+## Corrigendum to Section 5 M-1 (appended after the HOLD of 2026-09-05; Sections 1-6 unchanged)
+
+M-1's evidence sentence reads "rtl-arch's two wave runs: 70199 sva_ibus_rvalid_outstanding fires beside the same count of
+sva_rvalid_legal in my irqchk record". That mixes two runs of seed 1207954461: 70199 is rtl-arch's count on the 4017573 wave
+run (gen_ibus_props_irq_signature_reading.md:51-54, where sva_rvalid_legal is not tabulated), and the equal pair
+70208 = 70208 (sva_rvalid_legal beside sva_ibus_rvalid_outstanding) is my own run on the 9c7f8f6 build
+(gen_critic_irq_checker_fix.md Section 3 and its corrigendum). The inference the sentence carries, that the interface's
+counter and the properties' counter are the same computation, stands on my run's equal pair and on round 0's equal
+attempt counts; the wave run's 70199 is not part of it. Nothing else in M-1 moves; the 71 fires and the dead cover were
+measured on my own builds (Section 2's table).
