@@ -173,7 +173,8 @@ package gen_fcov_pkg;
     // of that record. The pin levels come from the irq agent's own events, kept here per line.
     gen_irq_entry_cg irq_entry_cg;
     int unsigned n_irq_entry = 0;
-    int unsigned n_irq_mret_masked = 0;   // mrets that mask a pending enabled line: the one case with no bin
+    int unsigned n_irq_mret_masked = 0;
+    int unsigned n_irq_mret_entry = 0, n_irq_mret_newbin_entry = 0;   // mrets that mask a pending enabled line: the one case with no bin
     bit irq_view_ok = 0;   // this record had a published view sample
     int unsigned n_irq_entry_rel = 0;   // second samples carrying only the pre/post mip relation
     gen_rvfi_txn irq_last_t; bit irq_have_t = 0;      // the record the state below belongs to
@@ -440,7 +441,11 @@ package gen_fcov_pkg;
     // cycle. The mret arm samples on EVERY mret, not only one that changes MIE: the plan's mret_mpie0_pending
     // bin is an mret that leaves MIE at 0, which is not a change.
     function void irq_mie_global_sample(gen_model_state st);
-      bit was  = irq_mstatus_prev[ibex_pkg::CSR_MSTATUS_MIE_BIT];
+      // An entry record's pre-state is what the ENTRY left, not the interrupted instruction's: a trap
+      // clears MIE unconditionally (rtl/ibex_cs_registers.sv:924) and retires no record of its own, so the
+      // previous record here is the instruction that was interrupted, whose MIE was necessarily set.
+      // is_trap is NOT the same case: that record's own pre-state really is its predecessor's.
+      bit was  = st.is_intr ? 1'b0 : irq_mstatus_prev[ibex_pkg::CSR_MSTATUS_MIE_BIT];
       bit now  = st.mstatus[ibex_pkg::CSR_MSTATUS_MIE_BIT];
       int unsigned c = irq_commit_cycle(st);
       bit pend = irq_pending_model(irq_pins_at(c), irq_mie_at(c));
@@ -456,6 +461,11 @@ package gen_fcov_pkg;
           : (now && was)   ? GEN_FC_IRQ_PENDING_MODEL_CP_MIE_GLOBAL_EDGE_MRET_MIE1_MPIE1_PENDING
                            : -1;
         if (v < 0) n_irq_mret_masked++;   // the clear edge: an mret that masks a pending enabled line
+        if (st.is_intr) n_irq_mret_entry++;   // an mret that IS a handler's first instruction
+        // the invariant rev56's Major turned on: nothing booked into the stays-set bin may be an entry
+        // record, because an entry leaves MIE clear. A non-zero reading here is the same defect returning.
+        if (st.is_intr && v == GEN_FC_IRQ_PENDING_MODEL_CP_MIE_GLOBAL_EDGE_MRET_MIE1_MPIE1_PENDING)
+          n_irq_mret_newbin_entry++;
       end else if (st.wrote_mstatus && was != now) begin
         v = now ? (pend ? GEN_FC_IRQ_PENDING_MODEL_CP_MIE_GLOBAL_EDGE_SET_PENDING
                         : GEN_FC_IRQ_PENDING_MODEL_CP_MIE_GLOBAL_EDGE_SET_IDLE)
@@ -2875,7 +2885,7 @@ package gen_fcov_pkg;
       zcmp_flush(null);  // a sequence at the very end has no record after it: minstret_once not applicable
       `uvm_info("GEN_FCOV", $sformatf("move pairs: %0d sampled, %0d with mismatching micro-ops (%0d of them the self-test's)", n_mv, n_mv_miss, ut_mv_miss_expected), UVM_LOW)
       `uvm_info("GEN_FCOV", $sformatf("slice A samples: records=%0d mul_timing=%0d rst_boot=%0d (boot_to_req %0d) sec_ctrl_inputs=%0d zcmp_hazard=%0d", n_rec, n_mt, n_rst, boot_to_req, n_sec, n_hz), UVM_LOW)
-      `uvm_info("GEN_FCOV", $sformatf("irq samples: entry=%0d entry_rel=%0d edge=%0d access=%0d mie_global=%0d debug_window=%0d (post-exit undecided %0d, dropped unclosed %0d) reset=%0d fetch_off=%0d (windows published %0d, dropped as shorter than the minimum %0d) view misses %0d (mret masking a pending enabled line, the clear edge with no bin: %0d)", n_irq_entry, n_irq_entry_rel, n_irq_edge, n_irq_access, n_irq_mie, n_irq_dbg, n_irq_dbg_undecided, n_irq_dbg_dropped, n_irq_rst, n_irq_off, gen_fetch_en_windows::published, gen_fetch_en_windows::skipped_short, n_irq_view_miss, n_irq_mret_masked), UVM_LOW)
+      `uvm_info("GEN_FCOV", $sformatf("irq samples: entry=%0d entry_rel=%0d edge=%0d access=%0d mie_global=%0d debug_window=%0d (post-exit undecided %0d, dropped unclosed %0d) reset=%0d fetch_off=%0d (windows published %0d, dropped as shorter than the minimum %0d) view misses %0d (mret masking a pending enabled line, the clear edge with no bin: %0d; mrets that are a handler's first instruction: %0d, of which wrongly booked stays-set: %0d)", n_irq_entry, n_irq_entry_rel, n_irq_edge, n_irq_access, n_irq_mie, n_irq_dbg, n_irq_dbg_undecided, n_irq_dbg_dropped, n_irq_rst, n_irq_off, gen_fetch_en_windows::published, gen_fetch_en_windows::skipped_short, n_irq_view_miss, n_irq_mret_masked, n_irq_mret_entry, n_irq_mret_newbin_entry), UVM_LOW)
       `uvm_info("GEN_FCOV", $sformatf("pmp samples: cfg_write=%0d addr_write=%0d csr_access=%0d table_state=%0d (dropped without a retire %0d, readback disagreed with the pre-state rule %0d)", n_pmp_cfg, n_pmp_addr, n_pmp_acc, n_pmp_tbl, n_pmp_tbl_dropped, n_pmp_addr_readback_odd), UVM_LOW)
       if (mul_cg != null) begin   // referee: a group the sampler fed must show coverage, a dropped sample is a collected failure
         if (n_mv_miss > ut_mv_miss_expected) `uvm_error("GEN_FCOV_REF", $sformatf("gen_cmp_zcmp_mv_cg: %0d legal move pairs whose micro-ops did not match the expansion", n_mv_miss - ut_mv_miss_expected))

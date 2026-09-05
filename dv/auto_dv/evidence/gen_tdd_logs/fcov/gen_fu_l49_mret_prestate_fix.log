@@ -1,0 +1,84 @@
+# gen_fu_l49_mret_prestate_fix.log -- the entry-record pre-state, and the enum parser's oracle
+# (TB Infra, 2026-09-05). The rev56 REQUEST-CHANGES fix.
+#
+# THE ONE BUILD EVERY FIGURE COMES FROM
+# $ bash dv/auto_dv/tb/gen_tb_local.sh compile <root>/dv/auto_dv/out_l49    compile rc=0
+#
+# ================ THE MAJOR: A PRE-STATE READ FROM A RECORD THAT IS NOT THE PRE-STATE ================
+# cp_mie_global_edge took the pre-state MIE from the previous retired record. A trap entry clears MIE
+# unconditionally (rtl/ibex_cs_registers.sv:924) and retires NO record, so for a handler's first instruction
+# the previous record is the interrupted instruction, whose MIE was necessarily set. Every mret in every one
+# of our programs is a handler's first instruction, so the misread was total.
+# THE FIX, at the single site that reads it, so both arms of the classifier are covered:
+#   bit was = st.is_intr ? 1'b0 : irq_mstatus_prev[ibex_pkg::CSR_MSTATUS_MIE_BIT];
+# st.is_trap is DELIBERATELY EXCLUDED. That flag marks the instruction that took the fault, whose own
+# pre-state genuinely is its predecessor's post-state; including it would corrupt a correct case. I nearly
+# applied it to both and checked what each flag means first (gen_rvfi_pkg.sv:207, st.is_trap = t.trap and
+# st.is_intr = intr).
+#
+# ================ THE DISCRIMINATOR IS A COUNTER, NOT A CLAIM ================
+# The review asked for the discriminator to be measured. Two counters now appear in every run summary:
+#   "mrets that are a handler's first instruction: N, of which wrongly booked stays-set: M"
+# M is the invariant this defect violated: nothing entering the stays-set bin may be an entry record, because
+# an entry leaves MIE clear. A non-zero M is this defect returning, and it is visible without a review.
+# $ the four smokes
+#   storm    N=173 of 173 mret samples   M=0
+#   lines    N=6   of 6                  M=0
+#   dbgstorm N=39  of 39                 M=0
+#   fetchen  N=15  of 15                 M=0
+# EVERY mret in EVERY program is a handler's first instruction. gen_nmi_long_directed.S:27-29 is
+# `.rept 31 / mret / .endr`: the vector table IS thirty-one bare mrets.
+#
+# ================ WHAT THE COVERAGE READS NOW ================
+# $ urg, storm run alone, "Total tests in report: 1"
+#   cp_mie_global_edge  expected 7  uncovered 5  covered 2
+#   uncovered: mret_mie1_mpie1_pending, mret_mpie0_pending, clear_idle, set_idle, clear_pending
+#   covered:   set_pending and mret_mpie1_pending
+# So the DECLARED edge bin now holds the 173 the storm genuinely exercises, and THE NEW BIN READS ZERO.
+# Its 173 hits in landing 47 were the misclassification.
+#
+# PER SMOKE, EACH FROM ITS OWN REPORT (the vdb is overwritten per run, never merged, so each row below is one
+# run measured on its own; every report says "Total tests in report: 1"):
+#   run        cp_mie_global_edge   mret_mie1_mpie1_pending   mret_mpie1_pending
+#   storm      2 of 7 covered       UNCOVERED                 covered
+#   lines      2 of 7 covered       UNCOVERED                 covered
+#   dbgstorm   2 of 7 covered       UNCOVERED                 covered
+#   fetchen    2 of 7 covered       UNCOVERED                 covered
+# The new bin is unhit in every smoke and the restoring-edge bin is hit in every smoke. All four verdicts PASS.
+#
+# WHAT THE FIXTURE MUST DO, and the obvious sentence is WRONG. An earlier draft of this log said the stays-set
+# case needs "a handler with at least one instruction before its return". That is NOT sufficient, and the
+# DV Lead showed why from these same arms: for a return that is NOT a handler's first instruction, `was` is the
+# previous retired record's MIE, and the entry CLEARED it. A handler that does work but never re-enables
+# interrupts still presents `was` = 0, so its return classifies as (now && !was), the restoring edge, into the
+# bin already covered. Adding an instruction to a handler produces another sample in the WRONG bin.
+# THE FIXTURE MUST WRITE mstatus.MIE BEFORE THE mret, with a line pending at the mret. That is the only path
+# to (now && was). The bin's status is the DV Lead's fourth category, reachable with no stimulus built, and
+# the reason is structural: every interrupt vector in the tree is a bare mret.
+# Both retained logs whose interpretation this inverts are corrected by
+# gen_fu_mret_prestate_corrigendum.log, with their bytes untouched.
+#
+# ================ THE MINOR: A PARSER THAT COULD EAT A COMMENT, AND A TEST THAT AGREED WITH IT ================
+# sv_enum_members split the brace body on commas without stripping comments, so a // or /* */ inside the
+# braces would have become part of a member NAME, rendering a mirror key no caller could ever match. And the
+# unit test re-derived its expectation with THE SAME REGEX, so it could not have caught it: an oracle that
+# shares the implementation's parser is not an oracle.
+# FIXED BOTH WAYS: the parser strips both comment forms before splitting and asserts every member is an
+# identifier; the unit test now carries the four names HAND-LISTED and additionally checks that the SV
+# declaration still lists exactly those four in that order, so the two cannot drift apart silently.
+# $ the parser, on synthetic declarations carrying each comment form
+#   with a // comment inside the braces: {'A_ONE': 0, 'A_TWO': 1, 'A_THREE': 2}
+#   with a block comment:                {'B_ONE': 0, 'B_TWO': 1}
+#
+# ================ GATES ================
+# $ gen_knobs_codegen --check   -> up to date        $ gen_ut_knobs_codegen -> PASS (0 failures)
+# $ gen_fcov_codegen --check    -> up to date        $ gen_ut_fcov_codegen  -> PASS (0 failures)
+# $ gen_unbuilt_mark_check      -> PASS              $ gen_norm_probe --self-test -> GEN_NORM_PROBE PASS
+# $ four smokes, verdicts from each run's own verdict.txt: storm, lines, dbgstorm, fetchen all PASS, ref 0
+#
+# ================ THE LESSON, SINCE THE METHOD LOOKED SOUND ================
+# The inference this replaces used TWO builds and compared them, which is why it read as strong evidence.
+# Both builds read the same wrong input, so the comparison could only confirm what the classifier believed.
+# Two measurements that share a defect are not two measurements. The check that would have caught it is the
+# one now standing as a counter: ask what KIND of record is being classified, not only how it classified.
+# END. Every figure above is produced by the command printed above its block.

@@ -1,0 +1,84 @@
+# gen_fu_mret_prestate_corrigendum.log -- one corrigendum to TWO retained logs (TB Infra)
+#
+# Corrects gen_fu_l46_irq_step1b.log (md5 e9be074c5036cb62956ff71bc2b29bf7) and
+# gen_fu_l47_irq_mret_bin.log (md5 1456cef854e37c0df572b29d05ca9b87). BOTH ARE UNCHANGED; this file stands
+# beside them. Raised by rev56 (dv/auto_dv/reviews/ on 03aafce..dc60063), REQUEST-CHANGES.
+# One file rather than two, because it is ONE error and the second log inherited it from the first.
+#
+# ================ WHAT WAS WRONG ================
+# The classifier read a retirement's pre-state MIE from the PREVIOUS RETIRED RECORD. That is correct for an
+# ordinary instruction and WRONG for a handler's first instruction, because a trap entry clears MIE
+# unconditionally (rtl/ibex_cs_registers.sv:924, with mstatus_d.mpie = mstatus_q.mie beside it at :926) and
+# RETIRES NO RECORD OF ITS OWN. So for a record with rvfi_intr the previous record is the INTERRUPTED
+# instruction, whose MIE was necessarily SET, since that is why the interrupt could be taken.
+# gen_nmi_long_directed.S:27-29 builds the storm's vector table as `.rept 31 / mret / .endr`, so every
+# regular vector is a BARE mret and every one of the storm's 173 mrets IS a handler's first instruction.
+#
+# ================ WHAT THE TWO LOGS THEREFORE GET BACKWARDS ================
+# gen_fu_l46_irq_step1b.log, "THE MRET EDGE FIX REMOVES A COVERED BIN, AND WHY THAT IS RIGHT": its two-build
+# inference concludes that every one of the 173 mrets had MIE set BEFORE it as well as after, so the plan's
+# restoring-edge scenario never occurred and the 173 hits were false coverage. The second half of that
+# inference is the misread pre-state. The 173 are a TRUE MIE 0 -> 1 restoring edge with MPIE set, MPP M and
+# a line pending: exactly the declared bin mret_mpie1_pending. The coverage that log calls false was REAL.
+# gen_fu_l47_irq_mret_bin.log, "THE 173, FROM FALSE COVERAGE TO HONEST COVERAGE": the arc is inverted. The
+# landing-46 state it calls "false coverage removed" was the correct classification losing its bin, and the
+# landing-47 state it calls "honest coverage" was 173 samples booked into a bin whose case never happened.
+# The urg figures in both logs are accurate readings of what the code did; it is the INTERPRETATION that is
+# wrong, and interpretation is the part a reader cannot re-derive.
+#
+# ================ WHAT IS TRUE, MEASURED AFTER THE FIX ================
+# The fix takes the pre-state from the ENTRY for a record that is a handler's first instruction:
+#   bit was = st.is_intr ? 1'b0 : irq_mstatus_prev[ibex_pkg::CSR_MSTATUS_MIE_BIT];
+# st.is_trap is deliberately NOT included: that flag marks the instruction that TOOK the fault, whose own
+# pre-state really is its predecessor's post-state. Including it would corrupt a case that was correct.
+# $ urg, storm run alone, "Total tests in report: 1"
+#   cp_mie_global_edge  expected 7  uncovered 5  covered 2
+#   uncovered: mret_mie1_mpie1_pending, mret_mpie0_pending, clear_idle, set_idle, clear_pending
+#   so the covered two are set_pending and MRET_MPIE1_PENDING, the declared edge bin.
+# THE NEW BIN READS ZERO. Its 173 hits were the misclassification.
+# $ the four smokes' run summaries, with the discriminating counters this landing adds
+#   mrets that are a handler's first instruction: 173 of 173, 6 of 6, 39 of 39, 15 of 15
+#   of which wrongly booked into the stays-set bin: 0, 0, 0, 0
+# EVERY mret in EVERY one of these programs is a handler's first instruction, which is why the misread
+# pre-state was total rather than partial, and why it looked so consistent that a two-build comparison
+# seemed to confirm it.
+#
+# ================ WHY THE TWO-BUILD METHOD DID NOT CATCH IT ================
+# Both builds read the same wrong pre-state, so comparing them could only ever confirm what the classifier
+# believed. The method looked strong because it used two independent measurements; they were not independent
+# of the defect. A comparison across two versions of the SAME classifier cannot test the input both versions
+# share. What would have caught it is the discriminator this landing now carries as a counter: asking whether
+# the records being classified were entry records at all.
+#
+# ================ A SECOND CORRECTION TO THE l47 LOG: THE CYCLE-0 RED'S WORDING (Critic L-1) ================
+# That log describes MUT-FEDRAIN0 without PRINTING it, and makes THREE cycle-0 claims, not one. Quoted exactly:
+#   :120  "Landing 46's valid flag made the drain check judge windows that open at cycle 0, and no red showed it
+#          fire for one."                                        -- true, and it is what L-16 asked for
+#   :122  "+gen_fetch_en_at_reset=0 so the window IS cycle 0"     -- WRONG, and the worst of the three
+#   :128  "The error message names cycle 0 itself, which is what the row asked to see."  -- WRONG
+# I originally corrected only the third. The second is the one that misleads most, because it asserts the
+# fixture opens a reset window when it does not. The Critic reproduced the red three ways to show both.
+# THE MUTATION, printed here as the diff it always should have been (gen_checkers_pkg.sv, the misc monitor's
+# fetch_enable arm):
+#   -          if (fe_on) begin fe_off_cycle = 0; fe_off_valid = 0; end
+#   +          if (fe_on) begin fe_off_cycle = 0; end        // the window never closes
+# WHAT THE "cycle 0" IN THE MESSAGE ACTUALLY IS. The mutant leaves the valid flag set while still CLEARING the Off
+# cycle, so the drain check runs against a variable holding its cleared value. The 0 in "left On at cycle 0" is that
+# value, NOT a window the checker observed at reset.
+# AND THE FIXTURE HAS NO RESET WINDOW AT ALL, which is what :122 gets wrong. gen_ut_fetch_en turns the pin On at 5 ns,
+# BEFORE reset release, so the plusarg does not give that run a cycle-0 window; the shapes that do open one (the
+# reset-reads and lines fixtures) drop it as shorter than GEN_FETCH_EN_WINDOW_MIN_CYCLES, which the window counters
+# this landing adds now report as "dropped as shorter than the minimum 1".
+# THE RED IS STILL THE RIGHT EVIDENCE, described correctly: it shows the drain rule JUDGING A WINDOW WHOSE CYCLE
+# READS ZERO, which is exactly the predicate the valid flag changed, and that is what L-16 asked for. What it does
+# not show, and what the l47 log claimed it showed, is a reset-time window being observed. The measured figures are
+# unaffected: 38 errors with the rule enabled, 0 with +gen_chk_fetch_en=0, a clean unmutated PASS, and the file
+# reverted byte-identical.
+#
+# ================ WHAT IS NOT CORRECTED ================
+# The four-way table itself stands, and rev56 confirms it independently from the RTL (MIE takes MPIE at :956,
+# MPIE set at :977, privilege from MPP at :953). The narrowing of the stays-clear arm to require both terms
+# is right. Everything else in both logs stands: the render, the mirror and its namespace guard, the derived
+# bit, the literal cleanups, the once-per-record view decision, the window counters, the cycle-0 drain red,
+# the reset-reads fixture and its four values, and the layout reason for the unhit boot-pc bin.
+# END.

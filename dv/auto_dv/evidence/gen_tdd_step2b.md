@@ -1557,3 +1557,36 @@ The view is now decided once per record before any classifier reads it, and a mi
 than once per accessor call.
 
 Retained: gen_tdd_logs/fcov/gen_fu_l47_irq_mret_bin.log and gen_fu_l46_irq_step1b_corrigendum.log. Two manifest rows.
+
+## Landing 49: two measurements that shared a defect are not two measurements
+
+The bin added in the previous landing reads zero, and the coverage it appeared to earn belonged to a bin that
+already existed. The classifier took a retirement's before-state from the previous retired record, which is right
+for an ordinary instruction and wrong for the first instruction of a handler: a trap clears the global enable and
+retires no record of its own, so the previous record is the instruction that was interrupted, whose enable was
+necessarily set. Every interrupt vector in our programs is a bare return, so every return we sample is a handler's
+first instruction and the misread was total rather than occasional.
+
+WHAT MAKES THIS WORTH A RECORD IS NOT THE DEFECT BUT THE EVIDENCE THAT DEFENDED IT. Two landings ago I removed
+coverage on the strength of a comparison between two builds, and the comparison read as strong precisely because it
+used two independent measurements. They were not independent of the defect. Both builds took the same wrong input,
+so the comparison could only ever confirm what the classifier already believed. A difference between two versions of
+one classifier cannot test the input both versions share, and I presented it as though it could.
+
+The check that would have caught it costs one counter and is now permanent: ask what kind of record is being
+classified, not only how it was classified. The run summary now reports how many returns are a handler's first
+instruction, and how many of those were booked into the bin that by construction cannot contain them. The second
+number must be zero, and a reviewer no longer has to reason about pre-states to see that it is.
+
+THE CORRECTION WAS APPLIED AT ONE SITE ON PURPOSE. The record carries two flags that both sound like they mean a
+trap, and only one is right here. One marks the instruction that took the fault, whose own before-state genuinely is
+its predecessor's. The other marks the handler's first instruction, the case with no record between it and its
+predecessor. I nearly corrected on both and checked what each meant first; correcting on both would have broken a
+case that was working.
+
+WHAT SURVIVES IS THE PLAN'S OWN LINE. The four-way table stands unchanged and was confirmed independently from the
+register file. The bin the DV Lead declared long ago is the one the storm exercises 173 times, as its text always
+said. My evidence for a gap was wrong; the gap I claimed to find was my classifier's.
+
+Retained: gen_tdd_logs/fcov/gen_fu_l49_mret_prestate_fix.log and gen_fu_mret_prestate_corrigendum.log, the second
+correcting two earlier logs whose bytes are untouched. Two manifest rows.

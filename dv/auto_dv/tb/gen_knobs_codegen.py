@@ -92,14 +92,21 @@ def sv_enum_members(path, typename):
     m = re.search(rf"typedef\s+enum\s*\{{([^}}]*)\}}\s*{typename}\s*;", path.read_text())
     if not m:
         die(f"enum {typename} not found in {path}")
+    body = m.group(1)
+    # strip comments before splitting: a // or /* */ inside the braces would otherwise become part of a
+    # member name, and a wrong NAME renders a mirror that silently never matches what a caller asks for
+    body = re.sub(r"/\*.*?\*/", " ", body, flags=re.S)
+    body = re.sub(r"//[^\n]*", " ", body)
     out = {}
-    for i, raw in enumerate(m.group(1).split(",")):
+    for i, raw in enumerate(body.split(",")):
         name = raw.strip()
         if not name:
             die(f"enum {typename} in {path}: empty member")
         if "=" in name:
             die(f"enum {typename} in {path}: member {name!r} carries an explicit value; this mirror only "
                 f"renders positional ordinals")
+        if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", name):
+            die(f"enum {typename} in {path}: member {name!r} is not an identifier")
         out[name] = i
     return out
 
