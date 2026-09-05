@@ -2,7 +2,8 @@
 """Check a record's numbered section headers: "## N." lines at column 0 must number consecutively, and no
 header or table row may sit indented (markdown renders an indented block as code, and a header check that
 matches column 0 then cannot see the section, so a numbered header indented by a patch script hides a gap).
-Lines inside a ``` fence are code by declaration and are skipped by both checks. A table row is an indented
+Lines inside a ``` fence are code by declaration and are skipped by both checks; a fence still open at the end
+of the file is a defect, since it would hide every later line from both checks. A table row is an indented
 line with two pipes, so an indented prose line that uses pipes as separators outside a fence is reported too:
 the check is for records that keep their tables at column 0, which the records it is pointed at do.
 
@@ -22,18 +23,20 @@ FENCE = re.compile(r"^[ \t]*```")
 
 def check(lines, start=None, out=print, indent_only=False):
     """defect strings for the record's lines; empty means the record passes"""
-    defects, seq, fenced = [], [], False
+    defects, seq, fence_open = [], [], 0   # fence_open: the line that opened the current fence, 0 outside one
     for n, line in enumerate(lines, 1):
         if FENCE.match(line):
-            fenced = not fenced
+            fence_open = 0 if fence_open else n
             continue
-        if fenced:
+        if fence_open:
             continue
         if INDENTED.match(line):
             defects.append(f"line {n}: indented header or table row: {line.strip()[:60]}")
         m = HEADER.match(line)
         if m:
             seq.append((n, int(m.group(1))))
+    if fence_open:
+        defects.append(f"line {fence_open}: fence opened here is never closed, so every later line was skipped")
     if indent_only:
         for d in defects:
             out(f"gen_section_check: {d}")
@@ -75,13 +78,16 @@ def self_test():
     assert "table row" in ok("## 1. a\n\t|a|b|\n## 2. b\n")[0], "an indented compact row is a table row"
     assert ok("## 1. a\n```\n    |-> !valid_o\n    ## 9. not a header\n```\n## 2. b\n") == [], "fenced lines are code, not defects"
     assert ok("## 1. a\n  |fill_req ? a : b\n## 2. b\n") == [], "an indented lone-pipe fragment outside a fence is not a table row"
+    stray = "## 1. a\n```\n    ## 2. b\n    | a | b |\n"
+    assert [d for d in ok(stray) if "never closed" in d and d.startswith("line 2:")], "an unclosed fence is a defect, not a vacuous pass"
+    assert any("never closed" in d for d in ok(stray, indent_only=True)), "an unclosed fence fails in --indent-only too"
     with tempfile.TemporaryDirectory() as d:
         path = pathlib.Path(d) / "rec.md"; path.write_text(good)
         assert run(str(path), None, out=lambda *_: None) == 0, "a passing file exits 0"
     assert not path.exists(), "the self-test leaves no file behind"
-    print("GEN_SECTION_CHECK self-test PASS (18 cases: consecutive, --from, missing start, indented middle header, "
+    print("GEN_SECTION_CHECK self-test PASS (20 cases: consecutive, --from, missing start, indented middle header, "
           "indented table, repeat, gap, no header, indented prose, --indent-only both ways, separator row, compact row, "
-          "fenced lines, lone-pipe fragment, file run without a leftover)")
+          "fenced lines, lone-pipe fragment, unclosed fence in both modes, file run without a leftover)")
     return 0
 
 
