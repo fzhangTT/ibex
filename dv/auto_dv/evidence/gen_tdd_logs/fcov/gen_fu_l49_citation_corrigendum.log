@@ -1,0 +1,84 @@
+# gen_fu_l49_citation_corrigendum.log -- records corrigendum to gen_fu_l49_mret_prestate_fix.log (TB Infra)
+#
+# Both retained logs' bytes are UNCHANGED. Records only: no figure moves, no run is re-judged, and the
+# classifier's behaviour is not altered by anything here.
+#
+# ================ 1. AN RTL CITATION SHORT BY A TERM, IN THREE PLACES ================
+# gen_fu_l49_mret_prestate_fix.log:9 and gen_fu_mret_prestate_corrigendum.log:11 both say a trap entry clears
+# MIE "unconditionally (rtl/ibex_cs_registers.sv:924)". IT IS NOT UNCONDITIONAL. That clear sits inside
+# "else if (!debug_mode_i)" at :918, the alternative to "if (debug_csr_save_i)" at :910, inside the
+# "csr_save_cause_i" arm at :893. So the statement is short by at least the debug term, which is my own
+# standing rule (quote every gating term before asserting a behaviour) broken in a retained record.
+# THE THIRD SITE IS CODE, NOT A RECORD, and a reader should not be left thinking only the logs were affected:
+# the classifier comment at gen_fcov_pkg.sv:445 carries the same word. It is corrected in place when that file
+# is next opened, beside the one-term change below; this corrigendum names it so the gap between the record
+# correction and the code correction is visible rather than silent.
+# WHAT THE NARROWED READING COSTS THE FIX, AND WHY IT IS NOT A CORRECTNESS ITEM. The fix reads the pre-state as
+# cleared for any record carrying the entry marker, which is right for a non-debug entry and would be wrong for
+# a debug one. It is unreachable: rvfi_intr is held as
+#   rvfi_intr_d = instr_first_cycle_id ? rvfi_set_trap_pc_q : rvfi_intr_q      (ibex_core.sv:2403)
+# and its flag is set by exactly one condition,
+#   pc_set && pc_mux_id == PC_EXC && (exc_pc_mux_id == EXC_PC_IRQ)
+# The vector selector is distinct per entry kind: EXC_PC_IRQ at ibex_controller.sv:560 and :727, EXC_PC_DBD at
+# :766 and :796, and at :831 "exc_pc_mux_o = debug_mode_q ? EXC_PC_DBG_EXC : EXC_PC_EXC". So a debug entry never
+# sets the marker; and independently an interrupt cannot be taken in debug mode, the take condition at :498
+# carrying ~debug_mode_q. Two independent reasons, either sufficient. The one-term change (treat the pre-state
+# as cleared only for a NON-debug entry) is therefore HYGIENE and rides the next touch of that file.
+# THE EXCEPTION-ENTRY QUESTION, RAISED BY THE SAME TRACE AND NOW SETTLED. That condition also means the marker
+# is set only for INTERRUPT entries, not EXCEPTION ones, though an exception clears MIE through the same path.
+# I left it open; the Critic settled it from gen_rvfi_pkg.sv and I verified the reading:
+#   :57-59  "The model of record AFTER one RVFI record was processed (published by gen_scoreboard on ap_state);
+#            the irq/debug/misc checkers consume this, never the shim directly."
+# publish_state is called after the step (the :583 site follows the pre-step privilege comparison at :581,
+# which contrasts itself with the published state; the :390 site says "the entry stepped above must reach the
+# checkers"). So the pre-state the classifier reads is the PREVIOUS record's POST state, and a trapping
+# instruction's record already carries the trap's CSR writes with MIE clear.
+# THE CLASSIFIER IS THEREFORE CORRECT FOR EXCEPTION HANDLERS WITH NO OVERRIDE, by construction rather than by
+# luck. THE SCOPE OF THAT, EXACTLY, BECAUSE SOMETHING IS STILL OWED. What closes is the CLASSIFIER's
+# correctness. What does not is this landing's two INVARIANT COUNTERS: both are gated on the entry flag,
+# gen_fcov_pkg.sv:464 and :467, so a booking that arrives by any other route increments neither and the
+# invariant reads zero while being violated. That is the DV Lead's finding and I verified it.
+# IT IS A DEFECT WHATEVER THE CLASSIFIER DOES, and it is the same shape as the two-build comparison this
+# landing already retracts: an invariant counter that shares the defect's own gating term cannot witness it. I
+# built that counter to PROVE the fix and gated the proof on the very flag the fix turns on.
+# THE FIX RIDES THE CHECKER TOUCH: the invariant must witness BOTH routes into that bin - this record carrying
+# the entry flag, OR the previous record having trapped - so it stops depending on that flag at all.
+#
+# ================ 1b. A SENTENCE THAT IS TRUE ONLY OF INTERRUPT ENTRIES ================
+# TWO SITES, with different wording each, and the committed mret corrigendum carries NEITHER:
+#   gen_fu_l49_mret_prestate_fix.log:9   "... and retires NO record, so for a handler's first instruction"
+#   gen_fcov_pkg.sv:445                  "... and retires no record of its own, so the"
+# Both hold for an INTERRUPT entry and not for a trap in general: a trapping instruction DOES retire a record,
+# which is exactly why the exception case above is covered by construction. Each should say "an interrupt
+# entry". The code site is corrected in place on the next touch of that file, with the citation above.
+#
+# ================ 2. A SURVEY SENTENCE BROADER THAN THE TREE ================
+# gen_fu_l49_mret_prestate_fix.log says "EVERY mret in EVERY program is a handler's first instruction". That
+# holds for the FOUR SMOKES it measured and NOT for the tree. The DV Lead's counterexamples, at 9a42c17:
+#   gen_cpuctrl_directed.S:26-37   a handler whose mret is its SEVENTH instruction (it takes a nested ecall
+#                                  at :31 first), with a second return at :38-42
+#   gen_isa_cti_prog.py:553-557    an mret emitted as ordinary control transfer, not a return
+#   gen_csr_trap_setup_prog.py:511 the same, with a modelled mstatus written freely
+#   gen_rst_boot_prog.py:287-290   the deliberate M-to-U transition
+# NO FIGURE MOVES. None of those programs is one of the four smokes, so no count in the retained log changes,
+# and none of them reaches the new bin either - but for four reasons the sentence does not cover: the handler
+# returns write mepc and at most mstatus.MPP and never re-enable interrupts; the ordinary-code mrets write MPP
+# alone, or run with no interrupt agent and the pins low, or carry the reset mstatus with MIE clear.
+# The DV Lead kept the generalisation OUT of its plan line, so the plan does not inherit it.
+#
+# ================ 3. A CLOSING ARGUMENT MISSING ITS MIDDLE STEP ================
+# gen_fu_l49_fixture_corrigendum.log closes with "no committed entry produces it at ANY seed - every vector in
+# the tree is a bare mret, so nothing drives the window at all". That reaches the right conclusion through a
+# premise that does not carry it: bare-return VECTORS alone would not stop a handler ELSEWHERE from re-enabling
+# MIE and reaching the bin. THE MISSING STEP IS THAT NO HANDLER IN THE TREE RE-ENABLES MIE BEFORE ITS RETURN,
+# which the DV Lead's survey establishes: the handler returns write mepc and at most mstatus.MPP (the 0x1800
+# csrs of gen_cpuctrl_directed.S:35-37 and gen_dmem_err_directed.S:62-65) and never re-enable interrupts. With
+# that step the argument holds; without it the sentence reads stronger than its evidence. Source: the DV Lead's
+# survey, stated directly here rather than deferred to its plan line's commit.
+#
+# ================ 4. THE PROBE RUNS LEFT NO RETAINED RUN ARTIFACT ================
+# The two-shape fixture probe behind gen_fu_l49_fixture_corrigendum.log retained its FIGURES but no run
+# artifact: no run header, no stdout excerpt, no verdict file. The figures are reproducible from the commands
+# that log prints, and the probe program and test were scratch and are gone, so the runs cannot be re-read.
+# Stated here rather than left for a reviewer to find.
+# END.
