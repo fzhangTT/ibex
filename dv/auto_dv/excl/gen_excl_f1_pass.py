@@ -12,7 +12,7 @@ Steps: round manifest -> merged vdb and its module dump (out-tree, the _module f
 into evidence) -> gen_excl_select.py with the EC-3 fill from the round's asserts evidence copy -> strict load
 with urg, any attempts.log fed back as a refutation input (bounded loop) -> plain load -> gated rows
 without/with the file -> Block no-op join against the plain report (CM-3 / Critic L-3) -> constfile
-copies (B.7 rule 3) -> README delta text and a summary YAML under dv/auto_dv/work/rtl-arch/gen_excl_f1_<tag>/.
+and join copies retained under gen_precheck/ (B.7 rule 3, EC-2) -> README delta text and a summary YAML under dv/auto_dv/work/rtl-arch/gen_excl_f1_<tag>/.
 Report-time urg only; LSF is never touched. README prose is never edited by this script: the delta
 file holds the text for the author, the COUNTS block is rewritten by the generator as before.
 """
@@ -20,6 +20,7 @@ file holds the text for the author, the COUNTS block is rewritten by the generat
 from __future__ import annotations
 
 import argparse
+import gzip
 import hashlib
 import os
 import re
@@ -46,6 +47,7 @@ DEFAULT_LEAVES = ("u_ibex_core", "u_register_file")   # R-001 gated scopes
 METRICS = ("line", "cond", "toggle", "fsm", "branch", "assert")
 URG_TIMEOUT_S = 900
 VERSION = "1"
+EC3_HELD_OUT_BLOCKS = 3   # spare-encoding default arms: no EC-3 numbers without a measured round
 # Per-object join scope of this version; the metrics below are the next steps, listed in every delta.
 JOIN_SCOPE = "Block entries (LINE metric)"
 NEXT_STEPS = ("Branch vectors: join each vector with the branch table row of its line in the plain report",
@@ -64,6 +66,13 @@ def sha256(p):
 
 def md5(p):
     return hashlib.md5(Path(p).read_bytes()).hexdigest()
+
+
+def gzip_n(src, dst):
+    """gzip without the name and mtime header fields, so the same input always gives the same bytes."""
+    with open(src, "rb") as f, open(dst, "wb") as raw, gzip.GzipFile(filename="", mode="wb", fileobj=raw, mtime=0) as gz:
+        shutil.copyfileobj(f, gz)
+    return dst
 
 
 def sh(cmd, timeout=URG_TIMEOUT_S):
@@ -122,6 +131,55 @@ def entry_set(el_path):
         elif t and not t.startswith(("//", "CHECKSUM:", "ANNOTATION_BEGIN", "ANNOTATION_END")) and mod:
             out.append((mod, t))
     return sorted(out)
+
+
+def entry_identity(mod, text):
+    """An entry without its object id. URG numbers objects per build, so two dumps of the same RTL can
+    give one object different ids; the kind, checksum and signature are what identify it."""
+    m = re.match(r"^(\w+)\s+\d+\s+(.*)$", text)
+    return (mod, m.group(1), m.group(2)) if m else (mod, "", text)
+
+
+def entry_set_delta(before, after, ec3_filled):
+    """Classify a difference between two entry sets: objects this build numbers differently, class-D
+    arms held out for want of EC-3 numbers, and anything else, which is a real change to the file."""
+    b, a = set(before), set(after)
+    pool = {}
+    for e in sorted(a - b):
+        pool.setdefault(entry_identity(*e), []).append(e)
+    out = {"renumbered": [], "held_out": [], "unexplained": []}
+    for e in sorted(b - a):
+        k = entry_identity(*e)
+        if pool.get(k):
+            pool[k].pop()
+            out["renumbered"].append(e)
+        elif not ec3_filled and e[1].startswith("Block "):
+            out["held_out"].append(e)
+        else:
+            out["unexplained"].append(e)
+    out["unexplained"] += [e for v in pool.values() for e in v]
+    return out
+
+
+def delta_self_test():
+    """The classifier decides whether a regenerated file is still the same file, so it carries cases it
+    must refuse to explain; it runs at every invocation."""
+    cond = ("ibex_if_stage", 'Condition 25 "2560706854" "(a | b) 1 -1" (2 "0001")')
+    renum = ("ibex_if_stage", 'Condition 21 "2560706854" "(a | b) 1 -1" (2 "0001")')
+    other = ("ibex_if_stage", 'Condition 25 "999999" "(a | b) 1 -1" (2 "0001")')
+    block = ("ibex_controller", 'Block 149 "1351085340" "instr_req_o = 1\'b0;"')
+    cases = [("object renumbered by the build", [cond], [renum], False, (1, 0, 0)),
+             ("class-D arm held out on an unmeasured round", [block], [], False, (0, 1, 0)),
+             ("class-D arm absent although EC-3 was filled", [block], [], True, (0, 0, 1)),
+             ("entry dropped", [cond], [], False, (0, 0, 1)),
+             ("entry added", [], [cond], False, (0, 0, 1)),
+             ("a different checksum is a different object", [cond], [other], False, (0, 0, 2))]
+    for name, before, after, filled, want in cases:
+        d = entry_set_delta(before, after, filled)
+        got = (len(d["renumbered"]), len(d["held_out"]), len(d["unexplained"]))
+        if got != want:
+            die(f"delta self-test FAILED on '{name}': renumbered/held_out/unexplained {got}, expected {want}")
+    print(f"[f1] delta self-test ok ({len(cases)} cases)")
 
 
 def run_generator(dump, out, report, attempts, ec3_asserts, ec3_round, readme):
@@ -281,8 +339,9 @@ def block_join(el_path, dump_dir, plain_modinfo):
     return rows
 
 
-def constfiles(round_dir, work):
-    """constfile.txt of every build of the round, copied beside the pass outputs with its sha256."""
+def constfiles(round_dir, work, tag, retain):
+    """constfile.txt of every build of the round, copied beside the pass outputs with its sha256; with
+    retain set, also kept in the tree compressed, because every annotation cites it as EC-2 evidence."""
     out = []
     bm_pre, bm_suf = C.ROUND_EV_BUILD_MANIFEST_FMT.split("{build}")
     for bm in sorted(round_dir.glob(C.ROUND_EV_BUILD_MANIFEST_FMT.format(build="*"))):
@@ -292,7 +351,11 @@ def constfiles(round_dir, work):
         if cf and Path(cf).is_file():
             dst = work / f"gen_constfile_{build}.txt"
             shutil.copyfile(cf, dst)
-            out.append({"build": build, "source": cf, "copy": str(dst), "sha256": sha256(dst)})
+            rec = {"build": build, "source": cf, "copy": str(dst), "sha256": sha256(dst), "retained": None}
+            if retain is not None:
+                gz = gzip_n(dst, retain / f"gen_precheck_constfile_{build}_{tag}.txt.gz")
+                rec["retained"] = str(gz.relative_to(ROOT))
+            out.append(rec)
         else:
             out.append({"build": build, "source": cf, "copy": None, "sha256": None})
     return out
@@ -371,6 +434,7 @@ def main():
         a.round_dir, a.dry_run = str((C.EVIDENCE_DIR / (C.ROUND_DIR_PREFIX + "0_rebaseline")).relative_to(C.REPO_ROOT)), True
     if not a.round_dir:
         die("--round-dir is required")
+    delta_self_test()
     round_dir = (ROOT / a.round_dir).resolve()
     tag = a.tag or round_dir.name.replace("gen_", "")
     work = Path(a.work_dir) if a.work_dir else WORK_ROOT / f"gen_excl_f1_{tag}"
@@ -432,10 +496,14 @@ def main():
                                     "NO-OP entries are kept in the file for the annotation record (see the README delta)."]) + "\n")
     after = entry_set(el)
     same = after == before["entries"]
+    D = entry_set_delta(before["entries"], after, bool(ec3_asserts))
     diff_file = work / f"gen_f1_{tag}_entryset_diff.txt"
     b, s_ = set(before["entries"]), set(after)
     diff_file.write_text(f"entry set before: {len(b)} after: {len(s_)} identical: {same}\n" +
-                         "".join(f"- {m}: {t}\n" for m, t in sorted(b - s_)) + "".join(f"+ {m}: {t}\n" for m, t in sorted(s_ - b)))
+                         f"classified: {len(D['renumbered'])} renumbered by this build, {len(D['held_out'])} class-D arms "
+                         f"held out for want of EC-3, {len(D['unexplained'])} unexplained\n" +
+                         "".join(f"- {m}: {t}\n" for m, t in sorted(b - s_)) + "".join(f"+ {m}: {t}\n" for m, t in sorted(s_ - b)) +
+                         "".join(f"unexplained: {m}: {t}\n" for m, t in D["unexplained"]))
     dropped = 0
     m_ = re.search(r"^Dropped (\d+) entries", Path(rep).read_text(), re.M)
     if m_:
@@ -444,14 +512,17 @@ def main():
     if not a.dry_run:
         shutil.copyfile(strict["log"], PRECHECK / f"gen_precheck_urg_{tag}.log")
         shutil.copyfile(Path(strict["report_dir"]) / "dashboard.txt", PRECHECK / f"gen_precheck_dashboard_{tag}.txt")
-        files += [f"dv/auto_dv/excl/gen_precheck/gen_precheck_urg_{tag}.log", f"dv/auto_dv/excl/gen_precheck/gen_precheck_dashboard_{tag}.txt"]
+        shutil.copyfile(join_file, PRECHECK / f"gen_precheck_noop_join_{tag}.md")
+        files += [f"dv/auto_dv/excl/gen_precheck/gen_precheck_urg_{tag}.log", f"dv/auto_dv/excl/gen_precheck/gen_precheck_dashboard_{tag}.txt",
+                  f"dv/auto_dv/excl/gen_precheck/gen_precheck_noop_join_{tag}.md"]
         files += [str(p.relative_to(ROOT)) for p in attempts if p.parent == PRECHECK and tag in p.name]
-    cfs = constfiles(round_dir, work)
+    cfs = constfiles(round_dir, work, tag, None if a.dry_run else PRECHECK)
     files += [c["copy"].replace(str(ROOT) + "/", "") for c in cfs if c["copy"]]
+    files += [c["retained"] for c in cfs if c.get("retained")]
     S = {"driver_version": VERSION, "generated_utc": now(), "tag": tag, "pass_label": a.pass_label, "dry_run": a.dry_run, "inputs": inputs, "generator_cmd": gen_cmd,
          "iterations": it, "attempts_used": [str(p.relative_to(ROOT)) for p in attempts], "strict": strict, "plain": plain,
          "gate_without": g0, "gate_with": g1, "el_md5": md5(el), "el_sha256": sha256(el), "el_before": {"md5": before["el_md5"], "sha256": before["el_sha256"]},
-         "entry_set_identical_to_before": same, "kinds": kinds(el), "dropped": dropped, "ec3": ec3, "join": J, "join_file": str(join_file.relative_to(ROOT)),
+         "entry_set_identical_to_before": same, "entry_set_delta": {k: len(v) for k, v in D.items()}, "kinds": kinds(el), "dropped": dropped, "ec3": ec3, "join": J, "join_file": str(join_file.relative_to(ROOT)),
          "constfiles": cfs, "files": files}
     delta = write_delta(work, tag, S)
     S["files"].append(str(delta.relative_to(ROOT)))
@@ -461,13 +532,19 @@ def main():
 
     if a.self_test:
         checks = {"strict load rc 0": strict["rc"] == 0, "no UCAPI warnings/errors": strict["ucapi_warnings"] == 0 and strict["ucapi_errors"] == 0,
-                  "no attempts.log": strict["attempts_log"] is None, "entry set identical to the current file": same,
+                  "no attempts.log": strict["attempts_log"] is None,
+                  "entry set matches the current file up to object ids and the EC-3 hold-out":
+                      not D["unexplained"] and len(D["held_out"]) == (0 if ec3_asserts else EC3_HELD_OUT_BLOCKS),
                   "gated covered counts unchanged by the file": all(g0[m].split("/")[0] == g1[m].split("/")[0] for m in g0 if m in g1),
                   "gated totals never grow with the file": all(int(g0[m].split("/")[1]) >= int(g1[m].split("/")[1]) for m in g0 if m in g1),
                   "every Block resolved, no anomaly": J["ANOMALY"] == 0 and J["UNRESOLVED-DUMP"] == 0 and J["UNRESOLVED-REPORT"] == 0}
         bad = [k for k, v in checks.items() if not v]
         for k, v in checks.items():
             print(f"[self-test] {'ok  ' if v else 'FAIL'} {k}")
+        print(f"[self-test] entry delta: {len(D['renumbered'])} renumbered by this build, {len(D['held_out'])} class-D arms held out, "
+              f"{len(D['unexplained'])} unexplained ({diff_file})")
+        for m, e in D["unexplained"][:10]:
+            print(f"[self-test]   unexplained: {m}: {e}")
         if bad:
             die("self-test FAILED: " + "; ".join(bad))
         print("[self-test] PASS")
