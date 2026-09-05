@@ -2516,3 +2516,28 @@ hit in every run of that entry; a bin hit at some seeds and not others leaves th
 entry on a tier named by fcov_manifest_required_tiers may not carry a null manifest), cited to gen_fcov.py:152-159 and gen_regress.py:237-260 with
 the lineage recorded once; committed history keeps the old label as written. The DV Lead's own lesson, recorded: before any absence or collision
 claim, run the search without a head or tail limit and read the count before the lines (three conclusions today from sources not read to the end).
+
+## LOG-099 - 2026-09-05 07:12Z - Owner question: ci/env.sh exports LIBPYTHON_LOC only when cocotb-config is on PATH at source time, silently otherwise; the committer gate routes around it
+
+Recorded by the Orchestrator; a question, not a directive. The committer's testbench gate gained a smoke this
+session: gen_tb is built and one directed unit entry is run from a detached worktree assembled strictly from a
+handed list, the worktree being its own mirror root. Four gate runs on tb-infra-2's landing 43 refused at the
+smoke's compile with "vcs1fe: symbol lookup error: libcocotb.so: undefined symbol: Py_Initialize" (vcs rc=127,
+errors=0) while the same smoke passed standalone. A controlled A/B on three fresh worktrees through the gate's own
+shell sequence isolated the cause: exporting LIBPYTHON_LOC from the worktree venv's cocotb-config alone makes the
+compile pass; adding the libpython directory to LD_LIBRARY_PATH alone does not; every variant reported the
+inherited LIBPYTHON_LOC empty after ci/env.sh had been sourced twice. ci/env.sh line 76 reads
+"command -v cocotb-config >/dev/null 2>&1 && export LIBPYTHON_LOC=$(cocotb-config --libpython) || true": a
+fresh worktree has no .venv when the gate sources it, so cocotb-config is absent at that moment and the miss is
+silent; the venv appears only when the smoke links it, after which cocotb-config resolves but nothing re-exports
+the variable. cocotb's VPI entry dlopens libpython through that variable (libcocotb.so carries one undefined
+Py_Initialize and an $ORIGIN-only RPATH), so the compile front-end fails to load it. tb-infra-2 examined its own
+runner (gen_tb_local.sh) as the suspected gap, failed to reproduce the failure from a shell that had the venv on
+PATH, and correctly refused to land a fix for an unconfirmed cause; the runner is not the gap.
+
+ci/env.sh is a site file outside dv/auto_dv, which the contract keeps the team out of, so the gate routes around
+it (the smoke pins PATH to the worktree venv, prints the inherited value, and exports LIBPYTHON_LOC itself).
+Question for the owner: should ci/env.sh derive LIBPYTHON_LOC from the repository venv path rather than from
+PATH, or fail loud when cocotb-config is absent, so that any non-interactive caller in a fresh worktree (a gate,
+a cron, a CI wrapper) gets the variable; or is the route-around the accepted answer? Evidence: the Orchestrator's
+TASKS.md rows of 2026-09-05 06:47Z to 07:11Z (attempts, variants, outputs).
