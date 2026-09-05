@@ -1,0 +1,136 @@
+# gen_fu_l41_irq_ack_target.log -- TDD red/green and MUT-ACKALL1 for the irq-ack release rule
+# Produced 2026-09-05T05:00:35Z on soc-l-11 from a detached archive of
+# 2d87642b1d36a943fc08f7cb47258310c9199e81 with this landing's three files applied. The landing is verified
+# on an archive of 218e9f3: git diff 2d87642 218e9f3 over dv/auto_dv/env/gen_agents_pkg.sv, dv/auto_dv/gen_tb,
+# dv/auto_dv/stim and dv/auto_dv/tb/gen_tb_pkg.sv is EMPTY, so these builds are builds of 218e9f3's sources
+# for everything this log claims. The two new files
+# (the self-test and the directed program) are present in EVERY build below, so the only difference
+# between the builds is dv/auto_dv/env/gen_agents_pkg.sv.
+#
+# BUILDS (dv/auto_dv/tb/gen_tb_local.sh compile; build identity = sha256 of that build's own
+# sources_sha256.txt, first 16, which every run header below carries):
+#   outR  f425a0cb41d987f7  gen_agents_pkg.sv sha256 217c3910142dd3a0
+#   outG  ff11ffe5bad102eb  gen_agents_pkg.sv sha256 e7577ec541d85a11
+#   outM  596ceaf7c17f0e2d  gen_agents_pkg.sv sha256 c96e4d7aae69de2c
+#     outR = gen_agents_pkg.sv exactly as committed at 2d87642; outG = with the fix; outM = the fix
+#     with MUT-ACKALL1 injected. Command "diff outR/sources_sha256.txt outG/sources_sha256.txt" and
+#     the same for outG/outM each report exactly one changed row, that file:
+#     1c1
+#     < 217c3910142dd3a021e8479cb742df389d587c4a2389c6731f1f3ad62f57abf5  dv/auto_dv/env/gen_agents_pkg.sv
+#     ---
+#     > e7577ec541d85a118f7f6cc4c9a5f773af0632d4e5f98724985cbfb91846f626  dv/auto_dv/env/gen_agents_pkg.sv
+#     1c1
+#     < e7577ec541d85a118f7f6cc4c9a5f773af0632d4e5f98724985cbfb91846f626  dv/auto_dv/env/gen_agents_pkg.sv
+#     ---
+#     > c96e4d7aae69de2c18fffab464f0c3a514e771a151022f6b0bf7529dbabbb3dd  dv/auto_dv/env/gen_agents_pkg.sv
+#
+# PROGRAM: dv/auto_dv/stim/gen_directed/gen_irq_ack_directed.S, built by
+#   gen_program.py --directed <that file> --seed 1 --out <dir> --gcc-opts=-I<root>/dv/auto_dv/tests/gen_programs
+#   image 144 words, crc32 0x073dcaa4, entry 0x80000080, tohost 0x800002a0. Every cause vectors to one
+#   handler that reads mcause, reports the lower cause to GEN_MM_EOT_ADDR and stores THAT cause to
+#   GEN_MM_IRQ_ACK_ADDR, then mrets.
+#
+# WHICH LINE THE ACK BELONGS TO: every run below raises mask 0x00044 in ONE IRQ_SET under UNTIL_ACK:
+#   fast[3] (driver line 6, mie bit and mcause lower cause 19) and external (driver line 2, cause 11).
+#   Controller priority takes fast[3] first (gen_irq_rank: a fast id outranks external), so the
+#   acknowledgement belongs to CAUSE 19, LINE 6; the line that must survive it and be taken in its own
+#   entry is EXTERNAL, CAUSE 11, LINE 2. The failing runs below are exactly the runs where cause 11
+#   never arrives.
+#
+# CLAIM: an acknowledgement releases the one line whose cause it names. NOT CLAIMED HERE: any
+#   behaviour of a long storm run (the two storm runs at the end are one short window), and the
+#   gen_test_irq_basic program's own ack ordering, which is the Test Writer's.
+#
+# ------------------------------------------------------------------------------------------------
+# RUNS (dv/auto_dv/tb/gen_tb_local.sh run <build> <name> <module> <plusargs>; verdict from the flow's
+# own gen_verdict.decide, never a grep of this log). Excerpt FILTER for every run below:
+#   grep -E 'GEN_UT_IRQ_ACK|AssertionError: GEN_UT_IRQ_ACK' <run>/stdout.log
+# ------------------------------------------------------------------------------------------------
+
+== RED: the committed driver, the named test
+# run red1: 2026-09-05T04:08:53Z host=soc-l-11 seed=1 module=dv.auto_dv.gen_tb.gen_tests.gen_ut_irq_ack build_sources_sha256=f425a0cb41d987f7 plusargs=[+gen_mem_image=ack1_prog/prog.vmem +gen_mem_image_crc32=073dcaa4 +gen_mem_image_words=144 +gen_boot_addr=80000000 +gen_tohost_addr=800002a0 +gen_fetch_en_at_reset=0]
+14815.00ns INFO cocotb.gen_tb_top GEN_UT_IRQ_ACK raised lines 0x00044 (fast3 and external) under UNTIL_ACK at cycle 1476
+15030.00ns INFO cocotb.gen_tb_top GEN_UT_IRQ_ACK entry 1 through cause 19, acknowledged, at cycle 1498
+AssertionError: GEN_UT_IRQ_ACK: cause 19 was acknowledged and no second entry followed within 4000 cycles: the other line of mask 0x00044 was released by an acknowledgement that did not name it
+verdict: FAIL
+reason: cocotb_summary at stdout.log:56
+marker_seen: False
+exit_code: 0
+uvm_errors: 0
+
+== GREEN: the fix, the named test
+# run green1: 2026-09-05T04:10:21Z host=soc-l-11 seed=1 module=dv.auto_dv.gen_tb.gen_tests.gen_ut_irq_ack build_sources_sha256=ff11ffe5bad102eb plusargs=[+gen_mem_image=ack1_prog/prog.vmem +gen_mem_image_crc32=073dcaa4 +gen_mem_image_words=144 +gen_boot_addr=80000000 +gen_tohost_addr=800002a0 +gen_fetch_en_at_reset=0]
+14815.00ns INFO cocotb.gen_tb_top GEN_UT_IRQ_ACK raised lines 0x00044 (fast3 and external) under UNTIL_ACK at cycle 1476
+15030.00ns INFO cocotb.gen_tb_top GEN_UT_IRQ_ACK entry 1 through cause 19, acknowledged, at cycle 1498
+15470.00ns INFO cocotb.gen_tb_top GEN_UT_IRQ_ACK entry 2 through cause 11 at cycle 1542
+15470.00ns INFO cocotb.gen_tb_top GEN_UT_IRQ_ACK 2 entries, retired 311, compared 311, mismatches 0
+16365.00ns INFO cocotb.gen_tb_top GEN_UT_IRQ_ACK_PASS
+verdict: PASS
+reason: no collected failure mechanism; end marker and config banner present
+marker_seen: True
+exit_code: 0
+uvm_errors: 0
+
+== GREEN with hidden referees inert (+gen_chk_all=0)
+# run fix_named_iso: 2026-09-05T04:12:18Z host=soc-l-11 seed=1 module=dv.auto_dv.gen_tb.gen_tests.gen_ut_irq_ack build_sources_sha256=ff11ffe5bad102eb plusargs=[+gen_mem_image=ack1_prog/prog.vmem +gen_mem_image_crc32=073dcaa4 +gen_mem_image_words=144 +gen_boot_addr=80000000 +gen_tohost_addr=800002a0 +gen_fetch_en_at_reset=0 +gen_chk_all=0]
+14815.00ns INFO cocotb.gen_tb_top GEN_UT_IRQ_ACK raised lines 0x00044 (fast3 and external) under UNTIL_ACK at cycle 1476
+15030.00ns INFO cocotb.gen_tb_top GEN_UT_IRQ_ACK entry 1 through cause 19, acknowledged, at cycle 1498
+15470.00ns INFO cocotb.gen_tb_top GEN_UT_IRQ_ACK entry 2 through cause 11 at cycle 1542
+15470.00ns INFO cocotb.gen_tb_top GEN_UT_IRQ_ACK 2 entries, retired 311, compared 311, mismatches 0
+16365.00ns INFO cocotb.gen_tb_top GEN_UT_IRQ_ACK_PASS
+verdict: PASS
+reason: no collected failure mechanism; end marker and config banner present
+marker_seen: True
+exit_code: 0
+uvm_errors: 0
+
+== MUT-ACKALL1 caught by the named check, hidden referees inert
+# run mut_named: 2026-09-05T04:11:59Z host=soc-l-11 seed=1 module=dv.auto_dv.gen_tb.gen_tests.gen_ut_irq_ack build_sources_sha256=596ceaf7c17f0e2d plusargs=[+gen_mem_image=ack1_prog/prog.vmem +gen_mem_image_crc32=073dcaa4 +gen_mem_image_words=144 +gen_boot_addr=80000000 +gen_tohost_addr=800002a0 +gen_fetch_en_at_reset=0 +gen_chk_all=0]
+14815.00ns INFO cocotb.gen_tb_top GEN_UT_IRQ_ACK raised lines 0x00044 (fast3 and external) under UNTIL_ACK at cycle 1476
+15030.00ns INFO cocotb.gen_tb_top GEN_UT_IRQ_ACK entry 1 through cause 19, acknowledged, at cycle 1498
+AssertionError: GEN_UT_IRQ_ACK: cause 19 was acknowledged and no second entry followed within 4000 cycles: the other line of mask 0x00044 was released by an acknowledgement that did not name it
+verdict: FAIL
+reason: cocotb_summary at stdout.log:57
+marker_seen: False
+exit_code: 0
+uvm_errors: 0
+
+== MUT-ACKALL1 ABLATION CONTROL: the named check removed, the mutation survives
+# run mut_ablated2: 2026-09-05T04:13:33Z host=soc-l-11 seed=1 module=dv.auto_dv.gen_tb.gen_tests.gen_ut_irq_ack_ablated build_sources_sha256=596ceaf7c17f0e2d plusargs=[+gen_mem_image=ack1_prog/prog.vmem +gen_mem_image_crc32=073dcaa4 +gen_mem_image_words=144 +gen_boot_addr=80000000 +gen_tohost_addr=800002a0 +gen_fetch_en_at_reset=0 +gen_chk_all=0]
+14815.00ns INFO cocotb.gen_tb_top GEN_UT_IRQ_ACK raised lines 0x00044 (fast3 and external) under UNTIL_ACK at cycle 1476
+15030.00ns INFO cocotb.gen_tb_top GEN_UT_IRQ_ACK entry 1 through cause 19, acknowledged, at cycle 1498
+55030.00ns INFO cocotb.gen_tb_top GEN_UT_IRQ_ACK_ABLATED entry 2 = None (the named check is ablated)
+55030.00ns INFO cocotb.gen_tb_top GEN_UT_IRQ_ACK_ABLATED entry count unchecked here, retired 1103, compared 1103, mismatches 0
+55955.00ns INFO cocotb.gen_tb_top GEN_UT_IRQ_ACK_ABLATED_PASS
+verdict: PASS
+reason: no collected failure mechanism; end marker and config banner present
+marker_seen: True
+exit_code: 0
+uvm_errors: 0
+
+# ------------------------------------------------------------------------------------------------
+# MUTATION RECORD
+#   id: MUT-ACKALL1
+#   file:line: dv/auto_dv/env/gen_agents_pkg.sv, the line selection inside ack_seen (:613 in the fixed file)
+#   original: if (line >= 0 && level[line] && hold_of[line] == GEN_IRQ_HOLD_UNTIL_ACK) m[line] = 1'b1;
+#   mutated:  for (int i = 0; i < 19; i++) if (level[i] && hold_of[i] == GEN_IRQ_HOLD_UNTIL_ACK) m[i] = 1'b1;
+#   expected detector: the second-entry assertion of gen_ut_irq_ack (the message naming cause 19 and mask 0x00044)
+#   caught: outM/mut_named FAIL on that assertion with +gen_chk_all=0 and 0 UVM_ERRORs
+#   ablation control: outM/mut_ablated2, the same build and plusargs with that one assertion and the
+#     check depending on it removed from a scratch copy of the test: PASS, so nothing else in Zone A
+#     catches the mutation and the verdict belongs to the named check alone.
+#   mutant diff: dv/auto_dv/evidence/gen_tdd_logs/mutations/gen_fu_l41_MUTACKALL1_mutant.diff
+#
+# ------------------------------------------------------------------------------------------------
+# STORM COMPARISON (context, not a claim of this landing): the same seed, image and knobs
+# (+gen_knob_irq_regime=storm +gen_knob_irq_hold=through_handler) on the committed and the fixed
+# build, through gen_ut_lockstep. Both runs FAIL for a reason unrelated to the fix (that test asserts
+# the last end-of-test code is 1, and this program's handler stores causes to the same register), and
+# both are identical where they can be compared:
+#   outR/storm_committed   sva_rvfi_irq_valid_seen, 1087 attempts, 60 match
+#   outG/storm_fixed       sva_rvfi_irq_valid_seen, 1087 attempts, 60 match
+#   outR/storm_committed   10865.00ns INFO cocotb.gen_tb_top GEN_UT_LOCKSTEP retired 201 consumed 201 mismatches 0 tohost 0x00000011
+#   outG/storm_fixed       10865.00ns INFO cocotb.gen_tb_top GEN_UT_LOCKSTEP retired 201 consumed 201 mismatches 0 tohost 0x00000011
+#   The window is short (that vehicle ends at its 200-retirement boot target), so this is not a
+#   statement about a long storm run: it is only evidence that the fix did not change the entry count
+#   over the window both builds ran.

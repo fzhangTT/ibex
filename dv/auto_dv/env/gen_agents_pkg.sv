@@ -191,8 +191,9 @@ package gen_agents_pkg;
   } gen_bus_pend_t;
 
   // ------------------------------------------------------------------------------------------
-  // Reactive slave driver: acts at the falling edge (the core's posedge outputs are stable), grants
-  // after the drawn delay while the outstanding cap allows, performs the memory operation at grant,
+  // Reactive slave driver: decides at the falling edge (the core's REGISTERED outputs are stable there),
+  // grants after the drawn delay while the outstanding cap allows, reads the request and performs the memory
+  // operation at the accepting rising edge (the bus address is combinational and moves within the cycle),
   // and drives the response for exactly one cycle after the drawn latency, in grant order.
   class gen_bus_driver extends uvm_component;
     `uvm_component_utils(gen_bus_driver)
@@ -305,10 +306,20 @@ package gen_agents_pkg;
           if (gnt_wait == 0 && pend.size() < cfg.max_outstanding) begin
             gen_bus_pend_t p;
             logic [38:0] enc;
+            int unsigned gnt_stamp;
+            p.gnt_delay = cycle - req_cycle; p.cycle_req = req_cycle; p.cycle_gnt = cycle; p.outstanding_at_gnt = pend.size(); p.stamp_gnt = bvif.cycle_count;
+            gnt_stamp = ev_on() ? sink.cycle() : 0;   // the export cycle base of THIS edge, before the wait below
+            if (first_pending) begin first_since = req_cycle - release_cycle + 1; first_pending = 0; end   // cycles from the release edge to the request (the driver counts from the first post-release negedge, so +1 gives the RTL's count)
+            vif.gnt = 1'b1;
+            grants++;
+            if (cfg.is_data) bvif.evt_dbus_grants <= bvif.evt_dbus_grants + 32'd1; else bvif.evt_ibus_grants <= bvif.evt_ibus_grants + 32'd1;
+            // the request is READ at the accepting edge, where req and gnt are both sampled high: the core's
+            // bus address is combinational, so a driver writing a DUT input at this falling edge moves it and a
+            // value read here would be a mid-cycle transient the core never presented at any clock edge. Every
+            // figure above is taken at the granting edge, so this moves the value and not the time.
+            @(posedge vif.clk);
             p.addr = vif.addr; p.we = req_we(); p.be = req_be();
             p.wdata = cfg.is_data ? vif.wdata[31:0] : '0;
-            p.gnt_delay = cycle - req_cycle; p.cycle_req = req_cycle; p.cycle_gnt = cycle; p.outstanding_at_gnt = pend.size(); p.stamp_gnt = bvif.cycle_count;
-            if (first_pending) begin first_since = req_cycle - release_cycle + 1; first_pending = 0; end   // cycles from the release edge to the request (the driver counts from the first post-release negedge, so +1 gives the RTL's count)
             p.err = 0; p.injected = 0; p.intg_bad = 0;
             if (armed_hit(GEN_MEM_ERR_ARM_KIND_ERR, p.addr) || (cfg.err_rate > 0 && cfg.in_err_window(p.addr) && ($urandom_range(999, 0) < cfg.err_rate))) begin
               p.err = 1; p.injected = 1; injected_err++;
@@ -340,11 +351,8 @@ package gen_agents_pkg;
             if (p.due <= last_due) p.due = last_due + 1;   // in-order, one response per cycle
             last_due = p.due;
             pend.push_back(p);
-            vif.gnt = 1'b1;
-            grants++;
-            if (cfg.is_data) bvif.evt_dbus_grants <= bvif.evt_dbus_grants + 32'd1; else bvif.evt_ibus_grants <= bvif.evt_ibus_grants + 32'd1;
-            if (ev_on()) sink.write_event(cfg.is_data ? gen_export_line_dbus_gnt(sink.cycle(), p.addr, p.we, p.be, req_stamp, pend.size())
-                                                      : gen_export_line_ibus_gnt(sink.cycle(), p.addr, p.we, p.be, req_stamp, pend.size()));
+            if (ev_on()) sink.write_event(cfg.is_data ? gen_export_line_dbus_gnt(gnt_stamp, p.addr, p.we, p.be, req_stamp, pend.size())
+                                                      : gen_export_line_ibus_gnt(gnt_stamp, p.addr, p.we, p.be, req_stamp, pend.size()));
             gnt_armed = 0;
           end else if (gnt_wait > 0) begin
             gnt_wait--;
@@ -503,7 +511,7 @@ package gen_agents_pkg;
   // hold cycles; IRQ_CLR mask; NMI_PULSE cycles) and from the regime engine (knob_irq_regime quiet /
   // sparse / storm, knob_irq_line_mix, knob_irq_hold). Hold policies: CYCLES(n) releases after n cycles,
   // UNTIL_TAKEN releases the line the DUT took on its own entry (evt_irq_taken and the entry's vector cause), STICKY
-  // never releases, UNTIL_ACK releases on the handler's store to the irq-ack register (memory-model hook).
+  // never releases, UNTIL_ACK releases the one line whose cause the handler's store to the irq-ack register names.
   // Acts at the falling edge like every driver; every change is published on ap with its cycle.
   // Interrupt-line bit i (0 sw, 1 timer, 2 ext, 3..17 fast, 18 nm) -> mie/mip bit position
   function automatic int gen_irq_mie_bit(int line);
@@ -604,9 +612,14 @@ package gen_agents_pkg;
       releases++;
       publish(mask, 1'b0, GEN_IRQ_HOLD_CYCLES, 1'b0);
     endfunction
-    function void ack_seen();   // from the irq-ack MMIO handler
+    // an ack names one line: the handler stores the cause it was entered for, so every other held
+    // line stays pending for its own entry, as a real source would
+    function void ack_seen(logic [31:0] data);   // from the irq-ack MMIO handler
       logic [18:0] m = '0;
-      for (int i = 0; i < 19; i++) if (level[i] && hold_of[i] == GEN_IRQ_HOLD_UNTIL_ACK) m[i] = 1'b1;
+      int unsigned cause = data & 32'h7fff_ffff;   // a store carrying mcause whole names the same line
+      int line = (cause == ibex_pkg::ExcCauseIrqNm.lower_cause) ? 18 : gen_irq_line_of_cause(cause);
+      if (line >= 0 && level[line] && hold_of[line] == GEN_IRQ_HOLD_UNTIL_ACK) m[line] = 1'b1;
+      `uvm_info("GEN_IRQ", $sformatf("ack of cause %0d releases lines %05h", cause, m), UVM_HIGH)
       if (m != 0) cmd_clr(m);
     endfunction
     function logic [18:0] regime_lines();
@@ -816,7 +829,7 @@ package gen_agents_pkg;
     virtual function void on_write(logic [31:0] addr, logic [31:0] data, logic [3:0] be);
       writes++; last_data = data; last_addr = addr;
       uvm_report_info(tag, $sformatf("store 0x%08h at 0x%08h (be %b)", data, addr, be), UVM_HIGH);
-      if (irq != null) irq.ack_seen();
+      if (irq != null) irq.ack_seen(data);
     endfunction
   endclass
 endpackage

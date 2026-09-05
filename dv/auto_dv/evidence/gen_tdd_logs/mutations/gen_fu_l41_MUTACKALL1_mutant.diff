@@ -1,0 +1,11 @@
+--- a/dv/auto_dv/env/gen_agents_pkg.sv
++++ b/dv/auto_dv/env/gen_agents_pkg.sv
+@@ -610,7 +610,7 @@
+       logic [18:0] m = '0;
+       int unsigned cause = data & 32'h7fff_ffff;   // a store carrying mcause whole names the same line
+       int line = (cause == ibex_pkg::ExcCauseIrqNm.lower_cause) ? 18 : gen_irq_line_of_cause(cause);
+-      if (line >= 0 && level[line] && hold_of[line] == GEN_IRQ_HOLD_UNTIL_ACK) m[line] = 1'b1;
++      for (int i = 0; i < 19; i++) if (level[i] && hold_of[i] == GEN_IRQ_HOLD_UNTIL_ACK) m[i] = 1'b1;   // MUT-ACKALL1
+       `uvm_info("GEN_IRQ", $sformatf("ack of cause %0d releases lines %05h", cause, m), UVM_HIGH)
+       if (m != 0) cmd_clr(m);
+     endfunction

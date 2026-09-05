@@ -1,0 +1,16 @@
+--- a/dv/auto_dv/env/gen_agents_pkg.sv
++++ b/dv/auto_dv/env/gen_agents_pkg.sv
+@@ -313,12 +313,7 @@
+             vif.gnt = 1'b1;
+             grants++;
+             if (cfg.is_data) bvif.evt_dbus_grants <= bvif.evt_dbus_grants + 32'd1; else bvif.evt_ibus_grants <= bvif.evt_ibus_grants + 32'd1;
+-            // the request is READ at the accepting edge, where req and gnt are both sampled high: the core's
+-            // bus address is combinational, so a driver writing a DUT input at this falling edge moves it and a
+-            // value read here would be a mid-cycle transient the core never presented at any clock edge. Every
+-            // figure above is taken at the granting edge, so this moves the value and not the time.
+-            @(posedge vif.clk);
+-            p.addr = vif.addr; p.we = req_we(); p.be = req_be();
++            p.addr = vif.addr; p.we = req_we(); p.be = req_be();   // MUT-LATCHNEG1: read at the falling edge
+             p.wdata = cfg.is_data ? vif.wdata[31:0] : '0;
+             p.err = 0; p.injected = 0; p.intg_bad = 0;
+             if (armed_hit(GEN_MEM_ERR_ARM_KIND_ERR, p.addr) || (cfg.err_rate > 0 && cfg.in_err_window(p.addr) && ($urandom_range(999, 0) < cfg.err_rate))) begin

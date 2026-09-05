@@ -1,0 +1,95 @@
+# gen_fu_l41_bus_latch_instant.log -- TDD red/green and MUT-LATCHNEG1 for the slave driver's request-capture instant
+# Produced 2026-09-05T05:00:04Z on soc-l-11 from a detached archive of
+# 218e9f3, this landing's files applied. The test needs no RTL and no core: it is the driver, one bus
+# interface, the bridge register block and the memory model.
+#
+# WHAT IS CLAIMED: a request is captured at the ACCEPTING RISING EDGE, where req and gnt are both sampled
+# high, for every grant-delay shape. NOT CLAIMED HERE: any statement about the core, whose bus behaviour
+# rtl-arch recorded separately as a design property; and no stimulus-shape reproducer was built.
+#
+# THE SHAPE, which is the order-548 wave's: the core presents 0x80000348 at a rising edge, the driver grants at
+# the falling edge, another driver writes a DUT input at that same falling edge and the combinational bus
+# address settles to 0x80000340 before the accepting rising edge. The word answered must be 0x80000340's. A
+# driver reading at the falling edge answers 0x80000348's word, a value the core never presented at any clock
+# edge. The test moves the address in that half cycle by writing it one time unit after the falling edge at
+# which gnt is observed, so the outcome does not depend on delta ordering between two processes.
+#
+# COMPILE (from the archive root), for each build below:
+#   vcs -full64 -sverilog -ntb_opts uvm-1.2 +define+UVM +define+UVM_REGEX_NO_DPI -timescale=1ns/10ps -licqueue \
+#       -f dv/auto_dv/tb/unit/gen_ut_bus_latch.f -top gen_ut_bus_latch_top -o <out>/simv -l <out>/compile.log
+# RUN: ./simv +UVM_NO_RELNOTES ; excerpt FILTER for every run below:
+#   grep -E '^(OK|FAIL)|gen_ut_bus_latch(_ablated)?: |GEN_UT_BUS_LATCH' <out>/stdout.log
+#
+# WHICH gen_agents_pkg.sv EACH BUILD CARRIES (sha256 first 16; nothing else differs between them):
+#   RED       217c3910142dd3a0  exactly as committed at 218e9f3
+#   GREEN     the same file with the capture moved to the accepting edge, and nothing else
+#   MUTANT    7926d147db045acc  this landing's file (both fixes) with MUT-LATCHNEG1 injected
+#   The landing's own file, which the GREEN pair below is the evidence for, is
+#   7f9e7d6cb8b6efa2. The ack fix in it is not exercised by this
+#   test, which never calls ack_seen; the RED/GREEN pair differs by the capture instant alone.
+
+== RED, the committed capture instant
+FAIL same-cycle grant: the word of the address held at the accepting edge got 0xfeed0348 exp 0xfeed0340
+OK   same-cycle grant, address unmoved: the presented address's word got 0xfeed0348 exp 0xfeed0348
+FAIL grant after two cycles: the word of the address held at the accepting edge got 0xfeed0348 exp 0xfeed0340
+OK   grant after two cycles, address unmoved: the presented address's word got 0xfeed0348 exp 0xfeed0348
+gen_ut_bus_latch: 2 failures
+GEN_UT_BUS_LATCH_FAIL
+
+== GREEN, captured at the accepting edge
+OK   same-cycle grant: the word of the address held at the accepting edge got 0xfeed0340 exp 0xfeed0340
+OK   same-cycle grant, address unmoved: the presented address's word got 0xfeed0348 exp 0xfeed0348
+OK   grant after two cycles: the word of the address held at the accepting edge got 0xfeed0340 exp 0xfeed0340
+OK   grant after two cycles, address unmoved: the presented address's word got 0xfeed0348 exp 0xfeed0348
+gen_ut_bus_latch: 0 failures
+GEN_UT_BUS_LATCH_PASS
+
+== MUT-LATCHNEG1, the named test
+FAIL same-cycle grant: the word of the address held at the accepting edge got 0xfeed0348 exp 0xfeed0340
+OK   same-cycle grant, address unmoved: the presented address's word got 0xfeed0348 exp 0xfeed0348
+FAIL grant after two cycles: the word of the address held at the accepting edge got 0xfeed0348 exp 0xfeed0340
+OK   grant after two cycles, address unmoved: the presented address's word got 0xfeed0348 exp 0xfeed0348
+gen_ut_bus_latch: 2 failures
+GEN_UT_BUS_LATCH_FAIL
+
+== MUT-LATCHNEG1, the ABLATION CONTROL
+OK   same-cycle grant, address unmoved: the presented address's word got 0xfeed0348 exp 0xfeed0348
+OK   grant after two cycles, address unmoved: the presented address's word got 0xfeed0348 exp 0xfeed0348
+gen_ut_bus_latch_ablated: 0 failures
+GEN_UT_BUS_LATCH_ABLATED_PASS
+
+# ------------------------------------------------------------------------------------------------
+# MUTATION RECORD
+#   id: MUT-LATCHNEG1
+#   file:line: dv/auto_dv/env/gen_agents_pkg.sv, the request capture inside gen_bus_driver's grant branch
+#   original: @(posedge vif.clk); p.addr = vif.addr; p.we = req_we(); p.be = req_be();
+#   mutated:  p.addr = vif.addr; p.we = req_we(); p.be = req_be();   (read at the falling edge, no wait)
+#   expected detector: the two moved-address checks of gen_ut_bus_latch
+#   caught: the named test FAILS on both of them under the mutation
+#   ablation control: the same mutant build with those two checks removed from a scratch copy of the test
+#     PASSES, so nothing else in the test catches the mutation and the verdict belongs to the named checks
+#   mutant diff: dv/auto_dv/evidence/gen_tdd_logs/mutations/gen_fu_l41_MUTLATCHNEG1_mutant.diff
+#
+# ------------------------------------------------------------------------------------------------
+# THE FIX MOVES THE VALUE AND NOT THE TIME: the grant decision, gnt itself, the grant counters, gnt_delay,
+# cycle_req, cycle_gnt, outstanding_at_gnt, stamp_gnt and the export cycle base are all taken at the granting
+# falling edge, before the wait. Only addr, we, be and wdata, and the memory operation that uses them, moved.
+#
+# WHOLE-TB REGRESSION with this fix and the ack fix together, build outF from the same archive
+# (dv/auto_dv/tb/gen_tb_local.sh), verdicts from the flow's own gen_verdict.decide:
+#   ackgreen   verdict:  UVM_ERRORs 0
+#   irqlines   verdict:  UVM_ERRORs 0
+#   boot       verdict:  UVM_ERRORs 0
+#   lockstorm  verdict:  UVM_ERRORs 0
+#   ackgreen is gen_ut_irq_ack (the ack landing's red, green here), irqlines gen_ut_irq, boot gen_ut_boot,
+#   lockstorm gen_ut_lockstep under a storm irq regime. All four PASS with zero UVM errors.
+#
+# AUDIT of every other clock-edge user in the env, for the register row:
+#   gen_bus_driver serves BOTH buses through cfg.is_data, so this one change covers instruction and data.
+#   Readers of DUT outputs already sample at the posedge: gen_rvfi_monitor (gen_rvfi_pkg.sv:136), the irq pin
+#   sampler and the misc monitor (gen_checkers_pkg.sv:241 and :476), the coverage class's reset watcher
+#   (gen_fcov_pkg.sv:1594).
+#   The other four negedge processes drive inputs and read no combinational DUT output for a value:
+#   gen_scrkey_driver (:453) reads ic_scr_key_req_o, whose only use is to start a delay count, not to produce
+#   a returned value; gen_irq_driver (:629) and gen_dbg_driver (:713) read bridge fields written by the
+#   scoreboard, not DUT pins; gen_ctrl_driver (:781) drives only.

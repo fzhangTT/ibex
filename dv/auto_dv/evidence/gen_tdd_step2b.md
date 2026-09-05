@@ -1265,3 +1265,72 @@ one commit.
 Retained: gen_tdd_logs/fcov/gen_fu_pmp1_covergroups.log, with the sample event and signal source per covergroup, the
 field caveats, the bins no stimulus reaches today and their reasons, and what P-07 needs before the three PMP entries
 flip to measured. One manifest row.
+
+## Landing 41: two agent defects, the acknowledgement's target and the request-capture instant
+
+Both live in gen_agents_pkg.sv, both were found by measurement rather than reading, and both land together because
+they are the two halves of the same failing run. Each has its own red, its own named mutation and its own ablation
+control; the four retained artifacts carry the transcripts.
+
+### The acknowledgement released every held line, not the one it named
+
+ack_seen took no argument, so it could not name a line: it cleared every line at level whose hold was UNTIL_ACK.
+That is designed-as-such and outgrown rather than a slip, and the handler comment said so in the plural; the first
+test to raise two lines at once needed per-line acknowledgement and did not get it. THE DEFECT IS IN THE INTERFACE,
+which is why editing the loop's predicate would have changed nothing.
+
+The fix reads the store's data word as the entry's mcause lower cause with the interrupt bit masked, maps it to one
+driver line through the same cause-to-line map the UNTIL_TAKEN release uses, and releases that line only if it is at
+level under UNTIL_ACK. The units are the CAUSE and not a driver-bit index or a mask, which matters because the two
+namespaces differ on every line (software is cause 3 and driver bit 0, fast0 is cause 16 and bit 3); putting the map
+in the driver keeps a program from having to know the driver's numbering. The Test Writer's inventory measured that
+exactly one program writes that address and it already stores the cause, so no program changes and there is no
+compatibility arm for a caller that does not exist.
+
+The red raises fast[3] (cause 19) and external (cause 11) in one command under UNTIL_ACK and requires two entries.
+The DUT takes fast[3] first, so the acknowledgement belongs to cause 19 and the line that must survive it is
+external. Five runs over three builds differing in this file alone: the committed driver fails the named assertion
+with zero UVM errors, the fix passes with and without hidden referees inert, MUT-ACKALL1 fails the same assertion,
+and the ablated copy of the test passes on that mutant.
+
+A BEHAVIOUR CHANGE TO KNOW ABOUT: an UNTIL_ACK line whose cause is never entered now stays asserted for the rest of
+the run, where any acknowledgement used to clear it. The regime engine gives autonomous lines this hold whenever
+knob_irq_hold is through_handler, so a program that arms mie for only part of the line set will accumulate pins. The
+entry-bound checker does not fire on that case: it judges only a line still at level whose mie bit is set with MIE
+on. A storm pair on the two builds was identical over the window both ran, which is a short window and not a
+statement about a long storm run.
+
+### The slave driver read the request half a cycle before the core presented it
+
+The reactive slave acted entirely at the falling edge on the note that the core's posedge outputs are stable. That
+is true of a REGISTERED output and false of the bus address, which is combinational: a wave read of one failing
+fetch traced ten hops with no register from a top-level interrupt input to the address. Because the irq agent drives
+that input at the same falling edge, which value the slave read was decided by delta ordering between two of our own
+drivers, and in the observed run it answered the previous address's word while the core booked the settled one. The
+core is self-consistent at every rising edge; the only observer that saw an inconsistency was ours.
+
+The fix reads addr, we, be and wdata, and performs the memory operation, at the accepting rising edge where req and
+gnt are both sampled high. THE GRANT DECISION AND EVERY TIMING FIGURE STAY WHERE THEY WERE: gnt itself, the grant
+counters, gnt_delay, cycle_req, cycle_gnt, outstanding_at_gnt, stamp_gnt and the export's cycle base are all taken
+before the wait, so the change moves the value and not the time. One class serves both buses, so the instruction and
+data sides are fixed together.
+
+The red is a directed driver unit test with no RTL and no core, in the shape of the wave: an address presented at a
+rising edge, moved in the half cycle between the granting falling edge and the accepting rising edge, with the
+answered word required to be the settled address's. It moves the address one time unit after the falling edge at
+which gnt is observed, so the verdict does not depend on delta ordering. Two controls with the address unmoved pass
+in every build, so a driver that answered the wrong word for everything would not pass. MUT-LATCHNEG1 puts the read
+back at the falling edge and the two moved-address checks catch it; the copy with those two checks removed survives
+it.
+
+AUDIT of every other clock-edge user, which the register row states: the readers of DUT outputs already sample at
+the posedge (the RVFI monitor, the irq pin sampler, the misc monitor, the coverage class's reset watcher). The other
+four negedge processes drive inputs and read no combinational DUT output for a value: the scr-key driver reads the
+key request only to start a delay count, the irq and debug drivers read bridge fields the scoreboard writes, and the
+control driver drives only.
+
+Whole-TB regression with both fixes in: gen_ut_irq_ack, gen_ut_irq, gen_ut_boot and gen_ut_lockstep under a storm
+irq regime all PASS with zero UVM errors.
+
+Retained: gen_tdd_logs/lockstep/gen_fu_l41_irq_ack_target.log and gen_fu_l41_bus_latch_instant.log with the two
+mutant diffs under gen_tdd_logs/mutations/. Four manifest rows.
