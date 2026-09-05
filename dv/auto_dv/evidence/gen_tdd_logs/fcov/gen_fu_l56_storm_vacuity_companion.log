@@ -1,0 +1,47 @@
+# gen_fu_l56_storm_vacuity_companion.log -- the storm-regime vacuity is NOT closed by landing 54 (TB Infra,
+# 2026-09-05). Companion to gen_fu_l52_commands_corrigendum.log, whose bytes are untouched
+# (md5 44ed232180fc5db85d8f7403c8d6a26e, 7506 bytes), answering rev60's Medium and the Critic's M-3.
+#
+# THE SENTENCE THIS CORRECTS. gen_fu_l52_commands_corrigendum.log:57 reads
+#   "This is the block the DV Lead later ruled VACUOUS rather than less sensitive
+#    (gen_fu_l52_vacuity_corrigendum.log), and landing 54 removes the shape that caused it."
+# The second clause is false. Landing 54 does not remove that shape.
+#
+# WHY, from the committed source rather than from the review. At b9e5fad, gen_checkers_pkg.sv:118 is
+#   if (expects[i].lines[17:0] != 0 || expects[i].nmi) begin expects[i].order_at = st.order; expects[i].unmasked = 0; keep.push_back(expects[i]); end
+# That runs on EVERY interrupt entry, and it zeroes the accrued takeable count of every expectation that
+# survives the entry, not only of the one the entry satisfied. Under a storm the entries are back to back, so
+# the count is reset before it can reach the bound, and a withheld line outranked by the lines actually being
+# taken is never judged. Accrual changed how the count survives a MASKED record; it did not change how the
+# count survives an ENTRY, and the storm vacuity is the second of those.
+# (The line has since moved to :114 in my working tree, where removing the NMI nesting counter shortened the
+# file. The text above is what is committed at b9e5fad and is what the sentence was written about.)
+#
+# WHAT LANDING 54 DID CLOSE, so the correction does not overshoot. The SOFTWARE-TOGGLE vacuity: a line raised,
+# some records in which it could have been taken, a software clear of mstatus.MIE, more records, a software
+# set, and then more takeable records. Before landing 54 the masked stretch discarded everything spent before
+# it, so the bound could never expire however long the line waited; after it the spent records are kept and
+# the case is judged. That is measured in gen_fu_l54_irq_nmi_mask_accrual.log, whose red on that shape reads
+# forty-two records elapsed against eighteen takeable. It is a different vacuity from the storm one.
+#
+# THE MEASUREMENT THAT SETTLES IT IS THE CRITIC'S AND IS ATTRIBUTED, NOT ADOPTED. On its own compiles it ran
+# the l52 storm fixture with the external line withheld against the FIXED checker and read zero fires with the
+# ablation also zero, both runs ending at the alive timeout, while the same mutation fires twelve times on the
+# NMI storm smoke. So the storm arm's zero is a property of that fixture rather than of the storm regime, and
+# the fixed checker still catches a withheld line on a storm smoke that gives it an unmasked stretch. I have
+# not reproduced the twelve and this companion does not claim it; what I verified myself is the entry restart
+# above, which is the mechanism the numbers are consistent with.
+#
+# THE CONTRADICTION WAS INSIDE ONE LANDING AND THAT IS THE PART WORTH RECORDING. gen_fu_l54_irq_nmi_mask_accrual.log
+# and gen_fu_l52_commands_corrigendum.log went into the same commit, b9e5fad. The first says at :72-74 that a
+# regime-independent end-of-test expectation is still owed and describes what it must reconcile. The second
+# says the shape is already removed. Both were written by me on the same day and neither read the other. A
+# corrigendum is exactly the artefact a reader trusts to be careful, and I wrote a claim into one that the
+# landing's own evidence log contradicts four files away.
+#
+# WHAT ACTUALLY CLOSES IT, stated so the sentence is not merely withdrawn. The regime-independent end-of-test
+# expectation: every raised, enabled line reconciled at the END OF TEST rather than by another per-record
+# bound, since a per-record bound is what goes vacuous under load. Its NMI term is NMI mode and debug mode
+# only, never mstatus.MIE, because the NMI has no enable bit and rtl/ibex_controller.sv:498 ORs irq_nm outside
+# irq_enabled. The DV Lead's form already carries the vacuity as open and closing only by that reconciliation,
+# so the plan and this record now agree.
