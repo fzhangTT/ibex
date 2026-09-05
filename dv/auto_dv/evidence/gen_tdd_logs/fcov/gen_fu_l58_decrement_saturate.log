@@ -1,0 +1,125 @@
+# gen_fu_l58_decrement_saturate.log -- the outstanding counters saturate the DECREMENT, and the two properties
+# that read them are one defect (TB Infra, 2026-09-05). Landing 58, feature group "outstanding counters",
+# answering rev66's two Mediums and its Lows, and the Critic's L-2, L-4 and L-5.
+#
+# ================ THE COUNTING RULE, STATED FIRST AND CORRECTED ==========================================
+# I have had this wrong twice and rev66 corrected the second version, so it goes at the top with its own
+# measurement. Grepping a log for an assertion id and calling the result a firing count is wrong THREE ways.
+# On out_l53wrapmut/r, for sva_dbus_outstanding_max, measured rather than reasoned:
+#   5285  lines mentioning the id
+#   2642  lines that are real UVM_ERRORs (matching '^UVM_ERROR [^:]')
+#   2641  the number UVM's own per-id report line carries
+# The doubling is the VCS assertion-source line printed beside each UVM_ERROR. The PLUS ONE is the per-id
+# report line "[sva_dbus_outstanding_max]  2641" in the Report Summary, NOT the overall tally: the tally reads
+# "UVM_ERROR : 2647" and carries no id at all, so it never matches an id-scoped grep. My earlier logs said the
+# plus one was the tally. It was not.
+# AND UVM'S OWN NUMBER UNDERCOUNTS, which is the third way and the one nobody had named. 2641 firings occur
+# before the Report Summary is generated and ONE occurs after it, during the drain, so the per-id line cannot
+# see it. Counting from the per-id line would have been wrong by exactly that.
+# The rule: count firings with '^UVM_ERROR [^:]' scoped to the id, never lines mentioning the id and never the
+# per-id report line.
+#
+# ================ ROW 1: the DECREMENT saturates, not the sum ============================================
+# Landing 55 saturated the SUM: a response was forced to zero when the count plus this cycle's grant was zero.
+# rev66 found the residue: a grant and a spurious response in the SAME cycle leave the sum at one, so the test
+# never fires, the subtraction still happens, and the count lands one below the truth. One below is permanent.
+# The fix subtracts a response only when a beat was outstanding BEFORE this edge:
+#   outstanding <= outstanding + ((req && gnt) ? 1 : 0) - ((rvalid && outstanding > 0) ? 1 : 0);
+# and the same shape on both counters in the properties file. FOUR CASES TRACED, all against the pre-update
+# count: spurious alone, 0 + 0 - 0 = 0, saturated; grant with a spurious response, 0 + 1 - 0 = 1, which is the
+# truth and where the sum form gave 0; a normal response, 3 + 0 - 1 = 2; a normal grant, 0 + 1 - 0 = 1.
+#
+# THE RED. Builds from two archives of 4bd933f: E is that archive unchanged (landing 55's sum form), F is that
+# archive with this landing's two tb files. Mutation MUT-SPURIOUSWINDOW, a response asserted with the pending
+# queue empty on every cycle from 300 to 399 so that some coincide with grants, on both bus agents. Fixture
+# gen_ut_irq on the irq1 program, seed 1.
+#   E build_sources_sha256 1c4f99930208695f      F build_sources_sha256 dd9f4cd5ddd825de
+#
+#   build              rvalid_legal   ibus_rvalid_outstanding   dbus_rvalid_outstanding   real UVM_ERROR
+#   E (sum form)           129                  29                        100                  2640
+#   F (decrement)          110                  10                        100                  2602
+#
+# THE READING, and the accounting closes to the digit. The DBUS obligation reads 100 in BOTH: those are the
+# injected violations themselves, so the fix loses NO real report, which is the claim that decides the design
+# exactly as it did for landing 53. The IBUS obligation drops 29 to 10 and the interface check drops 129 to
+# 110, the SAME nineteen, and the totals drop 2640 to 2602, which is 38 = 19 + 19. Nineteen FALSE failures on
+# legal traffic removed, every real report kept.
+# THIS IS THE HALF LANDING 55 COULD ONLY STATE. Its log named false failures on legal traffic as the second of
+# three wrong signals and had no measurement of them. Nineteen of them, and their removal, is that measurement.
+# CONTROL: all six smokes PASS on the F build with zero referee errors.
+#
+# ================ ROW 2: the two properties are ONE defect, not two ======================================
+# My landing-55 log says at :27-28 that after one spurious response the counter is "permanently ONE LESS than
+# the true outstanding count, and every later update preserves the offset", which is right, and never says that
+# one less READS AS 4294967295 when the true count is zero, nor that this is what makes the bound property
+# flood. A
+# reader can take the bound property and the response obligation for two defects. They are one, seen from the
+# two ends of the same counter, and the re-dump shows it as a strict alternation.
+# From /proj_soc/user_dev/fzhang/ibex_dv_out/redump_4017573/runs/gen_test_irq_basic_165313640/sim.log, every
+# real UVM_ERROR in cycle order with the bound property's runs collapsed:
+#   gnt_only_with_req 18334
+#   rvalid_outstanding 18345  rvalid_legal 18345  outstanding_max 18346..18354   (9)
+#   rvalid_outstanding 18363  rvalid_legal 18363  outstanding_max 18364..18403  (40)
+#   rvalid_outstanding 18408  rvalid_legal 18408  outstanding_max 18409..18417   (9)
+#   rvalid_outstanding 18422  rvalid_legal 18422  outstanding_max 18423..18449  (27)
+#   rvalid_outstanding 18457  rvalid_legal 18457  outstanding_max 18458..18481  (24)
+#   rvalid_outstanding 18979  rvalid_legal 18979  outstanding_max 18980..19027  (48)
+#   rvalid_outstanding 19032  rvalid_legal 19032  outstanding_max 19033..19103  (71)
+#   rvalid_outstanding 19108  rvalid_legal 19108  outstanding_max 19109..19160  (52)
+# Eight obligations, eight floods, strict alternation, and the run's last line is inside the eighth flood.
+# WHY THAT IS THE OFFSET. One below the truth reads as four billion, so with the true count at zero the bound
+# property floods; one grant increments it, four billion plus one is zero, so the bound is satisfied while the
+# truth is one, and the next response reads zero and fires. The flood lengths are the intervals in which the
+# true count sits at zero.
+# IT ALSO ANSWERS AN OBJECTION rather than contradicting it: a counter STUCK at its maximum could not produce
+# eight repeats, because the obligation would be satisfied forever. It does not stay there.
+# AND AN INDEPENDENT CORROBORATION I DID NOT EXPECT: sva_rvalid_legal fires at the IDENTICAL eight cycles and
+# nowhere else. That is the interface counter landing 55 fixed, showing the same offset on the same bus at the
+# same instants with no shared code, which is stronger than the equal totals landing 55 rested on.
+# NOT CLAIMED: which of the eight are real and which are the offset's own false failures. That needs the
+# per-cycle counter value, not the message text.
+#
+# ================ ROW 3 (rev66 Medium 1): the annotation, and the parameter from the BUILD ================
+# The landing-55 annotation named a second route to two data beats. rev66 rejected it and I first "corrected"
+# it by citing gen_dut_top.sv:51, WritebackStage = 1'b0. That is a DEFAULT and this build overrides it. From
+# the build rather than the source, three ways:
+#   compile line       -pvalue+WritebackStage=1
+#   elaboration log    assign 1 /gen_tb_top/WritebackStage (global:"command line":0)
+#   the DUT's banner   RV32E=0 BranchTargetALU=1 WritebackStage=1 ICache=1 ICacheECC=1 ICacheScramble=1
+# So ID takes gen_stall_mem, where data_req_allowed = ~outstanding_memory_access (rtl/ibex_id_stage.sv:1019),
+# and no second request issues while one is outstanding. The misaligned split remains the only path to two.
+# Same conclusion, different mechanism, and rev66's own premise was the default too. The rule I take from it:
+# a parameter declaration gives a default and says nothing about the configuration under test; cite the
+# elaboration log, the compile line or the banner beside the source line.
+#
+# ================ ROW 4 (rev66 Medium 2): the build identity, by base and digest =========================
+# The landing-55 log calls its roots "an archive of HEAD", which names no commit and left the saturating
+# build's identity unresolvable. For this landing: base 4bd933f, both roots archives of it, and the only files
+# copied over F are dv/auto_dv/tb/gen_bus_if.sv and dv/auto_dv/tb/gen_protocol_props.sv as handed with this
+# log. Each mutant build differs from its clean sibling in gen_agents_pkg.sv alone, and both roots were
+# reverted to the committed agent md5 3690968c afterwards.
+#
+# ================ ROW 5: the landing-53 A/B figures ======================================================
+# gen_fu_l53_outstanding_saturate.log:31-32 prints "3 fires" in both columns and "5285 error lines". Counted
+# as firings from the retained runs, out_l53wrapmut/r (build cb66d1b569cba4fb) and out_l53satmut/r
+# (0d548320b34bf9d9), both gen_ut_irq seed 1 on the irq1 program:
+#   response obligation   1 firing in EACH build          (the log says 3, which is its 3 lines mentioning the id)
+#   bound property        2642 wrapping, 0 saturating     (the log says 5285, which is its line count)
+# The conclusion is untouched: the response obligation fires the SAME number in both, so saturating loses no
+# report, and the bound property goes from many to zero. Only the two integers were wrong.
+#
+# ================ THE REMAINING ROWS ====================================================================
+# rev66, the cover match counts: NOT measured, and said so rather than asserted. The landing-53 log states the
+# five covers read zero match in both builds; I have not re-derived those from a vdb and this landing does not.
+# rev66, the mutants as prose: answered by landing 57's retention, which puts both mutant diffs under
+# dv/auto_dv/evidence/gen_irq_fixtures/ rather than in a log's prose.
+# rev66, two overstatements of mine, both corrected here, quoted as they stand rather than tidied. The l55 log
+# at :84 says a single injection at cycle 300 leaves "the whole rest of the run is traffic after" it; I had not
+# characterised that fixture's traffic and the phrase claims more than I measured. At :94-95 it says the second
+# fire corresponds to no "event at all" (the phrase wraps the line there); there WAS an event, a legitimate data
+# response, reported falsely. The second is the worse one, because it describes a false report as no report.
+# The Critic's L-2: the equality of the two builds' response-obligation counts in landing 53 is a QUIET-FIXTURE
+# artefact, not a general property. On that fixture one violation is injected and one is reported either way.
+# The claim it supports, that saturating loses no report, is by construction rather than by that measurement,
+# and this landing's own red is the general evidence: 100 injected, 100 reported by both forms.
+# The Critic's L-4 and L-5 are dispositioned in landing 55's log and its companion and are not reopened here.

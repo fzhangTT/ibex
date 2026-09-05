@@ -130,10 +130,12 @@ module gen_protocol_props
       // which fires the bound properties, makes the data no-third-request property accuse the core of a rule
       // it never broke, and silently kills five covers that test these counters for an EXACT value (1, 2, or
       // the maximum) for the rest of the run. The covers are the quiet half: nothing reports them going dark.
-      ibus_outstanding <= (instr_rvalid_i && (ibus_outstanding + (instr_req_o & instr_gnt_i)) == 0) ? '0
-                          : ibus_outstanding + (instr_req_o & instr_gnt_i) - instr_rvalid_i;
-      dbus_outstanding <= (data_rvalid_i && (dbus_outstanding + (data_req_o & data_gnt_i)) == 0) ? '0
-                          : dbus_outstanding + (data_req_o & data_gnt_i) - data_rvalid_i;
+      // The DECREMENT saturates, not the sum: a response is subtracted only when a beat was outstanding
+      // BEFORE this edge, so a grant and a spurious response in the same cycle cannot leave the count low.
+      ibus_outstanding <= ibus_outstanding + (instr_req_o & instr_gnt_i)
+                          - ((instr_rvalid_i && ibus_outstanding > 0) ? 1 : 0);
+      dbus_outstanding <= dbus_outstanding + (data_req_o & data_gnt_i)
+                          - ((data_rvalid_i && dbus_outstanding > 0) ? 1 : 0);
     end
   end
 
@@ -213,7 +215,7 @@ module gen_protocol_props
                                         (!data_req_o || !$isunknown({data_addr_o, data_we_o, data_be_o}))) // DUT
   `P_ASSERT(dbus, sva_dbus_gnt_only_with_req, data_gnt_i |-> data_req_o)                                    // TB
   `P_ASSERT(dbus, sva_dbus_rvalid_outstanding, data_rvalid_i |-> dbus_outstanding > 0)                      // TB
-  `P_ASSERT(dbus, sva_dbus_outstanding_max,   dbus_outstanding <= DBUS_MAX_OUTSTANDING)                     // TB (the DUT obligation it observes: never more than 2 data beats in flight, reached either by the two halves of one split or by a boundary-shaped access with a pipelined unrelated request behind it, as :219-220 records)
+  `P_ASSERT(dbus, sva_dbus_outstanding_max,   dbus_outstanding <= DBUS_MAX_OUTSTANDING)                     // TB (the DUT obligation it observes: never more than 2 data beats in flight, and the misaligned split's two halves are the only path to two: this build ELABORATES WritebackStage=1, from -pvalue on the compile line and not from the 1'b0 default at gen_dut_top.sv:51, so ID takes gen_stall_mem where data_req_allowed = ~outstanding_memory_access (rtl/ibex_id_stage.sv:1019) and no second request issues while one is outstanding)
   // (dbus_outstanding == 1 excludes a single byte access at offset 3, whose be 1000 equals a split first half)
   // The split rows are covers, not asserts: at the boundary a byte or half-word access at offset 2 or 3 (be 1100 / 1000)
   // is indistinguishable from a split's first half, and a pipelined unrelated request may follow it with one

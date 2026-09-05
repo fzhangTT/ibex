@@ -35,10 +35,11 @@ interface gen_bus_if #(
       outstanding <= 0;
       cycle       <= 0;
     end else begin
-      // saturate at zero: a wrap leaves the count permanently one below the truth, which makes the assertion
-      // below pass on the next real violation and then fail on legal traffic, and lies to its cover both ways
-      outstanding <= (rvalid && (outstanding + ((req && gnt) ? 1 : 0)) == 0) ? 0
-                     : outstanding + ((req && gnt) ? 1 : 0) - (rvalid ? 1 : 0);
+      // The DECREMENT saturates, not the sum: a response is only ever subtracted when a grant is actually
+      // outstanding BEFORE this edge. Qualifying the sum instead leaves the count one low when a grant and a
+      // spurious response land in the same cycle, and one low is permanent, which makes the assertion below
+      // pass on the next real violation, then fail on legal traffic, and lie to its cover both ways.
+      outstanding <= outstanding + ((req && gnt) ? 1 : 0) - ((rvalid && outstanding > 0) ? 1 : 0);
       cycle       <= cycle + 1;
     end
   end
