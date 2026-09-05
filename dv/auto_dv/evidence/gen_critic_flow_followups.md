@@ -306,3 +306,45 @@ Reconciliation with rev79 (read after the rows above were fixed):
 
 CRITIC VERDICT: APPROVE on ccd755d..b83f4fe. Section 7's L-8..L-15 and I-1 are CLOSED; L-16 and I-a owed to runtime-2's next records touch.
 The flow group stays closed on both sides.
+
+## 9. Flow hygiene (runtime-2), b83f4fe..35541bc: Section 8's L-16 closed, the comment boundary ruled; APPROVE (2026-09-05T15:14:03Z)
+
+Artifacts at 35541bc: the seven flow files, gen_critic_response_flow.md, gen_build_identity_counts.log, gen_manifest.md; rev82 read for the reconciliation below.
+Method: a detached worktree of 35541bc for the ten self-tests and the const check (gen_mirror's now runs there, its eight staging
+sites under the self-test scratch root), the scratch root counted, the manifest rows checked, the comment sweep repeated by shape
+over every file under dv/auto_dv/flow, the counts companion's four figures re-measured both ways; findings fixed before any review
+of the landing was read (flow2/draft_s9_flowhyg_prerev.txt). Logs: flow2/prever_35541bc.log, prechecks_35541bc.txt.
+
+- L-16 CLOSED: the three bare "item N" tags are gone, and the response row states the sweep by shape (thirteen sites before, three
+  after) rather than by the regex that missed them. The three that remain are the A-002 citations, each with the guard's intent
+  beside it, kept under the Orchestrator's comment-boundary ruling as the row records it: an owner ruling's identifier may stay as
+  the lookup key for a guard's reason when the comment states the intent and narrates nothing; review ids, plan-item tags, row
+  labels and reviewer or Critic labels go.
+- gen_mirror's self-test stages under the self-test scratch root at all eight sites and export_head's cleanup roots include that
+  root, so a reviewer runs it from a read-only checkout; it passes on my worktree with one case skipped for no mirror_root. The
+  counts companion says its predecessor's figures are line counts and that one is also wrong as an occurrence count (vpi_lib at
+  7930d04, three on two lines), which my own count confirms; the conclusion holds under either count. 45 manifest rows verify.
+- L-17 (Low, comment; runtime-2): the sweep's "three after" counts the .py files. dv/auto_dv/flow/gen_testlist.yaml's header comments
+  carry three Critic labels, "Critic R-01" (:17), "Critic ruling R-5.5" (:42) and "Critic P-07" (:47), the class the ruling says
+  goes, in a file under the same directory that the shape search did not visit; the row's "any comment or docstring under
+  dv/auto_dv/flow" overstates by three.
+- I-a stands (population.py's hardcoded flow path in the basis companion, with no substitution note). runtime-2 has withdrawn its
+  rev82 correction to widen it (the Q-ids and C-3 to intent, a LOG-id audit, the testlist-header labels), so L-17 and L-18 are judged
+  here against 35541bc as it stands and the correction is recorded as owed.
+
+Reconciliation with rev82 (dv/auto_dv/reviews/2026-09-05-claude-diff-b83f4fea-e85fe5ba.md at c736d29, dee992c43c467ae2, on
+b83f4fe..e85fe5b; read after the rows above were fixed):
+- Its verification agrees with mine on the ten self-tests from a read-only checkout, the eight staging sites, the ten reworded sites
+  and the three kept A-002 sites.
+- Its Low, VERIFIED and adopted as L-18 (Low, comment; runtime-2): the response row defines the shape as "ruling identifiers" included
+  and says the re-sweep returns exactly three, while comments under dv/auto_dv/flow carry many more identifiers of that shape; at
+  35541bc I count 22 comment lines with a LOG-<n>, Q-<n>, C-3 or dated-ruling id, 75 LOG-<n> occurrences and 6 Q-<n> occurrences.
+  Under the Orchestrator's widened ruling (owner rulings by intervention-log id or date stay with the intent stated; Q-ids and
+  plan-item tags go) the six Q-ids are the ones owed; the row's count should say what its shape excludes.
+- Its Infos: the ruling unrecorded in the tree is answered at 35541bc, whose row records it ("SETTLED BY RULING"); the :219 cite is :221
+  at e85fe5b, as my sweep found it; the guard-root computation in export_head evaluating selftest_tmp(), whose mkdir creates the
+  directory as a side effect, is verified on gen_flow_const.py:153 and gen_mirror.py:75 and agreed as an Info.
+- Verdict after reconciliation: unchanged. Both agree there is no Major and no Medium.
+
+CRITIC VERDICT: APPROVE on b83f4fe..35541bc. L-16 is CLOSED; L-17 and I-a are owed to runtime-2's next records touch. The flow group stays
+closed on both sides.

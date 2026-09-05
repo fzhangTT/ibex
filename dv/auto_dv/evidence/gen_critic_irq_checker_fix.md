@@ -586,3 +586,16 @@ CRITIC VERDICT: APPROVE on 139c325..41bcbe8 for the irq checker group. The REQUE
 LIFTED (M-1 closed by measurement on the committed tree); L-25 is owed to tb-infra-2's next records touch. The group's standing
 verdict is APPROVE with every code-bearing Low of Section 7 closed; the promotion of the irq entry stays gated on the end-of-test
 expectation as 7.5 says.
+
+### 12.1 Reconciliation with rev81 (appended under a HOLD, 2026-09-05T15:14:03Z; Sections 1-12 unchanged)
+
+rev81 (dv/auto_dv/reviews/2026-09-05-claude-diff-139c325b-41bcbe8c.md at 913b76f, c324e618e8cb44b4) on 139c325..41bcbe8, read after
+Section 12 was committed at bc7a15d. Its verification matches Section 12 item for item (the seven counter runs and the green on
+out_l65 at identity d9a0553bd4e0b326, the regenerated diffs' md5s, the include path, the re-dump arithmetic of 297 in four ids and
+330 omitted, the manifest row). Its Medium 1 is my L-25, the per-Low ledger wrong against the tree's own record; it rates the row
+Medium where I hold Low, because the ledger of record is this file and the mislabels cost a reader a lookup, not a claim about the
+code. Its Low on the 250-to-244 cause: my Section 10 measurement of 244 on a dd23dff archive, before the NMI-mode mirror landed, does
+isolate it as rev81 says, so the mirror did not move the figure and the unnamed build's 250 stays unexplained by anything committed.
+Its Low on the <scratch> roots is folded in L-25. Its Low on the manifest row for the l61 log, VERIFIED and adopted as L-26 (Low,
+records; tb-infra-2): the row says three landings where the log says four and five bus-protocol ids where the log and the run say
+four. Its Info on the identity recipe's locale dependence is noted, as in Section 11. Verdict unchanged: APPROVE, L-25 and L-26 owed.

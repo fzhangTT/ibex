@@ -461,3 +461,22 @@ CRITIC VERDICT: APPROVE on 139c325..41bcbe8 for the outstanding-counters group. 
 69eb33f..ac2d306 is LIFTED: M-2 is closed as corrected, M-3 stayed closed, M-1 closed in Section 7. Owed to tb-infra-2's next records
 touch: L-8 (the window mutation retained as a diff with the wrapper digest it produces) and L-6 (the two totals); L-4 and L-5 to the DV
 Lead. The group's standing verdict from me is APPROVE.
+
+### 9.1 Reconciliation with rev81 (appended under a HOLD, 2026-09-05T15:14:03Z; Sections 1-9 unchanged)
+
+rev81 (dv/auto_dv/reviews/2026-09-05-claude-diff-139c325b-41bcbe8c.md at 913b76f, c324e618e8cb44b4) on 139c325..41bcbe8, read after
+Section 9 was committed at bc7a15d. Its Medium 2 reads Section 9 against Section 8 and is fair on the letter: Section 8 named four
+items for M-2's closure (the clean roots' identities, the copied files' digests against the ac2d306 blobs, the mutation as a retained
+diff with the wrapper digest it produces, and which digests the table used) and said the landing-55 S build stays unresolved with it;
+landing 61 meets the first and the last, and it leaves the copied-file digests to the reader, says the mutation is not retained, and
+does not mention the S build. Section 9 lifted M-2 on the reasoning that the contradiction was what made it a Medium and that the
+retention half is a Low, the grade rev76 also gave it; that reasoning stands, and Section 9 should have said in so many words that it
+narrowed Section 8's criteria and why. THE LIFT STANDS, and the three items rev81 names are owed Lows named here: L-6 (the totals 2640
+and 2602 against my 2684 and 2646, with the delta 38 and the per-id counts the follow-on is to lead with); L-8 (the window mutation
+as a retained diff with the wrapper digest it produces, and beside it the two copied files' digests, which my F build already ties to
+ac2d306's committed blobs, edb6e789fe40b5c5 being that tree's identity); L-10 (Low, records; tb-infra-2): the landing-55 S build
+4ebaa0bc49091b37, either its file digests against a named base or a stated unresolved status. Its Low on the l53 digests
+cb66d1b569cba4fb and 0d548320b34bf9d9 being MUT-SPURIOUSRVALID mutant builds with the mutation unretained, VERIFIED and adopted as
+L-9 (Low, records; tb-infra-2): the l61 log repeats them without saying so, the shape its own Row 2 corrects for the l58 pair. Its Info
+on the locale-dependent identity recipe is noted. Verdict unchanged: APPROVE on 139c325..41bcbe8, the group's standing verdict APPROVE;
+L-6, L-8, L-9 and L-10 owed to tb-infra-2's counters follow-up, L-4 and L-5 to the DV Lead.
