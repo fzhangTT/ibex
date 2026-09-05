@@ -664,3 +664,15 @@ number, not a measurement.
     retained logs inside a records hand. (3) The API document's wait_cycles row now says a post-end call consumes no
     simulation time, so a loop over it must test the return value or eot_seen (rev64 L-3).
     
+
+## 21. Companion lines to Section 19 (rev67): the four figures, cited
+
+Section 19 gives four inflated counts as examples without saying where they live, which is the very failing the rule
+names. They are: (1) 343 against 334 checker fires on the irq_entry checker, gen_chkfix_reruns/gen_index.md:62 (runtime-2's
+record: nine of the 343 were end-of-simulation tally lines) and gen_fu_l54_irq_nmi_mask_accrual.log:24 (tb-infra-2's log
+naming the same case); (2) that l54 log's own first pass, 3, 409 and 410 where the truth is 2, 408 and 409, a UVM_ERROR
+tally line matching a grep for UVM_ERROR (gen_fu_l54_irq_nmi_mask_accrual.log:22-24); (3) and (4) the counters log
+gen_fu_l53_outstanding_saturate.log's two headline figures, line counts labelled as fires, corrected in
+gen_fu_l55_bus_if_saturate.log:109 (5285 error lines against 3 firings under wrapping plus mutation) and :112 (a bound
+property count of 2642 against a response-obligation count of 1). Each is a retained record; the pattern each count
+matched is in the file named.

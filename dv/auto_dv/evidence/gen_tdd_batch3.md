@@ -1132,3 +1132,10 @@ reopened; this line is its companion. (4) The Critic's L-9 and rev58's third Low
 on (a manifest declares guarantees and a count is only evidence; a block calibrated on one generator is evidence for
 that generator alone) had no committed home when Section 18 was written; the DV Lead recorded them in the coverage
 plan's Section 0 at 81355d1, and Section 18's clauses are to be read against that text.
+(5) rev67: the retained log gen_fu_bit_ratified_rev58.log names the two blobs and the 80 green seeds but not the red seeds,
+the comparison or the script; the sidecar gen_fu_bit_ratified_rev58_script.md beside it carries the script text with its
+sha256, the comparison stated exactly (the full emitted text, the report words, k and min_retired, and each item's ops list
+equal to the committed list minus its no-report member), the red seeds 1, 2 and 3 for each of the 18 built items (54
+pairs), and Section D's comment line whole; the log is not reopened. The docstring's "checked through the chained second
+op" now carries its limit: the pair's composite is checked, and a fault common to both binvi is caught only by the item's
+single binvi ops.

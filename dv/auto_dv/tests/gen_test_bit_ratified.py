@@ -39,7 +39,8 @@ delays (the items' Knobs lines) through lib.TIMING_ONLY_KNOBS, varied by the tem
 consumes them. Pinned knobs: none.
 
 Fire-checks per seed: every reporting non-vacuous op of an item reports its reference value (fire_tp_bit_<nnn>_ops; the
-binv pair's first op stores nothing and is checked through the chained second op, counted apart); every
+binv pair's first op stores nothing and is checked through the chained second op, counted apart: the pair's composite is
+checked, a fault common to both binvi is caught by the item's single binvi ops); every
 exhaustive set the item names has a carrier whose report matched (fire_tp_bit_<nnn>_<set>); TP-BIT-021 adds the
 0x55555555 results and the identity word; TP-BIT-040 checks the misa bits on the actual report words;
 fire_program_verdict: tohost pass code, retirement floor reached, report count k. declare_bins() takes the template
@@ -104,7 +105,8 @@ class BitRatified(GenTest):
     # ---- shared per-item checks (the `what` prefix names the calling item) ----------------------------------------
     def fire_ops(self, pre, item):
         """Every reporting non-vacuous op of the item reports its reference value; vacuous compares and the no-report op
-        (checked through its chained successor) are counted apart."""
+        (checked through its chained successor: the pair's composite, so a fault common to both binvi is caught only by the
+        item's single binvi ops) are counted apart."""
         exp = self._p.items[item]
         idxs = exp["ops"]
         bad = [i for i in idxs if i not in self._ok]
