@@ -1,0 +1,36 @@
+# gen_fu_l52_vacuity_corrigendum.log -- corrigendum to gen_fu_l52_irq_entry_bound.log (TB Infra)
+#
+# The retained log's bytes are UNCHANGED; its md5 is fe418c61e39bf272f2814ec581a82794, the value it was
+# committed with. Raised by the DV Lead's ruling on the sensitivity consequence.
+#
+# ================ WHAT IS CORRECTED, AND IT IS ONE WORD DOING TOO LITTLE WORK ================
+# Lines 53-56 read, verbatim:
+#   "The bound now fires only on 18 or more CONSECUTIVE UNMASKED records. Under a heavy storm this checker is
+#    therefore LESS SENSITIVE than it was: the storm arm of the mutation above shows exactly that, a genuine
+#    withheld interrupt producing no fire because no unmasked stretch is long enough. That is deliberate, since
+#    the bound is meant to measure the interrupt path, but it is a real reduction and it is with the DV Lead."
+# The measurement is right and the WORD IS WRONG. "Less sensitive" describes a check that catches less. Under a
+# heavy storm no unmasked stretch reaches the bound at all, so the check cannot fire whatever the DUT does:
+# it is VACUOUS there, not reduced. The DV Lead ruled it that way and the distinction matters, because a check
+# that is merely less sensitive still contributes and a vacuous one contributes nothing while looking green.
+# The fix itself is ACCEPTED and unchanged: a bound accruing over untakeable records measures the HANDLER'S
+# LENGTH, not the interrupt path.
+#
+# ================ WHY THE WORDING MATTERS ENOUGH TO CORRECT ================
+# This is the THIRD check of that shape found this week, after the invariant counter gated on the defect's own
+# flag and the readback counter that only printed. The shared property is a check that cannot observe what it
+# guards, and the shared failure is that each read GREEN. "Less sensitive" files this one under a different
+# heading and would have hidden it from that pattern.
+#
+# ================ WHAT FOLLOWS, AND IT IS NOT A CHANGE TO THIS FIX ================
+# A SECOND, REGIME-INDEPENDENT EXPECTATION is owed before the irq entry's promotion: every raised, enabled line
+# is eventually taken, checked AT END OF TEST against the raised set, rather than by another per-record bound.
+# A per-record bound is what goes vacuous under load; an end-of-test reconciliation cannot. It lands as its own
+# small landing with its own red, after the counter touch, and the DV Lead gives it a plan-side home.
+# The storm expectation is added to the irq entry's promotion conditions; condition (a) is met at 9c7f8f6.
+#
+# ================ WHAT IS NOT CORRECTED ================
+# Every figure in the retained log stands: the 9-fires-to-0 A/B, the first fix's failure and why, the quiet
+# fixture's catch-and-ablate showing the fixed checker still fires, the message mapping, the invariant's move
+# to the referee block and its unexercised state, and the parser test's red with its passing control.
+# END.

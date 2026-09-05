@@ -125,8 +125,15 @@ module gen_protocol_props
       ibus_outstanding <= 0;
       dbus_outstanding <= 0;
     end else begin
-      ibus_outstanding <= ibus_outstanding + (instr_req_o & instr_gnt_i) - instr_rvalid_i;
-      dbus_outstanding <= dbus_outstanding + (data_req_o & data_gnt_i) - data_rvalid_i;
+      // SATURATING at zero. A response with nothing outstanding is a real error and its own property reports
+      // it, so nothing is lost by not wrapping; wrapping turns that ONE event into 4294967295 outstanding,
+      // which fires the bound properties, makes the data no-third-request property accuse the core of a rule
+      // it never broke, and silently kills five covers that test these counters for an EXACT value (1, 2, or
+      // the maximum) for the rest of the run. The covers are the quiet half: nothing reports them going dark.
+      ibus_outstanding <= (instr_rvalid_i && (ibus_outstanding + (instr_req_o & instr_gnt_i)) == 0) ? '0
+                          : ibus_outstanding + (instr_req_o & instr_gnt_i) - instr_rvalid_i;
+      dbus_outstanding <= (data_rvalid_i && (dbus_outstanding + (data_req_o & data_gnt_i)) == 0) ? '0
+                          : dbus_outstanding + (data_req_o & data_gnt_i) - data_rvalid_i;
     end
   end
 
@@ -182,7 +189,7 @@ module gen_protocol_props
   `P_ASSERT(ibus, sva_ibus_req_known,         !$isunknown(instr_req_o) && (!instr_req_o || !$isunknown(instr_addr_o))) // DUT
   `P_ASSERT(ibus, sva_ibus_gnt_only_with_req, instr_gnt_i |-> instr_req_o)                                  // TB
   `P_ASSERT(ibus, sva_ibus_rvalid_outstanding, instr_rvalid_i |-> ibus_outstanding > 0)                     // TB (never in the grant cycle, never unsolicited)
-  `P_ASSERT(ibus, sva_ibus_outstanding_max,   ibus_outstanding <= IBUS_MAX_OUTSTANDING)                     // DUT (bound 8)
+  `P_ASSERT(ibus, sva_ibus_outstanding_max,   ibus_outstanding <= IBUS_MAX_OUTSTANDING)                     // TB (the DUT obligation it observes: never more than 8 instruction beats in flight; the term is this TB's counter, so a wrong model fires it with no DUT behaviour)
   `P_ASSERT(ibus, sva_ibus_err_with_rvalid,   instr_err_i |-> instr_rvalid_i)                               // TB hygiene
   `P_ASSERT(ibus, sva_ibus_rdata_intg,        instr_rvalid_i && !ibus_intg_corrupt_i |-> !instr_rdata_bad) // TB (unless injecting)
   `P_ASSERT(ibus, sva_ibus_rdata_known,       instr_rvalid_i |-> !$isunknown(instr_rdata_i))                // TB
@@ -206,7 +213,7 @@ module gen_protocol_props
                                         (!data_req_o || !$isunknown({data_addr_o, data_we_o, data_be_o}))) // DUT
   `P_ASSERT(dbus, sva_dbus_gnt_only_with_req, data_gnt_i |-> data_req_o)                                    // TB
   `P_ASSERT(dbus, sva_dbus_rvalid_outstanding, data_rvalid_i |-> dbus_outstanding > 0)                      // TB
-  `P_ASSERT(dbus, sva_dbus_outstanding_max,   dbus_outstanding <= DBUS_MAX_OUTSTANDING)                     // DUT (bound 2)
+  `P_ASSERT(dbus, sva_dbus_outstanding_max,   dbus_outstanding <= DBUS_MAX_OUTSTANDING)                     // TB (the DUT obligation it observes: never more than 2 data beats in flight, the two halves of one split)
   // (dbus_outstanding == 1 excludes a single byte access at offset 3, whose be 1000 equals a split first half)
   // The split rows are covers, not asserts: at the boundary a byte or half-word access at offset 2 or 3 (be 1100 / 1000)
   // is indistinguishable from a split's first half, and a pipelined unrelated request may follow it with one
@@ -217,7 +224,7 @@ module gen_protocol_props
                                           ((dbus_first_be == 4'b1110 && data_be_o == 4'b0001) ||
                                            (dbus_first_be == 4'b1100 && data_be_o == 4'b0011) ||
                                            (dbus_first_be == 4'b1000 && data_be_o inside {4'b0111, 4'b0001})))
-  `P_ASSERT(dbus, sva_dbus_no_third_request,  data_req_o |-> dbus_outstanding < DBUS_MAX_OUTSTANDING)       // DUT (a request is never issued with two outstanding)
+  `P_ASSERT(dbus, sva_dbus_no_third_request,  data_req_o |-> dbus_outstanding < DBUS_MAX_OUTSTANDING)       // TB (the DUT obligation it observes: a request is never issued with two outstanding; data_req_o is the DUT's, but the bound term is this TB's counter)
   `P_ASSERT(dbus, sva_dbus_err_with_rvalid,   data_err_i |-> data_rvalid_i)                                 // TB hygiene
   `P_ASSERT(dbus, sva_dbus_rdata_intg,        data_rvalid_i && !dbus_intg_corrupt_i |-> !data_rdata_bad)   // TB (unless injecting)
   `P_ASSERT(dbus, sva_dbus_rdata_known,       data_rvalid_i |-> !$isunknown(data_rdata_i))                  // TB

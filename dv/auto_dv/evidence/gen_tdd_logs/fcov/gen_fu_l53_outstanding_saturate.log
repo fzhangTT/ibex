@@ -1,0 +1,79 @@
+# gen_fu_l53_outstanding_saturate.log -- the outstanding counters saturate, and three properties stop
+# claiming to be DUT obligations (TB Infra, 2026-09-05).
+#
+# THE ONE BUILD EVERY FIGURE COMES FROM
+# $ bash dv/auto_dv/tb/gen_tb_local.sh compile <root>/dv/auto_dv/out_l53b     compile rc=0
+#
+# ================ THE DEFECT, FOUND BY rtl-arch FROM TWO RUN LOGS ================
+# gen_protocol_props.sv:122 declares both counters `int unsigned`, and :128-129 updated them as
+# `counter + (req & gnt) - rvalid`. A response arriving with NOTHING OUTSTANDING computes 0 + 0 - 1 and WRAPS
+# to 4294967295 rather than saturating. rtl-arch read it out of two run logs without a wave: in one seed the
+# bound property first fires exactly one cycle after the first response-without-outstanding, the counter's own
+# update delay, then floods; in another the response obligation fails 70199 times while the bound stays silent
+# for eleven million ticks, which is the same-cycle case this file's own comment already names.
+#
+# ================ TEN READERS, NOT THREE, AND THE THIRD CONSEQUENCE IS THE QUIET ONE ================
+# rtl-arch found a third DUT-annotated property I had missed (:220, the data no-third-request obligation).
+# Sweeping the file properly then found TEN readers of these two counters: five assertions and FIVE COVERS.
+#   assertions :184 :185 :208 :209 :220      covers :189 :215 :216 :225 :226
+# Every cover tests a counter for an EXACT value (1, 2, or the maximum). Once a counter reads four billion
+# those are false for the rest of the run and the covers SILENTLY STOP BEING HIT. No assertion fires for that.
+# THREE CLASSES OF CONSEQUENCE: bound assertions that fire; a request-rule assertion that ACCUSES THE CORE of
+# a rule it never broke; and covers that go dark without a word. The third is the quietest and the worst.
+# IT ALSO DECIDES SATURATE-VERSUS-QUALIFY, which neither of us had argued: qualifying the assertions leaves
+# the COVERS broken, because their problem is the counter's VALUE and not the properties' terms. Counter
+# first, annotations after.
+#
+# ================ THE A/B, BUILT BOTH WAYS SO ONLY THE COUNTER DIFFERS ================
+# MUTATION MUT-SPURIOUSRVALID in the bus driver: a one-shot response asserted at a fixed cycle with the
+# pending queue empty, i.e. a response with nothing outstanding. Two builds, identical but for the counter.
+#                             dbus response obligation      dbus bound property
+#   wrapping + mutation              3 fires                  5285 error lines
+#   saturating + mutation            3 fires                       0
+# THE CLAIM THAT DECIDES THE DESIGN IS MEASURED, not argued: the response obligation fires THE SAME THREE
+# TIMES in both, so the real event is still reported and saturating loses NO report. That is the whole reason
+# saturation beats qualification, and it now rests on a measurement rather than on my reading of the two
+# properties' firing sets.
+#
+# ================ TWO CONSEQUENCES THIS FIXTURE DOES **NOT** DEMONSTRATE ================
+# Stated because I asserted both earlier and the fixture does not support either:
+#   - the no-third-request ACCUSATION: 0 fires in BOTH builds, even with the counter wrapped, because the
+#     program makes no data request during the wrapped window. rtl-arch's reasoning stands and is UNMEASURED.
+#   - the COVER DEATH: those covers read 0 match in BOTH builds, so this fixture never exercises them and
+#     nothing is shown either way.
+# Showing both needs a program that makes data requests while wrapped and reaches the depths those covers
+# test, which is stimulus work larger than this touch and is not folded into it.
+# TWO MEASUREMENT ERRORS OF MY OWN, corrected before they reached this log: my first cover check counted
+# assertion SUMMARY LINES rather than match counts and read as "3 hit in both"; and a combined grep hid that
+# the mutation landed on the DATA bus, not the instruction bus (every ibus property reads 0 throughout).
+#
+# ================ THE EXPOSURE IS REAL AND UNREALISED, WHICH SETS THE PRIORITY ================
+# rtl-arch bounded it rather than leaving it open: ZERO of the 53 runs in the measured round fired any
+# counter-bound property, and zero in the rebaseline. No measured round has ever wrapped a counter. So this
+# matters for future rounds and NOTHING ALREADY RECORDED needs revisiting - which is why it did not jump ahead
+# of the irq checker work.
+#
+# ================ THE FIX ================
+# BOTH COUNTERS SATURATE at zero. The decrement is at most one, so saturation is exactly "a response with
+# nothing outstanding leaves the counter at zero", and the five covers then read true values again.
+# THE THREE ANNOTATIONS MOVE TO TB, each stating the DUT obligation it observes so the obligation is not lost
+# with the label: never more than eight instruction beats in flight; never more than two data beats, the two
+# halves of one split; and a request is never issued with two outstanding. The ruling was that a label is read
+# downstream as "a failure here is a design bug", and a property whose bound term is this TB's own model
+# cannot carry that reading saturated or not, since a wrong model fires it with no DUT behaviour at all.
+# I did not make that call alone: I put both framings to the Orchestrator and rtl-arch rather than relabel
+# three design obligations on my own reading of what a label is for.
+# $ after the change, no DUT-annotated assertion reads either counter: 0
+#
+# ================ ALSO IN THIS TOUCH: THE DEBUG-TERM HYGIENE ================
+# The classifier's pre-state override now reads (st.is_intr && !st.debug_mode). The Critic proved a debug
+# entry cannot carry rvfi_intr, so this changes no behaviour; it carries the term the RTL's own guard carries
+# (the clear at ibex_cs_registers.sv:924 sits inside else if (!debug_mode_i) at :918) so the classifier does
+# not depend on a reachability argument staying true.
+#
+# ================ GATES AND SMOKES ================
+# $ four smokes on the build above, verdicts from each run's own verdict.txt, referee counts from sim.log
+#   storm PASS ref 0 | lines PASS ref 0 | dbgstorm PASS ref 0 | fetchen PASS ref 0
+# $ compile rc=0; no DUT-annotated assertion reads either counter (measured, 0)
+# The counter finding's register row is the DV Lead's to place; it has the finding rather than my wording.
+# END. Every figure above is produced by the command printed above its block.

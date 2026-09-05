@@ -447,7 +447,10 @@ package gen_fcov_pkg;
       // :918) and, for an rvfi_intr record, retires no record of its own, so the
       // previous record here is the instruction that was interrupted, whose MIE was necessarily set.
       // is_trap is NOT the same case: that record's own pre-state really is its predecessor's.
-      bit was  = st.is_intr ? 1'b0 : irq_mstatus_prev[ibex_pkg::CSR_MSTATUS_MIE_BIT];
+      // the entry's clear is guarded on !debug_mode_i in the RTL, so the term is carried here too. The
+      // Critic proved a debug entry cannot carry rvfi_intr (it needs exc_pc_mux_id == EXC_PC_IRQ), so this
+      // is hygiene: it matches the guard rather than relying on a reachability argument staying true.
+      bit was  = (st.is_intr && !st.debug_mode) ? 1'b0 : irq_mstatus_prev[ibex_pkg::CSR_MSTATUS_MIE_BIT];
       bit now  = st.mstatus[ibex_pkg::CSR_MSTATUS_MIE_BIT];
       int unsigned c = irq_commit_cycle(st);
       bit pend = irq_pending_model(irq_pins_at(c), irq_mie_at(c));
