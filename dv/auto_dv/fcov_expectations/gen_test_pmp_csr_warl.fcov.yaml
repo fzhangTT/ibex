@@ -1,0 +1,443 @@
+# not_hit gen_pmp_addr_write_cg.cr_hi_mode.bit30_tor: seed-dependent: hit at 37 of the entry's 39 measured seeds, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_pmp_addr_write_cg.cr_hi_mode.bit31_napot: seed-dependent: hit at 38 of the entry's 39 measured seeds, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_pmp_addr_write_cg.cr_hi_mode.bit31_tor: seed-dependent: hit at 38 of the entry's 39 measured seeds, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_pmp_addr_write_cg.cr_idx_op.a0_csrrc: seed-dependent: hit at 8 of the entry's 39 measured seeds, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_pmp_addr_write_cg.cr_idx_op.a0_csrrs: seed-dependent: hit at 5 of the entry's 39 measured seeds, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_pmp_addr_write_cg.cr_idx_op.a10_csrrc: seed-dependent: hit at 15 of the entry's 39 measured seeds, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_pmp_addr_write_cg.cr_idx_op.a10_csrrs: seed-dependent: hit at 12 of the entry's 39 measured seeds, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_pmp_addr_write_cg.cr_idx_op.a11_csrrc: seed-dependent: hit at 10 of the entry's 39 measured seeds, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_pmp_addr_write_cg.cr_idx_op.a11_csrrs: seed-dependent: hit at 8 of the entry's 39 measured seeds, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_pmp_addr_write_cg.cr_idx_op.a12_csrrc: seed-dependent: hit at 13 of the entry's 39 measured seeds, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_pmp_addr_write_cg.cr_idx_op.a12_csrrs: seed-dependent: hit at 11 of the entry's 39 measured seeds, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_pmp_addr_write_cg.cr_idx_op.a13_csrrc: seed-dependent: hit at 12 of the entry's 39 measured seeds, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_pmp_addr_write_cg.cr_idx_op.a13_csrrs: seed-dependent: hit at 13 of the entry's 39 measured seeds, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_pmp_addr_write_cg.cr_idx_op.a14_csrrc: seed-dependent: hit at 12 of the entry's 39 measured seeds, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_pmp_addr_write_cg.cr_idx_op.a14_csrrs: seed-dependent: hit at 18 of the entry's 39 measured seeds, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_pmp_addr_write_cg.cr_idx_op.a15_csrrc: seed-dependent: hit at 9 of the entry's 39 measured seeds, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_pmp_addr_write_cg.cr_idx_op.a15_csrrs: seed-dependent: hit at 9 of the entry's 39 measured seeds, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_pmp_addr_write_cg.cr_idx_op.a1_csrrc: seed-dependent: hit at 11 of the entry's 39 measured seeds, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_pmp_addr_write_cg.cr_idx_op.a1_csrrs: seed-dependent: hit at 7 of the entry's 39 measured seeds, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_pmp_addr_write_cg.cr_idx_op.a2_csrrc: seed-dependent: hit at 10 of the entry's 39 measured seeds, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_pmp_addr_write_cg.cr_idx_op.a2_csrrs: seed-dependent: hit at 12 of the entry's 39 measured seeds, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_pmp_addr_write_cg.cr_idx_op.a3_csrrc: seed-dependent: hit at 9 of the entry's 39 measured seeds, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_pmp_addr_write_cg.cr_idx_op.a3_csrrs: seed-dependent: hit at 11 of the entry's 39 measured seeds, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_pmp_addr_write_cg.cr_idx_op.a4_csrrc: seed-dependent: hit at 10 of the entry's 39 measured seeds, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_pmp_addr_write_cg.cr_idx_op.a4_csrrs: seed-dependent: hit at 9 of the entry's 39 measured seeds, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_pmp_addr_write_cg.cr_idx_op.a5_csrrc: seed-dependent: hit at 13 of the entry's 39 measured seeds, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_pmp_addr_write_cg.cr_idx_op.a5_csrrs: seed-dependent: hit at 9 of the entry's 39 measured seeds, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_pmp_addr_write_cg.cr_idx_op.a6_csrrc: seed-dependent: hit at 15 of the entry's 39 measured seeds, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_pmp_addr_write_cg.cr_idx_op.a6_csrrs: seed-dependent: hit at 10 of the entry's 39 measured seeds, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_pmp_addr_write_cg.cr_idx_op.a7_csrrc: seed-dependent: hit at 9 of the entry's 39 measured seeds, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_pmp_addr_write_cg.cr_idx_op.a7_csrrs: seed-dependent: hit at 9 of the entry's 39 measured seeds, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_pmp_addr_write_cg.cr_idx_op.a8_csrrc: seed-dependent: hit at 9 of the entry's 39 measured seeds, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_pmp_addr_write_cg.cr_idx_op.a8_csrrs: seed-dependent: hit at 11 of the entry's 39 measured seeds, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_pmp_addr_write_cg.cr_idx_op.a9_csrrc: seed-dependent: hit at 12 of the entry's 39 measured seeds, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_pmp_addr_write_cg.cr_idx_op.a9_csrrs: seed-dependent: hit at 9 of the entry's 39 measured seeds, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_pmp_cfg_write_cg.cp_wr_lrwx.c1000: seed-dependent: hit at 34 of the entry's 39 measured seeds, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_pmp_cfg_write_cg.cp_wr_lrwx.c1001: seed-dependent: hit at 34 of the entry's 39 measured seeds, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_pmp_cfg_write_cg.cp_wr_lrwx.c1010: seed-dependent: hit at 37 of the entry's 39 measured seeds, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_pmp_cfg_write_cg.cp_wr_lrwx.c1011: seed-dependent: hit at 38 of the entry's 39 measured seeds, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_pmp_cfg_write_cg.cp_wr_lrwx.c1100: seed-dependent: hit at 3 of the entry's 39 measured seeds, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_pmp_cfg_write_cg.cp_wr_lrwx.c1110: seed-dependent: hit at 6 of the entry's 39 measured seeds, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_pmp_cfg_write_cg.cp_wr_lrwx.c1111: seed-dependent: hit at 17 of the entry's 39 measured seeds, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_pmp_cfg_write_cg.cr_mode_lrwx.na4_c1000: seed-dependent: hit at 19 of the entry's 39 measured seeds, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_pmp_cfg_write_cg.cr_mode_lrwx.na4_c1001: seed-dependent: hit at 13 of the entry's 39 measured seeds, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_pmp_cfg_write_cg.cr_mode_lrwx.na4_c1010: seed-dependent: hit at 25 of the entry's 39 measured seeds, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_pmp_cfg_write_cg.cr_mode_lrwx.na4_c1011: seed-dependent: hit at 19 of the entry's 39 measured seeds, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_pmp_cfg_write_cg.cr_mode_lrwx.na4_c1100: seed-dependent: hit at 2 of the entry's 39 measured seeds, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_pmp_cfg_write_cg.cr_mode_lrwx.na4_c1101: seed-dependent: hit at 4 of the entry's 39 measured seeds, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_pmp_cfg_write_cg.cr_mode_lrwx.na4_c1110: seed-dependent: hit at 1 of the entry's 39 measured seeds, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_pmp_cfg_write_cg.cr_mode_lrwx.na4_c1111: seed-dependent: hit at 8 of the entry's 39 measured seeds, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_pmp_cfg_write_cg.cr_mode_lrwx.napot_c1000: seed-dependent: hit at 16 of the entry's 39 measured seeds, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_pmp_cfg_write_cg.cr_mode_lrwx.napot_c1001: seed-dependent: hit at 18 of the entry's 39 measured seeds, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_pmp_cfg_write_cg.cr_mode_lrwx.napot_c1010: seed-dependent: hit at 22 of the entry's 39 measured seeds, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_pmp_cfg_write_cg.cr_mode_lrwx.napot_c1011: seed-dependent: hit at 24 of the entry's 39 measured seeds, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_pmp_cfg_write_cg.cr_mode_lrwx.napot_c1100: seed-dependent: hit at 1 of the entry's 39 measured seeds, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_pmp_cfg_write_cg.cr_mode_lrwx.napot_c1101: seed-dependent: hit at 5 of the entry's 39 measured seeds, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_pmp_cfg_write_cg.cr_mode_lrwx.napot_c1110: seed-dependent: hit at 1 of the entry's 39 measured seeds, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_pmp_cfg_write_cg.cr_mode_lrwx.napot_c1111: seed-dependent: hit at 12 of the entry's 39 measured seeds, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_pmp_cfg_write_cg.cr_mode_lrwx.off_c1000: seed-dependent: hit at 24 of the entry's 39 measured seeds, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_pmp_cfg_write_cg.cr_mode_lrwx.off_c1001: seed-dependent: hit at 18 of the entry's 39 measured seeds, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_pmp_cfg_write_cg.cr_mode_lrwx.off_c1010: seed-dependent: hit at 27 of the entry's 39 measured seeds, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_pmp_cfg_write_cg.cr_mode_lrwx.off_c1011: seed-dependent: hit at 26 of the entry's 39 measured seeds, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_pmp_cfg_write_cg.cr_mode_lrwx.off_c1100: stimulus: the lock step draws an entry's address mode and its L=1 LRWX row independently, so this pairing is available to the draw but occurred at none of the 39 measured seeds; the same row appears with na4 at 2 seeds and with napot at 1
+# not_hit gen_pmp_cfg_write_cg.cr_mode_lrwx.off_c1101: seed-dependent: hit at 6 of the entry's 39 measured seeds, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_pmp_cfg_write_cg.cr_mode_lrwx.off_c1110: seed-dependent: hit at 2 of the entry's 39 measured seeds, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_pmp_cfg_write_cg.cr_mode_lrwx.off_c1111: seed-dependent: hit at 2 of the entry's 39 measured seeds, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_pmp_cfg_write_cg.cr_mode_lrwx.tor_c1000: seed-dependent: hit at 3 of the entry's 39 measured seeds, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_pmp_cfg_write_cg.cr_mode_lrwx.tor_c1001: seed-dependent: hit at 3 of the entry's 39 measured seeds, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_pmp_cfg_write_cg.cr_mode_lrwx.tor_c1010: seed-dependent: hit at 4 of the entry's 39 measured seeds, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_pmp_cfg_write_cg.cr_mode_lrwx.tor_c1011: seed-dependent: hit at 11 of the entry's 39 measured seeds, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_pmp_cfg_write_cg.cr_mode_lrwx.tor_c1100: stimulus: the lock step draws an entry's address mode and its L=1 LRWX row independently, so this pairing is available to the draw but occurred at none of the 39 measured seeds; the same row appears with na4 at 2 seeds and with napot at 1
+# not_hit gen_pmp_cfg_write_cg.cr_mode_lrwx.tor_c1110: seed-dependent: hit at 2 of the entry's 39 measured seeds, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_pmp_cfg_write_cg.cr_mode_lrwx.tor_c1111: seed-dependent: hit at 2 of the entry's 39 measured seeds, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_pmp_cfg_write_cg.cr_res_op.nonzero_csrrc: declaration: the cross samples the ATTEMPTED word, and a clear-type write presents the read-back value with its mask cleared; this implementation stores no reserved pmpcfg field (ibex_pkg pmp_cfg_t carries lock, mode, exec, write and read only), so bits 6:5 read zero and no csrrc can present them non-zero, while csrrs and csrrw reach their legs of this cross at every one of the 39 seeds
+# not_hit gen_pmp_cfg_write_cg.cr_rw01_mml.rw01_mml1_l1_rlb1_stored: seed-dependent: hit at 16 of the entry's 39 measured seeds, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_pmp_csr_access_cg.cr_op_class.csrrc_mseccfgh: seed-dependent: hit at 11 of the entry's 39 measured seeds, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_pmp_csr_access_cg.cr_op_class.csrrci_mseccfgh: seed-dependent: hit at 25 of the entry's 39 measured seeds, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_pmp_csr_access_cg.cr_op_class.csrrs_mseccfgh: seed-dependent: hit at 23 of the entry's 39 measured seeds, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_pmp_csr_access_cg.cr_op_class.csrrsi_mseccfgh: seed-dependent: hit at 24 of the entry's 39 measured seeds, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_pmp_csr_access_cg.cr_op_class.csrrw_mseccfgh: seed-dependent: hit at 25 of the entry's 39 measured seeds, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_pmp_csr_access_cg.cr_op_class.csrrwi_mseccfgh: seed-dependent: hit at 8 of the entry's 39 measured seeds, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+test: gen_test_pmp_csr_warl
+owner: test-writer
+bins:
+  - gen_pmp_cfg_write_cg.cp_entry.e0
+  - gen_pmp_cfg_write_cg.cp_entry.e1
+  - gen_pmp_cfg_write_cg.cp_entry.e10
+  - gen_pmp_cfg_write_cg.cp_entry.e11
+  - gen_pmp_cfg_write_cg.cp_entry.e12
+  - gen_pmp_cfg_write_cg.cp_entry.e13
+  - gen_pmp_cfg_write_cg.cp_entry.e14
+  - gen_pmp_cfg_write_cg.cp_entry.e15
+  - gen_pmp_cfg_write_cg.cp_entry.e2
+  - gen_pmp_cfg_write_cg.cp_entry.e3
+  - gen_pmp_cfg_write_cg.cp_entry.e4
+  - gen_pmp_cfg_write_cg.cp_entry.e5
+  - gen_pmp_cfg_write_cg.cp_entry.e6
+  - gen_pmp_cfg_write_cg.cp_entry.e7
+  - gen_pmp_cfg_write_cg.cp_entry.e8
+  - gen_pmp_cfg_write_cg.cp_entry.e9
+  - gen_pmp_cfg_write_cg.cp_op.csrrw
+  - gen_pmp_cfg_write_cg.cp_outcome.written
+  - gen_pmp_cfg_write_cg.cp_prelock.unlocked
+  - gen_pmp_cfg_write_cg.cp_res_bits.zero
+  - gen_pmp_cfg_write_cg.cp_rlb.rlb0
+  - gen_pmp_cfg_write_cg.cp_wr_lrwx.c0000
+  - gen_pmp_cfg_write_cg.cp_wr_lrwx.c0001
+  - gen_pmp_cfg_write_cg.cp_wr_lrwx.c0010
+  - gen_pmp_cfg_write_cg.cp_wr_lrwx.c0011
+  - gen_pmp_cfg_write_cg.cp_wr_lrwx.c0100
+  - gen_pmp_cfg_write_cg.cp_wr_lrwx.c0101
+  - gen_pmp_cfg_write_cg.cp_wr_lrwx.c0110
+  - gen_pmp_cfg_write_cg.cp_wr_lrwx.c0111
+  - gen_pmp_cfg_write_cg.cp_wr_lrwx.c1101
+  - gen_pmp_cfg_write_cg.cp_wr_mode.na4
+  - gen_pmp_cfg_write_cg.cp_wr_mode.napot
+  - gen_pmp_cfg_write_cg.cp_wr_mode.off
+  - gen_pmp_cfg_write_cg.cp_wr_mode.tor
+  - gen_pmp_cfg_write_cg.cr_mode_lrwx.na4_c0000
+  - gen_pmp_cfg_write_cg.cr_mode_lrwx.na4_c0001
+  - gen_pmp_cfg_write_cg.cr_mode_lrwx.na4_c0010
+  - gen_pmp_cfg_write_cg.cr_mode_lrwx.na4_c0011
+  - gen_pmp_cfg_write_cg.cr_mode_lrwx.na4_c0100
+  - gen_pmp_cfg_write_cg.cr_mode_lrwx.na4_c0101
+  - gen_pmp_cfg_write_cg.cr_mode_lrwx.na4_c0110
+  - gen_pmp_cfg_write_cg.cr_mode_lrwx.na4_c0111
+  - gen_pmp_cfg_write_cg.cr_mode_lrwx.napot_c0000
+  - gen_pmp_cfg_write_cg.cr_mode_lrwx.napot_c0001
+  - gen_pmp_cfg_write_cg.cr_mode_lrwx.napot_c0010
+  - gen_pmp_cfg_write_cg.cr_mode_lrwx.napot_c0011
+  - gen_pmp_cfg_write_cg.cr_mode_lrwx.napot_c0100
+  - gen_pmp_cfg_write_cg.cr_mode_lrwx.napot_c0101
+  - gen_pmp_cfg_write_cg.cr_mode_lrwx.napot_c0110
+  - gen_pmp_cfg_write_cg.cr_mode_lrwx.napot_c0111
+  - gen_pmp_cfg_write_cg.cr_mode_lrwx.off_c0000
+  - gen_pmp_cfg_write_cg.cr_mode_lrwx.off_c0001
+  - gen_pmp_cfg_write_cg.cr_mode_lrwx.off_c0010
+  - gen_pmp_cfg_write_cg.cr_mode_lrwx.off_c0011
+  - gen_pmp_cfg_write_cg.cr_mode_lrwx.off_c0100
+  - gen_pmp_cfg_write_cg.cr_mode_lrwx.off_c0101
+  - gen_pmp_cfg_write_cg.cr_mode_lrwx.off_c0110
+  - gen_pmp_cfg_write_cg.cr_mode_lrwx.off_c0111
+  - gen_pmp_cfg_write_cg.cr_mode_lrwx.tor_c0000
+  - gen_pmp_cfg_write_cg.cr_mode_lrwx.tor_c0001
+  - gen_pmp_cfg_write_cg.cr_mode_lrwx.tor_c0010
+  - gen_pmp_cfg_write_cg.cr_mode_lrwx.tor_c0011
+  - gen_pmp_cfg_write_cg.cr_mode_lrwx.tor_c0100
+  - gen_pmp_cfg_write_cg.cr_mode_lrwx.tor_c0101
+  - gen_pmp_cfg_write_cg.cr_mode_lrwx.tor_c0110
+  - gen_pmp_cfg_write_cg.cr_mode_lrwx.tor_c0111
+  - gen_pmp_cfg_write_cg.cr_mode_lrwx.tor_c1101
+  - gen_pmp_csr_access_cg.cp_class.pmpcfg
+  - gen_pmp_csr_access_cg.cp_dbg.d0
+  - gen_pmp_csr_access_cg.cp_op.csrrw
+  - gen_pmp_csr_access_cg.cp_priv.m
+  - gen_pmp_csr_access_cg.cp_rw.write
+  - gen_pmp_csr_access_cg.cp_trap.none
+  - gen_pmp_csr_access_cg.cr_op_class.csrrw_pmpcfg
+  - gen_pmp_csr_access_cg.cr_priv_trap.m_none
+  - gen_pmp_addr_write_cg.cp_hi_bits.bit30
+  - gen_pmp_addr_write_cg.cp_hi_bits.bit31
+  - gen_pmp_addr_write_cg.cp_hi_bits.both
+  - gen_pmp_addr_write_cg.cp_hi_bits.none
+  - gen_pmp_addr_write_cg.cp_idx.a0
+  - gen_pmp_addr_write_cg.cp_idx.a1
+  - gen_pmp_addr_write_cg.cp_idx.a10
+  - gen_pmp_addr_write_cg.cp_idx.a11
+  - gen_pmp_addr_write_cg.cp_idx.a12
+  - gen_pmp_addr_write_cg.cp_idx.a13
+  - gen_pmp_addr_write_cg.cp_idx.a14
+  - gen_pmp_addr_write_cg.cp_idx.a15
+  - gen_pmp_addr_write_cg.cp_idx.a2
+  - gen_pmp_addr_write_cg.cp_idx.a3
+  - gen_pmp_addr_write_cg.cp_idx.a4
+  - gen_pmp_addr_write_cg.cp_idx.a5
+  - gen_pmp_addr_write_cg.cp_idx.a6
+  - gen_pmp_addr_write_cg.cp_idx.a7
+  - gen_pmp_addr_write_cg.cp_idx.a8
+  - gen_pmp_addr_write_cg.cp_idx.a9
+  - gen_pmp_addr_write_cg.cp_next_cfg.next_unlocked_other
+  - gen_pmp_addr_write_cg.cp_op.csrrw
+  - gen_pmp_addr_write_cg.cp_outcome.written
+  - gen_pmp_addr_write_cg.cp_rlb.rlb0
+  - gen_pmp_addr_write_cg.cp_self_lock.unlocked
+  - gen_pmp_addr_write_cg.cp_self_mode.na4
+  - gen_pmp_addr_write_cg.cp_self_mode.napot
+  - gen_pmp_addr_write_cg.cp_self_mode.off
+  - gen_pmp_addr_write_cg.cp_self_mode.tor
+  - gen_pmp_addr_write_cg.cr_hi_mode.bit30_na4
+  - gen_pmp_addr_write_cg.cr_hi_mode.bit30_napot
+  - gen_pmp_addr_write_cg.cr_hi_mode.bit30_off
+  - gen_pmp_addr_write_cg.cr_hi_mode.bit31_na4
+  - gen_pmp_addr_write_cg.cr_hi_mode.bit31_off
+  - gen_pmp_addr_write_cg.cr_hi_mode.both_na4
+  - gen_pmp_addr_write_cg.cr_hi_mode.both_napot
+  - gen_pmp_addr_write_cg.cr_hi_mode.both_off
+  - gen_pmp_addr_write_cg.cr_hi_mode.both_tor
+  - gen_pmp_addr_write_cg.cr_self_lock.unlocked_rlb0_written
+  - gen_pmp_csr_access_cg.cp_class.pmpaddr
+  - gen_pmp_csr_access_cg.cr_op_class.csrrw_pmpaddr
+  - gen_pmp_cfg_write_cg.cp_res_bits.nonzero
+  - gen_pmp_cfg_write_cg.cr_res_op.nonzero_csrrs
+  - gen_pmp_cfg_write_cg.cr_res_op.nonzero_csrrw
+  - gen_pmp_cfg_write_cg.cp_mml.mml0
+  - gen_pmp_cfg_write_cg.cp_outcome.w_dropped
+  - gen_pmp_cfg_write_cg.cr_rw01_mml.rw01_mml0_wdrop
+  - gen_pmp_cfg_write_cg.cp_mml.mml1
+  - gen_pmp_cfg_write_cg.cr_rw01_mml.rw01_mml1_stored
+  - gen_pmp_cfg_write_cg.cp_op.csrrc
+  - gen_pmp_cfg_write_cg.cp_op.csrrs
+  - gen_pmp_addr_write_cg.cp_op.csrrc
+  - gen_pmp_addr_write_cg.cp_op.csrrs
+  - gen_pmp_addr_write_cg.cr_idx_op.a0_csrrw
+  - gen_pmp_addr_write_cg.cr_idx_op.a10_csrrw
+  - gen_pmp_addr_write_cg.cr_idx_op.a11_csrrw
+  - gen_pmp_addr_write_cg.cr_idx_op.a12_csrrw
+  - gen_pmp_addr_write_cg.cr_idx_op.a13_csrrw
+  - gen_pmp_addr_write_cg.cr_idx_op.a14_csrrw
+  - gen_pmp_addr_write_cg.cr_idx_op.a15_csrrw
+  - gen_pmp_addr_write_cg.cr_idx_op.a1_csrrw
+  - gen_pmp_addr_write_cg.cr_idx_op.a2_csrrw
+  - gen_pmp_addr_write_cg.cr_idx_op.a3_csrrw
+  - gen_pmp_addr_write_cg.cr_idx_op.a4_csrrw
+  - gen_pmp_addr_write_cg.cr_idx_op.a5_csrrw
+  - gen_pmp_addr_write_cg.cr_idx_op.a6_csrrw
+  - gen_pmp_addr_write_cg.cr_idx_op.a7_csrrw
+  - gen_pmp_addr_write_cg.cr_idx_op.a8_csrrw
+  - gen_pmp_addr_write_cg.cr_idx_op.a9_csrrw
+  - gen_pmp_csr_access_cg.cp_class.mseccfg
+  - gen_pmp_csr_access_cg.cp_class.mseccfgh
+  - gen_pmp_csr_access_cg.cp_op.csrrc
+  - gen_pmp_csr_access_cg.cp_op.csrrci
+  - gen_pmp_csr_access_cg.cp_op.csrrs
+  - gen_pmp_csr_access_cg.cp_op.csrrsi
+  - gen_pmp_csr_access_cg.cp_op.csrrwi
+  - gen_pmp_csr_access_cg.cp_rw.read_only
+  - gen_pmp_csr_access_cg.cr_op_class.csrrc_mseccfg
+  - gen_pmp_csr_access_cg.cr_op_class.csrrc_pmpaddr
+  - gen_pmp_csr_access_cg.cr_op_class.csrrc_pmpcfg
+  - gen_pmp_csr_access_cg.cr_op_class.csrrci_mseccfg
+  - gen_pmp_csr_access_cg.cr_op_class.csrrci_pmpaddr
+  - gen_pmp_csr_access_cg.cr_op_class.csrrci_pmpcfg
+  - gen_pmp_csr_access_cg.cr_op_class.csrrs_mseccfg
+  - gen_pmp_csr_access_cg.cr_op_class.csrrs_pmpaddr
+  - gen_pmp_csr_access_cg.cr_op_class.csrrs_pmpcfg
+  - gen_pmp_csr_access_cg.cr_op_class.csrrsi_mseccfg
+  - gen_pmp_csr_access_cg.cr_op_class.csrrsi_pmpaddr
+  - gen_pmp_csr_access_cg.cr_op_class.csrrsi_pmpcfg
+  - gen_pmp_csr_access_cg.cr_op_class.csrrw_mseccfg
+  - gen_pmp_csr_access_cg.cr_op_class.csrrwi_mseccfg
+  - gen_pmp_csr_access_cg.cr_op_class.csrrwi_pmpaddr
+  - gen_pmp_csr_access_cg.cr_op_class.csrrwi_pmpcfg
+  - gen_pmp_csr_access_cg.cp_priv.u
+  - gen_pmp_csr_access_cg.cp_trap.illegal
+  - gen_pmp_csr_access_cg.cr_priv_trap.u_illegal
+  - gen_pmp_csr_access_cg.cr_u_class.u_mseccfg_read_only
+  - gen_pmp_csr_access_cg.cr_u_class.u_mseccfg_write
+  - gen_pmp_csr_access_cg.cr_u_class.u_mseccfgh_read_only
+  - gen_pmp_csr_access_cg.cr_u_class.u_mseccfgh_write
+  - gen_pmp_csr_access_cg.cr_u_class.u_pmpaddr_read_only
+  - gen_pmp_csr_access_cg.cr_u_class.u_pmpaddr_write
+  - gen_pmp_csr_access_cg.cr_u_class.u_pmpcfg_read_only
+  - gen_pmp_csr_access_cg.cr_u_class.u_pmpcfg_write
+anti_vacuity:
+  gen_pmp_cfg_write_cg.cp_entry.e0: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the sampler's own PMP-state model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state with that predicted per-entry outcome; the read-back comparison on the following csrr is the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance)"
+  gen_pmp_cfg_write_cg.cp_entry.e1: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the sampler's own PMP-state model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state with that predicted per-entry outcome; the read-back comparison on the following csrr is the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance)"
+  gen_pmp_cfg_write_cg.cp_entry.e10: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the sampler's own PMP-state model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state with that predicted per-entry outcome; the read-back comparison on the following csrr is the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance)"
+  gen_pmp_cfg_write_cg.cp_entry.e11: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the sampler's own PMP-state model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state with that predicted per-entry outcome; the read-back comparison on the following csrr is the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance)"
+  gen_pmp_cfg_write_cg.cp_entry.e12: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the sampler's own PMP-state model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state with that predicted per-entry outcome; the read-back comparison on the following csrr is the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance)"
+  gen_pmp_cfg_write_cg.cp_entry.e13: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the sampler's own PMP-state model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state with that predicted per-entry outcome; the read-back comparison on the following csrr is the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance)"
+  gen_pmp_cfg_write_cg.cp_entry.e14: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the sampler's own PMP-state model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state with that predicted per-entry outcome; the read-back comparison on the following csrr is the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance)"
+  gen_pmp_cfg_write_cg.cp_entry.e15: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the sampler's own PMP-state model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state with that predicted per-entry outcome; the read-back comparison on the following csrr is the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance)"
+  gen_pmp_cfg_write_cg.cp_entry.e2: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the sampler's own PMP-state model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state with that predicted per-entry outcome; the read-back comparison on the following csrr is the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance)"
+  gen_pmp_cfg_write_cg.cp_entry.e3: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the sampler's own PMP-state model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state with that predicted per-entry outcome; the read-back comparison on the following csrr is the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance)"
+  gen_pmp_cfg_write_cg.cp_entry.e4: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the sampler's own PMP-state model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state with that predicted per-entry outcome; the read-back comparison on the following csrr is the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance)"
+  gen_pmp_cfg_write_cg.cp_entry.e5: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the sampler's own PMP-state model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state with that predicted per-entry outcome; the read-back comparison on the following csrr is the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance)"
+  gen_pmp_cfg_write_cg.cp_entry.e6: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the sampler's own PMP-state model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state with that predicted per-entry outcome; the read-back comparison on the following csrr is the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance)"
+  gen_pmp_cfg_write_cg.cp_entry.e7: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the sampler's own PMP-state model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state with that predicted per-entry outcome; the read-back comparison on the following csrr is the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance)"
+  gen_pmp_cfg_write_cg.cp_entry.e8: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the sampler's own PMP-state model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state with that predicted per-entry outcome; the read-back comparison on the following csrr is the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance)"
+  gen_pmp_cfg_write_cg.cp_entry.e9: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the sampler's own PMP-state model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state with that predicted per-entry outcome; the read-back comparison on the following csrr is the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance)"
+  gen_pmp_cfg_write_cg.cp_op.csrrw: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the sampler's own PMP-state model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state with that predicted per-entry outcome; the read-back comparison on the following csrr is the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance)"
+  gen_pmp_cfg_write_cg.cp_outcome.written: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the sampler's own PMP-state model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state with that predicted per-entry outcome; the read-back comparison on the following csrr is the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance)"
+  gen_pmp_cfg_write_cg.cp_prelock.unlocked: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the sampler's own PMP-state model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state with that predicted per-entry outcome; the read-back comparison on the following csrr is the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance)"
+  gen_pmp_cfg_write_cg.cp_res_bits.zero: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the sampler's own PMP-state model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state with that predicted per-entry outcome; the read-back comparison on the following csrr is the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance)"
+  gen_pmp_cfg_write_cg.cp_rlb.rlb0: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the sampler's own PMP-state model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state with that predicted per-entry outcome; the read-back comparison on the following csrr is the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance)"
+  gen_pmp_cfg_write_cg.cp_wr_lrwx.c0000: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the sampler's own PMP-state model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state with that predicted per-entry outcome; the read-back comparison on the following csrr is the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance)"
+  gen_pmp_cfg_write_cg.cp_wr_lrwx.c0001: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the sampler's own PMP-state model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state with that predicted per-entry outcome; the read-back comparison on the following csrr is the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance)"
+  gen_pmp_cfg_write_cg.cp_wr_lrwx.c0010: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the sampler's own PMP-state model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state with that predicted per-entry outcome; the read-back comparison on the following csrr is the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance)"
+  gen_pmp_cfg_write_cg.cp_wr_lrwx.c0011: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the sampler's own PMP-state model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state with that predicted per-entry outcome; the read-back comparison on the following csrr is the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance)"
+  gen_pmp_cfg_write_cg.cp_wr_lrwx.c0100: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the sampler's own PMP-state model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state with that predicted per-entry outcome; the read-back comparison on the following csrr is the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance)"
+  gen_pmp_cfg_write_cg.cp_wr_lrwx.c0101: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the sampler's own PMP-state model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state with that predicted per-entry outcome; the read-back comparison on the following csrr is the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance)"
+  gen_pmp_cfg_write_cg.cp_wr_lrwx.c0110: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the sampler's own PMP-state model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state with that predicted per-entry outcome; the read-back comparison on the following csrr is the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance)"
+  gen_pmp_cfg_write_cg.cp_wr_lrwx.c0111: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the sampler's own PMP-state model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state with that predicted per-entry outcome; the read-back comparison on the following csrr is the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance)"
+  gen_pmp_cfg_write_cg.cp_wr_lrwx.c1101: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the sampler's own PMP-state model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state with that predicted per-entry outcome; the read-back comparison on the following csrr is the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance)"
+  gen_pmp_cfg_write_cg.cp_wr_mode.na4: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the sampler's own PMP-state model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state with that predicted per-entry outcome; the read-back comparison on the following csrr is the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance)"
+  gen_pmp_cfg_write_cg.cp_wr_mode.napot: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the sampler's own PMP-state model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state with that predicted per-entry outcome; the read-back comparison on the following csrr is the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance)"
+  gen_pmp_cfg_write_cg.cp_wr_mode.off: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the sampler's own PMP-state model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state with that predicted per-entry outcome; the read-back comparison on the following csrr is the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance)"
+  gen_pmp_cfg_write_cg.cp_wr_mode.tor: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the sampler's own PMP-state model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state with that predicted per-entry outcome; the read-back comparison on the following csrr is the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance)"
+  gen_pmp_cfg_write_cg.cr_mode_lrwx.na4_c0000: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the sampler's own PMP-state model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state with that predicted per-entry outcome; the read-back comparison on the following csrr is the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance)"
+  gen_pmp_cfg_write_cg.cr_mode_lrwx.na4_c0001: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the sampler's own PMP-state model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state with that predicted per-entry outcome; the read-back comparison on the following csrr is the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance)"
+  gen_pmp_cfg_write_cg.cr_mode_lrwx.na4_c0010: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the sampler's own PMP-state model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state with that predicted per-entry outcome; the read-back comparison on the following csrr is the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance)"
+  gen_pmp_cfg_write_cg.cr_mode_lrwx.na4_c0011: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the sampler's own PMP-state model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state with that predicted per-entry outcome; the read-back comparison on the following csrr is the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance)"
+  gen_pmp_cfg_write_cg.cr_mode_lrwx.na4_c0100: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the sampler's own PMP-state model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state with that predicted per-entry outcome; the read-back comparison on the following csrr is the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance)"
+  gen_pmp_cfg_write_cg.cr_mode_lrwx.na4_c0101: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the sampler's own PMP-state model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state with that predicted per-entry outcome; the read-back comparison on the following csrr is the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance)"
+  gen_pmp_cfg_write_cg.cr_mode_lrwx.na4_c0110: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the sampler's own PMP-state model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state with that predicted per-entry outcome; the read-back comparison on the following csrr is the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance)"
+  gen_pmp_cfg_write_cg.cr_mode_lrwx.na4_c0111: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the sampler's own PMP-state model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state with that predicted per-entry outcome; the read-back comparison on the following csrr is the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance)"
+  gen_pmp_cfg_write_cg.cr_mode_lrwx.napot_c0000: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the sampler's own PMP-state model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state with that predicted per-entry outcome; the read-back comparison on the following csrr is the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance)"
+  gen_pmp_cfg_write_cg.cr_mode_lrwx.napot_c0001: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the sampler's own PMP-state model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state with that predicted per-entry outcome; the read-back comparison on the following csrr is the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance)"
+  gen_pmp_cfg_write_cg.cr_mode_lrwx.napot_c0010: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the sampler's own PMP-state model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state with that predicted per-entry outcome; the read-back comparison on the following csrr is the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance)"
+  gen_pmp_cfg_write_cg.cr_mode_lrwx.napot_c0011: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the sampler's own PMP-state model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state with that predicted per-entry outcome; the read-back comparison on the following csrr is the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance)"
+  gen_pmp_cfg_write_cg.cr_mode_lrwx.napot_c0100: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the sampler's own PMP-state model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state with that predicted per-entry outcome; the read-back comparison on the following csrr is the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance)"
+  gen_pmp_cfg_write_cg.cr_mode_lrwx.napot_c0101: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the sampler's own PMP-state model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state with that predicted per-entry outcome; the read-back comparison on the following csrr is the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance)"
+  gen_pmp_cfg_write_cg.cr_mode_lrwx.napot_c0110: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the sampler's own PMP-state model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state with that predicted per-entry outcome; the read-back comparison on the following csrr is the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance)"
+  gen_pmp_cfg_write_cg.cr_mode_lrwx.napot_c0111: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the sampler's own PMP-state model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state with that predicted per-entry outcome; the read-back comparison on the following csrr is the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance)"
+  gen_pmp_cfg_write_cg.cr_mode_lrwx.off_c0000: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the sampler's own PMP-state model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state with that predicted per-entry outcome; the read-back comparison on the following csrr is the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance)"
+  gen_pmp_cfg_write_cg.cr_mode_lrwx.off_c0001: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the sampler's own PMP-state model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state with that predicted per-entry outcome; the read-back comparison on the following csrr is the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance)"
+  gen_pmp_cfg_write_cg.cr_mode_lrwx.off_c0010: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the sampler's own PMP-state model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state with that predicted per-entry outcome; the read-back comparison on the following csrr is the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance)"
+  gen_pmp_cfg_write_cg.cr_mode_lrwx.off_c0011: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the sampler's own PMP-state model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state with that predicted per-entry outcome; the read-back comparison on the following csrr is the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance)"
+  gen_pmp_cfg_write_cg.cr_mode_lrwx.off_c0100: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the sampler's own PMP-state model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state with that predicted per-entry outcome; the read-back comparison on the following csrr is the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance)"
+  gen_pmp_cfg_write_cg.cr_mode_lrwx.off_c0101: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the sampler's own PMP-state model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state with that predicted per-entry outcome; the read-back comparison on the following csrr is the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance)"
+  gen_pmp_cfg_write_cg.cr_mode_lrwx.off_c0110: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the sampler's own PMP-state model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state with that predicted per-entry outcome; the read-back comparison on the following csrr is the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance)"
+  gen_pmp_cfg_write_cg.cr_mode_lrwx.off_c0111: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the sampler's own PMP-state model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state with that predicted per-entry outcome; the read-back comparison on the following csrr is the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance)"
+  gen_pmp_cfg_write_cg.cr_mode_lrwx.tor_c0000: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the sampler's own PMP-state model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state with that predicted per-entry outcome; the read-back comparison on the following csrr is the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance)"
+  gen_pmp_cfg_write_cg.cr_mode_lrwx.tor_c0001: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the sampler's own PMP-state model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state with that predicted per-entry outcome; the read-back comparison on the following csrr is the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance)"
+  gen_pmp_cfg_write_cg.cr_mode_lrwx.tor_c0010: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the sampler's own PMP-state model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state with that predicted per-entry outcome; the read-back comparison on the following csrr is the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance)"
+  gen_pmp_cfg_write_cg.cr_mode_lrwx.tor_c0011: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the sampler's own PMP-state model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state with that predicted per-entry outcome; the read-back comparison on the following csrr is the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance)"
+  gen_pmp_cfg_write_cg.cr_mode_lrwx.tor_c0100: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the sampler's own PMP-state model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state with that predicted per-entry outcome; the read-back comparison on the following csrr is the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance)"
+  gen_pmp_cfg_write_cg.cr_mode_lrwx.tor_c0101: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the sampler's own PMP-state model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state with that predicted per-entry outcome; the read-back comparison on the following csrr is the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance)"
+  gen_pmp_cfg_write_cg.cr_mode_lrwx.tor_c0110: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the sampler's own PMP-state model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state with that predicted per-entry outcome; the read-back comparison on the following csrr is the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance)"
+  gen_pmp_cfg_write_cg.cr_mode_lrwx.tor_c0111: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the sampler's own PMP-state model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state with that predicted per-entry outcome; the read-back comparison on the following csrr is the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance)"
+  gen_pmp_cfg_write_cg.cr_mode_lrwx.tor_c1101: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the sampler's own PMP-state model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state with that predicted per-entry outcome; the read-back comparison on the following csrr is the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance)"
+  gen_pmp_csr_access_cg.cp_class.pmpcfg: "CG-PMP-004: only PMP CSR instructions sample; a hit proves the access happened in the named privilege/debug state and its trap outcome was compared"
+  gen_pmp_csr_access_cg.cp_dbg.d0: "CG-PMP-004: only PMP CSR instructions sample; a hit proves the access happened in the named privilege/debug state and its trap outcome was compared"
+  gen_pmp_csr_access_cg.cp_op.csrrw: "CG-PMP-004: only PMP CSR instructions sample; a hit proves the access happened in the named privilege/debug state and its trap outcome was compared"
+  gen_pmp_csr_access_cg.cp_priv.m: "CG-PMP-004: only PMP CSR instructions sample; a hit proves the access happened in the named privilege/debug state and its trap outcome was compared"
+  gen_pmp_csr_access_cg.cp_rw.write: "CG-PMP-004: only PMP CSR instructions sample; a hit proves the access happened in the named privilege/debug state and its trap outcome was compared"
+  gen_pmp_csr_access_cg.cp_trap.none: "CG-PMP-004: only PMP CSR instructions sample; a hit proves the access happened in the named privilege/debug state and its trap outcome was compared"
+  gen_pmp_csr_access_cg.cr_op_class.csrrw_pmpcfg: "CG-PMP-004: only PMP CSR instructions sample; a hit proves the access happened in the named privilege/debug state and its trap outcome was compared"
+  gen_pmp_csr_access_cg.cr_priv_trap.m_none: "CG-PMP-004: only PMP CSR instructions sample; a hit proves the access happened in the named privilege/debug state and its trap outcome was compared"
+  gen_pmp_addr_write_cg.cp_hi_bits.bit30: "CG-PMP-002: only pmpaddr writes sample; cp_outcome comes from the readback model's pre-write lock state, so a hit proves the lock / TOR-lock rule was exercised for that index and compared on the following csrr"
+  gen_pmp_addr_write_cg.cp_hi_bits.bit31: "CG-PMP-002: only pmpaddr writes sample; cp_outcome comes from the readback model's pre-write lock state, so a hit proves the lock / TOR-lock rule was exercised for that index and compared on the following csrr"
+  gen_pmp_addr_write_cg.cp_hi_bits.both: "CG-PMP-002: only pmpaddr writes sample; cp_outcome comes from the readback model's pre-write lock state, so a hit proves the lock / TOR-lock rule was exercised for that index and compared on the following csrr"
+  gen_pmp_addr_write_cg.cp_hi_bits.none: "CG-PMP-002: only pmpaddr writes sample; cp_outcome comes from the readback model's pre-write lock state, so a hit proves the lock / TOR-lock rule was exercised for that index and compared on the following csrr"
+  gen_pmp_addr_write_cg.cp_idx.a0: "CG-PMP-002: only pmpaddr writes sample; cp_outcome comes from the readback model's pre-write lock state, so a hit proves the lock / TOR-lock rule was exercised for that index and compared on the following csrr"
+  gen_pmp_addr_write_cg.cp_idx.a1: "CG-PMP-002: only pmpaddr writes sample; cp_outcome comes from the readback model's pre-write lock state, so a hit proves the lock / TOR-lock rule was exercised for that index and compared on the following csrr"
+  gen_pmp_addr_write_cg.cp_idx.a10: "CG-PMP-002: only pmpaddr writes sample; cp_outcome comes from the readback model's pre-write lock state, so a hit proves the lock / TOR-lock rule was exercised for that index and compared on the following csrr"
+  gen_pmp_addr_write_cg.cp_idx.a11: "CG-PMP-002: only pmpaddr writes sample; cp_outcome comes from the readback model's pre-write lock state, so a hit proves the lock / TOR-lock rule was exercised for that index and compared on the following csrr"
+  gen_pmp_addr_write_cg.cp_idx.a12: "CG-PMP-002: only pmpaddr writes sample; cp_outcome comes from the readback model's pre-write lock state, so a hit proves the lock / TOR-lock rule was exercised for that index and compared on the following csrr"
+  gen_pmp_addr_write_cg.cp_idx.a13: "CG-PMP-002: only pmpaddr writes sample; cp_outcome comes from the readback model's pre-write lock state, so a hit proves the lock / TOR-lock rule was exercised for that index and compared on the following csrr"
+  gen_pmp_addr_write_cg.cp_idx.a14: "CG-PMP-002: only pmpaddr writes sample; cp_outcome comes from the readback model's pre-write lock state, so a hit proves the lock / TOR-lock rule was exercised for that index and compared on the following csrr"
+  gen_pmp_addr_write_cg.cp_idx.a15: "CG-PMP-002: only pmpaddr writes sample; cp_outcome comes from the readback model's pre-write lock state, so a hit proves the lock / TOR-lock rule was exercised for that index and compared on the following csrr"
+  gen_pmp_addr_write_cg.cp_idx.a2: "CG-PMP-002: only pmpaddr writes sample; cp_outcome comes from the readback model's pre-write lock state, so a hit proves the lock / TOR-lock rule was exercised for that index and compared on the following csrr"
+  gen_pmp_addr_write_cg.cp_idx.a3: "CG-PMP-002: only pmpaddr writes sample; cp_outcome comes from the readback model's pre-write lock state, so a hit proves the lock / TOR-lock rule was exercised for that index and compared on the following csrr"
+  gen_pmp_addr_write_cg.cp_idx.a4: "CG-PMP-002: only pmpaddr writes sample; cp_outcome comes from the readback model's pre-write lock state, so a hit proves the lock / TOR-lock rule was exercised for that index and compared on the following csrr"
+  gen_pmp_addr_write_cg.cp_idx.a5: "CG-PMP-002: only pmpaddr writes sample; cp_outcome comes from the readback model's pre-write lock state, so a hit proves the lock / TOR-lock rule was exercised for that index and compared on the following csrr"
+  gen_pmp_addr_write_cg.cp_idx.a6: "CG-PMP-002: only pmpaddr writes sample; cp_outcome comes from the readback model's pre-write lock state, so a hit proves the lock / TOR-lock rule was exercised for that index and compared on the following csrr"
+  gen_pmp_addr_write_cg.cp_idx.a7: "CG-PMP-002: only pmpaddr writes sample; cp_outcome comes from the readback model's pre-write lock state, so a hit proves the lock / TOR-lock rule was exercised for that index and compared on the following csrr"
+  gen_pmp_addr_write_cg.cp_idx.a8: "CG-PMP-002: only pmpaddr writes sample; cp_outcome comes from the readback model's pre-write lock state, so a hit proves the lock / TOR-lock rule was exercised for that index and compared on the following csrr"
+  gen_pmp_addr_write_cg.cp_idx.a9: "CG-PMP-002: only pmpaddr writes sample; cp_outcome comes from the readback model's pre-write lock state, so a hit proves the lock / TOR-lock rule was exercised for that index and compared on the following csrr"
+  gen_pmp_addr_write_cg.cp_next_cfg.next_unlocked_other: "CG-PMP-002: only pmpaddr writes sample; cp_outcome comes from the readback model's pre-write lock state, so a hit proves the lock / TOR-lock rule was exercised for that index and compared on the following csrr"
+  gen_pmp_addr_write_cg.cp_op.csrrw: "CG-PMP-002: only pmpaddr writes sample; cp_outcome comes from the readback model's pre-write lock state, so a hit proves the lock / TOR-lock rule was exercised for that index and compared on the following csrr"
+  gen_pmp_addr_write_cg.cp_outcome.written: "CG-PMP-002: only pmpaddr writes sample; cp_outcome comes from the readback model's pre-write lock state, so a hit proves the lock / TOR-lock rule was exercised for that index and compared on the following csrr"
+  gen_pmp_addr_write_cg.cp_rlb.rlb0: "CG-PMP-002: only pmpaddr writes sample; cp_outcome comes from the readback model's pre-write lock state, so a hit proves the lock / TOR-lock rule was exercised for that index and compared on the following csrr"
+  gen_pmp_addr_write_cg.cp_self_lock.unlocked: "CG-PMP-002: only pmpaddr writes sample; cp_outcome comes from the readback model's pre-write lock state, so a hit proves the lock / TOR-lock rule was exercised for that index and compared on the following csrr"
+  gen_pmp_addr_write_cg.cp_self_mode.na4: "CG-PMP-002: only pmpaddr writes sample; cp_outcome comes from the readback model's pre-write lock state, so a hit proves the lock / TOR-lock rule was exercised for that index and compared on the following csrr"
+  gen_pmp_addr_write_cg.cp_self_mode.napot: "CG-PMP-002: only pmpaddr writes sample; cp_outcome comes from the readback model's pre-write lock state, so a hit proves the lock / TOR-lock rule was exercised for that index and compared on the following csrr"
+  gen_pmp_addr_write_cg.cp_self_mode.off: "CG-PMP-002: only pmpaddr writes sample; cp_outcome comes from the readback model's pre-write lock state, so a hit proves the lock / TOR-lock rule was exercised for that index and compared on the following csrr"
+  gen_pmp_addr_write_cg.cp_self_mode.tor: "CG-PMP-002: only pmpaddr writes sample; cp_outcome comes from the readback model's pre-write lock state, so a hit proves the lock / TOR-lock rule was exercised for that index and compared on the following csrr"
+  gen_pmp_addr_write_cg.cr_hi_mode.bit30_na4: "CG-PMP-002: only pmpaddr writes sample; cp_outcome comes from the readback model's pre-write lock state, so a hit proves the lock / TOR-lock rule was exercised for that index and compared on the following csrr"
+  gen_pmp_addr_write_cg.cr_hi_mode.bit30_napot: "CG-PMP-002: only pmpaddr writes sample; cp_outcome comes from the readback model's pre-write lock state, so a hit proves the lock / TOR-lock rule was exercised for that index and compared on the following csrr"
+  gen_pmp_addr_write_cg.cr_hi_mode.bit30_off: "CG-PMP-002: only pmpaddr writes sample; cp_outcome comes from the readback model's pre-write lock state, so a hit proves the lock / TOR-lock rule was exercised for that index and compared on the following csrr"
+  gen_pmp_addr_write_cg.cr_hi_mode.bit31_na4: "CG-PMP-002: only pmpaddr writes sample; cp_outcome comes from the readback model's pre-write lock state, so a hit proves the lock / TOR-lock rule was exercised for that index and compared on the following csrr"
+  gen_pmp_addr_write_cg.cr_hi_mode.bit31_off: "CG-PMP-002: only pmpaddr writes sample; cp_outcome comes from the readback model's pre-write lock state, so a hit proves the lock / TOR-lock rule was exercised for that index and compared on the following csrr"
+  gen_pmp_addr_write_cg.cr_hi_mode.both_na4: "CG-PMP-002: only pmpaddr writes sample; cp_outcome comes from the readback model's pre-write lock state, so a hit proves the lock / TOR-lock rule was exercised for that index and compared on the following csrr"
+  gen_pmp_addr_write_cg.cr_hi_mode.both_napot: "CG-PMP-002: only pmpaddr writes sample; cp_outcome comes from the readback model's pre-write lock state, so a hit proves the lock / TOR-lock rule was exercised for that index and compared on the following csrr"
+  gen_pmp_addr_write_cg.cr_hi_mode.both_off: "CG-PMP-002: only pmpaddr writes sample; cp_outcome comes from the readback model's pre-write lock state, so a hit proves the lock / TOR-lock rule was exercised for that index and compared on the following csrr"
+  gen_pmp_addr_write_cg.cr_hi_mode.both_tor: "CG-PMP-002: only pmpaddr writes sample; cp_outcome comes from the readback model's pre-write lock state, so a hit proves the lock / TOR-lock rule was exercised for that index and compared on the following csrr"
+  gen_pmp_addr_write_cg.cr_self_lock.unlocked_rlb0_written: "CG-PMP-002: only pmpaddr writes sample; cp_outcome comes from the readback model's pre-write lock state, so a hit proves the lock / TOR-lock rule was exercised for that index and compared on the following csrr"
+  gen_pmp_csr_access_cg.cp_class.pmpaddr: "CG-PMP-004: only PMP CSR instructions sample; a hit proves the access happened in the named privilege/debug state and its trap outcome was compared"
+  gen_pmp_csr_access_cg.cr_op_class.csrrw_pmpaddr: "CG-PMP-004: only PMP CSR instructions sample; a hit proves the access happened in the named privilege/debug state and its trap outcome was compared"
+  gen_pmp_cfg_write_cg.cp_res_bits.nonzero: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the sampler's own PMP-state model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state with that predicted per-entry outcome; the read-back comparison on the following csrr is the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance)"
+  gen_pmp_cfg_write_cg.cr_res_op.nonzero_csrrs: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the sampler's own PMP-state model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state with that predicted per-entry outcome; the read-back comparison on the following csrr is the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance)"
+  gen_pmp_cfg_write_cg.cr_res_op.nonzero_csrrw: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the sampler's own PMP-state model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state with that predicted per-entry outcome; the read-back comparison on the following csrr is the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance)"
+  gen_pmp_cfg_write_cg.cp_mml.mml0: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the sampler's own PMP-state model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state with that predicted per-entry outcome; the read-back comparison on the following csrr is the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance)"
+  gen_pmp_cfg_write_cg.cp_outcome.w_dropped: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the sampler's own PMP-state model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state with that predicted per-entry outcome; the read-back comparison on the following csrr is the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance)"
+  gen_pmp_cfg_write_cg.cr_rw01_mml.rw01_mml0_wdrop: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the sampler's own PMP-state model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state with that predicted per-entry outcome; the read-back comparison on the following csrr is the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance)"
+  gen_pmp_cfg_write_cg.cp_mml.mml1: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the sampler's own PMP-state model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state with that predicted per-entry outcome; the read-back comparison on the following csrr is the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance)"
+  gen_pmp_cfg_write_cg.cr_rw01_mml.rw01_mml1_stored: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the sampler's own PMP-state model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state with that predicted per-entry outcome; the read-back comparison on the following csrr is the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance)"
+  gen_pmp_cfg_write_cg.cp_op.csrrc: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the sampler's own PMP-state model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state with that predicted per-entry outcome; the read-back comparison on the following csrr is the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance)"
+  gen_pmp_cfg_write_cg.cp_op.csrrs: "CG-PMP-001: only pmpcfg writes sample (most retires never do) and the outcome field is computed by the sampler's own PMP-state model from the pre-write state, so a hit proves a pmpcfg write retired under the named lock/MML/RLB state with that predicted per-entry outcome; the read-back comparison on the following csrr is the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance)"
+  gen_pmp_addr_write_cg.cp_op.csrrc: "CG-PMP-002: only pmpaddr writes sample; cp_outcome comes from the readback model's pre-write lock state, so a hit proves the lock / TOR-lock rule was exercised for that index and compared on the following csrr"
+  gen_pmp_addr_write_cg.cp_op.csrrs: "CG-PMP-002: only pmpaddr writes sample; cp_outcome comes from the readback model's pre-write lock state, so a hit proves the lock / TOR-lock rule was exercised for that index and compared on the following csrr"
+  gen_pmp_addr_write_cg.cr_idx_op.a0_csrrw: "CG-PMP-002: only pmpaddr writes sample; cp_outcome comes from the readback model's pre-write lock state, so a hit proves the lock / TOR-lock rule was exercised for that index and compared on the following csrr"
+  gen_pmp_addr_write_cg.cr_idx_op.a10_csrrw: "CG-PMP-002: only pmpaddr writes sample; cp_outcome comes from the readback model's pre-write lock state, so a hit proves the lock / TOR-lock rule was exercised for that index and compared on the following csrr"
+  gen_pmp_addr_write_cg.cr_idx_op.a11_csrrw: "CG-PMP-002: only pmpaddr writes sample; cp_outcome comes from the readback model's pre-write lock state, so a hit proves the lock / TOR-lock rule was exercised for that index and compared on the following csrr"
+  gen_pmp_addr_write_cg.cr_idx_op.a12_csrrw: "CG-PMP-002: only pmpaddr writes sample; cp_outcome comes from the readback model's pre-write lock state, so a hit proves the lock / TOR-lock rule was exercised for that index and compared on the following csrr"
+  gen_pmp_addr_write_cg.cr_idx_op.a13_csrrw: "CG-PMP-002: only pmpaddr writes sample; cp_outcome comes from the readback model's pre-write lock state, so a hit proves the lock / TOR-lock rule was exercised for that index and compared on the following csrr"
+  gen_pmp_addr_write_cg.cr_idx_op.a14_csrrw: "CG-PMP-002: only pmpaddr writes sample; cp_outcome comes from the readback model's pre-write lock state, so a hit proves the lock / TOR-lock rule was exercised for that index and compared on the following csrr"
+  gen_pmp_addr_write_cg.cr_idx_op.a15_csrrw: "CG-PMP-002: only pmpaddr writes sample; cp_outcome comes from the readback model's pre-write lock state, so a hit proves the lock / TOR-lock rule was exercised for that index and compared on the following csrr"
+  gen_pmp_addr_write_cg.cr_idx_op.a1_csrrw: "CG-PMP-002: only pmpaddr writes sample; cp_outcome comes from the readback model's pre-write lock state, so a hit proves the lock / TOR-lock rule was exercised for that index and compared on the following csrr"
+  gen_pmp_addr_write_cg.cr_idx_op.a2_csrrw: "CG-PMP-002: only pmpaddr writes sample; cp_outcome comes from the readback model's pre-write lock state, so a hit proves the lock / TOR-lock rule was exercised for that index and compared on the following csrr"
+  gen_pmp_addr_write_cg.cr_idx_op.a3_csrrw: "CG-PMP-002: only pmpaddr writes sample; cp_outcome comes from the readback model's pre-write lock state, so a hit proves the lock / TOR-lock rule was exercised for that index and compared on the following csrr"
+  gen_pmp_addr_write_cg.cr_idx_op.a4_csrrw: "CG-PMP-002: only pmpaddr writes sample; cp_outcome comes from the readback model's pre-write lock state, so a hit proves the lock / TOR-lock rule was exercised for that index and compared on the following csrr"
+  gen_pmp_addr_write_cg.cr_idx_op.a5_csrrw: "CG-PMP-002: only pmpaddr writes sample; cp_outcome comes from the readback model's pre-write lock state, so a hit proves the lock / TOR-lock rule was exercised for that index and compared on the following csrr"
+  gen_pmp_addr_write_cg.cr_idx_op.a6_csrrw: "CG-PMP-002: only pmpaddr writes sample; cp_outcome comes from the readback model's pre-write lock state, so a hit proves the lock / TOR-lock rule was exercised for that index and compared on the following csrr"
+  gen_pmp_addr_write_cg.cr_idx_op.a7_csrrw: "CG-PMP-002: only pmpaddr writes sample; cp_outcome comes from the readback model's pre-write lock state, so a hit proves the lock / TOR-lock rule was exercised for that index and compared on the following csrr"
+  gen_pmp_addr_write_cg.cr_idx_op.a8_csrrw: "CG-PMP-002: only pmpaddr writes sample; cp_outcome comes from the readback model's pre-write lock state, so a hit proves the lock / TOR-lock rule was exercised for that index and compared on the following csrr"
+  gen_pmp_addr_write_cg.cr_idx_op.a9_csrrw: "CG-PMP-002: only pmpaddr writes sample; cp_outcome comes from the readback model's pre-write lock state, so a hit proves the lock / TOR-lock rule was exercised for that index and compared on the following csrr"
+  gen_pmp_csr_access_cg.cp_class.mseccfg: "CG-PMP-004: only PMP CSR instructions sample; a hit proves the access happened in the named privilege/debug state and its trap outcome was compared"
+  gen_pmp_csr_access_cg.cp_class.mseccfgh: "CG-PMP-004: only PMP CSR instructions sample; a hit proves the access happened in the named privilege/debug state and its trap outcome was compared"
+  gen_pmp_csr_access_cg.cp_op.csrrc: "CG-PMP-004: only PMP CSR instructions sample; a hit proves the access happened in the named privilege/debug state and its trap outcome was compared"
+  gen_pmp_csr_access_cg.cp_op.csrrci: "CG-PMP-004: only PMP CSR instructions sample; a hit proves the access happened in the named privilege/debug state and its trap outcome was compared"
+  gen_pmp_csr_access_cg.cp_op.csrrs: "CG-PMP-004: only PMP CSR instructions sample; a hit proves the access happened in the named privilege/debug state and its trap outcome was compared"
+  gen_pmp_csr_access_cg.cp_op.csrrsi: "CG-PMP-004: only PMP CSR instructions sample; a hit proves the access happened in the named privilege/debug state and its trap outcome was compared"
+  gen_pmp_csr_access_cg.cp_op.csrrwi: "CG-PMP-004: only PMP CSR instructions sample; a hit proves the access happened in the named privilege/debug state and its trap outcome was compared"
+  gen_pmp_csr_access_cg.cp_rw.read_only: "CG-PMP-004: only PMP CSR instructions sample; a hit proves the access happened in the named privilege/debug state and its trap outcome was compared"
+  gen_pmp_csr_access_cg.cr_op_class.csrrc_mseccfg: "CG-PMP-004: only PMP CSR instructions sample; a hit proves the access happened in the named privilege/debug state and its trap outcome was compared"
+  gen_pmp_csr_access_cg.cr_op_class.csrrc_pmpaddr: "CG-PMP-004: only PMP CSR instructions sample; a hit proves the access happened in the named privilege/debug state and its trap outcome was compared"
+  gen_pmp_csr_access_cg.cr_op_class.csrrc_pmpcfg: "CG-PMP-004: only PMP CSR instructions sample; a hit proves the access happened in the named privilege/debug state and its trap outcome was compared"
+  gen_pmp_csr_access_cg.cr_op_class.csrrci_mseccfg: "CG-PMP-004: only PMP CSR instructions sample; a hit proves the access happened in the named privilege/debug state and its trap outcome was compared"
+  gen_pmp_csr_access_cg.cr_op_class.csrrci_pmpaddr: "CG-PMP-004: only PMP CSR instructions sample; a hit proves the access happened in the named privilege/debug state and its trap outcome was compared"
+  gen_pmp_csr_access_cg.cr_op_class.csrrci_pmpcfg: "CG-PMP-004: only PMP CSR instructions sample; a hit proves the access happened in the named privilege/debug state and its trap outcome was compared"
+  gen_pmp_csr_access_cg.cr_op_class.csrrs_mseccfg: "CG-PMP-004: only PMP CSR instructions sample; a hit proves the access happened in the named privilege/debug state and its trap outcome was compared"
+  gen_pmp_csr_access_cg.cr_op_class.csrrs_pmpaddr: "CG-PMP-004: only PMP CSR instructions sample; a hit proves the access happened in the named privilege/debug state and its trap outcome was compared"
+  gen_pmp_csr_access_cg.cr_op_class.csrrs_pmpcfg: "CG-PMP-004: only PMP CSR instructions sample; a hit proves the access happened in the named privilege/debug state and its trap outcome was compared"
+  gen_pmp_csr_access_cg.cr_op_class.csrrsi_mseccfg: "CG-PMP-004: only PMP CSR instructions sample; a hit proves the access happened in the named privilege/debug state and its trap outcome was compared"
+  gen_pmp_csr_access_cg.cr_op_class.csrrsi_pmpaddr: "CG-PMP-004: only PMP CSR instructions sample; a hit proves the access happened in the named privilege/debug state and its trap outcome was compared"
+  gen_pmp_csr_access_cg.cr_op_class.csrrsi_pmpcfg: "CG-PMP-004: only PMP CSR instructions sample; a hit proves the access happened in the named privilege/debug state and its trap outcome was compared"
+  gen_pmp_csr_access_cg.cr_op_class.csrrw_mseccfg: "CG-PMP-004: only PMP CSR instructions sample; a hit proves the access happened in the named privilege/debug state and its trap outcome was compared"
+  gen_pmp_csr_access_cg.cr_op_class.csrrwi_mseccfg: "CG-PMP-004: only PMP CSR instructions sample; a hit proves the access happened in the named privilege/debug state and its trap outcome was compared"
+  gen_pmp_csr_access_cg.cr_op_class.csrrwi_pmpaddr: "CG-PMP-004: only PMP CSR instructions sample; a hit proves the access happened in the named privilege/debug state and its trap outcome was compared"
+  gen_pmp_csr_access_cg.cr_op_class.csrrwi_pmpcfg: "CG-PMP-004: only PMP CSR instructions sample; a hit proves the access happened in the named privilege/debug state and its trap outcome was compared"
+  gen_pmp_csr_access_cg.cp_priv.u: "CG-PMP-004: only PMP CSR instructions sample; a hit proves the access happened in the named privilege/debug state and its trap outcome was compared"
+  gen_pmp_csr_access_cg.cp_trap.illegal: "CG-PMP-004: only PMP CSR instructions sample; a hit proves the access happened in the named privilege/debug state and its trap outcome was compared"
+  gen_pmp_csr_access_cg.cr_priv_trap.u_illegal: "CG-PMP-004: only PMP CSR instructions sample; a hit proves the access happened in the named privilege/debug state and its trap outcome was compared"
+  gen_pmp_csr_access_cg.cr_u_class.u_mseccfg_read_only: "CG-PMP-004: only PMP CSR instructions sample; a hit proves the access happened in the named privilege/debug state and its trap outcome was compared"
+  gen_pmp_csr_access_cg.cr_u_class.u_mseccfg_write: "CG-PMP-004: only PMP CSR instructions sample; a hit proves the access happened in the named privilege/debug state and its trap outcome was compared"
+  gen_pmp_csr_access_cg.cr_u_class.u_mseccfgh_read_only: "CG-PMP-004: only PMP CSR instructions sample; a hit proves the access happened in the named privilege/debug state and its trap outcome was compared"
+  gen_pmp_csr_access_cg.cr_u_class.u_mseccfgh_write: "CG-PMP-004: only PMP CSR instructions sample; a hit proves the access happened in the named privilege/debug state and its trap outcome was compared"
+  gen_pmp_csr_access_cg.cr_u_class.u_pmpaddr_read_only: "CG-PMP-004: only PMP CSR instructions sample; a hit proves the access happened in the named privilege/debug state and its trap outcome was compared"
+  gen_pmp_csr_access_cg.cr_u_class.u_pmpaddr_write: "CG-PMP-004: only PMP CSR instructions sample; a hit proves the access happened in the named privilege/debug state and its trap outcome was compared"
+  gen_pmp_csr_access_cg.cr_u_class.u_pmpcfg_read_only: "CG-PMP-004: only PMP CSR instructions sample; a hit proves the access happened in the named privilege/debug state and its trap outcome was compared"
+  gen_pmp_csr_access_cg.cr_u_class.u_pmpcfg_write: "CG-PMP-004: only PMP CSR instructions sample; a hit proves the access happened in the named privilege/debug state and its trap outcome was compared"

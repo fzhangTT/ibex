@@ -436,3 +436,60 @@ gathered was right each time: I called a record internally inconsistent when the
 faithful; I said the wrong stub ran under the wrong cause when the cause was correct; and I made a point of "three
 slots" when the third address was a pc+4 link value. The finding survived because the three slot words and the two
 record lines were quoted. Quote the words; label the reading as one.
+
+## 12. PMP step 1 promoted to measured: three manifests shaped by a 40-seed block
+
+WHAT THE MANIFESTS REST ON. runtime-2's PMP block (dv/auto_dv/work/runtime/done/gen_pmp_40seed.yaml
+and gen_pmp_40seed_bins.txt), pinned to 218e9f3, coverage on, unmeasured, base seed 218090305, 407 bins
+of the four gen_pmp covergroups, per-bin per-seed counts from one urg report per test rather than a
+merged one, because a merged report's per-bin test column caps at ten tests with no marker.
+
+THE DENOMINATOR IS 39 FOR THE WARL ENTRY, NOT 40, and the manifest renderer emits no header, so every
+WARL reason line carries "of the entry's 39 measured seeds" instead. The missing run is a defect in a
+committed generator, not in the flow: at seed 230969025 gen_pmp_csr_warl_prog.py asserts on its own
+draw, "TP-PMP-003 mml0: no reserved-bit write drawn" (gen_pmp_csr_warl_prog.py:615, reached from
+build() at :1066 through the tp003 block at :1062), so no program was generated and no result was
+written. The fix joins the generator-fixes group; a measured entry whose generator asserts on a seed
+refuses a round.
+
+WHAT EACH ENTRY DECLARES AFTER THE FLIP, by the rule that only a bin hit at EVERY seed of its entry
+may leave that entry's manifest:
+
+  entry                    seeds   declared   stays   bins_not_hit
+  gen_test_pmp_csr_warl       39        260     179             81
+  gen_test_pmp_mseccfg        40         26      26              0
+  gen_test_pmp_lock           40         41      39              2
+
+The two coverpoints called out before the wave came back asymmetric, which is what the every-seed rule
+exists to catch: cp_mml.mml1 is every-seed for csr_warl (39/39) and mseccfg (40/40) but 18/40 for lock,
+and cp_rlb.rlb1 is every-seed for lock and mseccfg but 32/39 for csr_warl. Neither is safe to declare
+from all three, and the two entries that are safe differ between them.
+
+THREE BINS ARE DECLARATION-CLASS, NOT STIMULUS GAPS, and each names the mechanism read out of the
+committed source rather than a label:
+  - gen_pmp_cfg_write_cg.cr_res_op.nonzero_csrrc. The cross samples the ATTEMPTED word, and a
+    clear-type write presents the read-back value with its mask cleared. This implementation stores no
+    reserved pmpcfg field (ibex_pkg pmp_cfg_t carries lock, mode, exec, write and read only), so bits
+    6:5 read zero and no csrrc can present them non-zero. csrrs and csrrw reach their legs of the same
+    cross at every one of the 39 seeds, which is the control that makes this a property of the op
+    rather than of the draw.
+  - gen_pmp_addr_write_cg.cr_self_lock.locked_rlb1_written and cr_tor_lock.nl_tor_rlb1_written. The
+    sampler sets self_locked as the entry's lock bit AND NOT mseccfg.RLB, and next_locked the same way
+    for the next entry (gen_fcov_pkg.sv). So cp_self_lock.locked and cp_rlb.rlb1 are mutually exclusive
+    by construction, as are cp_next_cfg.next_locked_tor and cp_rlb.rlb1, and no stimulus can reach
+    either cross bin. The lock entry DOES rewrite locked entries under RLB=1 in its RLB phase; the
+    classifier does not label those samples locked. This is reported to the covergroup and plan owners.
+
+CG-PMP-014 (gen_pmp_table_state_cg) IS DECLARED BY NONE of the three, on the DV Lead's ruling that it
+is an expected-from-random-tests covergroup: its items include Phase 2 random-stimulus work, its
+coverpoints are whole-table shape properties no targeted test drives through, and locking is sticky so
+a run that reaches all-locked cannot return. Its bins are credited from the merged report.
+
+measured_seeds is stated ABSENT: the field does not exist at this HEAD and the manifests render
+without it.
+
+WHAT IS NOT CLAIMED HERE. Every one of the 119 runs in the block reads FAIL, on the rule that an entry
+declaring bins must have a manifest. That rule fires in finish(), after sampling, so the coverage the
+counts come from is real; the positive control's own database carries all four covergroups with
+non-zero counts where the identical control at the previous commit carried none. The flip is what makes
+these entries pass again, and until it lands the three entries fail at HEAD.

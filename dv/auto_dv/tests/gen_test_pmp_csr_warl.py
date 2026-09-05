@@ -95,6 +95,255 @@ class PmpCsrWarl(GenTest):
     schedulable = lib.TIMING_ONLY_KNOBS
     # items of the plan group this test does not check, with the reason (two-sided against the group by the structure check)
     not_built = {}
+    bins_not_hit = {
+        "gen_pmp_addr_write_cg.cr_hi_mode.bit30_tor":
+            "seed-dependent: hit at 37 of the entry's 39 measured seeds, so this test does not guarantee it per "
+            "run; PLANNED in traceability, credited from the merged report",
+        "gen_pmp_addr_write_cg.cr_hi_mode.bit31_napot":
+            "seed-dependent: hit at 38 of the entry's 39 measured seeds, so this test does not guarantee it per "
+            "run; PLANNED in traceability, credited from the merged report",
+        "gen_pmp_addr_write_cg.cr_hi_mode.bit31_tor":
+            "seed-dependent: hit at 38 of the entry's 39 measured seeds, so this test does not guarantee it per "
+            "run; PLANNED in traceability, credited from the merged report",
+        "gen_pmp_addr_write_cg.cr_idx_op.a0_csrrc":
+            "seed-dependent: hit at 8 of the entry's 39 measured seeds, so this test does not guarantee it per run; "
+            "PLANNED in traceability, credited from the merged report",
+        "gen_pmp_addr_write_cg.cr_idx_op.a0_csrrs":
+            "seed-dependent: hit at 5 of the entry's 39 measured seeds, so this test does not guarantee it per run; "
+            "PLANNED in traceability, credited from the merged report",
+        "gen_pmp_addr_write_cg.cr_idx_op.a10_csrrc":
+            "seed-dependent: hit at 15 of the entry's 39 measured seeds, so this test does not guarantee it per "
+            "run; PLANNED in traceability, credited from the merged report",
+        "gen_pmp_addr_write_cg.cr_idx_op.a10_csrrs":
+            "seed-dependent: hit at 12 of the entry's 39 measured seeds, so this test does not guarantee it per "
+            "run; PLANNED in traceability, credited from the merged report",
+        "gen_pmp_addr_write_cg.cr_idx_op.a11_csrrc":
+            "seed-dependent: hit at 10 of the entry's 39 measured seeds, so this test does not guarantee it per "
+            "run; PLANNED in traceability, credited from the merged report",
+        "gen_pmp_addr_write_cg.cr_idx_op.a11_csrrs":
+            "seed-dependent: hit at 8 of the entry's 39 measured seeds, so this test does not guarantee it per run; "
+            "PLANNED in traceability, credited from the merged report",
+        "gen_pmp_addr_write_cg.cr_idx_op.a12_csrrc":
+            "seed-dependent: hit at 13 of the entry's 39 measured seeds, so this test does not guarantee it per "
+            "run; PLANNED in traceability, credited from the merged report",
+        "gen_pmp_addr_write_cg.cr_idx_op.a12_csrrs":
+            "seed-dependent: hit at 11 of the entry's 39 measured seeds, so this test does not guarantee it per "
+            "run; PLANNED in traceability, credited from the merged report",
+        "gen_pmp_addr_write_cg.cr_idx_op.a13_csrrc":
+            "seed-dependent: hit at 12 of the entry's 39 measured seeds, so this test does not guarantee it per "
+            "run; PLANNED in traceability, credited from the merged report",
+        "gen_pmp_addr_write_cg.cr_idx_op.a13_csrrs":
+            "seed-dependent: hit at 13 of the entry's 39 measured seeds, so this test does not guarantee it per "
+            "run; PLANNED in traceability, credited from the merged report",
+        "gen_pmp_addr_write_cg.cr_idx_op.a14_csrrc":
+            "seed-dependent: hit at 12 of the entry's 39 measured seeds, so this test does not guarantee it per "
+            "run; PLANNED in traceability, credited from the merged report",
+        "gen_pmp_addr_write_cg.cr_idx_op.a14_csrrs":
+            "seed-dependent: hit at 18 of the entry's 39 measured seeds, so this test does not guarantee it per "
+            "run; PLANNED in traceability, credited from the merged report",
+        "gen_pmp_addr_write_cg.cr_idx_op.a15_csrrc":
+            "seed-dependent: hit at 9 of the entry's 39 measured seeds, so this test does not guarantee it per run; "
+            "PLANNED in traceability, credited from the merged report",
+        "gen_pmp_addr_write_cg.cr_idx_op.a15_csrrs":
+            "seed-dependent: hit at 9 of the entry's 39 measured seeds, so this test does not guarantee it per run; "
+            "PLANNED in traceability, credited from the merged report",
+        "gen_pmp_addr_write_cg.cr_idx_op.a1_csrrc":
+            "seed-dependent: hit at 11 of the entry's 39 measured seeds, so this test does not guarantee it per "
+            "run; PLANNED in traceability, credited from the merged report",
+        "gen_pmp_addr_write_cg.cr_idx_op.a1_csrrs":
+            "seed-dependent: hit at 7 of the entry's 39 measured seeds, so this test does not guarantee it per run; "
+            "PLANNED in traceability, credited from the merged report",
+        "gen_pmp_addr_write_cg.cr_idx_op.a2_csrrc":
+            "seed-dependent: hit at 10 of the entry's 39 measured seeds, so this test does not guarantee it per "
+            "run; PLANNED in traceability, credited from the merged report",
+        "gen_pmp_addr_write_cg.cr_idx_op.a2_csrrs":
+            "seed-dependent: hit at 12 of the entry's 39 measured seeds, so this test does not guarantee it per "
+            "run; PLANNED in traceability, credited from the merged report",
+        "gen_pmp_addr_write_cg.cr_idx_op.a3_csrrc":
+            "seed-dependent: hit at 9 of the entry's 39 measured seeds, so this test does not guarantee it per run; "
+            "PLANNED in traceability, credited from the merged report",
+        "gen_pmp_addr_write_cg.cr_idx_op.a3_csrrs":
+            "seed-dependent: hit at 11 of the entry's 39 measured seeds, so this test does not guarantee it per "
+            "run; PLANNED in traceability, credited from the merged report",
+        "gen_pmp_addr_write_cg.cr_idx_op.a4_csrrc":
+            "seed-dependent: hit at 10 of the entry's 39 measured seeds, so this test does not guarantee it per "
+            "run; PLANNED in traceability, credited from the merged report",
+        "gen_pmp_addr_write_cg.cr_idx_op.a4_csrrs":
+            "seed-dependent: hit at 9 of the entry's 39 measured seeds, so this test does not guarantee it per run; "
+            "PLANNED in traceability, credited from the merged report",
+        "gen_pmp_addr_write_cg.cr_idx_op.a5_csrrc":
+            "seed-dependent: hit at 13 of the entry's 39 measured seeds, so this test does not guarantee it per "
+            "run; PLANNED in traceability, credited from the merged report",
+        "gen_pmp_addr_write_cg.cr_idx_op.a5_csrrs":
+            "seed-dependent: hit at 9 of the entry's 39 measured seeds, so this test does not guarantee it per run; "
+            "PLANNED in traceability, credited from the merged report",
+        "gen_pmp_addr_write_cg.cr_idx_op.a6_csrrc":
+            "seed-dependent: hit at 15 of the entry's 39 measured seeds, so this test does not guarantee it per "
+            "run; PLANNED in traceability, credited from the merged report",
+        "gen_pmp_addr_write_cg.cr_idx_op.a6_csrrs":
+            "seed-dependent: hit at 10 of the entry's 39 measured seeds, so this test does not guarantee it per "
+            "run; PLANNED in traceability, credited from the merged report",
+        "gen_pmp_addr_write_cg.cr_idx_op.a7_csrrc":
+            "seed-dependent: hit at 9 of the entry's 39 measured seeds, so this test does not guarantee it per run; "
+            "PLANNED in traceability, credited from the merged report",
+        "gen_pmp_addr_write_cg.cr_idx_op.a7_csrrs":
+            "seed-dependent: hit at 9 of the entry's 39 measured seeds, so this test does not guarantee it per run; "
+            "PLANNED in traceability, credited from the merged report",
+        "gen_pmp_addr_write_cg.cr_idx_op.a8_csrrc":
+            "seed-dependent: hit at 9 of the entry's 39 measured seeds, so this test does not guarantee it per run; "
+            "PLANNED in traceability, credited from the merged report",
+        "gen_pmp_addr_write_cg.cr_idx_op.a8_csrrs":
+            "seed-dependent: hit at 11 of the entry's 39 measured seeds, so this test does not guarantee it per "
+            "run; PLANNED in traceability, credited from the merged report",
+        "gen_pmp_addr_write_cg.cr_idx_op.a9_csrrc":
+            "seed-dependent: hit at 12 of the entry's 39 measured seeds, so this test does not guarantee it per "
+            "run; PLANNED in traceability, credited from the merged report",
+        "gen_pmp_addr_write_cg.cr_idx_op.a9_csrrs":
+            "seed-dependent: hit at 9 of the entry's 39 measured seeds, so this test does not guarantee it per run; "
+            "PLANNED in traceability, credited from the merged report",
+        "gen_pmp_cfg_write_cg.cp_wr_lrwx.c1000":
+            "seed-dependent: hit at 34 of the entry's 39 measured seeds, so this test does not guarantee it per "
+            "run; PLANNED in traceability, credited from the merged report",
+        "gen_pmp_cfg_write_cg.cp_wr_lrwx.c1001":
+            "seed-dependent: hit at 34 of the entry's 39 measured seeds, so this test does not guarantee it per "
+            "run; PLANNED in traceability, credited from the merged report",
+        "gen_pmp_cfg_write_cg.cp_wr_lrwx.c1010":
+            "seed-dependent: hit at 37 of the entry's 39 measured seeds, so this test does not guarantee it per "
+            "run; PLANNED in traceability, credited from the merged report",
+        "gen_pmp_cfg_write_cg.cp_wr_lrwx.c1011":
+            "seed-dependent: hit at 38 of the entry's 39 measured seeds, so this test does not guarantee it per "
+            "run; PLANNED in traceability, credited from the merged report",
+        "gen_pmp_cfg_write_cg.cp_wr_lrwx.c1100":
+            "seed-dependent: hit at 3 of the entry's 39 measured seeds, so this test does not guarantee it per run; "
+            "PLANNED in traceability, credited from the merged report",
+        "gen_pmp_cfg_write_cg.cp_wr_lrwx.c1110":
+            "seed-dependent: hit at 6 of the entry's 39 measured seeds, so this test does not guarantee it per run; "
+            "PLANNED in traceability, credited from the merged report",
+        "gen_pmp_cfg_write_cg.cp_wr_lrwx.c1111":
+            "seed-dependent: hit at 17 of the entry's 39 measured seeds, so this test does not guarantee it per "
+            "run; PLANNED in traceability, credited from the merged report",
+        "gen_pmp_cfg_write_cg.cr_mode_lrwx.na4_c1000":
+            "seed-dependent: hit at 19 of the entry's 39 measured seeds, so this test does not guarantee it per "
+            "run; PLANNED in traceability, credited from the merged report",
+        "gen_pmp_cfg_write_cg.cr_mode_lrwx.na4_c1001":
+            "seed-dependent: hit at 13 of the entry's 39 measured seeds, so this test does not guarantee it per "
+            "run; PLANNED in traceability, credited from the merged report",
+        "gen_pmp_cfg_write_cg.cr_mode_lrwx.na4_c1010":
+            "seed-dependent: hit at 25 of the entry's 39 measured seeds, so this test does not guarantee it per "
+            "run; PLANNED in traceability, credited from the merged report",
+        "gen_pmp_cfg_write_cg.cr_mode_lrwx.na4_c1011":
+            "seed-dependent: hit at 19 of the entry's 39 measured seeds, so this test does not guarantee it per "
+            "run; PLANNED in traceability, credited from the merged report",
+        "gen_pmp_cfg_write_cg.cr_mode_lrwx.na4_c1100":
+            "seed-dependent: hit at 2 of the entry's 39 measured seeds, so this test does not guarantee it per run; "
+            "PLANNED in traceability, credited from the merged report",
+        "gen_pmp_cfg_write_cg.cr_mode_lrwx.na4_c1101":
+            "seed-dependent: hit at 4 of the entry's 39 measured seeds, so this test does not guarantee it per run; "
+            "PLANNED in traceability, credited from the merged report",
+        "gen_pmp_cfg_write_cg.cr_mode_lrwx.na4_c1110":
+            "seed-dependent: hit at 1 of the entry's 39 measured seeds, so this test does not guarantee it per run; "
+            "PLANNED in traceability, credited from the merged report",
+        "gen_pmp_cfg_write_cg.cr_mode_lrwx.na4_c1111":
+            "seed-dependent: hit at 8 of the entry's 39 measured seeds, so this test does not guarantee it per run; "
+            "PLANNED in traceability, credited from the merged report",
+        "gen_pmp_cfg_write_cg.cr_mode_lrwx.napot_c1000":
+            "seed-dependent: hit at 16 of the entry's 39 measured seeds, so this test does not guarantee it per "
+            "run; PLANNED in traceability, credited from the merged report",
+        "gen_pmp_cfg_write_cg.cr_mode_lrwx.napot_c1001":
+            "seed-dependent: hit at 18 of the entry's 39 measured seeds, so this test does not guarantee it per "
+            "run; PLANNED in traceability, credited from the merged report",
+        "gen_pmp_cfg_write_cg.cr_mode_lrwx.napot_c1010":
+            "seed-dependent: hit at 22 of the entry's 39 measured seeds, so this test does not guarantee it per "
+            "run; PLANNED in traceability, credited from the merged report",
+        "gen_pmp_cfg_write_cg.cr_mode_lrwx.napot_c1011":
+            "seed-dependent: hit at 24 of the entry's 39 measured seeds, so this test does not guarantee it per "
+            "run; PLANNED in traceability, credited from the merged report",
+        "gen_pmp_cfg_write_cg.cr_mode_lrwx.napot_c1100":
+            "seed-dependent: hit at 1 of the entry's 39 measured seeds, so this test does not guarantee it per run; "
+            "PLANNED in traceability, credited from the merged report",
+        "gen_pmp_cfg_write_cg.cr_mode_lrwx.napot_c1101":
+            "seed-dependent: hit at 5 of the entry's 39 measured seeds, so this test does not guarantee it per run; "
+            "PLANNED in traceability, credited from the merged report",
+        "gen_pmp_cfg_write_cg.cr_mode_lrwx.napot_c1110":
+            "seed-dependent: hit at 1 of the entry's 39 measured seeds, so this test does not guarantee it per run; "
+            "PLANNED in traceability, credited from the merged report",
+        "gen_pmp_cfg_write_cg.cr_mode_lrwx.napot_c1111":
+            "seed-dependent: hit at 12 of the entry's 39 measured seeds, so this test does not guarantee it per "
+            "run; PLANNED in traceability, credited from the merged report",
+        "gen_pmp_cfg_write_cg.cr_mode_lrwx.off_c1000":
+            "seed-dependent: hit at 24 of the entry's 39 measured seeds, so this test does not guarantee it per "
+            "run; PLANNED in traceability, credited from the merged report",
+        "gen_pmp_cfg_write_cg.cr_mode_lrwx.off_c1001":
+            "seed-dependent: hit at 18 of the entry's 39 measured seeds, so this test does not guarantee it per "
+            "run; PLANNED in traceability, credited from the merged report",
+        "gen_pmp_cfg_write_cg.cr_mode_lrwx.off_c1010":
+            "seed-dependent: hit at 27 of the entry's 39 measured seeds, so this test does not guarantee it per "
+            "run; PLANNED in traceability, credited from the merged report",
+        "gen_pmp_cfg_write_cg.cr_mode_lrwx.off_c1011":
+            "seed-dependent: hit at 26 of the entry's 39 measured seeds, so this test does not guarantee it per "
+            "run; PLANNED in traceability, credited from the merged report",
+        "gen_pmp_cfg_write_cg.cr_mode_lrwx.off_c1100":
+            "stimulus: the lock step draws an entry's address mode and its L=1 LRWX row independently, so this "
+            "pairing is available to the draw but occurred at none of the 39 measured seeds; the same row appears "
+            "with na4 at 2 seeds and with napot at 1",
+        "gen_pmp_cfg_write_cg.cr_mode_lrwx.off_c1101":
+            "seed-dependent: hit at 6 of the entry's 39 measured seeds, so this test does not guarantee it per run; "
+            "PLANNED in traceability, credited from the merged report",
+        "gen_pmp_cfg_write_cg.cr_mode_lrwx.off_c1110":
+            "seed-dependent: hit at 2 of the entry's 39 measured seeds, so this test does not guarantee it per run; "
+            "PLANNED in traceability, credited from the merged report",
+        "gen_pmp_cfg_write_cg.cr_mode_lrwx.off_c1111":
+            "seed-dependent: hit at 2 of the entry's 39 measured seeds, so this test does not guarantee it per run; "
+            "PLANNED in traceability, credited from the merged report",
+        "gen_pmp_cfg_write_cg.cr_mode_lrwx.tor_c1000":
+            "seed-dependent: hit at 3 of the entry's 39 measured seeds, so this test does not guarantee it per run; "
+            "PLANNED in traceability, credited from the merged report",
+        "gen_pmp_cfg_write_cg.cr_mode_lrwx.tor_c1001":
+            "seed-dependent: hit at 3 of the entry's 39 measured seeds, so this test does not guarantee it per run; "
+            "PLANNED in traceability, credited from the merged report",
+        "gen_pmp_cfg_write_cg.cr_mode_lrwx.tor_c1010":
+            "seed-dependent: hit at 4 of the entry's 39 measured seeds, so this test does not guarantee it per run; "
+            "PLANNED in traceability, credited from the merged report",
+        "gen_pmp_cfg_write_cg.cr_mode_lrwx.tor_c1011":
+            "seed-dependent: hit at 11 of the entry's 39 measured seeds, so this test does not guarantee it per "
+            "run; PLANNED in traceability, credited from the merged report",
+        "gen_pmp_cfg_write_cg.cr_mode_lrwx.tor_c1100":
+            "stimulus: the lock step draws an entry's address mode and its L=1 LRWX row independently, so this "
+            "pairing is available to the draw but occurred at none of the 39 measured seeds; the same row appears "
+            "with na4 at 2 seeds and with napot at 1",
+        "gen_pmp_cfg_write_cg.cr_mode_lrwx.tor_c1110":
+            "seed-dependent: hit at 2 of the entry's 39 measured seeds, so this test does not guarantee it per run; "
+            "PLANNED in traceability, credited from the merged report",
+        "gen_pmp_cfg_write_cg.cr_mode_lrwx.tor_c1111":
+            "seed-dependent: hit at 2 of the entry's 39 measured seeds, so this test does not guarantee it per run; "
+            "PLANNED in traceability, credited from the merged report",
+        "gen_pmp_cfg_write_cg.cr_res_op.nonzero_csrrc":
+            "declaration: the cross samples the ATTEMPTED word, and a clear-type write presents the read-back value "
+            "with its mask cleared; this implementation stores no reserved pmpcfg field (ibex_pkg pmp_cfg_t carries "
+            "lock, mode, exec, write and read only), so bits 6:5 read zero and no csrrc can present them non-zero, "
+            "while csrrs and csrrw reach their legs of this cross at every one of the 39 seeds",
+        "gen_pmp_cfg_write_cg.cr_rw01_mml.rw01_mml1_l1_rlb1_stored":
+            "seed-dependent: hit at 16 of the entry's 39 measured seeds, so this test does not guarantee it per "
+            "run; PLANNED in traceability, credited from the merged report",
+        "gen_pmp_csr_access_cg.cr_op_class.csrrc_mseccfgh":
+            "seed-dependent: hit at 11 of the entry's 39 measured seeds, so this test does not guarantee it per "
+            "run; PLANNED in traceability, credited from the merged report",
+        "gen_pmp_csr_access_cg.cr_op_class.csrrci_mseccfgh":
+            "seed-dependent: hit at 25 of the entry's 39 measured seeds, so this test does not guarantee it per "
+            "run; PLANNED in traceability, credited from the merged report",
+        "gen_pmp_csr_access_cg.cr_op_class.csrrs_mseccfgh":
+            "seed-dependent: hit at 23 of the entry's 39 measured seeds, so this test does not guarantee it per "
+            "run; PLANNED in traceability, credited from the merged report",
+        "gen_pmp_csr_access_cg.cr_op_class.csrrsi_mseccfgh":
+            "seed-dependent: hit at 24 of the entry's 39 measured seeds, so this test does not guarantee it per "
+            "run; PLANNED in traceability, credited from the merged report",
+        "gen_pmp_csr_access_cg.cr_op_class.csrrw_mseccfgh":
+            "seed-dependent: hit at 25 of the entry's 39 measured seeds, so this test does not guarantee it per "
+            "run; PLANNED in traceability, credited from the merged report",
+        "gen_pmp_csr_access_cg.cr_op_class.csrrwi_mseccfgh":
+            "seed-dependent: hit at 8 of the entry's 39 measured seeds, so this test does not guarantee it per run; "
+            "PLANNED in traceability, credited from the merged report",
+    }
 
     def report_count(self):
         return prog.plan(self.seed).k
