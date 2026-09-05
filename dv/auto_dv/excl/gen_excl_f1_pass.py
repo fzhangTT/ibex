@@ -11,7 +11,8 @@ Usage, from the clone root with the tools of ci/env.sh:
 Steps: round manifest -> merged vdb and its module dump (out-tree, the _module files are not copied
 into evidence) -> gen_excl_select.py with the EC-3 fill from the round's asserts evidence copy -> strict load
 with urg, any attempts.log fed back as a refutation input (bounded loop) -> plain load -> gated rows
-without/with the file -> Block no-op join against the plain report (CM-3 / Critic L-3) -> constfile
+without/with the file -> Block no-op join against the plain report, saying per entry whether the
+exclusion changes the report and catching a covered object being excluded -> constfile
 and join copies retained under gen_precheck/ (B.7 rule 3, EC-2) -> README delta text and a summary YAML under dv/auto_dv/work/rtl-arch/gen_excl_f1_<tag>/.
 Report-time urg only; LSF is never touched. README prose is never edited by this script: the delta
 file holds the text for the author, the COUNTS block is rewritten by the generator as before.

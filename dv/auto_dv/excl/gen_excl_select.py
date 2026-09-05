@@ -4,7 +4,7 @@
 The selection below IS gen_exclusions_draft.md v2 (Parts A and C) in executable form: every entry
 is taken verbatim (id, checksum, signature) from fullexclude_module.<metric> so -excl_strict can
 verify it, and carries the A.0 annotation (class, RTL location, tie chain / parameter, evidence
-class and pointer). Nothing outside Parts A/C and the six C.2 default arms is selected (Critic F-7);
+class and pointer). Nothing outside Parts A/C and the six C.2 default arms is selected;
 the ten A.8 carve-backs and the four class-R arcs are never selected.
 
 Usage: gen_excl_select.py --dump <dir with fullexclude_module.*> --out gen_exclusions.el --report <md>
