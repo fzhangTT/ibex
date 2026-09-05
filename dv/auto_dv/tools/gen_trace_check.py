@@ -24,8 +24,9 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent)); from gen_plan_
 ap = argparse.ArgumentParser()
 ap.add_argument('--knobs', default=str(R / 'tb' / 'gen_tb_knobs.yaml'))
 ap.add_argument('--build-manifest', default=None)
-# LOG-028a (gen_test_plan.md Section 0, T-142): an item sunsets only when every one of its export rows was OBSERVED in a retained
-# run of the pinned build (Runtime's per-row first-seen list, T-140); exclusion is by row, never by source; no list = refused.
+# LOG-028a (the rule's text is gen_test_plan.md Section 0): an item sunsets only when every one of its export rows was OBSERVED
+# in a retained run of the pinned build, from Runtime's per-row first-seen list; exclusion is by row, never by source; no list
+# means refused.
 ap.add_argument('--observed-field', default='export_rows_observed', help='manifest key of the observed-row list (T-140)')
 ap.add_argument('--exclude-rows', default=None, help='rehearsal only, refused when the manifest carries the observed list: treat the emitted rows minus these (semicolon-separated) as the observed list')
 args = ap.parse_args()
@@ -128,7 +129,8 @@ for i, r in enumerate(witness_csv):
     if not g or g.group(1) != r['test_group']: wit_errors.append(f'gen_trace_witness_ids.csv: test_group {r["test_group"]} disagrees with the item for {r["tp_item"]}')
 for tid in marked:
     if tid not in {r['tp_item'] for r in witness_csv}: wit_errors.append(f'{tid}: marked item without a CG-WIT-001 row')
-# the rendered witness table (TB Infra codegen) equals the CSV whenever it exists (round 7 L3; digest guard is WP-8)
+# the rendered witness table (TB Infra codegen) equals the CSV whenever it exists; the digest guard that would make the two
+# provably one artefact is not built, so this compare is what stands in for it
 gk = R / 'gen_tb' / 'gen_knobs.py'
 if gk.exists() and re.search(r'^WITNESS_IDS\s*=', gk.read_text(), re.M):
     ns = {}

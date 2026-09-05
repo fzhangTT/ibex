@@ -347,8 +347,8 @@ at 9c28944 to 178. The other figure, a generator assert producing no program rat
 belongs to the PMP blocks at 218e9f3 and 4cd3ff6, WHERE THIS ENTRY'S OWN GENERATOR IS WHAT ASSERTED:
 gen_tdd_batch3.md records gen_pmp_csr_warl_prog.py:615 asserting on its own draw at seed 230969025, with the
 message naming TP-PMP-003. What separates the two figures is the COMMIT and not the generator: those blocks
-are pinned before the Test Writer's backstop landed and the wave at 4017573 is after it, which is why the
-wave record reads a program at all forty seeds there. I carried the PMP cause onto this entry from a
+are pinned before the Test Writer's backstop and the wave is pinned to 4017573, the commit that landed it,
+which is why the wave record reads a program at all forty seeds there. I carried the PMP cause onto this entry from a
 message instead of reading the census. The four that were not measured over forty seeds
 are gen_test_csr_access, gen_test_csr_trap_setup, gen_test_isa_alu and gen_test_isa_cti, whose declared sets
 are the round-1 sets calibrated to three seeds.
