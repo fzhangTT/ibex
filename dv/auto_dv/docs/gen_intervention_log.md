@@ -2502,3 +2502,17 @@ and is RETIRED; the policy gets a recorded name in the plan set with the DV Lead
 gen_regress.py:237-260 (fcov_policy_failures). Also this window: rtl-arch retained the measured merge's constfile.txt and the no-op join under
 gen_precheck/ with gen_excl_f1_pass.py retaining both at every pass (7fb1aeb; the chain self-test had been red since pass 14 and is now a
 classifier); URG object ids are per-build ordinals, recorded as the reason the exclusion file is regenerated per round.
+
+### LOG-098 corrigendum (03:02Z, Orchestrator; from the DV Lead's full search): "P-07" did not collide with another rule
+LOG-098 says the label collides with a committed unrelated item at gen_t029_smoke_red_runs.md:34. That was built on a truncated search (head -5).
+The full picture: "P-07" occurs 239 times outside work/; the P-nn namespace is REVIEW-LOCAL (every Critic review artifact numbers its own findings
+P-01, P-02, ... and at least six artifacts each carry a P-07), so the t029 row is a peer, not a prior claimant. Our policy originates in the Critic's
+gen_critic_t010_dv_principles_v2.md:31 (a Medium marked FIXED, "null fcov manifest silently exempt", whose fix is the policy) and is recorded in
+committed documents at gen_runtime_api.md:299-303 ("Summary accounting (Critic P-07)") and in LOG-091's title. The defect is smaller than LOG-098
+states and real: a review-local finding number was promoted to a standing rule name in messages, and the policy has no home in the plan set. The
+retirement stands for that reason. The name is PER-RUN-MANIFEST (zero occurrences in dv/auto_dv today): it lands in gen_fcov_plan.md Section 0
+beside the "Manifest rule:" bullet with the rule in one sentence (a manifest declares what the test guarantees PER RUN, so every declared bin must be
+hit in every run of that entry; a bin hit at some seeds and not others leaves the declared set and is credited from the merged report; a measured
+entry on a tier named by fcov_manifest_required_tiers may not carry a null manifest), cited to gen_fcov.py:152-159 and gen_regress.py:237-260 with
+the lineage recorded once; committed history keeps the old label as written. The DV Lead's own lesson, recorded: before any absence or collision
+claim, run the search without a head or tail limit and read the count before the lines (three conclusions today from sources not read to the end).
