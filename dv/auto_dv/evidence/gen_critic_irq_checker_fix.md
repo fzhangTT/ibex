@@ -367,3 +367,133 @@ Promotion of the irq entry remains gated on the end-of-test expectation, as 7.5 
 The lift was first recorded in gen_critic_form_v3.md Section 4 (:54-56 at 55d784a, 12:56:46Z) and in my message to the
 Orchestrator after fab8a61 landed; this section is the gating record's own statement of it, written after rev74 found that this
 file still read REQUEST-CHANGES at :300 with no section lifting it.
+
+## 9. Landing 57 (irq checker fix 3a), ccd755d..38b729a: the per-line enable term, the dcsr home and the fixtures; APPROVE (2026-09-05T14:37:15Z)
+
+Artifacts at 38b729a: gen_checkers_pkg.sv, gen_fcov_pkg.sv, gen_tb_knobs.yaml, gen_tb_pkg.sv, gen_knobs.py, gen_isa_shim_map.h,
+gen_fu_l57_perline_enable.log (md5 66e1064ea9a3ec47, 8426 bytes), the four fixtures under gen_irq_fixtures, gen_manifest.md; rev71
+(dv/auto_dv/reviews/2026-09-05-claude-diff-ccd755dc-38b729a1.md at 60081cd, 2a38a10e59c18cff). Method: two out-of-tree archives, A of
+ccd755d and C of 38b729a, each clean and with the four regular interrupt inputs tied low at the core instance by my own script (the
+MUT-IRQWITHHOLDALL shape; the clean gen_dut_top.sv reads md5 56041635e557a553, the log's revert value), compiled with the local
+flow; the per-line fixture rebuilt from the retained source (crc32 33ec7bd6, 150 words, tohost 800002b8, equal to the log); twelve
+runs of gen_ut_lockstep at seed 1 under the storm regime with the until_taken hold; the RTL terms, the rendered constants, the code
+generators' checks and unit tests, and every TDD manifest row checked on the archive; rev71 read after the findings were fixed
+(dv/auto_dv/work/critic/irqfix3/draft_s9_prerev71.txt). Exposure: the Orchestrator's messages summarised the landing and relayed
+rev71's three Lows before these checks; each is measured below on my own runs, and the boot_retire finding is mine. Logs:
+dv/auto_dv/work/critic/irqfix3/ (runs_l57.txt, runs_l57_hypotheses.txt, static_checks_38b729a.txt, dcsr_literals_38b729a.txt,
+mutdiff_apply_check.txt, codegen_checks_38b729a.txt, l57_log_at_38b729a.txt).
+
+- L-10 CLOSED, the per-line enable term. The mask gains !line_enabled for every non-NMI expectation, line_enabled being any of the
+  expectation's lines with its bit set in the model's mie (gen_irq_mie_bit, gen_agents_pkg.sv:517). The RTL term it mirrors:
+  irqs_o = mip & mie_q and irq_pending_o = |irqs_o (rtl/ibex_cs_registers.sv:1044-1045); handle_irq needs irq_pending_i &
+  irq_enabled (rtl/ibex_controller.sv:498) with irq_enabled = csr_mstatus_mie_i | (priv_mode_i == PRIV_LVL_U) (:490); irq_nm is
+  ORed outside both, and the checker skips both terms for an NMI expectation.
+- THE RED REPRODUCES TO THE TOKEN, with one plusarg the log does not state. With +gen_ut_boot_retire=100 the log's table is exact:
+  A clean 0 fires / 0 real errors / 1 open expectation PASS; A + mutation 4 / 328 / 1 FAIL; C clean 0 / 0 / 5 PASS; C + mutation
+  5 / 329 / 1 FAIL; C + mutation + gen_chk_irq_entry=0 0 / 324 / 1 FAIL. The fifth fire reads verbatim "lines 00100 (enable bits
+  00200000) raised at cycle 181 (order 28) not taken within 17 records (now order 68, takeable records 18, mie 7fff0888 mstatus
+  00000088)" and the pre-fix build reports no fire at raise order 28; the other four fires are common to both builds with the same
+  lines, cycles and raise orders; entries=0 in every mutant run (no trap taken); 324 + 4 and 324 + 5 are exact; the clean builds
+  end with 1 and 5 open expectations, the fault-free observable. L-14 (Low, records; tb-infra-2): the log's recipe names module,
+  regime, hold, seed and mutation and omits +gen_ut_boot_retire=100. Run as written the runs are longer (218 retirements, $finish
+  at 1302501) and read 0/0/4, 8/1027/4, 0/0/12, 9/1028/4 and 0/1019/4: every mechanism claim holds there too (the fifth fire
+  identical, one extra fire on the fixed build, exact accounting, clean open expectations 4 to 12, the check off reporting 0 irq_entry errors while its summary still counts the five detections,
+  since expect_fail is incremented before the gen_chk_en gate, so "ablation 0" counts errors and not detections) and none of the
+  table's figures does; boot_retire 40 and 60 give the fixed mutant 5/313/0, 120 gives 6/466/0, 100 the table. No run header or
+  GEN_IRQ_CHK summary line is quoted, so the table cannot be tied to a run from the record; the plusarg line and the five summary
+  lines belong in a companion.
+- L-6 CLOSED: the four fixtures are in the tree with the log's md5s and their manifest rows (702, 479, 1315 and 2194 bytes); the
+  toggle source's md5 equals the l54 log's value. L-15 (Low, records; tb-infra-2): both retained diffs carry the placeholder hunk
+  header "@@ port map @@"; git apply --check answers "unrecognized input" and patch --dry-run "Only garbage was found in the patch
+  input", so they document the mutation and do not apply it; real hunk headers, or a sentence saying the four tie lines are the
+  recipe.
+- L-12 CLOSED: GEN_DCSR_STEP_BIT is declared once (gen_tb_knobs.yaml:231) and rendered into gen_tb_pkg.sv:282, gen_knobs.py:190 and
+  gen_isa_shim_map.h:67, used at gen_checkers_pkg.sv:137 and gen_fcov_pkg.sv:336 and :567; no dcsr[<digit>] indexing remains;
+  gen_knobs_codegen --check and gen_fcov_codegen --check read up to date on the archive and GEN_UT_KNOBS_CODEGEN and
+  GEN_UT_FCOV_CODEGEN pass with 0 failures, which is the gate the log says refused its first hand. L-16 (Low, code; tb-infra-2):
+  gen_fcov_pkg.sv:596 still reads st.dcsr[1:0] for the prv field where GEN_DCSR_PRV_BIT_LOW and _HIGH exist (gen_tb_pkg.sv:280-281)
+  and gen_checkers_pkg.sv:330 uses them; the same family, one line.
+- L-13 CLOSED: the comment reads "unmasked and counted, never a mask term"; step_records stays a print-only counter, disclosed in
+  the log's Row 3 with the fixture-side assertion owed when a step fixture exists.
+- L-8 stays owed: the NMI-mode mirror change is held back, as the log says first, under the DV Lead's rule that a change to what a
+  checker masks lands with its red; the depth mirror is present in both packages as before (four mentions each).
+- Records: the TDD manifest's 3520 rows all match the archive by bytes and md5 (0 bad, 0 missing); the five new rows included. No
+  rtl/ line changes; the mutation lives in out-of-tree archives only, mine included.
+
+Reconciliation with rev71 (read after the rows above were fixed):
+- Its verification list agrees with mine on the RTL terms, the mask, the fixture identities, the mtvec claim, the dcsr home, the
+  manifest rows and the hold-back; it adds checks I record as its: the never-set bit is held to report_phase and reported in the
+  open figure rather than failed; a mixed lines-plus-NMI expectation is judged on the NMI pin; the fifth fire's 40 elapsed, 22
+  masked and 18 takeable follow from the orders and the bound; the toggle image md5 equals the l54 log's.
+- Its Low 1 is my L-14 with the cause measured: the omitted plusarg is +gen_ut_boot_retire=100 and with it the table is exact.
+- Its Low 2 is my L-15 (the hunk headers; I measured both tools refusing). Its Low 3 is my L-16.
+- Its Info on the open-expectations figure conflating a never-enabled hold with a drain-window hold is fair, and a counter of
+  expectations held with the line's own bit clear would give the lost-coverage consequence a number in every run; its Info on
+  any-of line_enabled for a multi-line expectation is verified on the loop at :140 and is consistent with the still test.
+- Verdict after reconciliation: unchanged. Both agree there is no Major and no Medium.
+
+CRITIC VERDICT: APPROVE on ccd755d..38b729a. L-10, L-12, L-13 and L-6 of Section 7 are CLOSED; L-14, L-15 and L-16 are owed to
+tb-infra-2's next records touch as disclosed; L-8 remains owed from Section 7 with the rule it waits on named. The group's standing
+verdict of Section 8 (APPROVE) is unchanged.
+
+## 10. Landing 59 (the irq follow-ups), dd6fa54..dd23dff: L-14, L-15, L-16 closed, one Medium on the new counter's figures (2026-09-05T14:37:15Z)
+
+Artifacts at dd23dff: gen_checkers_pkg.sv, gen_fcov_pkg.sv, the two regenerated mutant diffs (md5 13fd25d9d214e631, 887 bytes;
+bdc5aaf6601db8b6, 685 bytes), gen_fu_l59_l57_artifacts_companion.log (5290beaf0151f91b, 5439 bytes), gen_manifest.md; rev77
+(dv/auto_dv/reviews/2026-09-05-claude-diff-dd6fa549-dd23dff7.md at 0624215, 8f35af81a30e80b3). Method: a dd23dff archive compiled
+clean and with the retained all-lines diff applied by git apply; the per-line fixture run with the companion's plusarg set and with
+five variants; the retained diff applied to ccd755d and 38b729a archives and compiled, to tie the companion's mutant identities to
+a committed tree plus the diff; every manifest row checked; rev77 read after the findings were fixed
+(dv/auto_dv/work/critic/irqfix3/draft_s10_prerev77.txt). Exposure: the Orchestrator relayed rev77's verdict shape before these
+checks. Logs: irqfix3/l59_checks.txt, runs59.log, build59.log, build59b.log, l59_log_at_dd23dff.txt, preread_dd23dff.txt.
+
+- L-14 CLOSED: the companion states the one plusarg set for the five l57 runs, +gen_ut_boot_retire=100 among them, the five out
+  directories with build identities and sim.log paths, and quotes each run's summary line; the quoted fields (bound failures
+  0/4/0/5/5, open expectations 1/1/5/1/1) equal my boot_retire=100 runs of Section 9 exactly, the four common fires listed equal
+  mine line for line, and the clean identities 2f874eb63deeb6bb and b7067f660ed88693 equal my ccd755d and 38b729a builds.
+- L-15 CLOSED: both diffs are real hunks against gen_dut_top.sv; git apply --check passes on the 38b729a and dd23dff files and the
+  applied file reads md5 5d9ec8ba369a099a (all) and 54cb9be1213ffb76 (nmi). A ccd755d archive plus the retained all-diff compiles
+  to identity 5bcfb9424b692b13 and a 38b729a archive plus it to 4baea273ea4d6723, the companion's a_mut and c_mut, so every
+  identity in its table resolves to a committed tree plus a retained diff. The commit message's "the mutant digests the
+  landing-54 build matrix recorded" names digests the l54 log does not carry (its PRE row is c045115's); the companion's table
+  is where they are recorded.
+- L-16 CLOSED: gen_fcov_pkg.sv:596 reads st.dcsr[GEN_DCSR_PRV_BIT_HIGH:GEN_DCSR_PRV_BIT_LOW]; no dcsr indexing without a GEN_DCSR_
+  constant remains under env/ or tb/.
+- The ablation precision: my own check-off run's summary reads bound failures=5 with irq_entry errors 0, as the companion says;
+  Section 9 reads its "ablation 0" that way.
+- M-1 (Medium, records; tb-infra-2): the new counter "records held by a clear per-line enable alone" is printed in the summary line
+  and its condition is the mask with every non-per-line term false, but its figures have no run root, build identity or sim.log:
+  "on this fixture it reads 250" and "0 on all six regression smokes" name no run, and the six smokes are unnamed (the testlist's
+  smoke tier has 17 entries). On my dd23dff archive with the companion's own plusarg set the clean run reads 244 and the mutant
+  runs 33; without boot_retire the clean run reads 935; boot_retire 40, 60 and 80 read 244 and 120 reads 344; none reads 250.
+  The counter is nonzero on the fixture and the structural point (a number in every run) holds; the figure and the zeros are
+  unsupported. Closes with a row per counter run (build identity, plusargs, sim.log, the field quoted), the 250 corrected to
+  what the committed checker prints or its recipe stated, and the six smokes named.
+- Records: the TDD manifest's 3522 rows match the archive (0 bad, 0 missing); the three touched rows match their blobs.
+- The ledger against Section 8's owed Lows, since the landing maps its work to rev71 alone: landing 57 (Section 9) closed L-10 and
+  L-13 and answered L-6 and L-12 in part; this landing completes L-6 (the diffs apply) and L-12 (the last bare slice) and closes
+  Section 9's L-14, L-15 and L-16; L-9 is answered by the reds2 block at 67c6ac1; L-7 and L-11 are records notes needing no code;
+  L-8 (the NMI-mode mirror) stays held back under the DV Lead's rule.
+
+Reconciliation with rev77 (read after the rows above were fixed):
+- Its verification agrees with mine on every shared item (the diffs applying, the six identities from committed trees plus the
+  diff, the dcsr accesses, the counter's condition and any-of, the ablation ordering at :164 before :165, the manifest rows).
+- Its Medium is my M-1; it adds that the five sourced rows are builds without the counter, so the 250 comes from a sixth build the
+  log never names (the committed dd23dff env digests to c684bc82a9d070dc, my D build), and my measurement adds that that tree
+  reads 244 on the stated recipe.
+- Its Low on the l57 log's Row 4 md5s, VERIFIED and adopted as L-17 (Low, records; tb-infra-2): the l57 log still lists
+  6bb801edb599b5d3 and 49bf2735cdccc195 for the two diffs, values no file carries after this landing (13fd25d9d214e631 and
+  bdc5aaf6601db8b6), and the companion names neither set; one superseding sentence is owed.
+- Its Low on the counter's unit, VERIFIED and adopted as L-18 (Low, code; tb-infra-2): the increment sits inside foreach
+  (expects[i]), so two expectations held on one record count two while the label says "records"; label or count, one of them
+  moves.
+- Its Low on the comment at gen_checkers_pkg.sv:66-68, VERIFIED and adopted as L-19 (Low, comment; tb-infra-2): "Before that term
+  existed the checker spent them ..." narrates history in a code comment, against the intent-only rule; state the intent.
+- Its Low on the missing L-mapping is answered by the ledger above; its reading (L-6 and L-12 answered, L-7, L-8, L-9, L-11 not
+  touched) is right against Section 8's list and does not see Section 9, which was not in the tree it read.
+- Its two Infos (the diff header could name the gen_dut_top.sv blob rather than a commit; the "applies inside the assembled tree"
+  check is a process claim with no committed gate) are fair and need no row.
+
+CRITIC VERDICT: REQUEST-CHANGES on dd6fa54..dd23dff, confined to M-1 (the counter's 250 and six zeros without a run root, and the
+250 not reproducing on the committed checker with the stated recipe). L-14, L-15 and L-16 are CLOSED; L-17, L-18 and L-19 owed
+with M-1's companion; the group's standing verdict (Section 8, APPROVE) is unchanged and L-8 stays held back.
