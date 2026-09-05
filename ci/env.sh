@@ -73,8 +73,25 @@ if [ -f "$IBEX_CI_ROOT/.venv/bin/activate" ]; then
     source "$IBEX_CI_ROOT/.venv/bin/activate"
 fi
 
-# --- cocotb (installed by ci/setup-venv.sh; optional until then) ---
-command -v cocotb-config >/dev/null 2>&1 && export LIBPYTHON_LOC="$(cocotb-config --libpython)" || true
+# --- cocotb (installed by ci/setup-venv.sh). cocotb's VPI library dlopens libpython
+# through LIBPYTHON_LOC, so the value must come from THIS clone's venv: a site
+# cocotb-config on PATH answers for the pinned one, its --libpython fails, and a
+# bare export would mask that as an empty string (dv/auto_dv/docs/gen_intervention_log.md
+# LOG-099/LOG-100). Fail loud when the venv's tool cannot answer; before the venv
+# exists (bootstrap, or a fresh worktree) warn and leave any inherited value alone. ---
+_ibex_cc="$IBEX_CI_ROOT/.venv/bin/cocotb-config"
+if [ -x "$_ibex_cc" ]; then
+    if _ibex_lp="$("$_ibex_cc" --libpython 2>/dev/null)" && [ -n "$_ibex_lp" ]; then
+        export LIBPYTHON_LOC="$_ibex_lp"
+    else
+        echo "ibex env ERROR: $_ibex_cc --libpython failed or printed nothing; LIBPYTHON_LOC not set (rerun ci/setup-venv.sh)" >&2
+        unset _ibex_cc _ibex_lp
+        return 1
+    fi
+else
+    echo "ibex env WARN: no $_ibex_cc (run ci/setup-venv.sh); LIBPYTHON_LOC left as inherited (${LIBPYTHON_LOC:-unset})" >&2
+fi
+unset _ibex_cc _ibex_lp
 
 echo "ibex env: vcs=$(command -v vcs || echo MISSING)" \
      "gcc=$(command -v "$RISCV_GCC" >/dev/null && echo "$RISCV_GCC" || echo MISSING)"
