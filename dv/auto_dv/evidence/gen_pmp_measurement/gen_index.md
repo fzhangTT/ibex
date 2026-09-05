@@ -152,10 +152,32 @@ Per entry, the EVERY / SOME / NEVER split over the 407-bin family, before then a
 | gen_test_pmp_lock | 40 | 139 to 142 | 174 to 174 | 94 to 91 |
 | gen_test_pmp_mseccfg | 40 | 175 to 177 | 81 to 80 | 151 to 150 |
 
-Fifteen further bins moved and all fifteen are in the listing. Two left the every-seed set:
-`gen_pmp_cfg_write_cg.cp_outcome.ignored_lock` goes 39/39 to 23/39 in csr_warl and 7/40 to 0/40 in mseccfg.
-NEITHER IS DECLARED, which is why the manifests survive; that was checked against the manifests rather than
-inferred from the checker's silence.
+Fifteen further bins moved and all fifteen are in the listing.
+
+CORRIGENDUM 2026-09-05T10:36Z, answering L-7 and L-8 of the Critic's Section 7. Both figures below are re-derived
+from the two committed listings beside this file rather than adopted from the review.
+
+L-8, WHAT LEFT THE EVERY-SEED SET. The row as first written said "two left the every-seed set" and named
+`gen_pmp_cfg_write_cg.cp_outcome.ignored_lock` at 39/39 to 23/39 in csr_warl and 7/40 to 0/40 in mseccfg. ONLY ONE
+LEFT: the csr_warl one. The mseccfg bin went 7/40 to 0/40 and was NEVER every-seed there, so it did not leave a set
+it was never in. Its movement is real and is kept here as its own statement: in mseccfg that bin goes from hit at
+7 of 40 seeds to hit at none. NEITHER BIN IS DECLARED in any of the three manifests, which is why the manifests
+survive; that was checked against the manifests rather than inferred from the checker's silence.
+
+L-7, WHAT BECAME EVERY-SEED, WHICH THE ROW UNDERCOUNTED. An earlier consumer sentence of the Runtime Manager's
+said lock promotes two bins with csr_warl and mseccfg unchanged. Counting the bins below the bar before and at
+every seed after:
+
+| entry | newly every-seed | bins |
+|---|---|---|
+| gen_test_pmp_lock | 3, not 2 | `cr_self_lock.locked_rlb1_written` 0/40 to 40/40, `cr_tor_lock.nl_tor_rlb1_written` 0/40 to 40/40, `gen_pmp_csr_access_cg.cr_reset_read.rst_mseccfg` 0/40 to 40/40 |
+| gen_test_pmp_mseccfg | 2, not "unchanged" | `cp_outcome.w_dropped` 38/40 to 40/40, `cr_rw01_mml.rw01_mml0_wdrop` 38/40 to 40/40 |
+| gen_test_pmp_csr_warl | 0 | the only part of the original sentence that was right |
+
+WHICH OF THESE FIVE MAY BE DECLARED IS THE TEST WRITER'S DECISION, not the Runtime Manager's. This block measures
+that each is hit at every measured seed of its entry; whether a bin belongs in a manifest is a separate judgement
+about what the entry intends to guarantee. Stated because the earlier sentence read as a promotion recommendation
+and was not one.
 
 ## Three things about this block a reader should not have to discover
 
