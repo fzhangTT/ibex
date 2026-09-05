@@ -2541,3 +2541,14 @@ Question for the owner: should ci/env.sh derive LIBPYTHON_LOC from the repositor
 PATH, or fail loud when cocotb-config is absent, so that any non-interactive caller in a fresh worktree (a gate,
 a cron, a CI wrapper) gets the variable; or is the route-around the accepted answer? Evidence: the Orchestrator's
 TASKS.md rows of 2026-09-05 06:47Z to 07:11Z (attempts, variants, outputs).
+
+### LOG-099 corrigendum (2026-09-05 07:18Z, Orchestrator; from tb-infra-2's third reproduction attempt)
+LOG-099 says the export at ci/env.sh line 76 is skipped when cocotb-config is absent. tb-infra-2 reproduced the gate's
+shape (a root with no .venv, a non-login shell, the clone venv off PATH) and found the guard does not fall through: with
+the pinned venv absent, cocotb-config resolves to the site installation for Python 3.9, whose --libpython returns an
+empty string, so the export succeeds and assigns nothing; the gate's probe printed that empty value as NONE. In that
+shape gen_tb_local.sh also builds against the site cocotb for Python 3.9 and exits 0, and the build identity (a digest
+over the SystemVerilog sources) does not distinguish it from a build against the pinned venv's cocotb. The question to
+the owner stands unchanged; the mechanism is the site cocotb-config answering for the pinned one. tb-infra-2 lands a
+refusal in gen_tb_local.sh (a cocotb-config that is not the clone's pinned venv's, or an empty --libpython, stops the
+build with the reason) as its own landing; the committer gate keeps exporting LIBPYTHON_LOC from the worktree venv.
