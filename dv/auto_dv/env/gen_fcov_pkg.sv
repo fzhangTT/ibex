@@ -468,12 +468,15 @@ package gen_fcov_pkg;
                            : -1;
         if (v < 0) n_irq_mret_masked++;   // the clear edge: an mret that masks a pending enabled line
         if (st.is_intr) n_irq_mret_entry++;   // an mret that IS a handler's first instruction
-        // The invariant: nothing booked into the stays-set bin may follow an entry,
-        // because an entry leaves MIE clear. It must witness BOTH routes, and the asymmetry is why one term
-        // cannot: an EXCEPTION is taken BY an instruction, so its clear lands inside that instruction's own
-        // published state and shows up as the PREVIOUS record having trapped; an INTERRUPT is taken BETWEEN
-        // instructions, so its clear lands in no record at all and shows up only as THIS record's entry flag.
-        // Keying on the entry flag alone made this counter blind to the first route by construction.
+        // The invariant: nothing booked into the stays-set bin may follow an entry, because an entry leaves
+        // MIE clear. Both routes are named because the clear lands in different places: an EXCEPTION is taken
+        // BY an instruction, so its clear is inside that instruction's own published state and shows as the
+        // PREVIOUS record having trapped; an INTERRUPT is taken BETWEEN instructions, so its clear is in no
+        // record at all and shows only as THIS record's entry flag.
+        // Both arms are structurally zero against the current classifier: :449 forces was to 0 on a non-debug
+        // entry, and a non-debug trap's own record already publishes the clear. This referee therefore guards
+        // the classifier and the post-step publication and measures nothing about the DUT: a nonzero count is
+        // a regression in one of those two, not a design bug.
         if ((st.is_intr || prev_trapped) && v == GEN_FC_IRQ_PENDING_MODEL_CP_MIE_GLOBAL_EDGE_MRET_MIE1_MPIE1_PENDING)
           n_irq_mret_newbin_entry++;
       end else if (st.wrote_mstatus && was != now) begin
@@ -505,7 +508,9 @@ package gen_fcov_pkg;
       irq_mtvec_have = 1;
       irq_rst_record(st, t);
       irq_off_take();
-      irq_mie_prev = st.mie; irq_mstatus_prev = st.mstatus; prev_trapped = st.is_trap;
+      // a trap taken INSIDE debug mode leaves MIE untouched (rtl/ibex_cs_registers.sv:918), so its record
+      // publishes MIE set and would make the two-route invariant above fire on a legitimate booking
+      irq_mie_prev = st.mie; irq_mstatus_prev = st.mstatus; prev_trapped = st.is_trap && !st.debug_mode;
     endfunction
 
     // ---- IRQ step 1: CG-IRQ-010 gen_irq_debug_interplay_cg -----------------------------------------------

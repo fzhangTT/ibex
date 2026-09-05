@@ -1,0 +1,87 @@
+# gen_fu_l52_commands_corrigendum.log -- the commands, fixtures and out directories behind every figure in
+# gen_fu_l52_irq_entry_bound.log (TB Infra, 2026-09-05). Landing 54.
+#
+# WHAT THIS CORRECTS. gen_fu_l52_irq_entry_bound.log closes with "Every figure above is produced by the
+# command printed above its block", and its blocks print no fixture, no plusargs, no out directory and no
+# verdict path. rev59 and the Critic's L-1 both call it: the figures are internally consistent and not
+# reproducible from the log. Its bytes are untouched, md5 fe418c61e39bf272f2814ec581a82794, 9116 bytes.
+# Everything below is read from the run directories themselves, from each run's run_header.txt and
+# verdict.txt, not reconstructed from memory. Fire counts are re-derived here rather than copied.
+#
+# COUNTING RULE. A UVM run ends with a tally line whose text is UVM_ERROR, a colon and a count, carrying no
+# message, and grep -c UVM_ERROR counts it as an error. Counts below match '^UVM_ERROR [^:]'. Two figures move because of it and
+# both are error TOTALS, not fire counts: see the quiet block.
+#
+# THE ONE COMPILE. The log's header line names out_l52c. That build is
+#   $ bash dv/auto_dv/tb/gen_tb_local.sh compile <clone>/dv/auto_dv/out_l52c
+#   build_sources_sha256 9904576dbd01808d
+# but it is NOT the only build the log's figures come from, and the header sentence "THE ONE BUILD EVERY
+# FIGURE COMES FROM" is wrong. Five builds appear: out_l49 (2e0d5cbfb591fa07, the committed checker),
+# out_l52 (907726226184d9b7, the first fix), out_l52b (028cd081da77bc56, the structural fix),
+# out_l52c (9904576dbd01808d, the final build) and out_l52mut (4d318ae1af370965, the mutant).
+#
+# THE COMMON FIXTURE, used by every block except the quiet one. The long-handler program at
+# <scratch>/l52/prog/prog.vmem, md5 da173bb45c6c0b196e57ea831caeee2f, built from
+# <scratch>/l52/gen_irq_longhandler.S. Plusargs, identical in all of them:
+#   +gen_mem_image=<scratch>/l52/prog/prog.vmem +gen_mem_image_crc32=39885870 +gen_mem_image_words=192
+#   +gen_boot_addr=80000000 +gen_tohost_addr=80000360 +gen_fetch_en_at_reset=0 +gen_ut_boot_retire=40
+#   +gen_knob_irq_regime=storm +gen_knob_irq_hold=through_handler
+# Module dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep, seed 1, host soc-l-11.
+#
+# BLOCK "MY FIRST FIX COULD NOT HAVE WORKED", whose figure line reads, verbatim and with its own quotes:
+#   committed  9 fires     "fixed"  9 fires, same order 665
+#   $ bash dv/auto_dv/tb/gen_tb_local.sh run <clone>/dv/auto_dv/out_l49  red_longh  <module> <common fixture>
+#   $ bash dv/auto_dv/tb/gen_tb_local.sh run <clone>/dv/auto_dv/out_l52  fix_longh  <module> <common fixture>
+#   out_l49/red_longh   2026-09-05T10:29:57Z  irq_entry 9  real UVM_ERROR 9  verdict FAIL  uvm_error at sim.log:32
+#   out_l52/fix_longh   2026-09-05T10:27:57Z  irq_entry 9  real UVM_ERROR 9  verdict FAIL  uvm_error at sim.log:32
+#   verdicts at <out>/<name>/verdict.txt. Both figures reproduce.
+#
+# BLOCK "THE STRUCTURAL FIX", whose figure line reads, verbatim:
+#   committed 9 fires  ->  fixed 0 fires, and ZERO UVM_ERROR of any kind
+# and which states that the fixed run still FAILS for a different reason.
+#   $ bash dv/auto_dv/tb/gen_tb_local.sh run <clone>/dv/auto_dv/out_l52b fix2_longh <module> <common fixture>
+#   $ bash dv/auto_dv/tb/gen_tb_local.sh run <clone>/dv/auto_dv/out_l52c fix_final  <module> <common fixture>
+#   out_l52b/fix2_longh 2026-09-05T10:30:01Z  irq_entry 0  real UVM_ERROR 0  verdict FAIL  cocotb_summary at stdout.log:52
+#   out_l52c/fix_final  2026-09-05T10:40:10Z  irq_entry 0  real UVM_ERROR 0  verdict FAIL  cocotb_summary at stdout.log:52
+#   The reason change the log reports is exactly these two strings against the red's "uvm_error at sim.log:32".
+#
+# THE MUTATION BLOCK, STORM ARM. The log's line is "$ on the STORM fixture      CATCH 0, ABLATE 0".
+#   Mutation MUT-IRQWITHHOLD applied to <clone>/dv/auto_dv/tb/gen_dut_top.sv, .irq_external_i tied to 1'b0,
+#   compiled to <clone>/dv/auto_dv/out_l52mut (4d318ae1af370965), reverted after; md5
+#   56041635e557a5531283918982a3f37f before and after, recorded in <scratch>/l52/mut_pre.txt.
+#   $ ... run <clone>/dv/auto_dv/out_l52mut catch  <module> <common fixture>
+#   $ ... run <clone>/dv/auto_dv/out_l52mut ablate <module> <common fixture> +gen_chk_irq_entry=0
+#   catch  2026-09-05T10:31:41Z  irq_entry 0  real UVM_ERROR 0  verdict FAIL  cocotb_summary at stdout.log:52
+#   ablate 2026-09-05T10:31:46Z  irq_entry 0  real UVM_ERROR 0  verdict FAIL  cocotb_summary at stdout.log:52
+#   Both reproduce. This is the block the DV Lead later ruled VACUOUS rather than less sensitive
+#   (gen_fu_l52_vacuity_corrigendum.log), and landing 54 removes the shape that caused it.
+#
+# THE MUTATION BLOCK, QUIET ARM. The log's line is "$ on a QUIET single-line fixture   CATCH 1, ABLATE 0 (+gen_chk_irq_entry=0)".
+#   THE FIXTURE IS NOT A COMMITTED TEST AND THE LOG DOES NOT SAY SO. Module
+#   dv.auto_dv.gen_tb.gen_tests.gen_ut_fx_reenable, a scratch cocotb module written for the two-shape fixture
+#   probe; the copy is retained at <scratch>/fx2/pyroot/dv/auto_dv/gen_tb/gen_tests/gen_ut_fx_reenable.py,
+#   md5 0db4096ee98a810dbaa2c88d8569502e. gen_tb_local.sh sets PYTHONPATH to its own ROOT (:107), so the module
+#   was resolved from a root that contained it and is not in the clone now. Anyone reproducing this block must
+#   place that file under <root>/dv/auto_dv/gen_tb/gen_tests/ first. Same image, no regime or hold plusargs:
+#   $ ... run <clone>/dv/auto_dv/out_l52mut quiet_catch  dv.auto_dv.gen_tb.gen_tests.gen_ut_fx_reenable \
+#       +gen_mem_image=<scratch>/l52/prog/prog.vmem +gen_mem_image_crc32=39885870 +gen_mem_image_words=192 \
+#       +gen_boot_addr=80000000 +gen_tohost_addr=80000360 +gen_fetch_en_at_reset=0
+#   $ ... run <clone>/dv/auto_dv/out_l52mut quiet_ablate <same> +gen_chk_irq_entry=0
+#   quiet_catch  2026-09-05T10:32:47Z  irq_entry 1  real UVM_ERROR 3002  verdict FAIL  uvm_error at sim.log:32
+#   quiet_ablate 2026-09-05T10:32:50Z  irq_entry 0  real UVM_ERROR 3001  verdict FAIL  uvm_error at sim.log:32
+#   TWO THINGS THE LOG'S "ABLATE 0" COULD BE READ TO MEAN AND DOES NOT. The ablated run is not error-free: it
+#   carries 3001 errors, essentially all [irq_pending], which are the mutation's own signature on a fixture
+#   that raises a line the core cannot see. "ABLATE 0" means zero of the NAMED rule, which is the claim the
+#   mutation control has to make and does make. (3002 and 3001 are the tally-corrected totals; a grep -c
+#   'UVM_ERROR' reads 3003 and 3002.)
+#
+# THE FOUR SMOKES the l52 log reports as PASS were run in out_l52c with the P_IRQ and P_NMI recipes of
+# gen_fu_l47_irq_mret_bin.log; their commands are in <scratch>/l52/final.sh and each run's own run_header.txt.
+#
+# "same order 665", which the l52 log understates. 665 is the raise order of the FIRST fire in both runs,
+# and the two runs agree on far more than that: all nine raise-to-fire pairs are identical, raise 665 -> now
+# 683, then 1664 -> 1682, 2069 -> 2087, 2501 -> 2519, 2879 -> 2897, 3176 -> 3194, 3959 -> 3977,
+# 4904 -> 4922, 5201 -> 5219, every one a distance of eighteen against the bound of seventeen. The first fix
+# reproduced the red record for record, which is a stronger statement of its ineffectiveness than the log
+# made, and the eighteen-record distance is the same family the Test Writer measured across the wave runs.
+#   $ grep -o 'raised at cycle [0-9]* (order [0-9]*)[^(]*(now order [0-9]*' <out>/<name>/sim.log

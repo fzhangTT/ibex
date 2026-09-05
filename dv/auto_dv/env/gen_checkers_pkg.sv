@@ -36,7 +36,9 @@ package gen_checkers_pkg;
     sample_t pend_q [$];
     int unsigned last_rec_cycle = 0;
     // entry expectations
-    typedef struct { logic [63:0] order_at; int unsigned cycle; logic [18:0] lines; bit nmi; } expect_t;
+    // unmasked: records spent since the last restart in which THIS expectation's interrupt could have been
+    // taken; it is the bound's clock, order_at only the order at that restart
+    typedef struct { logic [63:0] order_at; int unsigned cycle; logic [18:0] lines; bit nmi; int unsigned unmasked; } expect_t;
     expect_t expects [$];
     gen_model_state last_st;
     bit have_st = 0;
@@ -59,6 +61,10 @@ package gen_checkers_pkg;
     bit nmi_mode = 0, intg_wait = 0;
     int nmi_depth = 0;
     int unsigned intg_wait_records = 0, nmi_internal_fail = 0;
+    // dcsr.step is bit 2 of the packed dcsr_t (rtl/ibex_cs_registers.sv:217-233) and drives
+    // debug_single_step_o at :1038; counted, not masked on, because st.dcsr is the model's copy
+    localparam int unsigned GEN_DCSR_STEP_BIT = 2;
+    int unsigned step_records = 0;
     logic [63:0] intg_wait_order = 0;
     function new(string name, uvm_component parent);
       super.new(name, parent);
@@ -109,7 +115,7 @@ package gen_checkers_pkg;
         foreach (expects[i]) begin
           if (is_nmi) expects[i].nmi = 0;
           if (line >= 0) expects[i].lines[line] = 1'b0;
-          if (expects[i].lines[17:0] != 0 || expects[i].nmi) begin expects[i].order_at = st.order; keep.push_back(expects[i]); end
+          if (expects[i].lines[17:0] != 0 || expects[i].nmi) begin expects[i].order_at = st.order; expects[i].unmasked = 0; keep.push_back(expects[i]); end
         end
         expects = keep;
         // irq_masked: an entry while M-mode with MIE clear and not an NMI (the state BEFORE the entry)
@@ -117,32 +123,36 @@ package gen_checkers_pkg;
             gen_chk_en(cfg, cfg.chk_irq_masked, cfg.chk_irq_masked_set))
           `uvm_error("irq_masked", $sformatf("interrupt entry (mcause %08h) while MIE=0 in M-mode at order %0d", st.mcause, st.order))
       end
-      // entry bound: expectations older than GEN_IRQ_ENTRY_BOUND_RECORDS records. The bound measures the
-      // INTERRUPT PATH, so a record on which the DUT was right to withhold must not spend it. That has to be
-      // decided PER RECORD, before the expiry test: a mask that lifts before the bound expires (the global
-      // enable does, exactly at the mret) would otherwise leave the whole masked window already charged, and a
-      // restart tested only at expiry never sees it. Measured: every fire reports mstatus with MIE already
-      // restored, so a restart at expiry cannot help.
-      begin
-        bit masked = nmi_mode || st.debug_mode ||
-                     (!st.mstatus[ibex_pkg::CSR_MSTATUS_MIE_BIT] && st.prv == ibex_pkg::PRIV_LVL_M);
-        if (masked) foreach (expects[i]) expects[i].order_at = st.order;
-      end
+      // entry bound: an expectation may spend GEN_IRQ_ENTRY_BOUND_RECORDS records in which its own interrupt
+      // COULD have been taken. Takeability is decided once per expectation per record and the count ACCRUES
+      // across masked gaps; restarting it on a masked record would discard the records already spent, so a
+      // line withheld across a software MIE toggle could never expire however long it waited, and a regime
+      // whose masked records recur more often than the bound could not be judged at all.
+      // rtl/ibex_controller.sv:498 gates a take on ~debug_mode_q & ~debug_single_step_i & ~nmi_mode_q and, for
+      // regular lines only, irq_enabled = csr_mstatus_mie_i | (priv_mode_i == PRIV_LVL_U) at :490. irq_nm is
+      // ORed OUTSIDE irq_enabled there, so mstatus.MIE must not mask an NMI expectation.
+      // Two terms of :498 are named exclusions, counted rather than masked on: single step, because st.dcsr is
+      // the model's copy and not the DUT's debug_single_step_i, and the Zcmp expansion commit phase, which
+      // needs the micro-op records gen_model_state does not carry. Both are absent from every committed
+      // interrupt fixture; step_records is the count that would show the first one arriving.
+      if (st.dcsr[GEN_DCSR_STEP_BIT] === 1'b1) step_records++;
       foreach (expects[i]) begin
-        if (st.order - expects[i].order_at > GEN_IRQ_ENTRY_BOUND_RECORDS) begin
-          // still enabled? (the line may have been released or masked meanwhile)
+        bit masked = nmi_mode || st.debug_mode ||
+                     (!expects[i].nmi && !st.mstatus[ibex_pkg::CSR_MSTATUS_MIE_BIT] && st.prv == ibex_pkg::PRIV_LVL_M);
+        if (masked) continue;   // the record neither spends the bound nor judges the expectation
+        expects[i].unmasked++;
+        if (expects[i].unmasked > GEN_IRQ_ENTRY_BOUND_RECORDS) begin
+          // still owed? (the line may have been released, or its own enable bit cleared, meanwhile)
           bit still = 0;
           logic [17:0] pins = vif.lines();
-          // NMI mode and debug mode mask every line: the expectation is neither judged nor forgotten, its bound restarts when the mask lifts
-          if (nmi_mode || st.debug_mode) begin expects[i].order_at = st.order; continue; end
           for (int l = 0; l < 18; l++) if (expects[i].lines[l] && pins[l] && st.mie[gen_irq_mie_bit(l)]) still = 1;
           if (expects[i].nmi) still = vif.nm;
-          if (still && (expects[i].nmi || st.mstatus[ibex_pkg::CSR_MSTATUS_MIE_BIT] || st.prv != ibex_pkg::PRIV_LVL_M)) begin
+          if (still) begin
             expect_fail++;
             if (gen_chk_en(cfg, expects[i].nmi ? cfg.chk_nmi_entry : cfg.chk_irq_entry, expects[i].nmi ? cfg.chk_nmi_entry_set : cfg.chk_irq_entry_set))
               `uvm_error(expects[i].nmi ? "nmi_entry" : "irq_entry",
-                         $sformatf("lines %05h (enable bits %08h) raised at cycle %0d (order %0d) not taken within %0d records (now order %0d, mie %08h mstatus %08h)",
-                                   expects[i].lines, gen_irq_lines_to_mie_bits(expects[i].lines), expects[i].cycle, expects[i].order_at, GEN_IRQ_ENTRY_BOUND_RECORDS, st.order, st.mie, st.mstatus))
+                         $sformatf("lines %05h (enable bits %08h) raised at cycle %0d (order %0d) not taken within %0d records (now order %0d, takeable records %0d, mie %08h mstatus %08h)",
+                                   expects[i].lines, gen_irq_lines_to_mie_bits(expects[i].lines), expects[i].cycle, expects[i].order_at, GEN_IRQ_ENTRY_BOUND_RECORDS, st.order, expects[i].unmasked, st.mie, st.mstatus))
           end
           expects.delete(i);
           break;
@@ -235,7 +245,7 @@ package gen_checkers_pkg;
       end
       if (e.level && have_st) begin
         expect_t x;
-        x.order_at = last_st.order; x.cycle = e.cycle; x.lines = e.changed; x.nmi = e.changed[18];
+        x.order_at = last_st.order; x.cycle = e.cycle; x.lines = e.changed; x.nmi = e.changed[18]; x.unmasked = 0;
         expects.push_back(x);
       end
     endfunction
@@ -273,8 +283,8 @@ package gen_checkers_pkg;
           eor_open++;
         end
       end
-      `uvm_info("GEN_IRQ_CHK", $sformatf("irq_pending cycles checked=%0d mismatches=%0d; entries=%0d nmi=%0d (internal %0d, accepted on announced corruptions) cause checked=%0d mismatches=%0d priority undecidable=%0d bound failures=%0d expectations released=%0d open expectations=%0d nmi_internal bound failures=%0d open after the drain=%0d",
-                checked_cycles, pending_mismatch, entries_seen, nmi_seen, nmi_internal_entries, cause_checked, cause_mismatch, priority_undecidable, expect_fail, expect_released, expects.size(), nmi_internal_fail, eor_open), UVM_LOW)
+      `uvm_info("GEN_IRQ_CHK", $sformatf("irq_pending cycles checked=%0d mismatches=%0d; entries=%0d nmi=%0d (internal %0d, accepted on announced corruptions) cause checked=%0d mismatches=%0d priority undecidable=%0d bound failures=%0d expectations released=%0d open expectations=%0d nmi_internal bound failures=%0d open after the drain=%0d; records with the model dcsr step bit set=%0d",
+                checked_cycles, pending_mismatch, entries_seen, nmi_seen, nmi_internal_entries, cause_checked, cause_mismatch, priority_undecidable, expect_fail, expect_released, expects.size(), nmi_internal_fail, eor_open, step_records), UVM_LOW)
     endfunction
   endclass
 

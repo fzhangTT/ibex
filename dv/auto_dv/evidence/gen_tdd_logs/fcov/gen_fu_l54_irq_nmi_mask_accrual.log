@@ -1,0 +1,229 @@
+# gen_fu_l54_irq_nmi_mask_accrual.log -- the entry bound's mask made per expectation and its clock made a
+# count (TB Infra, 2026-09-05). Feature group "irq checker fix", landing 54, answering rev59 and the Critic's
+# gen_critic_irq_checker_fix.md on the landing-52 range 65b7cb0..9c7f8f6.
+#
+# THE BUILDS EVERY FIGURE COMES FROM. Six, from two out-of-tree source roots, each an archive of HEAD
+# (c045115) with nothing else in it; PRE is that archive unchanged, POST is that archive with this landing's
+# three edited files copied over it. Each mutant build differs from its clean sibling in gen_dut_top.sv alone.
+#   $ git archive HEAD | tar -x -C <root>            (both roots; tools/spike symlinked, the archive has no tools/)
+#   $ FORCE=1 bash <root>/dv/auto_dv/tb/gen_tb_local.sh compile <root>/dv/auto_dv/out_<label>
+#   rootPRE  out_clean 665d62e97890e7ca   out_mnmi 0bd1ad2cd1602077   out_mirq c28c0c5bbd137fc5
+#   rootPOST out_clean 89184728eca05aed   out_mnmi 0b13390b02ed2114   out_mirq 201e83d9e22cceb4
+#   (the values are build_sources_sha256 as each run's own run_header.txt records it)
+# The in-tree build used for the regression smokes is dv/auto_dv/out_l54, build_sources_sha256
+# 89184728eca05aed, WHICH IS THE SAME VALUE AS rootPOST/out_clean: the out-of-tree post-fix root and the
+# working tree hash to one source set, so the reds below are runs of the tree I am handing.
+# gen_checkers_pkg.sv at HEAD is byte-identical to the reviewed commit 9c7f8f6 (git diff is empty), so PRE is
+# the reviewed checker and every A/B here is exactly this landing's diff.
+# gen_dut_top.sv md5 56041635e557a5531283918982a3f37f in both roots after the last revert, and in the working
+# tree, which is the value the l52 log and the Critic both record. No mutation survives.
+#
+# COUNTING RULE, stated because it changed two of my own numbers before this log was written. A UVM run ends
+# with a tally line whose text is UVM_ERROR, a colon and a count, carrying no message, and grep -c UVM_ERROR
+# count below matches '^UVM_ERROR [^:]' instead. My first pass reported 3, 409 and 410 where the truth is
+# 2, 408 and 409. This is the third time this session that a tally line has inflated a count (334 against 343
+# on the fire pattern, and 3 against 6 below on the ruled property); it is now in the rule, not in my head.
+#
+# ================ ROW 1 (rev59 Major, Critic M-1): mstatus.MIE must not mask an NMI expectation ============
+# rtl/ibex_controller.sv:498-499 is
+#   assign handle_irq = ~debug_mode_q & ~debug_single_step_i & ~nmi_mode_q &
+#                       (irq_nm | (irq_pending_i & irq_enabled)) & ...
+# with irq_enabled = csr_mstatus_mie_i | (priv_mode_i == PRIV_LVL_U) at :490. irq_nm is ORed OUTSIDE
+# irq_enabled, so an NMI is takeable in M mode with MIE clear. Landing 52 applied the MIE term to the whole
+# expectation queue, so in every regular handler, from reset until a program enables interrupts, and under the
+# with_nmi storm mix, a withheld NMI's bound could not expire at all.
+# THE FIX: the mask is decided per expectation, and the MIE term is qualified on !expects[i].nmi.
+# The sibling end-of-run arm at :279 needed no change: its condition already reads
+# expects[i].nmi || last_st.mstatus[MIE] || last_st.prv != M, so it has always exempted an NMI
+# expectation from the enable, and the in-run mask now agrees with it instead of contradicting it.
+#
+# RED A. Fixture: gen_ut_irq_nmi_long (committed) on the reset-reads program, which never writes mstatus, so
+# MIE is clear for the whole run and the pre-fix mask is active on every record. The test raises the NMI at
+# retired record 200 and holds it UNTIL_TAKEN. Mutation MUT-NMIWITHHOLD: gen_dut_top.sv's .irq_nm_i tied to
+# 1'b0, so the pin reaches the checker and never the core - a genuine never-taken NMI.
+#   $ bash <root>/dv/auto_dv/tb/gen_tb_local.sh run <root>/dv/auto_dv/out_<b> <name> \
+#       dv.auto_dv.gen_tb.gen_tests.gen_ut_irq_nmi_long \
+#       +gen_mem_image=<scratch>/irq1b/rrprog/prog.vmem +gen_mem_image_crc32=69379b6e +gen_mem_image_words=24 \
+#       +gen_boot_addr=80000000 +gen_tohost_addr=800000c0 +gen_fetch_en_at_reset=0
+#     (image md5 847593fd93e4da76b1dc1008dc3e73dd; the crc32 plusarg is the value the l47 log records for this
+#      image, not a recomputation - a naive little-endian crc32 of the vmem words gives d0ee4d11 and fatals)
+#     verdict from <out>/<name>/verdict.txt, never from an exit code.
+#
+#   build                          nmi_entry   real UVM_ERROR   verdict reason
+#   PRE  + MUT-NMIWITHHOLD              0            0          cocotb_summary at stdout.log:54
+#   POST + MUT-NMIWITHHOLD              1            1          uvm_error at sim.log:33
+#   POST + MUT + gen_chk_nmi_entry=0    0            0          cocotb_summary at stdout.log:54
+#   PRE  clean (ablation)               0            2          uvm_error at sim.log:35
+#   POST clean (ablation)               0            2          uvm_error at sim.log:35
+#
+# THE PRE-FIX MUTANT RUN CARRIES ZERO UVM_ERRORS OF ANY KIND. A never-taken NMI produced no report at all; the
+# only thing that failed was the test's own timeout, "GEN_UT_IRQ_NMI_LONG: the NMI was not taken within 4000
+# cycles". After the fix the same run fails on the checker instead, which is the whole point of having one.
+# The fired line, verbatim:
+#   [nmi_entry] lines 40000 (enable bits 00000000) raised at cycle 1361 (order 200) not taken within 17
+#   records (now order 218, takeable records 18, mie 00000000 mstatus 00000080)
+# Three readings of it. "enable bits 00000000" is correct and not a defect: the NMI has no mie bit, and the
+# helper maps lines 0..17 only. "mstatus 00000080" is MPIE alone, MIE CLEAR, which is the state the Major says
+# must still be judged. And this is the SAME cycle and the SAME two order numbers the Critic quotes for the
+# pre-landing-52 checker on this fixture, so the fix restores exactly the behaviour landing 52 removed rather
+# than inventing a new one.
+# CARRIED FORWARD, the DV Lead's second acceptance point in full: the NMI path is takeable with MIE clear,
+# so it is not folded into the enable mask here AND it must not be folded into the regime-independent
+# end-of-test expectation I take after this landing. That expectation reconciles every raised enabled line
+# against the entries at end of test; the NMI's enable is not mstatus.MIE and it has no mie bit at all, so
+# its reconciliation term is nmi_mode and debug mode only. Written here because the constraint is easy to
+# lose between two landings.
+# THE TWO CLEAN CONTROLS ARE NOT ERROR-FREE AND I AM NOT CALLING THEM CLEAN. Both carry two [double_fault]
+# errors, because the reset-reads program installs no NMI handler and the NMI vector at 0x8000007c lies below
+# this linker script's PROG origin 0x80000080. The test ITSELF passes in both (GEN_UT_IRQ_NMI_LONG_PASS,
+# "retired 400 mismatches 0"), so the NMI is taken on a clean build; the statistic the control carries is
+# nmi_entry 0, and the double faults are a property of the fixture, present identically before and after.
+#
+# ================ ROW 2 (rev59 Medium, Critic M-2): the bound accrues, it does not restart ==================
+# Landing 52's comment said the bound "accrues only over records in which the interrupt could be taken" and
+# the code set order_at = st.order on every masked record, which DISCARDS the records already spent. Under
+# that shape the bound fires only on 18 or more CONSECUTIVE unmasked records, so a regime whose masked records
+# recur more often than the bound cannot be judged at all whatever the DUT does. That is the vacuity the DV
+# Lead ruled on the storm case in gen_fu_l52_vacuity_corrigendum.log, and it is the same defect seen from the
+# other side.
+# THE FIX: expect_t carries an unmasked count. It increments once per record in which THAT expectation could
+# have been taken, it is reset where the entry restart already resets the baseline (:112), and it is what the
+# bound compares. order_at now only carries the order of the last restart, for the message.
+#
+# THE CASE FOR ACCRUAL RATHER THAN REWORDING THE COMMENT TO SAY THE BOUND RESTARTS, which is the alternative
+# rev59 offered. The property worth having is that an enabled raised line is taken within N records in which it
+# could have been taken. Accrual states exactly that. A restart states instead: within N records since the last
+# record in which it could NOT be taken, which is not a bound at all when masked records are periodic: every
+# handler entry clears MIE, so any
+# interrupt-carrying regime resets the clock forever. The DV Lead's acceptance point is the same case from the
+# plan side: cp_mie_global_edge's set_pending bin asserts that when software sets MIE with a line pending the
+# entry follows before the next retirement, so an interrupt withheld across a software MIE toggle is
+# plan-asserted behaviour, and only the accrued form can judge it. I chose accrual and the plan needs no
+# sentence excusing the checker.
+#
+# RED B. Fixture: gen_ut_lockstep (committed) on a scratch program that alternates mstatus.MIE in six-record
+# windows - six takeable records, then six masked, six times over, thirty-six takeable records against a bound
+# of seventeen with no takeable run ever longer than six. Source
+# <scratch>/l54/gen_irq_mie_toggle.S md5 25a722a9fc12da2c5dbca660a1e8ec09; image built by
+#   $ python3 dv/auto_dv/stim/gen_program.py --seed 1 --out <scratch>/l54/tprog \
+#       --directed <scratch>/l54/gen_irq_mie_toggle.S --gcc-opts=-Idv/auto_dv/tests/gen_programs
+#   OK ... entry=0x80000080 words=36 crc32=0x3b4f1c71   (image md5 3bb833ad1d27ecaa51f8dd9cf65244af)
+# Mutation MUT-IRQWITHHOLDALL: gen_dut_top.sv's .irq_software_i, .irq_timer_i, .irq_external_i and .irq_fast_i
+# all tied low, so whichever line the storm raises reaches the checker and never the core.
+#   $ bash <root>/dv/auto_dv/tb/gen_tb_local.sh run <root>/dv/auto_dv/out_<b> <name> \
+#       dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep \
+#       +gen_mem_image=<scratch>/l54/tprog/prog.vmem +gen_mem_image_crc32=3b4f1c71 +gen_mem_image_words=36 \
+#       +gen_boot_addr=80000000 +gen_tohost_addr=800000f0 +gen_fetch_en_at_reset=0 +gen_ut_boot_retire=80 \
+#       +gen_knob_irq_regime=storm +gen_knob_irq_hold=until_taken
+#
+#   build                          irq_entry   real UVM_ERROR   composition
+#   PRE  + MUT-IRQWITHHOLDALL           0           408         408 [irq_pending]
+#   POST + MUT-IRQWITHHOLDALL           1           409         408 [irq_pending] + 1 [irq_entry]
+#   POST + MUT + gen_chk_irq_entry=0    0           408         408 [irq_pending]
+#   PRE  clean (ablation)               0             1         1 [double_fault]
+#   POST clean (ablation)               0             1         1 [double_fault]
+#
+# The accounting is exact: 408 to 409 to 408, so the named rule is precisely the difference and nothing else
+# moved. The 408 [irq_pending] are the mutation's own signature and are present in both mutant builds - the
+# pins are raised, the model's pending says yes and the DUT's irq_pending_o says no. They are collateral of
+# tying the inputs low, not a finding.
+# The fired line, verbatim, and it contains the demonstration:
+#   [irq_entry] lines 00100 (enable bits 00200000) raised at cycle 181 (order 40) not taken within 17 records
+#   (now order 82, takeable records 18, mie 7fff0888 mstatus 00000088)
+# Order 40 to order 82 is FORTY-TWO records elapsed, of which EIGHTEEN were takeable. The pre-fix code needed
+# eighteen consecutive and the longest run here is six, which is why the same mutant produces nothing on the
+# PRE build. The two semantics are separated numerically by the message itself. (lines 00100 is line 8, fast[5],
+# whose enable is bit 21: 0x00200000. mie reads 7fff0888 because the program writes -1 and the WARL mask keeps
+# only the implemented lines.)
+#
+# ================ ROW 3 (Critic L-2): two RTL withholding terms, named exclusions with an observable ========
+# :498 has two further terms the mask does not carry. Single step, ~debug_single_step_i, driven from
+# dcsr_q.step at rtl/ibex_cs_registers.sv:1038, bit 2 of the packed dcsr_t at :217-233. And the Zcmp expansion
+# commit phase, which needs micro-op records gen_model_state does not carry.
+# I did NOT mask on single step, and the reason is not convenience: st.dcsr is the ISA model's copy, read with
+# gen_isa_read_csr, and it is not the DUT's debug_single_step_i. Masking a checker on a mirror I have not
+# proved tracks the pin would be exactly the shape this landing exists to remove - a mask that can silence the
+# check without anything reporting it. Instead the checker COUNTS the records in which the model's step bit is
+# set and prints the count in its summary, so the exclusion is measured rather than assumed and the first
+# fixture that drives single step will show a nonzero count instead of quietly losing coverage.
+# MEASURED: 0 in all six regression smokes below, including the debug-request storm. Stated precisely, that is
+# a statement about the model's dcsr step bit in these fixtures, not a statement that the DUT never single-stepped.
+# Zcmp stays a named exclusion with nothing to count, because the state is not in the record. No committed
+# fixture drives interrupts across a Zcmp expansion today (gen_zcmp_irq_directed.S has no testlist entry).
+#
+# ================ ROW 4 (rev59 Low, Critic L-3): the mret invariant, and what it actually guards ============
+# gen_fcov_pkg.sv:505 recorded prev_trapped = st.is_trap. The Critic found the false-positive path: a trap
+# taken INSIDE debug mode leaves MIE untouched, because the clear at rtl/ibex_cs_registers.sv:924 sits inside
+# "else if (!debug_mode_i)" at :918, so such a record publishes MIE set, and an mret after it with a line
+# pending would raise GEN_FCOV_REF on a legitimate booking. Recorded now as st.is_trap && !st.debug_mode.
+# THE DV LEAD'S T6 CORRECTION, and it is only true once that change is in. Both arms of the invariant are
+# structurally zero against the current classifier: the is_intr arm because :449 forces was to 0 on a non-debug
+# entry, and the trapped-predecessor arm because the published state is post-step, so a non-debug trap's own
+# record already carries the MIE clear. The debug-mode trap was the single residue where the second arm could
+# fire, and excluding it closes the gap the DV Lead's sentence assumes.
+# SAID PLAINLY, BECAUSE IT IS THE THIRD CHECK OF THIS SHAPE THIS WEEK: after this change the referee CANNOT
+# fire on any DUT behaviour. It guards the :449 classifier and the post-step publication assumption, and a
+# nonzero count is a regression in one of those two, never a design bug. It is not a measurement of the model
+# and this log does not let it be read as one. The comment at :470-478 now says so in the source.
+#
+# ================ ROW 5 (rev59 Low, Critic L-5): the parser cases write under SCRATCH ======================
+# gen_ut_knobs_codegen.py:193,198 wrote their synthetic .sv under tempfile.mkdtemp(), in the system temp
+# directory, and never removed it, against the file's own docstring at :4-5. They now write
+# dv/auto_dv/work/tb-infra/ut_scratch/knobs_codegen/enum_parse/x.sv, unlink it after each case and remove the
+# directory after the last.
+#   $ python3 dv/auto_dv/tb/unit/gen_ut_knobs_codegen.py
+#     GEN_UT_KNOBS_CODEGEN PASS (0 failures)
+#
+# ================ ROW 6 (Critic L-4): where seed 1207954461's 258 fires come from ==========================
+# Asked for as a diagnosis and produced by reading that run's own sim.log rather than by reasoning about it.
+# Source: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_chkfix/runs/gen_test_irq_basic_1207954461/sim.log,
+# runtime-2's re-run at 9c7f8f6 (265755454 bytes). Script: <scratch>/l54/diag258.py, one pass, every figure
+# re-derived here and none adopted.
+#   693238 real UVM_ERROR lines. By id, with the first timestamp each appears (UVM log ticks, 10 ps):
+#     450021 sva_ibus_outstanding_max     first@26503500
+#      70208 sva_rvalid_legal             first@15158500
+#      70208 sva_ibus_rvalid_outstanding  first@15158500
+#      23387 isa_insn                     first@ 9290500
+#      23384 isa_pc                       first@ 9300500
+#      23369 crash_dump                   first@ 9499500
+#      18553 isa_pc_next                  first@ 9290500
+#       9126 isa_rd                       first@ 9326500
+#        258 irq_entry                    first@15737500
+#          3 sva_rvfi_irq_valid_exclusive first@ 6591500
+#          1 sva_ibus_gnt_only_with_req   first@ 9250500
+#   258 fires, 18 distinct raised bitmaps, mstatus 00000088 at all 258, mie 7fff0888 at all 258, raise-to-fire
+#   order deltas 18:153 19:67 20:23 21:7 22:3 23:5. Those five figures reproduce runtime-2's record exactly.
+# THE DIAGNOSIS IS THE ORDERING. The first instruction-level divergence between model and DUT is at 9290500,
+# SIX THOUSAND FOUR HUNDRED AND FORTY-SEVEN CYCLES BEFORE the first irq_entry fire at 15737500, and 23387
+# isa_insn mismatches have already been reported by then. The core is executing 0x00000000 at pc 0x80000022
+# while the model is at 0x80000154 ("Illegal instruction (hart 0) at PC 0x80000022: 0x00000000"; pc 80000022
+# appears on 9084 lines). The bus anomaly precedes even that: sva_ibus_gnt_only_with_req fires once at
+# 9250500, forty cycles before the divergence.
+# So the fires are DOWNSTREAM of a fetch and execution breakdown, not the masked-window mechanism. And they
+# are the checker telling the truth: at every one of the 258, mstatus has MIE set and the raised line's enable
+# bit is set, so the interrupt was takeable and a core that was still running its program would have taken it.
+# This seed is not a checker defect, it is not fixed by this landing, and it must not be counted against it.
+# ONE CORRECTION TO THE CRITIC'S FILE, whose bytes I do not touch. Its Section 3 says rtl-arch's ibus-signature
+# table "names 1207954461 with the same firing counts". It does not: rtl-arch's table in
+# gen_ibus_props_irq_signature_reading.md:51-54 gives that seed sva_ibus_rvalid_outstanding 70199 and
+# sva_ibus_outstanding_max 449948, where this run has 70208 and 450021. The two are different runs of the same
+# seed, at 4017573 and at 9c7f8f6. The attribution is right and rests on the signature and the ordering, not
+# on equal numbers, and every number the Critic states for THIS run I reproduce exactly.
+# ONE CORRECTION TO runtime-2's RECORD. gen_chkfix_reruns.yaml:17 says the deciding property "fires 6 times".
+# It fires 3. Six lines mention the id: each firing emits a VCS assertion-source line and a UVM_ERROR line.
+# The same tally-shaped error as the 343-against-334 count, in a different disguise.
+#
+# ================ REGRESSION: the smokes on the tree build ================================================
+# dv/auto_dv/out_l54, build_sources_sha256 89184728eca05aed, all six from verdict.txt:
+#   storm PASS  lines PASS  dbgstorm PASS  fetchen PASS  rr PASS  nmilong PASS
+#   0 real UVM_ERROR, 0 GEN_FCOV_REF, 0 irq_entry, 0 nmi_entry and step_records 0 in every one.
+# Recipes are those of gen_fu_l47_irq_mret_bin.log (P_IRQ, P_NMI, P_RR) with +gen_ut_boot_retire=100 on the
+# storm shape; the two added here are gen_ut_irq_reset_reads on P_RR and gen_ut_irq_nmi_long on P_NMI.
+#
+# ================ WHAT I GOT WRONG BEFORE THIS LOG, RECORDED BECAUSE IT REACHED THE ORCHESTRATOR ===========
+# When I paused the counter touch I wrote that fixing the Medium would make seed 1207954461 fire MORE. That
+# was a consequence I asserted without deriving it and it is not right: the entry restart at :112 resets every
+# surviving expectation at every entry and this landing does not change it, so in a regime where entries recur
+# the accrued count never builds. The seed's own log then showed the fires have nothing to do with either
+# semantics. The rule I am taking from it is the one I keep relearning: a consequence stated to someone else
+# is a claim, and a claim needs the measurement first.
