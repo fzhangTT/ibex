@@ -1,0 +1,37 @@
+# gen_fu_cocotb_pin: the fixture linked whichever cocotb PATH offered, and said nothing
+
+WHAT THIS CLAIMS. gen_run_fixture.sh assigned LIBPYTHON_LOC from cocotb-config with no check.
+With the clone's pinned venv absent from PATH the site Python 3.9 installation answers, and it
+answers INCONSISTENTLY: --lib-name-path exits 0 with a real 3.9 library while --libpython exits
+1 with empty output. Claimed here: the committed script accepts that silently and the changed
+one refuses with the reason, while the pinned venv still passes.
+
+MEASURED, with PATH holding no venv (/usr/bin:/bin plus the site python 3.9 bin):
+  cocotb-config resolves to /tools_soc/opensrc/python/python-3.9/bin/cocotb-config
+    --lib-name-path vpi vcs -> exit 0, .../python3.9/site-packages/cocotb/libs/libcocotbvpi_vcs.so
+    --libpython             -> exit 1, empty
+
+RED, the committed script on that PATH: exit 0. No refusal, no message; LIBPY is empty and the
+run is handed LIBPYTHON_LOC= with a 3.9 VPI library available to load.
+
+GREEN, the changed script on the same PATH: exit 2 with
+  gen_run_fixture.sh: cocotb-config resolves to /tools_soc/opensrc/python/python-3.9/bin/cocotb-config,
+  outside /localdev/fzhang/ws/ibex-challenge/.venv; source the clone's .venv
+
+CONTROL, so the refusal is not merely always refusing: with the pinned venv first on PATH the
+same script prints no refusal and proceeds. That venv answers consistently:
+  cocotb-config  .venv/bin/cocotb-config
+  VPI library    .venv/lib/python3.12/site-packages/cocotb/libs/libcocotbvpi_vcs.so
+  libpython      /tools_soc/opensrc/python/python-3.12.10/lib/libpython3.12.so.1.0
+
+THE RULE IS THE ONE gen_mirror.venv_info ALREADY USES: the resolved cocotb-config and the VPI
+library it names must sit under the clone's .venv, compared on RESOLVED paths so a venv reached
+through a symlink still passes. --libpython is checked for a non-empty value too, since the
+failure that started this exits 1 with empty output rather than printing something wrong.
+
+INPUTS BY DIGEST (sha256 first 12).
+  gen_run_fixture.sh at HEAD, the red side           36f35d3610e7
+  gen_run_fixture.sh with the refusal (working tree) ace92ec2a8da
+
+NOT CLAIMED: anything about the other three consumers. tb-infra-2 lands the same refusal in
+gen_tb_local.sh and the Runtime Manager owns the two flow ones; this log is the fixture only.

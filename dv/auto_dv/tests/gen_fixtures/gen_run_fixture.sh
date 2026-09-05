@@ -12,7 +12,19 @@ dir=$OUT/$NAME; mkdir -p $dir
 PYROOTS="${GEN_TB_PYROOT:+$GEN_TB_PYROOT:}$ROOT"
 export PYTHONPATH=$PYROOTS
 ARGS=$(python3 -c "from dv.auto_dv.gen_tb.gen_image import GenImage; print(' '.join(GenImage('$VMEM').plusargs()))")
-LIBPY=$(cocotb-config --libpython)
+# cocotb-config must be the clone's pinned one. With the venv off PATH the site Python 3.9 install
+# answers: --lib-name-path exits 0 with a real 3.9 library while --libpython exits 1 empty, so an
+# unchecked assignment links the wrong cocotb and says nothing. Same rule as gen_mirror.venv_info:
+# the tool and its VPI library must resolve under the clone's .venv.
+VENV=$(cd "$ROOT/.venv" 2>/dev/null && pwd -P) || { echo "gen_run_fixture.sh: no .venv under $ROOT" >&2; exit 2; }
+CC=$(command -v cocotb-config) || { echo "gen_run_fixture.sh: no cocotb-config on PATH; source the clone's .venv" >&2; exit 2; }
+CCDIR=$(cd "$(dirname "$CC")" && pwd -P)
+case "$CCDIR" in "$VENV"/*) ;; *) echo "gen_run_fixture.sh: cocotb-config resolves to $CC, outside $VENV; source the clone's .venv" >&2; exit 2 ;; esac
+VPI=$("$CC" --lib-name-path vpi vcs) || { echo "gen_run_fixture.sh: cocotb-config --lib-name-path vpi vcs failed ($CC)" >&2; exit 2; }
+VPIDIR=$(cd "$(dirname "$VPI")" 2>/dev/null && pwd -P) || VPIDIR=""
+case "$VPIDIR" in "$VENV"/*) ;; *) echo "gen_run_fixture.sh: the VPI library is $VPI, outside $VENV; that is a different cocotb" >&2; exit 2 ;; esac
+LIBPY=$("$CC" --libpython) || { echo "gen_run_fixture.sh: cocotb-config --libpython failed ($CC)" >&2; exit 2; }
+[ -n "$LIBPY" ] || { echo "gen_run_fixture.sh: cocotb-config --libpython printed nothing ($CC)" >&2; exit 2; }
 # the shim has no baked rpath for spike: export the library dirs like gen_tb_local.sh run and the flow's runtime_lib_dirs
 export LD_LIBRARY_PATH="$OUT/lib:$ROOT/tools/spike/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
 # the build identity is the sources sha the compile step recorded (gen_tb_local.sh compile); a run header without one names an unknown build
