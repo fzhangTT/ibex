@@ -176,3 +176,16 @@ citations, the manifest rows) matches Sections 1-4; it did not run the smokes, w
 agree.
 
 Disagreement: none.
+
+## Corrigendum to Section 3 and Section 5 M-1 (written 2026-09-05T09:35:34Z, HOLD sent to the Orchestrator first; Sections 1-6 unchanged)
+
+Section 3 attributes to "the plan" the words "the case every program in the tree performs", and M-1 asks for a plan
+corrigendum on "the plan's sentence that the enable-already-set case is what every program performs". The attribution
+is wrong. gen_fcov_plan.md at HEAD carries no such sentence (grep for "every program" and "the case every" finds none);
+the landed bin text describes what the case is: "mret_mie1_mpie1_pending{NO EDGE, MIE stays 1 (MIE 1 before, MPIE = 1,
+MPP = M) with irq_pending_o == 1: the return leaves interrupts enabled and the entry follows}". The sentence is in the
+dc60063 commit message (its fourth line) and in the DV Lead's messages to the Orchestrator, where the DV Lead retracted
+it at 09:19Z (no program performs the case; the bin stands as a fourth combination, reachable with no stimulus built).
+So the disposition M-1 asks of the plan on that point is void; the corrigenda owed for the 173 narrative are the l46
+and l47 logs', and the DV Lead's coming plan line is additive (the reason, the structural fact, the fixture sentence).
+M-1's mechanism, measurement and verdict word are unchanged. Found by the Orchestrator; verified by me at HEAD.

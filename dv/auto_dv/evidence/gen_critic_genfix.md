@@ -179,3 +179,40 @@ Rows adopted from rev55, each with the mechanism verified:
   red anywhere. A cross-reference beside the classifier, or a unit check that the generator's rule agrees with the
   sampler's constants, would make a drift visible.
 Verdict unchanged: REQUEST-CHANGES confined to M-1 and M-2; L-1..L-6 owed as disclosed.
+
+## Corrigendum to Section 5 M-1 and M-2 (written 2026-09-05T09:25:39Z, HOLD sent to the Orchestrator first; Sections 1-6 unchanged)
+
+Raised by the Test Writer against the committed verdict (2882446); both items verified by me before this correction.
+
+1. M-1's sub-claim "the reader misses an emission path of the generator it models" is WITHDRAWN. The 13 r-form Zb
+   instructions with rd == rs1 == rs2 in the pre-fix run's program at seed 100600133 come from the pre-fix SWEEP ROOT's
+   generator (sha256 7f3ec33390c2 inside /proj_soc/user_dev/fzhang/ibex_dv_probe/gensweep), an intermediate version that
+   already carried _relationship_sweep, _binv_twice_pair, PACK_REF and _plain_rand (12 marker hits), while the
+   reader's red run read the generator committed at 8559958 (c1580d22a361), which carries none of them (0 hits). Two
+   generators, two correct readings: run by me against the pre-fix root, the retained reader reports
+   gen_bit_zba_zbb_ops_cg.cr_op_same.max_all_same OK at 40 of 40 seeds with 40 emissions (and cp_binv_twice.yes 40 of
+   40), exit 0. My pairing of the 13 with the 1-of-40 crossed the two, and the inference does not follow.
+   Consequence for the rest of M-1, stated plainly: the sweep's "before" ran the intermediate generator, so "44 of 46
+   hit in 40 of 40 runs BEFORE the fix" measures a stimulus that already carried the shape fixes. What it shows is
+   therefore that the FIXED shapes reach their bins in simulation for 44 of the 46 (good news for the landing, and
+   the reason the re-render can credit them), and that the manifests' not_hit reasons are STALE relative to the fixed
+   stimulus rather than wrong when written; whether the committed parent's generator hit them is unmeasured by any
+   sweep. What stands unchanged: the 46 shapes were not graded by the sweep and the shape-check log's "settled by
+   simulation" sentence over-claimed (the record now says what the sweep graded, at 03aafce); cp_binv_twice.yes and
+   cp_cj_off.self are unhit in all 40 post-fix runs; the re-render from a 40-seed block is the remedy and the credit
+   point; and the calibration point narrows to what the data supports: a shape the reader books as emitted at 40 of 40
+   (binv twice) can still be a bin hit at 0 of 40, so a model-level reading is a claim to test in simulation, not
+   evidence of a hit. The Medium stands on the over-claim and the uncredited bins; its severity is unchanged.
+2. M-2's citation. Every line number here is read with git show at the commit named. The rule in sbit_sample sets
+   `twice` from the predecessor state sb_prev_binv (gen_fcov_pkg.sv:1565 at 4017573; :1573 at 55f9243), which
+   sbit_sample writes for sbit records (:1569 at 4017573) and does not clear for others; the clearing is the caller's,
+   in the record dispatcher: `if (sbit_sample(t)) return; sb_prev_binv = 0;` (:2570 at 4017573; :2578 at 55f9243),
+   after the trap and micro-op early returns that also clear it (:2551 and :2565 at 4017573). So ANY non-sbit record
+   between the two binvi, the report store included, resets the pair. The mechanism, the measurement (0 of 40
+   post-fix) and the disposition are unchanged; the cited line is the consumer's, not the rule's. The committed M-2
+   row's ":1573" was read from the working tree, which carried another role's uncommitted edits to this file (the
+   rule sits at :1583 there today); it is the same statement about a line eight higher in the committed file, and
+   this corrigendum's numbers replace it.
+
+The Test Writer reports the pair fixed at model level (no report store between the two; consecutive at 40 of 40) and
+holds the hand until a run's own report shows the bin hit, which is the proof M-2 asked for. Verdict word unchanged.
