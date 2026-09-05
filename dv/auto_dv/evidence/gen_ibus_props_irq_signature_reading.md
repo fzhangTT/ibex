@@ -125,3 +125,54 @@ firing in Section 3 would occur unchanged with the replacement in place. The onl
 the exclusivity firing would stop being reported, which would remove the correlation from the logs
 without removing anything from the design or the testbench. That is worth stating plainly, because a
 correlation that disappears when one observer is retired was never evidence of a chain.
+
+## 7. The root event, settled by waveform (added 2026-09-05)
+
+Section 5 left the single grant-without-request event open between two causes and named the dump that
+would decide it. That dump was run and read, and this section records the answer. It also records the
+transitions themselves, because the waveforms were non-durable scratch and have been released: this
+text is now the surviving evidence of what they showed.
+
+The runs. A fresh -debug_access+all build from the same root, pinned to the same commit 4017573 as the
+wave regression and differing from it only by that flag, at both seeds, 165313640 and 1207954461. The
+firing totals matched the original runs in both seeds (291 and 520233), so the dump did not perturb
+the behaviour. The waveforms were
+`regress_ibus_wave/runs/gen_test_irq_basic_165313640/waves.fsdb` (665363 bytes, md5 049a2646bf09) and
+`.../gen_test_irq_basic_1207954461/waves.fsdb` (23564419 bytes, md5 e9579d32030d); both were verified
+against those figures before reading and are RELEASED SCRATCH, not retained evidence.
+
+What the waveform shows, seed 165313640, in the FSDB's 10 ps units with the clock rising on the half
+tick and falling on the tick. The grant is held high with ZERO transitions across 18330000 to
+18342000, twelve cycles spanning the event. The request is high throughout that span except for a
+single dip, low from the falling edge 18338000 and high again exactly at the rising edge 18338500,
+which is where the property fires. At that falling edge `branch_i` goes 1 to 0 and `lookup_grant_ic0`
+goes 1 to 0 while `fill_ext_req` is already 0 from 18337500, which is the whole request expression at
+rtl/ibex_icache.sv:1030-1031 going false.
+
+Seed 1207954461 is independent and identical in shape: the request low from the falling edge 9250000
+to the rising edge 9250500, the same two signals collapsing at that falling edge, and there the
+grant's own timing is visible, asserted at the falling edge 9249000 and deasserted at 9251000.
+
+THE ANSWER. The request was low at the rising edge where the grant was sampled, and the core is
+nonetheless clean. In both seeds the grant was already high at the rising edge BEFORE the dip, so the
+request had been accepted and the obligation that
+doc/03_reference/instruction_fetch.rst:53-54 states, that the request stay high until the grant is
+high for one cycle, was discharged. The core then stopped requesting, which that rule permits. The
+property fired because the grant OUTLIVED the request it accepted by one cycle and the half-cycle dip
+landed in that extra cycle. So the root event is the grant-hold policy meeting a combinational
+request, not a core protocol violation. No RTL change and no bug row against the design follows,
+which is the same conclusion Section 1 reached for the signature as a whole and now rests on
+measurement rather than on the two open hypotheses.
+
+One measurement bounds it. In seed 165313640 the request toggles 217 times across the run, roughly a
+hundred low periods, while sva_ibus_gnt_only_with_req fires exactly once. The grant is deasserted in
+time in essentially every other case, so this is a rare alignment and not a policy that is broadly
+wrong.
+
+A hypothesis raised and refuted during the read, recorded so it is not raised again: that the grant
+might be held constantly high, which would make `instr_gnt_i |-> instr_req_o` degenerate into a claim
+that the core must always be requesting. It is not. The grant transitions 1357 times across that run.
+
+What remains is not an RTL question. The property treats a held grant as implying a live request,
+while the driver's grant can outlive the request it accepted, so the property and the driver's policy
+disagree about what a held grant means. Which of the two should change is tb-infra-2's call.
