@@ -21,8 +21,8 @@ mcause it must carry, so a wrong-line entry fails its own tuple rather than bein
 """
 
 import cocotb
-from cocotb.triggers import Edge, with_timeout
 
+from dv.auto_dv.tests import gen_test_lib as lib
 from dv.auto_dv.tests.gen_programs import gen_irq_basic_prog as prog
 from dv.auto_dv.tests.gen_test_template import GenTest
 
@@ -30,6 +30,8 @@ HOLD_UNTIL_ACK = 1        # gen_irq_hold_e: {CYCLES, UNTIL_ACK, UNTIL_TAKEN, STI
 NMI_DRIVER_BIT = 18       # never driven here: this entry owns no NMI shape
 MSTATUS_MIE = 1 << 3
 MSTATUS_MPIE = 1 << 7
+MSTATUS_MPP = 3 << 11         # previous privilege, recorded on entry
+MSTATUS_MPP_M = 3 << 11
 # a phase group applies one command per cycle from its trigger, at most k of them (lib.Schedule
 # k_range), so this covers the whole group plus the bridge command round trip
 PHASE_SETTLE_CYCLES = 64
@@ -64,6 +66,8 @@ def line_facts(reports, cause, label):
         ((mstatus & MSTATUS_MPIE) != 0,
          f"{label}: mstatus.MPIE is 0 in the handler, entry from MIE=1 sets it"),
         (mtval == 0, f"{label}: mtval is 0x{mtval:08x}, an interrupt writes no trap value"),
+        ((mstatus & MSTATUS_MPP) == MSTATUS_MPP_M,
+         f"{label}: mstatus.MPP is {(mstatus >> 11) & 3}, entry from M-mode records M"),
     ]
 
 
@@ -72,29 +76,16 @@ async def await_reports(test, n):
     after the previous entry has completed and released its line.
 
     Driven by the report edge rather than by a poll on the bridge cycle slot: that slot is shared
-    with the schedule runner and every arm suppresses one cycle's compare, so a poll that re-arms
-    it every few cycles can cost the runner a boundary. Lateness is judged by retirement, the way
-    the report collector judges it, because a bus regime stretches a program many times over and a
-    fixed cycle budget fails a healthy run at some seeds and not others.
+    with the schedule runner and every arm suppresses one cycle's compare, so a poll that re-arms it
+    every few cycles can cost the runner a boundary. Lateness is the template's own rule, called
+    rather than copied, so this wait and the collector judge it alike and both count into the slow
+    total.
     """
-    b = test.h.b
     final = test.report_count() + 1        # the last store is the end of test, not a report word
-    rounds, last_retired = 0, test.retired()
     while test.eot_count() < n:
         if test.eot_count() >= final:
             return   # the program reached end of test; wait_eot owns the verdict from here
-        try:
-            await with_timeout(Edge(b.evt_eot_seen), test.program_budget_cycles * test.period_ns, "ns")
-        except Exception as exc:   # cocotb SimTimeoutError
-            now_retired = test.retired()
-            assert now_retired > last_retired, (
-                f"GEN_TEST_IRQ: {test.eot_count()} report words at cycle {test.cycle()}, expected {n}, "
-                f"and no retirement for {test.program_budget_cycles} cycles ({type(exc).__name__})")
-            rounds += 1
-            assert rounds < test.progress_rounds_max, (
-                f"GEN_TEST_IRQ: {test.eot_count()} report words at cycle {test.cycle()}, expected {n}, "
-                f"after {rounds} x {test.program_budget_cycles} cycles although the core keeps retiring")
-            last_retired = now_retired
+        await test.next_report_edge(f"report word {test.eot_count() + 1} of {n}")
 
 
 async def hold_for_last_phase(test):
@@ -156,6 +147,9 @@ class IrqBasic(GenTest):
             await await_reports(self, 1 + (i + 1) * prog.WORDS_PER_ENTRY)
 
     def fire_check(self):
+        # the image carries the number this generator computed and the plan recomputes it, so a
+        # difference means the program and the Python checking it are different versions
+        lib.program_min_retired(self.image, prog.plan(self.seed).min_retired)
         self.fire_tp_irq_001()
         self.fire_tp_irq_002()
         self.fire_tp_irq_003()
@@ -173,10 +167,13 @@ class IrqBasic(GenTest):
         """Timer entry, and the pc every entry must have been taken from."""
         for ok, detail in line_facts(self.reports, prog.CAUSE_TIMER, "timer interrupt entry"):
             self.check("fire_tp_irq_002", ok, detail)
+        # the items say mepc == the interrupted pc, so compare against the address rather than
+        # against the other entries: a consistently wrong mepc is uniform and still wrong
+        spin = lib.program_symbol_addr(self.image, "gen_irq_wait")
         pcs = {t[2] for t in entries_of(self.reports)}
-        self.check("fire_tp_irq_002", len(pcs) <= 1,
-                   f"entries were taken from {len(pcs)} different pcs {sorted(hex(x) for x in pcs)}, "
-                   "the program spins on one instruction so every mepc must be that address")
+        self.check("fire_tp_irq_002", pcs == {spin},
+                   f"entries were taken from {sorted(hex(x) for x in pcs)}, the program spins on one "
+                   f"instruction so every mepc must be gen_irq_wait at 0x{spin:08x}")
 
     def fire_tp_irq_003(self):
         """External entry, and the run's own count of traps this test never armed."""

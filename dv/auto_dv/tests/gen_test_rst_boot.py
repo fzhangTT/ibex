@@ -170,6 +170,9 @@ class RstBoot(GenTest):
         return prog.plan(self.seed).k
 
     def fire_check(self):
+        # the image carries the number this generator computed and the plan recomputes it, so a
+        # difference means the program and the Python checking it are different versions
+        lib.program_min_retired(self.image, prog.plan(self.seed).min_retired)
         self.fire_tp_rst_003()
         self.fire_tp_rst_006()
         self.fire_tp_rst_007()

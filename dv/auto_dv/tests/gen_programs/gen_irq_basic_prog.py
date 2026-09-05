@@ -245,6 +245,7 @@ def _body(p):
          "",
          "  # spin until every armed vector has reported once; a repeat entry does not count, so a",
          "  # non-quiet regime adds entries without changing the report count",
+         ".globl gen_irq_wait",     # the checker compares every mepc against this address
          "gen_irq_wait:",
          f"  bne  {REG_SEEN}, {REG_TARGET}, gen_irq_wait",
          "",

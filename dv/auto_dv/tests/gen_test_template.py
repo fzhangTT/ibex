@@ -184,8 +184,7 @@ class GenTest:
 
         The slot is one register shared by every waiter, so a caller writing its own target
         destroys a pending one. Concurrent tasks make that ordinary rather than exotic: run() runs
-        the schedule runner and stimulus() together, and a stimulus polling a near target once
-        stole the runner's far boundary and applied a whole phase group thousands of cycles early.
+        the schedule runner and stimulus() together.
         """
         b = self.h.b
         while len(self._cycle_waiters):
@@ -324,6 +323,34 @@ class GenTest:
         """Hook: the scenario's stimulus (bridge commands, waits). Default: the program alone."""
         return None
 
+    async def next_report_edge(self, what):
+        """Await the next report-store edge, tolerating a stretched bus; raise when progress stops.
+
+        The lateness rule lives here so the collector and any stimulus waiting on the report channel
+        judge it the same way and both count into the slow total. A store is late only when
+        retirement stopped: bus regimes stretch a program many times over.
+        """
+        b = self.h.b
+        rounds, last_retired = 0, self.retired()
+        while True:
+            try:
+                await with_timeout(Edge(b.evt_eot_seen), self.program_budget_cycles * self.period_ns, "ns")
+                return rounds
+            except Exception as exc:   # cocotb SimTimeoutError
+                rounds += 1
+                self._slow_rounds += 1
+                now_retired = self.retired()
+                assert now_retired > last_retired, (f"GEN_TEST: {what} not seen and no retirement for "
+                                                    f"{self.program_budget_cycles} cycles (cycle {self.cycle()}, "
+                                                    f"retired {now_retired}; {type(exc).__name__})")
+                assert rounds < self.progress_rounds_max, (f"GEN_TEST: {what} not seen within {rounds} x "
+                                                           f"{self.program_budget_cycles} cycles (cycle {self.cycle()}, "
+                                                           f"retired {now_retired}) although the core keeps retiring "
+                                                           f"(runaway program)")
+                self.log.info("GEN_TEST_SLOW %s pending after %d x %d cycles, cycle %d, retired %d (bus regimes)",
+                              what, rounds, self.program_budget_cycles, self.cycle(), now_retired)
+                last_retired = now_retired
+
     async def wait_eot(self):
         """Collect expected_reports report words (one EOT-register store each), then the end-of-test
         store; every store is one awaited edge, and the store counter proves none was missed."""
@@ -331,23 +358,7 @@ class GenTest:
         final = self.report_count() + 1
         while self.eot_count() < final:
             seen_before = self.eot_count()
-            rounds, last_retired = 0, self.retired()
-            while True:   # a store is late only when retirement stopped: bus regimes stretch a program many times over
-                try:
-                    await with_timeout(Edge(b.evt_eot_seen), self.program_budget_cycles * self.period_ns, "ns")
-                    break
-                except Exception as exc:
-                    rounds += 1
-                    self._slow_rounds += 1
-                    now_retired = self.retired()
-                    assert now_retired > last_retired, (f"GEN_TEST: end-of-test store {seen_before + 1} of {final} not seen and no retirement "
-                                                        f"for {self.program_budget_cycles} cycles (cycle {self.cycle()}, retired {now_retired}; {type(exc).__name__})")
-                    assert rounds < self.progress_rounds_max, (f"GEN_TEST: end-of-test store {seen_before + 1} of {final} not seen within "
-                                                               f"{rounds} x {self.program_budget_cycles} cycles (cycle {self.cycle()}, retired {now_retired}) "
-                                                               f"although the core keeps retiring (runaway program)")
-                    self.log.info("GEN_TEST_SLOW store %d of %d pending after %d x %d cycles, cycle %d, retired %d (bus regimes)", seen_before + 1, final,
-                                  rounds, self.program_budget_cycles, self.cycle(), now_retired)
-                    last_retired = now_retired
+            await self.next_report_edge(f"end-of-test store {seen_before + 1} of {final}")
             now = self.eot_count()   # read once: the assert and its message describe the same observation
             assert now == seen_before + 1, \
                 f"GEN_TEST: report channel skipped a store ({seen_before} -> {now}); the program stores faster than one edge per store"

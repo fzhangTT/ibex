@@ -514,6 +514,15 @@ runs read as 57 fire-check failures against one edited generator, which looked l
 it. The verdict line above printed both numbers in every one of those runs. Neither the run's owner
 nor I read them.
 
+CORRIGENDUM (CM226-M-2), because the sentence below was wrong when written. The identity is OPT-IN
+per test: it fires only where a caller passes the plan's value, and four directed modules whose
+generator declares a gen_min_retired word never called program_min_retired at all, so their plan
+value was computed and unused. They are gen_test_irq_basic, gen_test_rst_boot, gen_test_csr_access
+and gen_test_csr_reset, and the first is this group's own entry, which opted out of the check this
+group added. All four now call it, so the claim below holds for nineteen directed entries rather
+than fifteen, and the condition is now mechanical: no module importing a generator that declares the
+word skips the identity.
+
 THE CHANGE. program_min_retired takes the plan's value as an optional second argument and asserts
 equality when it is given; the fifteen directed entries pass it, each with the expression that names
 its plan in its own scope. gen_test_boot_retire is deliberately exempt: it is a riscv-dv entry whose
@@ -608,6 +617,17 @@ with no link to the coverpoint the bin belongs to. Two facts killed it:
   - Adding one rule, refusing any value carried by more than one tag key, moved gen_test_isa_alu from
     367 resolved to 172. A number that halves when one guess is removed was never a measurement, and
     the survivors have no better claim than the ones that went.
+CORRIGENDUM: the two facts above are ARGUMENTS; the Runtime Manager has since MEASURED the same tool
+against forty simulated runs of gen_test_bit_ratified on one generator by md5, and it is wrong in
+both directions. It OVER-CLEARS cr_op_rs1.zext_h_pos_rand, reporting 40 of 40 where simulation hit it
+at 28 of 40, because it models the generator's class LABEL rather than the sampler's value
+classifier, which is the very defect that bin has. It FALSE-ALARMS cp_single_pos.p16 at 6 of 40 where
+simulation hit that bin in all forty runs, three to five times per run, so it was not a
+mis-resolution but an alarm about a bin that is fine. And it is blind to the other six, whose
+two-operand ops carry no class tag. The control that would have caught both is a second calibration
+arm flagging any resolved bin whose predicted rate disagrees with a measured one; those forty runs
+are the ready control for it. The tool stays withdrawn either way.
+
 Its calibration could not catch either: the control flags a resolved bin at zero that the report says
 was hit, and a mis-resolution landing at 6 of 40 passes that test. So the ten entries have no
 emit-level reading at all, and the cost of a real one is one hand mapper per generator, which is what
@@ -671,11 +691,14 @@ re-entry window.
 WHAT THE RERUN PROVES, in the run's own words rather than my summary of them. Pinned to 1bd7439,
 one run, seed 694904681, retained at 0b16018 as gen_tdd_logs/test_writer/gen_irq_basic_red1_stdout.log
 with its sim sibling, the stdout carrying the family's run header that names the build it claims:
-    verdict RED-OK, red_expect matched
-    1 fire-check failure: fire_tp_irq_002, vector 7 carried mcause 0x00000007, expected 0x80000007
+  QUOTED from the run's own lines:
+    1 fire-check failure(s): fire_tp_irq_002: timer interrupt entry: vector 7 carried mcause
+    0x00000007, expected 0x80000007
     fire_schedule_applied ok=True reached 14 of 14 scheduled entries by EOT (cycle 11786, retired
-    1670), applied 14
-    92 report words, 18 lines driven, 0 UVM_ERROR, 14 phase lines
+    1670), applied 14 (k=2, source=derived)
+  COUNTED over that log by the Runtime Manager, not quoted from it: 92 report words, 18 lines
+  driven, 0 UVM_ERROR, 14 phase lines, and the RED-OK verdict with its red_expect match, which are
+  the flow's own result fields rather than text in either retained file.
 Against the entry's history at this seed:
     run 3        92 reports  18 drove  173 UVM_ERROR  14 phases applied at c77  3 fire failures  FAIL
     first rerun  92 reports  18 drove    0 UVM_ERROR   8 phases, c11664 skipped  1 fire failure  RED-OK

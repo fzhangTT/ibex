@@ -88,6 +88,9 @@ class CsrAccess(GenTest):
         return plan_for(self).k
 
     def fire_check(self):
+        # the image carries the number this generator computed and the plan recomputes it, so a
+        # difference means the program and the Python checking it are different versions
+        lib.program_min_retired(self.image, self.plan.min_retired)
         self.fire_tp_csr_001()
         self.fire_tp_csr_002()
         self.fire_tp_csr_003()

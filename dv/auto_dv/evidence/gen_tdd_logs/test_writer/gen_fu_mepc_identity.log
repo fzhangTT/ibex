@@ -1,0 +1,110 @@
+# gen_fu_mepc_identity: a consistently wrong mepc passed the committed check (CM226-M-1)
+
+WHAT THIS CLAIMS. The plan's items say mepc == the interrupted pc. The committed check asked
+only that every entry report the SAME pc, so a device recording a consistent wrong value
+satisfied it. Claimed here: on the entry's own retained run, three consistent-wrong mutants
+pass the committed check and fail the fixed one, and the REAL recorded values pass both.
+NOT claimed: any new simulation. The check is a pure function of the report words and one
+symbol address, so the retained run is the artifact and no re-run is needed to decide it.
+
+THE CONTROL IS THE REAL COMMITTED ARTIFACT, not only a fabricated stream: the report words
+are read from the committed retained log's own GEN_TEST_REPORT lines, and the address comes
+from the sidecar of a program built at that same seed with the label now exported.
+
+INPUTS BY DIGEST (sha256 first 12).
+  proof script                                     5b303d27eb96
+  retained run, committed                          70722f03779f
+  sidecar of a program built at the same seed      60326dfb0989
+  generator with the label exported (working tree) a350edcbb6d0
+
+COMMAND, from the clone root with PYTHONPATH unset:
+  python3 gen_mepc_identity_red.py <retained stdout log> <prog.sym.json>   -> exit 0
+
+================================================================================================
+THE REAL RUN: 92 report words recorded, 18 entries, mepc values ['0x80000154']
+gen_irq_wait in the image built at the same seed: 0x80000154
+
+CONTROL, the real recorded mepc values:
+  committed check True     fixed check True
+
+MUTANT every mepc + 4 (the next instruction)      committed True  fixed False  <- the fault escapes the committed check
+MUTANT every mepc - 4 (the branch's predecessor)  committed True  fixed False  <- the fault escapes the committed check
+MUTANT every mepc = 0                             committed True  fixed False  <- the fault escapes the committed check
+
+RED/GREEN HOLDS: True
+
+================================================================================================
+THE PROOF SCRIPT IN FULL, so this log names its own instrument
+================================================================================================
+
+"""Red and green for CM226-M-1: an mepc that is consistently wrong passes the committed check.
+
+The plan's items say mepc == the interrupted pc. The committed check asked only that every entry
+report the SAME pc, so a device recording a consistent wrong value -- the link address, the next
+instruction, the branch's own address -- satisfies it. The fixed check compares each mepc against
+the spin instruction's address, which the program now exports and the image's sidecar carries.
+
+The control is the real retained run rather than only a fabricated stream: its own report words are
+read out of the committed log and must satisfy the fixed check against the address the sidecar of a
+program built at that same seed reports.
+
+  python3 gen_mepc_identity_red.py <retained stdout log> <prog.sym.json of that seed>
+"""
+import json
+import re
+import sys
+
+
+def reports_from(log):
+    """The report words the retained log recorded, in index order, from its own GEN_TEST_REPORT lines."""
+    got = {}
+    for line in open(log, encoding="utf-8", errors="replace"):
+        m = re.search(r"GEN_TEST_REPORT idx=(\d+) value=0x([0-9a-fA-F]{8})", line)
+        if m:
+            got[int(m.group(1))] = int(m.group(2), 16)
+    return [got[i] for i in sorted(got)]
+
+
+def entries_of(reports, words_per_entry=5):
+    body = list(reports[1:-1])
+    return [tuple(body[i:i + words_per_entry]) for i in range(0, len(body), words_per_entry)]
+
+
+def committed_check(pcs, _spin):
+    """What the entry asked before CM226-M-1: every entry reports the same pc."""
+    return len(pcs) <= 1
+
+
+def fixed_check(pcs, spin):
+    """What it asks now: every mepc IS the spin instruction."""
+    return pcs == {spin}
+
+
+def main():
+    log, sidecar = sys.argv[1], sys.argv[2]
+    spin = int(json.load(open(sidecar))["symbols"]["gen_irq_wait"], 16)
+    reports = reports_from(log)
+    real = {t[2] for t in entries_of(reports)}
+    print("THE REAL RUN: %d report words recorded, %d entries, mepc values %s"
+          % (len(reports), len(entries_of(reports)), sorted(hex(x) for x in real)))
+    print("gen_irq_wait in the image built at the same seed: 0x%08x" % spin)
+    print("")
+    print("CONTROL, the real recorded mepc values:")
+    print("  committed check %s     fixed check %s" % (committed_check(real, spin), fixed_check(real, spin)))
+    print("")
+    for label, mutate in (("every mepc + 4 (the next instruction)", lambda v: v + 4),
+                          ("every mepc - 4 (the branch's predecessor)", lambda v: v - 4),
+                          ("every mepc = 0", lambda v: 0)):
+        bad = {mutate(v) for v in real}
+        c, f = committed_check(bad, spin), fixed_check(bad, spin)
+        flag = "  <- the fault escapes the committed check" if c and not f else ""
+        print("MUTANT %-42s committed %-5s fixed %-5s%s" % (label, c, f, flag))
+    ok = (committed_check(real, spin) and fixed_check(real, spin)
+          and committed_check({v + 4 for v in real}, spin) and not fixed_check({v + 4 for v in real}, spin))
+    print("")
+    print("RED/GREEN HOLDS: %s" % ok)
+    return 0 if ok else 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

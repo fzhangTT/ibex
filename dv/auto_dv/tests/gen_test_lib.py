@@ -62,10 +62,9 @@ class CycleWaiters:
     """Which cycle-threshold waiters to wake, and what to arm the bridge with.
 
     The bridge has ONE cycle-threshold slot (evt_cycle_target / evt_cycle_arm / evt_cycle_hit) and
-    every waiter shares it, so a caller that writes its own target destroys a pending one: a
-    stimulus polling a near target once stole the schedule runner's far boundary and applied a
-    whole phase group thousands of cycles early. This holds every pending target instead, arms
-    only the earliest, and wakes only the waiters whose own target has been reached.
+    every waiter shares it, so a caller that writes its own target destroys a pending one. This
+    holds every pending target instead, arms only the earliest, and wakes only the waiters whose own
+    target has been reached.
 
     Policy only, no cocotb: the caller owns the events and the bridge writes, so the waking rule
     is testable without a simulator.
@@ -299,6 +298,13 @@ def riscv_dv_instr_cnt(test_name):
             m = re.search(r"\+instr_cnt=(\d+)", entry.get("gen_opts", ""))
             return int(m.group(1)) if m else None
     raise AssertionError(f"GEN_TEST_LIB: riscv-dv test {test_name} not in {RISCV_DV_TESTLIST}")
+
+
+def program_symbol_addr(image, symbol):
+    """Address of a global the program defines, from the image's own sidecar."""
+    syms = image.sidecar.get("symbols", {})
+    assert symbol in syms, f"GEN_TEST_LIB: program defines no symbol {symbol}"
+    return int(syms[symbol], 16)
 
 
 def program_symbol_word(image, symbol):
@@ -1027,8 +1033,7 @@ def _self_test():
     seed = 12345
     names = list(TIMING_ONLY_KNOBS)   # the mechanics are tested independent of the consumer gate
     # CycleWaiters: the bridge has one cycle-threshold slot and every waiter shares it, so a near
-    # target used to destroy a pending far one (a stimulus poll stole the schedule runner's c11664
-    # boundary and applied a phase group at cycle 77). Two concurrent waiters, near and far:
+    # target used to destroy a pending far one. Two concurrent waiters, near and far:
     w = CycleWaiters()
     w.add(11664, "runner")
     w.add(85, "poll")
@@ -1053,8 +1058,7 @@ def _self_test():
     w4.drop(far)
     assert len(w4) == 1 and w4.armed_target() == 85, "dropping the far waiter leaves the near one armed"
     assert w4.on_hit(85) == [near], "the near waiter still wakes after the far one gave up"
-    # an arm costs that cycle its compare, so only a new earliest target may arm; the rule the
-    # template used, arming on every add, is the red here
+    # an arm costs that cycle its compare, so only a new earliest target may arm
     w5 = CycleWaiters()
     served = [w5.add_arms(t, object()) for t in (500, 900, 200)]
     naive = [True, True, True]
