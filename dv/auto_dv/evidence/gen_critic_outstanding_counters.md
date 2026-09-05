@@ -432,3 +432,32 @@ CRITIC VERDICT: REQUEST-CHANGES on 69eb33f..ac2d306, confined to M-2 (the build 
 the mutation retained as prose). M-3 is CLOSED; M-1 stayed closed from Section 7; the red's per-property claims reproduce to the
 digit; L-6, L-7 and L-8 and I-1 are owed with M-2's companion, L-4 and L-5 with the DV Lead. The group closes when that companion
 lands and its digests verify.
+
+## 9. Landing 61 (the artifacts and identity companion), 139c325..41bcbe8, the counters half: M-2 closed as corrected; APPROVE with two Lows owed (2026-09-05T15:01:38Z)
+
+Artifacts at 41bcbe8: gen_fu_l61_artifacts_and_identity.log (its Rows 2 and 3, and the dbus annotation in gen_protocol_props.sv).
+No review of 41bcbe8 exists at HEAD e85fe5b (rev81 is running), so none is read here. Method: the log's roots read on the clone's own
+output directories it names, my Section 8 rows checked one by one, the annotation line read at 41bcbe8.
+Logs: dv/auto_dv/work/critic/l53/l61_checks.txt, l61_log_at_41bcbe8.txt.
+
+- M-2 CLOSED as a records contradiction. Row 2 says what the two digests are, the run headers of the MUTANT builds e_mut and f_mut,
+  names the base (4bd933f) and the copied files, states the clean identities a reader can reproduce, b7067f660ed88693 and
+  edb6e789fe40b5c5, which are exactly my E and F, and says plainly that the window mutation is NOT retained and that retaining it is
+  owed. The claim the tree contradicted is corrected in the record; what remains is my L-8 of Section 8 (the mutation as prose), which
+  the log itself discloses as open, so it stays a Low owed rather than a Medium.
+- L-7 CLOSED and the l58 log's counting rule VERIFIED. Row 3 names the roots as the clone's own dv/auto_dv/out_l53wrapmut/r and
+  out_l53satmut/r; both exist. On the wrap run: 5285 lines mention sva_dbus_outstanding_max, 2642 are real firings, the per-id report
+  line carries 2641 and the tally 2647, the triple the l58 log states; the response obligation fires once in each run and the bound
+  property 2642 times in the wrap run and 0 in the saturating one, the corrected integers of the l58 log's Row 5.
+- I-1 addressed: Row 3 says the cycle list covers the four bus-protocol ids in cycle order and omits 330 of the run's 627 real errors;
+  my own count reads 297 in the four ids and 330 omitted, so I agree with the log against rev76's 328.
+- L-6 (the totals 2640 and 2602 against my 2684 and 2646) is not addressed; still owed. The "SAME nineteen" is now stated as not
+  derived line by line, which is honest; Section 8 derived it per bus, so nothing further is owed there.
+- L-4 and L-5: the claim that landing 55's log and companion dispositioned them is withdrawn in Row 3; they stay with the DV Lead.
+- The dbus annotation at gen_protocol_props.sv:218 now states the obligation and the reason a second request cannot issue, without
+  the build parameter and the line numbers (rev76's Info), the derivation living in the l58 log where a line can be corrected.
+
+CRITIC VERDICT: APPROVE on 139c325..41bcbe8 for the outstanding-counters group. The REQUEST-CHANGES of Section 8 on
+69eb33f..ac2d306 is LIFTED: M-2 is closed as corrected, M-3 stayed closed, M-1 closed in Section 7. Owed to tb-infra-2's next records
+touch: L-8 (the window mutation retained as a diff with the wrapper digest it produces) and L-6 (the two totals); L-4 and L-5 to the DV
+Lead. The group's standing verdict from me is APPROVE.

@@ -251,3 +251,58 @@ CRITIC VERDICT: APPROVE on 44a24f5..ccd755d for runtime-2's three commits (1fa0b
 this file's Section 5 on a58f562..44a24f5 is LIFTED: M-1, M-2 and M-3 are closed by measurement, L-1..L-7 and the Info are
 closed. Owed to runtime-2's next records touch as disclosed: L-8..L-15 and I-1, all Low or Info, none a claim the tree
 contradicts; rev73 and this section agree there is no Major and no Medium.
+
+## 8. Flow fixes 2 (runtime-2), ccd755d..b83f4fe: Section 7's L-8..L-15 and I-1 closed; APPROVE (2026-09-05T15:01:38Z)
+
+Artifacts at b83f4fe: gen_verdict.py, gen_flow_const.py, gen_round.py, gen_cov_report.py, gen_dashboard.py, gen_flow_util.py,
+gen_runtime_api.md, gen_critic_response_flow.md, the reds2 index and yaml, the pair-fix index, and three companions under
+gen_tdd_logs/flow (gen_export_default_red2_corrections.log, gen_verdict_reason_basis.log, gen_build_identity_wording.log); rev79
+(dv/auto_dv/reviews/2026-09-05-claude-diff-ccd755dc-b83f4fea.md at 8e7744a, 81888b18ac113de0). Method: a detached worktree of b83f4fe
+for the ten self-tests and the const check; the look-ahead's two counter-examples and the assertion shape fed to decide_lines; the
+scratch root counted after a gen_round self-test; the companions' digests and folded scripts re-derived; the reds2 yaml against its
+hash row and the served copy; every flow manifest row; rev79 read after the findings were fixed (flow2/draft_s8_flow2_prerev79.txt).
+Exposure: the Orchestrator's message summarised the landing before these checks. Logs: flow2/prever_b83f4fe.log,
+prever_b83f4fe_details.txt, the three companions saved beside them.
+
+- L-8 CLOSED: the scratch removal moved after the last case that writes into the root; selftest_tmp holds 0 entries after a run.
+- L-9 CLOSED: gen_verdict_reason_basis.log names Section 2's tree (1fa0bc7; gen_verdict.py 4cc36636a67a03ba and gen_flow_const.py
+  7d62bdae08c285d4, both recomputed), the population root (the one my own re-decide used) and folds both scripts in with md5 and
+  bytes that re-derive (8549513988b2e901, 1821; 26b62950254e90ce, 2066).
+- L-10 CLOSED: mechanism_id takes a following line's id only for the assertion_failure class; "Error-[FCIBH]" two lines above an
+  unrelated bracketed UVM_ERROR reads "vcs_runtime_error at log line 1" with no id, an unbracketed UVM_ERROR followed by a bracketed
+  one reads "uvm_error at log line 1", the assertion shape still names its property; the self-test carries both counter-examples
+  and asserts the class name is a FAIL_PATTERNS entry.
+- L-11 CLOSED: the three-consumer guard is pinned to the fixture's own literal, so three empty cells or a wrong quantity under the
+  right label fail. L-12 CLOSED: the API canary paragraph names round_sources_sha256_all and defines the three outcomes with null as
+  "could not be made", not a mismatch.
+- L-13 and L-14 CLOSED by gen_export_default_red2_corrections.log: the PRE field is ABSENT, not null; the predecessor's fault is a
+  false provenance claim with no effect on the bytes, the four digest pairs equal at 7d1a6fe and edbe821 (which I had measured as an
+  empty git diff over the flow directory). L-15 CLOSED: the rev62 L-2 row is corrected in place with the date and the L-5 row points at
+  it. I-1 CLOSED: the reds2 index and yaml now say the four result files carry no export_origin key; the yaml's hash row reads 3560
+  bytes baff21ca96e40252 and the served copy under work/runtime/done is byte-identical.
+- rev73's two Infos: gen_build_identity_wording.log separates the measured counts from the inferred identity; the plan-item tags in
+  comments were swept. The pair-fix index carries the carry-over row citing gen_carryover_comparison.md (9fad5d2dbde1, 4778 bytes,
+  both re-derived), the Test Writer's record of 1520 of 1520 pairs identical over the block's forty seeds and 1..40 with every red
+  form, whose retained log matches its stated md5 and bytes; that is the recording rule (b) asks for, the home my genfix follow-up
+  L-2 asked about, and the answer to rev74's Low on the motivating case.
+- Flow manifest: 44 rows verify on the worktree. Ten self-tests and CONST-CHECK PASS.
+- L-16 (Low, comment; runtime-2), my miss on the sweep: three bare plan-item tags survive, "item five:" at gen_round.py:442 and "item
+  three" at gen_flow_util.py:1043 and :1072, while the response row and my own sweep said none remained; my pattern looked for
+  "rt39 item" and "rt37" and not for the bare form (gen_flow_util.py:477 keeps "rt37:" inside a self-test label, the stated boundary).
+- I-a (Info; runtime-2): population.py, folded into the basis companion, hardcodes the clone's flow path and the companion does not
+  say the substitution as gen_build_identity_basis.log does.
+
+Reconciliation with rev79 (read after the rows above were fixed):
+- Its verification list agrees with mine on every item: the self-tests, the gate with both counter-examples, the FAIL_PATTERNS pin
+  (it renamed the entry and watched the self-test fail), the scratch count, the pinned guard, the canary paragraph, the three
+  companions' digests, the reds2 hash row and served copy, the carry-over row, the 44 manifest rows and the eleven response rows.
+- Its Low is my L-16, found independently by it and missed by my sweep; the three lines are the ones I name.
+- Its Info on Critic ruling labels in flow comments (A-24, R-5.x, R-01): those cite controller rulings as the authority for a refusal or
+  a policy, which the intent-only rule does not forbid; agreed as Info. Its Info on gen_mirror's self-test staging under the work
+  directory: I ran it on a worktree (PASS, one case skipped); a hygiene note. Its Info that "occurrences" are line counts in the
+  identity companion: verified (vpi_lib occurs three times on two lines at 7930d04); my Sections 7 and 8 of the counters and flow
+  records use the same line counts under the same word, so the note applies to them too.
+- Verdict after reconciliation: unchanged. Both agree there is no Major and no Medium.
+
+CRITIC VERDICT: APPROVE on ccd755d..b83f4fe. Section 7's L-8..L-15 and I-1 are CLOSED; L-16 and I-a owed to runtime-2's next records touch.
+The flow group stays closed on both sides.

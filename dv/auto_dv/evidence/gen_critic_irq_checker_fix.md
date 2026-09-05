@@ -497,3 +497,92 @@ Reconciliation with rev77 (read after the rows above were fixed):
 CRITIC VERDICT: REQUEST-CHANGES on dd6fa54..dd23dff, confined to M-1 (the counter's 250 and six zeros without a run root, and the
 250 not reproducing on the committed checker with the stated recipe). L-14, L-15 and L-16 are CLOSED; L-17, L-18 and L-19 owed
 with M-1's companion; the group's standing verdict (Section 8, APPROVE) is unchanged and L-8 stays held back.
+
+## 11. Landing 60 (the NMI-mode mirrors exit on the first mret), dd23dff..139c325: L-8 closed; APPROVE (2026-09-05T15:01:38Z)
+
+Artifacts at 139c325: gen_checkers_pkg.sv (md5 412733ec), gen_fcov_pkg.sv (0d99a8c0), gen_irq_nmi_aligned.S (4a790cfab0d39791, 2520
+bytes), gen_fu_l60_nmi_mode_exit.log (bdcd757daf052a29, 6041 bytes), gen_manifest.md; rev80 (dv/auto_dv/reviews/2026-09-05-claude-diff-dd23dff7-139c325b.md at e5ddfff, 4ff5af5b1e6ed8e6). Method: two out-of-tree roots exactly as
+the log names them, G an archive of dd23dff (the depth mirror; its two packages read the log's md5s ed3ef053 and 3a3c6c35) and H the
+same archive with 139c325's two packages laid over it (412733ec and 0d99a8c0), each with the retained gen_mut_irqwithholdall.diff
+applied by git apply (gen_dut_top.sv md5 5d9ec8ba); the fixture rebuilt from the retained source; gen_ut_irq_nmi_long at seed 1 with the
+module's plusarg and the ablation; the RTL term read; every manifest row checked on a 139c325 archive. Findings fixed before any review
+of the landing was read (irqfix3/draft_s11_prerev.txt). Logs: irqfix3/l60_checks.txt, l60_runs.log, l60_log_at_139c325.txt,
+l60_diff_at_139c325.txt.
+
+- L-8 CLOSED by the code and the RTL: both packages drop the nesting depth and leave NMI mode on the first mret record that is not a
+  trap, which is what rtl/ibex_controller.sv:954-960 does (mret_insn in the FLUSH branch clears nmi_mode_d with no count), the term
+  Section 7 quoted. The log states the RTL fact in its own text rather than only in the fixture's header.
+- THE RED REPRODUCES VERBATIM. The mutant build identities read 311aaf1ed6d1c9cc (G) and 00a451af15ba8b17 (H), exactly the log's two,
+  and the log says of them what they are: mutant builds, recomputable from a committed tree plus the retained diff, which is the
+  discipline my counters M-2 asks for. The fixture assembles to crc32 3cba3f47, 218 words, tohost 800003c8 as stated. The depth mirror
+  reports "lines 00004 (enable bits 00000800) raised at cycle 902 (order 206) not taken within 17 records (now order 267, takeable
+  records 18)" and the RTL mirror the same raise at "now order 225", forty-two records apart with takeable 18 in both, so the mask
+  moved and the bound did not; the ablation reads 0 irq_entry errors with bound failures=1 in its summary. The other 867 real errors in
+  every mutant run are irq_pending mismatches, the withheld lines' pending view, the same on both mirrors. I agree with the DV Lead's
+  ruling as the log states it: the judgment-order difference with its window quantified isolates the mask with the confounder held
+  equal, and a run ending inside the window loses the report, which follows; the nested ecall inside the NMI handler is the case L-8
+  named.
+- L-20 (Low, records; tb-infra-2): the recipe names module and seed and omits +gen_fetch_en_at_reset=0, which gen_ut_irq_nmi_long
+  requires; run as written the simulation ends at 10 ps with a cocotb FAIL and no summary, so the omission is found at once rather
+  than misleading, but the recipe does not run as written (+gen_ut_boot_retire=100 changes nothing here).
+- L-21 (Low, records; tb-infra-2): "all six regression smokes PASS on the tree build" names no smoke, run or summary line, as in
+  landing 59; the log itself says the control bounds little.
+- Records: the TDD manifest's 3524 rows match a 139c325 archive (0 bad, 0 missing); the two new rows match their blobs. No rtl/ change.
+
+Reconciliation with rev80 (read after the rows above were fixed):
+- Its verification agrees with mine and goes further on the RTL: it quotes all three nmi_mode_d assignments (the hold, the set at :745
+  under irq_nm && !nmi_mode_q, the clear at :959 in FLUSH) and confirms both mirrors match; it recomputed every digest in the log
+  from committed archives plus the retained diff and names the clean roots c684bc82a9d070dc (dd23dff, my D build) and
+  1940c64a528d078c, which my own clean build of the RTL-mirror root reads exactly.
+- Its Medium, the red's figures and the ablation's summary quoted from no named out directory or sim.log, is the artifact half of
+  what my L-20 and L-21 name; adopted as L-22 (Low, records; tb-infra-2): the figures reproduce verbatim on my builds, so the gap is
+  quotation, not truth, which keeps it Low in my scale where rev80 says Medium.
+- Its Low on rev77's comment still present at gen_checkers_pkg.sv:64-67, VERIFIED (the "Before that term existed" sentence stands at
+  139c325); it is fixed in the next landing (Section 12).
+- Its Low on the fixture's include path, VERIFIED and adopted as L-23 (Low, records; tb-infra-2): gen_irq_nmi_aligned.S includes
+  gen_mmio_map.h, the directed recipe as written ends "assemble/link failed", and --gcc-opts=-Idv/auto_dv/tests/gen_programs, which
+  my assembly used, builds it to the stated 218 words and crc32; the same holds for the two earlier retained fixtures.
+- Its Low on the missing clean-build row, agreed and MEASURED here as L-24's answer: on the unmutated RTL-mirror root (identity
+  1940c64a528d078c) the fixture reads PASS, irq_entry 0, entries=2 nmi=1, bound failures 0, open expectations 0, so the design takes
+  the NMI and then the external line inside the handler remainder after the inner mret, the window the depth mirror masked and the
+  RTL mirror leaves open. L-24 (Low, records; tb-infra-2) is the row for the record to carry it.
+- Its Infos (the fixture header's history sentence; the comment duplicated by design in the fcov mirror; the identity recipe's sort
+  being locale-dependent, under which my digests and theirs agree because both ran on the site's locale) are noted.
+
+CRITIC VERDICT: APPROVE on dd23dff..139c325. L-8 is CLOSED, the last of Section 7's Lows that named code; L-20 and L-21 owed to tb-infra-2's next
+records touch; the group's standing verdict of Section 8 (APPROVE) stands, with Section 10's M-1 on landing 59 still the open row.
+
+## 12. Landing 61 (the artifacts and identity companion), 139c325..41bcbe8, the irq half: Section 10's REQUEST-CHANGES lifted (2026-09-05T15:01:38Z)
+
+Artifacts at 41bcbe8: gen_checkers_pkg.sv, gen_protocol_props.sv, gen_fu_l61_artifacts_and_identity.log, gen_manifest.md. No review of
+41bcbe8 exists at HEAD e85fe5b (rev81 is running), so none is read here; a reconciliation follows when the Orchestrator names one.
+Method: the log's runs read on the clone's own output directories it names (dv/auto_dv/out_l65 and its eight runs), the build
+identity compared with a 41bcbe8 archive compiled by me, the code diff read, my Section 10 and Section 11 rows checked one by one.
+Logs: dv/auto_dv/work/critic/l53/l61_checks.txt, l61_log_at_41bcbe8.txt.
+
+- Section 10's M-1 CLOSED. Row 1 puts the counter's figures on ONE named build, dv/auto_dv/out_l65 with identity d9a0553bd4e0b326,
+  which is the identity of a 41bcbe8 archive compiled by me, so the runs are on the committed tree; the six smokes are named with
+  their modules and plusargs (storm, lines, dbgstorm, fetchen, rr, nmilong) and each run's field is quoted; on the clone's out_l65 I
+  read the eight verdicts PASS, the six zeros, perline 244 and nmiclean entries=2 nmi=1, all as the log says. The figure is corrected
+  to 244, my Section 10 measurement, and the log says the earlier 250 came from an unnamed build and does not assert which change
+  moved it, which is the right thing to say.
+- L-17 CLOSED (Row 4 names the superseded md5s 6bb801ed and 49bf2735 and the regenerated 13fd25d9 and bdc5aaf6). L-18 CLOSED: the
+  counter is bit_clear_expectation_records and its summary field reads "expectation-records held by a clear per-line enable alone".
+  L-19 CLOSED: the comment states what the counter counts and why, and nothing of its history.
+- Section 11's rows: L-20 CLOSED (Row 6 states the plusarg set with +gen_fetch_en_at_reset=0); L-21 CLOSED (the six smokes named, on
+  one identity); L-22 CLOSED (Row 6 quotes the two fire lines and the three summary lines verbatim, equal to mine, with the ablation's
+  bound failures=1 beside its zero errors); L-23 CLOSED (Row 8 gives the assembling command with -Idv/auto_dv/tests/gen_programs);
+  L-24 CLOSED (Row 7's nmiclean on out_l65 reads PASS, entries=2 nmi=1, irq_entry 0, which my clean run of Section 11 also reads).
+  Row 6's l60 run paths are <scratch> placeholders again where the out_l65 rows are clone-relative and checkable; folded into L-25.
+- L-25 (Low, records; tb-infra-2): Row 5's ledger of my owed Lows mislabels them. It says L-6 was answered by landing 57's per-line
+  enable term (L-6 is the toggle source and the mutant diffs; the per-line term is L-10), that L-12 was answered by the ablation
+  precision (L-12 is the dcsr home; the ablation precision is no row of mine), and that L-8 and L-9 are untouched (landing 60 closed
+  L-8, Section 11; the reds2 block at 67c6ac1 answered L-9, my flow Section 7). The ledger a reader should use is this file's:
+  L-6 closed by landings 57 and 59; L-8 by landing 60; L-9 by the reds2 block; L-10 and L-13 by landing 57; L-12 by landings 57 and
+  59; L-7 and L-11 are records notes with nothing owed; L-14 to L-24 as Sections 9 to 12 state.
+- Records: the manifest row for the l61 log matches its blob (checked with the others in l61_checks.txt); no rtl/ change.
+
+CRITIC VERDICT: APPROVE on 139c325..41bcbe8 for the irq checker group. The REQUEST-CHANGES of Section 10 on dd6fa54..dd23dff is
+LIFTED (M-1 closed by measurement on the committed tree); L-25 is owed to tb-infra-2's next records touch. The group's standing
+verdict is APPROVE with every code-bearing Low of Section 7 closed; the promotion of the irq entry stays gated on the end-of-test
+expectation as 7.5 says.
