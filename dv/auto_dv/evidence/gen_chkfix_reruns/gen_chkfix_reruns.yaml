@@ -1,0 +1,39 @@
+block: irq checker fix re-runs, the two masked reds and the 258-fire seed
+served_utc: '2026-09-05T10:56:00Z'
+served_by: runtime-2
+kind: unmeasured for the round; coverage on; PINNED
+head_sha: 9c7f8f63957d153d9c67cd1a61d44f88b3c94c69
+source_root: /proj_soc/user_dev/fzhang/ibex_dv_mirror_head/9c7f8f63957d
+driver: a detached archive of 9c7f8f6 whose gen_run.py hashes to the committed blob ad3e464a39b4
+outdir: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_chkfix
+fresh_outdir: 'yes, the TB sources changed'
+expectation_filed_before_the_runs: >
+  the two reds read RED-OK with fire_tp_irq_002 among the failures and no other fire check failing, taking
+  the fixture to 3 of 3; the 258-fire seed shows zero irq_entry fires; any remaining undeclared-reason
+  failure or any fire is a second mechanism and a finding.
+result:
+  gen_test_irq_basic_red_1038372995: {verdict: RED-OK, fire: fire_tp_irq_002, irq_entry_fires: 0}
+  gen_test_irq_basic_red_1382184738: {verdict: RED-OK, fire: fire_tp_irq_002, irq_entry_fires: 0}
+  gen_test_irq_basic_1207954461: {verdict: FAIL, irq_entry_fires: 258, decided_by: 'sva_rvfi_irq_valid_exclusive, the already-ruled property, which fires 6 times'}
+the_reds_are_closed: >
+  3 of 3. The masking is gone: both seeds that previously failed for an undeclared reason now read RED-OK on
+  the declared reason with ZERO checker fires.
+the_finding: >
+  The 258-fire seed is UNCHANGED. 258 fires in the wave run at 4017573 and 258 here at 9c7f8f6, counted both
+  times with the not-taken pattern rather than by lines mentioning the id. Not reduced, not reshaped.
+  THE FIX IS DEMONSTRABLY IN THE BUILD and this is not a stale binary: the message now carries the enable
+  mapping ("lines 00020 (enable bits 00040000)"), which the pre-fix message did not print.
+  What the new field shows, all of it re-derived here rather than taken from the message text:
+  every one of the 18 distinct raised-line bitmaps has its enable bit SET in mie 7fff0888 (all eighteen
+  enable words checked against the mask, none unset); mstatus is 00000088 throughout so the global enable is
+  set at the sample; the raise-to-fire order deltas are 18 to 23, with 18 dominating at 153 of 258, then 19
+  at 67, 20 at 23, 21 at 7, 22 at 3, 23 at 5; the raised lines are FAST lines, bits 16 upward, over eighteen
+  distinct bitmaps, where the analysis that produced the masked-handler arithmetic was on line 0, the
+  software line at bit 3.
+  The delta range is the same family as the window the fix addresses, yet the accrual still happens here,
+  while the two red seeds went to zero on the same build. So whatever withholds these interrupts is not what
+  the reds were hitting. The diagnosis is tb-infra-2's; this record states the measurement only.
+method_note: >
+  Fires counted with the not-taken pattern, not by lines mentioning the id, because the id also appears on
+  UVM end-of-simulation per-id tally lines. This run carries zero tally lines and both counts agree at 258,
+  but it was checked rather than assumed.
