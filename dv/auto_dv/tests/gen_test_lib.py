@@ -718,7 +718,30 @@ def check_test_source(source, path="<source>", entry_lookup=None):
 
 
 def check_test_module(path):
-    return check_test_source(Path(path).read_text(), path)
+    """Structure rules, plus the file-level rule cocotb itself imposes.
+
+    A module with no registered cocotb test compiles, passes every structural rule and simulates
+    nothing: cocotb discovers no tests and the run reports time 0. The rule lives here rather than
+    in check_test_source because it is a property of the FILE as cocotb loads it, and the source
+    checker's own fixtures are minimal snippets with no entry point by design.
+    """
+    text = Path(path).read_text()
+    checked = check_test_source(text, path)
+    tree = ast.parse(text)
+    reg = [n for n in ast.walk(tree) if isinstance(n, ast.AsyncFunctionDef)
+           and any(isinstance(d, ast.Call) and isinstance(d.func, ast.Attribute) and d.func.attr == "test"
+                   and isinstance(d.func.value, ast.Name) and d.func.value.id == "cocotb"
+                   for d in n.decorator_list)]
+    assert len(reg) == 1, (f"GEN_TEST_LIB: {path}: {len(reg)} @cocotb.test() entry point(s); a test module "
+                           f"registers exactly one or cocotb discovers nothing and the run simulates nothing")
+    for cls in [n for n in ast.walk(tree) if isinstance(n, ast.ClassDef)]:
+        want = next((a.value.value for a in cls.body if isinstance(a, ast.Assign)
+                     for tg in a.targets if isinstance(tg, ast.Name) and tg.id == "name"
+                     and isinstance(a.value, ast.Constant)), None)
+        if want and cls.name in checked:
+            assert reg[0].name == want, \
+                f"GEN_TEST_LIB: {path}: entry point {reg[0].name} does not match the class name attribute {want}"
+    return checked
 
 
 # Regime knobs whose events a program must be able to survive, by knob: a debug request needs a debug ROM in the DM window ("dbg"),

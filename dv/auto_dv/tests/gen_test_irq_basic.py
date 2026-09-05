@@ -20,6 +20,8 @@ The checking here is intent-derived: the vector a handler was entered through de
 mcause it must carry, so a wrong-line entry fails its own tuple rather than being averaged away.
 """
 
+import cocotb
+
 from dv.auto_dv.tests.gen_programs import gen_irq_basic_prog as prog
 from dv.auto_dv.tests.gen_test_template import GenTest
 
@@ -151,3 +153,8 @@ class IrqBasic(GenTest):
         seen = sorted(t[0] for t in entries_of(self.reports))
         want = sorted(e.cause for e in prog.plan(self.seed).entries)
         self.check("fire_tp_irq_004", seen == want, f"vector indices {seen} != armed set {want}")
+
+
+@cocotb.test()
+async def gen_test_irq_basic(dut):
+    await IrqBasic(dut).run()
