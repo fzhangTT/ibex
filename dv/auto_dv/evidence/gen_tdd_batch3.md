@@ -628,3 +628,81 @@ WHAT THE SIMULATION HAS DECIDED SO FAR:
 WHAT IS NOT CLAIMED. No entry in the simulation rows is cleared or condemned by this record; those
 rows are pending and the sweep decides them. And a hand mapper's "0 under the bar" clears only the
 bins it examined, which is why the fourth column is beside it rather than in a footnote.
+
+## 15. Group irq-entry: what the entry found, what was fixed, and what the rerun proves
+
+THE CAUSE, in one sentence, settled by the Orchestrator over the DV Lead's and the RTL/Arch
+Engineer's readings: the divergence was a testbench modelling defect, the memory agent latching the
+fetch address at the falling edge while the interrupt agent drove the input at the same edge; the
+core is self-consistent at every rising edge and its combinational path from the interrupt inputs to
+the bus address is recorded as design property S6, not as a cause.
+
+WHAT THE ENTRY IS. gen_test_irq_basic drives each armed line alone under the quiet regime and checks
+the tuple each vector reports: the vector index it was entered through determines the mcause it must
+carry, so a wrong-line entry fails its own tuple rather than being averaged away. The program stores
+an armed marker before mstatus.MIE is set, so no interrupt can be taken until the marker is out and
+every reported entry is taken from the one-instruction spin loop.
+
+THREE DEFECTS WERE FOUND BY RUNNING IT, and only one of them was in the design's neighbourhood.
+  - THE ENTRY-POINT ESCAPE. The first version had no @cocotb.test() decorator, so cocotb discovered
+    no test and the run reported time 0 while looking clean. The library now refuses a module that
+    does not register exactly one entry point whose name matches the class, checked at file level
+    because the source checker is fed synthetic snippets that have no entry point by design.
+  - THE SHARED CYCLE SLOT. The bridge has ONE cycle-threshold slot and every wait_cycles caller wrote
+    it directly. My eight-cycle report poll took the schedule runner's c11664 boundary and applied a
+    whole phase group at cycle 77, which carried the storm regime from there to the end of the run.
+    The storm was reached THROUGH that defect; it was not a regime fault. lib.CycleWaiters now holds
+    every pending target, arms only the earliest and wakes only what a hit reaches (Section 11), and
+    this touch adds the re-arm rule: an arm edge suppresses that cycle's compare, so the slot is
+    re-armed only when the earliest target actually moved.
+  - THE ACKNOWLEDGEMENT CONTRACT. ack_seen released every UNTIL_ACK line rather than the one named,
+    so an entry's acknowledgement cancelled the next line. That is TB Infra's fix, landed with its
+    own red; the units are the vector cause, which my handler already stores, so my program needed no
+    change for it.
+
+WHAT I DROPPED, and why it is recorded rather than removed silently. My handler acknowledges after
+its five report stores, and I had prepared a change to acknowledge first. With the acknowledgement
+fixed to release one line by cause, that change is no longer required for correctness, and I dropped
+it: the committed program stays byte-identical with the source of the run-3 observation this record
+cites, and a line held across the report window is the more realistic shape, since the hardware
+clears mstatus.MIE on entry and the acknowledging store precedes the mret, so holding it opens no
+re-entry window.
+
+WHAT THE RERUN PROVES, in the run's own words rather than my summary of them. Pinned to 1bd7439,
+one run, seed 694904681, retained at 0b16018 as gen_tdd_logs/test_writer/gen_irq_basic_red1_stdout.log
+with its sim sibling, the stdout carrying the family's run header that names the build it claims:
+    verdict RED-OK, red_expect matched
+    1 fire-check failure: fire_tp_irq_002, vector 7 carried mcause 0x00000007, expected 0x80000007
+    fire_schedule_applied ok=True reached 14 of 14 scheduled entries by EOT (cycle 11786, retired
+    1670), applied 14
+    92 report words, 18 lines driven, 0 UVM_ERROR, 14 phase lines
+Against the entry's history at this seed:
+    run 3        92 reports  18 drove  173 UVM_ERROR  14 phases applied at c77  3 fire failures  FAIL
+    first rerun  92 reports  18 drove    0 UVM_ERROR   8 phases, c11664 skipped  1 fire failure  RED-OK
+    now          92 reports  18 drove    0 UVM_ERROR  14 phases, none early      1 fire failure  RED-OK
+The first rerun proved the phases were no longer applied early; this one proves they are all applied
+at their own boundaries, which is what the report-edge wait and the held final entry were for. The
+Runtime Manager compared each phase's trigger cycle against its applied cycle mechanically rather
+than leaving it to my reading.
+
+RED ATTRIBUTABILITY. The designed failure is the only failure, and it names the check it was designed
+to fail. That is the first time this entry has graded RED-OK with nothing else in the log.
+
+A PRE-REGISTERED NULL THAT MUST NOT BE READ AS A FIX: the wrong-word fault does not reproduce in
+these runs and the scoreboard is clean. Without the schedule defect this seed runs quiet at default
+bus timing, so the contention that surrounded the fault is gone. The wave at the earlier commit is
+what reproduces and places it; nobody should read this zero as the divergence being resolved.
+
+WORDS OVER READINGS. Three of my inferences about the fault were corrected while the evidence itself
+never moved: a record I called inconsistent was a correct record of a wrong fetch, a cause I called
+wrong was correct with the stub wrong, and three slots I counted were a link address. Quote the words,
+then label the reading.
+
+POINTER: the retained cycle-slot log's COMMAND 1 script is not in that log. Its text is beside it at
+gen_fu_cycle_slot_service_script.md, a reconstruction whose output reproduces that log's five result
+lines byte for byte; the log itself is unchanged because a retained log is never reopened.
+
+ONE PROCESS NOTE FROM THE RUN, worth carrying because the failure mode is a refusal rather than a
+wrong answer: the mirror for this run was first synced with an abbreviated sha and the flow refused
+it, because it pins the full forty characters and looks for a tree of that name. The commit and the
+mirror name have to agree.
