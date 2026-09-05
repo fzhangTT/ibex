@@ -1,0 +1,55 @@
+block: 'irq checker fix 2 re-runs at b9e5fad: the three red seeds and the 258-fire seed'
+counting_rule: a firing is a UVM_ERROR line carrying [irq_entry]; lines mentioning the identifier are not firings
+driver: a detached archive of b9e5fad; its gen_run.py hashes to 7632eca5b10f840c, equal to the committed blob at
+  that commit, so no uncommitted flow code took part in these four runs
+expectation_filed_before_the_runs: all three red seeds read RED-OK with zero irq_entry firings, making 3 of 3 a
+  measurement at this commit rather than two measurements plus the wave's third seed carried forward; the 258-fire
+  seed's count is reported under the new clock without a prediction, since the seed is a wedged core rather than
+  a checker measurement.
+fresh_outdir: true
+head_sha: b9e5fad36c4d7f643a02c76f333ee00bfa22bc6a
+kind: unmeasured for the round; PINNED; rev60's Medium, a required row rather than a courtesy
+mirror_tree_sha256_prefix: e2ef252f23091d9a
+no_export_stream: 'export_origin is null on all four runs. The driver is the PINNED b9e5fad archive, which predates
+  the export default, so no record stream was written. Stated because I told the Orchestrator these runs would write
+  one: the pinned driver is the right choice for a verification block and the export run on this seed was released
+  as unnecessary.'
+outdir: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_reds2_b9e5fadB
+result:
+  gen_test_irq_basic_1207954461:
+    export_origin: null
+    irq_entry_firings: 258
+    reason: assertion_failure at sim.log:45
+    verdict: FAIL
+    wall_s: 93.8
+  gen_test_irq_basic_red_1038372995:
+    export_origin: null
+    irq_entry_firings: 0
+    reason: 'red fixture failed as designed (red_expect matched): gen_fail_marker at sim_stdout.log:305'
+    verdict: RED-OK
+    wall_s: 8.8
+  gen_test_irq_basic_red_1382184738:
+    export_origin: null
+    irq_entry_firings: 0
+    reason: 'red fixture failed as designed (red_expect matched): gen_fail_marker at sim_stdout.log:292'
+    verdict: RED-OK
+    wall_s: 38.9
+  gen_test_irq_basic_red_552432658:
+    export_origin: null
+    irq_entry_firings: 0
+    reason: 'red fixture failed as designed (red_expect matched): gen_fail_marker at sim_stdout.log:287'
+    verdict: RED-OK
+    wall_s: 10.2
+served_by: runtime
+served_utc: 2026-09-05T13:09Z
+source_root: /proj_soc/user_dev/fzhang/ibex_dv_mirror_head/b9e5fad36c4d
+the_258_seed: 'gen_test_irq_basic_1207954461 fires irq_entry 258 times at b9e5fad, the same count as at 9c7f8f6
+  and at 4017573. Landing 54''s new clock does not change it, which is expected: the run is a wedged core, not a
+  checker measurement. Its earliest mechanism is sva_rvfi_irq_valid_exclusive at cycle 6591.5, 2659 cycles before
+  the grant property and 2699 before the first instruction divergence.'
+the_reds_are_closed: 3 of 3, measured here rather than carried. All three red seeds read RED-OK on the declared
+  reason with ZERO irq_entry firings. The 69eb33f block re-ran only the two seeds that had failed for an undeclared
+  reason and took the wave's already-RED-OK 552432658 as the third; this block runs all three at the new commit.
+why_this_block_exists: 'rev60''s Medium: the 3-of-3 RED-OK recorded at 69eb33f was measured on the 9c7f8f6 checker,
+  and landing 54 replaced that checker''s clock, so the irq entry''s promotion condition rested on a checker that
+  no longer exists. This re-measures it at b9e5fad.'
