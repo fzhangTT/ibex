@@ -260,6 +260,8 @@ package gen_tb_pkg;
   parameter int unsigned GEN_IRQ_FAST_W_PY = 15;  // rendered from rtl/ibex_pkg.sv (irq_fast_w)
   parameter logic [31:0] GEN_IRQ_FAST_MASK = ((32'h1 << GEN_IRQ_FAST_W) - 1) << 16;  // mie/mip fast interrupt bits 16..16+GEN_IRQ_FAST_W-1 (platform-specific interrupts start at bit 16); the shim installs them in gen_mie_csr_t
   parameter logic [31:0] GEN_IRQ_FAST_MASK_PY = 2147418112;  // rendered from rtl/ibex_pkg.sv (irq_fast_mask)
+  parameter int unsigned GEN_IRQ_MIP_BIT_EXTERNAL = ibex_pkg::CSR_MEIX_BIT;  // mip/mie bit of the external interrupt line; the line INDEX is 2 and the bit is not, so a test that raises a line and reads mip needs both numbers
+  parameter int unsigned GEN_IRQ_MIP_BIT_EXTERNAL_PY = 11;  // rendered from rtl/ibex_pkg.sv (csr_meix_bit)
   parameter logic [31:0] GEN_CSR_MARCHID_VALUE = ibex_pkg::CSR_MARCHID_VALUE;  // marchid the DUT reports (rtl/ibex_pkg.sv CSR_MARCHID_VALUE); the shim installs it as a read-only CSR
   parameter logic [31:0] GEN_CSR_MARCHID_VALUE_PY = 22;  // rendered from rtl/ibex_pkg.sv (csr_marchid_value)
   parameter logic [11:0] GEN_CSR_CPUCTRLSTS = ibex_pkg::CSR_CPUCTRLSTS;  // custom CSR address cpuctrlsts (rtl/ibex_pkg.sv); the shim's masked CSR with the ic_scr_key_valid status bit

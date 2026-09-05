@@ -213,6 +213,7 @@ constants:
   - {name: GEN_FINISH_TIMEOUT_CYCLES_DEFAULT, value: 20000, sv_type: int unsigned, desc: "default finish-handshake budget (+gen_finish_timeout)"}
   - {name: GEN_IRQ_FAST_W, derive: irq_fast_w, sv: "$bits(GEN_IRQS_ZERO.irq_fast)", sv_type: int unsigned, desc: "fast interrupt lines (width of ibex_pkg::irqs_t.irq_fast)"}
   - {name: GEN_IRQ_FAST_MASK, derive: irq_fast_mask, sv: "((32'h1 << GEN_IRQ_FAST_W) - 1) << 16", sv_type: "logic [31:0]", desc: "mie/mip fast interrupt bits 16..16+GEN_IRQ_FAST_W-1 (platform-specific interrupts start at bit 16); the shim installs them in gen_mie_csr_t"}
+  - {name: GEN_IRQ_MIP_BIT_EXTERNAL, derive: csr_meix_bit, sv: "ibex_pkg::CSR_MEIX_BIT", sv_type: int unsigned, desc: "mip/mie bit of the external interrupt line; the line INDEX is 2 and the bit is not, so a test that raises a line and reads mip needs both numbers"}
   - {name: GEN_CSR_MARCHID_VALUE, derive: csr_marchid_value, sv: "ibex_pkg::CSR_MARCHID_VALUE", sv_type: "logic [31:0]", desc: "marchid the DUT reports (rtl/ibex_pkg.sv CSR_MARCHID_VALUE); the shim installs it as a read-only CSR"}
   - {name: GEN_CSR_CPUCTRLSTS, derive: csr_addr_cpuctrlsts, sv: "ibex_pkg::CSR_CPUCTRLSTS", sv_type: "logic [11:0]", desc: "custom CSR address cpuctrlsts (rtl/ibex_pkg.sv); the shim's masked CSR with the ic_scr_key_valid status bit"}
   - {name: GEN_CSR_SECURESEED, derive: csr_addr_secureseed, sv: "ibex_pkg::CSR_SECURESEED", sv_type: "logic [11:0]", desc: "custom CSR address secureseed (rtl/ibex_pkg.sv); reads 0 in the shim"}

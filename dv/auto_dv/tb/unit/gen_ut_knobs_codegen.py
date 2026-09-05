@@ -165,6 +165,24 @@ def main():
         check("python knob values match yaml", all(m.PLUSARGS[k]["values"] == enums[k]["values"] for k in enums))
         check("python REGIME_WINDOWS equals yaml", m.REGIME_WINDOWS == rw)
         check("python DEBUG_ONLY equals yaml", sorted(m.DEBUG_ONLY) == sorted(f"gen_{n}" for n in dbg_only))
+        # ---- SV enums mirrored from their declaring package (the package is the authority, not the yaml)
+        agents = (ROOT / "dv/auto_dv/env/gen_agents_pkg.sv").read_text()
+        em = re.search(r"typedef\s+enum\s*\{([^}]*)\}\s*gen_irq_hold_e\s*;", agents)
+        check("gen_irq_hold_e is declared in gen_agents_pkg.sv", em is not None)
+        if em:
+            want = {n.strip(): i for i, n in enumerate(em.group(1).split(","))}
+            got = getattr(m, "SV_ENUMS", {}).get("gen_irq_hold_e")
+            check("python SV_ENUMS mirrors gen_irq_hold_e", got == want, f"got {got}, sv says {want}")
+            # the namespace guard: knob_irq_hold is a DIFFERENT set with overlapping words. until_taken is
+            # index 0 in the knob and ordinal 2 in the enum, so a mirror built from the knob would hand a
+            # caller the wrong policy silently.
+            knob_vals = m.PLUSARGS["knob_irq_hold"]["values"]
+            check("the mirror is the enum, not the knob value set",
+                  got is not None and set(got) != set(knob_vals) and all(k.startswith("GEN_IRQ_HOLD_") for k in got),
+                  f"knob values {knob_vals}")
+            check("the two namespaces really do disagree on until_taken",
+                  knob_vals.index("until_taken") != want["GEN_IRQ_HOLD_UNTIL_TAKEN"],
+                  "if these ever agree, this guard has stopped proving anything")
         hdr = H_OUT.read_text() if H_OUT.is_file() else ""
         check("header exists", H_OUT.is_file())
         check("header ISA string equals yaml", f'#define GEN_ISA_STRING "{src["isa_string"]}"' in hdr)

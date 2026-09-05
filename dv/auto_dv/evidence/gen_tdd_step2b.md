@@ -1512,3 +1512,48 @@ verified byte-identical.
 
 Retained: gen_tdd_logs/fcov/gen_fu_l46_irq_step1b.log and gen_fu_l43_irq_step1_corrigendum.log. Two manifest rows, and
 one manifest row corrected in place because its description repeated a divergence the plan ended.
+
+## Landing 47: the combination that happened 173 times and had no name
+
+The interrupt-return coverpoint carried two bins for four combinations of the global enable before the instruction
+and the saved bit it restores. The case that actually occurs, in every one of our interrupt programs, 173 times in a
+single storm run, was not among them. It took three passes to see that, and the passes are worth recording because
+the failure was never in the code.
+
+FIRST THE CLASSIFIER READ A LEVEL WHERE THE PLAN SAID AN EDGE, and reported 173 hits of a bin whose scenario never
+happened. Fixing that in the previous landing removed the false coverage and dropped those 173 to unclassified, which
+was correct and looked like a loss. Only then, with the count visible in the run summary under a name that said no bin
+covers this, did it become obvious that a real and common behaviour had no home in the plan. The evidence that exposed
+the gap was produced by the fix that appeared to reduce coverage.
+
+THE ARGUMENT THAT SETTLED IT CAME FROM THE ARTEFACT, not from either of us. The DV Lead and I disagreed twice about
+which of my two arms was too wide, and each of us moved once. What ended it was reading the coverpoint's other four
+bins: every one is keyed on edge direction crossed with pending state, and the two interrupt-return bins are the only
+ones keyed on the saved bit. Every disagreement we had sat exactly on that seam. Folding a clearing edge into a
+no-edge bin would put an edge and a non-edge in one bin, on a coverpoint whose every other bin separates precisely
+those. Neither preference survived that reading, and the table it produced needed two arm changes rather than one.
+
+A DEPENDENCY MADE THE READING SAFE RATHER THAN LUCKY. The classifier's before-state is the previous record's state,
+which is only the instruction's pre-state when records are consecutive. The previous landing had moved that update
+out of the branch a missing sample can skip. Had it not, the agreed table would have been right in prose and wrong in
+practice on any run with a miss, and the failure would have looked like stimulus.
+
+THE REMAINING COMBINATION IS NAMED RATHER THAN SILENT. A return that masks a pending enabled line has no bin yet, and
+the counter now measures exactly that case and reads zero across every smoke. Zero is the finding: reaching it needs
+an exception taken with interrupts globally disabled, a handler that then enables them, and a line pending at the
+return. Our interrupt programs all enter through interrupts, so none of them can produce it. That is a stimulus
+sentence and an owed item, not a coverage hole to be argued about later.
+
+TWO NAMES FOR ONE WORD IS A DEFECT WAITING TO HAPPEN. The regime knob and the driver's enum both use the word hold,
+share the word until-taken, and disagree on its number: index zero in one, ordinal two in the other. A mirror built
+from the knob because the name matched would have handed tests a working number for the wrong policy, silently. The
+mirror therefore keys on the enum's full member names, and the guard against the confusion is a live test that also
+fails if the two ever stop disagreeing, so it cannot decay into a tautology.
+
+A DEFECT OF MINE CAME BACK IN THIS TOUCH. My previous landing fixed a coverpoint to read published pins instead of a
+stale level, and introduced a worse failure in the same edit: on a missing sample the accessor returns zero, and zero
+pins is a reading rather than an absence, so the classifier answered confidently from nothing. The review caught it.
+The view is now decided once per record before any classifier reads it, and a miss is counted once per record rather
+than once per accessor call.
+
+Retained: gen_tdd_logs/fcov/gen_fu_l47_irq_mret_bin.log and gen_fu_l46_irq_step1b_corrigendum.log. Two manifest rows.

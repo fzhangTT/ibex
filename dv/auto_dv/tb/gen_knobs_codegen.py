@@ -26,6 +26,10 @@ IBEX_PKG = ROOT / "rtl/ibex_pkg.sv"
 LD = ROOT / "dv/auto_dv/stim/gen_riscv_dv_target/gen_link.ld"
 CS_REGS = ROOT / "rtl/ibex_cs_registers.sv"
 CONFIGS = ROOT / "ibex_configs.yaml"
+AGENTS_PKG = ROOT / "dv/auto_dv/env/gen_agents_pkg.sv"
+# SV enums mirrored into the Python module. The declaring package is the authority for the names AND
+# the ordinals; the yaml declares no copy, so the two cannot drift.
+SV_ENUM_SOURCES = (("gen_irq_hold_e", AGENTS_PKG),)
 # rendered targets, clone-root relative (relocated under --root)
 REL_PKG = "dv/auto_dv/tb/gen_tb_pkg.sv"
 REL_CFG = "dv/auto_dv/tb/gen_env_cfg_knobs.svh"
@@ -58,7 +62,7 @@ WINDOW_KNOBS = {
 }
 RANGE_GROUPS = {"gnt_delay", "rvalid_delay"}      # [lo, hi] windows; the others are scalars
 DERIVATIONS = {"ibus_max_outstanding", "irq_fast_w", "irq_fast_mask", "csr_marchid_value", "csr_addr_cpuctrlsts",
-               "csr_addr_secureseed", "icram_lines_x_ways"}
+               "csr_addr_secureseed", "icram_lines_x_ways", "csr_meix_bit"}
 # REGIME_SET consumers a knob may name; the first four are run-time consumers in the SV dispatcher
 KNOB_CONSUMERS = {"bus", "irq", "dbg", "scrkey", "none", "program"}
 RUNTIME_CONSUMERS = {"bus", "irq", "dbg", "scrkey"}
@@ -80,6 +84,24 @@ def sv_int_param(path, name):
     if not m:
         die(f"integer parameter {name} not found in {path}")
     return int(m.group(1))
+
+
+def sv_enum_members(path, typename):
+    """Members of a plain `typedef enum {A, B, C} typename;` in declaration order, name -> ordinal.
+    Refuses an explicitly valued member rather than guessing what the ordinals became."""
+    m = re.search(rf"typedef\s+enum\s*\{{([^}}]*)\}}\s*{typename}\s*;", path.read_text())
+    if not m:
+        die(f"enum {typename} not found in {path}")
+    out = {}
+    for i, raw in enumerate(m.group(1).split(",")):
+        name = raw.strip()
+        if not name:
+            die(f"enum {typename} in {path}: empty member")
+        if "=" in name:
+            die(f"enum {typename} in {path}: member {name!r} carries an explicit value; this mirror only "
+                f"renders positional ordinals")
+        out[name] = i
+    return out
 
 
 def sv_enum_hex12(path, name):
@@ -343,6 +365,8 @@ def derive_values(src):
             out[c["name"]] = fast_w
         elif d == "irq_fast_mask":
             out[c["name"]] = ((1 << fast_w) - 1) << 16
+        elif d == "csr_meix_bit":
+            out[c["name"]] = sv_int_param(IBEX_PKG, "CSR_MEIX_BIT")
         elif d == "csr_marchid_value":
             out[c["name"]] = sv_marchid_value(IBEX_PKG)
         elif d == "csr_addr_cpuctrlsts":
@@ -595,6 +619,11 @@ def render_py(src, mm, cvals):
     L.append("# knobs the SV dispatcher consumes at run time (REGIME_SET); the test library's CONSUMED_KNOBS reads this")
     L.append("REGIME_SET_CONSUMED = (" + ", ".join(f'"{p["name"]}"' for p in rk if p["regime_set_consumer"] in RUNTIME_CONSUMERS) + ",)")
     L.append("")
+    L.append("SV_ENUMS = {  # mirrored from the declaring SV package, which is the authority for names and ordinals")
+    for tname, path in SV_ENUM_SOURCES:
+        members = sv_enum_members(path, tname)
+        L.append(f'    "{tname}": {{' + ", ".join(f'"{k}": {v}' for k, v in members.items()) + "},")
+    L.append("}"); L.append("")
     L.append("CMD = {  # bridge command kinds (cmd_kind codes)")
     for i, k in enumerate(src["bridge_cmds"], start=1):
         L.append(f'    "{k}": {i},')

@@ -13114,6 +13114,7 @@ TP-IRQ-028,CG-EXC-011,cr_mpp_pending,m_irq_enabled,0
 TP-IRQ-028,CG-EXC-011,cr_mpp_pending,m_nmi,0
 TP-IRQ-028,CG-EXC-011,cr_mpp_pending,u_nmi,0
 TP-IRQ-028,CG-IRQ-001,cr_line_mepc,fast_3_mret_target,0
+TP-IRQ-028,CG-IRQ-003,cp_mie_global_edge,mret_mie1_mpie1_pending,0
 TP-IRQ-028,CG-IRQ-003,cp_mie_global_edge,mret_mpie0_pending,0
 TP-IRQ-028,CG-IRQ-003,cp_mie_global_edge,mret_mpie1_pending,0
 TP-IRQ-028,CG-IRQ-004,cr_ctx_latency,id_mret_three_five,0

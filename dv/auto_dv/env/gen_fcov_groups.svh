@@ -5280,7 +5280,7 @@
     }
   endgroup
 
-  // CG-IRQ-003 (gen_irq_pending_model_cg), 37 coverpoint bins, 36 cross bins
+  // CG-IRQ-003 (gen_irq_pending_model_cg), 38 coverpoint bins, 36 cross bins
   localparam int GEN_FC_IRQ_PENDING_MODEL_CP_TRANSITION_RISE_ENABLED = 0;
   localparam int GEN_FC_IRQ_PENDING_MODEL_CP_TRANSITION_RISE_DISABLED = 1;
   localparam int GEN_FC_IRQ_PENDING_MODEL_CP_TRANSITION_RISE_ENABLED_OTHER_HIGH = 2;
@@ -5318,6 +5318,7 @@
   localparam int GEN_FC_IRQ_PENDING_MODEL_CP_MIE_GLOBAL_EDGE_CLEAR_IDLE = 3;
   localparam int GEN_FC_IRQ_PENDING_MODEL_CP_MIE_GLOBAL_EDGE_MRET_MPIE1_PENDING = 4;
   localparam int GEN_FC_IRQ_PENDING_MODEL_CP_MIE_GLOBAL_EDGE_MRET_MPIE0_PENDING = 5;
+  localparam int GEN_FC_IRQ_PENDING_MODEL_CP_MIE_GLOBAL_EDGE_MRET_MIE1_MPIE1_PENDING = 6;
   covergroup gen_irq_pending_model_cg with function sample(int v_cp_transition, int v_cp_state, int v_cp_line_kind, int v_cp_mip_access, int v_cp_mie_write, int v_cp_mie_global_edge);
     option.per_instance = 0;
     option.cross_auto_bin_max = 0;   // a cross has exactly the CSV's named bins: no automatic bins for the plan's ignored tuples
@@ -5326,7 +5327,7 @@
     cp_line_kind: coverpoint v_cp_line_kind { bins software= {0}; bins timer= {1}; bins external= {2}; bins fast_low= {3}; bins fast_mid= {4}; bins fast_high= {5}; ignore_bins na = {-1}; }
     cp_mip_access: coverpoint v_cp_mip_access { bins read_mie0_pins_high= {0}; bins read_partial_mie= {1}; bins read_all_low= {2}; bins write_csrrw_ignored= {3}; bins write_csrrs_ignored= {4}; bins write_csrrc_ignored= {5}; ignore_bins na = {-1}; }
     cp_mie_write: coverpoint v_cp_mie_write { bins all_ones= {0}; bins zero= {1}; bins random_masked= {2}; bins fast_only= {3}; ignore_bins na = {-1}; }
-    cp_mie_global_edge: coverpoint v_cp_mie_global_edge { bins set_pending= {0}; bins clear_pending= {1}; bins set_idle= {2}; bins clear_idle= {3}; bins mret_mpie1_pending= {4}; bins mret_mpie0_pending= {5}; ignore_bins na = {-1}; }
+    cp_mie_global_edge: coverpoint v_cp_mie_global_edge { bins set_pending= {0}; bins clear_pending= {1}; bins set_idle= {2}; bins clear_idle= {3}; bins mret_mpie1_pending= {4}; bins mret_mpie0_pending= {5}; bins mret_mie1_mpie1_pending= {6}; ignore_bins na = {-1}; }
     cr_access_state: cross cp_mip_access, cp_state {
       bins read_all_low_mie1_m= binsof(cp_mip_access.read_all_low) && binsof(cp_state.mie1_m);
       bins read_mie0_pins_high_mie0_m= binsof(cp_mip_access.read_mie0_pins_high) && binsof(cp_state.mie0_m);

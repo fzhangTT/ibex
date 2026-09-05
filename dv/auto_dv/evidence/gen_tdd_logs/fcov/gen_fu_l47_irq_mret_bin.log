@@ -1,0 +1,177 @@
+# gen_fu_l47_irq_mret_bin.log -- the fourth mret combination, the hold-enum mirror, and the rev54/rev55 rows
+# (TB Infra, 2026-09-05). The TB half of a JOINT landing; the DV Lead's four plan documents are the other half.
+#
+# WHAT THIS IS. Three strands that share one compile: the new cp_mie_global_edge bin the DV Lead added and the
+# two classifier arms it needs; the hold enum mirrored into Python from its declaring SV package (rev52 L-4);
+# and the rev54 Minors, the rev55 Low and the Critic's rev55 Lows. It lands jointly so HEAD never carries a
+# render without its plan or a plan without its render.
+#
+# THE ONE BUILD EVERY FIGURE COMES FROM
+# $ bash dv/auto_dv/tb/gen_tb_local.sh compile <root>/dv/auto_dv/out_l47b
+#   compile rc=0   sources sha256 (dv/auto_dv env, tb, isa, gen_tb) 196c0be73a622d1d
+#
+# ================ THE FOUR-WAY TABLE, AND THE TWO ARGUMENTS THAT SETTLED IT ================
+# cp_mie_global_edge had two mret bins for four combinations of MIE-before and MPIE. The DV Lead and I
+# disagreed twice about which of my arms was too wide, and what settled it was the coverpoint's OWN other
+# four bins: set_pending, clear_pending, set_idle and clear_idle are each keyed on EDGE DIRECTION crossed
+# with pending state. The two mret bins are the only ones keyed on MPIE, and every disagreement sat on that
+# seam. Folding a CLEAR edge into a no-edge bin would put an edge and a non-edge together on a coverpoint
+# whose every other bin separates exactly those.
+#   MIE 0 -> 1   a set edge via mret        mret_mpie1_pending        arm unchanged (now && !was)
+#   MIE 1 -> 0   a CLEAR edge via mret      NO BIN, named in the plan  falls through
+#   MIE 0 -> 0   no edge, stays clear       mret_mpie0_pending        NARROWED to (!now && !was)
+#   MIE 1 -> 1   no edge, stays set         mret_mie1_mpie1_pending   NEW arm (now && was)
+# A DEPENDENCY THAT MADE THE READING SAFE RATHER THAN LUCKY: "was" is the enable at the PREVIOUS RECORD, so
+# it is the mret's pre-state only if records are consecutive. Landing 46 moved that update out of the branch
+# a view miss can skip. Before that, this table would have been right in prose and wrong on any run with a
+# miss.
+#
+# ================ THE 173, FROM FALSE COVERAGE TO HONEST COVERAGE ================
+# The same 173 samples per storm run have now been read three ways, and the arc is the point:
+#   before landing 46   cp_mie_global_edge 2 of 6, 174 samples   the classifier read a LEVEL; 173 hits of
+#                                                                mret_mpie1_pending that never happened
+#   after  landing 46   cp_mie_global_edge 1 of 6,   1 sample    the edge fix removed the false coverage and
+#                                                                the 173 fell to -1, correctly unnamed
+#   this landing        cp_mie_global_edge 2 of 7, 174 samples   the 173 land in the bin that names them
+# $ urg -dir <out>/vcs_simv.vdb -format text   [storm run alone; "Total tests in report: 1"]
+#   cp_mie_global_edge  expected 7  uncovered 5  covered 2
+#   uncovered: mret_mpie0_pending, mret_mpie1_pending, clear_idle, set_idle, clear_pending
+#   so the two covered are set_pending and mret_mie1_mpie1_pending: THE NEW BIN IS HIT.
+#
+# ================ THE FALLTHROUGH NOW MEANS ONE THING, AND IT MEASURES ZERO ================
+# The run summary's counter was named for the enable-already-set case, which now has a bin. It is renamed and
+# narrowed to the clear edge: an mret that MASKS a pending enabled line.
+# $ the four smokes, from their sim.log summary lines
+#   storm 0   lines 0   dbgstorm 0   fetchen 0
+# ZERO IS THE EXPECTED READING AND IS EVIDENCE, not an absence of evidence. That row needs an exception taken
+# with interrupts globally disabled (which saves a clear MPIE: ibex_cs_registers.sv:926 takes mstatus_d.mpie
+# from mstatus_q.mie, and ibex_controller.sv:490 gates INTERRUPTS on the enable while a synchronous exception
+# is not gated), a handler that then enables interrupts, and a line pending at the mret. Every interrupt
+# program in the tree enters through an INTERRUPT, so none of them reaches it. The row is
+# reachable-with-no-stimulus-built, its stimulus is one sentence, and a TP item to own it is owed after round 2.
+#
+# ================ THE HOLD ENUM MIRROR, AND THE TRAP IT HAD TO AVOID (rev52 L-4) ================
+# TWO DIFFERENT THINGS ARE CALLED HOLD and they overlap in the middle:
+#   knob_irq_hold   (gen_tb_knobs.yaml)        values until_taken, through_handler, pulse
+#   gen_irq_hold_e  (gen_agents_pkg.sv:489)    members CYCLES, UNTIL_ACK, UNTIL_TAKEN, STICKY
+# until_taken is INDEX 0 in the knob and ORDINAL 2 in the enum. The enum is the bridge command's argument
+# type (cmd_set(mask, gen_irq_hold_e h, cycles, from_regime)); the knob is the DV Lead's autonomous regime. A
+# mirror built from the knob because its name matches would hand a test 0 where the driver expects 2, compile,
+# run, and set the wrong hold policy silently.
+# SO THE MIRROR KEYS ON THE ENUM'S FULL MEMBER NAMES, and the guard is a LIVE TEST rather than a comment. It
+# asserts every key carries the enum prefix, that the key set differs from the knob's values, AND that the two
+# really do disagree on until_taken, with failure text saying the guard has stopped proving anything if they
+# ever coincide.
+# $ python3 dv/auto_dv/tb/unit/gen_ut_knobs_codegen.py   [RED, against the committed codegen]
+#   FAIL python SV_ENUMS mirrors gen_irq_hold_e (got None, sv says {'GEN_IRQ_HOLD_CYCLES': 0,
+#     'GEN_IRQ_HOLD_UNTIL_ACK': 1, 'GEN_IRQ_HOLD_UNTIL_TAKEN': 2, 'GEN_IRQ_HOLD_STICKY': 3})
+#   FAIL the mirror is the enum, not the knob value set (knob values ['until_taken','through_handler','pulse'])
+#   GEN_UT_KNOBS_CODEGEN FAIL (2 failures)
+# $ the same, after the codegen change
+#   GEN_UT_KNOBS_CODEGEN PASS (0 failures)
+# The SV package stays the ONLY authority: the mirror renders into the Python module alone, because a second
+# SV definition is the defect the row exists to remove. The render moved one file by four lines; the other six
+# targets came out byte-identical.
+# EXERCISED THROUGH ITS CONSUMERS, not just imported. Both of my tests dropped their literals and both RUN:
+#   gen_ut_irq_ack        PASS   2 entries, causes 19 and 11, one per line, 311 retired, 0 mismatches
+#   gen_ut_irq_reset_reads PASS  mstatus 00000080 mie 00000000 mtvec 80000001 mip 00000800
+# The ack run is the discriminating one: two entries, one per line, is UNTIL_ACK behaviour and would not
+# survive a wrong value. Its banner reads "hold=until_taken" in the SAME run, which is the knob namespace: the
+# two visibly doing different things in one log.
+#
+# ================ THE DERIVED mip BIT (Critic L-14 / rev54 M5) ================
+# gen_ut_irq_reset_reads.py hand-encoded 11 for the external line's mip bit. It is now a yaml constant
+# GEN_IRQ_MIP_BIT_EXTERNAL with derive: csr_meix_bit reading ibex_pkg::CSR_MEIX_BIT, so it renders to the TB
+# package as well and picks up the _PY mirror the TB top checks against the SV expression at time 0 - a drift
+# guard the SV_ENUMS mirror does not have, which is why a plain parameter belongs here rather than there.
+#
+# ================ THE rev54 MINORS ================
+#   M1  a THIRD jammed comment at :162 (state_imp carried dbg_imp's, and dbg_imp had none). My landing-46 log
+#       says two were split; the corrigendum beside it says three.
+#   M3  THE REAL DEFECT OF THE SET, and it was mine. irq_others_bin ran from irq_entry_sample BEFORE
+#       irq_view_ok was computed in irq_pend_record, so on a view miss it classified from irq_pins_at's ZERO
+#       return - a reading, not an absence. It arrived with my own landing-46 cp_others fix. Now the view is
+#       decided ONCE in write_mst before the first classifier that reads it, cp_others returns -1 on a miss,
+#       and the accessor stopped counting so a miss is counted once per RECORD instead of once per CALL.
+#   M4  residual literals 12'h344, 12'h304 (:404) and 12'h7b0 (:572) -> ibex_pkg::CSR_MIP, CSR_MIE, CSR_DCSR.
+#   M6  the run summary now reports the window counters, and they immediately explained something invisible:
+#       lines and dbgstorm read fetch_off=0 NOT because no window occurred but because the reset window was
+#       SHORTER than GEN_FETCH_EN_WINDOW_MIN_CYCLES and was correctly dropped. storm and fetchen publish 1.
+#       $ storm run alone: cp_fetch_on_after 1 of 2 (resume_at_on), cp_fetch_off 1 of 4
+#       The reset-time window IS published and sampled, and it classifies as a RESUME, which is right: at
+#       reset there is no pending line to vector to, so the first fetch after On is boot code. The
+#       fetch-enable run covers the other bin, so between them both bins are covered, each by one run.
+#   M7  irq_lines_now deleted, declaration and write: its only reader went in landing 46.
+#   Info :478 the comment now says the debug call reads the view and emits an undecided window on a miss.
+#   M2 (the vector test) needed NO sampler change: see the membership paragraph below.
+#
+# ================ THE VECTOR TEST IS MEMBERSHIP, AND WHY THAT IS A MECHANISM (rev54 M2 / Critic L-12) ================
+# irq_addr_is_vector accepts any 4-aligned address in the 32-slot window at the current base. It cannot judge
+# one slot, because THE CAUSE IS NOT KNOWN AT FETCH TIME. My landing-46 log said "base + 4*cause", which
+# overstated it; the corrigendum beside that log corrects it.
+# MEMBERSHIP IS NOT A WEAK PROXY HERE. gen_link.ld:17 gives programs ONE region at ORIGIN 0x80000080, and the
+# 32-slot table occupies exactly the 0x80 bytes below it, so an address inside the table cannot be program
+# code in this TB - the linker guarantees it. That is the same geometry that makes cp_mepc_src.boot_pc
+# unreachable, used in the other direction.
+# The slot identity for a given cause belongs to CG-IRQ-006, which samples at the entry record where the
+# cause IS known. The DV Lead's plan line states membership as what is checked (gen_fcov_plan.md:2401).
+#
+# ================ THE DRAIN CHECK ON A CYCLE-0 WINDOW, RED AND ABLATION (Critic L-16) ================
+# Landing 46's valid flag made the drain check judge windows that open at cycle 0, and no red showed it fire
+# for one. MUTATION MUT-FEDRAIN0, in the checker that publishes the windows: the Off window never closes.
+# $ gen_ut_fetch_en on the mutant, rule enabled, +gen_fetch_en_at_reset=0 so the window IS cycle 0
+#   verdict: FAIL   [fetch_en] errors 38
+#   UVM_ERROR gen_checkers_pkg.sv(455) ... record at order 201, cycle 1301, 1301 cycles after fetch_enable_i
+#     left On at CYCLE 0 (drain window 64)
+# $ the SAME mutant, the named rule ablated (+gen_chk_fetch_en=0)
+#   verdict: PASS   [fetch_en] errors 0
+# The error message names cycle 0 itself, which is what the row asked to see. Reverted and verified
+# byte-identical: gen_checkers_pkg.sv md5 6b3d5f77978d9321d121598d7ba57843 before and after, no marker left.
+#
+# ================ ONE HIT PER RESET-GROUP SAMPLE, DISCLOSED (Critic L-11) ================
+# The reset group is sampled once for the pin pattern and first event and once per reset read-back, so its
+# RUN-WIDE coverpoints repeat their value on every sample.
+# $ the reset-reads fixture alone ("Total tests in report: 1")
+#   cp_first_event.boot_insn      5 hits    from ONE first-instruction event
+#   cp_lines_at_reset.none        5 hits    from ONE pin pattern
+#   cp_reset_reads.<each of four> 1 hit     one value is non-negative per sample
+# The covered SET is unaffected; only the counts are inflated, and a reader comparing hit counts across
+# coverpoints of this group would otherwise draw a wrong conclusion about how often the event occurred.
+#
+# ================ THE SMOKE COMMANDS, VERBATIM (Critic L-13) ================
+# The Critic could reproduce two of the four smokes from the shapes alone but not the storm's entry=173, so
+# the commands are retained rather than described. All four are preceded by
+# `source ci/env.sh` and run from the clone root; <out> is the build directory named at the top.
+#   P_IRQ="+gen_mem_image=<irq program>.vmem +gen_mem_image_crc32=8e882c5b +gen_mem_image_words=156 \
+#          +gen_boot_addr=80000000 +gen_tohost_addr=800002d0 +gen_fetch_en_at_reset=0"
+#   P_NMI="+gen_mem_image=<nmi_long program>.vmem +gen_mem_image_crc32=ce5633d1 +gen_mem_image_words=220 \
+#          +gen_boot_addr=80000000 +gen_tohost_addr=800003d0 +gen_fetch_en_at_reset=0 +gen_ut_boot_retire=100"
+#   P_RR="+gen_mem_image=<reset-reads program>.vmem +gen_mem_image_crc32=69379b6e +gen_mem_image_words=24 \
+#          +gen_boot_addr=80000000 +gen_tohost_addr=800000c0 +gen_fetch_en_at_reset=0"
+#   bash dv/auto_dv/tb/gen_tb_local.sh run <out> storm    dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep $P_NMI +gen_knob_irq_regime=storm
+#   bash dv/auto_dv/tb/gen_tb_local.sh run <out> lines    dv.auto_dv.gen_tb.gen_tests.gen_ut_irq      $P_IRQ
+#   bash dv/auto_dv/tb/gen_tb_local.sh run <out> dbgstorm dv.auto_dv.gen_tb.gen_tests.gen_ut_dbg      $P_IRQ +gen_knob_irq_regime=storm
+#   bash dv/auto_dv/tb/gen_tb_local.sh run <out> fetchen  dv.auto_dv.gen_tb.gen_tests.gen_ut_fetch_en $P_IRQ +gen_knob_irq_regime=storm
+#   bash dv/auto_dv/tb/gen_tb_local.sh run <out> rr       dv.auto_dv.gen_tb.gen_tests.gen_ut_irq_reset_reads $P_RR
+# THE STORM'S entry=173 NEEDS +gen_ut_boot_retire=100 AND the nmi_long image; the Critic's attempts timed out
+# at tohost, which is what a run without the boot-retire plusarg does. The tohost address and word count are
+# the image's own, taken from its build record and NOT recomputed - recomputing them is how I produced a false
+# MEM_LOAD failure earlier in this landing.
+#
+# ================ GATES AND SMOKES, ALL FROM THE BUILD NAMED AT THE TOP ================
+# $ gen_fcov_codegen --check           -> up to date   (STALE before the render, on gen_fcov_groups.svh alone)
+# $ gen_knobs_codegen --check          -> up to date
+# $ gen_ut_fcov_codegen                -> PASS (0 failures)
+# $ gen_ut_knobs_codegen               -> PASS (0 failures)
+# $ gen_unbuilt_mark_check             -> PASS
+# $ gen_norm_probe --self-test         -> GEN_NORM_PROBE PASS
+# $ five smokes, verdicts from each run's own verdict.txt, referee counts from its sim.log
+#   storm PASS ref 0 | lines PASS ref 0 | dbgstorm PASS ref 0 | fetchen PASS ref 0 | rr PASS ref 0
+#   mie_global is back to 174 / 7 / 40 / 16: the 173 are counted again, now under a bin that names them.
+#
+# ================ ALSO IN THIS TOUCH ================
+#   rev55 Low: a reverse pointer beside bit_rs1_cls naming gen_bit_ratified_prog.py's _NAMED_EXACT and its
+#   bit-7/bit-15 rule. The generator already pointed here; now both point at each other. Nothing FAILS if they
+#   drift - the bins just stop being hit - which is why a pointer is the remedy and an assertion would be
+#   theatre.
+# END. Every figure above is produced by the command printed above its block, on the one build named at the top.

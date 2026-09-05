@@ -18,10 +18,10 @@ from cocotb.triggers import Edge, with_timeout
 from dv.auto_dv.gen_tb.gen_bridge import GenBridge
 from dv.auto_dv.gen_tb.gen_handles import GenHandles
 from dv.auto_dv.gen_tb.gen_image import GenImage
-from dv.auto_dv.gen_tb.gen_knobs import CONSTANTS, PLUSARGS
+from dv.auto_dv.gen_tb.gen_knobs import CONSTANTS, PLUSARGS, SV_ENUMS
 
 PASS_MARKER = "GEN_UT_IRQ_ACK_PASS"
-HOLD_UNTIL_ACK = 1
+HOLD_UNTIL_ACK = SV_ENUMS["gen_irq_hold_e"]["GEN_IRQ_HOLD_UNTIL_ACK"]   # the driver's enum, not knob_irq_hold
 LINE_FAST3 = 3 + 3         # fast[3]
 LINE_EXTERNAL = 2
 # the mcause lower cause of a line is its mie/mip bit: 3 software, 7 timer, 11 external, 16 + id fast

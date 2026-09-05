@@ -49,6 +49,7 @@
 #define GEN_FINISH_TIMEOUT_CYCLES_DEFAULT  20000u
 #define GEN_IRQ_FAST_W                     15u
 #define GEN_IRQ_FAST_MASK                  2147418112u
+#define GEN_IRQ_MIP_BIT_EXTERNAL           11u
 #define GEN_CSR_MARCHID_VALUE              22u
 #define GEN_CSR_CPUCTRLSTS                 1984u
 #define GEN_CSR_SECURESEED                 1985u

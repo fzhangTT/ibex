@@ -172,6 +172,7 @@ CONSTANTS = {
     "GEN_FINISH_TIMEOUT_CYCLES_DEFAULT": 20000,
     "GEN_IRQ_FAST_W": 15,
     "GEN_IRQ_FAST_MASK": 2147418112,
+    "GEN_IRQ_MIP_BIT_EXTERNAL": 11,
     "GEN_CSR_MARCHID_VALUE": 22,
     "GEN_CSR_CPUCTRLSTS": 1984,
     "GEN_CSR_SECURESEED": 1985,
@@ -259,6 +260,10 @@ KNOB_CONSUMER = {  # regime knob -> yaml regime_set_consumer (bus, irq, dbg, scr
 
 # knobs the SV dispatcher consumes at run time (REGIME_SET); the test library's CONSUMED_KNOBS reads this
 REGIME_SET_CONSUMED = ("knob_imem_gnt_delay", "knob_imem_rvalid_delay", "knob_imem_err_rate", "knob_imem_intg_err_rate", "knob_imem_outstanding_cap", "knob_dmem_gnt_delay", "knob_dmem_rvalid_delay", "knob_dmem_err_rate", "knob_dmem_intg_err_rate", "knob_irq_regime", "knob_irq_line_mix", "knob_irq_hold", "knob_debug_req_regime", "knob_scr_key_delay",)
+
+SV_ENUMS = {  # mirrored from the declaring SV package, which is the authority for names and ordinals
+    "gen_irq_hold_e": {"GEN_IRQ_HOLD_CYCLES": 0, "GEN_IRQ_HOLD_UNTIL_ACK": 1, "GEN_IRQ_HOLD_UNTIL_TAKEN": 2, "GEN_IRQ_HOLD_STICKY": 3},
+}
 
 CMD = {  # bridge command kinds (cmd_kind codes)
     "IRQ_SET": 1,

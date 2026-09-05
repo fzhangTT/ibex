@@ -20,12 +20,12 @@ from cocotb.triggers import Edge, with_timeout
 from dv.auto_dv.gen_tb.gen_bridge import GenBridge
 from dv.auto_dv.gen_tb.gen_handles import GenHandles
 from dv.auto_dv.gen_tb.gen_image import GenImage
-from dv.auto_dv.gen_tb.gen_knobs import CONSTANTS, PLUSARGS
+from dv.auto_dv.gen_tb.gen_knobs import CONSTANTS, PLUSARGS, SV_ENUMS
 
 PASS_MARKER = "GEN_UT_IRQ_RESET_READS_PASS"
-HOLD_STICKY = 3
+HOLD_STICKY = SV_ENUMS["gen_irq_hold_e"]["GEN_IRQ_HOLD_STICKY"]   # the driver's enum, not knob_irq_hold
 LINE_EXTERNAL = 2          # driver mask bit
-MIP_EXTERNAL_BIT = 11      # the same line's mip/mie bit, which is not the same number
+MIP_EXTERNAL_BIT = CONSTANTS["GEN_IRQ_MIP_BIT_EXTERNAL"]   # the same line's mip bit, which is not the line index
 MSTATUS_RESET = 0x80       # MPIE set, MIE clear, MPP = U (rtl/ibex_cs_registers.sv:1052-1056)
 REPORT_BOUND_CYCLES = 4000
 REPORT_NAMES = ("mstatus", "mie", "mtvec", "mip")

@@ -1,0 +1,47 @@
+# gen_fu_l46_irq_step1b_corrigendum.log -- corrigendum to gen_fu_l46_irq_step1b.log (TB Infra)
+#
+# The retained log's bytes are UNCHANGED; this file stands beside it. Raised by the cross-model re-review
+# rev54 (dv/auto_dv/reviews/2026-09-05-claude-diff-27212cb0-55ef529a.md), whose verdict was
+# APPROVE-WITH-CHANGES: no Major was reopened and every correction below is to the RECORD, not to a fix.
+#
+# ================ WHAT IS COMMON TO ALL THREE ================
+# None of the three sentences below is false. Each is a true statement that reads as a stronger one, which
+# is the failure mode a reader cannot catch from the log alone. Two of them count work done and invite the
+# inference that the work was complete; the third describes a predicate as doing something more precise than
+# it does. I am naming the pattern because it is the same one that put a wrong sentence in the owner's log
+# earlier the same day, and because the fix for it is a habit rather than an edit: state what was changed AND
+# what was left, and describe a predicate by what it tests, not by what it is for.
+#
+# ================ 1. "two jammed comments split" -- there were THREE ================
+# The Minors list says two jammed comments were split. A third survived at gen_fcov_pkg.sv:162, where
+# state_imp carried both its own comment and dbg_imp's ("the debug driver's request changes"), while dbg_imp
+# on the line above had none. Corrected in the landing that carries this corrigendum: the second half is
+# moved to the declaration it describes.
+#
+# ================ 2. "11 sites now use ibex_pkg names" -- true, and NOT the whole file ================
+# The Minors list says the hand-encoded CSR numbers, field indices and instruction encodings are gone and
+# names 11 sites. Eleven sites were indeed converted. Three literals remained: 12'h344 and 12'h304 at :404
+# and 12'h7b0 at :572. A count of what was fixed reads as a count of what existed, and I did not say which
+# it was. Corrected in this landing to ibex_pkg::CSR_MIP, CSR_MIE and CSR_DCSR.
+#
+# ================ 3. THE VECTOR TEST: what it checks is MEMBERSHIP, not the slot ================
+# The M5 paragraph says the fixed test compares against "base + 4*cause within the 32-entry table in
+# vectored mode". irq_addr_is_vector does not and cannot do that: the cause is NOT KNOWN at fetch time, and
+# the predicate accepts any 4-aligned address inside the 32-slot window at the current base. That is table
+# MEMBERSHIP.
+# THE CHECK IS NOT WEAK, AND THE REASON IS GEOMETRY RATHER THAN A PROPERTY OF TODAY'S PROGRAMS. gen_link.ld
+# gives programs one region at ORIGIN 0x80000080, and the 32-slot table occupies exactly the 0x80 bytes
+# below it, so an address inside the table cannot be program code in this TB: the linker guarantees it. That
+# is the same fact that makes cp_mepc_src.boot_pc unreachable today, used in the other direction.
+# THE SAMPLER IS UNCHANGED BY THIS CORRECTION. The DV Lead ruled that the slot identity for a given cause
+# belongs to CG-IRQ-006, which samples at the entry record where the cause IS known, and that resolving it
+# inside CG-IRQ-011 would duplicate a check that already has an owner and a sampling event built for it. Its
+# plan line states membership as what is checked. So this corrects the log's description of a predicate that
+# was, and remains, correct for what it is asked to decide.
+#
+# ================ WHAT IS NOT CORRECTED ================
+# Every measured figure in the retained log stands: the four Majors proved from single runs with their
+# "Total tests in report: 1" lines, the two-build mret comparison and its counts, the fixture's four
+# read-back values, the compile identity, the smoke verdicts and referee counts, and the layout reason for
+# the unhit boot-pc bin. No number moves and no run is re-judged.
+# END.
