@@ -61,11 +61,10 @@ package gen_checkers_pkg;
     bit nmi_mode = 0, intg_wait = 0;
     int unsigned intg_wait_records = 0, nmi_internal_fail = 0;
     int unsigned step_records = 0;   // records whose model dcsr has step set: unmasked and counted, never a mask term
-    // records in which an expectation was held ONLY because its own enable bit was clear, so the bound did not
-    // spend them. Before that term existed the checker spent them and dropped the expectation at the bound, and
-    // a later enable was never judged; this is that lost coverage as a number in every run rather than a fact
-    // established once on one fixture.
-    int unsigned bit_clear_records = 0;
+    // counts the coverage the bound would otherwise hide: an expectation whose line is raised with its own
+    // enable bit clear is held rather than spent, so a later enable is still judged. Incremented once per
+    // expectation per record, so it is a count of expectation-records and not of records.
+    int unsigned bit_clear_expectation_records = 0;
     logic [63:0] intg_wait_order = 0;
     function new(string name, uvm_component parent);
       super.new(name, parent);
@@ -149,7 +148,7 @@ package gen_checkers_pkg;
         if (masked) begin
           if (!expects[i].nmi && !line_enabled && !nmi_mode && !st.debug_mode &&
               (st.mstatus[ibex_pkg::CSR_MSTATUS_MIE_BIT] || st.prv != ibex_pkg::PRIV_LVL_M))
-            bit_clear_records++;   // held by its own bit alone, with nothing else masking it
+            bit_clear_expectation_records++;   // held by its own bit alone, with nothing else masking it
           continue;   // the record neither spends the bound nor judges the expectation
         end
         expects[i].unmasked++;
@@ -296,8 +295,8 @@ package gen_checkers_pkg;
           eor_open++;
         end
       end
-      `uvm_info("GEN_IRQ_CHK", $sformatf("irq_pending cycles checked=%0d mismatches=%0d; entries=%0d nmi=%0d (internal %0d, accepted on announced corruptions) cause checked=%0d mismatches=%0d priority undecidable=%0d bound failures=%0d expectations released=%0d open expectations=%0d nmi_internal bound failures=%0d open after the drain=%0d; records with the model dcsr step bit set=%0d; records held by a clear per-line enable alone=%0d",
-                checked_cycles, pending_mismatch, entries_seen, nmi_seen, nmi_internal_entries, cause_checked, cause_mismatch, priority_undecidable, expect_fail, expect_released, expects.size(), nmi_internal_fail, eor_open, step_records, bit_clear_records), UVM_LOW)
+      `uvm_info("GEN_IRQ_CHK", $sformatf("irq_pending cycles checked=%0d mismatches=%0d; entries=%0d nmi=%0d (internal %0d, accepted on announced corruptions) cause checked=%0d mismatches=%0d priority undecidable=%0d bound failures=%0d expectations released=%0d open expectations=%0d nmi_internal bound failures=%0d open after the drain=%0d; records with the model dcsr step bit set=%0d; expectation-records held by a clear per-line enable alone=%0d",
+                checked_cycles, pending_mismatch, entries_seen, nmi_seen, nmi_internal_entries, cause_checked, cause_mismatch, priority_undecidable, expect_fail, expect_released, expects.size(), nmi_internal_fail, eor_open, step_records, bit_clear_expectation_records), UVM_LOW)
     endfunction
   endclass
 

@@ -1,0 +1,133 @@
+# gen_fu_l61_artifacts_and_identity.log -- the build identities and run artifacts three of my logs asserted
+# without them (TB Infra, 2026-09-05). Landing 61, answering rev76 (d8bed4e) and rev77 (0624215). The logs it
+# corrects are untouched: gen_fu_l53_outstanding_saturate.log, gen_fu_l58_decrement_saturate.log and
+# gen_fu_l59_l57_artifacts_companion.log.
+#
+# ================ THE THING WORTH SAYING FIRST ==========================================================
+# FOUR LANDINGS IN A ROW CARRIED THE SAME DEFECT: a figure published without the artifacts it was read from.
+# I wrote a companion whose entire purpose was faulting an older log for it. Then the next log repeated it.
+# Then the companion that fixed that repeat repeated it again, in the paragraph that introduced a new counter.
+# The check is now in my pre-hand list, and this paragraph is here so a reader knows the rule is load-bearing
+# rather than decorative: it exists because I keep failing it while enforcing it on others.
+# rev80 found the fourth while this log was being written, in the landing that had just closed the
+# identity half of the same finding. The identity half held; the artifact half failed again.
+#
+# ================ ROW 1 (rev77 Medium): the counter's figures, with their artifacts ======================
+# gen_fu_l59_l57_artifacts_companion.log:61-64 says at :63-64 that on that fixture the counter reads
+# "250; on all six regression smokes it reads 0" and names no run root, build digest, sim.log path or smoke name. Worse, the five rows it DOES source
+# are builds that predate the counter, so the figures came from a build the log never named.
+# ALL SEVEN RUNS BELOW ARE ONE BUILD: dv/auto_dv/out_l65, build_sources_sha256 d9a0553bd4e0b326, seed 1,
+# sim.log at <that out dir>/<run>/sim.log, verdict at <that out dir>/<run>/verdict.txt.
+#   run       verdict  module                                              summary field, quoted
+#   storm     PASS     gen_ut_lockstep          expectation-records held by a clear per-line enable alone=0
+#   lines     PASS     gen_ut_irq               expectation-records held by a clear per-line enable alone=0
+#   dbgstorm  PASS     gen_ut_dbg               expectation-records held by a clear per-line enable alone=0
+#   fetchen   PASS     gen_ut_fetch_en          expectation-records held by a clear per-line enable alone=0
+#   rr        PASS     gen_ut_irq_reset_reads   expectation-records held by a clear per-line enable alone=0
+#   nmilong   PASS     gen_ut_irq_nmi_long      expectation-records held by a clear per-line enable alone=0
+#   perline   PASS     gen_ut_lockstep          expectation-records held by a clear per-line enable alone=244
+# Plusargs: storm and nmilong take the NMI-long image (crc32 ce5633d1, 220 words, tohost 800003d0) with
+# +gen_ut_boot_retire=100 and, for storm, +gen_knob_irq_regime=storm; lines, dbgstorm and fetchen take the irq1
+# image (crc32 8e882c5b, 156 words, tohost 800002d0), the latter two with +gen_knob_irq_regime=storm; rr takes
+# the reset-reads image (crc32 69379b6e, 24 words, tohost 800000c0); perline takes gen_irq_perline_directed.S's
+# image (crc32 33ec7bd6, 150 words, tohost 800002b8) with +gen_ut_boot_retire=100 +gen_knob_irq_regime=storm
+# +gen_knob_irq_hold=until_taken. All carry +gen_fetch_en_at_reset=0 and +gen_boot_addr=80000000.
+#
+# AND THE FIGURE MOVED, WHICH IS THE POINT RATHER THAN AN EMBARRASSMENT. The unnamed build gave 250; this named
+# one gives 244. Between them the NMI-mode mirror landed, which changes a mask term. I have NOT isolated which
+# change moved it and I am not going to assert one. That is exactly the cost of publishing a figure without its
+# build: a later reader cannot tell whether a different number means the code changed or the measurement did.
+# The six zeros are unchanged, and the zeros with a nonzero control are still what makes them measured rather
+# than structural.
+#
+# ================ ROW 2 (rev76 Medium): the build identities that resolved to nothing ====================
+# gen_fu_l58_decrement_saturate.log names E 1c4f99930208695f and F dd9f4cd5ddd825de. Those are the run headers
+# of e_mut and f_mut, the MUTANT builds, and the log does not say so, so no reader can recompute them from a
+# committed tree and cannot tell which root is clean.
+# rev77 showed the shape that DOES resolve, on landing 59: a committed baseline plus a retained diff. Restated
+# in that shape:
+#   base commit 4bd933f. E is an archive of it unchanged; F is that archive plus the two tb files landing 58
+#   handed, gen_bus_if.sv and gen_protocol_props.sv.
+#   The mutation is MUT-SPURIOUSWINDOW, a response asserted with the pending queue empty on every cycle from
+#   300 to 399, in the bus driver. IT IS NOT RETAINED, which is rev76's third Low and is why those two digests
+#   remain unreproducible even now. Retaining it is owed; this log does not claim it is done.
+#   What a reader CAN reproduce today: the clean builds. A pure 4bd933f tree gives b7067f660ed88693 and that
+#   tree plus the two committed tb files gives edb6e789fe40b5c5, both by the local build script's own recipe.
+#
+# ================ ROW 3 (rev76 Lows): the l53 and l58 record corrections ================================
+# "out_l53wrapmut/r" is a label with no root. Its root is the clone's own dv/auto_dv/ output directory, and the
+# two runs are dv/auto_dv/out_l53wrapmut/r (build cb66d1b569cba4fb) and dv/auto_dv/out_l53satmut/r
+# (0d548320b34bf9d9), both gen_ut_irq seed 1 on the irq1 image.
+# The l58 red table quotes no run directory and no fired line, and says the interface check and the ibus
+# obligation drop by "the SAME nineteen", which is asserted from two equal differences rather than from the
+# lines. The runs are <scratch>/l61/rootE/dv/auto_dv/out_mut/e_mut and .../rootF/.../f_mut. I have not
+# re-derived a line-by-line correspondence between the two drops and I am not claiming one: what is measured is
+# that each count falls by nineteen and the total by thirty-eight.
+# The l58 log's phrase "real UVM_ERROR in cycle order" at :59 is wrong for the re-dump cycle list. Re-derived here: that run has 627
+# real errors, of which the four bus-protocol ids in my list carry 297, so the list OMITS 330. rev76 says 328;
+# I get 330 and have not reconciled the difference of two, and I would rather state that than round to its
+# number. The list covers the four bus-protocol ids in cycle order and should say so.
+# My claim that the Critic's L-4 and L-5 are dispositioned in landing 55's log and its companion does not hold.
+# Withdrawn; rev66 Low 7 stands.
+#
+# ================ ROW 4 (rev77 Lows): the l57 digests and the code fixes ================================
+# gen_fu_l57_perline_enable.log's retention row lists the mutant diffs at md5 6bb801ed and 49bf2735. Those are
+# superseded: the diffs were regenerated as real unified hunks in landing 59 and now hash 13fd25d9 and
+# bdc5aaf6. The l57 log's bytes stay as they are; this sentence is the correction.
+# THE RUBRIC FAIL IS FIXED IN CODE, and it deserves naming rather than just closing. The committed comment said
+# the counter is "that lost coverage as a number in every run rather than a fact established once on one
+# fixture". That is not a description of what the code does; it is me arguing for my own change inside the
+# code, and narrating the checker's history and my evidence process while doing it. It now says what the
+# counter counts and why the number matters, and nothing about how it came to exist.
+# THE LABEL IS FIXED IN CODE TOO: the counter increments once per expectation per record, so it is
+# bit_clear_expectation_records and its summary field says expectation-records. The per-expectation count is the
+# more useful number, so the label moved rather than the arithmetic.
+# gen_protocol_props.sv's dbus annotation carried a build-specific parameter and two source line numbers, both
+# of which rot. It now states the obligation and the reason a second request cannot issue, and the derivation
+# with its citations lives in gen_fu_l58_decrement_saturate.log where a line number can be corrected.
+#
+# ================ ROW 5: the Critic's owed Lows, per Low ================================================
+# L-6 answered in landing 57's log (the per-line enable as a mask term, with its red).
+# L-12 answered in landing 59's companion (the ablation reads zero ERRORS, not zero detections).
+# L-7, L-8, L-9 and L-11 are UNTOUCHED and are not answered by anything landed so far. They are recorded here
+# as open rather than mapped to a rev71 row that does not cover them, which is what landing 59 did.
+# L-4, L-5 and L-10 are outside this landing's scope and are not claimed either way.
+#
+# ================ ROW 6 (rev80): landing 60's red table, with its artifacts ==============================
+# gen_fu_l60_nmi_mode_exit.log:47-64 states five figures and the ablation precision without the artifacts.
+# rev80 recomputed its build digests, so the identity half is met; this is the artifact half.
+# All three mutant runs are MUT-IRQWITHHOLDALL builds, module gen_ut_irq_nmi_long, seed 1, on the aligned
+# fixture's image (crc32 3cba3f47, 218 words, tohost 800003c8, +gen_boot_addr=80000000
+# +gen_fetch_en_at_reset=0); the ablation adds +gen_chk_irq_entry=0 and nothing else.
+#   g_mut  <scratch>/l60b/rootG/dv/auto_dv/out_mut/g_mut/sim.log   depth mirror
+#   h_mut  <scratch>/l60b/rootH/dv/auto_dv/out_mut/h_mut/sim.log   RTL mirror
+#   h_abl  <scratch>/l60b/rootH/dv/auto_dv/out_mut/h_abl/sim.log   RTL mirror, named check off
+# THE FIRE LINES, verbatim, which the log summarised as two order numbers:
+#   g_mut  raised at cycle 902 (order 206) not taken within 17 records (now order 267, takeable records 18
+#   h_mut  raised at cycle 902 (order 206) not taken within 17 records (now order 225, takeable records 18
+# THE SUMMARY LINES, verbatim, and they carry the ablation precision rather than my assertion of it:
+#   g_mut  bound failures=1 expectations released=0 open expectations=0
+#   h_mut  bound failures=1 expectations released=0 open expectations=0
+#   h_abl  bound failures=1 expectations released=0 open expectations=0
+# So the ablation counts ONE bound failure while reporting ZERO errors. That is the precision stated as a
+# measurement at last: the named check off suppresses the report and leaves the detection counted.
+#
+# ================ ROW 7 (rev80): the GREEN that was missing, and it is stronger than the red ============
+# No run of the aligned fixture on an UNMUTATED build was recorded, and the six smokes never enter NMI mode
+# with a nested trap, so nothing showed the design doing the right thing in the window the mirror is about.
+#   nmiclean  dv/auto_dv/out_l65/nmiclean, build d9a0553bd4e0b326, same fixture and plusargs, NO mutation
+#   verdict PASS, irq_entry 0, entries=2 nmi=1, bound failures=0, open expectations=0
+# ENTRIES=2 IS THE POINT. The design takes the NMI and then takes the external line, and it takes it in the
+# handler remainder after the inner mret: exactly the window the depth mirror masked and the RTL mirror does
+# not. So the green does not merely fail to fire; it shows the design doing the thing the old mirror would
+# have hidden, on the same fixture, with the expectation cleared by the entry rather than left open.
+#
+# ================ ROW 8 (rev80): the retained fixtures do not assemble as documented ====================
+# Both retained .S files carry .include "gen_mmio_map.h", which lives in dv/auto_dv/tests/gen_programs/, and
+# the directed recipe passes only dv/auto_dv/stim. As written the build fails on the missing include. The
+# command that assembles them, and reproduces 218 words and crc32 3cba3f47 exactly:
+#   python3 dv/auto_dv/stim/gen_program.py --seed 1 --out <dir> --directed <the .S> \
+#     --gcc-opts=-Idv/auto_dv/tests/gen_programs
+# The same applies to gen_irq_perline_directed.S and to gen_irq_mie_toggle.S. A retained fixture that does not
+# build by the documented recipe is retention with a step missing, which is the same class as a retained diff
+# whose header no tool accepts.

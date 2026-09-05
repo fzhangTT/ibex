@@ -215,7 +215,7 @@ module gen_protocol_props
                                         (!data_req_o || !$isunknown({data_addr_o, data_we_o, data_be_o}))) // DUT
   `P_ASSERT(dbus, sva_dbus_gnt_only_with_req, data_gnt_i |-> data_req_o)                                    // TB
   `P_ASSERT(dbus, sva_dbus_rvalid_outstanding, data_rvalid_i |-> dbus_outstanding > 0)                      // TB
-  `P_ASSERT(dbus, sva_dbus_outstanding_max,   dbus_outstanding <= DBUS_MAX_OUTSTANDING)                     // TB (the DUT obligation it observes: never more than 2 data beats in flight, and the misaligned split's two halves are the only path to two: this build ELABORATES WritebackStage=1, from -pvalue on the compile line and not from the 1'b0 default at gen_dut_top.sv:51, so ID takes gen_stall_mem where data_req_allowed = ~outstanding_memory_access (rtl/ibex_id_stage.sv:1019) and no second request issues while one is outstanding)
+  `P_ASSERT(dbus, sva_dbus_outstanding_max,   dbus_outstanding <= DBUS_MAX_OUTSTANDING)                     // TB (the DUT obligation it observes: never more than 2 data beats in flight, and the misaligned split's two halves are the only path to two, because a memory instruction cannot issue a request while one is outstanding)
   // (dbus_outstanding == 1 excludes a single byte access at offset 3, whose be 1000 equals a split first half)
   // The split rows are covers, not asserts: at the boundary a byte or half-word access at offset 2 or 3 (be 1100 / 1000)
   // is indistinguishable from a split's first half, and a pipelined unrelated request may follow it with one
