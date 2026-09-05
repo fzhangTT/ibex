@@ -86,6 +86,25 @@ def regression_verdict(man: dict[str, Any]) -> dict[str, Any]:
             "exclusion_violations": cov.get("exclusion_violations") or []}
 
 
+def round_source_digests(builds: dict[str, Any], canary_sources: str | None) -> dict[str, Any]:
+    """The round's source identity: every build's digest, the round's scalar and the compare against the canary.
+
+    The scalar and the compare are None unless the round has exactly ONE distinct digest, so a round built from
+    two different source trees is visibly undecidable rather than reported as matching whichever build came
+    first. A build with no readable manifest contributes nothing and is not an error here."""
+    all_digests: list[str] = []
+    for b in builds.values():
+        mp = b.get("manifest")
+        bm = U.load_yaml(Path(mp)) if mp and Path(mp).is_file() else {}
+        d = (bm.get("inputs") or {}).get("sources_sha256")
+        if d:
+            all_digests.append(d)
+    uniq = sorted(set(all_digests))
+    return {"all": uniq,
+            "round": uniq[0] if len(uniq) == 1 else None,
+            "match": (canary_sources in uniq) if (canary_sources and len(uniq) == 1) else None}
+
+
 def metric_row(cov: dict[str, Any]) -> dict[str, Any]:
     """The gate row: the gated DUT scopes combined per metric (DV Lead ruling, gen_tb_architecture.md
     Section 5: u_dut.u_ibex_core + u_dut.u_register_file, covered and total objects summed), group from
@@ -256,7 +275,7 @@ def collect(outdir: Path, round_no: int, dry_run: bool, label: str | None,
         bm = Path(b.get("manifest") or "")
         if bm.is_file():
             shutil.copyfile(bm, ev / C.ROUND_EV_BUILD_MANIFEST_FMT.format(build=bname))
-    # CM222 M-3: the canary's build manifest is retained beside the round's, so the identity above can be re-derived from the commit.
+    # The canary's build manifest is retained beside the round's, so the identity above is re-derivable from the commit.
     _cm = Path((man.get("canary_build") or {}).get("manifest") or "")
     if _cm.is_file():
         shutil.copyfile(_cm, ev / C.ROUND_EV_CANARY_MANIFEST)
@@ -269,18 +288,9 @@ def collect(outdir: Path, round_no: int, dry_run: bool, label: str | None,
     # rt39 item four: the canary's identity against the round's. Both values travel with the compare
     # result, so a reader of the commit never has to open a path under work/ that git does not track.
     canary = man.get("canary_build") or {}
-    round_sources_all: list[str] = []
-    for _b in (man.get("builds") or {}).values():
-        _bm = U.load_yaml(Path(_b.get("manifest"))) if _b.get("manifest") and Path(_b["manifest"]).is_file() else {}
-        _d = (_bm.get("inputs") or {}).get("sources_sha256")
-        if _d:
-            round_sources_all.append(_d)
     canary_sources = canary.get("sources_sha256")
-    # Every build's digest, not just the first: a round with two builds of different sources would
-    # otherwise compare the canary against one of them and report a match that covers half the round.
-    uniq = sorted(set(round_sources_all))
-    round_sources = uniq[0] if len(uniq) == 1 else None
-    sources_match = ((canary_sources in uniq) and len(uniq) == 1) if (canary_sources and uniq) else None
+    _dig = round_source_digests(man.get("builds") or {}, canary_sources)
+    uniq, round_sources, sources_match = _dig["all"], _dig["round"], _dig["match"]
     prev = index["rounds"][-1] if (index["rounds"] and not dry_run) else None
     gain = gain_against(prev["metrics"] if prev else None, row)
     streak = 0 if (prev is None or gain["shows_gain"]) else int(prev.get("no_gain_streak", 0)) + 1
@@ -450,6 +460,45 @@ def self_test() -> int:
     ok &= cond
     print("SELF-TEST", "ok " if cond else "BAD", "retain_gz round-trips the source bytes unchanged")
     U.remove_selftest_tree(d)
+    # The round's source identity: one distinct digest decides, two make it undecidable rather than half-checked.
+    def _bm(name: str, digest: str | None) -> dict[str, Any]:
+        mp = d / f"{name}_manifest.yaml"
+        U.dump_yaml({"inputs": {"sources_sha256": digest}} if digest else {"inputs": {}}, mp)
+        return {"manifest": str(mp)}
+    one = {"gen_tb": _bm("one", "a" * 64)}
+    two = {"gen_tb": _bm("one", "a" * 64), "gen_tb2": _bm("two", "b" * 64)}
+    none = {"gen_tb": _bm("bare", None)}
+    r1 = round_source_digests(one, "a" * 64)
+    r1x = round_source_digests(one, "c" * 64)
+    r2 = round_source_digests(two, "a" * 64)
+    r0 = round_source_digests(none, "a" * 64)
+    rnc = round_source_digests(one, None)
+    cond = (r1["round"] == "a" * 64 and r1["match"] is True and len(r1["all"]) == 1
+            and r1x["match"] is False
+            and r2["round"] is None and r2["match"] is None and len(r2["all"]) == 2
+            and r0["all"] == [] and r0["round"] is None and r0["match"] is None
+            and rnc["match"] is None and rnc["round"] == "a" * 64)
+    ok &= cond
+    print("SELF-TEST", "ok " if cond else "BAD",
+          f"round_source_digests: one digest decides (match {r1['match']}, mismatch {r1x['match']}); TWO builds of "
+          f"different sources give round None and match None ({r2['all'] and len(r2['all'])} digests); no manifest "
+          f"and no canary both give None")
+    # One selector, three consumers: the manifest cell, the round summary row and the dashboard row must agree.
+    import gen_dashboard   # self-test only: the dashboard is a consumer, not a dependency of this module
+    cov_rec = {"gate_row": {"line": 50.0, "ratios": {"line": "1/2"}, "combined_from": ["s"], "rule": "sum"},
+               "dut_scope": {"s": {"line": 50.0}}, "dashboard_txt": "x",
+               "group_quantities": {"group_bins_all": {"percent": 81.47, "ratio": "3477/4268", "scope": "all"},
+                                    "group_bins_gate": {"percent": 85.89, "ratio": "3477/4048", "scope": "gate"}}}
+    keys = ("field", "percent", "ratio", "scope")
+    cells = [R.group_cell(cov_rec["group_quantities"]), metric_row(cov_rec)["group_cell"],
+             gen_dashboard.dut_scope_row({"coverage": cov_rec})["group_cell"]]
+    view = [tuple(c.get(k) for k in keys) for c in cells]
+    other = R.group_cell(cov_rec["group_quantities"], "group_bins_gate")
+    cond = len(set(view)) == 1 and view[0][0] == C.GROUP_CELL_FIELD and tuple(other.get(k) for k in keys) != view[0]
+    ok &= cond
+    print("SELF-TEST", "ok " if cond else "BAD",
+          f"one selector, three consumers: manifest, round summary and dashboard return the same cell "
+          f"{view[0]}; a different field is a different cell")
     print("SELF-TEST:", "PASS" if ok else "FAIL")
     return 0 if ok else 2
 

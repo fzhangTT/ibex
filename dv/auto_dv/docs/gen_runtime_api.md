@@ -124,10 +124,12 @@ regression manifest mirrors all three fields under `builds.<name>` and summarize
 A run that wrote an export file re-checks the sink against the codegen: the `sources=` set of the file's first
 header line must equal the manifest's DECLARED source set, else the run FAILs (`export sources emitted mismatch
 ...`); when the run narrowed the sources knob (`+gen_export_sources` other than `all`) the header may be a
-subset of the declared set, never a source the build cannot emit. A run whose entry names `+gen_export_file` and
-that ends PASS or RED-OK without the file, or with a file that has no `# gen_export` header, FAILs (`export file
-<name> absent or without a gen_export header`): not writing the file cannot dodge the check. result.yaml records
-`export_header_sources`, `export_file` and the manifest's `export_sources_declared`. The DV Lead's sunset tool
+subset of the declared set, never a source the build cannot emit. A run whose ARGV carries `+gen_export_file`, from
+the entry, the operator or the feature-group default, and that ends PASS or RED-OK without the file, or with a
+file that has no `# gen_export` header, FAILs (`export file <name> absent or without a gen_export header`): not
+writing the file cannot dodge the check, and the default brings entries under it that name no plusarg of their
+own. result.yaml records `export_header_sources`, `export_file`, `export_origin` (entry, default, operator or
+none) and the manifest's `export_sources_declared`. The DV Lead's sunset tool
 fails only on emitted (observed) rows; the reference build manifest for it is one whose regression ran a test
 that writes the export file (gen_ut_export).
 

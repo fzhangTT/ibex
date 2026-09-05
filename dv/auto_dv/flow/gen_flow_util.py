@@ -308,12 +308,20 @@ def vpi_lib_identity(path: str | None) -> dict[str, Any] | None:
     return {"path": str(p), "sha256": sha256_file(p), "present": True}
 
 
-def _cocotb_config_is_pinned(cc: str) -> bool:
-    """True when this cocotb-config is the clone's pinned venv's, resolved paths compared."""
+def under_pinned_venv(path: str | Path | None) -> bool:
+    """True when path resolves inside the clone's pinned venv. Path containment, not string containment: a
+    sibling whose name merely starts with the venv's would pass the latter. The one predicate for every caller."""
+    if not path:
+        return False
     try:
-        return str((C.REPO_ROOT / ".venv").resolve()) in str(Path(cc).resolve())
+        return Path(path).resolve().is_relative_to((C.REPO_ROOT / ".venv").resolve())
     except OSError:
         return False
+
+
+def _cocotb_config_is_pinned(cc: str) -> bool:
+    """True when this cocotb-config is the clone's pinned venv's."""
+    return under_pinned_venv(cc)
 
 
 def require_env(*tools: str) -> None:
@@ -972,7 +980,8 @@ def self_test() -> int:
     # any other entry gets none, and the default value is a plain name the loader's containment rule accepts.
     grp = C.EXPORT_DEFAULT_FEATURE_GROUPS[0]
     e_def = {"name": "gen_x", "plusargs": ["+gen_fetch_en_at_reset=0"], "feature_groups": [grp, "gen_x"]}
-    e_own = {"name": "gen_y", "plusargs": [f"+gen_export_file=own.txt"], "feature_groups": [grp]}
+    ex_name = {ident: n for n, ident in C.sv_plusarg_names().items()}[C.SV_PLUSARG_EXPORT_FILE]
+    e_own = {"name": "gen_y", "plusargs": [f"+{ex_name}=own.txt"], "feature_groups": [grp]}
     e_no = {"name": "gen_z", "plusargs": [], "feature_groups": ["cmp"]}
     got = [export_file_for(e_def), export_file_for(e_own), export_file_for(e_no)]
     dv = C.EXPORT_DEFAULT_FILE

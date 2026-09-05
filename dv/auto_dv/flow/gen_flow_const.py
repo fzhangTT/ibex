@@ -585,7 +585,7 @@ GROUP_SCOPE_BY_FIELD = {"group_bins_gate": GROUP_SCOPE_GATE, "group_bins_all": G
 
 def group_cell_scope() -> str:
     """Scope string of the field the selector reads. Labels derive from this rather than restating a
-    definition, so changing GROUP_CELL_FIELD moves every label with it (CM219 MINOR-2)."""
+    definition, so changing GROUP_CELL_FIELD moves every label with it."""
     return GROUP_SCOPE_BY_FIELD[GROUP_CELL_FIELD]
 
 GROUP_CELL_SELECTOR_NOTE = ("selected by gen_cov_report.group_cell; the criterion ruling naming the "

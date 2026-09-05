@@ -1,0 +1,89 @@
+# Export default: the live red RE-RUN with its basis PROVEN, Runtime flow
+#
+# WHY THIS EXISTS. dv/auto_dv/evidence/gen_tdd_logs/flow/gen_export_default_red.log records the same red on an
+# ASSERTED basis: it says the two driver trees are archives of one commit differing in four named files, and
+# it carries no digest of any of them, of the build, or of the run command. rev69 and the Critic both raised
+# that as M-1. This log re-runs the pair on a basis that can be checked line by line.
+#
+# AND THE OLD LOG NAMES THE WRONG TREE, which neither review could see and which I found writing this one. Its
+# header takes the commit from a git rev-parse at LOG-WRITING time, not at archive time. The archives were
+# taken when HEAD was 7d1a6fe; the header names a later commit. So a reader tying its POST tree to a blob
+# would tie it to a tree that never ran. The old log keeps its bytes; this one supersedes it.
+#
+# WHY NOT A COMPANION. Both driver trees were deleted in scratch cleanup, so the old run's basis is not
+# provable after the fact by any amount of prose. Re-running is the only honest fix.
+
+================================================================
+# SECTION 0: the basis, proved rather than asserted
+# stamp 2026-09-05T13:18:45Z  host soc-l-11
+#
+# Both drivers are plain archives of COMMITS, not of a working tree. sha256[:16] of each flow file in the
+# extracted tree against that commit's blob:
+
+  pre  gen_flow_const.py    935728bb83e378d1  vs fb7226caefeb 935728bb83e378d1  EQUAL
+  pre  gen_flow_util.py     1f5d9503043d0970  vs fb7226caefeb 1f5d9503043d0970  EQUAL
+  pre  gen_run.py           7632eca5b10f840c  vs fb7226caefeb 7632eca5b10f840c  EQUAL
+  pre  gen_regress.py       29a4f5042b171e3b  vs fb7226caefeb 29a4f5042b171e3b  EQUAL
+  post gen_flow_const.py    419a6d25f9025af7  vs 44a24f5edd9b 419a6d25f9025af7  EQUAL
+  post gen_flow_util.py     8744412c9ca5297b  vs 44a24f5edd9b 8744412c9ca5297b  EQUAL
+  post gen_run.py           600012e27f978436  vs 44a24f5edd9b 600012e27f978436  EQUAL
+  post gen_regress.py       26aab93c0f186e1f  vs 44a24f5edd9b 26aab93c0f186e1f  EQUAL
+
+  ALL EIGHT EQUAL: True
+  PRE  fb7226caefeb747a6635da1273037da85293b450   EXPORT_DEFAULT_FEATURE_GROUPS occurs 0 times in gen_flow_const.py
+  POST 44a24f5edd9b7b219ea88c5e35da3a9c29a31a4f   occurs 1 time
+  Exactly these four files differ between the two trees (diff -rq over dv/auto_dv/flow).
+
+# The build both runs used, unchanged between them:
+  build      /proj_soc/user_dev/fzhang/ibex_dv_out/regress_chkfix/build/gen_tb
+  status     ok
+  sources    inputs.sources_sha256 fb0798b2432ca7e1edf77c5499376444
+  mirror     /proj_soc/user_dev/fzhang/ibex_dv_mirror_head/9c7f8f63957d
+  mirror tree_sha256 55636b8b63b0f3c6c89f46965f099816
+
+================================================================
+# SECTION 1: the PRE run, fields quoted from its own result.yaml
+# run_dir /proj_soc/user_dev/fzhang/ibex_dv_out/expdef_red2/pre/gen_test_irq_basic_1005939007
+
+  test                   'gen_test_irq_basic'
+  seed                   1005939007
+  verdict                'PASS'
+  reason                 'no collected failure mechanism; end marker and config banner present'
+  export_file            None
+  export_origin          None
+  export_header_sources  None
+  build                  'gen_tb'
+  build_config           'opentitan'
+  gen_export.txt on disk  ABSENT
+  simv line               n/a
+  plusargs in run_cmd.sh  ['+gen_build_config=opentitan', '+gen_fetch_en_at_reset=0', '+gen_knob_irq_line_mix=single', '+gen_mem_image=/proj_soc/user_dev/fzhang/ibex_dv_out/expdef_red2/pre/gen_test_irq_basic_1005939007/program/prog.vmem', '+gen_mem_image_crc32=03c84170', '+gen_mem_image_words=217', '+gen_boot_addr=80000000', '+gen_tohost_addr=800003c0']
+
+================================================================
+# SECTION 2: the POST run, fields quoted from its own result.yaml
+# run_dir /proj_soc/user_dev/fzhang/ibex_dv_out/expdef_red2/post/gen_test_irq_basic_1005939007
+
+  test                   'gen_test_irq_basic'
+  seed                   1005939007
+  verdict                'PASS'
+  reason                 'no collected failure mechanism; end marker and config banner present'
+  export_file            '/proj_soc/user_dev/fzhang/ibex_dv_out/expdef_red2/post/gen_test_irq_basic_1005939007/gen_export.txt'
+  export_origin          'default'
+  export_header_sources  ['ibus', 'dbus', 'pin', 'alert', 'misc', 'scrkey', 'regime']
+  build                  'gen_tb'
+  build_config           'opentitan'
+  gen_export.txt on disk  present, 152069 bytes
+  simv line               n/a
+  plusargs in run_cmd.sh  ['+gen_build_config=opentitan', '+gen_fetch_en_at_reset=0', '+gen_knob_irq_line_mix=single', '+gen_mem_image=/proj_soc/user_dev/fzhang/ibex_dv_out/expdef_red2/post/gen_test_irq_basic_1005939007/program/prog.vmem', '+gen_mem_image_crc32=03c84170', '+gen_mem_image_words=217', '+gen_boot_addr=80000000', '+gen_tohost_addr=800003c0', '+gen_export_file=gen_export.txt']
+
+================================================================
+# SECTION 3: what the pair shows
+
+The PRE run records export_file None and its run directory holds no gen_export.txt, so a checker fire in that
+run would leave nothing per-record behind. The POST run writes the stream and records export_origin 'default',
+so the name came from the feature-group rule and not from an entry or an operator. The verdict is PASS on both,
+which is the property worth checking: export_check FAILs a PASS run that names an export file and writes none or
+writes one without a header, so a default turned on carelessly could have turned passing runs into failures.
+
+Both plusarg lists above are quoted from the runs' own run_cmd.sh, so the difference between the two argvs is
+visible rather than described.
+

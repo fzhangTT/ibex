@@ -46,14 +46,14 @@ def cocotb_lib(a: argparse.Namespace) -> tuple[str, dict[str, Any] | None]:
         cc = shutil.which("cocotb-config")
         if not cc:
             U.die("cocotb-config not on PATH; the venv is not active (ci/env.sh)")
-        if str(venv) not in str(Path(cc).resolve()):
+        if not U.under_pinned_venv(cc):
             U.die(f"cocotb-config {cc!r} is not the clone's pinned venv's ({venv}); it would link another "
                   f"Python's VPI library into this build. Activate the venv (ci/env.sh) or drop --local-cocotb")
         r = subprocess.run([cc, "--lib-name-path", "vpi", "vcs"], capture_output=True, text=True)
         lib = r.stdout.strip()
         if r.returncode != 0 or not Path(lib).is_file():
             U.die(f"cocotb VPI library not found: {lib!r}")
-        if str(venv) not in str(Path(lib).resolve()):
+        if not U.under_pinned_venv(lib):
             U.die(f"cocotb VPI library {lib!r} resolves outside the clone's pinned venv ({venv})")
         return lib, None
     root = M.mirror_root()
@@ -279,9 +279,9 @@ def self_test() -> int:
     ok &= cond
     print("SELF-TEST", "ok " if cond else "BAD",
           f"every define the config group emits reaches defines_all ({len(cfg_defines)} of them)")
-    # The cases above read compile_config's RETURN. The manifest is written elsewhere, so a case that
-    # only checks the return cannot fire if the write ever stops carrying the keys. This case reads the
-    # manifest's own construction: the keys the write puts in, taken from the same dict literal.
+    # Key-set check on the same call the cases above assert values from: it pins which keys exist, and it
+    # CANNOT fire if the manifest literal stops spreading them, because no self-test reaches that write
+    # without a compile. A real build manifest is the evidence for the write itself.
     manifest_keys = set(compile_config(argv))
     cond = {"defines_all", "parameters_all"} <= manifest_keys and "defines" not in manifest_keys
     ok &= cond
@@ -299,7 +299,7 @@ def self_test() -> int:
     cond = "defines" not in got
     ok &= cond
     print("SELF-TEST", "ok " if cond else "BAD",
-          "the old `defines` key is gone: one name never means two populations (CM222 L-1)")
+          "the old `defines` key is gone: one name never means two populations")
     # Control on real committed bytes: the round-0 build record's own command.
     rec = C.EVIDENCE_DIR / "gen_round_0" / "gen_build_manifest_gen_tb.yaml"
     if rec.is_file():

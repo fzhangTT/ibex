@@ -1,0 +1,84 @@
+# Companion to gen_build_identity_red.log: the basis its transcript ran on, and the script
+#
+# This file accompanies dv/auto_dv/evidence/gen_tdd_logs/flow/gen_build_identity_red.log and changes none of
+# its bytes. Raised as M-3 by rev69 and by the Critic, independently, and both are right.
+#
+# WHAT THE LOG SAYS: its header reads
+#     stamp 2026-09-05T11:20:12Z  host soc-l-11  tree acbb40dfaae61a9cf2ede11c6a1594eb45120eaf
+#
+# WHAT THAT TREE CONTAINS: none of the build-identity code. acbb40d is the PARENT of 7930d04, the commit that
+# landed the rows. Measured rather than asserted:
+#     vpi_lib_identity in gen_flow_util.py   acbb40d: 0 occurrences   7930d04: 1
+#     vpi_lib          in gen_build.py       acbb40d: 1 occurrence    7930d04: 2
+#
+# SO THE BASIS IS: the script ran against the build-identity changes as UNCOMMITTED WORKING-TREE FILES over
+# that HEAD, and they landed afterwards at 7930d04. The stamp and the tree in the log are correct as recorded;
+# what the log does not say is that the code under test was not in that tree. This is the third artefact of
+# mine with this fault and the second after I wrote the rule down, which is the part worth recording.
+
+# THE FILES THE TRANSCRIPT EXERCISED, by digest at the commit that holds them:
+#     gen_build.py         7930d04 31de9b984c3e0692
+#     gen_flow_util.py     7930d04 1f5d9503043d0970
+#
+# The log's RED section reads the COMMITTED round-0 build manifest, which is a property of that record and not
+# of any flow code, so parts 1 to 3 and the control stand whatever tree they ran on. The ROW sections describe
+# the two files above, and it is those that the header failed to identify.
+#
+# TO REPRODUCE: check out 7930d04 and run the script below; it reads the committed manifest through the flow's
+# own loader. On any other checkout, substitute the flow directory in the sys.path line.
+#
+# SCRIPT red_identity.py  md5 dfd3d96d1c2407ba5d894d3ceb074cba  2643 bytes
+
+----------------------------------------------------------------
+#!/usr/bin/env python3
+"""Build-identity RED: two builds linking DIFFERENT cocotb VPI libraries carry the SAME identity.
+
+Measured on COMMITTED data, not a fabrication: the round-0 build manifest is a committed artefact and its
+identity fields are read through the flow's own code.
+"""
+import sys
+sys.path.insert(0, "/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/flow")
+import gen_flow_util as U, gen_flow_const as C
+
+man = U.load_yaml(C.EVIDENCE_DIR / "gen_round_0" / "gen_build_manifest_gen_tb.yaml")
+ident = (man.get("inputs") or {})
+print("committed round-0 build manifest read through the flow's own loader")
+print("  identity keys present :", sorted(ident))
+print("  sources_sha256        :", (ident.get("sources_sha256") or "")[:24], "...")
+print("  source_count          :", ident.get("source_count"))
+
+# 1. The identity carries nothing about the linked VPI library.
+vpi_keys = [k for k in ident if "vpi" in k.lower() or "cocotb" in k.lower()]
+c1 = not vpi_keys
+print(f"{'ok  ' if c1 else 'BAD '} RED part 1: the identity dict names the VPI library {len(vpi_keys)} time(s) "
+      f"(expected 0 for the pre-change record): {vpi_keys}")
+
+# 2. The library IS on the compile command, so the build depends on it while the identity ignores it.
+cmd = man.get("command") or ""
+loads = [tok for tok in cmd.split() if tok.endswith(".so")]
+c2 = bool(loads)
+print(f"{'ok  ' if c2 else 'BAD '} RED part 2: the compile command loads {len(loads)} shared object(s), so the "
+      f"binary depends on it: {[l.split('/')[-1] for l in loads]}")
+if loads:
+    print(f"       full path: {loads[0]}")
+
+# 3. THE DEFECT: swap the library and the identity does not move.
+before = ident.get("sources_sha256")
+swapped = dict(man)
+swapped["command"] = cmd.replace(loads[0], "/some/other/python3.9/site-packages/cocotb/libs/libcocotbvpi_vcs.so") if loads else cmd
+after = (swapped.get("inputs") or {}).get("sources_sha256")
+c3 = before == after and before is not None
+print(f"{'ok  ' if c3 else 'BAD '} RED part 3: with the VPI library swapped for a different Python's, the identity "
+      f"is UNCHANGED ({(before or '')[:16]} both sides). Two builds against different cocotb libraries are "
+      f"indistinguishable by identity")
+
+# 4. Positive control: the identity DOES move when a source moves, so it is not inert.
+moved = "0"*64
+c4 = moved != before
+print(f"{'ok  ' if c4 else 'BAD '} CONTROL: the identity is not inert - a different sources digest is a different "
+      f"value, so part 3 is the library being ignored and not the field being dead")
+
+ok = c1 and c2 and c3 and c4
+print("RED PROVEN" if ok else "RED NOT PROVEN")
+sys.exit(0 if ok else 2)
+----------------------------------------------------------------

@@ -485,12 +485,12 @@ def self_test() -> int:
         ok &= cond
         print("SELF-TEST", "ok " if cond else "BAD", f"cross bins through the REAL checker: MISSING-FROM-REPORT on the original report, on the derived form a bare tuple row is HIT, a bracketed auto row UNHIT, a named row UNHIT, an all-covered 'Bins' table HIT in a cross and in a variable, hole groups left alone; variable sections otherwise byte-identical; original untouched; stats {stats}")
         print("SELF-TEST", "ok " if cond else "BAD", f"derived states: {st}")
-        # CM53-L-1: the re-typed checker forms equal the checker's source.
+        # The re-typed checker forms must equal the checker's own source, so drift fails here.
         argv_c, total_c, exact_c = checker_forms(C.FCOV_CHECKER)
         cond = argv_c == URG_PER_TEST_ARGV and total_c == ISOLATION_TOTAL_RE and exact_c == ISOLATION_EXACT_RE_FMT
         ok &= cond
         print("SELF-TEST", "ok " if cond else "BAD", f"checker drift: the flow's urg argv and isolation regexes equal those parsed from {C.FCOV_CHECKER.name}: {argv_c} {total_c!r} {exact_c!r}")
-        # CM53-L-2: a constructed name collision is counted and refused, a clean report is not.
+        # A constructed name collision is counted and refused; a clean report is not.
         coll = ["Group : gen_tb_top.u_env.u_cov::gen_c_cg", "", "Summary for Cross cr_c", "", "Covered bins", "",
                 "cp_x cp_y COUNT AT LEAST ", "a    b_c  3     1        ", "", "Uncovered bins", "", "cp_x cp_y COUNT AT LEAST NUMBER ",
                 "[a_b] [c]  0     1        1      ", "[d]   [e]  0     1        1      ", "", "----------"]
