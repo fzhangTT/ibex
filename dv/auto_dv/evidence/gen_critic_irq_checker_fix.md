@@ -344,3 +344,26 @@ not a model mirror, which is why masking on it is consistent with not masking on
   companion lands. M-1 and M-2 are closed in both reviews.
 
 Verdict unchanged: REQUEST-CHANGES on 65b7cb0..b9e5fad confined to M-3; M-1 and M-2 closed; L-1..L-5 fixed; L-6..L-13 owed.
+
+## 8. The lift: M-3 closed by landing 56 at fab8a61; the REQUEST-CHANGES on 65b7cb0..b9e5fad is lifted (appended under a HOLD, 2026-09-05T13:58:24Z; Sections 1-7 unchanged)
+
+The companion: dv/auto_dv/evidence/gen_tdd_logs/fcov/gen_fu_l56_storm_vacuity_companion.log at fab8a61, sha256 a5efb3ea37645cef,
+md5 d224cf45049c6c8b, 4161 bytes; its manifest row is gen_tdd_logs/gen_manifest.md:3521 at fab8a61 (manifest blob 9678c82de94200b5).
+Its header names itself the answer to rev60's Medium and to my M-3, quotes the sentence it corrects
+(gen_fu_l52_commands_corrigendum.log:57, "landing 54 removes the shape that caused it"), states the second clause false, derives
+the entry restart from gen_checkers_pkg.sv:118 at b9e5fad exactly as 7.4a measured it, and separates what landing 54 closed (the
+software-toggle vacuity) from what it did not (the storm-arm vacuity, whose remedy stays the end-of-test expectation). The
+commands corrigendum's bytes are untouched (md5 44ed232180fc5db8, 7506 bytes, the figures 7.1 recorded). That is the companion 7.5
+asked for, so M-3 is CLOSED.
+
+Standing verdict on the irq checker group, 65b7cb0..b9e5fad: CRITIC VERDICT: APPROVE. M-1 and M-2 are closed by mechanism and by
+my re-runs (Section 7), M-3 by fab8a61, L-1..L-5 fixed; L-6..L-13 are owed as disclosed. The tree now carries answers to several,
+which Section 9 judges on the named range ccd755d..38b729a (landing 57, measurements in progress): L-6 (the toggle source and the
+mutant diffs, retained under gen_irq_fixtures at 38b729a), L-10, L-12 and L-13 (the per-line enable term, the dcsr home, the
+wording); L-9 (the re-measurement record) is answered by the reds2 block at 67c6ac1, verified in gen_critic_flow_followups.md
+Section 7; L-7 and L-11 are records notes; L-8 (the NMI-mode mirror) is held back by landing 57's own statement and stays owed.
+Promotion of the irq entry remains gated on the end-of-test expectation, as 7.5 says.
+
+The lift was first recorded in gen_critic_form_v3.md Section 4 (:54-56 at 55d784a, 12:56:46Z) and in my message to the
+Orchestrator after fab8a61 landed; this section is the gating record's own statement of it, written after rev74 found that this
+file still read REQUEST-CHANGES at :300 with no section lifting it.
