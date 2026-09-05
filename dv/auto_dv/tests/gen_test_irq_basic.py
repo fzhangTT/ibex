@@ -30,6 +30,7 @@ NMI_DRIVER_BIT = 18       # never driven here: this entry owns no NMI shape
 MSTATUS_MIE = 1 << 3
 MSTATUS_MPIE = 1 << 7
 ENTRY_SETTLE_CYCLES = 4000   # a commanded line is taken well inside this; the budget check owns the tail
+POLL_CYCLES = 8              # granularity of the report-count poll
 
 
 def entries_of(reports):
@@ -66,13 +67,19 @@ def line_facts(reports, cause, label):
 
 async def await_reports(test, n):
     """Wait until the program has stored at least n report words, so the next line is driven only
-    after the previous entry has completed and released its line."""
-    waited = 0
+    after the previous entry has completed and released its line.
+
+    wait_cycles takes an ABSOLUTE cycle, not a delay, so the target is computed from the current
+    cycle each time round; it returns False when the program ended first, which ends the wait
+    rather than spinning to the deadline.
+    """
+    deadline = test.cycle() + ENTRY_SETTLE_CYCLES
     while test.eot_count() < n:
-        await test.wait_cycles(1)
-        waited += 1
-        assert waited < ENTRY_SETTLE_CYCLES, \
-            f"GEN_TEST_IRQ: {test.eot_count()} report words after {waited} cycles, expected {n}"
+        assert test.cycle() < deadline, (
+            f"GEN_TEST_IRQ: {test.eot_count()} report words at cycle {test.cycle()}, expected {n} "
+            f"by cycle {deadline}")
+        if not await test.wait_cycles(test.cycle() + POLL_CYCLES):
+            return   # the program reached end of test; wait_eot owns the verdict from here
 
 
 class IrqBasic(GenTest):
