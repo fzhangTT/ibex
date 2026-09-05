@@ -281,3 +281,43 @@ Reconciliation with rev74 (read after the rows above were fixed; rows checked at
   seeds_for_test is at :1757) VERIFIED.
 - Verdict after reconciliation: unchanged, APPROVE on e95a4c9..ef2385a with L-4 owed; the rev74 rows are the DV Lead's for v3.5 or
   the round record, none of them a claim the tree contradicts. Both agree there is no Major.
+
+## 10. v3.5 and v3.6 at 001c302..c1239af: the form's rows closed, the checker grows two controls; APPROVE (2026-09-05T14:47:28Z)
+
+Artifacts at c1239af: gen_round2_request.md 685c2df5a6633fc4, gen_round_form_check.py fd9c38649d2264f5, gen_plan_digest_provenance.md
+(3533 bytes); rev75 (dv/auto_dv/reviews/2026-09-05-claude-diff-ef2385a2-001c3021.md at ac88944, 8900724c0e9d03a7) and rev78
+(dv/auto_dv/reviews/2026-09-05-claude-diff-001c3021-c1239af9.md at b59051b, 85a6551ec4372f93). Method: a detached archive of c1239af
+(form3/v33_checks.sh c1239af, log v36_checks.log): the checker passes 206 claims from the archive root and from a foreign directory
+(the 204 of v3.4 plus the cap-rule citation claim and the open-condition count claim); --self-test passes twelve cases, the two new
+controls among them ("renaming the cap rule fails the citation claim", done on a copy of the plan, and "a wrong open-condition count
+fails"); my sixteen-row control still fails the row count; the rows read against the text; rev75 and rev78 read after the findings
+were fixed (form3/s10_ready.txt). Exposure: the Orchestrator's messages summarised both landings and rev75's shape before these checks.
+
+- Condition (a) (:376) reads CLOSED at 5f9bea6 and cites this file's companion record, gen_critic_irq_checker_fix.md Section 8, for
+  M-3 closed by landing 56's companion at fab8a61, the REQUEST-CHANGES lifted and the standing verdict APPROVE; that is what Section
+  8 says. The (b) paragraph reads "HAD REOPENED ITSELF" (:383), past tense. The cap rule is cited by name, the checker asserts the
+  name occurs exactly once in gen_fcov_plan.md (gen_round_form_check.py:186) and reads the name from the form's own citation, and
+  the rename control fails as it should. gen_plan_digest_provenance.md states what the digest covers and the run that produced
+  f9a685486369, which the three documents' headers carry and agree on; I did not recompute the digest, the parts and generator
+  being gitignored, and the record says so of itself.
+- L-4 OPEN, unchanged: :342 still reads "rather than any coverage refusal"; owed to the next touch, the one row left from me.
+- The smoke, targeted and Section 7 rows are unchanged from v3.4 and still reproduce inside the 206.
+
+Reconciliation with rev75 and rev78 (read after the rows above were fixed):
+- rev75's three Mediums (the rename test writing the tracked plan in place; the open count stated in prose against a row that read
+  neither open nor closed; the provenance commands not running as printed) are each answered in v3.6 by rev78's account and by what
+  I ran: the rename case uses a temporary copy and the twelve cases pass from a foreign directory; the open count is a claim with a
+  flip control; the provenance record's commands are single lines. rev75's Lows (the docstring's "parsed out of the form" against a
+  string constant; nothing pointing at the provenance record) are answered at the form.
+- rev78's Medium, VERIFIED and adopted as L-10 (Low, code; DV Lead): the open-condition count classifies a status cell as open only
+  when the cell begins with "open" (gen_round_form_check.py:198-199); a cell reading "fixed at deadbee; OPEN on the sweep record" in a
+  copy of the form counts as closed (the claim then fails as "form 3 vs source 2", which is the count moving, not the classifier
+  reading the cell). Every v3.6 cell begins with its verdict word, so the claim holds today; the classifier should read a status token
+  rather than a prefix, or the form should fix the convention it relies on. Low in my scale (a check weaker than its label, no claim
+  the tree contradicts); rev78 says Medium.
+- rev78's Lows (the spliced digest sentence at :359-360; the provenance commands printing the digest of an empty input on a plain
+  checkout; the misplaced comment above the inserted case) and its Info (the digest order and figures unverifiable from any checkout)
+  are read and agreed as the DV Lead's; none is a claim the tree contradicts.
+
+CRITIC VERDICT: APPROVE on 001c302..c1239af. Nothing of mine is open on the form but L-4 and the L-10 note; the checker reproduces all
+206 claims from any working directory with a twelve-case self-test whose two new controls fail as they should.
