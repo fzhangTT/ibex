@@ -97,11 +97,19 @@ ibex_pkg; compiled with +define+RVFI; cheriot_enable_i tied IbexMuBiOff inside t
   expectations. The mark states a fact about the TB, not about the plan, so a family's marks are dropped in the
   same landing that builds that family: CG-PMP-001, CG-PMP-002, CG-PMP-004 and CG-PMP-014 are BUILT AS OF THIS
   LANDING and carry no mark, while CG-PMP-003 keeps its marks until its 46 cross-bin items are written (step 1b).
-  Dropping the mark ENDS ONE HALF of a compound claim, so say the other half plainly: those four are built and are
-  NOT YET DECLARED BY ANY MANIFEST. The mark's absence means their bins MAY be declared, never that they are, and
-  it is what makes declaring them possible at all, since the manifest generator excludes any coverpoint whose line
-  carries the phrase (gen_fcov_manifest.py excluded_coverpoints, keyed on the literal "not in manifest"). Their
-  three manifests arrive with the testlist flip that closes this group.
+  Dropping the mark ENDS ONE HALF of a compound claim, so say the other half plainly: at that landing those four
+  were built and NOT YET DECLARED BY ANY MANIFEST. The mark's absence means their bins MAY be declared, never that
+  they are, and it is what makes declaring them possible at all, since the manifest generator excludes any
+  coverpoint whose line carries the phrase (gen_fcov_manifest.py excluded_coverpoints, keyed on the literal "not in
+  manifest"). THREE OF THE FOUR ARE DECLARED NOW: the manifests of gen_test_pmp_csr_warl, gen_test_pmp_lock and
+  gen_test_pmp_mseccfg are committed at 253f08e and declare bins of CG-PMP-001, CG-PMP-002 and CG-PMP-004, while
+  the testlist still detaches those entries (fcov_expectation_file null, measured false) until the flip that
+  closes this group. CG-PMP-014 IS THE FOURTH AND IS DECLARED BY NO MANIFEST, by design and permanently: its TP
+  list carries the Phase 2 random items TP-PMP-100 and TP-PMP-106, its coverpoints are table-SHAPE properties no
+  targeted entry drives on every run, and locking is STICKY, so a run that reaches all-locked cannot come back -
+  declaring them would be a per-run guarantee no entry can keep. It is an EXPECTED-FROM-RANDOM-TESTS covergroup
+  under LOG-096 (gen_intervention_log.md:2373) and its own block says so, which is what stops a later reader
+  filing a built covergroup with no manifest as an omission.
   An unbuilt covergroup carrying NO mark is a third, transitional state and not an error: while its manifest is
   staged and no testlist entry references it, gen_unbuilt_mark_check.py reports it in neither leg, because MARK
   judges only marked lines and DECL judges only the manifests the testlist names. That silence depends on the
@@ -2360,7 +2368,7 @@ Conventions
   - cp_line = line class (pin monitor): bins irq, nmi_ext, nmi_int
   - cp_mode = debug or step window (rvfi_ext_debug_mode, CSR model): bins debug_mode, step_outside, debug_in_nmi_handler{debug window opened while nmi_mode is set: the NMI handler is running (F-IRQ-066); post_exit not_taken until the handler's mret}
   - cp_duration = line held or dropped before the exit (pin monitor): bins held_through_exit, dropped_before_exit
-  - cp_post_exit = behaviour after the exit (RVFI), classified AFTER the sampling event: the sample is taken at the window end and the bin is decided by what follows, so the observation runs to the first retirement at or after dpc, or for taken_after_nmi_mret to the NMI handler's mret, whichever the bin names; a window whose observation has not closed is not sampled: bins taken_before_first_insn{entry with no retirement at dpc}, not_taken{>= 1 retirement at/after dpc with the line still asserted and no entry}, taken_after_nmi_mret{debug_in_nmi_handler only: not taken at the dret, taken directly after the NMI handler's mret (F-IRQ-066)}
+  - cp_post_exit = behaviour after the exit (RVFI), classified AFTER the sampling event: the sample is taken at the window end and the bin is decided by the FIRST RVFI RECORD AFTER THE EXIT in record ORDER, not by comparing an address to dpc - a step window's next retirement is the debug ROM's, which is not at or after dpc, so a dpc comparison cannot discriminate there; a debug_in_nmi_handler window defers past the NMI handler's mret first and judges the records after it; a window whose deciding record settles nothing is still SAMPLED, with cp_post_exit in its ignore bin, so the window's other coverpoints keep the credit they earned, and only a debug_in_nmi_handler window still waiting for that mret after a bounded number of records is left unsampled: bins taken_before_first_insn{an interrupt entry is the first record after the exit, or in a debug_in_nmi_handler window an entry arrives before the handler's mret}, not_taken{the deciding record is an ordinary retirement and the line is still pending, mie-enabled for irq}, taken_after_nmi_mret{debug_in_nmi_handler only: not taken at the dret, taken directly after the NMI handler's mret (F-IRQ-066)}
   - cp_dcsr_prv = dcsr.prv (CSR model): bins m, u
   - cp_nmip_read iff (a csrr dcsr retires in the window) = irq_nm_i at the read: bins read_with_nmi_high, read_with_nmi_low (bit 3 is compared by the B5 owner item TP-DBG-021 only; TP-IRQ-041 masks it)
   - cp_exit_kind iff (the window ended) = how the window ended (RVFI): bins dret, step_complete{stepped instruction retires; debug re-entry}
@@ -2789,6 +2797,12 @@ Bin naming: `CG-PMP-nnn.cp_<name>.<bin>` for coverpoint bins and `CG-PMP-nnn.cr_
 ### CG-PMP-014: gen_cg_pmp_table_state
 - Features: F-PMP-015, F-PMP-042, F-PMP-046, F-PMP-047, F-PMP-053, F-PMP-056, F-PMP-052 (parent of
   folded bins hosted here)
+- Manifest expectation: EXPECTED FROM RANDOM TESTS (LOG-096). No test manifest declares a bin of this group
+  and none is owed. TP-PMP-100 and TP-PMP-106 are Phase 2 random items; the shape coverpoints below are not
+  driven on every run of any targeted entry; and sticky locking makes several of them one-way, so a per-run
+  declaration could not be kept. Credit comes from the merged report. Section 0's unbuilt-mark convention
+  describes the same built-and-undeclared state for the other three PMP covergroups as a transient one; here it
+  is permanent.
 - Sample: RVFI retire of any PMP CSR write (snapshot of the table after the write) and at each regime phase start; condition: at least one instruction retires before the next table change (otherwise the sample is discarded); anti-vacuity: only table changes sample; a hit proves a live configuration with the named shape was run under
 - Coverpoints:
   - cp_active = entries with A != PMP_MODE_OFF: bins n0{0}, n1{1}, n2_4{2..4}, n5_8{5..8}, n9_15{9..PMPNumRegions-1}, n16{PMPNumRegions}
