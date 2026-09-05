@@ -327,6 +327,14 @@ EXPORT_EVENT_LINE_PREFIX = "E "
 EXPORT_FIRST_LINE_MAX = 200
 EXPORT_EMITTED_UNOBSERVED = "no export file observed yet: a run of this build that writes an export file fills it (LOG-028a)"
 RETENTION_PRUNE_PURPOSES = (4,)
+# Export default: an entry in one of these feature groups writes the per-record export without naming the
+# plusarg, because a checker fire there is diagnosed from the record stream and nothing else in the run
+# directory retains it. Widening the scope is adding a group name; an entry that names the export plusarg
+# itself always keeps its own value.
+EXPORT_DEFAULT_FEATURE_GROUPS: tuple[str, ...] = ("irq",)
+EXPORT_DEFAULT_FILE = "gen_export.txt"
+# Where a run's export file name came from, recorded in result.yaml so a default is never mistaken for a choice.
+EXPORT_ORIGIN_ENTRY, EXPORT_ORIGIN_DEFAULT, EXPORT_ORIGIN_OPERATOR, EXPORT_ORIGIN_NONE = "entry", "default", "operator", "none"
 # program: the test's memory image comes from dv/auto_dv/stim/gen_program.py before the run.
 PROGRAM_TOOL = SOURCE_ROOT / "dv" / "auto_dv" / "stim" / "gen_program.py"
 PROGRAM_KEYS = ("riscv_dv_test", "directed", "generator", "generator_args", "seed", "extra_args", "spike_check")

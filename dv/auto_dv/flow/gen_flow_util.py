@@ -4,9 +4,11 @@ loading, deterministic seeds, bounded subprocesses and the LSF submit-and-watch 
 
 from __future__ import annotations
 
+import contextlib
 import datetime as _dt
 import fnmatch
 import hashlib
+import io
 import os
 import re
 import shlex
@@ -195,8 +197,10 @@ def remove_tree_guarded(path: Path, roots: tuple[Path, ...], what: str) -> int:
         die(f"refusing to remove {what} {p}: not under any of {[str(r) for r in roots if r is not None]} (A-002)")
     if p in {Path(r).resolve() for r in roots if r is not None}:
         die(f"refusing to remove {what} {p}: it is a root itself (A-002)")
+    if not p.exists():
+        die(f"refusing to remove {what} {p}: no such path (A-002)")
     if not p.is_dir():
-        die(f"refusing to remove {what} {p}: not an existing directory (A-002)")
+        die(f"refusing to remove {what} {p}: not a directory (A-002)")
     n = sum(1 for _ in p.rglob("*"))
     if n == 0:
         p.rmdir()
@@ -964,6 +968,30 @@ def self_test() -> int:
         and (rg / "outside").is_dir() and (C.REPO_ROOT / "ci" / "env.sh").is_file()
     ok &= cond
     print("SELF-TEST", "ok " if cond else "BAD", f"remove_tree_guarded (A-002): removes a listed directory under its own root and logs its entry count (1, then an empty one); refuses a path outside the given roots, a root itself, a missing path and a file: {refused}")
+    # export_file_for (export default): the entry's own value wins, a default-group entry with none gets one,
+    # any other entry gets none, and the default value is a plain name the loader's containment rule accepts.
+    grp = C.EXPORT_DEFAULT_FEATURE_GROUPS[0]
+    e_def = {"name": "gen_x", "plusargs": ["+gen_fetch_en_at_reset=0"], "feature_groups": [grp, "gen_x"]}
+    e_own = {"name": "gen_y", "plusargs": [f"+gen_export_file=own.txt"], "feature_groups": [grp]}
+    e_no = {"name": "gen_z", "plusargs": [], "feature_groups": ["cmp"]}
+    got = [export_file_for(e_def), export_file_for(e_own), export_file_for(e_no)]
+    dv = C.EXPORT_DEFAULT_FILE
+    cond = got == [(dv, C.EXPORT_ORIGIN_DEFAULT), ("own.txt", C.EXPORT_ORIGIN_ENTRY), (None, C.EXPORT_ORIGIN_NONE)] \
+        and bool(dv) and not Path(dv).is_absolute() and ".." not in Path(dv).parts
+    ok &= cond
+    print("SELF-TEST", "ok " if cond else "BAD", f"export_file_for (export default): groups {list(C.EXPORT_DEFAULT_FEATURE_GROUPS)} default to {dv}; an entry naming its own keeps it; others get none: {got}")
+    # A-002 diagnostics name the two causes apart: a path that is not there and a path that is a file.
+    msgs = []
+    for target in (rg / "gone", C.ENV_SH):
+        buf = io.StringIO()
+        try:
+            with contextlib.redirect_stderr(buf):
+                remove_tree_guarded(target, (rg.parent, C.REPO_ROOT), "self-test dir")
+        except SystemExit:
+            msgs.append(buf.getvalue().strip())
+    cond = len(msgs) == 2 and "no such path" in msgs[0] and "not a directory" in msgs[1] and C.ENV_SH.is_file()
+    ok &= cond
+    print("SELF-TEST", "ok " if cond else "BAD", f"remove_tree_guarded names a missing path and a file differently: {[m.split(': ')[-1] for m in msgs]}")
     remove_selftest_tree(rg)
     # Build-input gate (dv/auto_dv/docs/gen_build_input_gate_rule.md): red cases 1-11 on fabricated name lists, 13 on the list.
     gate_cases = (
@@ -1676,6 +1704,22 @@ def plusarg_enabled(plusargs: list[str], name: str) -> bool:
             val = pa.split("=", 1)[1] if "=" in pa else "1"
             return val.strip() not in ("0", "")
     return False
+
+
+def export_file_for(test: dict[str, Any]) -> tuple[str | None, str]:
+    """The export file a run of this entry writes and where the name came from: the entry's own plusarg, the
+    feature-group default (C.EXPORT_DEFAULT_FEATURE_GROUPS), or none. One function, so the run's argv and the
+    retention plan cannot disagree about which runs have an export file."""
+    by_ident = {ident: n for n, ident in C.sv_plusarg_names().items()}
+    name = by_ident.get(C.SV_PLUSARG_EXPORT_FILE)
+    if not name:
+        return None, C.EXPORT_ORIGIN_NONE
+    own = [plusarg_value(pa) for pa in test.get("plusargs") or [] if plusarg_name(pa) == name]
+    if own:
+        return (own[0] or None), C.EXPORT_ORIGIN_ENTRY
+    if set(test.get("feature_groups") or []) & set(C.EXPORT_DEFAULT_FEATURE_GROUPS):
+        return C.EXPORT_DEFAULT_FILE, C.EXPORT_ORIGIN_DEFAULT
+    return None, C.EXPORT_ORIGIN_NONE
 
 
 def test_by_name(testlist: dict[str, Any], name: str) -> dict[str, Any]:

@@ -1,0 +1,124 @@
+# Export default: the red, the live pair and the scope, Runtime flow
+#
+# WHAT LANDS. An entry whose feature groups meet C.EXPORT_DEFAULT_FEATURE_GROUPS writes the per-record export
+# without naming the plusarg. The scope is ("irq",), ruled by the Orchestrator; widening is adding a group name.
+#
+# WHY. A checker fire is diagnosed from the record stream and nothing else in the run directory retains one. Of
+# the 403-run wave at 4017573, 96 runs failed: 75 were fcov-expectation failures whose result.yaml names the
+# missing bins and needed no re-run, and 21 were checker or assertion fires that did. All 21 are gen_test_irq_basic
+# and its red fixture. That measurement is the scope's justification and it is why the default is not wider.
+#
+# ONE READING THE ORCHESTRATOR SHOULD SEE RATHER THAN FIND. The ruling's words were "entries carrying a fire
+# check (the irq family)". In this tree a fire check is the fire_check() hook, which every gen_test_ entry has,
+# so that reading covers 54 of round 2's 56 planned runs and CONTAINS every measured entry, which is the scope
+# the same ruling excluded. The parenthetical is the reading that satisfies both halves, and it is the one built.
+
+================================================================
+# SECTION 1: THE RED, live, on one entry and one seed
+# stamp 2026-09-05T12:26:24Z  host soc-l-11  driver trees are archives of edbe8214c15893ec2c083d5a9938aafab5893103
+#
+# Same entry, same seed, same already-built simv, same mirror. The two driver trees differ in exactly four
+# files: gen_flow_const.py, gen_flow_util.py, gen_run.py, gen_regress.py. Nothing else varies.
+#   build   /proj_soc/user_dev/fzhang/ibex_dv_out/regress_chkfix/build/gen_tb  (compiled at 9c7f8f6)
+#   mirror  /proj_soc/user_dev/fzhang/ibex_dv_mirror_head/9c7f8f63957d, checked by the run against the build's record
+#   entry   gen_test_irq_basic   seed 1005939007   testlist taken from the mirror for BOTH runs
+
+PRE  (committed flow code)
+    verdict        PASS
+    reason         no collected failure mechanism; end marker and config banner present
+    export_file    None
+    export_origin  None
+    header sources None
+    gen_export.txt ABSENT from the run directory
+
+POST (the change)
+    verdict        PASS
+    reason         no collected failure mechanism; end marker and config banner present
+    export_file    /proj_soc/user_dev/fzhang/ibex_dv_out/expdef_red/post/gen_test_irq_basic_1005939007/gen_export.txt
+    export_origin  default
+    header sources ['ibus', 'dbus', 'pin', 'alert', 'misc', 'scrkey', 'regime']
+    gen_export.txt present, 152068 bytes
+
+RED: the pre-change run records export_file null and its run directory holds no gen_export.txt, so a checker
+fire in that run would leave nothing per-record behind. GREEN: the post-change run writes the stream and says
+the name came from the default rather than from a choice.
+
+THE VERDICT IS UNCHANGED, AND THAT WAS THE RISK WORTH CHECKING. export_check fails a PASS run that names an
+export file and writes none or writes one without a header, so a default turned on carelessly could turn passing
+runs into failures. It does not: the header carries all seven sources the build declares and the check passes.
+
+================================================================
+# SECTION 2: WHAT THE STREAM COSTS, measured on this run rather than on the storm fixtures
+
+  152068 bytes, 405 R lines, cycles 81 to 8735
+  375.5 bytes per retired record;  17.57 bytes per cycle
+
+A CORRECTION TO MY OWN EARLIER FIGURE, recorded here because it travelled to the DV Lead before it was checked.
+I first sized the export by CYCLES at 77.3 bytes each, a rate taken from the six retained files under
+probe_t150_979350a. Those are storm fixtures whose purpose is to fire every event source, and they are not
+representative of a program run: this run writes 17.6 bytes per cycle against their 69 to 109. Bytes per RECORD
+is the stable quantity, 302 to 531 across all seven files against a factor of 6.2 for bytes per cycle, because
+the R lines scale with the program and the E lines with bus activity that a storm maximises.
+
+  Re-derived per scope over round 2's 56 planned runs, each entry sized by its own mean retired-record count
+  from round 1, and the irq entry by the 35 wave runs that report one:
+
+    scope                                    runs   records    export at 375 to 531 B/record
+    irq family (the landed scope)               3    11,373    4.3 to 6.0 MB
+    every measured entry                       45   390,167     147 to 207 MB
+    every fire-check entry (gen_test_)         54   405,925     152 to 216 MB
+
+  Round 1's whole out-tree is 319 MB. A purpose-4 round already prunes the export from every PASS and RED-OK
+  run unless the entry sets keep_artifacts, so these are PEAK figures during a round, not what survives it.
+
+================================================================
+# SECTION 3: the self-tests
+# stamp 2026-09-05T12:26:24Z  host soc-l-11  clone working tree over edbe8214c15893ec2c083d5a9938aafab5893103
+
+=== gen_flow_util.py --self-test   (filter: the export-default and A-002 lines, plus the suite verdict)
+  SELF-TEST ok  export_file_for (export default): groups ['irq'] default to gen_export.txt; an entry naming its own keeps it; others get none: [('gen_export.txt', 'default'), ('own.txt', 'entry'), (None, 'none')]
+  SELF-TEST ok  remove_tree_guarded names a missing path and a file differently: ['no such path (A-002)', 'not a directory (A-002)']
+  SELF-TEST: PASS
+
+=== gen_run.py --self-test   (filter: the export-default and A-002 lines, plus the suite verdict)
+  SELF-TEST ok  effective_plusargs export default: default added once (['+gen_fetch_en_at_reset=0', '+gen_export_file=gen_export.txt']), entry value kept, operator wins, non-default entry untouched
+  SELF-TEST ok  export_origin records which of the three named the file: ['default', 'entry', 'operator', 'none']
+  SELF-TEST: PASS
+
+=== gen_regress.py --self-test   (filter: the export-default and A-002 lines, plus the suite verdict)
+  SELF-TEST ok  prune_plan sees the export default: a irq entry naming no plusarg is planned for pruning, a non-default entry is not: [('gen_d', 'gen_export.txt')]
+  SELF-TEST: PASS
+
+================================================================
+# SECTION 4: the retention rule sees the default
+
+prune_plan and the run's argv read ONE predicate, gen_flow_util.export_file_for, so a defaulted export is
+pruned by exactly the rule that prunes a named one. The self-test above proves it on a fabricated entry that
+names no plusarg and carries the default feature group: it is planned for pruning with the default file name,
+and a non-default entry beside it is not. The case uses its own testlist so the counts the existing retention
+cases assert are not perturbed.
+
+================================================================
+# SECTION 5: the default does not refuse the entry when it is promoted to measured
+# stamp 2026-09-05T12:38:33Z
+
+The default adds a plusarg to the list measured_refusal judges (gen_run.py:53 and :248 read one expression), so a
+promotion of the irq entry to measured could have been refused by a gate that never saw that knob before. Checked
+rather than assumed, on the real testlist entry with measured forced true:
+
+  effective plusargs  ['+gen_fetch_en_at_reset=0', '+gen_knob_irq_line_mix=single', '+gen_export_file=gen_export.txt']
+  measured_refusal    None
+  export_origin       default
+  gen_export_file in debug_only_plusargs?  False
+  MEASURED_KNOB_CONDITIONS triggers  ['gen_knob_icache_ecc_err_rate', 'gen_knob_icache_data_ecc_err_rate']
+
+Neither gate engages: the export knob is not debug-only, and both LOG-077 rows trigger on the icache ECC rate
+knobs. The entry is measured false today; this is the check that the default will not block the promotion the
+round-2 scope has for it.
+
+ONE GAP NAMED RATHER THAN LEFT. The loader's containment rule, that an export file is a plain name inside the run
+directory, is applied to plusargs an ENTRY lists, and a defaulted export never passes through it. The default value
+is a constant, so containment holds by construction, and the self-test asserts that constant is non-empty, not
+absolute and free of "..". A future scope that computed a file name per entry would have to route it through the
+loader's rule instead.
+

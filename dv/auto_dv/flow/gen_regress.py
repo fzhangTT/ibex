@@ -278,8 +278,8 @@ def export_plusarg_name() -> str | None:
 def prune_plan(runs: list[dict[str, Any]], testlist: dict[str, Any], purpose: int | None,
                export_plusarg: str | None) -> tuple[list[tuple[dict[str, Any], str]], int]:
     """Retention ruling: which runs lose their export file, and how many were spared by keep_artifacts.
-    Only purposes in RETENTION_PRUNE_PURPOSES, only PASS / RED-OK verdicts, only tests whose entry names an
-    export file through the export plusarg."""
+    Only purposes in RETENTION_PRUNE_PURPOSES, only PASS / RED-OK verdicts, only tests that write an export
+    file, whether the entry names it or the feature-group default gives it one."""
     plan: list[tuple[dict[str, Any], str]] = []
     kept = 0
     if purpose not in C.RETENTION_PRUNE_PURPOSES or not export_plusarg:
@@ -288,13 +288,14 @@ def prune_plan(runs: list[dict[str, Any]], testlist: dict[str, Any], purpose: in
         if r["verdict"] not in (C.VERDICT_PASS, C.VERDICT_RED_OK):
             continue
         t = U.test_by_name(testlist, r["test"])
-        files = [U.plusarg_value(pa) for pa in t.get("plusargs") or [] if U.plusarg_name(pa) == export_plusarg]
-        if not files or not files[0]:
+        # The same predicate the run's argv came from, so a defaulted export is pruned like a named one.
+        fname, _origin = U.export_file_for(t)
+        if not fname:
             continue
         if t.get("keep_artifacts"):
             kept += 1
             continue
-        plan.append((r, files[0]))
+        plan.append((r, fname))
     return plan, kept
 
 
@@ -412,6 +413,15 @@ def self_test() -> int:
     plan_none, _ = prune_plan(rr, tl3, 4, None)
     cond = plan1 == [] and kept1 == 0 and plan_none == []
     ok &= cond; print("SELF-TEST", "ok " if cond else "BAD", "prune_plan: purposes 1-3 keep everything; no export knob means nothing to prune")
+    # A run whose export came from the feature-group default is retained by the same rule as a named one; its
+    # own testlist, so the counts asserted above are not perturbed.
+    grp = C.EXPORT_DEFAULT_FEATURE_GROUPS[0]
+    tl4 = {"tests": [{"name": "gen_d", "plusargs": [], "feature_groups": [grp]},
+                     {"name": "gen_dn", "plusargs": [], "feature_groups": ["cmp"]}]}
+    rr4 = [{"test": "gen_d", "verdict": C.VERDICT_PASS}, {"test": "gen_dn", "verdict": C.VERDICT_PASS}]
+    plan4, kept4 = prune_plan(rr4, tl4, 4, "gen_export_file")
+    cond = [(r["test"], f) for r, f in plan4] == [("gen_d", C.EXPORT_DEFAULT_FILE)] and kept4 == 0
+    ok &= cond; print("SELF-TEST", "ok " if cond else "BAD", f"prune_plan sees the export default: a {grp} entry naming no plusarg is planned for pruning, a non-default entry is not: {[(r['test'], f) for r, f in plan4]}")
     # prune_exports on disk: the file goes, result.yaml records the path; a run without the file records an empty list.
     import tempfile
     with tempfile.TemporaryDirectory(prefix="gen_regress_selftest_", dir=C.selftest_tmp()) as td:

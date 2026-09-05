@@ -216,9 +216,24 @@ def export_check(res: dict[str, Any], build: dict[str, Any], argv: list[str], ru
 
 def effective_plusargs(test: dict[str, Any], extra_plusargs: list[str]) -> list[str]:
     """The plusargs a run carries: the entry's, an operator plusarg replacing a same-name entry plusarg (compose appends
-    exactly this list to the simv argv, and VCS takes the first occurrence)."""
+    exactly this list to the simv argv, and VCS takes the first occurrence), plus the export file an entry gets by
+    default when its feature groups ask for one and neither the entry nor the operator names it."""
     extra_names = {U.plusarg_name(x) for x in extra_plusargs}
-    return [x for x in test["plusargs"] if U.plusarg_name(x) not in extra_names] + list(extra_plusargs)
+    out = [x for x in test["plusargs"] if U.plusarg_name(x) not in extra_names] + list(extra_plusargs)
+    fname, origin = U.export_file_for(test)
+    name = {ident: n for n, ident in C.sv_plusarg_names().items()}.get(C.SV_PLUSARG_EXPORT_FILE)
+    if origin == C.EXPORT_ORIGIN_DEFAULT and fname and name and name not in extra_names:
+        out.append(f"+{name}={fname}")
+    return out
+
+
+def export_origin(test: dict[str, Any], extra_plusargs: list[str]) -> str:
+    """Where the run's export file name came from, for the record: an operator plusarg outranks both the entry
+    and the default, so a reader is never told "default" about a name the operator chose."""
+    name = {ident: n for n, ident in C.sv_plusarg_names().items()}.get(C.SV_PLUSARG_EXPORT_FILE)
+    if name and name in {U.plusarg_name(x) for x in extra_plusargs}:
+        return C.EXPORT_ORIGIN_OPERATOR
+    return U.export_file_for(test)[1]
 
 
 def measured_refusal(test: dict[str, Any], extra_plusargs: list[str], testlist: dict[str, Any], measured: bool, coverage: bool) -> str | None:
@@ -273,6 +288,26 @@ def self_test() -> int:
     case("knob narrowed, header a subset: PASS kept", [f"+{efile}=exp.txt", f"+{esrc}=ibus"], "# gen_export v1 sources=ibus", C.VERDICT_PASS, "decided")
     case("knob narrowed, header names a source the build cannot emit: FAIL", [f"+{efile}=exp.txt", f"+{esrc}=pin"], "# gen_export v1 sources=pin", C.VERDICT_FAIL, "emitted mismatch")
     case("a FAIL stays FAIL with its own reason", [f"+{efile}=exp.txt"], None, C.VERDICT_FAIL, "decided", verdict=C.VERDICT_FAIL)
+
+    # export default: an entry in a default feature group gets the export file and says where it came from;
+    # the entry's own value and an operator plusarg both outrank the default.
+    grp = C.EXPORT_DEFAULT_FEATURE_GROUPS[0]
+    t_def = {"name": "gen_x", "plusargs": ["+gen_fetch_en_at_reset=0"], "feature_groups": [grp]}
+    t_own = {"name": "gen_y", "plusargs": [f"+{efile}=own.txt"], "feature_groups": [grp]}
+    t_no = {"name": "gen_z", "plusargs": ["+gen_fetch_en_at_reset=0"], "feature_groups": ["cmp"]}
+    got_def, got_own = effective_plusargs(t_def, []), effective_plusargs(t_own, [])
+    got_op = effective_plusargs(t_def, [f"+{efile}=op.txt"])
+    got_no = effective_plusargs(t_no, [])
+    cond = (got_def == ["+gen_fetch_en_at_reset=0", f"+{efile}={C.EXPORT_DEFAULT_FILE}"]
+            and got_own == [f"+{efile}=own.txt"]
+            and got_op == ["+gen_fetch_en_at_reset=0", f"+{efile}=op.txt"]
+            and got_no == ["+gen_fetch_en_at_reset=0"])
+    ok &= cond
+    print("SELF-TEST", "ok " if cond else "BAD", f"effective_plusargs export default: default added once ({got_def}), entry value kept, operator wins, non-default entry untouched")
+    origins = [export_origin(t_def, []), export_origin(t_own, []), export_origin(t_def, [f"+{efile}=op.txt"]), export_origin(t_no, [])]
+    cond = origins == [C.EXPORT_ORIGIN_DEFAULT, C.EXPORT_ORIGIN_ENTRY, C.EXPORT_ORIGIN_OPERATOR, C.EXPORT_ORIGIN_NONE]
+    ok &= cond
+    print("SELF-TEST", "ok " if cond else "BAD", f"export_origin records which of the three named the file: {origins}")
     # Measured-run refusals on the effective plusargs (entry + operator, operator replacing).
     tl = {"debug_only_plusargs": ["gen_dbg_x", C.PLUSARG_PROBE_IC_LOOKUP]}
     entry = {"name": "gen_t", "plusargs": ["+gen_fetch_en_at_reset=0"]}
@@ -486,6 +521,7 @@ def main() -> int:
         "expected_fail": bool(test.get("expected_fail")), "red_fixture": bool(test.get("red_fixture")),
         "red_expect": test.get("red_expect"), "owner": test["owner"], "witness": witness,
         "export_header_sources": export_header, "export_file": str(export_file) if export_file else None,
+        "export_origin": export_origin(test, a.plusarg),
         "export_sources_declared": build.get("export_sources_declared"),
         "fcov_expectation_file": test.get("fcov_expectation_file"), "fcov_check": None, "lsf": lsf,
         "cocotb_module": test.get("cocotb_module"), "mirror": mirror_used, "program": program_rec,

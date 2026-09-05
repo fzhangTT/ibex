@@ -1053,6 +1053,23 @@ a single token, `['+define+RVFI']`, while the recorded `command` carried nine de
 extension, and a live diagnosis nearly concluded a correct build was missing that extension. A field that
 answers a narrower question than its name suggests is worse than no field.
 
+THE EXPORT IS ON BY DEFAULT FOR ONE FAMILY. An entry whose `feature_groups` meet
+`C.EXPORT_DEFAULT_FEATURE_GROUPS` writes the per-record export without naming the plusarg; the value is
+`C.EXPORT_DEFAULT_FILE`. The scope is `("irq",)` today. One predicate, `gen_flow_util.export_file_for`, answers
+both "what does this run's argv carry" (`gen_run.effective_plusargs`) and "what does retention prune"
+(`gen_regress.prune_plan`), so a defaulted export cannot be written and then left unpruned. `result.yaml` records
+`export_origin`, one of entry, default, operator or none, so a default is never read as somebody's choice; an
+operator plusarg outranks both the entry and the default. Widening the scope is adding a group name and
+re-measuring nothing.
+
+WHY THAT SCOPE AND NOT EVERY MEASURED ENTRY. Of the 403-run wave at 4017573, 96 runs failed. 75 were
+fcov-expectation failures whose `result.yaml` already names the missing bins, and none needed a re-run; 21 were
+checker or assertion fires that did, and all 21 were `gen_test_irq_basic` and its red fixture. A wider default
+would buy record streams for failures that were diagnosed without them. Sizing, on the record basis: over round
+2's 56 planned runs the irq family writes 4 to 6 MB, every measured entry 147 to 207 MB, every entry with a
+fire-check hook 152 to 216 MB. Those are PEAK figures during a round: a purpose-4 round already prunes the export
+from every PASS and RED-OK run unless the entry sets `keep_artifacts`.
+
 THE REGRESSION MANIFEST COPIES THEM UNDER NEW NAMES, AND THE OLD NAMES ARE GONE. The coverage record carries
 `build_defines_all` and `build_parameters_all` per build (`gen_regress.py`), never the former `build_defines`
 and `build_parameters`. The rename is not cosmetic: the old `build_defines` held the entry's one-token group
