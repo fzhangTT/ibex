@@ -408,8 +408,8 @@ def self_test():
         ('a wrong restated plan run count fails', r"(\| THE ROUND'S PLAN AT \w+ \| 20 \| )56 \|", r'\g<1>57 |'),
         ('a wrong open-condition count fails', r'Three of the six are open at this commit',
          'Four of the six are open at this commit'),
-        # The cell M-2 was about: a status that opens with its history and says CLOSED further in. Counting
-        # cells that START with open read this as closed, so an open condition passed the count.
+        # A status cell that leads with its history and says CLOSED further in must fail classification
+        # rather than count as closed.
         ('a condition cell that begins with neither open nor closed fails',
          r'\| a \| the irq_entry checker item classified and fixed \| CLOSED at 5f9bea6',
          '| a | the irq_entry checker item classified and fixed | fixed at b9e5fad; CLOSED at 5f9bea6'),

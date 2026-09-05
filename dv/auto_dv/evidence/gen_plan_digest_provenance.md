@@ -24,13 +24,13 @@ that has moved rather than like an absent input; a reviewer running it from a re
 that.
 
     $ sha256sum dv/auto_dv/work/dv-lead/gen_build_docs.py | cut -c1-16
-    598fcfc9ba8dfc1f
+    3c6fc6dc85bb7ecc
 
     $ python3 -c "import hashlib,pathlib; W=pathlib.Path('dv/auto_dv/work/dv-lead'); fs=[f for f in sorted((W/'parts').glob('*'))+sorted((W/'parts6').glob('*')) if f.is_file()]; assert fs, 'no part files here: dv/auto_dv/work/dv-lead is gitignored and absent from a plain checkout'; h=hashlib.sha256(); [(h.update(f.name.encode()), h.update(f.read_bytes())) for f in fs]; print(h.hexdigest()[:12])"
     916cc594a845                                  # the parts alone
 
     $ python3 -c "import hashlib,pathlib; W=pathlib.Path('dv/auto_dv/work/dv-lead'); fs=[f for f in sorted((W/'parts').glob('*'))+sorted((W/'parts6').glob('*')) if f.is_file()]; me=W/'gen_build_docs.py'; assert fs and me.is_file(), 'no parts or no generator here: dv/auto_dv/work/dv-lead is gitignored and absent from a plain checkout'; h=hashlib.sha256(); [(h.update(f.name.encode()), h.update(f.read_bytes())) for f in fs]; h.update(me.name.encode()); h.update(me.resolve().read_bytes()); print(h.hexdigest()[:12])"
-    cdb6e3abfe31                                  # the parts and then the generator, which is what the
+    18db40ef7371                                  # the parts and then the generator, which is what the
                                                   # header carries today
 
 ## What it settles
@@ -41,15 +41,16 @@ that.
 | 4f2b578 | 86c54a6a6319 | the provenance touch itself: the generator became an input |
 | 66a4f48 | 266624bb25d4 | the rule (b) clarification, a generator edit |
 | ef2385a | f9a685486369 | v3.4 and the recording sentence, a generator edit |
-| the commit carrying this row | cdb6e3abfe31 | the rev78 answer: the three headers name what the digest covers and point here, and Section 0's recording rule points here; a generator edit |
+| 9a8d852 | cdb6e3abfe31 | the rev78 answer: the three headers name what the digest covers and point here, and the fcov plan's Section 0 recording rule points here; a generator edit |
+| the commit carrying this row | 18db40ef7371 | the code-comment rule taking its home in gen_test_plan.md Section 0; a generator edit |
 
 The parts-only digest of the tree TODAY is 916cc594a845, which is exactly the digest the documents carried
 before the provenance touch. So no part file has changed across any of these touches, and every digest
 movement since is the generator's own source, which is what those commit messages said. The parts+generator
-digest of the tree today, cdb6e3abfe31, is what the three documents in the commit carrying this row carry, so
-the tree reproduces the committed header. The row above it, f9a685486369, is what those documents carried at
-ef2385a, and the movement between the two is this touch's generator edit and nothing else: the parts-only
-digest is the same number on both sides of it.
+digest of the tree today, 18db40ef7371, is what the three documents in the commit carrying this row carry, so
+the tree reproduces the committed header. The row above it, cdb6e3abfe31, is what those documents carried at
+9a8d852, and the movement between the two is this touch's generator edit and nothing else: the parts-only
+digest is the same number on both sides of it, as it is on both sides of every row in this table.
 
 ## Why this file exists rather than a sentence in a commit message
 

@@ -344,8 +344,11 @@ earlier version of this sentence merged them. The entry's own row in the wave re
 index says those figures are each run's own checker verdict) IS a coverage refusal: one run's verdict against
 the 179-bin set refused on the single cross leg, and that leg left the set when the manifest was re-rendered
 at 9c28944 to 178. The other figure, a generator assert producing no program rather than refusing on coverage,
-belongs to the PMP blocks at 218e9f3 and 4cd3ff6; the same wave record states that this entry produced a
-program at all forty seeds, so that cause is not its own. I carried the PMP cause onto this entry from a
+belongs to the PMP blocks at 218e9f3 and 4cd3ff6, WHERE THIS ENTRY'S OWN GENERATOR IS WHAT ASSERTED:
+gen_tdd_batch3.md records gen_pmp_csr_warl_prog.py:615 asserting on its own draw at seed 230969025, with the
+message naming TP-PMP-003. What separates the two figures is the COMMIT and not the generator: those blocks
+are pinned before the Test Writer's backstop landed and the wave at 4017573 is after it, which is why the
+wave record reads a program at all forty seeds there. I carried the PMP cause onto this entry from a
 message instead of reading the census. The four that were not measured over forty seeds
 are gen_test_csr_access, gen_test_csr_trap_setup, gen_test_isa_alu and gen_test_isa_cti, whose declared sets
 are the round-1 sets calibrated to three seeds.
