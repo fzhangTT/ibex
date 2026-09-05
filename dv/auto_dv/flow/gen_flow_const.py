@@ -511,6 +511,10 @@ NOT_APPLICABLE = "n/a"
 # Gate and stopping rule (DV_prompt Section 4): 80 percent per gated metric; a round shows gain
 # when a gated metric improves by at least G points; stop after N consecutive rounds without gain.
 # A metric URG does not report is n/a: excluded from the gate and from the gain computation.
+# The fcov checker's unmet-bin reason. One source: gen_fcov reports it, the testlist loader looks for it in a
+# red fixture's signature, so neither carries a copy of the other's text.
+FCOV_UNMET_REASON = "fcov expectation unmet"
+
 GATE_PCT = 80.0
 ROUND_GAIN_G = 0.5
 ROUND_NO_GAIN_N = 5

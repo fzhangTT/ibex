@@ -427,6 +427,9 @@ def self_test() -> int:
                 ("red_expect matching the empty string (.*)", lambda d: d["tests"][0].update(red_fixture=True, measured=False, red_expect=".*")),
                 ("red_expect matching the empty string (x?)", lambda d: d["tests"][0].update(red_fixture=True, measured=False, red_expect="x?")),
                 ("red_expect matching the empty string (^)", lambda d: d["tests"][0].update(red_fixture=True, measured=False, red_expect="^")),
+                ("rt37: red_expect naming the fcov unmet reason with no fcov_expectation_file",
+                    lambda d: d["tests"][0].update(red_fixture=True, measured=False, fcov_expectation_file=None,
+                                                   red_expect=r"fcov expectation unmet: [0-9]+ declared bin\(s\) not hit .*gen_x_cg\.cp_y\.b")),
                 ("program with generator and directed", lambda d: d["tests"][0].update(program={"generator": "dv/auto_dv/flow/gen_stim.py", "directed": ["x.S"], "seed": "run"})),
                 ("program.generator naming a missing script", lambda d: d["tests"][0].update(program={"generator": "dv/auto_dv/tests/gen_programs/gen_missing_prog.py", "seed": "run"})),
                 ("program.generator_args without generator", lambda d: d["tests"][0].update(program={"directed": ["dv/auto_dv/stim/gen_directed/gen_zc_directed.S"], "generator_args": ["--red"], "seed": "run"})),
@@ -1495,6 +1498,12 @@ def load_testlist(path: Path = C.TESTLIST_YAML) -> dict[str, Any]:
                     and C.RED_EXPECT_FIRE_TOKEN not in rx:
                 die(f"{path}: test {t['name']}: red_expect {rx!r} matches the {C.RED_EXPECT_HARNESS_PREFIX} harness line but names no "
                     f"{C.RED_EXPECT_FIRE_TOKEN} id (policy {C.RED_EXPECT_POLICY_FIRE_ID}: the designed fire id is on that line)")
+            # rt37: a signature only the fcov checker can produce needs a manifest to produce it. Without one the
+            # fixture is graded on its sim log (red_grading_deferred is false), so red_expect can never match.
+            if not t.get("fcov_expectation_file") and C.FCOV_UNMET_REASON in rx:
+                die(f"{path}: test {t['name']}: red_expect {rx!r} matches the fcov checker's unmet-bin reason but "
+                    f"the entry names no fcov_expectation_file; only the coverage check emits that line, and "
+                    f"without a manifest the fixture is graded on its sim log, so the signature can never match")
             # The signature must match the fixture's own retained pinned-red log when one exists.
             chk = red_signature_check(t)
             if chk and chk["refuse"]:

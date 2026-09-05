@@ -47,7 +47,7 @@ BIN_RE = re.compile(r"^(gen_\w+)\.([A-Za-z_]\w*)\.([^.\s]+)$")
 QUOTED_BIN_LINE_RE = re.compile(r"""^\s*-\s*["']""")
 RESULT_LINE_RE = re.compile(r"^FCOV-EXPECTATION: (\S+) = (HIT|UNHIT|MISSING-FROM-REPORT) \(count=(\S+)\)")
 STATUS_BY_EXIT = C.FCOV_EXIT_CODES
-REASON_UNMET = "fcov expectation unmet"
+REASON_UNMET = C.FCOV_UNMET_REASON
 REASON_UNVERIFIABLE = "fcov expectation unverifiable"
 CAUSE_NO_GRPINFO = "per-test urg report has no grpinfo.txt (no covergroup in this vdb)"
 CAUSE_URG_FAILED = "per-test urg report failed"
