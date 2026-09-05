@@ -1,0 +1,288 @@
+# Round-2 request: the second measured coverage run (acceptance form)
+
+DV Lead request to the Runtime Manager, copied to the Orchestrator. It states what round 2 selects, how many
+seeds each entry runs and why, what the round costs, what each entry is expected to do, and what acceptance
+means. It is submitted before the round and reviewed before dispatch.
+
+Round 1 is the team's first measured coverage run: evidence `dv/auto_dv/evidence/gen_round_0`, regression tag
+`round_1`, pinned at 4a00702, outcome 53 of 53 runs clean and 36 of 36 fcov checks passing. Its records are
+`gen_round1_credit/`, `gen_round1_promotion_table.md` and `gen_round1_covergroup_set.md` at 0203c6e.
+
+THE ONE THING THIS FORM DECIDES THAT ROUND 1 DID NOT. Round 1 ran three seeds per measured entry because
+three is what the entries already declared. This form does not inherit that. It asks for a rule that ties an
+entry's seed count to evidence, applies the rule per entry, and states what the answer costs.
+
+## 1. Scope, and what the round selects
+
+`gen_round.py --round 2` runs tier full with coverage. Tier full is a rank, not the whole testlist: the
+selector keeps an entry when `C.TIER_RANK[t["tier"]] <= rank` over `{smoke: 0, targeted: 1, full: 2}`, and the
+check tier is absent from that map with its own branch that only a tier of exactly `check` reaches
+(gen_flow_util.py:1618-1631). Derived by CALLING the selector at 0203c6e with base seed 20260904:
+
+| tier | entries | runs | of which measured |
+|---|---|---|---|
+| smoke | 16 | 44 | 36 |
+| targeted | 3 | 9 | 0 |
+| THE STATE AT 0203c6e | 19 | 53 | 36 |
+
+That table is the state at 0203c6e, NOT the round's plan. Round 2's entry set is whatever the selector returns
+at the round's own commit, and the round-2 scope (LOG-097) expects these to land first: PMP step 1 (four
+covergroups and the flip of `gen_test_pmp_csr_warl`, `gen_test_pmp_mseccfg` and `gen_test_pmp_lock` to
+measured), IRQ step 1 (four covergroups, a new owning entry and its manifest), the generator fixes, the
+LSU/ECC/timing shapes, and the manifest-semantics change. The selector is called again at the round's commit
+and this section is restated from that call before dispatch; no stored list is used.
+
+THE GATING CONDITION IS NOT THE MEASURED SET. gen_round indexes a round only when the regression is clean,
+where clean counts fail plus timeout plus not_run over ALL selected runs. One unmeasured run can refuse the
+round while contributing nothing to the coverage merge, so this form states an expected outcome for every
+selected run.
+
+## 2. Base seed, pinned
+
+`--base-seed 20260905`, and it must be passed. Without it gen_regress sets the base from the dispatch start
+time (`gen_regress.py:613-614`, `a.base_seed = int(start) & 0x7FFFFFFF`), which makes the round's seeds
+unreproducible. 20260905 is chosen because it is already measured as disjoint from round 1: the round-1 form
+recorded that 0 of the 36 measured seed values at base 20260904 are shared with base 20260905. Re-derive that
+over the round-2 plan before dispatch, because the plan's entry set will differ.
+
+## 3. Seed counts: the rule, and the measurement that decides it
+
+### 3.1 The rule I am asking the round to adopt
+
+    An entry's seed count in a measured round may not exceed the number of seeds
+    its fcov manifest has been measured over.
+
+A manifest is a PER-RUN guarantee: every declared bin must be hit in every run. The round-1 declared sets were
+built by REMOVING exactly the bins that missed within three seeds, so they are calibrated to three seeds by
+construction. Raising the seed count without re-measuring the manifests does not make the round a better
+measurement; it makes it a wager on 2895 declared bins that nobody has priced. Section 3.2 prices it.
+
+The rule already exists for new entries, where it is stated as the 40-seed manifest measurement. This
+generalises it to entries that already exist, and makes it checkable.
+
+### 3.2 How much margin each declared set actually has
+
+Round 1 passed 36 of 36 fcov checks and 8685 of 8685 bin checks, every bin HIT, none missing from any run. That
+is the whole of what a pass tells you, and it is not enough to decide a seed count. The round's manifest also
+records the HIT COUNT of every declared bin in every run, so the margin can be measured instead of assumed.
+
+For each declared bin I took the SMALLEST hit count it reached across the entry's three runs. A bin whose
+smallest count is 1 occurred exactly once in the thinnest run of the three: it passed, with no margin at all,
+and nothing in the round establishes that it occurs in a fourth run.
+
+| entry | declared bins | bins hit exactly once in their thinnest run | share | median smallest count |
+|---|---|---|---|---|
+| gen_test_csr_access | 4 | 0 | 0.0% | 80 |
+| gen_test_isa_cti | 184 | 1 | 0.5% | 118 |
+| gen_test_isa_alu | 563 | 30 | 5.3% | 33 |
+| gen_test_csr_trap_setup | 146 | 12 | 8.2% | 14 |
+| gen_test_cmp_zca | 300 | 81 | 27.0% | 5 |
+| gen_test_mul_div | 196 | 55 | 28.1% | 4 |
+| gen_test_isa_shift | 120 | 35 | 29.2% | 5 |
+| gen_test_cmp_zcb | 96 | 32 | 33.3% | 4 |
+| gen_test_bit_ratified | 617 | 276 | 44.7% | 2 |
+| gen_test_cmp_zcmp_basic | 325 | 193 | 59.4% | 1 |
+| gen_test_rst_boot | 6 | 4 | 66.7% | 1 |
+| gen_test_mul_mul | 338 | 244 | 72.2% | 1 |
+| ALL TWELVE | 2895 | 963 | 33.3% | - |
+
+963 of the 2895 declared bins, a third of the round's per-run guarantees, were hit exactly once in their
+thinnest run. 1327 of them, 45.8 percent, were hit three times or fewer. Four entries carry a median smallest
+count of 1 or 2, meaning most of their declared bins have no margin, not a few.
+
+That is the price of a seed rise, measured rather than modelled, and it is why the answer to "run more seeds"
+is not simply yes. The supporting arithmetic points the same way: a bin kept because it was hit at 3 of 3
+seeds has a 95 percent lower bound on its per-seed rate of only 0.368, since 0.05^(1/3) = 0.368.
+
+### 3.3 The twelve existing measured entries
+
+EIGHT stay at three seeds and may not rise before a re-measurement: cmp_zca, mul_div, isa_shift, cmp_zcb,
+bit_ratified, cmp_zcmp_basic, rst_boot and mul_mul, every one of them between 27 and 72 percent zero-margin
+bins.
+
+FOUR have real margin and are the pre-flight's priority: csr_access, isa_cti, isa_alu and csr_trap_setup, all
+at or below 8.2 percent zero-margin bins, with median smallest counts of 80, 118, 33 and 14. A 12-seed
+pre-flight over just those four costs 12 x 102.9 = about 1234 s of run time (section 4), after which the rule
+in 3.1 permits them at twelve seeds. I am not asking to raise them in round 2 ahead of that measurement, and
+the split above is what makes the pre-flight small enough to be worth running.
+
+Of the four, csr_trap_setup is the one with a measured payoff rather than a hoped-for one, and it is the
+cheapest entry in the set at 10.0 s per run. Section 5 gives its 0.25-rate bin.
+
+### 3.4 Why the seed-dependent set is not the argument for more seeds
+
+The Test Writer classified every unmet bin of the eight tier-full manifest-naming entries over their three
+seeds (gen_r1_preflight_classification.md:22-31). Stable means unhit in EVERY seed; seed-dependent means unhit
+in some seed and hit in another.
+
+| entry | declared | seeds | stable unmet | seed-dependent | union |
+|---|---|---|---|---|---|
+| gen_test_cmp_zcb | 110 | 3 | 6 | 8 | 14 |
+| gen_test_cmp_zcmp_basic | 472 | 3 | 74 | 73 | 147 |
+| gen_test_isa_alu | 602 | 3 | 6 | 33 | 39 |
+| gen_test_isa_cti | 200 | 3 | 16 | 0 | 16 |
+| gen_test_isa_shift | 120 | 3 | 0 | 0 | 0 |
+| gen_test_mul_div | 224 | 3 | 19 | 9 | 28 |
+| gen_test_mul_mul | 338 | 3 | 0 | 0 | 0 |
+| gen_test_rst_boot | 8 | 3 | 2 | 0 | 2 |
+
+A seed-dependent bin was HIT at one of the three seeds, so the MERGED report already holds it and it is already
+credited; the class-B exclusion reason says exactly that. The 123 seed-dependent bins sit on four entries
+(cmp_zcb 8, cmp_zcmp_basic 73, isa_alu 33, mul_div 9); the other two headings in the work list carry zero.
+
+The bins the merge is MISSING are the 123 stable ones, and the Test Writer root-caused those test by test,
+each cause covering many bins: compressed branches and `jalr` with rs1 = x0 never emitted (isa_cti, 16);
+data-independent timing never enabled, divide-by-zero dividend classes never produced and `c.mul` never
+emitted (mul_div, 19); writer-then-x0-read orderings never placed (isa_alu, 6); a `rand` catch-all the program
+deliberately avoids, which is a declaration defect (cmp_zcb, 6); the insn-by-rlist-by-spimm product the
+stimulus never reaches (cmp_zcmp_basic, 57 of 74); and two boundary values needing an owner ruling on
+drivability (rst_boot, 2).
+
+Every one of those is decided by what the program generator emits. A different seed does not change it.
+
+### 3.5 The entries that do get more seeds, and why twelve
+
+New or newly measured entries have no per-run history, and their manifests are measured over 40 seeds before
+the round under the standing rule, so the rule in 3.1 permits up to 40. I ask for TWELVE:
+
+| entry | round-2 seeds | why |
+|---|---|---|
+| gen_test_pmp_csr_warl | 12 | flips to measured; new PMP covergroups, never sampled |
+| gen_test_pmp_mseccfg | 12 | same |
+| gen_test_pmp_lock | 12 | same |
+| the new IRQ owning entry | 12 if it flips to measured, else its testlist count | new IRQ covergroups, never sampled |
+| the twelve existing measured entries | 3 | sections 3.2 and 3.3 |
+| LSU / ECC / timing entries, if they land | see 3.6 | the seed is the only instrument |
+
+Twelve is derived, not round. With n seeds and no hit, the 95 percent upper bound on a bin's per-seed rate is
+1 - 0.05^(1/n):
+
+| seeds | rate ruled out above | chance of missing a 0.25-rate bin |
+|---|---|---|
+| 3 | 0.63 | 0.42 |
+| 8 | 0.31 | 0.10 |
+| 12 | 0.22 | 0.032 |
+| 20 | 0.14 | 0.0032 |
+| 40 | 0.072 | 0.00001 |
+
+Three seeds rule out almost nothing: a bin unhit at three seeds may still be a one-in-four bin, and one
+measured case proves that happens (section 5). Twelve gives the round a conclusion it can act on: a PMP or IRQ
+bin still unhit after twelve seeds has a per-seed rate below 0.22 with 95 percent confidence, so it is a
+stimulus ask and the triage can be written from the round instead of owed after it. Twenty and forty tighten
+the bound and cost little (section 4), so the number can rise without changing anything else in this form;
+twelve is where the bound stops moving quickly per seed.
+
+### 3.6 The one case where the seed is the only instrument
+
+A bin whose reachability is decided by the program TEXT can be settled by sweeping the generator, which runs no
+simulation at all; that is how the one measured rate in this form was obtained. A bin whose reachability is
+decided by TB or DUT timing (bus error injection, ECC error rates, interrupt arrival, grant and rvalid delay
+regimes) cannot be, because the generator does not decide it. If the LSU, ECC or timing entries land in this
+round, their seed counts are sized to their own injection or regime rate, measured by their owner and stated
+here before dispatch. I am not guessing a number for entries that do not exist yet.
+
+### 3.7 Do not pass `--seeds N`
+
+It is not a measured-only knob. `seeds_for_test` takes the override ahead of the entry's own count for every
+selected entry (gen_flow_util.py:1634-1638), so the flag also multiplies the unmeasured runs, including the two
+one-seed entries whose program image is a fixed assembly file and whose extra runs would compile the same
+instruction stream. The lever is the per-entry `seeds` field in the testlist, which is the Runtime Manager's
+file. This form requests the values; runtime-2 applies them.
+
+## 4. What the seeds cost, measured from round 1
+
+From the round's own manifest, `/proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_1/manifest.yaml`:
+
+| quantity | value |
+|---|---|
+| regression wall clock | 362.9 s (21:54:27Z to 22:00:28Z) |
+| runs | 53 |
+| sum of per-run wall | 940.7 s (measured 689.3, unmeasured 251.4) |
+| per-run wall | mean 17.7 s, min 6.6 s, max 69.5 s |
+
+One extra seed across all twelve measured entries costs 229.8 s of run time. One extra seed across the three
+PMP entries costs 49.2 s. So the round-2 request above adds 9 seeds on three entries, about 443 s of run time,
+which at round 1's observed parallel speedup of about 2.6 is roughly three extra minutes of wall clock.
+
+The point of this section is not that the round is affordable. It is that COST IS NOT THE CONSTRAINT, so the
+seed decision has to be argued from what the round can conclude. A uniform rise to twelve seeds on all twelve
+existing entries would cost about 2068 s of run time, roughly 13 minutes of wall clock at the same speedup,
+and it would still be the wrong thing to do, for the reason section 3.2 measures. A 12-seed pre-flight over
+the four entries with margin costs about 1234 s; over the eight without it, about 1523 s.
+
+## 5. What seeds buy, and the only per-seed rate anyone has measured
+
+One bin has a measured per-seed rate. `gen_csr_trap_setup_warl_cg.cr_csr_wpat.mie_msb` was recorded as a
+stimulus gap, with the reason "the program never writes this bit pattern to this CSR". The Test Writer then
+instrumented the generator's `csr_write` over 40 seeds and found each run emits 180 mie writes with the
+operand exactly 0x80000000 in 10 of the 40 seeds. The bin classifies the write operand, not the effective
+value, and the rate is 0.25. Missing it at three seeds has probability 0.42, so it is a seed miss and the
+committed reason was false.
+
+Two things follow, and the second is the one a reviewer should press on.
+
+First, the population of bins that look stable at three seeds and are not is NOT empty, which is the whole
+case for more seeds anywhere.
+
+Second, its size is unknown and this form does not estimate it. Six stable bins were audited over 40 seeds and
+one was reclassified. That is not a rate: the six were chosen because their reasons had been written by
+READING the generator rather than running it, so they are the sample most likely to be wrong, not a random
+sample of the stable set. Anyone converting 1 of 6 into a projection over the 123 stable bins is reading a
+biased sample as an unbiased one. The honest statement is that the population exists, its size is unmeasured,
+and the cheap way to measure it is a generator sweep over the stable set rather than simulation seeds.
+
+## 6. Pre-flight owed before any seed rise on the twelve
+
+If the Orchestrator wants the twelve existing entries above three seeds in round 3, the manifests must be
+re-measured first, and the measurement is a pre-flight rather than the round:
+
+    gen_regress.py --tests <the measured entries carrying a manifest> --base-seed <the round's base> \
+      --source head --head-sha <the landing's FULL 40-character sha> --max-parallel 8 \
+      --tag r2_fcov_preflight
+
+Coverage on, no `--purpose 4`, never indexed. Cost from section 4: a 12-seed pre-flight over the twelve is
+about 2757 s of run time; a 40-seed pre-flight is about 9191 s. Derive `--tests` by calling the selector at
+that commit, and use the full 40-character sha, since an abbreviated one builds and passes and then makes the
+round refuse after it has pinned. The pre-flight reclassifies each declared set at the target seed count, the
+bins that miss move out under the class-B reason, and only then does the rule in 3.1 permit the rise.
+
+## 7. The measured entries and their expected outcomes
+
+Stated per entry before dispatch, once the round-2 landings are in and the selector has been called at the
+round's commit. The shape each row must carry: the entry, its seed count, its declared bin count, whether its
+covergroups are built, and what the round expects the fcov check to say. An entry whose declared set would be
+empty is not measured at all: the checker returns unverifiable rather than PASS for a manifest that declares
+no bins (gen_fcov.py:328-331), so an empty declared set is a defect, not a pass.
+
+## 8. Standing gates, named
+
+Unchanged from round 1 and enforced by the Runtime Manager: P6 (no debug_only knob in a measured run),
+LOG-067 (the B8 probe knob off in every measured run), LOG-077 (an ICache ECC error rate at rare or frequent
+only with the alert-minor checker on), and the fcov_expectation_file loader rule (non-null under
+fcov_expectations, stem equal to the entry name for a measured entry).
+
+## 9. The canary requirement
+
+A measured round pins the live HEAD at dispatch and refuses without `--canary-build`, accepting only a
+head-mode build of exactly that commit with a covergroup declared. The canary is built with the FULL
+40-character sha: an abbreviated one builds and passes the canary check and then makes the round refuse after
+it has pinned.
+
+## 10. What the credit tool will read
+
+`gen_round_credit.py` reads the round's regression manifest and sim logs against the plan, and its record for
+this round is written with `--label`-free explicit paths and `--heading-id`, as round 1's was. The heading id
+for round 2 is added to the HEADINGS table in the same landing that writes the record, so the record cannot
+name a heading the tool does not carry.
+
+## 11. Acceptance
+
+The round is accepted when every selected run is clean, the merge and the fcov checks complete, every measured
+entry meets the expectation stated for it in section 7 on all of its runs, and the credit report, promotion
+table and covergroup set are regenerated at the round's commit under the round-2 record label. A failing run
+of either selected tier refuses the index, so an unmeasured run is a round blocker and not a footnote. A
+check-tier failure is not: the round does not select that tier.
+
+The round does NOT claim the functional gate. The gate's functional condition has two parts, both required,
+and the second is traceability completeness confirmed by a reviewer other than the author. This form governs
+the first part's measurement only.
