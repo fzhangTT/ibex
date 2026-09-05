@@ -663,7 +663,9 @@ tests:
     measured: false
 
   - name: gen_test_pmp_csr_warl
-    description: 'TP-PMP-001..008 PMP CSR WARL rules (pmpcfg packing, 32-bit pmpaddr, bits 6:5, RW=01 under MML=0/1, A modes with U-mode probes, RMW forms, U-mode access illegal); per-seed generated program; fire_tp_pmp_001..008 on the report channel; Round 1: fcov_expectation_file detached (null) because 266 of the 266 bins this test''s manifest declares are on covergroups that are not built at this commit (gen_pmp_access_verdict_cg, gen_pmp_addr_write_cg, gen_pmp_cfg_write_cg, gen_pmp_csr_access_cg, gen_pmp_mseccfg_cg), so the expectation check fails the run at every seed; the manifest stays committed and unchanged, and the reference returns with the covergroup landing.; Round 1 (LOG-091): measured false because every bin this test''s manifest declares is on a covergroup not built at this commit, so the entry cannot carry a per-run expectation and its coverage is not credited to the measured merge; the reference stays null and both return with the covergroup landing.'
+    description: TP-PMP-001..008 PMP CSR WARL rules (pmpcfg packing, 32-bit pmpaddr, bits 6:5, RW=01 under MML=0/1,
+      A modes with U-mode probes, RMW forms, U-mode access illegal); per-seed generated program; fire_tp_pmp_001..008
+      on the report channel
     tier: smoke
     build: gen_tb
     uvm_test: gen_base_test
@@ -674,7 +676,7 @@ tests:
       seed: run
       extra_args: [--gcc-opts=-Idv/auto_dv/tests/gen_programs]
     seeds: 3
-    fcov_expectation_file: null
+    fcov_expectation_file: dv/auto_dv/fcov_expectations/gen_test_pmp_csr_warl.fcov.yaml
     timeout_s: 900
     owner: test-writer
     pass_marker: GEN_TEST_PASS
@@ -682,8 +684,7 @@ tests:
     cocotb_module: dv.auto_dv.tests.gen_test_pmp_csr_warl
     expected_fail: false
     component: gen_tb_top
-    measured: false
-
+    measured: true
   - name: gen_test_pmp_csr_warl_red
     description: 'TDD red fixture of gen_test_pmp_csr_warl, pinned to TP-PMP-001 (generator --red --red-item TP-PMP-001): one TP-PMP-001 pmpcfg byte is written with a flipped A field, so exactly fire_tp_pmp_001
       FAILs by design (RED-OK); every other item''s red is retained locally (gen_tdd_batch1.md Section 8)'
@@ -1420,7 +1421,10 @@ tests:
     notes: 'RTL finding B8 (dv/auto_dv/evidence/gen_b8_rtl_facts.md, section 6: the RTL-level signature the reproducer should observe); the retained red is dv/auto_dv/evidence/gen_tdd_logs/fcov/gen_fu_l4_lockstep_zcmp_dummy_*; its designed failure is the scoreboard UVM_ERROR from gen_rvfi_pkg.sv: [isa_mem] rows tagged "Zcmp stores:" or "Zcmp loads:" with a model / dut count mismatch, and [isa_rd] "Zcmp union:" register mismatches; a FAIL through any other mechanism is not the B8 red and needs triage; the row mapping is dv/auto_dv/evidence/gen_b8_row_mapping.md'
 
   - name: gen_test_pmp_mseccfg
-    description: 'Phase 1 batch 3: mseccfg (Smepmp MML, MMWP, RLB) WARL and sticky rules, RLB against locked entries, MML executable-lock suppression with RLB 0/1, and the interpretation change under MML with U-mode probes through a returning handler (TP-PMP-011, 012, 022..031 built; TP-PMP-108 not built: the walk needs a wrapper reset the bridge lacks); per-seed program gen_pmp_mseccfg_prog.py; fire_tp_pmp_011..031 on the report channel; Round 1: fcov_expectation_file detached (null) because 77 of the 77 bins this test''s manifest declares are on covergroups that are not built at this commit (gen_pmp_access_verdict_cg, gen_pmp_cfg_write_cg, gen_pmp_csr_access_cg, gen_pmp_mseccfg_cg, gen_pmp_recfg_cg), so the expectation check fails the run at every seed; the manifest stays committed and unchanged, and the reference returns with the covergroup landing.'
+    description: 'Phase 1 batch 3: mseccfg (Smepmp MML, MMWP, RLB) WARL and sticky rules, RLB against locked entries,
+      MML executable-lock suppression with RLB 0/1, and the interpretation change under MML with U-mode probes through
+      a returning handler (TP-PMP-011, 012, 022..031 built; TP-PMP-108 not built: the walk needs a wrapper reset the
+      bridge lacks); per-seed program gen_pmp_mseccfg_prog.py; fire_tp_pmp_011..031 on the report channel'
     tier: targeted
     build: gen_tb
     uvm_test: gen_base_test
@@ -1431,7 +1435,7 @@ tests:
       seed: run
       extra_args: [--gcc-opts=-Idv/auto_dv/tests/gen_programs]
     seeds: 3
-    fcov_expectation_file: null
+    fcov_expectation_file: dv/auto_dv/fcov_expectations/gen_test_pmp_mseccfg.fcov.yaml
     timeout_s: 900
     owner: test-writer
     pass_marker: GEN_TEST_PASS
@@ -1439,9 +1443,8 @@ tests:
     cocotb_module: dv.auto_dv.tests.gen_test_pmp_mseccfg
     expected_fail: false
     component: gen_tb_top
-    measured: false
-    notes: measured false until the PMP covergroups are built; round-0 refusal class
-
+    measured: true
+    notes: null
   - name: gen_test_pmp_mseccfg_red
     description: 'TDD red fixture of gen_test_pmp_mseccfg, pinned to TP-PMP-011 (generator --red --red-item TP-PMP-011): one lock-free mseccfg write carries the RLB bit flipped and the planned state is restored
       after the reported read-back, so exactly fire_tp_pmp_011 FAILs by design (RED-OK); every other item''s red is retained as an excerpt (gen_tdd_batch3.md)'
@@ -1468,7 +1471,11 @@ tests:
     measured: false
 
   - name: gen_test_pmp_lock
-    description: 'Phase 1 batch 3: PMP lock, TOR-lock and RLB rules (locked pmpcfg bytes and pmpaddr ignore writes, TOR i+1 lock protects pmpaddr(i), the last entry depends on its own lock, L=1 with A=OFF locks and blocks RLB, pre-write lock evaluation on back-to-back writes, RLB=1 bypass, RLB cleared with locks present; TP-PMP-013..021 and TP-PMP-112, all 10 built); per-seed program gen_pmp_lock_prog.py; fire_tp_pmp_013..021 and fire_tp_pmp_112 on the report channel; Round 1: fcov_expectation_file detached (null) because 50 of the 50 bins this test''s manifest declares are on covergroups that are not built at this commit (gen_pmp_addr_write_cg, gen_pmp_cfg_write_cg, gen_pmp_mseccfg_cg, gen_pmp_recfg_cg), so the expectation check fails the run at every seed; the manifest stays committed and unchanged, and the reference returns with the covergroup landing.'
+    description: 'Phase 1 batch 3: PMP lock, TOR-lock and RLB rules (locked pmpcfg bytes and pmpaddr ignore writes,
+      TOR i+1 lock protects pmpaddr(i), the last entry depends on its own lock, L=1 with A=OFF locks and blocks RLB,
+      pre-write lock evaluation on back-to-back writes, RLB=1 bypass, RLB cleared with locks present; TP-PMP-013..021
+      and TP-PMP-112, all 10 built); per-seed program gen_pmp_lock_prog.py; fire_tp_pmp_013..021 and fire_tp_pmp_112
+      on the report channel'
     tier: targeted
     build: gen_tb
     uvm_test: gen_base_test
@@ -1479,7 +1486,7 @@ tests:
       seed: run
       extra_args: [--gcc-opts=-Idv/auto_dv/tests/gen_programs]
     seeds: 3
-    fcov_expectation_file: null
+    fcov_expectation_file: dv/auto_dv/fcov_expectations/gen_test_pmp_lock.fcov.yaml
     timeout_s: 900
     owner: test-writer
     pass_marker: GEN_TEST_PASS
@@ -1487,9 +1494,8 @@ tests:
     cocotb_module: dv.auto_dv.tests.gen_test_pmp_lock
     expected_fail: false
     component: gen_tb_top
-    measured: false
-    notes: measured false until the PMP covergroups are built; round-0 refusal class
-
+    measured: true
+    notes: null
   - name: gen_test_pmp_lock_red
     description: 'TDD red fixture of gen_test_pmp_lock, pinned to TP-PMP-013 (generator --red --red-item TP-PMP-013): a lock-mix pmpcfg word write that changes an unlocked lane is replaced by a read, so
       the read-back keeps the pre-write word instead of the model''s prediction and exactly fire_tp_pmp_013 FAILs by design (RED-OK); every other item''s red is retained as an excerpt (gen_tdd_batch3.md)'
