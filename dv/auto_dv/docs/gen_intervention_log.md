@@ -2466,3 +2466,22 @@ byte-identical per LOG-092), so no round-to-round delta spans two rules. Not rul
 requires a second condition, traceability completeness confirmed by a reviewer other than the author, which is a separate finding.
 Ruling for rt39 item five (replan review 2cfb6fd M-2): the eight committed full_exclusions gzip archives are not converted; the reproducible
 gzip shape (GzipFile(filename="", mtime=0)) applies to files written from now on.
+
+### LOG-097 addendum 4 (02:45Z, Orchestrator): the group-cell criterion ruling is SUSPENDED; the question goes to the owner
+The DV Lead stopped its own ruling (addendum 3) on reading the plan of record: gen_fcov_plan.md:50-51, :97-99, :6731 and :6733-6735 define the
+functional-coverage gate as "the URG functional-group score with equal group weights after ignore_bins (cross bins counted per expanded bin), not
+a flat ratio over declared bins, over the spec-derived and adopted groups only", at or above 80 percent for BOTH the spec-derived total and the
+adopted total, every site citing DV_prompt Section 4. The ruling of 02:15Z read DV_prompt.txt:112-113 ("at least 80% of declared bins hit") as a
+bin fraction. The prompt supports both readings (:106-110 says the seven numbers are the URG summary totals and "the URG report is the number").
+The two definitions fall on opposite sides of the 80.0 gate for round 1: the plan's quantity as approximated by gen_cov_report (78.29, the
+ledger-excluded weighted score over all 25 remaining covergroups) is BELOW it; the bin fraction (85.89 = 3477/4048) is ABOVE it. Third finding: NO
+artifact computes the plan's own quantity, which requires the spec-derived and adopted totals separately; 78.29 mixes them. So the choice is
+between two measured quantities of which neither is the plan's, and it flips the gate. Under CLAUDE.md a disagreement with a recorded ruling goes
+to the owner: the question is put to the owner with both readings. Until the owner rules: the 02:15Z ruling is suspended (its reasoning stands,
+its authority does not); no criterion text enters the plan set; rt39 implements item one's mechanism (both counts per covergroup from one filtered
+list, the percent with its denominator and a scope string, the fallback removed, the dashboard as the third definer) with the DEFINITION held in
+one place and the stored round-1 figure not restated; the round-1 record keeps the group gate as not claimed. Also this window: the Test Writer's
+irq red entry landed before its retained red log (the library self-test is red until the transcript is retained; the committer gate does not run
+it; fix forward, no back-out), and its committed module registers no cocotb test (a self-test gap: a module with no registered test passed; fixed
+forward with a new self-test case); the Critic's exclusion final-file verdict is APPROVE (9c1de66) with the measured merge's constfile.txt to be
+retained gzip -n under gen_round_0 (all 495 annotations cite it as EC-2).
