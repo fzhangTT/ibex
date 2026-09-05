@@ -9,7 +9,7 @@ does not track.
 
 | file | bytes | sha256 |
 |---|---|---|
-| `gen_chkfix_reruns.yaml` | 5424 | `23e1dfea5fe2c0858bdbdc3a95555e1fa79d780a5e06fd93acbfbf8b843a1153` |
+| `gen_chkfix_reruns.yaml` | 6533 | `2a51db4b40c5485b4c15a1880ddeddee18cbaf019275590b61db84d7644a00c7` |
 
 Pinned to 9c7f8f63957d153d9c67cd1a61d44f88b3c94c69, head-mode mirror, driver a detached archive of that commit
 whose `gen_run.py` hashes to the committed blob. Fresh output directory, since the testbench sources changed.
@@ -76,6 +76,31 @@ the gap was first computed as 64470 cycles by dividing the tick difference by 10
 against a 10 ns clock so the divisor is 1000. Caught before it was written down.
 
 The export run on this seed is no longer needed for the diagnosis and no slot was spent on it.
+
+### CORRIGENDUM 2026-09-05T12:46Z: the gap is 6447 cycles, and the earliest mechanism is named
+
+TWO CORRECTIONS to the block above, neither of which changes its conclusion.
+
+THE GAP IS 6447, not "about 6443". The record's own ticks give it: (15737500 - 9290500) / 1000 = 6447. The
+near-miss recorded above, 64470 from dividing by 100, is 6447 with the wrong divisor, so the right figure was
+one step away in this page's own text. Raised by the Orchestrator against the round-2 form's re-derivation.
+
+"A BUS ANOMALY PRECEDES EVEN THAT" IS TRUE AND IS NOT THE EARLIEST. Censusing every UVM_ERROR line of the run
+(counting firings, not lines mentioning an identifier) gives, by first firing: sva_rvfi_irq_valid_exclusive at
+cycle 6591.5 with 3 firings, sva_ibus_gnt_only_with_req at 9250.5 with 1, the divergent store's LSU-stage
+unmapped write at 9284.5, isa_insn at 9290.5 with 23387, irq_entry at 15737.5 with 258, and
+sva_ibus_outstanding_max at 26503.5 with 450021. The earliest mechanism is the RVFI property, 2659 cycles
+before the bus one. rtl-arch's committed table already listed it first; one sentence of its Section 3, since
+corrected, read as though the grant fired first.
+
+ONE READING OF MINE WITHDRAWN rather than left in the record. I offered the unmapped write to 0x40000000 as a
+possible route to the wedged core. It is not a separate event: order 462 at 9290500 is pc=80000154 with dut
+insn=0062a023, a full-word store, and that line carries mem=40000000 with a 1111 mask, so the write at 9284500
+is the same instruction six cycles earlier at the LSU stage. It is a consequence of the wrong word, not a route
+to it. Established by rtl-arch and verified against both this build and the wave's.
+
+The conclusion of the block is unaffected: the fires are downstream of a fetch and execution breakdown and the
+checker is telling the truth.
 
 ## Method
 
