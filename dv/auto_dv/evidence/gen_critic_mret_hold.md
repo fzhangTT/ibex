@@ -308,3 +308,65 @@ words as the companion itself does. No item owns the bin and one is owed, as the
 CRITIC VERDICT: APPROVE for 9a42c17, 021684d and 9bb1974. The REQUEST-CHANGES of Section 5 on 03aafce..dc60063 is LIFTED on
 this record: the mret-bin-and-hold-mirror group stands approved. Sections 1-6 and the corrigendum above are
 byte-identical to the ec70820 commit (dc9e64def0536c4e).
+
+## Section 8. Reconciliation of Section 7 with the cross-model re-review rev57 (written 2026-09-05T10:32:12Z, HOLD sent first)
+
+Artifact: dv/auto_dv/reviews/2026-09-05-claude-diff-03aafce2-9bb19747.md, committed efbd8b4, sha256 17ea58007278f10d,
+53 lines, verdict APPROVE-WITH-CHANGES, read after Section 7 was committed at 319a88e. Exposure before Section 7: the
+Orchestrator's messages summarised rev57's Major, Minors and Low count; the DV Lead's counter-scope finding reached me
+the same way and is L-7 below, verified before rev57 was read.
+
+Agreement. rev57 judges the classifier's pre-state for all four record kinds against the same RTL and scoreboard terms as
+Section 7 (rvfi_intr only through EXC_PC_IRQ; the save-cause arm's two guards; the trap record publishing the post-step
+model state; the debug arm not touching mstatus), verifies the same logs, md5s, plan citations and program sites, and
+finds the parser fix correct on the committed declaration. Its verdict rationale and mine agree on substance: the fix
+is correct, the bins mean what the plan says, the companion withdraws its sentence honestly, the classification is
+right. Verdict words differ by form; both approve the group.
+
+Rows adopted after verifying the mechanism, my misses stated where they are mine:
+- L-7 (Low in my record; rev57's Major; raised by the DV Lead before rev57 landed). Both invariant counters are gated on
+  st.is_intr (gen_fcov_pkg.sv:464, :467 at 9a42c17), the flag the override keys on at :448, so (a) an exception
+  handler's first-instruction mret increments neither, and (b) n_irq_mret_newbin_entry is zero by construction: it
+  increments only for st.is_intr && v == the stays-set bin, and :448 forces was = 0 for every st.is_intr record, so v
+  cannot be that bin. As committed the counter can only fire if a later edit removes the override; it is not a
+  measurement of this classifier, and the l49 log (:20-23 "A non-zero M is this defect returning, and it is visible
+  without a review"), its corrigendum, the manifest row and the plan line ("none of them wrongly booked") present it as
+  one. Neither counter reaches the GEN_FCOV_REF referee block (:2890-2919), so a non-zero reading could not fail a run.
+  MY MISS: Section 7.2 called the second counter "the discriminator rev56's Low and my M-1 asked for" and a run-summary
+  line rather than a review argument; it is a regression guard for the override, uncollected, and not a witness of the
+  classifier's behaviour. Why Low and not Major here: Section 7's verdict rests on the bin readings I reproduced on my
+  own build (the new bin 0 in four smokes, the declared bin 173, 6, 39, 15), not on the counter, and the exception path
+  is covered by construction (L-6); the defect is a records over-claim plus a collected-mechanism gap, the same class
+  as gen_critic_pmp_step1.md L-11. Remedy (tb-infra-2's counter touch, already owned): the referee line; a witness that
+  does not share the override's term, such as counting stays-set bookings whose predecessor record was a trap record
+  (the exception route) and stating the interrupt-only scope in the labels.
+- L-8 (Low, plan records; adopted from rev57 Minor 1, verified; MY MISS). The plan line's survey names six sites and
+  gives per-site reasons; two ordinary-code mret sites it omits, gen_pmc_ctrl_prog.py:365-372 and
+  gen_pmp_csr_warl_prog.py:773-781, clear MPP and mret into U, so the arm's st.prv != PRIV_LVL_M gate excludes them, a
+  term the sentence does not give; and gen_isa_cti_prog.py's stated reason ("write MPP alone") is not what excludes its
+  mrets: MSTATUS_RESET is 0x80 (MPIE 1), so after its first ordinary mret MIE is 1 and its later mrets ARE the stays-set
+  shape in M-mode; nothing is pending because gen_test_isa_cti runs the irq regime at its quiet default
+  (gen_tb_knobs.yaml:88). The conclusion holds; the reasons need the two gates named. My census in Section 7 checked
+  that no site sets MIE and did not check the gating term per site.
+- L-9 (Low, test; adopted from rev57 Minor 2, verified). The comment-stripping path has no committed test: the unit
+  test's declaration check re-extracts with the codegen's outer regex and splits without stripping (gen_ut_knobs_codegen.py
+  :171-180), so a comment inside the braces would fail the test while the codegen renders correctly; my four synthetic
+  cases were run ad hoc, as the log's were. Add them as SCRATCH files the test parses through sv_enum_members.
+- L-10 (Low, records; adopted from rev57 Minor 3, verified). The l49 log's "$ the four smokes" is a label; its per-smoke
+  table is re-derivable only from the l47 log's commands (:44-63), which it does not cite. I reproduced it that way in
+  Section 7.2. Cite them.
+- L-11 (Low, hygiene; adopted from rev57 Low 1, verified). The comment "mrets that mask a pending enabled line: the one
+  case with no bin" sits on :177 (the two new counters) and describes n_irq_mret_masked on :176.
+- L-12 (Low, comments; adopted from rev57 Low 2). The comment at :465 names a review artifact; the intent sentence after
+  it stands alone.
+- L-13 (Low, records; adopted from rev57 Low 4, verified). The l49 log (:29) and its corrigendum (:14) cite
+  gen_nmi_long_directed.S:27-29 for the .rept block; :27 is the gen_vec: label and the block is :28-30, as the plan line
+  has it.
+- L-14 (Low, classifier precision; adopted from rev57 Low 5, verified). The mret arm (:452-456) does not exclude
+  st.is_trap, so an mret that itself traps would count into n_irq_mret_masked; practically unreachable in this tree.
+rev57's Low 3 (":445 'unconditionally'") is my L-5; tb-infra-2's citation corrigendum at 5f5bc94 (after this range)
+already carries it.
+
+Disagreement: severity only, on L-7 (my Low against rev57's Major), with the reason above. Verdict unchanged: APPROVE for
+9a42c17, 021684d and 9bb1974, the group's REQUEST-CHANGES lifted; L-3..L-14 owed as disclosed. Sections 1-7 and the
+corrigendum above are byte-identical to the 319a88e commit (97b1dd08207a460c).
