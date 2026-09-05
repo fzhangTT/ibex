@@ -176,3 +176,82 @@ that the core must always be requesting. It is not. The grant transitions 1357 t
 What remains is not an RTL question. The property treats a held grant as implying a live request,
 while the driver's grant can outlive the request it accepted, so the property and the driver's policy
 disagree about what a held grant means. Which of the two should change is tb-infra-2's call.
+
+## 8. The same run executing zeros at 0x80000022 (added 2026-09-05)
+
+A later question about this same run, gen_test_irq_basic_1207954461, asked how the core comes to
+execute an all-zero word at pc 0x80000022, whether the model or the DUT diverged first, what the
+controller does with a pending enabled interrupt while trapping repeatedly, and whether the Section 7
+event is causally upstream. This section answers those from the run's own log and the RTL.
+
+### How the core reached 0x80000022: an MRET
+
+The image covers 0x80000080 to 0x80000378 and its vmem carries one code section at word 0x20000020,
+byte 0x80000080. So 0x80000022 lies BELOW the programmed region and reads as zeros; the disassembly
+has no line at that address. The transition into it is an MRET:
+
+    order=1130 pc=800001c0 insn=30200073 trap=0     0x30200073 is MRET (opcode 0x73, funct12 0x302)
+    order=1131 pc=80000022 insn=00000000 trap=1
+
+MRET takes the pc from mepc, so mepc held 0x80000022. It is therefore a return to a stale or
+corrupted mepc, and none of the other candidates: not a jump into an unprogrammed region, not a
+vector-table entry, and not a misaligned fetch.
+
+NOT CLAIMED: how mepc came to hold 0x80000022. The value is consistent with the core having trapped
+at that address earlier, but this log does not show the write and it is not inferred here.
+
+A related hazard, because it turns one bad instruction into a loop: mtvec reads 0x80000001, so the
+mode is vectored with base 0x80000000, and for an EXCEPTION the RTL takes `{csr_mtvec_i[31:8], 8'h00}`
+(rtl/ibex_if_stage.sv:222-224), which is 0x80000000 and also lies below the image start. An exception
+therefore vectors into unprogrammed zeros as well.
+
+### Who diverged first: the DUT
+
+The first divergence is order 462 at 9290500, `insn model=018b1063 dut=0062a023`, pc 0x80000154. The
+image holds 018b1063 at 0x80000154, the model's word, and holds the DUT's word 0062a023 at
+0x80000168, twenty bytes further on. So the DUT reported a real instruction from a different address
+than the pc it reported, and the model was right. 23387 instruction mismatches follow. That is the
+same wrong-word-at-a-pc shape as the order-548 event of Section 7, and here it delivers zeros as well
+as neighbouring words: order 1122 and order 1126 both read pc=80000300 insn=00000000 trap=1 while
+orders 1123 and 1127 read the same pc with the correct eb9ff06f.
+
+### The all-zero word is a trap, and the masking is architectural
+
+Every one of the 6813 records at pc=80000022 carries trap=1; traps also occur at 0x80000300 (366),
+0x80000244 (68) and 0x800000e4 (63). Taking a trap clears the global interrupt enable: under
+`csr_save_cause_i:` (rtl/ibex_cs_registers.sv:893) the CSR block sets `mstatus_d.mie = 1'b0;` (:924)
+having saved it with `mstatus_d.mpie = mstatus_q.mie;` (:926), and an MRET restores it,
+`mstatus_d.mie = mstatus_q.mpie;` (:956). The controller gates regular interrupts on that bit:
+`assign irq_enabled = csr_mstatus_mie_i | (priv_mode_i == PRIV_LVL_U);` (rtl/ibex_controller.sv:490),
+used by `handle_irq` at :498-500 within `(irq_nm | (irq_pending_i & irq_enabled))`.
+
+So in M-mode a held fast interrupt whose own mie bit is set is still not taken while mstatus.MIE is
+clear, and every trap clears it. A repeated trap masks the interrupt for as long as the loop runs
+between mrets, which is the mechanism behind the stretches of 18 to 23 records in which a held,
+enabled interrupt is not taken. This is architectural behaviour and not a controller defect.
+
+### Is the Section 7 event causally upstream? Associated, not causal
+
+In both runs carrying the grant-without-request event the first instruction divergence follows it
+closely: 9250500 to 9290500, 40 cycles, in this run; 18338500 to 18373500, 35 cycles, in
+165313640. Two independent runs, same ordering, same order of magnitude.
+
+The obvious counter-example was checked and does not weaken it. Of the 403 runs only three show any
+instruction divergence. The third, 1981534788, has zero grant events and zero exclusivity firings,
+and its divergence is the OPPOSITE kind: at order 812, pc 0x8000016c, the DUT reported 0000006f and
+the image holds 0000006f at exactly that pc, so there the MODEL is wrong and the DUT right, with 6
+mismatches rather than 23387. It is a different failure, so among DUT-side wrong-word divergences the
+association with the grant event is two for two.
+
+NOT CLAIMED: causation. Section 7 established that the grant event is the driver granting for a
+request that had ALREADY been accepted, which does not obviously enqueue a phantom transaction, so no
+path from it to a word delivered for the wrong address is established. Temporal precedence and a
+shape match are not a mechanism.
+
+What would settle it, and a note that is mine to carry: a wave covering the span from the grant event
+to the first divergence in either grant-event run, 40 cycles in this one and 35 in 165313640, so
+about fifty cycles either side covers both, reading the fetch address issued and the word returned
+for every transaction in that span to see whether any response is paired with an address the core did
+not request. It cannot be done from what exists: the two dumps runtime-2 made were non-durable
+scratch and were deleted at my own request after the Section 7 read, which was premature by one
+question. A re-dump would be runtime-2's to schedule.
