@@ -118,11 +118,19 @@ ibex_pkg; compiled with +define+RVFI; cheriot_enable_i tied IbexMuBiOff inside t
   and a staged manifest would then be read and would fail DECL (gen_unbuilt_mark_check.py:126). CG-IRQ-001, CG-IRQ-003, CG-IRQ-010 and CG-IRQ-011
   are in that state until the IRQ step-1 landing flips their entry.
 
+- Boundary of an instant or a window: a coverpoint sampled AT an instant or OVER a window states what happens
+  at its boundary - the first window, the sample taken at the edge itself - and that boundary is checked
+  against ACTUAL stimulus before the block is called done. Three coverpoints reached round 1 with a boundary
+  nobody had checked, and in each the boundary case turned out to be the only case: two could take exactly one
+  bin, and two more would have sampled almost nothing had a cycle-0 window been read as no window.
 - PER-RUN-MANIFEST (the per-run guarantee): a test's fcov-expectation manifest declares what that test
   guarantees PER RUN, so every declared bin must be hit in EVERY run of that entry; a bin hit at some seeds and
   not others leaves the declared set under its bins_not_hit reason and is credited from the merged report
   instead; and a measured entry on a tier named by the testlist header's fcov_manifest_required_tiers may not
-  carry a null manifest. The mechanisms are the authority, not a review row: gen_fcov.py makes any declared bin
+  carry a null manifest. A CROSS bin is a per-run guarantee only when EVERY operand is: a coverpoint bin that
+  cannot vary, a plusarg fixed for the run say, is every-seed by construction and says nothing about the
+  crosses it feeds, so a manifest declares a cross bin only where the measurement shows THAT CROSS LEG at
+  every seed. The mechanisms are the authority, not a review row: gen_fcov.py makes any declared bin
   whose state is not HIT an unmet bin and sets the run's unmet reason (:152-159 at 218e9f3), and
   fcov_policy_failures in gen_regress.py refuses the null manifest (:237-260 at 218e9f3; the range is pinned
   because rt39 edits that file above it). Lineage, so the trail survives: this rule was carried in messages and
@@ -2164,19 +2172,19 @@ Conventions
   folded bins hosted here)
 - Sample: completion of the handler read-back set for one trap (the sampler matches the retired csrr mepc / mcause / mtval / mstatus records to the trap record), with crash_dump_o and the minstret read-back sampled at that point; condition: read-back set complete; anti-vacuity: samples once per trap whose handler reads the CSRs, so a hit proves the read-back records were observed; the comparison of their values is the lock-step comparator's isa_rd row until gen_chk_csr_readback is built (UNBUILT at the Section 0a concordance).
 - Coverpoints:
-  - cp_kind = trap kind (sync exception / interrupt / NMI): bins sync, irq, nmi_ext, nmi_int
-  - cp_old_mie = mstatus.MIE before the trap: bins mie0, mie1
-  - cp_old_priv = privilege before the trap (CSR model): bins m, u
-  - cp_mtval_class = mtval read-back: bins zero, pc, pc_plus2, insn32, insn16, data_addr, data_addr_second
-  - cp_mepc_bit1 = mepc[1] read-back (single owner of pc[1]/mepc[1] alignment, S-7): bins bit1_0{mepc[1] == 0: word-aligned trapped/interrupted pc}, bit1_1{mepc[1] == 1: 2-byte-aligned pc, 16-bit instruction before it}
-  - cp_kept = pre-trap fields that must survive the entry: bins mprv1_kept, tw1_kept, both_zero
+  - cp_kind = trap kind (sync exception / interrupt / NMI) [covergroup not built, not in manifest]: bins sync, irq, nmi_ext, nmi_int
+  - cp_old_mie = mstatus.MIE before the trap [covergroup not built, not in manifest]: bins mie0, mie1
+  - cp_old_priv = privilege before the trap (CSR model) [covergroup not built, not in manifest]: bins m, u
+  - cp_mtval_class = mtval read-back [covergroup not built, not in manifest]: bins zero, pc, pc_plus2, insn32, insn16, data_addr, data_addr_second
+  - cp_mepc_bit1 = mepc[1] read-back (single owner of pc[1]/mepc[1] alignment, S-7) [covergroup not built, not in manifest]: bins bit1_0{mepc[1] == 0: word-aligned trapped/interrupted pc}, bit1_1{mepc[1] == 1: 2-byte-aligned pc, 16-bit instruction before it}
+  - cp_kept = pre-trap fields that must survive the entry [covergroup not built, not in manifest]: bins mprv1_kept, tw1_kept, both_zero
   - cp_crash_dump: RETIRED (S-3b): equality-with-prediction bins are checker mirrors; gen_chk_crash_dump owns the compare and cp_kind records the trap kinds at which it ran
-  - cp_minstret = mcountinhibit.IR in force at the trap (CSR model): bins ir0{IR == 0: the handler's minstret read-back is compared against the retirement count excluding the trap record}, ir1{IR == 1: minstret frozen across the trap}
+  - cp_minstret = mcountinhibit.IR in force at the trap (CSR model) [covergroup not built, not in manifest]: bins ir0{IR == 0: the handler's minstret read-back is compared against the retirement count excluding the trap record}, ir1{IR == 1: minstret frozen across the trap}
 - Crosses:
-  - cr_kind_mtval = cp_kind x cp_mtval_class: bins {sync_zero, sync_pc, sync_pc_plus2, sync_insn32, sync_insn16, sync_data_addr, sync_data_addr_second, irq_zero, nmi_ext_zero, nmi_int_data_addr}; ignore irq/nmi_ext x non-zero and nmi_int x non-data_addr: the RTL writes 0 / the captured address; a mismatch is a checker failure
-  - cr_kind_mie_priv = cp_kind x cp_old_mie x cp_old_priv: bins {sync_mie0_m, sync_mie1_m, sync_mie0_u, sync_mie1_u, irq_mie1_m, irq_mie0_u, irq_mie1_u, nmi_ext_mie0_m, nmi_ext_mie1_m, nmi_ext_mie0_u, nmi_ext_mie1_u, nmi_int_mie0_m, nmi_int_mie1_m, nmi_int_mie1_u}; ignore irq x mie0 x m: not taken
-  - cr_kind_kept = cp_kind x cp_kept: bins {sync_mprv1_kept, sync_tw1_kept, irq_mprv1_kept, irq_tw1_kept, nmi_ext_mprv1_kept, sync_both_zero}
-  - cr_kind_bit1 = cp_kind x cp_mepc_bit1: bins {sync_bit1_1, irq_bit1_1, nmi_ext_bit1_1, nmi_int_bit1_1, sync_bit1_0, irq_bit1_0, nmi_ext_bit1_0, nmi_int_bit1_0}
+  - cr_kind_mtval = cp_kind x cp_mtval_class [covergroup not built, not in manifest]: bins {sync_zero, sync_pc, sync_pc_plus2, sync_insn32, sync_insn16, sync_data_addr, sync_data_addr_second, irq_zero, nmi_ext_zero, nmi_int_data_addr}; ignore irq/nmi_ext x non-zero and nmi_int x non-data_addr: the RTL writes 0 / the captured address; a mismatch is a checker failure
+  - cr_kind_mie_priv = cp_kind x cp_old_mie x cp_old_priv [covergroup not built, not in manifest]: bins {sync_mie0_m, sync_mie1_m, sync_mie0_u, sync_mie1_u, irq_mie1_m, irq_mie0_u, irq_mie1_u, nmi_ext_mie0_m, nmi_ext_mie1_m, nmi_ext_mie0_u, nmi_ext_mie1_u, nmi_int_mie0_m, nmi_int_mie1_m, nmi_int_mie1_u}; ignore irq x mie0 x m: not taken
+  - cr_kind_kept = cp_kind x cp_kept [covergroup not built, not in manifest]: bins {sync_mprv1_kept, sync_tw1_kept, irq_mprv1_kept, irq_tw1_kept, nmi_ext_mprv1_kept, sync_both_zero}
+  - cr_kind_bit1 = cp_kind x cp_mepc_bit1 [covergroup not built, not in manifest]: bins {sync_bit1_1, irq_bit1_1, nmi_ext_bit1_1, nmi_int_bit1_1, sync_bit1_0, irq_bit1_0, nmi_ext_bit1_0, nmi_int_bit1_0}
   - cr_kind_crash: RETIRED (S-3b): see cp_crash_dump
 - Adopted (riscv-dv): none
 - TP items: TP-EXC-001, TP-EXC-003, TP-EXC-013, TP-EXC-016, TP-EXC-017, TP-EXC-022, TP-EXC-023, TP-EXC-024, TP-EXC-026, TP-EXC-030, TP-EXC-041, TP-EXC-044, TP-EXC-049, TP-EXC-051, TP-EXC-063, TP-EXC-066, TP-EXC-067, TP-EXC-071, TP-IRQ-001, TP-IRQ-007, TP-IRQ-013, TP-IRQ-044
@@ -2297,11 +2305,11 @@ Conventions
 - Features: F-IRQ-012, F-IRQ-013, F-IRQ-014, F-IRQ-015, F-IRQ-061, F-IRQ-062
 - Sample: ev_entry = interrupt entry (first handler pc from rvfi_pc_rdata with rvfi_intr / ibus monitor); ev_mtvec = retired csrw/csrs/csrc mtvec plus the first csrr mtvec after reset; condition: entry or mtvec access; anti-vacuity: samples only on entries and mtvec accesses, so a hit proves the vector arithmetic or the WARL rule was exercised for that id/base class.
 - Coverpoints:
-  - cp_id iff ev_entry = interrupt id: bins id3{3}, id7{7}, id11{11}, fast[15]{[16:30]}, id31_ext{31, external NMI}, id31_int{internal NMI, vector forced to 31}
-  - cp_base_class = mtvec base in force: bins boot_init, sw_aligned, sw_legalised, upper_half{base[31] == 1}
-  - cp_mtvec_wdata iff ev_mtvec = value class of a software write (rvfi_rs1_rdata) or the reset read-back: bins mode00, mode01, mode1x{10, 11}, base_low_nonzero{wdata[7:2] != 0}, boot_readback{first csrr mtvec == {boot_addr[31:8], 8'h01}}
+  - cp_id iff ev_entry = interrupt id [covergroup not built, not in manifest]: bins id3{3}, id7{7}, id11{11}, fast[15]{[16:30]}, id31_ext{31, external NMI}, id31_int{internal NMI, vector forced to 31}
+  - cp_base_class = mtvec base in force [covergroup not built, not in manifest]: bins boot_init, sw_aligned, sw_legalised, upper_half{base[31] == 1}
+  - cp_mtvec_wdata iff ev_mtvec = value class of a software write (rvfi_rs1_rdata) or the reset read-back [covergroup not built, not in manifest]: bins mode00, mode01, mode1x{10, 11}, base_low_nonzero{wdata[7:2] != 0}, boot_readback{first csrr mtvec == {boot_addr[31:8], 8'h01}}
 - Crosses:
-  - cr_id_base = cp_id x cp_base_class: bins {id3_boot_init, id3_sw_aligned, id3_sw_legalised, id3_upper_half, id7_boot_init, id7_sw_legalised, id11_sw_aligned, id11_upper_half, fast_0_boot_init, fast_0_sw_legalised, fast_14_sw_aligned, fast_14_upper_half, fast_7_sw_aligned, id31_ext_boot_init, id31_ext_sw_legalised, id31_ext_upper_half, id31_int_sw_aligned, id31_int_boot_init, id7_sw_aligned, id11_boot_init}
+  - cr_id_base = cp_id x cp_base_class [covergroup not built, not in manifest]: bins {id3_boot_init, id3_sw_aligned, id3_sw_legalised, id3_upper_half, id7_boot_init, id7_sw_legalised, id11_sw_aligned, id11_upper_half, fast_0_boot_init, fast_0_sw_legalised, fast_14_sw_aligned, fast_14_upper_half, fast_7_sw_aligned, id31_ext_boot_init, id31_ext_sw_legalised, id31_ext_upper_half, id31_int_sw_aligned, id31_int_boot_init, id7_sw_aligned, id11_boot_init}
 - Adopted (riscv-dv): none
 - TP items: TP-IRQ-001, TP-IRQ-002, TP-IRQ-003, TP-IRQ-004, TP-IRQ-005, TP-IRQ-006, TP-IRQ-007, TP-IRQ-017, TP-IRQ-018, TP-IRQ-019, TP-IRQ-071
 ### CG-IRQ-007: gen_cg_irq_nmi
@@ -2383,9 +2391,9 @@ Conventions
 - TP items: TP-IRQ-029, TP-IRQ-041, TP-IRQ-042, TP-IRQ-043, TP-IRQ-054, TP-IRQ-069, TP-IRQ-075, TP-IRQ-078
 ### CG-IRQ-011: gen_cg_irq_reset_fetch_en
 - Features: F-IRQ-014, F-IRQ-055, F-IRQ-056, F-IRQ-065
-- Sample: ev_reset = reset release (first cycle with rst_ni high) with the irq/debug pin state and the first csrr mstatus/mie/mtvec/mip retirements; ev_off = every fetch_enable_i != On window of >= 20 cycles (gen_misc_monitor, gen_checkers_pkg.sv:337 at 218e9f3, which holds the window itself at :393 and :529-532 and feeds the chk_fetch_en drain check at :443-449 in the same component, so the coverage class consumes the window rather than detecting it), with the irq monitor state inside it; condition: one sample per reset and per Off window; anti-vacuity: samples only at reset release and in Off windows, so a hit proves the reset-time / fetch-disabled interrupt path was exercised; none_pending_while_off is a stimulus-qualified control (an Off window occurred with no line), not an always-true witness (S-3b).
+- Sample: ev_reset = reset release (first cycle with rst_ni high) with the irq/debug pin state and the first csrr mstatus/mie/mtvec/mip retirements; ev_off = every fetch_enable_i != On window of >= 20 cycles, INCLUDING one that begins at reset release when fetch_enable_i is Off there, which is the common case rather than an edge case since every measured entry holds it Off at reset; a sampler must not treat cycle 0 as a no-window sentinel (gen_misc_monitor, gen_checkers_pkg.sv:337 at 218e9f3, which holds the window itself at :393 and :529-532 and feeds the chk_fetch_en drain check at :443-449 in the same component, so the coverage class consumes the window rather than detecting it), with the irq monitor state inside it; condition: one sample per reset and per Off window; anti-vacuity: samples only at reset release and in Off windows, so a hit proves the reset-time / fetch-disabled interrupt path was exercised; none_pending_while_off is a stimulus-qualified control (an Off window occurred with no line), not an always-true witness (S-3b).
 - Coverpoints:
-  - cp_lines_at_reset iff ev_reset = lines asserted at reset release (pin monitor), classified by the DUT's own priority when more than one applies, internal NMI over the external pin over an ordinary line; a debug request arriving with neither an NMI nor a regular line has NO bin here and samples nothing, and adding debug_only is owed with its traceability row: bins none, regular_only, nmi_only, nmi_and_regular, debug_and_nmi, debug_and_regular
+  - cp_lines_at_reset iff ev_reset = lines asserted at reset release (pin monitor), classified by the DUT's own priority when more than one applies, internal NMI over the external pin over an ordinary line; a debug request arriving with neither an NMI nor a regular line has NO bin here and samples nothing, and adding debug_only is owed with its traceability row. NOT-BUILT-STIMULUS, every bin but none: the sample is the release edge itself, and no stimulus can assert a pin BEFORE it - pins initialise to zero in their interfaces, the debug driver has no pre-loop drive, the interrupt driver's pre-loop levels are zero, and a bridge command cannot arrive before the test starts. The bins are reachable the moment a reset-time pin preset exists and are NOT unreachable by design; the mechanism and its measurement are T4 of gen_tb_defects.md: bins none, regular_only, nmi_only, nmi_and_regular, debug_and_nmi, debug_and_regular
   - cp_first_event iff ev_reset = first architectural event after reset: bins boot_insn{first retirement at the boot pc}, nmi_before_insn, debug_before_insn
   - cp_reset_reads iff ev_reset = first CSR read-backs after reset: bins mstatus_0x80, mie_0, mtvec_boot_page, mip_reflects_pins
   - cp_boot_mret iff (ev_reset && an mret retires before any trap) = boot-time mret (RVFI): bins to_u_mie1{mret as an early instruction: U-mode, MIE = 1}
@@ -5819,7 +5827,13 @@ candidates). Conventions applied by fix brief 2 (Critic pre-review S-3/S-4/S-5/S
     off{IbexMuBiOff}, invalid{every other ibex_mubi_t value}
   - cp_pending = inputs pending at release: bins none{no irq, NMI or debug request high},
     irq_enabled_later{an irq line high, mie still 0}, nmi{irq_nm_i}, debug_req{debug_req_i},
-    nmi_and_debug{irq_nm_i && debug_req_i}, irq_and_debug{an irq line && debug_req_i}
+    nmi_and_debug{irq_nm_i && debug_req_i}, irq_and_debug{an irq line && debug_req_i}; NOT-BUILT-STIMULUS,
+    every bin but none, by the mechanism T4 of gen_tb_defects.md records: this coverpoint reads the same pins
+    in the same task at the same instant as CG-IRQ-011's, and no stimulus can assert one before the release.
+    The five are OWNED - TP-RST-024 has debug_req and nmi_and_debug, TP-RST-025 nmi, TP-RST-026
+    irq_enabled_later, TP-RST-029 irq_and_debug - and measured at 0 across all 53 runs of the round while none
+    took 36 and 17 in the two merges. They are reachable once a reset-time pin preset exists, so this is not
+    the unreachable-by-design class
   - cp_first_event = class of the first post-reset event, from RVFI: bins first_instr_retire{first rvfi_valid with rvfi_intr == 0 and
     rvfi_ext_debug_mode == 0}, nmi_taken{first record has rvfi_intr && rvfi_ext_nmi},
     debug_entry{first record has rvfi_ext_debug_mode == 1}, none_fetch_disabled{no event within
