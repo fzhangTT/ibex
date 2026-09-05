@@ -132,7 +132,15 @@ def check_selection(c):
     meas = sorted([t for t in sel if t.get('fcov_expectation_file')], key=lambda x: x['name'])
     rendered = set(re.findall(r'covergroup\s+(gen_\w+_cg)\b',
                               (R / 'dv/auto_dv/env/gen_fcov_groups.svh').read_text(encoding='utf-8')))
-    for tier, label in (('smoke', 'smoke at 9c28944'), ('targeted', 'targeted at 9c28944')):
+    # The restated rows are labelled "<tier> at <commit>" to keep them apart from the historical table.
+    # Read that commit OUT OF THE FORM rather than pinning one here, so a later restatement at a new commit
+    # is checked instead of silently unmatched.
+    m = re.search(r"\| THE ROUND'S PLAN AT (\w+) \|", c.flat)
+    if not m:
+        c.fail("selection checks: the form has no restated plan row to read the commit from")
+        return
+    at = m.group(1)
+    for tier, label in (('smoke', f'smoke at {at}'), ('targeted', f'targeted at {at}')):
         ents = [t for t in sel if t['tier'] == tier]
         c.check(f'{label} entries', rf'\| {re.escape(label)} \| (\d+) \|', len(ents))
         c.check(f'{label} runs', rf'\| {re.escape(label)} \| \d+ \| (\d+) \|', sum(seeds[t['name']] for t in ents))
@@ -144,7 +152,9 @@ def check_selection(c):
             sum(seeds[t['name']] for t in meas))
     total = 0
     for t in meas:
-        man, errs = F.validate_manifest(pathlib.Path(t['fcov_expectation_file']), t['name'])
+        # repo-relative in the testlist, so resolve against the ROOT: opening it relative to the
+        # process working directory reported every manifest missing from any other directory.
+        man, errs = F.validate_manifest(R / t['fcov_expectation_file'], t['name'])
         if man is None or errs:
             c.fail(f"{t['name']}: manifest does not validate ({'; '.join(errs)})")
             continue
@@ -301,6 +311,23 @@ def run_checks(form_text, manifest, preflight_text, quiet=False):
     return c
 
 
+def _cwd_self_test():
+    """M-1's own control: the tool must give the same verdict from a different working directory."""
+    import os, tempfile
+    here = os.getcwd()
+    try:
+        with tempfile.TemporaryDirectory() as d:
+            os.chdir(d)
+            c = run_checks(FORM_DEFAULT.read_text(encoding='ascii'), yaml.safe_load(open(MANIFEST_DEFAULT)),
+                           PREFLIGHT_DEFAULT.read_text(encoding='ascii'), quiet=True)
+        ok = not c.bad
+        print(f"SELF-TEST {'ok  ' if ok else 'FAIL'} the same verdict from a different working directory: "
+              f"{len(c.bad)} failure(s), want 0")
+        return ok
+    finally:
+        os.chdir(here)
+
+
 def self_test():
     """Drive run_checks itself, on the committed form and manifest, with the real code path rather than a
     private subset: the true form must pass, and each perturbation must fail."""
@@ -322,6 +349,13 @@ def self_test():
         ('a wrong share fails', r'\| gen_test_mul_mul \| 338 \| 244 \| 72\.2%', '| gen_test_mul_mul | 338 | 244 | 62.2%'),
         ('a dropped claim fails, it does not silently pass', r'\| runs \| 53 \|\n', ''),
         ('naming the wrong four with margin fails', r"priority: csr_access, isa_cti", "priority: mul_mul, isa_cti"),
+        # The three below are the controls for check_selection's claims. The five above predate them and
+        # perturb Sections 3 and 4, so without these the seventy selection claims could pass a form whose
+        # selection figures were wrong and nothing would report it.
+        ('a wrong Section 7 declared count fails', r'\| gen_test_mul_div \| 3 \| 190 \|',
+         '| gen_test_mul_div | 3 | 194 |'),
+        ('a dropped Section 7 row fails', r'\| gen_test_rst_boot \| 3 \| 6 \| 3 of 3 \|[^\n]*\n', ''),
+        ('a wrong restated plan run count fails', r"(\| THE ROUND'S PLAN AT \w+ \| 20 \| )56 \|", r'\g<1>57 |'),
     ]:
         t = bump(pat, rep)
         if t is not None:
@@ -336,6 +370,7 @@ def self_test():
         detail = '' if got_pass else f' ({c.bad[0]})'
         print(f'SELF-TEST {"ok " if good else "BAD"}  {name}: {"pass" if got_pass else "fail"}, '
               f'want {"pass" if want_pass else "fail"}{"" if good else detail}')
+    ok = _cwd_self_test() and ok
     print('gen_round_form_check --self-test:', 'PASS' if ok else 'FAIL')
     return 0 if ok else 1
 

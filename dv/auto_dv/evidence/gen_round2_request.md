@@ -43,7 +43,8 @@ measured, which is the PMP step-1 landing v2 named in its round-2 scope. Fifteen
 fifteen validate: gen_fcov.py's own validate_manifest returns no error for any of them, and their declared
 sets total 3171 bins.
 
-That table is the state at 6407118, NOT the round's plan. Round 2's entry set is whatever the selector returns
+THE 6407118 TABLE ABOVE, and not the restated one, is the state at that commit rather than the round's
+plan. Round 2's entry set is whatever the selector returns
 at the round's own commit, and the round-2 scope (LOG-097) expects these to land first: PMP step 1 (four
 covergroups and the flip of `gen_test_pmp_csr_warl`, `gen_test_pmp_mseccfg` and `gen_test_pmp_lock` to
 measured), IRQ step 1 (four covergroups, a new owning entry and its manifest), the generator fixes, the
@@ -79,7 +80,7 @@ The rule already exists for new entries, where it is stated as the 40-seed manif
 generalises it to entries that already exist.
 
 WHAT THE RULE NEEDS BEFORE IT CAN BE ENFORCED, and it does not exist today. I called this rule checkable in
-the first version of this form and that was wrong: nothing in the tree records the number it reads. The 24
+the first version of this form and that was wrong: nothing in the tree records the number it reads. The 27
 manifests under dv/auto_dv/fcov_expectations/ carry `test`, `owner`, `bins` and `anti_vacuity` and no
 measurement provenance at all, so today the rule is a policy a human applies, not a gate. Two things close
 that, and neither is mine:
@@ -188,6 +189,13 @@ the round under the standing rule, so the rule in 3.1 permits up to 40. I ask fo
 | the new IRQ owning entry | 12 if it flips to measured, else its testlist count | new IRQ covergroups, never sampled |
 | the twelve existing measured entries | 3 | sections 3.2 and 3.3 |
 | LSU / ECC / timing entries, if they land | see 3.6 | the seed is the only instrument |
+
+THIS TABLE IS A REQUEST, NOT THE ROUND'S PLAN, and Section 7 is what the round is accepted against. The
+seed counts here are what I ask the testlist to carry; the testlist does not carry them today, so Section 7's
+seed column shows what the selector actually returns and every row of it reads three. Applying this table
+without the testlist touch would produce twelve-seed runs against Section 7 rows that state three, and
+Section 11 accepts the round against Section 7. If the Runtime Manager lands the seed rise, Section 7 is
+restated from a fresh selector call before dispatch and the acceptance follows the restated rows.
 
 Twelve is derived, not round. With n seeds and no hit, the 95 percent upper bound on a bin's per-seed rate is
 1 - 0.05^(1/n):
@@ -312,15 +320,34 @@ designed outcome. No entry expects that here. A group left unrendered would be a
 row, because an unbuilt covergroup fails every seed.
 
 NO ENTRY EXPECTS A FAILURE, and that is a claim this round tests rather than an assumption it makes. Nine of
-the fifteen were measured over forty fresh seeds in the wave at 4017573, and six of those nine were RE-RENDERED
-to that wave's every-seed set after refusing on declared bins unhit at some seeds; two more, gen_test_pmp_lock
-and gen_test_pmp_mseccfg, come from the PMP step-1b block. The four that were not measured over forty seeds
+the fifteen were measured in the wave at 4017573, and six of those nine were RE-RENDERED to that wave's
+every-seed set after refusing on declared bins unhit at some seeds; two more, gen_test_pmp_lock and
+gen_test_pmp_mseccfg, come from the PMP step-1b block. TWO OF THE NINE ARE NARROWER THAN "forty fresh seeds"
+AND THIS PLAN'S OWN RULE IS WHAT NARROWS THEM. gen_test_bit_ratified declares 654 bins of which 37 were added
+on the pair-fix block, a DIFFERENT generator from the one the wave measured, so under the Section 0 rule that
+a block is evidence for the generator it measured, the wave covers 617 of its 654 and the pair-fix block
+covers the other 37. gen_test_pmp_csr_warl produced a program at all forty seeds and one run refused its
+coverage, so its measurement is 39 of 40, which is the figure its provisional status cleared on. The four that were not measured over forty seeds
 are gen_test_csr_access, gen_test_csr_trap_setup, gen_test_isa_alu and gen_test_isa_cti, whose declared sets
 are the round-1 sets calibrated to three seeds.
 
+THE SEED COLUMN IS WHAT THE SELECTOR RETURNS, and the rule in 3.1 caps it rather than setting it. That cap
+is not uniform and the derivation belongs here rather than in a commit message. An entry may not exceed the
+seeds its manifest was measured over, so at this commit ELEVEN of the fifteen are capped at FORTY - the nine
+measured over forty fresh seeds in the wave at 4017573, plus gen_test_pmp_lock and gen_test_pmp_mseccfg from
+the PMP step-1b block - and the remaining FOUR are capped at THREE, those being gen_test_csr_access,
+gen_test_csr_trap_setup, gen_test_isa_alu and gen_test_isa_cti, whose declared sets are the round-1 sets
+calibrated to three seeds. So Section 3.5's request for twelve is permitted for the entries it names and is
+not permitted for those four, and it takes a testlist touch to become the round's plan. Until that lands the
+rows above are the plan, and this section is restated from a fresh selector call if it does.
+
+TWO OPEN ITEMS THIS FORM DOES NOT CLAIM. The hart_id plusargs on gen_test_csr_access and gen_test_rst_boot
+are a Runtime Manager testlist touch that has not landed, so no row above claims them and the round does not
+depend on them. And the coverage criterion remains with the owner: this form does not state one.
+
 THE FIVE UNMEASURED ENTRIES of the twenty carry a null fcov_expectation_file and are selected for their runs
 rather than their coverage: gen_boot_zc, gen_test_bit_draft, gen_test_csr_reset, gen_ut_lockstep, and
-gen_test_irq_basic. The irq entry is unmeasured DELIBERATELY and stays so until five conditions are met, which
+gen_test_irq_basic. The irq entry is unmeasured DELIBERATELY and stays so until the six conditions below are met, which
 this form records rather than re-argues, each with its status at this commit.
 
 | # | condition | status |
@@ -330,7 +357,7 @@ this form records rather than re-argues, each with its status at this commit.
 | c | the fixed cocotb timeout in the stimulus path replaced by a seed-independent bound | fixed at 6b894ab, re-review pending |
 | d | a fresh forty-seed sweep at the fix commit with its manifest rendered FROM that sweep | open |
 | e | a regime-independent end-of-test expectation covering the case a per-record bound cannot judge | open, and LOAD-BEARING rather than provisional: the storm-regime vacuity closes only by that reconciliation |
-| f | no run of the entry wedges the core | open: one wave run diverges from the model 6447 cycles before its first checker fire, with 23387 instruction mismatches already reported and the core executing zeros |
+| f | no run of the entry wedges the core | open: one wave run diverges from the model 6447 cycles before its first checker fire (the cited record reads 6443; the figure here is re-derived from the run and a one-line corrigendum on that record is owed), with 23387 instruction mismatches already reported and the core executing zeros |
 
 CONDITION (b) REOPENED ITSELF UNDER THIS PLAN'S OWN RULE, which is worth stating rather than quietly
 re-listing. Section 0 says a block is evidence for what it measured and no other; the reds were measured on
