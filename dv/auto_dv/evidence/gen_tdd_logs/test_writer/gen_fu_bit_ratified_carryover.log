@@ -1,0 +1,161 @@
+# gen_fu_bit_ratified_carryover: the block's carry-over compared at the block's forty seeds and 1..40, green and every red form
+written 2026-09-05T13:56:39Z by the Test Writer; clone HEAD ffd38b7 (ffd38b78f0dbc4505c424b75dba5d34006d5a980); python 3.12.10
+block generator: blob 70f318080711d7845c88341a012461bd21d57695536daf2db33189a675a3b8d0 (committed at ba4860b, the generator gen_bit_ratified_pairfix/ block 2 measured), loaded from a git archive of ba4860b
+current generator: blob b8a99dc827c382587112226e20c62372bd8f85fff8f1ec793e93bade2b686dc4 (HEAD's, the rev58 follow-up landed at 0679715)
+seeds: the block's forty from gen_pairfix_seeds.txt (40) then 1..40; forms: the green program and the red form of each of the 18 built items
+compared per pair: the full emitted program text (comments included); the report word list, k and min_retired
+rule: gen_fcov_plan.md Section 0 (DV Lead): a generator change carries a block over only when the emitted programs are byte-identical at the block's seeds and at its red forms
+
+## A. PER-FORM RESULT over 80 seeds (40 block + 40): pairs identical / compared
+  green         80/80
+  TP-BIT-002    80/80
+  TP-BIT-003    80/80
+  TP-BIT-004    80/80
+  TP-BIT-005    80/80
+  TP-BIT-006    80/80
+  TP-BIT-007    80/80
+  TP-BIT-008    80/80
+  TP-BIT-009    80/80
+  TP-BIT-010    80/80
+  TP-BIT-014    80/80
+  TP-BIT-015    80/80
+  TP-BIT-017    80/80
+  TP-BIT-018    80/80
+  TP-BIT-019    80/80
+  TP-BIT-020    80/80
+  TP-BIT-021    80/80
+  TP-BIT-038    80/80
+  TP-BIT-040    80/80
+
+## B. PER-SEED RESULT at the block's forty seeds (every form: green + 18 reds = 19 pairs per seed)
+    140681439  19/19  identical
+    275115791  19/19  identical
+    322097203  19/19  identical
+    447188228  19/19  identical
+    451705593  19/19  identical
+    517903650  19/19  identical
+    590501458  19/19  identical
+    598009562  19/19  identical
+    639215811  19/19  identical
+    658118464  19/19  identical
+    795121614  19/19  identical
+    795121748  19/19  identical
+    856721794  19/19  identical
+    859927737  19/19  identical
+    974310432  19/19  identical
+   1013974387  19/19  identical
+   1087572542  19/19  identical
+   1327152986  19/19  identical
+   1349621060  19/19  identical
+   1364802963  19/19  identical
+   1399741704  19/19  identical
+   1470859231  19/19  identical
+   1539148183  19/19  identical
+   1588369926  19/19  identical
+   1620257934  19/19  identical
+   1630460430  19/19  identical
+   1641265529  19/19  identical
+   1650469786  19/19  identical
+   1676380956  19/19  identical
+   1749035339  19/19  identical
+   1777794037  19/19  identical
+   1782140117  19/19  identical
+   1785273978  19/19  identical
+   1793868022  19/19  identical
+   1945941221  19/19  identical
+   1982825852  19/19  identical
+   1986775234  19/19  identical
+   2102236322  19/19  identical
+   2102415926  19/19  identical
+   2107093390  19/19  identical
+
+## C. TOTAL: 1520 of 1520 pairs identical (emitted text and reports); differing pairs: 0
+
+## D. SCRIPT FOLDED IN
+--- gen_fu_bit_ratified_carryover_measure.py sha256 911851126a771d5ae6330798f602ee7d4ae83c53bc03ea017a958b6561d55ec0 ---
+"""Build gen_fu_bit_ratified_carryover.log: the bit_ratified block's carry-over from the generator it measured (blob 70f31808,
+committed at ba4860b) to the current committed generator (the rev58 follow-up), compared at the BLOCK'S forty seeds and at
+1..40, for the green program and every built item's red form: emitted text, report words, k and min_retired. The DV Lead's
+Section 0 rule (a generator change carries a block over only when the emitted programs are byte-identical at the block's
+seeds AND at its red forms, the comparison recorded beside the block). Exit 0 only when every pair is identical."""
+import hashlib, importlib.util, sys, datetime, subprocess
+from multiprocessing import Pool
+from pathlib import Path
+CLONE = Path("/localdev/fzhang/ws/ibex-challenge")
+C = Path("/tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/test_writer_r3/carryover")
+BLOCK_ROOT = C / "block_root"          # git archive ba4860b dv/auto_dv: the generator the block measured, with its imports
+PIN = "70f318080711d7845c88341a012461bd21d57695536daf2db33189a675a3b8d0"
+REL = "dv/auto_dv/tests/gen_programs/gen_bit_ratified_prog.py"
+
+def load(name, root):
+    sys.path.insert(0, str(root))
+    spec = importlib.util.spec_from_file_location(name, root / REL)
+    mod = importlib.util.module_from_spec(spec); spec.loader.exec_module(mod); sys.path.pop(0); return mod
+
+def sha(p): return hashlib.sha256(Path(p).read_bytes()).hexdigest()
+def git(*a): return subprocess.check_output(["git", "-C", str(CLONE), *a], text=True)
+
+_H = _C = None
+def _init():
+    global _H, _C
+    _H = load("bit_block", BLOCK_ROOT); _C = load("bit_head", CLONE)
+
+def compare(job):
+    seed, item = job   # item None = the green program
+    if item is None:
+        ph, pc = _H.plan(seed), _C.plan(seed)
+    else:
+        ph, pc = _H.plan(seed, red=True, red_item=item), _C.plan(seed, red=True, red_item=item)
+    same_text = _H.emit(ph) == _C.emit(pc)
+    same_rep = (ph.reports, ph.k, ph.min_retired) == (pc.reports, pc.k, pc.min_retired)
+    return seed, item, same_text, same_rep
+
+def main():
+    head = git("rev-parse", "HEAD").strip()
+    now = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    assert sha(BLOCK_ROOT / REL) == PIN and git("show", f"ba4860b:{REL}").encode() == (BLOCK_ROOT / REL).read_bytes()
+    assert git("show", f"HEAD:{REL}").encode() == (CLONE / REL).read_bytes(), "the clone's generator is not HEAD's blob"
+    H = load("bit_block_main", BLOCK_ROOT)
+    seeds_block = [int(x) for x in (CLONE / "dv/auto_dv/evidence/gen_bit_ratified_pairfix/gen_pairfix_seeds.txt").read_text().split()]
+    seeds = seeds_block + list(range(1, 41))
+    items = list(H.BUILT_ITEMS)
+    print("# gen_fu_bit_ratified_carryover: the block's carry-over compared at the block's forty seeds and 1..40, green and every red form")
+    print(f"written {now} by the Test Writer; clone HEAD {head[:7]} ({head}); python {sys.version.split()[0]}")
+    print(f"block generator: blob {PIN} (committed at ba4860b, the generator gen_bit_ratified_pairfix/ block 2 measured), loaded from a git archive of ba4860b")
+    print(f"current generator: blob {sha(CLONE / REL)} (HEAD's, the rev58 follow-up landed at 0679715)")
+    print(f"seeds: the block's forty from gen_pairfix_seeds.txt ({len(seeds_block)}) then 1..40; forms: the green program and the red form of each of the {len(items)} built items")
+    print("compared per pair: the full emitted program text (comments included); the report word list, k and min_retired")
+    print("rule: gen_fcov_plan.md Section 0 (DV Lead): a generator change carries a block over only when the emitted programs are byte-identical at the block's seeds and at its red forms")
+    print()
+    jobs = [(s, None) for s in seeds] + [(s, it) for it in items for s in seeds]
+    with Pool(processes=6, initializer=_init) as pool:
+        results = pool.map(compare, jobs, chunksize=8)
+    by_form = {}
+    for seed, item, st, sr in results:
+        by_form.setdefault(item or "green", []).append((seed, st, sr))
+    bad = [(s, it) for s, it, st, sr in results if not (st and sr)]
+    print(f"## A. PER-FORM RESULT over {len(seeds)} seeds ({len(seeds_block)} block + 40): pairs identical / compared")
+    for form in ["green"] + items:
+        rows = by_form[form]
+        n_ok = sum(1 for _, st, sr in rows if st and sr)
+        print(f"  {form:<12} {n_ok:>3}/{len(rows)}" + ("" if n_ok == len(rows) else "  DIFFERS at seeds " + str([s for s, st, sr in rows if not (st and sr)])))
+    print()
+    print("## B. PER-SEED RESULT at the block's forty seeds (every form: green + 18 reds = 19 pairs per seed)")
+    for s in seeds_block:
+        n_ok = sum(1 for seed, it, st, sr in results if seed == s and st and sr)
+        print(f"  {s:>11}  {n_ok:>2}/19  {'identical' if n_ok == 19 else 'DIFFERS'}")
+    print()
+    print(f"## C. TOTAL: {len(results) - len(bad)} of {len(results)} pairs identical (emitted text and reports); differing pairs: {len(bad)}")
+    for s, it in bad[:20]: print(f"  DIFFER seed {s} form {it or 'green'}")
+    print()
+    print("## D. SCRIPT FOLDED IN")
+    me = Path(__file__).resolve(); print(f"--- {me.name} sha256 {sha(me)} ---"); print(me.read_text().rstrip("\n")); print(f"--- end {me.name} ---")
+    print()
+    print("RESULT: " + ("PASS, every pair identical: the block carries over to the current generator at all its seeds and every red form" if not bad else f"FAIL, {len(bad)} pair(s) differ: the carry-over does not hold"))
+    return 1 if bad else 0
+
+if __name__ == "__main__":
+    sys.exit(main())
+--- end gen_fu_bit_ratified_carryover_measure.py ---
+
+RESULT: PASS, every pair identical: the block carries over to the current generator at all its seeds and every red form

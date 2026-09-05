@@ -1139,3 +1139,31 @@ equal to the committed list minus its no-report member), the red seeds 1, 2 and 
 pairs), and Section D's comment line whole; the log is not reopened. The docstring's "checked through the chained second
 op" now carries its limit: the pair's composite is checked, and a fault common to both binvi is caught only by the item's
 single binvi ops.
+
+## 22. The bit_ratified block's carry-over, compared at the block's seeds and every red form (the DV Lead's rule)
+
+The DV Lead's Section 0 rule (gen_fcov_plan.md, from rev74's first Low) says a generator change carries a block over only
+when the emitted programs are byte-identical at the block's seeds and at its red forms, with the comparison recorded beside
+the block. The bit_ratified block (gen_bit_ratified_pairfix/, block 2 at blob 70f31808, ba4860b) had been carried over to
+the rev58 follow-up's generator (0679715) on a comparison that lived in gen_fu_bit_ratified_rev58.log and its sidecar: 80
+green seeds, but the red forms at seeds 1, 2 and 3 only, and nothing beside the block pointed at it. The DV Lead ruled both
+halves owed: a pointer beside the block now, and the red comparison extended to the block's seeds, because three seeds'
+red forms are a sample where the rule asks for the block's, and the extension costs generator time and no simulation.
+
+Done as ruled. gen_fu_bit_ratified_carryover.log loads the block's generator from a git archive of ba4860b (its blob
+asserted equal to the pin) and HEAD's from the clone (asserted equal to HEAD's blob) and compares, at the block's forty
+seeds and at 1..40, the green program and the red form of every one of the 18 built items: 1520 pairs, each on the full
+emitted text, the report words, k and min_retired; 1520 of 1520 identical, every form 80 of 80, every block seed 19 of 19.
+The record beside the block is gen_bit_ratified_pairfix/gen_carryover_comparison.md, in the shape the rule asks for: the
+seeds compared, the red forms compared, the per-seed result, the script's sha256 and the log's name; its row in the block's
+index is runtime-2's to add, since the index is runtime-2's file. Seed-independence is shown rather than asserted: the two
+changes at 0679715 consume no random draw and reorder none, so identity at every seed is what the construction predicts,
+and the log shows it at all eighty. The companion names which of the two could in principle have moved a draw (the
+no-report op's bookkeeping inside plan(); the comment spelling in the emitter cannot), so the prediction is a reason to
+expect identity and the log is what turns it into evidence; had a seed differed, the prediction would have pointed at
+the change that consumed the draw.
+
+RIDING THIS TOUCH: the Critic's Low on the rev58 follow-up verdict, that the response file's Critic L-6 row named
+sampler_divisor_cls as the committed mul_div generator's mirror where no such function exists at HEAD (it lives only in
+the parked candidate) and the mirror is classify_divisor over DIVISOR_NAMED; the row is corrected in place with the
+correction noted inside it.
