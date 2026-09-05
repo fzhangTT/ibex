@@ -539,3 +539,53 @@ sit inside that, and the address span observed there is exactly four lines.
 So the offsets do not need two mechanisms. One surplus can produce both the small and the large ones,
 which means the check in 11.2 is decisive for all five records of Section 10 rather than for some of
 them.
+
+### 11.8 The delivery's timing against the queue drain
+
+Using the export-to-wave correspondence fixed in 11.3, export cycle N is the wave falling edge at
+(N+5) microcycles.
+
+The unrequested delivery is at export cycle 18337, wave 183420 ns. The driver's queue drains to
+outstanding_after 0 at export cycle 18344, wave 183490 ns. The delivery therefore PRECEDES the drain
+by seven cycles. The drain is not evidence against the delivery: it bounds how long the surplus
+persists on the driver side, not whether the surplus was consumed by the core, and 11.4 measures that
+it was.
+
+The retired divergence in this seed is at 18373500 ticks, wave 183735 ns, a further twenty-four and a
+half cycles after the drain. That gap is what any causal account still has to bridge. Nothing in this
+file bridges it. The derived path in 11.7 explains the precondition and the shape of the fingerprint;
+it does not explain the timing, and it should not be read as if it did.
+
+### 11.9 The two seeds are one observation, not two
+
+The DV Lead asked for this check before the recurring address pair carries any weight, and it goes
+against the reading in 11.6.
+
+The two programs are different files: prog.dis for 1207954461 and for 165313640 have different md5
+sums and differ overall. But the region from 0x80000100 to 0x800001ff is BYTE-IDENTICAL between them,
+including both addresses at issue. 0x80000154 holds `bne s6,s8,80000154` in both and 0x80000168 holds
+`sw t1,0(t0)` in both.
+
+So given the same pc and the same five-beat offset on a shared layout, the model word and the DUT word
+follow of necessity; they could not have come out differently. The heading of 11.6, "the same address
+in three places", overstates what was found and is corrected here: it is not three independent facts.
+
+Counting what is actually independent:
+
+- Measured, in one seed, independent of layout: the uncounted grant at the firing edge with its
+  positive control (11.2); the driver capturing 0x80000168 there, an address the core had already
+  left (11.3); and the core taking delivery of that word into a buffer that requested none of it
+  (11.4).
+- Entailed by the layout once the offset is fixed, and therefore NOT independent evidence: both
+  seeds' model word and DUT word.
+- Repeated but weakly: that both seeds show a +5 offset at pc 0x80000154. The two runs execute
+  identical code through this region, so a shared fault shape on a shared code path is less
+  surprising than two unrelated runs agreeing would be.
+
+The strongest single piece of evidence in this file is therefore the one measured capture in one seed,
+not the agreement between seeds. T3 and T10 remain one investigation and neither closes; the shared
+fingerprint does not stand in for the causal chain.
+
+One framing to hold rather than relax: the surplus entry and the stale capture remain unseparated.
+Measuring the precondition does not settle the delivery question by association, and no sentence in
+this file should be read as if it had.
