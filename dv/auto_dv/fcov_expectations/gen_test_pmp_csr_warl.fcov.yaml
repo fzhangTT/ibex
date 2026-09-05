@@ -1,3 +1,4 @@
+# not_hit gen_pmp_addr_write_cg.cr_hi_mode.bit30_napot: seed-dependent: hit at 39 of 40 seeds in the wave at 4017573 (gen_wave_4017573/gen_wave_census.txt), so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
 # not_hit gen_pmp_addr_write_cg.cr_hi_mode.bit30_tor: seed-dependent: hit at 37 of the entry's 39 measured seeds, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
 # not_hit gen_pmp_addr_write_cg.cr_hi_mode.bit31_napot: seed-dependent: hit at 38 of the entry's 39 measured seeds, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
 # not_hit gen_pmp_addr_write_cg.cr_hi_mode.bit31_tor: seed-dependent: hit at 38 of the entry's 39 measured seeds, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
@@ -187,7 +188,6 @@ bins:
   - gen_pmp_addr_write_cg.cp_self_mode.off
   - gen_pmp_addr_write_cg.cp_self_mode.tor
   - gen_pmp_addr_write_cg.cr_hi_mode.bit30_na4
-  - gen_pmp_addr_write_cg.cr_hi_mode.bit30_napot
   - gen_pmp_addr_write_cg.cr_hi_mode.bit30_off
   - gen_pmp_addr_write_cg.cr_hi_mode.bit31_na4
   - gen_pmp_addr_write_cg.cr_hi_mode.bit31_off
@@ -367,7 +367,6 @@ anti_vacuity:
   gen_pmp_addr_write_cg.cp_self_mode.off: "CG-PMP-002: only pmpaddr writes sample; cp_outcome comes from the readback model's pre-write lock state, so a hit proves the lock / TOR-lock rule was exercised for that index and compared on the following csrr"
   gen_pmp_addr_write_cg.cp_self_mode.tor: "CG-PMP-002: only pmpaddr writes sample; cp_outcome comes from the readback model's pre-write lock state, so a hit proves the lock / TOR-lock rule was exercised for that index and compared on the following csrr"
   gen_pmp_addr_write_cg.cr_hi_mode.bit30_na4: "CG-PMP-002: only pmpaddr writes sample; cp_outcome comes from the readback model's pre-write lock state, so a hit proves the lock / TOR-lock rule was exercised for that index and compared on the following csrr"
-  gen_pmp_addr_write_cg.cr_hi_mode.bit30_napot: "CG-PMP-002: only pmpaddr writes sample; cp_outcome comes from the readback model's pre-write lock state, so a hit proves the lock / TOR-lock rule was exercised for that index and compared on the following csrr"
   gen_pmp_addr_write_cg.cr_hi_mode.bit30_off: "CG-PMP-002: only pmpaddr writes sample; cp_outcome comes from the readback model's pre-write lock state, so a hit proves the lock / TOR-lock rule was exercised for that index and compared on the following csrr"
   gen_pmp_addr_write_cg.cr_hi_mode.bit31_na4: "CG-PMP-002: only pmpaddr writes sample; cp_outcome comes from the readback model's pre-write lock state, so a hit proves the lock / TOR-lock rule was exercised for that index and compared on the following csrr"
   gen_pmp_addr_write_cg.cr_hi_mode.bit31_off: "CG-PMP-002: only pmpaddr writes sample; cp_outcome comes from the readback model's pre-write lock state, so a hit proves the lock / TOR-lock rule was exercised for that index and compared on the following csrr"

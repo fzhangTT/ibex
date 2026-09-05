@@ -77,12 +77,24 @@ class CmpZcb(GenTest):
             "declaration: component bin cp_alu_operand.rand is a default that never fires, so this cross cannot be hit; the cross follows its component",
         "gen_cmp_zcb_cg.cr_alu_operand.c_zext_h_rand":
             "declaration: component bin cp_alu_operand.rand is a default that never fires, so this cross cannot be hit; the cross follows its component",
+        "gen_cmp_zcb_cg.cr_half_misaligned.c_lh_mis1":
+            "seed-dependent: hit at 39 of 40 seeds in the wave at 4017573 (gen_wave_4017573/gen_wave_census.txt), so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_cmp_zcb_cg.cr_half_misaligned.c_lh_mis3":
+            "seed-dependent: hit at 39 of 40 seeds in the wave at 4017573 (gen_wave_4017573/gen_wave_census.txt), so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_cmp_zcb_cg.cr_half_misaligned.c_lhu_mis3":
+            "seed-dependent: hit at 39 of 40 seeds in the wave at 4017573 (gen_wave_4017573/gen_wave_census.txt), so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
         "gen_mul_ops_cg.cp_rs1_class.all_ones":
             "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
         "gen_mul_ops_cg.cp_rs1_class.int_max":
             "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
         "gen_mul_ops_cg.cp_rs1_class.int_min":
             "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_mul_ops_cg.cp_rs1_class.one":
+            "seed-dependent: hit at 38 of 40 seeds in the wave at 4017573 (gen_wave_4017573/gen_wave_census.txt), so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_mul_ops_cg.cp_rs1_class.p16":
+            "seed-dependent: hit at 30 of 40 seeds in the wave at 4017573 (gen_wave_4017573/gen_wave_census.txt), so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_mul_ops_cg.cp_rs1_class.two":
+            "seed-dependent: hit at 34 of 40 seeds in the wave at 4017573 (gen_wave_4017573/gen_wave_census.txt), so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
         "gen_mul_ops_cg.cp_rs1_class.zero":
             "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
         "gen_mul_ops_cg.cr_op_rs1.c_mul_all_ones":
@@ -91,6 +103,12 @@ class CmpZcb(GenTest):
             "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
         "gen_mul_ops_cg.cr_op_rs1.c_mul_int_min":
             "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_mul_ops_cg.cr_op_rs1.c_mul_one":
+            "seed-dependent: hit at 38 of 40 seeds in the wave at 4017573 (gen_wave_4017573/gen_wave_census.txt), so this test does not guarantee it per run; the cross follows its component cp_rs1_class.one, itself under the bar at 38 of 40; PLANNED in traceability, credited from the merged report",
+        "gen_mul_ops_cg.cr_op_rs1.c_mul_p16":
+            "seed-dependent: hit at 30 of 40 seeds in the wave at 4017573 (gen_wave_4017573/gen_wave_census.txt), so this test does not guarantee it per run; the cross follows its component cp_rs1_class.p16, itself under the bar at 30 of 40; PLANNED in traceability, credited from the merged report",
+        "gen_mul_ops_cg.cr_op_rs1.c_mul_two":
+            "seed-dependent: hit at 34 of 40 seeds in the wave at 4017573 (gen_wave_4017573/gen_wave_census.txt), so this test does not guarantee it per run; the cross follows its component cp_rs1_class.two, itself under the bar at 34 of 40; PLANNED in traceability, credited from the merged report",
         "gen_mul_ops_cg.cr_op_rs1.c_mul_zero":
             "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
     }

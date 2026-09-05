@@ -96,6 +96,8 @@ class PmpCsrWarl(GenTest):
     # items of the plan group this test does not check, with the reason (two-sided against the group by the structure check)
     not_built = {}
     bins_not_hit = {
+        "gen_pmp_addr_write_cg.cr_hi_mode.bit30_napot":
+            "seed-dependent: hit at 39 of 40 seeds in the wave at 4017573 (gen_wave_4017573/gen_wave_census.txt), so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
         "gen_pmp_addr_write_cg.cr_hi_mode.bit30_tor":
             "seed-dependent: hit at 37 of the entry's 39 measured seeds, so this test does not guarantee it per "
             "run; PLANNED in traceability, credited from the merged report",

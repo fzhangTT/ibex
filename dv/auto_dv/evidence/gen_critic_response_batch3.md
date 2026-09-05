@@ -239,3 +239,8 @@ CM229-M-1 ABOVE ("HALF ANSWERED: the declarations wait on the wave") closes its 
 with this touch, from block 2 rather than the wave, because the pair fix perturbs the entry's programs by one to three
 instructions and the DV Lead ruled the post-fix block the authority for the whole entry; the row is left as written and
 this line is its completion. gen_test_cmp_zca's half closes with the wave re-render hand.
+
+CM229-M-1's declaring half closes for gen_test_cmp_zca with the wave re-render hand (gen_tdd_batch3.md Section 19): its 21
+every-seed shapes are declared from the wave census itself, the forty-seed measurement at 4017573, the commit that fixed
+that generator (gen_wave_4017573/gen_wave_nothit.txt at 1fb417f); cp_cj_off.self stays out with its reason made
+entry-scoped. Both halves of the row are now closed, bit_ratified's at ba4860b and cmp_zca's here.

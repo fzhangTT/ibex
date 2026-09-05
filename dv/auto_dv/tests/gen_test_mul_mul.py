@@ -79,6 +79,13 @@ class MulMul(GenTest):
     schedulable = lib.TIMING_ONLY_KNOBS
     # items of the plan group this test does not check, with the reason (two-sided against the group by the structure check)
     not_built = {"TP-MUL-003": "latency clause: RVFI cycle / bus records, event export"}
+    # bins this test does not guarantee per run, with the reason and its class (gen_test_template.bins_not_hit)
+    bins_not_hit = {
+        "gen_mul_timing_cg.cr_op_delta_clean.mulhsu_d2":
+            "seed-dependent by measurement, cause undiagnosed: hit at 38 of 40 seeds in the wave at 4017573 (gen_wave_4017573/gen_wave_census.txt); one of the four delta-2 timing bins (mul_div cp_delta.d2 and cr_dit_div0_delta.dit0_div0_d2, mul_mul cr_op_delta_clean.mulhsu_d2 and mulhu_d2) that get one diagnosis together; PLANNED in traceability, credited from the merged report",
+        "gen_mul_timing_cg.cr_op_delta_clean.mulhu_d2":
+            "seed-dependent by measurement, cause undiagnosed: hit at 38 of 40 seeds in the wave at 4017573 (gen_wave_4017573/gen_wave_census.txt); one of the four delta-2 timing bins (mul_div cp_delta.d2 and cr_dit_div0_delta.dit0_div0_d2, mul_mul cr_op_delta_clean.mulhsu_d2 and mulhu_d2) that get one diagnosis together; PLANNED in traceability, credited from the merged report",
+    }
 
     def report_count(self):
         return _plan(self).k

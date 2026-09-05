@@ -1,0 +1,411 @@
+# gen_fu_wave_rerender: six entries re-rendered to the wave's every-seed set, cmp_zca's 21 shapes declared, checked bin by bin
+written 2026-09-05T11:28:51Z by the Test Writer; clone HEAD ba4860b (ba4860ba077a76bbb23e6c8293b219dabca50f42); python 3.12.10
+census: dv/auto_dv/evidence/gen_wave_4017573/gen_wave_census.txt sha256 11eaf13f51e3; not_hit table: dv/auto_dv/evidence/gen_wave_4017573/gen_wave_nothit.txt sha256 10243f2cab29 (both committed at 1fb417f, measured on 4017573)
+ruling: the DV Lead's per-entry remedy (Orchestrator TASKS.md 2026-09-05T10:08:17Z): re-render to the every-seed set; N-of-40 reasons naming 4017573 and the census;
+        three classes; the cross-operand rule in the removal direction; cmp_zca's 21 every-seed shapes return; cp_cj_off.self's reason corrected
+
+## A. THE CENSUS, parsed with the raw marker count asserted
+  ok    28 under-bar rows in the census, parsed 28 of 28 raw rows
+  ok    every entry's row count equals its SOME figure
+  ok    no declared bin is NEVER hit in the wave
+  ok    per-entry under-bar counts {'gen_test_cmp_zcb': 9, 'gen_test_cmp_zcmp_basic': 6, 'gen_test_mul_div': 6, 'gen_test_isa_shift': 4, 'gen_test_mul_mul': 2, 'gen_test_pmp_csr_warl': 1}
+  under-bar bins by kind: 5 coverpoint, 23 cross legs (the file's own [CROSS LEG] marks)
+
+## B. EACH ENTRY: the bins that left the declared set are exactly the census's, each reason carries its count and class
+  gen_test_cmp_zcb: declared 96 -> 87 (9 removed: 6 cross, 3 coverpoint); not_hit lines 14 -> 23
+  ok    gen_test_cmp_zcb: HEAD's manifest declares the 96 the census measured
+  ok    gen_test_cmp_zcb: removed set equals the census's under-bar set; nothing added
+  ok    gen_test_cmp_zcb: exactly those bins gained a not_hit line; every old line kept
+  ok    gen_test_cmp_zcb: cr_half_misaligned.c_lh_mis1 39/40 [seed-dependent] cross
+  ok    gen_test_cmp_zcb: cr_half_misaligned.c_lh_mis3 39/40 [seed-dependent] cross
+  ok    gen_test_cmp_zcb: cr_half_misaligned.c_lhu_mis3 39/40 [seed-dependent] cross
+  ok    gen_test_cmp_zcb: cp_rs1_class.one 38/40 [seed-dependent] coverpoint
+  ok    gen_test_cmp_zcb: cp_rs1_class.p16 30/40 [seed-dependent] coverpoint
+  ok    gen_test_cmp_zcb: cp_rs1_class.two 34/40 [seed-dependent] coverpoint
+  ok    gen_test_cmp_zcb: cr_op_rs1.c_mul_one 38/40 [seed-dependent] cross
+  ok    gen_test_cmp_zcb: cr_op_rs1.c_mul_p16 30/40 [seed-dependent] cross
+  ok    gen_test_cmp_zcb: cr_op_rs1.c_mul_two 34/40 [seed-dependent] cross
+  ok    gen_test_cmp_zcb: the 14 pre-existing not_hit reasons are byte-identical
+  ok    gen_test_cmp_zcb: cross-operand rule: 1 declared cross leg(s) name one; removed with it: 1, left declared: 0
+  ok    gen_test_cmp_zcb: cross-operand rule: 1 declared cross leg(s) name p16; removed with it: 1, left declared: 0
+  ok    gen_test_cmp_zcb: cross-operand rule: 1 declared cross leg(s) name two; removed with it: 1, left declared: 0
+  gen_test_cmp_zcmp_basic: declared 325 -> 319 (6 removed: 5 cross, 1 coverpoint); not_hit lines 147 -> 153
+  ok    gen_test_cmp_zcmp_basic: HEAD's manifest declares the 325 the census measured
+  ok    gen_test_cmp_zcmp_basic: removed set equals the census's under-bar set; nothing added
+  ok    gen_test_cmp_zcmp_basic: exactly those bins gained a not_hit line; every old line kept
+  ok    gen_test_cmp_zcmp_basic: cp_hazard.popretz_ft_cm 39/40 [seed-dependent] coverpoint
+  ok    gen_test_cmp_zcmp_basic: cr_ft_kind.popret_ft_cm_cm_push 21/40 [seed-dependent] cross
+  ok    gen_test_cmp_zcmp_basic: cr_ft_kind.popretz_ft_cm_cm_pop 16/40 [seed-dependent] cross
+  ok    gen_test_cmp_zcmp_basic: cr_hazard_rlist.store_same_slot_then_pop_r5_14 32/40 [seed-dependent] cross
+  ok    gen_test_cmp_zcmp_basic: cr_hazard_rlist.write_pushed_reg_then_push_r5_14 34/40 [seed-dependent] cross
+  ok    gen_test_cmp_zcmp_basic: cr_insn_rlist_spimm.cm_popret_r4_s1 11/40 [seed-dependent] cross
+  ok    gen_test_cmp_zcmp_basic: the 147 pre-existing not_hit reasons are byte-identical
+  ok    gen_test_cmp_zcmp_basic: cross-operand rule: 1 declared cross leg(s) name popretz_ft_cm; removed with it: 1, left declared: 0
+  gen_test_mul_div: declared 196 -> 190 (6 removed: 5 cross, 1 coverpoint); not_hit lines 28 -> 34
+  ok    gen_test_mul_div: HEAD's manifest declares the 196 the census measured
+  ok    gen_test_mul_div: removed set equals the census's under-bar set; nothing added
+  ok    gen_test_mul_div: exactly those bins gained a not_hit line; every old line kept
+  ok    gen_test_mul_div: cr_op_divisor.div_pos_rand 38/40 [generator label defect] cross
+  ok    gen_test_mul_div: cr_op_divisor.divu_pos_rand 36/40 [generator label defect] cross
+  ok    gen_test_mul_div: cr_op_divisor.rem_pos_rand 39/40 [generator label defect] cross
+  ok    gen_test_mul_div: cr_op_divisor.remu_pos_rand 37/40 [generator label defect] cross
+  ok    gen_test_mul_div: cp_delta.d2 39/40 [seed-dependent by measurement, cause undiagnosed] coverpoint
+  ok    gen_test_mul_div: cr_dit_div0_delta.dit0_div0_d2 39/40 [seed-dependent by measurement, cause undiagnosed] cross
+  ok    gen_test_mul_div: the 28 pre-existing not_hit reasons are byte-identical
+  ok    gen_test_mul_div: cross-operand rule: 1 declared cross leg(s) name d2; removed with it: 1, left declared: 0
+  gen_test_isa_shift: declared 120 -> 116 (4 removed: 4 cross, 0 coverpoint); not_hit lines 0 -> 4
+  ok    gen_test_isa_shift: HEAD's manifest declares the 120 the census measured
+  ok    gen_test_isa_shift: removed set equals the census's under-bar set; nothing added
+  ok    gen_test_isa_shift: exactly those bins gained a not_hit line; every old line kept
+  ok    gen_test_isa_shift: cr_op_operand.slli_all_ones 38/40 [seed-dependent] cross
+  ok    gen_test_isa_shift: cr_op_operand.slli_msb_only 39/40 [seed-dependent] cross
+  ok    gen_test_isa_shift: cr_op_operand.srli_lsb_only 39/40 [seed-dependent] cross
+  ok    gen_test_isa_shift: cr_op_shamt.slli_s1 39/40 [seed-dependent] cross
+  ok    gen_test_isa_shift: the 0 pre-existing not_hit reasons are byte-identical
+  gen_test_mul_mul: declared 338 -> 336 (2 removed: 2 cross, 0 coverpoint); not_hit lines 0 -> 2
+  ok    gen_test_mul_mul: HEAD's manifest declares the 338 the census measured
+  ok    gen_test_mul_mul: removed set equals the census's under-bar set; nothing added
+  ok    gen_test_mul_mul: exactly those bins gained a not_hit line; every old line kept
+  ok    gen_test_mul_mul: cr_op_delta_clean.mulhsu_d2 38/40 [seed-dependent by measurement, cause undiagnosed] cross
+  ok    gen_test_mul_mul: cr_op_delta_clean.mulhu_d2 38/40 [seed-dependent by measurement, cause undiagnosed] cross
+  ok    gen_test_mul_mul: the 0 pre-existing not_hit reasons are byte-identical
+  gen_test_pmp_csr_warl: declared 179 -> 178 (1 removed: 1 cross, 0 coverpoint); not_hit lines 81 -> 82
+  ok    gen_test_pmp_csr_warl: HEAD's manifest declares the 179 the census measured
+  ok    gen_test_pmp_csr_warl: removed set equals the census's under-bar set; nothing added
+  ok    gen_test_pmp_csr_warl: exactly those bins gained a not_hit line; every old line kept
+  ok    gen_test_pmp_csr_warl: cr_hi_mode.bit30_napot 39/40 [seed-dependent] cross
+  ok    gen_test_pmp_csr_warl: the 81 pre-existing not_hit reasons are byte-identical
+  six entries: 1254 -> 1226 declared (28 removed)
+
+## C. gen_test_cmp_zca: the 21 every-seed shapes return, the never one stays out with its reason corrected
+  ok    the table reads 21 declarable shapes and one never (21, ['gen_cmp_imm_edges_cg.cp_cj_off.self'])
+  declared 300 -> 321 (21 cross, 0 coverpoint added); not_hit lines 24 -> 3
+  ok    the 21 added bins are exactly the census's every-seed shapes; nothing removed
+  ok    the 21 left bins_not_hit and nothing else did
+  ok    cp_cj_off.self stays undeclared with a not_hit line
+  ok    cp_cj_off.self's reason: stimulus class, 0 of 40 in the wave, entry-scoped, the park-here idiom named
+  ok    the two seed-dependent c_lwsp lines are untouched (2)
+
+## D. RENDER: every manifest equals its module's render byte for byte; the ten untouched manifests byte-identical to HEAD
+  ok    gen_test_bit_ratified: zero render diff; byte-identical to HEAD: True
+  ok    gen_test_bit_ratified: untouched, equals HEAD
+  ok    gen_test_cmp_zca: zero render diff
+  ok    gen_test_cmp_zcb: zero render diff
+  ok    gen_test_cmp_zcmp_basic: zero render diff
+  ok    gen_test_csr_access: zero render diff; byte-identical to HEAD: True
+  ok    gen_test_csr_access: untouched, equals HEAD
+  ok    gen_test_csr_trap_setup: zero render diff; byte-identical to HEAD: True
+  ok    gen_test_csr_trap_setup: untouched, equals HEAD
+  ok    gen_test_irq_basic: zero render diff; byte-identical to HEAD: True
+  ok    gen_test_irq_basic: untouched, equals HEAD
+  ok    gen_test_isa_alu: zero render diff; byte-identical to HEAD: True
+  ok    gen_test_isa_alu: untouched, equals HEAD
+  ok    gen_test_isa_cti: zero render diff; byte-identical to HEAD: True
+  ok    gen_test_isa_cti: untouched, equals HEAD
+  ok    gen_test_isa_shift: zero render diff
+  ok    gen_test_mul_div: zero render diff
+  ok    gen_test_mul_mul: zero render diff
+  ok    gen_test_pmc_ctrl: zero render diff; byte-identical to HEAD: True
+  ok    gen_test_pmc_ctrl: untouched, equals HEAD
+  ok    gen_test_pmp_csr_warl: zero render diff
+  ok    gen_test_pmp_lock: zero render diff; byte-identical to HEAD: True
+  ok    gen_test_pmp_lock: untouched, equals HEAD
+  ok    gen_test_pmp_mseccfg: zero render diff; byte-identical to HEAD: True
+  ok    gen_test_pmp_mseccfg: untouched, equals HEAD
+  ok    gen_test_rst_boot: zero render diff; byte-identical to HEAD: True
+  ok    gen_test_rst_boot: untouched, equals HEAD
+  ok    gen_test_cmp_zcb: the module's bins_not_hit dict equals the manifest's not_hit lines (23)
+  ok    gen_test_cmp_zcmp_basic: the module's bins_not_hit dict equals the manifest's not_hit lines (153)
+  ok    gen_test_mul_div: the module's bins_not_hit dict equals the manifest's not_hit lines (34)
+  ok    gen_test_isa_shift: the module's bins_not_hit dict equals the manifest's not_hit lines (4)
+  ok    gen_test_mul_mul: the module's bins_not_hit dict equals the manifest's not_hit lines (2)
+  ok    gen_test_pmp_csr_warl: the module's bins_not_hit dict equals the manifest's not_hit lines (82)
+  ok    gen_test_cmp_zca: the module's bins_not_hit dict equals the manifest's not_hit lines (3)
+
+## E. SCRIPTS FOLDED IN
+--- apply_handB.py sha256 c14bf39403079b0c07c9fdf05c6a9824e67a43a4dd121e9408c5e4435cdfa777 ---
+"""Hand B edits: the wave re-renders. Every removed bin and its count come from the committed census; the class
+of each reason is the DV Lead's ruling (TASKS 2026-09-05T10:08:17Z). Idempotent: refuses to insert a key twice."""
+import ast, re, subprocess, sys
+from pathlib import Path
+CLONE = Path("/localdev/fzhang/ws/ibex-challenge")
+CENSUS = CLONE / "dv/auto_dv/evidence/gen_wave_4017573/gen_wave_census.txt"
+NOTHIT = CLONE / "dv/auto_dv/evidence/gen_wave_4017573/gen_wave_nothit.txt"
+CITE = "the wave at 4017573 (gen_wave_4017573/gen_wave_census.txt)"
+
+def census():
+    out, ent = {}, None
+    for line in CENSUS.read_text().splitlines():
+        m = re.match(r"^=== (gen_test_\w+): (\d+) runs.*declared (\d+) \| EVERY (\d+)\s+SOME (\d+)\s+NEVER (\d+)", line)
+        if m: ent = m.group(1); out[ent] = {"declared": int(m.group(3)), "some": int(m.group(5)), "bins": {}}; continue
+        m = re.match(r"^\s+(\d+)/40\s+(gen_\S+)( \[CROSS LEG\])?\s*$", line)
+        if m and ent: out[ent]["bins"][m.group(2)] = (int(m.group(1)), bool(m.group(3)))
+    for e, d in out.items():
+        assert len(d["bins"]) == d["some"], (e, len(d["bins"]), d["some"])
+    return out
+
+def nothit_zca():
+    t = NOTHIT.read_text()
+    blk = t.split("=== gen_test_cmp_zca:")[1]
+    decl = re.findall(r"^\s+40/40\s+(gen_\S+)$", blk, re.M)
+    never = re.findall(r"^\s+0/40\s+(gen_\S+)\s+<-- NEVER", blk, re.M)
+    assert len(decl) == 21 and never == ["gen_cmp_imm_edges_cg.cp_cj_off.self"], (len(decl), never)
+    return decl, never[0]
+
+LABEL_LEGS = {"gen_div_ops_cg.cr_op_divisor.divu_pos_rand", "gen_div_ops_cg.cr_op_divisor.remu_pos_rand",
+              "gen_div_ops_cg.cr_op_divisor.div_pos_rand", "gen_div_ops_cg.cr_op_divisor.rem_pos_rand"}
+UNDIAG = {"gen_div_timing_cg.cp_delta.d2", "gen_div_timing_cg.cr_dit_div0_delta.dit0_div0_d2",
+          "gen_mul_timing_cg.cr_op_delta_clean.mulhsu_d2", "gen_mul_timing_cg.cr_op_delta_clean.mulhu_d2"}
+FOLLOWS = {"gen_mul_ops_cg.cr_op_rs1.c_mul_p16": "gen_mul_ops_cg.cp_rs1_class.p16",
+           "gen_mul_ops_cg.cr_op_rs1.c_mul_two": "gen_mul_ops_cg.cp_rs1_class.two",
+           "gen_mul_ops_cg.cr_op_rs1.c_mul_one": "gen_mul_ops_cg.cp_rs1_class.one",
+           "gen_cmp_zcmp_hazard_cg.cr_ft_kind.popretz_ft_cm_cm_pop": "gen_cmp_zcmp_hazard_cg.cp_hazard.popretz_ft_cm",
+           "gen_div_timing_cg.cr_dit_div0_delta.dit0_div0_d2": "gen_div_timing_cg.cp_delta.d2"}
+
+def reason(b, n, ent_bins):
+    if b in LABEL_LEGS:
+        return (f"generator label defect, not seed-dependent: hit at {n} of 40 seeds in {CITE}; gen_mul_div_prog.py draws a "
+                "pos_rand divisor by sign alone while the sampler's single-class rule (div_divisor_cls: the named values, then "
+                "eq_dividend, then abs_gt_dividend, then the sign class) books a draw whose magnitude exceeds the dividend as "
+                "abs_gt_dividend, so the label is not the bin; the fix owed is a draw that rejects the classifier's other classes, "
+                "proven against the sampler's rule and never the generator's mirror, then a fresh forty-seed measurement at that "
+                "fix's commit")
+    if b in UNDIAG:
+        return (f"seed-dependent by measurement, cause undiagnosed: hit at {n} of 40 seeds in {CITE}; one of the four delta-2 "
+                "timing bins (mul_div cp_delta.d2 and cr_dit_div0_delta.dit0_div0_d2, mul_mul cr_op_delta_clean.mulhsu_d2 and "
+                "mulhu_d2) that get one diagnosis together; PLANNED in traceability, credited from the merged report")
+    s = f"seed-dependent: hit at {n} of 40 seeds in {CITE}, so this test does not guarantee it per run"
+    if b in FOLLOWS:
+        comp = FOLLOWS[b]; cn = ent_bins[comp][0]
+        s += f"; the cross follows its component {comp.split('.', 1)[1]}, itself under the bar at {cn} of 40"
+    return s + "; PLANNED in traceability, credited from the merged report"
+
+def dict_node(src):
+    tree = ast.parse(src)
+    for n in ast.walk(tree):
+        if isinstance(n, ast.Assign) and any(isinstance(x, ast.Name) and x.id == "bins_not_hit" for x in n.targets):
+            return n
+    return None
+
+def entry_lines(key, why):
+    return [f'        "{key}":', f'            "{why}",']
+
+def add_entries(path, new):
+    """Insert sorted entries into an existing dict without touching its other lines, or create the dict after not_built."""
+    src = path.read_text(); lines = src.split("\n")
+    node = dict_node(src)
+    for k in new:
+        assert f'"{k}"' not in src, f"{path.name}: {k} already present"
+    if node is not None:
+        keys = [(k.value, k.lineno) for k in node.value.keys]
+        close = node.end_lineno  # the line holding the closing brace
+        groups = {}              # before_line_1based -> lines, keys in sorted order within a group
+        for k in sorted(new):
+            after = [ln for kv, ln in keys if kv > k]
+            groups.setdefault(min(after) if after else close, []).extend(entry_lines(k, new[k]))
+        for at in sorted(groups, reverse=True):
+            lines[at - 1:at - 1] = groups[at]
+    else:
+        nb = [i for i, l in enumerate(lines) if re.match(r"^    not_built = ", l)]
+        assert len(nb) == 1, path.name
+        i = nb[0]
+        # a one-line not_built; the dict goes right after it with the template's comment
+        assert lines[i].rstrip().endswith("}"), (path.name, lines[i])
+        block = ["    # bins this test does not guarantee per run, with the reason and its class (gen_test_template.bins_not_hit)",
+                 "    bins_not_hit = {"]
+        for k in sorted(new):
+            block += entry_lines(k, new[k])
+        block.append("    }")
+        lines[i + 1:i + 1] = block
+    path.write_text("\n".join(lines))
+    node2 = dict_node(path.read_text()); got = {k.value: v.value for k, v in zip(node2.value.keys, node2.value.values)}
+    for k, v in new.items():
+        assert got[k] == v, k
+    assert [k.value for k in node2.value.keys] == sorted(k.value for k in node2.value.keys), f"{path.name}: dict not sorted"
+    return len(node2.value.keys)
+
+def remove_entries(path, drop, replace):
+    src = path.read_text(); lines = src.split("\n"); node = dict_node(src)
+    kv = {k.value: (k, v) for k, v in zip(node.value.keys, node.value.values)}
+    cuts = []
+    for k in drop:
+        kn, vn = kv[k]; assert vn.lineno == kn.lineno + 1 and vn.end_lineno == vn.lineno, k
+        cuts.append((kn.lineno, vn.end_lineno))
+    for k, why in replace.items():
+        kn, vn = kv[k]; assert vn.end_lineno == vn.lineno, k
+        lines[vn.lineno - 1] = f'            "{why}",'
+    for a, b in sorted(cuts, reverse=True):
+        del lines[a - 1:b]
+    path.write_text("\n".join(lines))
+    node2 = dict_node(path.read_text()); got = {k.value: v.value for k, v in zip(node2.value.keys, node2.value.values)}
+    assert not (set(drop) & set(got)) and all(got[k] == w for k, w in replace.items())
+    return len(got)
+
+def main():
+    c = census()
+    ENTRIES = {"gen_test_cmp_zcb": "cmp_zcb", "gen_test_cmp_zcmp_basic": "cmp_zcmp_basic", "gen_test_mul_div": "mul_div",
+               "gen_test_isa_shift": "isa_shift", "gen_test_mul_mul": "mul_mul", "gen_test_pmp_csr_warl": "pmp_csr_warl"}
+    for ent, short in ENTRIES.items():
+        bins = c[ent]["bins"]
+        new = {b: reason(b, n, bins) for b, (n, _) in bins.items()}
+        total = add_entries(CLONE / f"dv/auto_dv/tests/gen_test_{short}.py", new)
+        print(f"{ent}: +{len(new)} not_hit -> {total} entries")
+    decl, never = nothit_zca()
+    zca = CLONE / "dv/auto_dv/tests/gen_test_cmp_zca.py"
+    fix = {never: ("stimulus: this program emits no c.j or c.jal with offset 0, so the bin is 0 of 40 in the wave at 4017573 "
+                   "(gen_wave_4017573/gen_wave_nothit.txt); entry-scoped, not exclusive with termination: a zero-offset compressed "
+                   "jump is the park-here idiom that other entries retire (398 merged hits in round 0)")}
+    total = remove_entries(zca, decl, fix)
+    print(f"gen_test_cmp_zca: -{len(decl)} not_hit, 1 reason replaced -> {total} entries")
+    for short in list(ENTRIES.values()) + ["cmp_zca"]:
+        t = f"gen_test_{short}"
+        r = subprocess.run([sys.executable, str(CLONE / "dv/auto_dv/tests/gen_fcov_manifest.py"), "--test-module",
+                            str(CLONE / f"dv/auto_dv/tests/{t}.py"), "--test", t, "--write"], cwd=str(CLONE),
+                           text=True, capture_output=True, env={"PATH": "/usr/bin:/bin"})
+        last = r.stdout.strip().splitlines()[-1] if r.stdout.strip() else r.stderr.strip().splitlines()[-1]
+        print(f"  render {t}: exit {r.returncode}: {last}")
+        if r.returncode: print(r.stderr[-800:]); sys.exit(1)
+
+if __name__ == "__main__":
+    main()
+--- end apply_handB.py ---
+--- gen_fu_wave_rerender_measure.py sha256 ae994e651462fa9e6dc46da53baf1857aeffd87a5aafe17f0f2e91f511f505b5 ---
+"""Build gen_fu_wave_rerender.log: the wave re-renders checked against the committed census, bin by bin.
+
+The measurement is runtime-2's retained wave census (gen_wave_4017573/, commit 1fb417f, 40 fresh seeds per entry on
+4017573); this log verifies that the re-render removes exactly the bins that census puts under the every-seed bar, with
+the count and class each reason carries, that every cross leg naming a removed operand bin is removed with it, that
+cmp_zca declares exactly the 21 shapes the census's not_hit table reads at every seed, and that every manifest renders
+from its module with zero diff. Exit 0 only when every expectation holds."""
+import hashlib, os, re, subprocess, sys, datetime, ast
+from pathlib import Path
+CLONE = Path("/localdev/fzhang/ws/ibex-challenge")
+S = Path("/tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/test_writer_r3/handB")
+CENSUS = "dv/auto_dv/evidence/gen_wave_4017573/gen_wave_census.txt"
+NOTHIT = "dv/auto_dv/evidence/gen_wave_4017573/gen_wave_nothit.txt"
+ENTRIES = {"gen_test_cmp_zcb": 9, "gen_test_cmp_zcmp_basic": 6, "gen_test_mul_div": 6, "gen_test_isa_shift": 4,
+           "gen_test_mul_mul": 2, "gen_test_pmp_csr_warl": 1}
+LABEL_LEGS = {"gen_div_ops_cg.cr_op_divisor.divu_pos_rand", "gen_div_ops_cg.cr_op_divisor.remu_pos_rand",
+              "gen_div_ops_cg.cr_op_divisor.div_pos_rand", "gen_div_ops_cg.cr_op_divisor.rem_pos_rand"}
+UNDIAG = {"gen_div_timing_cg.cp_delta.d2", "gen_div_timing_cg.cr_dit_div0_delta.dit0_div0_d2",
+          "gen_mul_timing_cg.cr_op_delta_clean.mulhsu_d2", "gen_mul_timing_cg.cr_op_delta_clean.mulhu_d2"}
+fails = []
+def expect(cond, msg):
+    print(("  ok    " if cond else "  FAIL  ") + msg)
+    if not cond: fails.append(msg)
+def sha(p): return hashlib.sha256(Path(p).read_bytes()).hexdigest()
+def git(*a): return subprocess.check_output(["git", "-C", str(CLONE), *a], text=True)
+def bins_of(text): return re.findall(r"^  - (\S+)$", text, re.M)
+def nothit_of(text): return dict(re.findall(r"^# not_hit (\S+): (.*)$", text, re.M))
+
+head = git("rev-parse", "HEAD").strip()
+now = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+print("# gen_fu_wave_rerender: six entries re-rendered to the wave's every-seed set, cmp_zca's 21 shapes declared, checked bin by bin")
+print(f"written {now} by the Test Writer; clone HEAD {head[:7]} ({head}); python {sys.version.split()[0]}")
+print(f"census: {CENSUS} sha256 {sha(CLONE/CENSUS)[:12]}; not_hit table: {NOTHIT} sha256 {sha(CLONE/NOTHIT)[:12]} (both committed at 1fb417f, measured on 4017573)")
+print(f"ruling: the DV Lead's per-entry remedy (Orchestrator TASKS.md 2026-09-05T10:08:17Z): re-render to the every-seed set; N-of-40 reasons naming 4017573 and the census;")
+print(f"        three classes; the cross-operand rule in the removal direction; cmp_zca's 21 every-seed shapes return; cp_cj_off.self's reason corrected")
+print()
+print("## A. THE CENSUS, parsed with the raw marker count asserted")
+census, ent = {}, None
+for line in (CLONE / CENSUS).read_text().splitlines():
+    m = re.match(r"^=== (gen_test_\w+): (\d+) runs.*declared (\d+) \| EVERY (\d+)\s+SOME (\d+)\s+NEVER (\d+)", line)
+    if m: ent = m.group(1); census[ent] = {"runs": int(m.group(2)), "declared": int(m.group(3)), "some": int(m.group(5)), "never": int(m.group(6)), "bins": {}}; continue
+    m = re.match(r"^\s+(\d+)/40\s+(gen_\S+)( \[CROSS LEG\])?\s*$", line)
+    if m and ent: census[ent]["bins"][m.group(2)] = (int(m.group(1)), bool(m.group(3)))
+raw_rows = sum(1 for l in (CLONE / CENSUS).read_text().splitlines() if re.match(r"^\s+\d+/40\s+gen_", l))
+parsed = sum(len(d["bins"]) for d in census.values())
+expect(raw_rows == parsed == 28, f"28 under-bar rows in the census, parsed {parsed} of {raw_rows} raw rows")
+expect(all(len(d["bins"]) == d["some"] for d in census.values()), "every entry's row count equals its SOME figure")
+expect(all(d["never"] == 0 for d in census.values()), "no declared bin is NEVER hit in the wave")
+expect({e: len(census[e]["bins"]) for e in ENTRIES} == ENTRIES, f"per-entry under-bar counts {ENTRIES}")
+ncross = sum(1 for d in census.values() for n, c in d["bins"].values() if c)
+print(f"  under-bar bins by kind: {28 - ncross} coverpoint, {ncross} cross legs (the file's own [CROSS LEG] marks)")
+print()
+print("## B. EACH ENTRY: the bins that left the declared set are exactly the census's, each reason carries its count and class")
+tot_before = tot_after = 0
+for e, k in ENTRIES.items():
+    man_head = git("show", f"HEAD:dv/auto_dv/fcov_expectations/{e}.fcov.yaml")
+    man_new = (CLONE / f"dv/auto_dv/fcov_expectations/{e}.fcov.yaml").read_text()
+    b0, b1 = set(bins_of(man_head)), set(bins_of(man_new))
+    nh0, nh1 = nothit_of(man_head), nothit_of(man_new)
+    removed = b0 - b1
+    exp = set(census[e]["bins"])
+    tot_before += len(b0); tot_after += len(b1)
+    print(f"  {e}: declared {len(b0)} -> {len(b1)} ({len(b0) - len(b1)} removed: {sum(1 for b in removed if '.cr_' in b)} cross, {sum(1 for b in removed if '.cp_' in b)} coverpoint); not_hit lines {len(nh0)} -> {len(nh1)}")
+    expect(len(b0) == census[e]["declared"], f"{e}: HEAD's manifest declares the {census[e]['declared']} the census measured")
+    expect(removed == exp and not (b1 - b0), f"{e}: removed set equals the census's under-bar set; nothing added")
+    expect(set(nh1) - set(nh0) == exp and set(nh0) <= set(nh1), f"{e}: exactly those bins gained a not_hit line; every old line kept")
+    for b in sorted(exp):
+        n, is_cross = census[e]["bins"][b]
+        why = nh1[b]
+        cls = "generator label defect" if b in LABEL_LEGS else "seed-dependent by measurement, cause undiagnosed" if b in UNDIAG else "seed-dependent"
+        ok = why.startswith(cls) and f"hit at {n} of 40 seeds" in why and "4017573" in why and "gen_wave_census.txt" in why
+        if b in LABEL_LEGS: ok = ok and "not seed-dependent" in why and "fix owed" in why and "div_divisor_cls" in why
+        if b in UNDIAG: ok = ok and "one diagnosis" in why
+        expect(ok, f"{e}: {b.split('.', 1)[1]} {n}/40 [{cls}]" + (" cross" if is_cross else " coverpoint"))
+    # old not_hit lines untouched
+    expect(all(nh0[b] == nh1[b] for b in nh0), f"{e}: the {len(nh0)} pre-existing not_hit reasons are byte-identical")
+    # cross-operand rule in the removal direction: every declared cross leg naming a removed coverpoint bin is removed too
+    for cp in sorted(b for b in exp if ".cp_" in b):
+        cg, _, binname = cp.split(".", 2)[0], None, cp.split(".", 2)[2]
+        segs = binname.split("_")
+        legs = []
+        for x in b0:
+            xcg, xcp, xb = x.split(".", 2)
+            if xcg != cg or not xcp.startswith("cr_"): continue
+            xs = xb.split("_")
+            if any(xs[i:i + len(segs)] == segs for i in range(len(xs) - len(segs) + 1)): legs.append(x)
+        left = [x for x in legs if x in b1]
+        expect(not left, f"{e}: cross-operand rule: {len(legs)} declared cross leg(s) name {binname}; removed with it: {len(legs) - len(left)}, left declared: {len(left)}")
+print(f"  six entries: {tot_before} -> {tot_after} declared ({tot_before - tot_after} removed)")
+print()
+print("## C. gen_test_cmp_zca: the 21 every-seed shapes return, the never one stays out with its reason corrected")
+blk = (CLONE / NOTHIT).read_text().split("=== gen_test_cmp_zca:")[1]
+decl = re.findall(r"^\s+40/40\s+(gen_\S+)$", blk, re.M)
+never = re.findall(r"^\s+0/40\s+(gen_\S+)\s+<-- NEVER", blk, re.M)
+expect(len(decl) == 21 and never == ["gen_cmp_imm_edges_cg.cp_cj_off.self"], f"the table reads 21 declarable shapes and one never ({len(decl)}, {never})")
+man_head = git("show", "HEAD:dv/auto_dv/fcov_expectations/gen_test_cmp_zca.fcov.yaml")
+man_new = (CLONE / "dv/auto_dv/fcov_expectations/gen_test_cmp_zca.fcov.yaml").read_text()
+b0, b1 = set(bins_of(man_head)), set(bins_of(man_new)); nh0, nh1 = nothit_of(man_head), nothit_of(man_new)
+print(f"  declared {len(b0)} -> {len(b1)} ({sum(1 for b in b1 - b0 if '.cr_' in b)} cross, {sum(1 for b in b1 - b0 if '.cp_' in b)} coverpoint added); not_hit lines {len(nh0)} -> {len(nh1)}")
+expect(b1 - b0 == set(decl) and not (b0 - b1), "the 21 added bins are exactly the census's every-seed shapes; nothing removed")
+expect(set(nh0) - set(nh1) == set(decl), "the 21 left bins_not_hit and nothing else did")
+expect(never[0] in nh1 and never[0] not in b1, "cp_cj_off.self stays undeclared with a not_hit line")
+why = nh1[never[0]]
+expect(why.startswith("stimulus:") and "0 of 40" in why and "4017573" in why and "gen_wave_nothit.txt" in why and "entry-scoped" in why and "park-here" in why,
+       "cp_cj_off.self's reason: stimulus class, 0 of 40 in the wave, entry-scoped, the park-here idiom named")
+kept = [b for b in nh0 if b in nh1 and b != never[0]]
+expect(len(kept) == 2 and all(nh0[b] == nh1[b] for b in kept), f"the two seed-dependent c_lwsp lines are untouched ({len(kept)})")
+print()
+print("## D. RENDER: every manifest equals its module's render byte for byte; the ten untouched manifests byte-identical to HEAD")
+env = {k: v for k, v in os.environ.items() if k != "PYTHONPATH"}
+touched = list(ENTRIES) + ["gen_test_cmp_zca"]
+for m in sorted((CLONE / "dv/auto_dv/fcov_expectations").glob("gen_test_*.fcov.yaml")):
+    t = m.name[:-len(".fcov.yaml")]
+    mod = CLONE / f"dv/auto_dv/tests/{t}.py"
+    if not mod.exists(): continue
+    r = subprocess.run([sys.executable, str(CLONE / "dv/auto_dv/tests/gen_fcov_manifest.py"), "--test-module", str(mod), "--test", t],
+                       cwd=str(CLONE), env=env, text=True, capture_output=True)
+    rendered = "".join(l for l in r.stdout.splitlines(True) if not l.startswith("# dropped "))
+    same_head = (git("show", f"HEAD:dv/auto_dv/fcov_expectations/{m.name}") == m.read_text())
+    expect(r.returncode == 0 and rendered == m.read_text(), f"{t}: zero render diff" + ("" if t in touched else f"; byte-identical to HEAD: {same_head}"))
+    if t == "gen_test_bit_ratified" and not same_head:
+        # Hand A's re-render (654 declared), handed before this log and frozen until its commit
+        expect(sha(m)[:12] == "2d08ebedcd88", f"{t}: untouched here; equals Hand A's handed manifest 2d08ebedcd88 (HEAD still holds the pre-Hand-A file)")
+    elif t not in touched: expect(same_head, f"{t}: untouched, equals HEAD")
+sys.path.insert(0, str(CLONE / "dv/auto_dv/tests")); import gen_fcov_manifest as gfm  # noqa: E402
+for t in touched:
+    gfm.module_items(str(CLONE / f"dv/auto_dv/tests/{t}.py")); nh = gfm.module_items.last_not_hit
+    man = nothit_of((CLONE / f"dv/auto_dv/fcov_expectations/{t}.fcov.yaml").read_text())
+    expect(nh == man, f"{t}: the module's bins_not_hit dict equals the manifest's not_hit lines ({len(nh)})")
+print()
+print("## E. SCRIPTS FOLDED IN")
+for p in (S / "apply_handB.py", Path(__file__).resolve()):
+    print(f"--- {p.name} sha256 {sha(p)} ---"); print(p.read_text().rstrip("\n")); print(f"--- end {p.name} ---")
+print()
+print("RESULT: " + ("PASS, every expectation above holds" if not fails else f"FAIL, {len(fails)} expectation(s) missed: " + "; ".join(fails)))
+sys.exit(1 if fails else 0)
+--- end gen_fu_wave_rerender_measure.py ---
+
+RESULT: PASS, every expectation above holds

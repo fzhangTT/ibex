@@ -104,6 +104,8 @@ class CmpZcmpBasic(GenTest):
     bins_not_hit = {
         "gen_cmp_zcmp_hazard_cg.cp_hazard.popret_ra_deferred":
             "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_cmp_zcmp_hazard_cg.cp_hazard.popretz_ft_cm":
+            "seed-dependent: hit at 39 of 40 seeds in the wave at 4017573 (gen_wave_4017573/gen_wave_census.txt), so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
         "gen_cmp_zcmp_hazard_cg.cp_rlist_class.r15":
             "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
         "gen_cmp_zcmp_hazard_cg.cr_ft_kind.popret_ft_cm_cm_mva01s":
@@ -116,10 +118,14 @@ class CmpZcmpBasic(GenTest):
             "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
         "gen_cmp_zcmp_hazard_cg.cr_ft_kind.popret_ft_cm_cm_popretz":
             "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_cmp_zcmp_hazard_cg.cr_ft_kind.popret_ft_cm_cm_push":
+            "seed-dependent: hit at 21 of 40 seeds in the wave at 4017573 (gen_wave_4017573/gen_wave_census.txt), so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
         "gen_cmp_zcmp_hazard_cg.cr_ft_kind.popretz_ft_cm_cm_mva01s":
             "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
         "gen_cmp_zcmp_hazard_cg.cr_ft_kind.popretz_ft_cm_cm_mvsa01":
             "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_cmp_zcmp_hazard_cg.cr_ft_kind.popretz_ft_cm_cm_pop":
+            "seed-dependent: hit at 16 of 40 seeds in the wave at 4017573 (gen_wave_4017573/gen_wave_census.txt), so this test does not guarantee it per run; the cross follows its component cp_hazard.popretz_ft_cm, itself under the bar at 39 of 40; PLANNED in traceability, credited from the merged report",
         "gen_cmp_zcmp_hazard_cg.cr_ft_kind.popretz_ft_cm_cm_popret":
             "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
         "gen_cmp_zcmp_hazard_cg.cr_ft_kind.popretz_ft_cm_cm_popretz":
@@ -162,10 +168,14 @@ class CmpZcmpBasic(GenTest):
             "stimulus: the program does not generate this hazard shape with this rlist",
         "gen_cmp_zcmp_hazard_cg.cr_hazard_rlist.store_same_slot_then_pop_r4":
             "stimulus: the program does not generate this hazard shape with this rlist",
+        "gen_cmp_zcmp_hazard_cg.cr_hazard_rlist.store_same_slot_then_pop_r5_14":
+            "seed-dependent: hit at 32 of 40 seeds in the wave at 4017573 (gen_wave_4017573/gen_wave_census.txt), so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
         "gen_cmp_zcmp_hazard_cg.cr_hazard_rlist.write_pushed_reg_then_push_r15":
             "stimulus: the program does not generate this hazard shape with this rlist",
         "gen_cmp_zcmp_hazard_cg.cr_hazard_rlist.write_pushed_reg_then_push_r4":
             "stimulus: the program does not generate this hazard shape with this rlist",
+        "gen_cmp_zcmp_hazard_cg.cr_hazard_rlist.write_pushed_reg_then_push_r5_14":
+            "seed-dependent: hit at 34 of 40 seeds in the wave at 4017573 (gen_wave_4017573/gen_wave_census.txt), so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
         "gen_cmp_zcmp_mv_cg.cr_insn_hazard.cm_mvsa01_load_prev":
             "stimulus: the program does not generate this move-instruction hazard shape",
         "gen_cmp_zcmp_pushpop_cg.cp_ret_align.odd":
@@ -252,6 +262,8 @@ class CmpZcmpBasic(GenTest):
             "stimulus: the program draws a subset of the rlist and spimm space per run, so this combination of the full product is not generated",
         "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r4_s0":
             "stimulus: the program draws a subset of the rlist and spimm space per run, so this combination of the full product is not generated",
+        "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r4_s1":
+            "seed-dependent: hit at 11 of 40 seeds in the wave at 4017573 (gen_wave_4017573/gen_wave_census.txt), so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
         "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r4_s2":
             "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
         "gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r4_s3":

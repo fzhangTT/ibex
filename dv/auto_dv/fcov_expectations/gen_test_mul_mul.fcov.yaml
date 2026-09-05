@@ -1,4 +1,6 @@
 # not_built TP-MUL-003: latency clause: RVFI cycle / bus records, event export
+# not_hit gen_mul_timing_cg.cr_op_delta_clean.mulhsu_d2: seed-dependent by measurement, cause undiagnosed: hit at 38 of 40 seeds in the wave at 4017573 (gen_wave_4017573/gen_wave_census.txt); one of the four delta-2 timing bins (mul_div cp_delta.d2 and cr_dit_div0_delta.dit0_div0_d2, mul_mul cr_op_delta_clean.mulhsu_d2 and mulhu_d2) that get one diagnosis together; PLANNED in traceability, credited from the merged report
+# not_hit gen_mul_timing_cg.cr_op_delta_clean.mulhu_d2: seed-dependent by measurement, cause undiagnosed: hit at 38 of 40 seeds in the wave at 4017573 (gen_wave_4017573/gen_wave_census.txt); one of the four delta-2 timing bins (mul_div cp_delta.d2 and cr_dit_div0_delta.dit0_div0_d2, mul_mul cr_op_delta_clean.mulhsu_d2 and mulhu_d2) that get one diagnosis together; PLANNED in traceability, credited from the merged report
 test: gen_test_mul_mul
 owner: test-writer
 bins:
@@ -334,9 +336,7 @@ bins:
   - gen_mul_timing_cg.cp_fetch_stall.no
   - gen_mul_timing_cg.cp_op.mulhu
   - gen_mul_timing_cg.cp_wb_busy.no
-  - gen_mul_timing_cg.cr_op_delta_clean.mulhu_d2
   - gen_mul_timing_cg.cp_op.mulhsu
-  - gen_mul_timing_cg.cr_op_delta_clean.mulhsu_d2
   - gen_cmp_zcb_cg.cp_insn.c_mul
   - gen_cmp_zcb_cg.cp_regs.distinct
   - gen_cmp_zcb_cg.cp_regs.same
@@ -673,9 +673,7 @@ anti_vacuity:
   gen_mul_timing_cg.cp_fetch_stall.no: "CG-MUL-002: cp_delta is `iff gap_clean` and cr_op_delta_clean also requires wb_busy == no, so a hit there proves the multiplier's own occupancy (1 or 2 cycles) was observed; cp_wb_busy records a deferred start (C-9): the multiplier starts in the response cycle and never holds, so the record delta is 1 + W / 2 + W"
   gen_mul_timing_cg.cp_op.mulhu: "CG-MUL-002: cp_delta is `iff gap_clean` and cr_op_delta_clean also requires wb_busy == no, so a hit there proves the multiplier's own occupancy (1 or 2 cycles) was observed; cp_wb_busy records a deferred start (C-9): the multiplier starts in the response cycle and never holds, so the record delta is 1 + W / 2 + W"
   gen_mul_timing_cg.cp_wb_busy.no: "CG-MUL-002: cp_delta is `iff gap_clean` and cr_op_delta_clean also requires wb_busy == no, so a hit there proves the multiplier's own occupancy (1 or 2 cycles) was observed; cp_wb_busy records a deferred start (C-9): the multiplier starts in the response cycle and never holds, so the record delta is 1 + W / 2 + W"
-  gen_mul_timing_cg.cr_op_delta_clean.mulhu_d2: "CG-MUL-002: cp_delta is `iff gap_clean` and cr_op_delta_clean also requires wb_busy == no, so a hit there proves the multiplier's own occupancy (1 or 2 cycles) was observed; cp_wb_busy records a deferred start (C-9): the multiplier starts in the response cycle and never holds, so the record delta is 1 + W / 2 + W"
   gen_mul_timing_cg.cp_op.mulhsu: "CG-MUL-002: cp_delta is `iff gap_clean` and cr_op_delta_clean also requires wb_busy == no, so a hit there proves the multiplier's own occupancy (1 or 2 cycles) was observed; cp_wb_busy records a deferred start (C-9): the multiplier starts in the response cycle and never holds, so the record delta is 1 + W / 2 + W"
-  gen_mul_timing_cg.cr_op_delta_clean.mulhsu_d2: "CG-MUL-002: cp_delta is `iff gap_clean` and cr_op_delta_clean also requires wb_busy == no, so a hit there proves the multiplier's own occupancy (1 or 2 cycles) was observed; cp_wb_busy records a deferred start (C-9): the multiplier starts in the response cycle and never holds, so the record delta is 1 + W / 2 + W"
   gen_cmp_zcb_cg.cp_insn.c_mul: "CG-CMP-005: Zcb is a small encoding space; load sign and address alignment come from rvfi_mem_addr/rdata so a hit proves the access happened with that data"
   gen_cmp_zcb_cg.cp_regs.distinct: "CG-CMP-005: Zcb is a small encoding space; load sign and address alignment come from rvfi_mem_addr/rdata so a hit proves the access happened with that data"
   gen_cmp_zcb_cg.cp_regs.same: "CG-CMP-005: Zcb is a small encoding space; load sign and address alignment come from rvfi_mem_addr/rdata so a hit proves the access happened with that data"

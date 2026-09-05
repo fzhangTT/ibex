@@ -1021,3 +1021,70 @@ bin hit on the runs' own reports at 40 of 40; M-1 closed for this entry by the r
 above, the cmp_zca half riding the wave hand; L-1 by two header lines in gen_run_fixture.sh naming the two links a detached archive
 needs (tools/spike and .venv); L-2 and L-3 by the corrections above. CM229-M-1's declaring half closes for
 bit_ratified the same way. The rows are in gen_critic_response_batch3.md.
+
+## 19. Group wave re-renders: six entries to the wave's every-seed set, cmp_zca's 21 shapes declared
+
+WHAT CHANGED. Seven test modules and their manifests, no generator, no plan line. Under the DV Lead's per-run-manifest
+rule (a bin hit at N < 40 seeds is a FALSE declaration at the seeds it misses, so a re-render to the every-seed set
+corrects a false declaration rather than demoting a bin), the six entries the wave census puts under the bar
+(dv/auto_dv/evidence/gen_wave_4017573/gen_wave_census.txt, retained at 1fb417f, 40 fresh seeds per entry on 4017573)
+lose exactly the census's 28 bins, 5 coverpoint bins and 23 cross legs, each moved into the module's bins_not_hit
+with its N-of-40 count, the commit and the census file in the reason:
+
+  gen_test_cmp_zcb          96 -> 87    9 removed (cp_rs1_class p16/two/one at 30/34/38 with their cr_op_rs1 legs; three cr_half_misaligned legs at 39)
+  gen_test_cmp_zcmp_basic  325 -> 319   6 removed (cm_popret_r4_s1 11; popretz_ft_cm_cm_pop 16; popret_ft_cm_cm_push 21; two cr_hazard_rlist legs 32/34; cp_hazard.popretz_ft_cm 39)
+  gen_test_mul_div         196 -> 190   6 removed (four cr_op_divisor pos_rand legs 36/37/38/39; cp_delta.d2 39; dit0_div0_d2 39)
+  gen_test_isa_shift       120 -> 116   4 removed (slli_all_ones 38; slli_msb_only, srli_lsb_only, slli_s1 39)
+  gen_test_mul_mul         338 -> 336   2 removed (mulhsu_d2, mulhu_d2 38)
+  gen_test_pmp_csr_warl    179 -> 178   1 removed (cr_hi_mode.bit30_napot 39)
+  gen_test_cmp_zca         300 -> 321   21 cr_insn_next / cr_insn_align shapes DECLARED from the census's not_hit table (40 of 40 each)
+
+isa_shift and mul_mul had no bins_not_hit before and gain one; the other dicts keep every existing line byte for byte
+(the retained log checks that). The seven manifests render from their modules with zero diff and the ten others are
+byte-identical to their committed text at ba4860b, bit_ratified's included.
+
+THE THREE CLASSES, as ruled, and what each reason says. SEED-DEPENDENT (20 bins): the count, the commit, the census,
+"so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report". GENERATOR LABEL
+DEFECT (mul_div's four cr_op_divisor pos_rand legs), which must not read as seed-dependent because the cause is
+known: gen_mul_div_prog.py draws a pos_rand divisor by sign alone (divisor() falls through to rand_unnamed) and its
+own classify_divisor books a draw as a SET of classes, while the sampler's div_divisor_cls at gen_fcov_pkg.sv is
+single-class with a priority (the named values, then eq_dividend, then abs_gt_dividend, then the sign class), so a
+pos_rand draw whose magnitude exceeds the dividend is booked abs_gt_dividend and the op's pos_rand leg goes unhit at a
+seed where every such draw lands high. The same shape as bit_ratified's classifier draw in Section 16: a generator
+satisfying its own label rather than the consumer's rule. The reason names the fix owed: a draw that rejects the
+classifier's other classes, proven against the sampler's rule and never against the generator's own mirror, then a
+fresh forty-seed measurement at that fix's commit. The generator is untouched here; a development copy of the fix
+exists outside this landing and is excluded from it. SEED-DEPENDENT BY MEASUREMENT, CAUSE UNDIAGNOSED (the four
+delta-2 timing bins: mul_div cp_delta.d2 and cr_dit_div0_delta.dit0_div0_d2, mul_mul cr_op_delta_clean.mulhsu_d2 and
+mulhu_d2), in those words: cp_delta is the retire delta from the previous retirement iff gap_clean, d2 the two-cycle
+case, and each of the four misses at one or two seeds of forty; they are one shape across two entries and get one
+diagnosis, not four, and nothing here guesses at it.
+
+THE CROSS-OPERAND RULE IN THE REMOVAL DIRECTION. An operand bin under the bar takes every cross leg naming it: p16,
+two and one take c_mul_p16, c_mul_two and c_mul_one; cp_hazard.popretz_ft_cm takes popretz_ft_cm_cm_pop; cp_delta.d2
+takes dit0_div0_d2. Each of those five legs' reasons says which component it follows and that component's count. The
+retained log gen_fu_wave_rerender.log applies the rule mechanically: for every removed coverpoint bin it lists the declared cross legs of the
+same covergroup whose name carries the bin's name as a segment run and requires each to be removed too; none was left
+declared, which also says the census is complete on those legs (a leg cannot be hit at a seed its operand misses).
+
+cmp_zca. The 21 shapes come back into the declared set from the wave alone, because the wave is the forty-seed
+measurement at 4017573, the commit that fixed this generator, and the census's not_hit table reads each of the 21 at
+40 of 40 (gen_wave_nothit.txt). cp_cj_off.self stays out and its reason is corrected from a stimulus statement that
+earlier records framed as "exclusive with termination": a zero-offset compressed jump is the park-here idiom, other
+entries retire it (398 merged hits in round 0, gen_round_0/gen_grpinfo.txt), and this program simply emits none, 0
+of 40 in the wave; the reason now says so and is entry-scoped. The two seed-dependent c_lwsp lines are untouched: no
+ruling covers them and the census does not measure undeclared bins other than the 46 shapes.
+
+WHAT COMES BACK AND HOW. A removed bin returns to a manifest only with a fresh forty-seed measurement at a fix's
+commit, never by reusing the wave's numbers: cmp_zcb's three thin operand classes wait on a directed instance and a
+block, mul_div's four legs on the label fix and its block, the delta-2 four on a diagnosis. The DV Lead ruled no
+generator work before round 2 for the 24 thin-draw legs, which are the 28 less the four label-defect legs; the
+label fix is ordered after the re-renders so round 2's runs pass and merge.
+
+NOT CLAIMED. Nothing about round 2's outcome on these entries; no diagnosis of the delta-2 bins; no fix of the label
+defect. No plan-side wording changes: the mul_div defect reason lives in the module and manifest only, so this touch is
+not joint with the DV Lead.
+
+RECORDS. CM229-M-1's declaring half closes for gen_test_cmp_zca here (its bit_ratified half closed in Section 18). One
+figure in a hand-off message did not survive the files: the census hand-off spoke of 24 cross legs under the bar; the
+census file and the index table both give 23 (1 + 2 + 4 + 5 + 6 + 5), which is the figure this landing uses.

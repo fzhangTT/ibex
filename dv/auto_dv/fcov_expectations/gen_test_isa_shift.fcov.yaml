@@ -1,3 +1,7 @@
+# not_hit gen_isa_shift_cg.cr_op_operand.slli_all_ones: seed-dependent: hit at 38 of 40 seeds in the wave at 4017573 (gen_wave_4017573/gen_wave_census.txt), so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_isa_shift_cg.cr_op_operand.slli_msb_only: seed-dependent: hit at 39 of 40 seeds in the wave at 4017573 (gen_wave_4017573/gen_wave_census.txt), so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_isa_shift_cg.cr_op_operand.srli_lsb_only: seed-dependent: hit at 39 of 40 seeds in the wave at 4017573 (gen_wave_4017573/gen_wave_census.txt), so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
+# not_hit gen_isa_shift_cg.cr_op_shamt.slli_s1: seed-dependent: hit at 39 of 40 seeds in the wave at 4017573 (gen_wave_4017573/gen_wave_census.txt), so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report
 test: gen_test_isa_shift
 owner: test-writer
 bins:
@@ -22,9 +26,7 @@ bins:
   - gen_isa_shift_cg.cp_shamt.s0
   - gen_isa_shift_cg.cp_shamt.s1
   - gen_isa_shift_cg.cp_shamt.s31
-  - gen_isa_shift_cg.cr_op_operand.slli_all_ones
   - gen_isa_shift_cg.cr_op_operand.slli_lsb_only
-  - gen_isa_shift_cg.cr_op_operand.slli_msb_only
   - gen_isa_shift_cg.cr_op_operand.slli_neg_rand
   - gen_isa_shift_cg.cr_op_operand.slli_pos_rand
   - gen_isa_shift_cg.cr_op_operand.slli_zero
@@ -35,7 +37,6 @@ bins:
   - gen_isa_shift_cg.cr_op_operand.srai_pos_rand
   - gen_isa_shift_cg.cr_op_operand.srai_zero
   - gen_isa_shift_cg.cr_op_operand.srli_all_ones
-  - gen_isa_shift_cg.cr_op_operand.srli_lsb_only
   - gen_isa_shift_cg.cr_op_operand.srli_msb_only
   - gen_isa_shift_cg.cr_op_operand.srli_neg_rand
   - gen_isa_shift_cg.cr_op_operand.srli_pos_rand
@@ -48,7 +49,6 @@ bins:
   - gen_isa_shift_cg.cr_op_rd_x0.srli_yes
   - gen_isa_shift_cg.cr_op_shamt.slli_mid
   - gen_isa_shift_cg.cr_op_shamt.slli_s0
-  - gen_isa_shift_cg.cr_op_shamt.slli_s1
   - gen_isa_shift_cg.cr_op_shamt.slli_s31
   - gen_isa_shift_cg.cr_op_shamt.srai_mid
   - gen_isa_shift_cg.cr_op_shamt.srai_s0
@@ -143,9 +143,7 @@ anti_vacuity:
   gen_isa_shift_cg.cp_shamt.s0: "CG-ISA-003: the funct7 guard excludes every Zb* shift-space encoding; a hit proves a base shift retired with the sampled amount and operand class"
   gen_isa_shift_cg.cp_shamt.s1: "CG-ISA-003: the funct7 guard excludes every Zb* shift-space encoding; a hit proves a base shift retired with the sampled amount and operand class"
   gen_isa_shift_cg.cp_shamt.s31: "CG-ISA-003: the funct7 guard excludes every Zb* shift-space encoding; a hit proves a base shift retired with the sampled amount and operand class"
-  gen_isa_shift_cg.cr_op_operand.slli_all_ones: "CG-ISA-003: the funct7 guard excludes every Zb* shift-space encoding; a hit proves a base shift retired with the sampled amount and operand class"
   gen_isa_shift_cg.cr_op_operand.slli_lsb_only: "CG-ISA-003: the funct7 guard excludes every Zb* shift-space encoding; a hit proves a base shift retired with the sampled amount and operand class"
-  gen_isa_shift_cg.cr_op_operand.slli_msb_only: "CG-ISA-003: the funct7 guard excludes every Zb* shift-space encoding; a hit proves a base shift retired with the sampled amount and operand class"
   gen_isa_shift_cg.cr_op_operand.slli_neg_rand: "CG-ISA-003: the funct7 guard excludes every Zb* shift-space encoding; a hit proves a base shift retired with the sampled amount and operand class"
   gen_isa_shift_cg.cr_op_operand.slli_pos_rand: "CG-ISA-003: the funct7 guard excludes every Zb* shift-space encoding; a hit proves a base shift retired with the sampled amount and operand class"
   gen_isa_shift_cg.cr_op_operand.slli_zero: "CG-ISA-003: the funct7 guard excludes every Zb* shift-space encoding; a hit proves a base shift retired with the sampled amount and operand class"
@@ -156,7 +154,6 @@ anti_vacuity:
   gen_isa_shift_cg.cr_op_operand.srai_pos_rand: "CG-ISA-003: the funct7 guard excludes every Zb* shift-space encoding; a hit proves a base shift retired with the sampled amount and operand class"
   gen_isa_shift_cg.cr_op_operand.srai_zero: "CG-ISA-003: the funct7 guard excludes every Zb* shift-space encoding; a hit proves a base shift retired with the sampled amount and operand class"
   gen_isa_shift_cg.cr_op_operand.srli_all_ones: "CG-ISA-003: the funct7 guard excludes every Zb* shift-space encoding; a hit proves a base shift retired with the sampled amount and operand class"
-  gen_isa_shift_cg.cr_op_operand.srli_lsb_only: "CG-ISA-003: the funct7 guard excludes every Zb* shift-space encoding; a hit proves a base shift retired with the sampled amount and operand class"
   gen_isa_shift_cg.cr_op_operand.srli_msb_only: "CG-ISA-003: the funct7 guard excludes every Zb* shift-space encoding; a hit proves a base shift retired with the sampled amount and operand class"
   gen_isa_shift_cg.cr_op_operand.srli_neg_rand: "CG-ISA-003: the funct7 guard excludes every Zb* shift-space encoding; a hit proves a base shift retired with the sampled amount and operand class"
   gen_isa_shift_cg.cr_op_operand.srli_pos_rand: "CG-ISA-003: the funct7 guard excludes every Zb* shift-space encoding; a hit proves a base shift retired with the sampled amount and operand class"
@@ -169,7 +166,6 @@ anti_vacuity:
   gen_isa_shift_cg.cr_op_rd_x0.srli_yes: "CG-ISA-003: the funct7 guard excludes every Zb* shift-space encoding; a hit proves a base shift retired with the sampled amount and operand class"
   gen_isa_shift_cg.cr_op_shamt.slli_mid: "CG-ISA-003: the funct7 guard excludes every Zb* shift-space encoding; a hit proves a base shift retired with the sampled amount and operand class"
   gen_isa_shift_cg.cr_op_shamt.slli_s0: "CG-ISA-003: the funct7 guard excludes every Zb* shift-space encoding; a hit proves a base shift retired with the sampled amount and operand class"
-  gen_isa_shift_cg.cr_op_shamt.slli_s1: "CG-ISA-003: the funct7 guard excludes every Zb* shift-space encoding; a hit proves a base shift retired with the sampled amount and operand class"
   gen_isa_shift_cg.cr_op_shamt.slli_s31: "CG-ISA-003: the funct7 guard excludes every Zb* shift-space encoding; a hit proves a base shift retired with the sampled amount and operand class"
   gen_isa_shift_cg.cr_op_shamt.srai_mid: "CG-ISA-003: the funct7 guard excludes every Zb* shift-space encoding; a hit proves a base shift retired with the sampled amount and operand class"
   gen_isa_shift_cg.cr_op_shamt.srai_s0: "CG-ISA-003: the funct7 guard excludes every Zb* shift-space encoding; a hit proves a base shift retired with the sampled amount and operand class"

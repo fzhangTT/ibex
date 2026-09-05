@@ -92,6 +92,17 @@ class IsaShift(GenTest):
     schedulable = lib.TIMING_ONLY_KNOBS
     # items of the plan group this test does not check, with the reason (two-sided against the group by the structure check)
     not_built = {}
+    # bins this test does not guarantee per run, with the reason and its class (gen_test_template.bins_not_hit)
+    bins_not_hit = {
+        "gen_isa_shift_cg.cr_op_operand.slli_all_ones":
+            "seed-dependent: hit at 38 of 40 seeds in the wave at 4017573 (gen_wave_4017573/gen_wave_census.txt), so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_isa_shift_cg.cr_op_operand.slli_msb_only":
+            "seed-dependent: hit at 39 of 40 seeds in the wave at 4017573 (gen_wave_4017573/gen_wave_census.txt), so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_isa_shift_cg.cr_op_operand.srli_lsb_only":
+            "seed-dependent: hit at 39 of 40 seeds in the wave at 4017573 (gen_wave_4017573/gen_wave_census.txt), so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+        "gen_isa_shift_cg.cr_op_shamt.slli_s1":
+            "seed-dependent: hit at 39 of 40 seeds in the wave at 4017573 (gen_wave_4017573/gen_wave_census.txt), so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
+    }
 
     def report_count(self):
         return _plan(self).k
