@@ -13,7 +13,7 @@ Common knobs: --outdir DIR | --tag T, --no-coverage, --no-cond, --max-parallel N
               --build-lsf, --waves, --purpose P, --request NAME, --requester ROLE,
               --elfile F (strict), --dump-exclusions, --build-vcs-arg ARG
 Tests with `measured: false` (mutation-evidence, forced-error) run into a separate vdb tree and
-never enter the measured merge (Critic ruling R-5.5).
+never enter the measured merge.
 """
 
 from __future__ import annotations
@@ -75,7 +75,7 @@ def compile_build(name: str, outdir: Path, a: argparse.Namespace, coverage: bool
     man = U.load_yaml(man_path) if man_path.is_file() else {}
     unmeasured_vdb = None
     if coverage and man.get("status") == "ok" and man.get("build_vdb"):
-        # Separate -cm_dir tree for non-measured tests (R-5.5), seeded with the compile-time design data.
+        # Separate -cm_dir tree for non-measured tests, seeded with the compile-time design data.
         unmeasured_vdb = outdir / C.UNMEASURED_COV_DIRNAME / f"{name}.vdb"
         unmeasured_vdb.parent.mkdir(parents=True, exist_ok=True)
         shutil.copytree(man["build_vdb"], unmeasured_vdb)

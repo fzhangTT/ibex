@@ -238,7 +238,7 @@ CM_NAME_PREFIX = "test_"
 BUILD_VDB_NAME = "build.vdb"
 MERGED_VDB_NAME = "merged.vdb"
 URG_REPORT_DIRNAME = "report"
-# Exclusion policy (Critic ruling R-5): strict loading is mandatory, propagation is banned, the
+# Exclusion policy: strict loading is mandatory, propagation is banned, the
 # full-exclusions dump of a measured merge is kept beside the annotated exclusion file.
 URG_EXCL_STRICT = ["-excl_strict"]
 URG_EXCL_BANNED = ("-excl_propagation", "-excl_bypass_checks")
@@ -300,7 +300,7 @@ TESTLIST_SCHEMA_VERSION = 1
 TIERS = ("smoke", "targeted", "full")
 TIER_RANK = {t: i for i, t in enumerate(TIERS)}
 # Build/elaboration checks (gen_smoke, the cocotb probe): outside the measured tiers, selectable
-# only by name or with --tier check; never in a measured merge (Critic R-01).
+# only by name or with --tier check; never in a measured merge.
 CHECK_TIER = "check"
 ALL_TIERS = TIERS + (CHECK_TIER,)
 TEST_REQUIRED_KEYS = ("name", "description", "tier", "build", "plusargs", "seeds",

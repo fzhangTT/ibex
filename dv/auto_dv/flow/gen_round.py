@@ -439,7 +439,7 @@ def self_test() -> int:
     cond = rc == C.ROUND_EXIT_REFUSED and "no build manifest" in msg
     ok &= cond
     print("SELF-TEST", "ok " if cond else "BAD", f"missing canary build dir refuses: rc {rc}")
-    # item five: retain_gz is reproducible: the header carries no source name and no wall-clock mtime, so
+    # retain_gz is reproducible: the header carries no source name and no wall-clock mtime, so
     # two collects of one source give one digest (gzip.open stores both and the two differ).
     src = d / "modlist.txt"
     src.write_bytes(b"module top\nmodule leaf\n" * 300)

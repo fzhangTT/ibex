@@ -1,0 +1,27 @@
+# Companion to gen_build_identity_wording.log: its two figures are LINE counts, not occurrence counts
+#
+# Raised as an Info by rev79 and it is right, with one figure worse than the review states.
+#
+# WHAT THAT FILE SAYS:
+#     vpi_lib_identity in gen_flow_util.py   acbb40d: 0 occurrences   7930d04: 1
+#     vpi_lib          in gen_build.py       acbb40d: 1 occurrence    7930d04: 2
+#
+# THOSE ARE LINE COUNTS. They came from `grep -c`, which counts MATCHING LINES, not matches. Re-measured
+# both ways here, with `grep -o | wc -l` for the occurrence count:
+#
+#     symbol             commit    matching lines    occurrences
+#     vpi_lib_identity   acbb40d         0           0
+#     vpi_lib            acbb40d         1           1
+#     vpi_lib_identity   7930d04         1           1
+#     vpi_lib            7930d04         2           3
+#
+# SO ONE FIGURE IS WRONG AS WELL AS MISLABELLED: vpi_lib in gen_build.py at 7930d04 occurs THREE times on
+# two lines, where that log says 2. The other three figures are the same under either definition.
+#
+# THE CONCLUSION IS UNAFFECTED, which is why this is a wording companion and not a correction of a result:
+# what those figures establish is that acbb40d does not contain the build-identity code, and 0 against 1 for
+# vpi_lib_identity says that under either count.
+#
+# THE LESSON WORTH THE LINE: `grep -c` answers a different question from the one the word "occurrences"
+# asks, and the two agree often enough that the mislabel survives review until a figure happens to differ.
+

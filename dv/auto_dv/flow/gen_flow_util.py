@@ -1040,7 +1040,7 @@ def self_test() -> int:
         cond = got is want
         ok &= cond
         print("SELF-TEST", "ok " if cond else "BAD", f"red_grading_deferred: {label} (got {got})")
-    # item three: git_head names the dirty files, their scope and the stamp the answer was taken at.
+    # git_head names the dirty files, their scope and the stamp the answer was taken at.
     # Fabricated repository, two tracked files modified: the list must name both and only both.
     with tempfile.TemporaryDirectory() as td_git:
         g = Path(td_git)
@@ -1069,7 +1069,7 @@ def self_test() -> int:
           f"git_head names the dirty tracked files with one scope and a stamp: {names}, "
           f"stamp {gh.get('dirty_stamp_utc')}, untracked excluded")
     # An older record carries the boolean and no list: it must READ, not raise, because the committed
-    # round-0 entry has exactly that shape and item three adds no refusal.
+    # round-0 entry has exactly that shape, and reporting the dirty files adds no refusal.
     older = {"head": "a" * 40, "branch": "b", "dirty_tracked_files": True}
     cond = older.get("dirty_tracked_tree") is None and older.get("dirty_scope") is None and older["dirty_tracked_files"] is True
     ok &= cond

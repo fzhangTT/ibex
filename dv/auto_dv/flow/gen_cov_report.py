@@ -63,7 +63,7 @@ def combine_rows(rows: list[dict[str, Any]]) -> dict[str, Any]:
 def merge(cov_dir: Path, vdbs: list[Path], elfiles: list[Path] | None = None,
           extra: list[str] | None = None, dut_scopes: list[str] | None = None,
           dump_exclusions: bool = False, info_scopes: list[str] | None = None) -> dict[str, Any]:
-    """SIM_RECIPE Section 8 merge. Exclusion files load with -excl_strict (Critic R-5.1): an entry
+    """SIM_RECIPE Section 8 merge. Exclusion files load with -excl_strict, so an entry
     that hides a covered or stale object makes the merge FAIL instead of silently dropping it."""
     cov_dir.mkdir(parents=True, exist_ok=True)
     report = cov_dir / C.URG_REPORT_DIRNAME

@@ -78,7 +78,7 @@ def cocotb_lib(a: argparse.Namespace) -> tuple[str, dict[str, Any] | None]:
 def absolutize_filelist(src: Path, dst: Path, rtl_root: Path | None = None) -> list[dict[str, str]]:
     """Copy a clone-root-relative VCS -f file into the outdir with absolute paths, so vcs can run
     with the outdir as cwd (its side files then land there, never in the clone root). With an RTL
-    root override (mutation builds, Critic A-24) a source that exists under rtl_root replaces the
+    root override (mutation builds): a source that exists under rtl_root replaces the
     clone's copy; every substitution is returned with both digests for the manifest."""
     out: list[str] = []
     subs: list[dict[str, str]] = []
@@ -142,7 +142,7 @@ def compose_command(build: dict[str, Any], outdir: Path, a: argparse.Namespace) 
         metrics = C.COV_METRICS_WITH_COND if a.cond else C.COV_METRICS_VERIFIED
         groups["coverage"] = ["-cm", metrics, *C.COV_COMPILE_EXTRA,
                               "-cm_dir", str(outdir / C.BUILD_VDB_NAME), "-cm_hier", str(hier)]
-        # Constant-analysis diagnostics (constfile.txt) are the auto-Unreachable evidence (R-5.3).
+        # Constant-analysis diagnostics (constfile.txt) are the evidence for an auto-Unreachable exclusion.
         if not a.no_diag_noconst:
             groups["coverage"] += list(C.COV_DIAG_NOCONST)
     if a.cocotb or build.get("cocotb"):
