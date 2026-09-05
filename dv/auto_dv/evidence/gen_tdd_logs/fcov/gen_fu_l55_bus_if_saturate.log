@@ -1,0 +1,153 @@
+# gen_fu_l55_bus_if_saturate.log -- the second outstanding counter, the one the sweep missed, and a
+# corrigendum to the log that claimed the sweep was complete (TB Infra, 2026-09-05). Landing 55, feature
+# group "outstanding counters", answering rev61 and the Critic on the range 69eb33f..c045115.
+#
+# THE BUILDS EVERY FIGURE COMES FROM. Four, from two out-of-tree roots, each an archive of HEAD and nothing
+# else; W is that archive unchanged (the counter wraps), S is that archive with this landing's two tb files
+# copied over it (the counter saturates). Each mutant build differs from its clean sibling in
+# gen_agents_pkg.sv alone, and both roots were reverted to the committed md5 3690968c afterwards.
+#   $ git archive HEAD | tar -x -C <root>
+#   $ FORCE=1 bash <root>/dv/auto_dv/tb/gen_tb_local.sh compile <root>/dv/auto_dv/out_<label>
+#   W clean 665d62e97890e7ca   W mut a99e3a5884b4c5a2   S clean 4ebaa0bc49091b37   S mut 985fcb072c78c0f2
+#   (build_sources_sha256 as each run's own run_header.txt records it)
+# COUNTING RULE, and it is the reason half this log exists. A UVM run ends with a tally line whose text is
+# UVM_ERROR, a colon and a count, carrying no message; and every SVA firing emits TWO lines, a VCS
+# assertion-source line and the UVM_ERROR line. Counting lines that mention an assertion id therefore reads
+# roughly twice the firings plus one. Every count below matches '^UVM_ERROR' with a following character that
+# is not a colon, and is a count of FIRINGS.
+#
+# ================ THE DEFECT: A SECOND COUNTER OF THE SAME SHAPE, IN A FILE THE SWEEP NEVER OPENED =======
+# gen_bus_if.sv:38, untouched by landing 53:
+#   outstanding <= outstanding + ((req && gnt) ? 1 : 0) - (rvalid ? 1 : 0);
+# on an int unsigned, so a response with nothing outstanding computes 0 + 0 - 1 and wraps to 4294967295. Two
+# readers: the assertion sva_rvalid_legal at :47, rvalid |-> (outstanding > 0), and the cover cov_rvalid_legal
+# at :51. The interface is instantiated for both buses.
+# THE DEFECT IS PERMANENT, NOT A WINDOW, and getting that wrong is the correction this log carries against
+# my own first draft of it. Incrementing 4294967295 returns zero, which looks like recovery and is not: after
+# one spurious response the counter is permanently ONE LESS than the true outstanding count, and every later
+# update preserves the offset. A second spurious response makes it two less. It never comes back.
+# SO ONE DEFECT PRODUCES THREE DIFFERENT WRONG SIGNALS, in this order, and a reader who trusted any of them
+# would be misled in a different direction each time.
+#   1. A FALSE PASS. The reader requires outstanding to be greater than zero, so while the counter reads four
+#      billion the next genuine violation passes. The check is silenced by exactly the event it exists to catch.
+#   2. FALSE FAILURES ON LEGAL TRAFFIC. Once the counter reads one below the truth, a legitimate response
+#      arriving with exactly one grant outstanding reads zero and the assertion fires on traffic that is legal.
+#   3. A COVER THAT LIES IN BOTH DIRECTIONS. cov_rvalid_legal needs a nonzero reading at a response: it is hit
+#      spuriously while the counter reads four billion, and then goes dark for the single-outstanding case that
+#      is the common one.
+# The landing-53 defect had only the first shape of this, a bound assertion flooding while the counter read
+# four billion. This one is worse than blind, because two of its three signals are confidently wrong rather
+# than absent.
+# THAT THE TWO COUNTERS ARE THE SAME MECHANISM IS MEASURED, not asserted from their shape. On seed
+# 1207954461 at 9c7f8f6, where both still wrapped, the interface assertion sva_rvalid_legal fires 70208
+# times, every one on the ibus instance, and the properties-side sva_ibus_rvalid_outstanding fires 70208
+# times, with the dbus one at zero. Two counters, two files, one bus, agreeing to the digit.
+#
+# ================ THE RED, WITH THE ALREADY-FIXED COUNTER AS ITS ORACLE ====================================
+# Landing 53's fixture cannot discriminate this fix and I checked that before building a new one: its
+# injection is a SINGLE spurious response, which is caught whether the counter wraps or saturates, because
+# the masking only bites on the second consecutive one. Its two runs both read sva_rvalid_legal 1.
+# MUTATION MUT-SPURIOUSRVALID4 in the bus driver: the response line asserted on FOUR consecutive cycles with
+# the pending queue empty, i.e. four genuine protocol violations in a row with no grant between them.
+# Fixture gen_ut_irq on the irq1 program, seed 1, the same fixture and plusargs landing 53 used:
+#   $ bash <root>/dv/auto_dv/tb/gen_tb_local.sh run <root>/dv/auto_dv/out_<b> <name> \
+#       dv.auto_dv.gen_tb.gen_tests.gen_ut_irq \
+#       +gen_mem_image=<scratch>/irq1_prog/prog.vmem +gen_mem_image_crc32=8e882c5b +gen_mem_image_words=156 \
+#       +gen_boot_addr=80000000 +gen_tohost_addr=800002d0 +gen_fetch_en_at_reset=0
+#
+#   build                       sva_rvalid_legal   sva_dbus_rvalid_outstanding   real UVM_ERROR   verdict
+#   W (wrapping) clean                 0                     0                        0          PASS
+#   W (wrapping) + 4 injections        1                     4                       19          FAIL
+#   S (saturating) clean               0                     0                        0          PASS
+#   S (saturating) + 4 injections      4                     4                       22          FAIL
+#   S + 4 + gen_chk_sva_rvalid_legal=0 0                     4                       18          FAIL
+#
+# THE ORACLE IS THE POINT OF THE DESIGN. sva_dbus_rvalid_outstanding is the properties-side counter, already
+# saturating since c045115, and it reports 4 in BOTH builds. So the number of real violations is established
+# independently of the thing under test: four went in, four are reported by the fixed counter, and the
+# unsaturated one reports ONE. Three of four genuine protocol violations were masked. I did not have to
+# compute an expected number by hand.
+# THE MESSAGES SAY IT WITHOUT ARITHMETIC. Saturating build: "dbus: rvalid with no outstanding grant at cycle
+# 500", then cycle 501, then 502 and 503. Wrapping build: cycle 500 and nothing else.
+# THE REST OF THE RUN IS IDENTICAL, which is what makes it an A/B rather than two runs. Both mutant builds
+# carry 4 alert_bus, 4 sva_dbus_rdata_intg, 4 unbracketed and 2 nmi_entry; the ONLY statistic that moves is
+# sva_rvalid_legal, 1 against 4. Those twelve are the mutation's own collateral, not findings. The ablation
+# with the named check disabled returns the total to 18, so the named rule accounts for exactly its own
+# contribution in both directions: 19 - 18 = 1 and 22 - 18 = 4.
+# NO FALSE FIRES: both clean builds are PASS with zero UVM_ERRORs of any kind.
+#
+# ================ THE SECOND RED: THE FALSE FAILURE, WHICH THE FIRST FIXTURE COULD NOT SHOW ================
+# The fixture above establishes the masking and nothing else, because gen_ut_irq makes almost no data request
+# after the injection cycle, so the four injections land in a quiet window. That is a property of the fixture
+# and my first draft of this log generalised from it, which is how the wrong claim about a short exposure
+# window got into it.
+# MUT-SPURIOUSRVALID1EARLY: ONE spurious response at cycle 300, so the whole rest of the run is traffic after
+# it. Fixture gen_ut_lockstep on the NMI-long program under the storm regime, which runs to cycle 17500 and
+# beyond, seed 1, +gen_ut_boot_retire=100 +gen_knob_irq_regime=storm.
+#
+#   build          sva_rvalid_legal   the fire cycles      properties oracle   other ids
+#   W (wrapping)          2           300 and 17508              1             1 alert_bus 1 nmi_entry 1 dbus_rdata_intg
+#   S (saturating)        1           300                        1             1 alert_bus 1 nmi_entry 1 dbus_rdata_intg
+#
+# THE ORACLE MAKES THIS A PROOF AND NOT A COUNT. The properties-side counter, fixed and reviewed at c045115,
+# watches the same bus and reports exactly ONE real violation in both builds. The unsaturated counter reports
+# TWO. The second, at cycle 17508, is 17208 cycles after the only injected violation and corresponds to no
+# event at all: it is the off-by-one firing on legal traffic. Every other id is identical across the two runs.
+# So the two halves are now both measured on the same defect with the same oracle: four real violations
+# reported as one, and one real violation reported as two.
+# WHAT I HAVE NOT MEASURED AND WILL NOT IMPLY. I have not measured how many violations the masking has hidden,
+# or how many false failures the offset has caused, in any real run. The Critic measured 71 fires with the
+# cover dead on a traffic-heavy fixture; I have not reproduced that number and this log does not claim it.
+# What is established here is the mechanism, in both directions, with an independent oracle.
+#
+# ================ CORRIGENDUM TO gen_fu_l53_outstanding_saturate.log ======================================
+# Its bytes are untouched, md5 7fdaebaceb6f7ea840a944a759cc6894, 6458 bytes. Two corrections and a scope
+# correction. Re-deriving its A/B to supply the commands rev61 asked for is what found the first two.
+#
+# 1. TWO FIGURES IN ITS A/B TABLE ARE LINE COUNTS PRINTED AS FIRINGS. Its lines 31-32 read
+#                                 dbus response obligation      dbus bound property
+#     wrapping + mutation                3 fires                  5285 error lines
+#     saturating + mutation              3 fires                       0
+#   The retained runs give, counted as firings:
+#     wrapping + mutation          response obligation 1        bound property 2642
+#     saturating + mutation        response obligation 1        bound property 0
+#   Total real UVM_ERRORs 2648 and 6, differing by exactly 2642, all of it the bound property. The mechanism
+#   is the one at the head of this log: lines mentioning sva_dbus_rvalid_outstanding number 3 in each build,
+#   which is one firing doubled plus the tally; lines mentioning sva_dbus_outstanding_max number 5285, which
+#   is 2642 doubled plus the tally.
+#   THE CONCLUSION IS UNAFFECTED AND THAT IS STATED AS PRECISELY AS THE ERROR. The claim that decides
+#   saturate over qualify is that the response obligation fires the SAME number of times in both builds, so
+#   saturating loses no report. It fires once in each: still the same, still nothing lost. The bound property
+#   still goes from many to zero. Only the two integers were wrong.
+#   The same log records catching this exact error once already, on its cover check, and describes it at :47: "assertion SUMMARY LINES rather than match counts". It was caught in one block
+#   and repeated in the block above it.
+#
+# 2. ITS HEADER NAMES ONE BUILD WHERE THE A/B NEEDS TWO. The header line names out_l53b. The A/B runs are
+#   out_l53wrapmut/r, build cb66d1b569cba4fb, and out_l53satmut/r, build 0d548320b34bf9d9, each
+#   2026-09-05, host soc-l-11, seed 1, module dv.auto_dv.gen_tb.gen_tests.gen_ut_irq, plusargs
+#   +gen_mem_image=<scratch>/irq1_prog/prog.vmem +gen_mem_image_crc32=8e882c5b +gen_mem_image_words=156
+#   +gen_boot_addr=80000000 +gen_tohost_addr=800002d0 +gen_fetch_en_at_reset=0, verdicts at
+#   <out>/r/verdict.txt. Both figure-bearing claims that follow the table, the no-third-request accusation
+#   reading zero in both and the covers reading zero match in both, come from those same two runs.
+#
+# 3. THE SWEEP CLAIM WAS SCOPED TO ONE FILE AND DID NOT SAY SO. Its line 17 reads "Sweeping the file properly
+#   then found TEN readers of these two counters", under a heading at :15 beginning "TEN READERS, NOT THREE". The file is
+#   gen_protocol_props.sv, and within it the count is right: five assertions and five covers. But the heading
+#   and the prose read as a complete accounting of the exposure, and they are not: a second counter of the
+#   same shape with two more readers lives in gen_bus_if.sv, which the sweep never opened. What the sweep
+#   covered is the properties file; what it missed is the bus interface. Twelve readers, in two files.
+#
+# ================ THE OTHER REVIEW ROWS ==================================================================
+# gen_protocol_props.sv:216 named the split's two halves as the reason two data beats may be in flight, while
+# the comment at :219-220 in the same file records a second route: a boundary-shaped access, byte or
+# half-word at offset 2 or 3, may have a pipelined unrelated request behind it. The annotation now names both
+# routes. The parameter comment at :18 is left alone deliberately: it cites the RTL line that SETS the limit
+# (rtl/ibex_load_store_unit.sv:403-405), which is the right authority for the value two, where :216 was
+# giving a reason for it.
+# THE IBUS SATURATION IS VERIFIED BY INSPECTION AND THIS LOG SAYS SO RATHER THAN IMPLYING A MEASUREMENT. The
+# A/B above exercises the DATA side: the injection lands on the dbus, and every ibus property reads zero
+# throughout, as it did in landing 53. The instruction-side counter in gen_bus_if.sv is the same parameterised
+# interface with the same single expression, so the fix applies to it by construction and not by measurement.
+# gen_fcov_pkg.sv:450-452 restated a guard given two lines above and attributed the argument to a reviewer by
+# role. A comment naming who proved something is a process reference, which our comment rule forbids in code
+# regardless of whether it is true. Folded into one line that says what the term is for.

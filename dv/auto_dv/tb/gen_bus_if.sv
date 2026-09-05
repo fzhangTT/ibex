@@ -35,7 +35,10 @@ interface gen_bus_if #(
       outstanding <= 0;
       cycle       <= 0;
     end else begin
-      outstanding <= outstanding + ((req && gnt) ? 1 : 0) - (rvalid ? 1 : 0);
+      // saturate at zero: a wrap leaves the count permanently one below the truth, which makes the assertion
+      // below pass on the next real violation and then fail on legal traffic, and lies to its cover both ways
+      outstanding <= (rvalid && (outstanding + ((req && gnt) ? 1 : 0)) == 0) ? 0
+                     : outstanding + ((req && gnt) ? 1 : 0) - (rvalid ? 1 : 0);
       cycle       <= cycle + 1;
     end
   end

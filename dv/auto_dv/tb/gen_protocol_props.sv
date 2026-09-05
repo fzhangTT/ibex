@@ -213,7 +213,7 @@ module gen_protocol_props
                                         (!data_req_o || !$isunknown({data_addr_o, data_we_o, data_be_o}))) // DUT
   `P_ASSERT(dbus, sva_dbus_gnt_only_with_req, data_gnt_i |-> data_req_o)                                    // TB
   `P_ASSERT(dbus, sva_dbus_rvalid_outstanding, data_rvalid_i |-> dbus_outstanding > 0)                      // TB
-  `P_ASSERT(dbus, sva_dbus_outstanding_max,   dbus_outstanding <= DBUS_MAX_OUTSTANDING)                     // TB (the DUT obligation it observes: never more than 2 data beats in flight, the two halves of one split)
+  `P_ASSERT(dbus, sva_dbus_outstanding_max,   dbus_outstanding <= DBUS_MAX_OUTSTANDING)                     // TB (the DUT obligation it observes: never more than 2 data beats in flight, reached either by the two halves of one split or by a boundary-shaped access with a pipelined unrelated request behind it, as :219-220 records)
   // (dbus_outstanding == 1 excludes a single byte access at offset 3, whose be 1000 equals a split first half)
   // The split rows are covers, not asserts: at the boundary a byte or half-word access at offset 2 or 3 (be 1100 / 1000)
   // is indistinguishable from a split's first half, and a pipelined unrelated request may follow it with one
