@@ -2432,3 +2432,19 @@ Owner (verbatim): "we will review the bug list later, but the handling is correc
 expected_fail mechanism stands as the policy for bug candidates: a candidate's test fails and is reported XFAIL; a pass is reported as an
 unexpected pass; XFAIL vdbs merge when the entry is measured. The disposition pass over the bug log (the 15 open candidates, S1-S5) waits for the
 owner's review and is not queued.
+
+### LOG-097 addendum 2 (02:34Z, Orchestrator): policy trail for groups without a pre-execution plan artifact; two rulings from the PMP step-1 preparation
+- Policy trail (CM221 Info-3): feature group regen-round1 (0203c6e) traces to the Critic's CR-40 M-1 in the round-1 record verdict (8c83b3a), a
+  cross-model finding that named the regeneration as the round's acceptance; feature group rt37 (936afaf) traces to the owner's LOG-085/LOG-097
+  queue (the deferred loader tightening). Neither had a plan document of its own; both were reviewed after execution in the 3e23389..0203c6e range
+  (156dac5) and take a Critic verdict as code. Groups that change flow or tool behaviour beyond a named review row get a plan document and a
+  pre-execution review first, as rt39 did.
+- PMP step-1 manifests: the statement "no program writes mseccfg" in the TB landing note was false (gen_pmp_lock_prog.py:313-320 sets RLB for
+  TP-PMP-021 and :790 MML; gen_pmp_csr_warl_prog.py:939/:960; gen_pmp_mseccfg_prog.py:836 MML for TP-PMP-022). Ruling: the 40-seed measurement
+  decides cp_mml.mml1 and cp_rlb.rlb1 (declared only if hit at every seed; otherwise bins_not_hit with the measured rate and the real cause, the
+  qualifying cfg/addr write relative to the bit); cp_regime bins other than off are not declared because knob_pmp_regime has no program-side
+  implementation; the note's sentence is corrected before the base lands. A constraint on a manifest is a measured statement, not a premise.
+- Retained elcheck records: the done/ files for rtl-arch-004..007 are request records with a notes paragraph, not the results manifests that carry
+  the served figures; the readme bullets cite them with the caveat that their quoted stamps and figures are not re-derivable from the commit until
+  the results manifests are retained (runtime-2's next records touch), unlike rtl-arch-009 whose served block carries verdict, stamps, return
+  codes and the six gated rows.
