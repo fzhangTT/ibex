@@ -348,3 +348,46 @@ b83f4fe..e85fe5b; read after the rows above were fixed):
 
 CRITIC VERDICT: APPROVE on b83f4fe..35541bc. L-16 is CLOSED; L-17 and I-a are owed to runtime-2's next records touch. The flow group stays
 closed on both sides.
+
+### 9.1 The rev82 correction (runtime-2), e85fe5b..9661c5d: L-17 and L-18 closed; APPROVE (appended under a HOLD, 2026-09-05T15:42:31Z; Sections 1-9 unchanged)
+
+Artifacts at 9661c5d: gen_flow_const.py, gen_flow_util.py, gen_mirror.py, gen_fcov.py, gen_testlist.yaml, gen_critic_response_flow.md; rev85 (dv/auto_dv/reviews/2026-09-05-claude-diff-e85fe5ba-9661c5d5.md, edb6f3e799ca01ed, d2452eb).
+Method: a detached worktree of 9661c5d for the ten self-tests and the const check, the scratch root counted, the manifest rows checked,
+the comment sweep repeated by shape over the flow directory's Python and yaml, the side effect measured; findings fixed before any
+review of the commit was read (flow2/draft_s91_flowcorr_prerev85.txt). Logs: flow2/prever_9661c5d.log, prechecks_9661c5d.txt.
+
+- The ten self-tests and CONST-CHECK pass; selftest_tmp holds 0 entries after a gen_round run; 45 manifest rows verify.
+- rev82's side effect is closed by a path-only accessor: selftest_tmp_path() returns the location without creating it and both guard
+  roots (export_head's staging guard, remove_selftest_tree) use it, the creating selftest_tmp() staying for the staging callers.
+  Measured with GEN_DV_SELFTEST_TMP pointed at an absent directory: the path-only call leaves it absent, the creating call creates it.
+- L-17 CLOSED: gen_testlist.yaml's three Critic labels (:17, :42, :47) are reworded to the constraints they named. L-18 CLOSED for
+  what it named: the Q-ids and the C-3 sunset trigger are reworded to intent (0 Q-id comment lines), the LOG-<n> owner-ruling citations
+  are kept under the widened ruling and each re-judged as a constraint in the response row, which declares a fifth category (five
+  sites citing a fact the code depends on), routes the twenty-six sites in other roles' files rather than sweeping them, states the
+  ruling as dated with the DV Lead's test and refinement, and gives per-class counts with their scopes.
+- L-19 (Low, comment; runtime-2), my miss as much as the row's: nine bare Critic finding labels of the shape P-nn (the rows of this
+  file's flow review record, gen_critic_response_flow.md:12-20) survive in flow comments and docstrings (gen_build.py:138, gen_flow_const.py:381, :397, :626, gen_flow_util.py:364, gen_regress.py:231,
+  gen_verdict.py:33, :191, :210; the P-02 and P-09 strings in gen_verdict.py's case labels are labels and stay), so the row's "by-shape
+  sweep returns zero" is overstated a third time, and my own sweep at 9661c5d looked for Critic and Q- and not for the P family.
+  Under the ruling they go to intent.
+- L-20 (Low, records; runtime-2): the A-002 response rows cite gen_mirror.py:219 (gen_critic_response_flow.md:1191 and :1215) where the
+  kept comment sits at :221 at this commit. L-21 (Low, records; runtime-2): "the 35 permitted citations" states no unit; a LOG-<n>
+  or A-nnn token count over flow Python comment lines gives 23 lines and 83 occurrences over all lines, so the row should say lines
+  or occurrences and its scope.
+- I-a stands (population.py's hardcoded path in the basis companion); nothing else is owed on the flow group from me.
+
+Reconciliation with rev85 (read after the rows above were fixed; the P-nn count, the cite and the unit checked on the tree,
+flow2/prechecks_9661c5d.txt):
+- Its verification matches mine (the ten self-tests, the path-only accessor, the sweep of Q-ids and yaml labels, the manifest rows); it
+  closes L-17 as I do.
+- Its four Lows: the nine P-nn labels are my L-19, found by it and verified here; the :219 cite is my L-20; the unstated unit of the 35
+  is my L-21 (its census reads 42 occurrences on 39 lines in flow Python plus two yaml lines under its own filter; mine differs by
+  filter, which is the point of the row); its fourth is my I-a, neither fixed nor declined by the landing, which stays an Info of mine
+  until runtime-2 answers it either way.
+- Its Infos: the 22 plus 2 creating calls match my reading of the accessor split; the eleven T-nnn task ids in flow comments are ruled
+  process pointers that go, and 38 lines under dv/auto_dv/flow carry a T-nnn token by my count over all lines, so the next sweep's shape
+  must include that family too; the Q-002 in gen_dut_top.sv's comments (four lines) is tb-infra-2's and is routed.
+- Verdict after reconciliation: unchanged. Both agree there is no Major and no Medium.
+
+CRITIC VERDICT: APPROVE on e85fe5b..9661c5d. L-17 and L-18 are CLOSED; L-19, L-20 and L-21 are owed to runtime-2's next records
+touch with I-a; the flow group stays closed on both sides.

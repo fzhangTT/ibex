@@ -365,3 +365,38 @@ rather than against the form's new wording. L-4 stays CLOSED on the refusal half
 assert half's owner. Its Infos (a checker comment naming a review finding, the provenance table's row keyed by "the commit carrying
 this row", the digests unverifiable from a checkout) are noted as the DV Lead's. Verdict unchanged: APPROVE on c1239af..9a8d852; L-11
 owed.
+
+## 12. The rev83 answer at e4aef00, 9a8d852..e4aef00: L-11 closed, the comment rule's home; APPROVE (2026-09-05T15:44:44Z)
+
+Artifacts at e4aef00: gen_round2_request.md 19f7d0528d6f824b, gen_round_form_check.py, gen_test_plan.md Section 0, the three plan
+headers, gen_plan_digest_provenance.md; rev88 (dv/auto_dv/reviews/2026-09-05-claude-diff-9a8d852f-e4aef004.md at a523ac3,
+2c96821d5fce6348). Method: a detached archive of e4aef00 (form3/v33_checks.sh e4aef00, log v38_checks.log): the checker passes 208
+claims from the archive root and from a foreign directory, --self-test passes fifteen cases, my sixteen-row control still fails the
+row count; the csr_warl sentence read against the records; the plan's Section 0 entry read; findings fixed before rev88
+(form3/draft_s12_prerev.txt), rev88 then read and its rows checked on the tree.
+
+- L-11 CLOSED: the sentence (:346-351) now says this entry's own generator asserted at seed 230969025 at the PMP blocks' pinned commit
+  (gen_tdd_batch3.md:449-450) and that what separates the two 39-of-40 figures is the COMMIT and not the generator, which is what the
+  records say and what Sections 5 and 11.1 of this file read. I-2 (Info; DV Lead): "the wave at 4017573 is after it" understates by a
+  commit; git log on gen_pmp_csr_warl_prog.py shows the backstop landing in 4017573 itself, so the wave measured the commit that
+  carries the backstop rather than one after it; the substance is unchanged.
+- The comment rule's home: gen_test_plan.md Section 0, Conventions (:41-51) carries the class boundary (an intervention-log ruling
+  by LOG-<n> or A-<n>, or a dated owner ruling, stays with the constraint stated beside it; review ids, plan-item tags, row labels
+  and owner-question ids go), the test on the comment's own words, and names the rubric that enforces the intent half per diff. Two
+  Lows on its text, rev88's, VERIFIED and adopted: L-12 (Low, plan; DV Lead): the excluded class omits "reviewer or Critic labels",
+  which the ruling as recorded in the flow response record names and which the flow sweeps act on; L-13 (Low, plan; DV Lead): the
+  entry says the boundary lives here and does not say whose ruling it records or when (the Orchestrator's, 2026-09-05, widened that
+  day with the DV Lead's test), which a home for a ruling should.
+- The three headers read inputs digest 18db40ef7371 and the provenance table gains a row for it, keyed "the commit carrying this
+  row" as before. The provenance digests stay unverifiable from a checkout, as the record says of itself.
+
+Reconciliation with rev88 (read after the rows above were fixed): its verification agrees with mine (208 claims, fifteen cases, the
+header lines the only changes to the plan documents besides the Section 0 entry, the provenance row, the csr_warl sentence against
+gen_tdd_batch3.md). Its Lows are L-12 and L-13 above. Its Infos: the third shape the two-part test does not name, an identifier cited
+as the source of a name or value (gen_flow_const.py:175, :458, :468 "knob name per LOG-076"), is a fair gap in the rule's text for the
+DV Lead; the backstop's commit is I-2; the two Critic labels in gen_smoke_run.sh:9-10 and the CM labels at gen_round.py:427 and
+gen_run.py:331-332 are the flow and tb owners' under the rule, the flow ones being self-test case labels kept as the stated boundary;
+the digests unverifiable, as before. Both agree there is no Major and no Medium.
+
+CRITIC VERDICT: APPROVE on 9a8d852..e4aef00. L-11 is CLOSED and nothing of mine is open on the round-2 request form; L-12 and L-13
+are owed on the plan's Section 0 text, I-2 on the form's wording.
