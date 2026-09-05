@@ -94,6 +94,14 @@ must be identical in the manifest, the round summary and the dashboard row, and 
 non-empty and partly hit must yield the both-terms figure 3477/4048 and NOT the larger figure a
 denominator-only scoping produces. Both fail against the pre-change code.
 
+CORRECTION 2026-09-05T12:11Z (Critic rt39 L-1). "Both fail against the pre-change code" is not what was run
+and could not have been: the pre-change code holds no such named quantity, so there is nothing in it for
+either red to fail. Both are PROPERTY DEMONSTRATIONS of the landed code. The both-terms red is shown by the
+shipped control's 3484/4048 against 3477/4048 and by the self-test's 15/20 against 22/20. The identity red
+of the sentence above went unevidenced at the landing, which the Critic's M-2 also names; it is now run and
+retained in gen_tdd_logs/flow/gen_rt39_reds2.log Section 5, where the three consumers agree over the
+committed round-0 record and one consumer made to name another quantity is caught.
+
 The failing value is 3477 plus however many ledger bins are hit, because a denominator-only fix removes
 the ledger from the declared count while still counting its hits. The shipped control gives the ledger
 SEVEN hit bins and so measures 3484/4048 against 3477/4048. The plan review's rewrite named 3482/4048,
@@ -211,6 +219,10 @@ collects it. Cost measured: 202.3 s for 24 runs, 280.2 s for 36. Two conditions 
 has pinned.
 
 ## 9. Evidence, sequencing and cost
+
+CORRECTION 2026-09-05T12:11Z (Critic rt39 L-1). Read "each failing against the pre-change code" as it applies:
+items two, four and five have reds that do fail against the code they replace, and item one's are property
+demonstrations of the landed quantity, for the reason given in Section 2's correction.
 
 Reds as listed per item, each failing against the pre-change code and passing after. Positive controls
 on the real committed round-0 record for items one, two and four; item three has none by construction

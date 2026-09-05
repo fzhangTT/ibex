@@ -1041,7 +1041,9 @@ ledger out of BOTH terms, the gate's ruled quantity), `group_bins_all` (the same
 covergroup, which reproduces urg's own report-wide figure), and `group_score_weighted` (urg's weighted
 score, which carries NO ratio and must not be shown with one). `group_cell()` is THE ONE SELECTOR; both
 `gen_round` and `gen_dashboard` read it, and moving the flow to another quantity is one token in
-`C.GROUP_CELL_FIELD`. There is no content-dependent fallback: a reader never has to work out which
+`C.GROUP_CELL_FIELD`, which today names `group_bins_all` because the criterion ruling that would choose
+between the two ratios is suspended (LOG-097 addendum 4); the printed cell therefore equals what the
+round-0 record already stores. There is no content-dependent fallback: a reader never has to work out which
 definition produced a cell. On the committed round-0 report the three read 85.89 (3477/4048), 81.47
 (3477/4268) and 78.29, and the shipped self-test reproduces all three from that committed artefact.
 
@@ -1050,6 +1052,15 @@ key, which is removed rather than kept alongside. The motivating case is worth t
 a single token, `['+define+RVFI']`, while the recorded `command` carried nine defines including the bitmanip
 extension, and a live diagnosis nearly concluded a correct build was missing that extension. A field that
 answers a narrower question than its name suggests is worse than no field.
+
+THE REGRESSION MANIFEST COPIES THEM UNDER NEW NAMES, AND THE OLD NAMES ARE GONE. The coverage record carries
+`build_defines_all` and `build_parameters_all` per build (`gen_regress.py`), never the former `build_defines`
+and `build_parameters`. The rename is not cosmetic: the old `build_defines` held the entry's one-token group
+while the new key holds the compile's full set, so keeping the name would have made records before and after
+the change disagree under it. The new keys appear from ROUND 2 onward; every committed record of rounds 0 and
+1 carries the old `build_defines` with its one token, and a reader comparing rounds across that boundary is
+comparing two different populations and should say so. The absent old key is deliberate: a reader finds it
+missing rather than finding it changed.
 
 THE DIRTY-TREE FACTS CARRY THEIR SCOPE AND THEIR STAMP. `git_head()` returns `dirty_tracked_tree` (the
 porcelain list), `dirty_scope` and `dirty_stamp_utc` beside the boolean, and the round index entry carries

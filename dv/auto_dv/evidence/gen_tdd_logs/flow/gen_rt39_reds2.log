@@ -1,0 +1,365 @@
+# rt39 reds and controls, re-run at a commit that CONTAINS the code, with every script folded in
+#
+# WHY THIS LOG EXISTS. dv/auto_dv/evidence/gen_tdd_logs/flow/gen_rt39_reds.log is a re-run transcript whose
+# section headers name tree 9c7f8f63957d, which contains none of the rt39 code: at that moment the changed
+# modules were uncommitted working-tree files. Its scripts were recorded by scratchpad path and md5 only, so
+# the run could not be reproduced from the record, and item one's PLANNED FIRST RED (one quantity across the
+# manifest, the round summary and the dashboard) had no retained evidence at all. The Critic raised all three
+# as M-2 of the flow rt39 verdict (dv/auto_dv/evidence/gen_critic_flow_rt39.md); the cross-model review rev62
+# raised the first two independently.
+#
+# WHAT I DID INSTEAD OF ANOTHER COMPANION, and it is a change from the choice I made at rev62. The rt39 code
+# is now COMMITTED (a58f562), so the honest fix is not to explain the old basis a second time but to run the
+# same scripts at a commit that holds the code. gen_rt39_reds.log and its companion gen_rt39_reds_basis.log
+# keep their bytes and their manifest rows; nothing in either is reopened. This log stands beside them and is
+# the one a reader should reproduce from.
+#
+# BASIS. host soc-l-11; tree 8e902639552efd6a78f213a51c36ca6f9a900948; scripts run from the clone working tree, whose flow modules are proved
+# below to be byte-identical to that commit's blobs. This is the claim the earlier log could not make.
+#
+# THE FIVE SCRIPTS ARE IN THIS FILE. Appendix A carries each one's full text with its md5. The four re-run
+# scripts are BYTE-IDENTICAL to the ones the earlier log named by md5, so this is the same evidence with a
+# basis that holds, not new evidence. The fifth is new.
+#
+# WHAT WAS NOT RUN: nothing. The one item the earlier record left unevidenced, the three-consumer identity,
+# is Section 5 below, and it carries its own red.
+
+================================================================
+# SECTION 0: the code under test is the code at the named tree
+# stamp 2026-09-05T12:10:11Z
+#
+# sha256[:16] of each flow module the scripts import, working tree against the commit's blob.
+
+  gen_cov_report.py      worktree b7c03821454af345  8e902639552e b7c03821454af345  same
+  gen_round.py           worktree 1ab2fba4783b9fa9  8e902639552e 1ab2fba4783b9fa9  same
+  gen_dashboard.py       worktree faf55d23c7bec117  8e902639552e faf55d23c7bec117  same
+  gen_flow_const.py      worktree 935728bb83e378d1  8e902639552e 935728bb83e378d1  same
+  gen_flow_util.py       worktree 1f5d9503043d0970  8e902639552e 1f5d9503043d0970  same
+  gen_regress.py         worktree 29a4f5042b171e3b  8e902639552e 29a4f5042b171e3b  same
+  gen_run.py             worktree 7632eca5b10f840c  8e902639552e 7632eca5b10f840c  same
+  gen_build.py           worktree 74599741aa16966e  8e902639552e 74599741aa16966e  same
+  gen_verdict.py         worktree 66c3dc5e8f493a70  8e902639552e 66c3dc5e8f493a70  same
+
+  git status --porcelain -- dv/auto_dv/flow : (empty: no flow file modified)
+  ALL NINE MODULES MATCH THE COMMIT.
+
+================================================================
+# SECTION 1: item five RED: the retention shape written today is not reproducible
+# stamp 2026-09-05T12:10:11Z  host soc-l-11  tree 8e902639552efd6a78f213a51c36ca6f9a900948
+# script red_item5.py  md5 bc05dc6b3c94a9e38c3e6fcd260c6d31  (full text in Appendix A)
+
+SELF-TEST BAD  item5 retention reproducible [control]: mtime 1788610171/1788610171, stored-name flag True/True, digests DIFFER (f7d9fc144bd1 aaa755f86c69)
+SELF-TEST ok   item5 retention reproducible [changed]: mtime 0/0, stored-name flag False/False, digests equal (bb59a0cb2d55 bb59a0cb2d55)
+
+RED  (control, the shape gen_round.py:232 writes today): FAILS as required
+GREEN(changed, filename='' mtime=0): PASSES
+
+================================================================
+# SECTION 2: item five POSITIVE CONTROL: retain_gz reproduces the two committed archives byte for byte
+# stamp 2026-09-05T12:10:11Z  host soc-l-11  tree 8e902639552efd6a78f213a51c36ca6f9a900948
+# script control_item5.py  md5 1482a2babc60e17ab1a375e2da07a0e1  (full text in Appendix A)
+
+ok  modlist.txt: retain_gz 743b177c1065fddb / 2120 B  vs committed 743b177c1065fddb / 2120 B
+ok  modinfo.txt: retain_gz a5f939d2115e9693 / 347899 B  vs committed a5f939d2115e9693 / 347899 B
+POSITIVE CONTROL on the committed pair (a6f811a): PASS
+
+================================================================
+# SECTION 3: item one CONTROL and both-terms RED on the committed group report
+# stamp 2026-09-05T12:10:11Z  host soc-l-11  tree 8e902639552efd6a78f213a51c36ca6f9a900948
+# script control_item1.py  md5 32cf188a17e9ce1c09c2f673d2859ea9  (full text in Appendix A)
+
+covergroups parsed: 26; with COVERED/EXPECTED: 26
+  group_bins_gate        percent 85.89  ratio 3477/4048  covergroups 25
+  group_bins_all         percent 81.47  ratio 3477/4268  covergroups 26
+  group_score_weighted   percent 78.29  ratio None  covergroups 25
+  urg_report_total       percent 81.47  ratio 3477/4268  covergroups None
+ok   group_bins_all reproduces the report-wide figure 81.47 (3477/4268)
+ok   group_bins_gate is 85.89 (3477/4048): the ledger out of BOTH terms
+ok   group_score_weighted is 78.29 over 25 covergroups and carries NO ratio
+ok   the selector pairs one percent with ITS OWN ratio: group_bins_all 81.47 (3477/4268)
+ok   RED, a witnessed ledger: scoping BOTH terms gives 3477/4048, scoping only the denominator gives 3484/4048 - a figure that counts ledger hits it excluded
+ITEM ONE: PASS
+
+================================================================
+# SECTION 4: item four CONTROL, RED and the pre-change defect measured on the committed index
+# stamp 2026-09-05T12:10:11Z  host soc-l-11  tree 8e902639552efd6a78f213a51c36ca6f9a900948
+# script control_item4.py  md5 8521227799e22c5ad9af31d61b66a2eb  (full text in Appendix A)
+
+round-0 build record sources_sha256 = bc0cd7778e382b13991bbae9...
+ok   POSITIVE CONTROL: canary_build_facts carries the digest (bc0cd7778e382b13), compare result True
+     scope recorded: the filelist sources only: not the defines, the parameters or any other compile option
+ok   RED: a canary of other sources records its OWN digest (ffffffffffffffff), so the compare result would be False, not silent
+ok   PRE-CHANGE DEFECT, measured on the committed index: the round-0 entry contains the sources digest 0 time(s); its canary_build keys are ['b8_probe_knob_default_on', 'b8_probe_sv_default_on', 'build', 'covergroup_files', 'covergroups_declared', 'head_sha', 'manifest', 'manifest_present', 'path', 'source_mode']
+[2026-09-05T12:09:31Z] removed item four self-test dir /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/runtime/selftest_tmp/rt39_item4_0vq4dkg3 (1 entries) under /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/runtime/selftest_tmp
+ITEM FOUR: PASS
+
+================================================================
+# SECTION 5: item one's PLANNED FIRST RED, run here for the first time: the manifest, the round summary row and the dashboard row name ONE quantity
+# stamp 2026-09-05T12:10:11Z  host soc-l-11  tree 8e902639552efd6a78f213a51c36ca6f9a900948
+# script identity_item1.py  md5 185cf83e28630c3cbe2b8c90db1fa80d  (full text in Appendix A)
+
+SELF-TEST ok  three consumers over one record agree: identical=True (want True)
+      manifest       field=group_bins_all percent=81.47 ratio=3477/4268 scope=functional bins, every covergroup in the report, hit over declar
+      round_summary  field=group_bins_all percent=81.47 ratio=3477/4268 scope=functional bins, every covergroup in the report, hit over declar
+      dashboard      field=group_bins_all percent=81.47 ratio=3477/4268 scope=functional bins, every covergroup in the report, hit over declar
+SELF-TEST ok  RED, the dashboard alone naming another quantity is CAUGHT: identical=False (want False)
+      manifest       field=group_bins_all percent=81.47 ratio=3477/4268 scope=functional bins, every covergroup in the report, hit over declar
+      round_summary  field=group_bins_all percent=81.47 ratio=3477/4268 scope=functional bins, every covergroup in the report, hit over declar
+      dashboard      field=group_bins_gate percent=85.89 ratio=3477/4048 scope=functional bins, covergroups in gate scope, hit over declared, w
+IDENTITY CHECK: PASS
+
+================================================================
+# APPENDIX A: the scripts, in full
+#
+# Folded in so this record is reproducible without the scratchpad. Each is reproduced verbatim; the four
+# re-run scripts still hash to the md5s gen_rt39_reds.log recorded, which is how a reader can tell that the
+# only thing that changed between the two transcripts is the tree they ran against.
+
+----------------------------------------------------------------
+# red_item5.py  md5 bc05dc6b3c94a9e38c3e6fcd260c6d31  2191 bytes
+----------------------------------------------------------------
+#!/usr/bin/env python3
+"""rt39 item five RED: the retention shape must be reproducible.
+
+Runs the SAME assertion against two retention implementations:
+  control  = the expression gen_round.py:232 uses today, gzip.open(dst, "wb")
+  changed  = gzip.GzipFile(fileobj=..., filename="", mtime=0)
+A gzip member's header is: magic(2) CM(1) FLG(1) MTIME(4, little-endian) XFL(1) OS(1).
+FLG bit 3 (0x08, FNAME) set means the source file name is stored in the member.
+"""
+import gzip, hashlib, shutil, struct, sys, tempfile
+from pathlib import Path
+
+
+def retain_control(src: Path, dst: Path) -> None:
+    with src.open("rb") as s, gzip.open(dst, "wb") as d:      # gen_round.py:232 today
+        shutil.copyfileobj(s, d)
+
+
+def retain_changed(src: Path, dst: Path) -> None:
+    with src.open("rb") as s, dst.open("wb") as fh, \
+            gzip.GzipFile(fileobj=fh, filename="", mtime=0, mode="wb") as d:
+        shutil.copyfileobj(s, d)
+
+
+def facts(p: Path) -> tuple[int, bool, str]:
+    h = p.read_bytes()[:10]
+    mtime = struct.unpack("<I", h[4:8])[0]
+    fname_flag = bool(h[3] & 0x08)
+    return mtime, fname_flag, hashlib.sha256(p.read_bytes()).hexdigest()
+
+
+def check(name, fn, d: Path) -> bool:
+    src = d / "modlist.txt"
+    src.write_bytes(b"module top\nmodule leaf\n" * 300)
+    a, b = d / f"{name}_a.gz", d / f"{name}_b.gz"
+    fn(src, a)
+    fn(src, b)
+    m_a, f_a, s_a = facts(a)
+    m_b, f_b, s_b = facts(b)
+    ok = (m_a == 0 and m_b == 0 and not f_a and not f_b and s_a == s_b)
+    print(f"SELF-TEST {'ok  ' if ok else 'BAD '} item5 retention reproducible [{name}]: "
+          f"mtime {m_a}/{m_b}, stored-name flag {f_a}/{f_b}, digests {'equal' if s_a == s_b else 'DIFFER'} "
+          f"({s_a[:12]} {s_b[:12]})")
+    return ok
+
+
+d = Path(tempfile.mkdtemp(prefix="rt39_item5_"))
+control_ok = check("control", retain_control, d)
+changed_ok = check("changed", retain_changed, d)
+shutil.rmtree(d)
+print()
+print("RED  (control, the shape gen_round.py:232 writes today):", "PASS - NO RED" if control_ok else "FAILS as required")
+print("GREEN(changed, filename='' mtime=0):", "PASSES" if changed_ok else "FAILS - the fix is wrong")
+sys.exit(0 if (not control_ok and changed_ok) else 2)
+
+----------------------------------------------------------------
+# control_item5.py  md5 1482a2babc60e17ab1a375e2da07a0e1  1127 bytes
+----------------------------------------------------------------
+#!/usr/bin/env python3
+"""rt39 item five POSITIVE CONTROL: the new retain_gz must reproduce the committed archives byte for byte."""
+import sys
+sys.path.insert(0, "/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/flow")
+import gen_round as R, gen_flow_util as U
+from pathlib import Path
+
+rep = Path("/proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_1/cov/report")
+out = Path("/tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/rt39")
+ev = Path("/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/evidence/gen_round_0")
+ok = True
+for name, committed in (("modlist.txt", ev / "gen_modlist.txt.gz"), ("modinfo.txt", ev / "gen_modinfo.txt.gz")):
+    src, dst = rep / name, out / (name + ".gz")
+    R.retain_gz(src, dst)
+    a, b = U.sha256_file(dst), U.sha256_file(committed)
+    same = a == b
+    ok &= same
+    tag = "ok  " if same else "BAD "
+    print(f"{tag}{name}: retain_gz {a[:16]} / {dst.stat().st_size} B  vs committed {b[:16]} / {committed.stat().st_size} B")
+print("POSITIVE CONTROL on the committed pair (a6f811a):", "PASS" if ok else "FAIL")
+sys.exit(0 if ok else 2)
+
+----------------------------------------------------------------
+# control_item1.py  md5 32cf188a17e9ce1c09c2f673d2859ea9  2703 bytes
+----------------------------------------------------------------
+#!/usr/bin/env python3
+"""rt39 item one: POSITIVE CONTROL on the committed round-0 group report, plus the both-terms RED."""
+import sys
+sys.path.insert(0, "/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/flow")
+import gen_cov_report as R, gen_flow_const as C
+from pathlib import Path
+
+txt = (C.EVIDENCE_DIR / "gen_round_0" / "gen_groups.txt").read_text()
+rows = R.parse_groups(txt)
+totals = {"group": 81.47, "ratios": {"group": "3477/4268"}}
+q = R.group_quantities(rows, totals, C.LEDGER_COVERGROUPS)
+ok = True
+print(f"covergroups parsed: {len(rows)}; with COVERED/EXPECTED: "
+      f"{sum(1 for g in rows if g.get('covered') is not None and g.get('expected') is not None)}")
+for name in ("group_bins_gate", "group_bins_all", "group_score_weighted", "urg_report_total"):
+    v = q[name]
+    print(f"  {name:22} percent {v['percent']}  ratio {v['ratio']}  covergroups {v.get('covergroups')}")
+
+c1 = q["group_bins_all"]["ratio"] == "3477/4268" and q["group_bins_all"]["percent"] == 81.47
+ok &= c1
+print(f"{'ok  ' if c1 else 'BAD '} group_bins_all reproduces the report-wide figure 81.47 (3477/4268)")
+c2 = q["group_bins_gate"]["ratio"] == "3477/4048" and q["group_bins_gate"]["percent"] == 85.89
+ok &= c2
+print(f"{'ok  ' if c2 else 'BAD '} group_bins_gate is 85.89 (3477/4048): the ledger out of BOTH terms")
+c3 = q["group_score_weighted"]["percent"] == 78.29 and q["group_score_weighted"]["ratio"] is None \
+     and q["group_score_weighted"]["covergroups"] == 25
+ok &= c3
+print(f"{'ok  ' if c3 else 'BAD '} group_score_weighted is 78.29 over 25 covergroups and carries NO ratio")
+
+cell = R.group_cell(q)
+c4 = cell["field"] == C.GROUP_CELL_FIELD and cell["percent"] == q[C.GROUP_CELL_FIELD]["percent"] \
+     and cell["ratio"] == q[C.GROUP_CELL_FIELD]["ratio"]
+ok &= c4
+print(f"{'ok  ' if c4 else 'BAD '} the selector pairs one percent with ITS OWN ratio: "
+      f"{cell['field']} {cell['percent']} ({cell['ratio']})")
+
+# RED: scoping only the denominator. Give the ledger 7 hit bins and re-derive.
+rows2 = [dict(g) for g in rows]
+for g in rows2:
+    if g["name"] in C.LEDGER_COVERGROUPS:
+        g["covered"] = 7
+q2 = R.group_quantities(rows2, totals, C.LEDGER_COVERGROUPS)
+both_terms = q2["group_bins_gate"]["ratio"]
+denominator_only = f"{sum(g['covered'] for g in rows2)}/{q2['group_bins_gate']['declared']}"
+c5 = both_terms == "3477/4048" and denominator_only == "3484/4048" and both_terms != denominator_only
+ok &= c5
+print(f"{'ok  ' if c5 else 'BAD '} RED, a witnessed ledger: scoping BOTH terms gives {both_terms}, "
+      f"scoping only the denominator gives {denominator_only} - a figure that counts ledger hits it excluded")
+print("ITEM ONE:", "PASS" if ok else "FAIL")
+sys.exit(0 if ok else 2)
+
+----------------------------------------------------------------
+# control_item4.py  md5 8521227799e22c5ad9af31d61b66a2eb  2585 bytes
+----------------------------------------------------------------
+#!/usr/bin/env python3
+"""rt39 item four RED + POSITIVE CONTROL, both on real committed data.
+
+Control: the committed round-0 pair really did share sources, so the flag must read true on it.
+Red:     a canary whose sources differ must record BOTH values and a false flag, where the
+         pre-change canary_build_facts records neither value at all.
+"""
+import sys, tempfile
+sys.path.insert(0, "/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/flow")
+import gen_flow_util as U, gen_flow_const as C
+from pathlib import Path
+
+ev = C.EVIDENCE_DIR / "gen_round_0"
+round_man = U.load_yaml(ev / "gen_build_manifest_gen_tb.yaml")
+round_sources = (round_man.get("inputs") or {}).get("sources_sha256")
+print(f"round-0 build record sources_sha256 = {round_sources[:24]}...")
+
+# Scratch under the flow's own self-test root, never the shared /tmp (gen_flow_const F-001).
+d = Path(tempfile.mkdtemp(prefix="rt39_item4_", dir=C.selftest_tmp()))
+ok = True
+
+# Positive control: a canary manifest with the round's own digest.
+U.dump_yaml(round_man, d / C.BUILD_MANIFEST)
+facts = U.canary_build_facts(d)
+same = facts.get("sources_sha256") == round_sources
+match = (facts.get("sources_sha256") == round_sources)
+ok &= same
+print(f"{'ok  ' if same else 'BAD '} POSITIVE CONTROL: canary_build_facts carries the digest "
+      f"({str(facts.get('sources_sha256'))[:16]}), compare result {match}")
+print(f"     scope recorded: {facts.get('sources_sha256_scope')}")
+
+# Red: a canary built from different sources.
+other = dict(round_man)
+other["inputs"] = dict(round_man["inputs"], sources_sha256="f" * 64)
+U.dump_yaml(other, d / C.BUILD_MANIFEST)
+facts2 = U.canary_build_facts(d)
+differs = facts2.get("sources_sha256") == "f" * 64 and facts2.get("sources_sha256") != round_sources
+ok &= differs
+print(f"{'ok  ' if differs else 'BAD '} RED: a canary of other sources records its OWN digest "
+      f"({str(facts2.get('sources_sha256'))[:16]}), so the compare result would be False, not silent")
+
+# What the pre-change record showed: the committed index entry contains the digest zero times.
+idx = U.load_yaml(C.ROUND_INDEX)
+entry = idx["rounds"][-1]
+absent = round_sources not in str(entry)
+ok &= absent
+print(f"{'ok  ' if absent else 'BAD '} PRE-CHANGE DEFECT, measured on the committed index: the round-0 entry "
+      f"contains the sources digest {0 if absent else 1} time(s); its canary_build keys are "
+      f"{sorted((entry.get('canary_build') or {}))}")
+U.remove_tree_guarded(d, (Path(C.selftest_tmp()),), "item four self-test dir")
+print("ITEM FOUR:", "PASS" if ok else "FAIL")
+sys.exit(0 if ok else 2)
+
+----------------------------------------------------------------
+# identity_item1.py  md5 185cf83e28630c3cbe2b8c90db1fa80d  2580 bytes
+----------------------------------------------------------------
+#!/usr/bin/env python3
+"""rt39 item one, the planned FIRST red: the manifest, the round summary row and the dashboard row must
+name ONE group quantity. Runs the three consumers over one coverage record and compares their cells.
+
+Input: the committed round-0 regression manifest's coverage record, with group_quantities supplied by the
+landed parse of the committed gen_groups.txt (the record predates the field). Red: one consumer forced to a
+different field must be caught."""
+import sys, copy
+sys.path.insert(0, "/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/flow")
+import gen_cov_report as R, gen_flow_const as C, gen_flow_util as U
+import gen_round as RD, gen_dashboard as DB
+
+ev = C.EVIDENCE_DIR / "gen_round_0"
+cov = (U.load_yaml(ev / "gen_regress_manifest.yaml").get("coverage") or {})
+rows = R.parse_groups((ev / "gen_groups.txt").read_text())
+cov["group_quantities"] = R.group_quantities(rows, cov.get("totals") or {}, C.LEDGER_COVERGROUPS)
+
+def cells(c):
+    return {"manifest": R.group_cell(c.get("group_quantities") or {}),
+            "round_summary": RD.metric_row(c)["group_cell"],
+            "dashboard": DB.dut_scope_row({"coverage": c})["group_cell"]}
+
+def judge(label, c, want_equal):
+    got = cells(c)
+    keys = ("field", "percent", "ratio", "scope")
+    view = {k: {kk: v.get(kk) for kk in keys} for k, v in got.items()}
+    same = len({tuple(sorted(v.items())) for v in view.values()}) == 1
+    ok = same is want_equal
+    print(f"SELF-TEST {'ok ' if ok else 'BAD'} {label}: identical={same} (want {want_equal})")
+    for k, v in view.items():
+        print(f"      {k:14} field={v['field']} percent={v['percent']} ratio={v['ratio']} scope={str(v['scope'])[:64]}")
+    return ok
+
+ok = judge("three consumers over one record agree", copy.deepcopy(cov), True)
+red = copy.deepcopy(cov)
+orig = R.group_cell
+try:
+    # ONE consumer made to name another quantity, which is the pre-change shape where each module chose for
+    # itself. The three consumers share one module object, so the divergent one is picked out by its caller
+    # frame rather than by patching a per-module binding, which would move all three at once.
+    import inspect
+
+    def divergent(q, field=None):
+        caller = inspect.currentframe().f_back.f_globals.get("__name__")
+        return orig(q, "group_bins_gate" if caller == "gen_dashboard" else field)
+    R.group_cell = divergent
+    ok &= judge("RED, the dashboard alone naming another quantity is CAUGHT", red, False)
+finally:
+    R.group_cell = orig
+print("IDENTITY CHECK:", "PASS" if ok else "FAIL")
+sys.exit(0 if ok else 2)
+
