@@ -391,3 +391,51 @@ flow2/prechecks_9661c5d.txt):
 
 CRITIC VERDICT: APPROVE on e85fe5b..9661c5d. L-17 and L-18 are CLOSED; L-19, L-20 and L-21 are owed to runtime-2's next records
 touch with I-a; the flow group stays closed on both sides.
+
+### 9.2 The rev85 follow-on (runtime-2), 9661c5d..555f17a: L-19, L-20 and L-21 closed, I-a declined with reason; APPROVE (appended under a HOLD, 2026-09-05T18:46:32Z; Sections 1-9.1 unchanged)
+
+Artifacts at 555f17a: thirteen flow files and gen_critic_response_flow.md; rev90 (dv/auto_dv/reviews/2026-09-05-claude-diff-9661c5d5-555f17a8.md, ed4e2cf74566c875, in the tree and
+not yet committed when read). Method: a detached worktree of 555f17a for the ten
+self-tests and the const check, the scratch root counted, the manifest rows checked, a full-shape sweep of comment and docstring lines over
+the flow directory's Python, yaml and shell for every identifier family named so far; findings fixed before any review of the commit
+(flow2/draft_s92_prerev.txt). Logs: flow2/prever_555f17a.log, preread_555f17a.txt.
+
+- The ten self-tests and CONST-CHECK pass; selftest_tmp holds 0 entries after a gen_round run; 45 manifest rows verify.
+- L-19 CLOSED: the search is a label shape now, and my own sweep finds no rev, CM, CR, rt, "item N", L/M/H-n, P-nn, Q-n, T-nnn, C-n or
+  Critic token on a leading-comment line under dv/auto_dv/flow; the self-test and testlist case labels stay as traceability, and the three
+  user-facing strings were swept by choice with strings noted as outside the rule.
+- L-20 CLOSED: the A-002 row cites gen_mirror.py:221, the comment's line at this commit; the :219 that remains at :1215 is rev82's finding
+  quoted as the row's subject, not a citation. L-21 CLOSED: the counts are a per-class table with its method and unit (comment and
+  docstring lines only, the file types named, plan ids and tool versions excluded; process labels zero, task ids zero, intervention-log
+  and A-002 identifiers 23 occurrences on 21 lines, dated rulings 4 on 4, the EC-3 pair excluded as documented cross-references).
+- I-a CLOSED as declined in place with its reason: a retained log is not reopened to make a folded script portable, and the alternative is
+  a re-run retained as a new log; that is the row I asked for either way.
+- L-22 (Low, comment; runtime-2): one Orchestrator task id survives in an inline comment after code, gen_fcov.py:68 ("TB Infra's T-215
+  probe report"), against the table's "task ids zero"; the sweep's line shape read leading-comment lines and missed the trailing one.
+  (gen_flow_util.py:1677's "P-06" is an f-string message and outside the rule.)
+- The five fact-stating citations are re-judged under the plan's extension with one referred to the DV Lead as ambiguous; the census
+  names the file types it covered and that it never visited SystemVerilog, the Q-002 site in gen_dut_top.sv being tb-infra-2's; the
+  creating-call count reads 22 plus 2; the rule is cited at its home, gen_test_plan.md Section 0.
+
+Reconciliation with rev90 (read after the rows above were fixed at 15:56Z; its rows checked on the tree, flow2/preread_555f17a.txt):
+- Its verification matches mine (the ten self-tests, its own tokenizer sweep finding no P-nn, R-nn, Q-nn, C-n, rev, rt or CM label, the
+  A-002 cites at :221 with the :219 at :1215 being quoted finding text, the I-a decline's rule at gen_tdd_test_template.md:730, the
+  22 plus 2 creating calls, the EC-3 document existing).
+- Its Low on the T-215 trailing comment is my L-22.
+- Its Low on the METHOD, VERIFIED and adopted as L-23 (Low, records; runtime-2): the table says "comment and docstring lines only" and
+  gives 23 occurrences on 21 lines for the intervention-log and A-002 identifiers, but over # comment lines alone I count 17 on 16 and
+  over comments plus docstrings by a Python tokenizer 35 on 32, so the stated method does not reproduce the figures; state the filter
+  that does.
+- Its Low on the EC-3 cross-references, VERIFIED and adopted as L-24 (Low, comment; runtime-2): gen_flow_const.py:563 and :613 still say
+  "EC-3 evidence" and "the EC-3 input the selector accepts" without the document the row says every EC-3 mention now names; the row's
+  "pair" was two of four.
+- Its Low on the rule cited for the fact category, VERIFIED and adopted as L-25 (Low, records; runtime-2): the section says the five
+  fact-stating sites were re-judged "under the plan's extension" and cites gen_test_plan.md Section 0 at e4aef00, whose :41-51 carry no
+  fact category (the four-case entry landed later, at 2f92709); the citation should name the commit that carries the case it applies.
+- Its Infos: F-001 at gen_flow_const.py:143 and :151 is an intervention-log entry excluded by the METHOD as a plan id (two sites the
+  count omits); gen_acceptance_excerpt.py's A-002 comment and its Path(C.selftest_tmp()) sit outside the table's scope though the row
+  calls the file the flow's; P6 in gen_run.py is a probe name without a dash and stays. All fair, none a row of mine.
+- Verdict after reconciliation: unchanged. Both agree there is no Major and no Medium.
+
+CRITIC VERDICT: APPROVE on 9661c5d..555f17a. L-19, L-20 and L-21 are CLOSED and I-a is closed as declined; L-22 to L-25 are owed to
+runtime-2's next records touch. The flow group stays closed on both sides.
