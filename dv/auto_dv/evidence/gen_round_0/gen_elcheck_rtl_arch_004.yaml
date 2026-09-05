@@ -1,0 +1,18 @@
+# rtl-arch purpose-2 request (re-file of rtl-arch-003 with the elcheck field): report-only strict load
+# of the exclusion file against the round-0 re-baseline merged vdb. No simulation, no coverage claim.
+requester: rtl-arch
+purpose: 2
+tests: []
+seeds: []
+coverage: yes
+component: exclusion-file
+elcheck:
+  vdb: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_rebaseline/cov_unmeasured/merged.vdb
+  elfile: /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/excl/gen_exclusions.el
+notes: >
+  Formal record of the strict-load check of dv/auto_dv/excl/gen_exclusions.el (commit dca91fd) for the
+  exclusion README (Critic condition F-1 in draft form). Runtime's pre-flight runtime-007 already gave
+  urg rc 0, exclusion_violations 0, no Warning-[/Error-[ line, gated row LINE 1694/4057 COND 2547/9220
+  TOGGLE 1682/20596 FSM 6/74 BRANCH 798/2320 ASSERT 143/175 (excluded 294/346/3942/12/98/3); this
+  request repeats it under the rtl-arch name so the README cites a requester-owned manifest. Report the
+  manifest path only.

@@ -1,0 +1,16 @@
+# rtl-arch purpose-2 elcheck: formal strict-load record of the pass-13 exclusion file (annotation-only
+# regeneration after the cross-model re-review of 4125c36: term names in A.4 groups, evidence path, negation
+# precedence fix, per-module constant scoping; entry set identical to the pass-12 file). Report-only.
+requester: rtl-arch
+purpose: 2
+tests: []
+seeds: []
+coverage: yes
+component: exclusion-file
+elcheck:
+  vdb: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_rebaseline/cov_unmeasured/merged.vdb
+  elfile: /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/excl/gen_exclusions.el
+notes: >
+  Supersedes rtl-arch-006. File md5 9b642ef57393d8b3af8de9485a8f6f88 at filing (1421 entry lines, 492 annotation groups); the sorted
+  entry set equals the rtl-arch-006 file exactly, only annotation texts changed. rtl-arch pre-check pass 13:
+  urg rc 0, 0 warnings/errors, attempts file no. Manifest path only, please.

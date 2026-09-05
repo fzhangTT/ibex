@@ -1,0 +1,19 @@
+# rtl-arch purpose-2 elcheck: formal strict-load record of the REGENERATED exclusion file after the
+# cross-model review of dca91fd (A.1 sweep replaced by the dead-arm guard analysis; class-D 2b groups
+# held out). Report-only, no simulation.
+requester: rtl-arch
+purpose: 2
+tests: []
+seeds: []
+coverage: yes
+component: exclusion-file
+elcheck:
+  vdb: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_rebaseline/cov_unmeasured/merged.vdb
+  elfile: /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/excl/gen_exclusions.el
+notes: >
+  Supersedes rtl-arch-004 (which recorded the dca91fd file). The file now has 1442 entry lines (md5
+  3b67ac6f909ac21d83609c9239399e68 at filing); rtl-arch's local pre-check pass 10 on the same vdb: urg rc 0,
+  no warning or error, no attempts; URG total row LINE 1694/4134 COND 2547/9319 TOGGLE 1994/23016 FSM 6/74
+  BRANCH 798/2353 ASSERT 143/178. Please report the manifest path; gated rows and excluded counts go into
+  dv/auto_dv/excl/gen_exclusions_README.md section 3 and the response file
+  dv/auto_dv/evidence/gen_critic_response_exclusions.md.

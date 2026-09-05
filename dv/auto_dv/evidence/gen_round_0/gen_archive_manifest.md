@@ -5,7 +5,7 @@ record was changed; this manifest and the archives it lists are additions.
 
 The team calls this measurement **round 1**; the flow indexes it as **measured round 0**, regression
 tag `round_1`. Pinned commit `4a0070285557a2a7dfb50cea9390597143b984b0`. The record is commit
-`d29d5db` (23 files under `dv/auto_dv/evidence/gen_round_0`) and its supplement is `a6f811a`
+`d29d5db` (21 files under `dv/auto_dv/evidence/gen_round_0`; the 23-file hand-off list also carried the round index and the regenerated dashboard, which live elsewhere) and its supplement is `a6f811a`
 (`gen_modlist.txt.gz`, `gen_modinfo.txt.gz`).
 
 ## What is archived, and where

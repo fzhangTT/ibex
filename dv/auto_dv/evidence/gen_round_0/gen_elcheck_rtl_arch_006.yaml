@@ -1,0 +1,16 @@
+# rtl-arch purpose-2 elcheck: formal strict-load record of the exclusion file regenerated after the
+# Critic's REQUEST-CHANGES M-1 (guard analysis on every shared module, A.8 carve-back filter). Report-only.
+requester: rtl-arch
+purpose: 2
+tests: []
+seeds: []
+coverage: yes
+component: exclusion-file
+elcheck:
+  vdb: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_round_0_rebaseline/cov_unmeasured/merged.vdb
+  elfile: /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/excl/gen_exclusions.el
+notes: >
+  Supersedes rtl-arch-005. File md5 73fa4c3ba87878c5f5a429261ee5861a at filing (1421 entry lines, 381 groups);
+  rtl-arch pre-check pass 12 on the same vdb: urg rc 0, no warning or error, no attempts; gated rows from the
+  hierarchy report LINE 1694/4154 COND 2547/9319 TOGGLE 1682/20596 FSM 6/74 BRANCH 798/2353 ASSERT 143/175.
+  Please report the manifest path; it goes into dv/auto_dv/excl/gen_exclusions_README.md section 3.
