@@ -348,3 +348,46 @@ where the census lives; L-11..L-16 are new Lows, none blocking. CRITIC VERDICT: 
 REQUEST-CHANGES of Section 5 on the group e1bee86, d09ff58, 4b5730e is LIFTED on this record: the irq-step1-samplers
 group stands approved with L-2 and L-11..L-16 owed as disclosed. Sections 1-6 and the corrigendum above are
 byte-identical to the d355f7f commit (a17ace6ae10690e8).
+
+## Section 8. Reconciliation of Section 7 with the cross-model re-review rev54 (written 2026-09-05T09:01:35Z)
+
+Artifact: dv/auto_dv/reviews/2026-09-05-claude-diff-27212cb0-55ef529a.md, committed 0029b94, sha256 0e53e7d9f4ad2f81,
+47 lines, verdict APPROVE-WITH-CHANGES, read after Section 7 was on the record (31903f9). Exposure before Section 7: the
+Orchestrator's message summarised its rows (disclosed in Section 7's method line).
+
+Agreement. rev54 re-traces the five Majors to the same mechanisms and the same fixture and smoke figures as Section 7.2
+(the expected mip word through gen_irq_mie_bit; gen_reset_pc from GEN_MM_BOOT_RESET_OFFSET against PC_BOOT; the
+relation as a second sample whose only cross gain is cr_line_marks; the window opened in write_ibus with the reset
+mtvec base), judges e1bee86 clean, and confirms the valid flag at the three sentinel sites, the referee, the mret edge
+and the l43 corrigendum. Its verdict word differs from mine by the form each of us uses: my APPROVE lifts a
+REQUEST-CHANGES with the Lows owed as disclosed; its APPROVE-WITH-CHANGES routes seven Minors to tb-infra-2's paired
+touch. Four of its Minors are Section 7's L-12 (table membership, not base plus four times the cause), L-14 (residual
+CSR literals), L-15 (cp_others before the view check) and the valid-flag effect Section 7.3 closed on my own fetch_off
+reading. Three are rows Section 7 did not carry, adopted below with the mechanism verified.
+
+- L-17 (Low, records and hygiene; adopted from rev54 Minor 1, verified). gen_fcov_pkg.sv:162 still carries the jammed
+  second comment ("// the debug driver's request changes (the same item: changed[0] = req)") on state_imp while dbg_imp
+  at :161 has none; the log's Minors list says "two jammed comments split". Move the comment and correct the list.
+- L-14 extended (adopted from rev54 Minor 4, verified). Besides :404, dcsr is compared as 12'h7b0 at :572 where
+  ibex_pkg::CSR_DCSR exists.
+- L-15 extended (adopted from rev54 Minor 3, verified). A view miss is counted at every irq_pins_at call (:299) and
+  again in irq_pend_record (:467), so one record's miss can count two or three times (the entry sample's call, the
+  debug record's at :534, the record's own); count once per record.
+- L-18 (Low, test hygiene; adopted from rev54 Minor 5, verified). gen_ut_irq_reset_reads.py:26 and :28 hand-encode
+  HOLD_STICKY = 3 and MIP_EXTERNAL_BIT = 11, whose authorities are gen_agents_pkg.sv's hold enum and ibex_pkg's
+  CSR_MEIX_BIT; the hold enum through the knobs codegen is deferred in the log with a reason and needs an owner.
+- L-19 (Low, records; adopted from rev54 Minor 6, verified with my own run). The log does not say which bin the storm
+  smoke's new fetch_off=1 window produced. My storm-shaped gen_ut_lockstep run on the same build (Section 7.3, retained
+  under dv/auto_dv/work/critic/irq1b/) reads cp_fetch_on_after resume_at_on 1, handler_fetched_at_on 0: the reset-opened
+  window's first fetch is the boot fetch, as rev54 infers, and the fetch-enable shape's window is the handler fetch.
+  State both in the log at its next corrigendum.
+- L-20 (Low, dead code; adopted from rev54 Minor 7, verified). irq_lines_now is declared at :179 and written at :722
+  "for cp_others", which now reads the view; nothing reads the field. Delete it.
+- Info (adopted from rev54, verified). The comment above the view-ok block ("the three below read the record itself")
+  is wrong for irq_dbg_record, which reads irq_pins_at at :534. The reviewer's second Info (the handler-with-interrupts-
+  disabled fixture and the two missing mret bins owed) is Section 7.3 L-8's disposition.
+
+Disagreement: none. rev54 records nothing Section 7 disputes, and Section 7's L-11 (the reset group's per-sample hit
+inflation), L-13 (smoke recipes not retained) and L-16 (no red for the cycle-0 drain check) are rows rev54 does not
+carry; they stand. Verdict unchanged: APPROVE for 55ef529, the REQUEST-CHANGES lifted; L-2, L-11..L-20 owed as
+disclosed. Sections 1-7 and the corrigendum above are byte-identical to the 31903f9 commit (6b86f0c732cc05f5).
