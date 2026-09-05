@@ -101,7 +101,50 @@ sections 1 to 4 is reached at all.
 Read mstatus.mie and the mie CSR immediately after each mret. Section 3 predicts mie equal to the
 handler's written value between the nested and outer mrets, and equal to M0 after the outer mret.
 
-## 8. Not claimed
+## 8. Where an mret lands, and what the mstack restore does not affect
+
+The jump and the CSR restore happen in the same cycle, and only one of them decides the destination.
+
+In FLUSH under `if (mret_insn)` the controller asserts `pc_mux_o = PC_ERET` and `pc_set_o = 1'b1`
+(rtl/ibex_controller.sv:955-956) and `csr_restore_mret_id_o = 1'b1` (:957) together. That restore
+signal reaches the CSRs with no register in the path: rtl/ibex_id_stage.sv:691 passes it out,
+rtl/ibex_core.sv:751 wires it to csr_restore_mret_id, and :1538 drives cs_registers' csr_restore_mret_i
+with the same net.
+
+The destination is a single unmuxed wire carrying the register's current value. `csr_mepc_o = mepc_q`
+(rtl/ibex_cs_registers.sv:1028) is the only assignment to that port; core:1502 carries it to csr_mepc
+and :620 into the IF stage, where `PC_ERET: fetch_addr_n = csr_mepc_i` (rtl/ibex_if_stage.sv:246).
+
+So an mret lands at whatever mepc_q holds in that cycle: the value a handler's csrw left if it wrote
+one, otherwise the value the trap saved. The mstack restore's own write, `mepc_en = 1'b1` and
+`mepc_d = mstack_epc_q` (:971-972), is a write of mepc_d and lands at the end of that same cycle, so
+it changes only later reads and CANNOT affect this jump.
+
+Two consequences worth stating explicitly, because both have been derived the other way. A nested
+handler's mret returns to its own return point, not to the frame the mstack restore is installing;
+and after that mret the architectural mepc holds the outer frame, so a later mret uses the outer
+return point and any handler read of mepc sees the outer frame rather than its own.
+
+A handler that never begins executing produces no mret at all, and none of this applies to it. Where a
+trap begins executing is section 5.
+
+## 9. The documented constraint is broader than the controller comment
+
+The controller comment at :494-495 gives the NMI-mode gate's intent as interrupts being ignored "while
+in NMI mode (nested NMIs are not supported, NMI has highest priority and cannot be interrupted by
+regular interrupts)". It speaks only about interrupts.
+
+doc/03_reference/exception_interrupts.rst is broader. Line 175 states "Nesting of
+interrupts/exceptions in hardware is not supported", which covers synchronous exceptions as well.
+Line 176 adds that the nonstandard mstack CSRs exist "only to support recoverable NMIs" and :177 that
+they are not software-accessible. Line 178 states that while handling an NMI all interrupts are
+ignored independent of mstatus.MIE, and :179 separately states that nested NMIs are not supported.
+
+So the document forbids the case in section 6 and the comment does not mention it. The classification
+of that case remains the DV Lead's; this section only records that the two texts differ in scope and
+which one is broader.
+
+## 10. Not claimed
 
 No waveform was read for any statement here; every line is from the RTL at the commit this file is
 recorded against. No claim is made about which instruction in any particular fixture writes any
