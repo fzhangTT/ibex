@@ -1,0 +1,35 @@
+request: Test Writer request 2, rerun on the commit carrying both agent fixes
+served_utc: '2026-09-05T05:19:20Z'
+served_by: runtime-2
+kind: unmeasured, no coverage, no manifest row; PINNED
+head_sha: 27212cb0bb4f9d24ac1d4849d2a518426c9670ff
+note_on_commit: >
+  The Orchestrator authorised "e6eb3a2 or later". I ran at 27212cb, the later commit, whose TB build
+  identity is unchanged from e6eb3a2 (gen_tb sources_sha256[:16] 699fa803302ba93a), so the simulation is
+  the same TB with the two agent fixes in it.
+driver: detached archive of 27212cb (committed flow code); the manifest's git field is empty, source.head_sha carries the pin
+run: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_irq_req2_rerun/runs/gen_test_irq_basic_red_694904681
+entry: gen_test_irq_basic_red (committed, unchanged)
+seed: 694904681
+verdict: RED-OK
+verdict_reason: red fixture failed as designed (red_expect matched); gen_fail_marker at sim_stdout.log:267
+result:
+  report_words: 92
+  lines_driven: 18
+  uvm_errors: 0
+  gen_test_phase_lines: 8
+  fire_schedule_applied: 'ok=True reached 8 of 14 scheduled entries by EOT (cycle 3447, retired 423), applied 8 (k=2, source=derived)'
+  harness_line: 'GEN_TEST_FAIL gen_test_irq_basic: 1 fire-check failure(s): fire_tp_irq_002: timer interrupt entry: vector 7 carried mcause 0x00000007, expected 0x80000007'
+expectations:
+  idx1_group_not_applied_at_cycle_77: MET - 8 phase lines, the idx=0 group only; run 3 had 14
+  beyond_eot_phases_reported_unapplied: MET - the check reports reached 8 of 14, applied 8, and PASSES
+  designed_TP_IRQ_002_red_fires: MET - RED-OK with exactly one fire failure, the designed one
+  poll_wakes_at_its_own_targets: MET - 92 report words and all 18 lines driven, the full entry set
+comparison_with_run_3:
+  run_3: 92 reports, 18 drove, 173 UVM_ERROR, 14 phase lines, 3 fire failures, verdict FAIL for an undeclared reason
+  now:   92 reports, 18 drove,   0 UVM_ERROR,  8 phase lines, 1 fire failure,  verdict RED-OK
+pre_registered_note: >
+  The wrong-word fault did NOT reproduce (0 UVM_ERROR). The Test Writer registered before the run that
+  this is expected and is NOT evidence about the fault: without the schedule defect this seed runs quiet
+  at default bus timing, so the contention that surrounded the fault is gone. rtl-arch's wave at
+  07653dd is what reproduces and places it, and the DV Lead records the RTL half as a design property.

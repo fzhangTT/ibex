@@ -13,6 +13,7 @@ file here carries a manifest row.
 | `gen_irq_quiet_probes.yaml` | 5946 | `10a0414edb4796b961f284aa58c5909e22c6e066f4988141619827d2b62c29f4` | `gen_irq_quiet_probes.yaml` |
 | `gen_irq_probe_a_direct.yaml` | 4480 | `0f6a6af1e673e25c8d1e50fe2802419231c3b4434893f4a7ad30b10eca80b018` | `gen_irq_probe_a_direct.yaml` |
 | `gen_pmp_covergroup_control.yaml` | 2135 | `63dd519b2c7717756a40ce9acee0eaa6e33e84e9e3f71d25e38fff4dcd1617f6` | `gen_pmp_covergroup_control.yaml` |
+| `gen_irq_req2_rerun.yaml` | 2397 | `ab667a412f5db47f4cecb92d087636d1b52668e54df87700b4a7a2f12b624270` | `gen_irq_req2_rerun.yaml` |
 | `gen_export.txt.gz` | 155526 | `3e1f03baa414b9fcaca07ffe04cb02c70a58409fbdca1c2f972b17baed080ba3` | (the wave run's export, compressed) |
 
 ## The export file
@@ -35,6 +36,7 @@ already documents; site gzip is 1.9, and another version could produce different
 | `gen_irq_quiet_probes.yaml` | `regress_irq_probe_b2/runs/{ctrl,schedquiet,quietpin}_694904681` and `regress_irq_probe_b/runs/gen_test_irq_probe_quiet_694904681` | gen_test_irq_basic_red | 694904681 | 07653dd873fa3dff0b18c419f9345a2e9977b993 | the control and the three quiet probes, RE-MEASURED from the run artifacts rather than transcribed |
 | `gen_irq_probe_a_direct.yaml` | `regress_irq_probe_a4/runs/local_gen_test_irq_probe_direct_694904681` | gen_test_irq_probe_direct (scratch entry) | 694904681 | none: the 07653dd mirror plus one uncommitted generator | the mtvec-direct probe; NOT pinnable, and its zero scoreboard errors are not evidence about the divergence |
 | `gen_pmp_covergroup_control.yaml` | `regress_pmp_cg_control/runs/gen_test_pmp_mseccfg_1396647892` | gen_test_pmp_mseccfg | 1396647892 | 2d87642b1d36a943fc08f7cb47258310c9199e81 | the positive control for the PMP covergroup ABSENCE before the render landed: 26 covergroups, none PMP |
+| `gen_irq_req2_rerun.yaml` | `regress_irq_req2_rerun/runs/gen_test_irq_basic_red_694904681` | gen_test_irq_basic_red | 694904681 | 27212cb0bb4f9d24ac1d4849d2a518426c9670ff | the same seed rerun with BOTH agent fixes and the timer service in: the first RED-OK for this entry, and the measurement that the divergence stops reproducing once the TB is fixed |
 | `gen_export.txt.gz` | `regress_irq_wave010/runs/gen_test_irq_basic_red_694904681` | gen_test_irq_basic_red | 694904681 | 07653dd873fa3dff0b18c419f9345a2e9977b993 | the pin and ibus event rows of the wave run, read together with the FSDB |
 
 ## Out-tree artifacts these cite
