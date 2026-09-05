@@ -551,3 +551,80 @@ failure I found and fixed a real defect in gen_bit_ratified_prog.py, where the d
 held three mnemonics that the draft probe set already covered, so each was probed twice. That fix
 stands on having read the source. Whether the duplicate could ever have changed a result is untested,
 because the failure it was proposed to explain never existed.
+
+## 14. Declared bins against the every-seed bar: twelve entries, three instruments, one withdrawal
+
+WHY THIS EXISTS. A DECLARED bin is a per-run guarantee: the entry promises it on every run, and the
+functional-coverage check fails a run that misses one. Round 1 selected its entries at three seeds
+from one base seed. Round 2 changes the base by design, so a declared set calibrated on the old base
+is not evidence for the new one. A bin produced at 6 of 40 seeds passes a fresh three-seed draw with
+probability 0.0034; its three-of-three in round 1 was the selection criterion, not evidence for it.
+
+THREE INSTRUMENTS, and this record says per entry which one decided it, because they are not
+interchangeable:
+  HAND MAPPER   a reader written against one generator's actual semantics, calibrated so that any
+                bin the committed round report says was hit must resolve and be non-zero.
+  SIMULATION    runtime-2's 40-seed unmeasured sweep with per-test attribution. Decides any bin,
+                needs no mapper, and is authoritative where the two disagree.
+  (WITHDRAWN)   a generic mapper. See the withdrawal below; it decided nothing.
+
+TWO COUNTS PER ENTRY, NEVER ONE. The count of declared bins found under the every-seed bar, and the
+count of declared bins the reader could NOT examine. A line reading "0 under the bar" is read as
+clearance for the whole declared set; for an entry whose reader examined a quarter of it, that
+sentence would mislead while every word of it stayed true. The DV Lead required this after
+runtime-2's classification showed the case concretely, and runtime-2's sweep blocks carry the same
+pair.
+
+    entry                     declared  instrument   under the bar   not examined
+    gen_test_bit_ratified          617  hand mapper   0 (was 8)                543
+    gen_test_cmp_zca               300  hand mapper   0 (was 3) + 12 unproven  217
+    gen_test_isa_alu               563  simulation    pending                  563
+    gen_test_mul_mul               338  simulation    pending                  338
+    gen_test_cmp_zcmp_basic        325  simulation    pending                  325
+    gen_test_mul_div               196  simulation    pending                  196
+    gen_test_isa_cti               184  simulation    pending                  184
+    gen_test_csr_trap_setup        146  simulation    pending                  146
+    gen_test_isa_shift             120  simulation    pending                  120
+    gen_test_cmp_zcb                96  simulation    pending                   96
+    gen_test_rst_boot                6  simulation    pending                    6
+    gen_test_csr_access              4  simulation    pending                    4
+
+WHAT THE HAND MAPPERS FOUND, and it is the whole case for the precondition. Eleven bins that these
+two entries DECLARE hit are produced at fewer than 40 of 40 seeds by the committed generators: three
+pack equal-operand legs (cr_op_eq.pack_no, packh_no, packu_no), five rs1_eq_rs2 legs (cr_op_same for
+max, minu, sh1add, sh2add, sh3add) and three next-length legs (cr_insn_next.c_addi_n16, c_j_n16,
+c_slli_n16). The thinnest, c_j_n16, stands at 6 of 40. Both entries run at three seeds, so they were
+passing by coincidence. The generator work in this group takes that eleven to zero; the twelve
+"unproven" on cmp_zca are memory-form alignment legs whose addresses the reader refuses to place
+after a line the assembler may compress, and the simulation decides those.
+
+A GENERIC MAPPER WAS ATTEMPTED AND IS WITHDRAWN, recorded because the withdrawal is the finding. It
+resolved a declared bin by matching the bin's class token against tag VALUES in the generator's plan,
+with no link to the coverpoint the bin belongs to. Two facts killed it:
+  - Its one positive finding was gen_bit_count_cg.cp_single_pos.p16 at 6 of 40 seeds. Checked against
+    the generator before it was reported: the string p16 in that plan belongs to orc.b operations
+    tagged cls=p16, while the declared bin is a single-bit POSITION in a bit-count covergroup. The
+    match was spelling, not semantics.
+  - Adding one rule, refusing any value carried by more than one tag key, moved gen_test_isa_alu from
+    367 resolved to 172. A number that halves when one guess is removed was never a measurement, and
+    the survivors have no better claim than the ones that went.
+Its calibration could not catch either: the control flags a resolved bin at zero that the report says
+was hit, and a mis-resolution landing at 6 of 40 passes that test. So the ten entries have no
+emit-level reading at all, and the cost of a real one is one hand mapper per generator, which is what
+the two above took.
+
+WHAT THE SIMULATION HAS DECIDED SO FAR:
+  gen_test_cmp_zca   25 of 40 clean; the other 15 each miss exactly ONE declared bin, nine on
+                     cr_insn_rdfull.c_swsp_x8_15 and six on c_swsp_x3_7, with no fire-check failure
+                     in the forty. Both bins are in the 217 the hand mapper does not examine, which
+                     is the concrete case for the second count.
+  gen_test_pmp_csr_warl  its declared set is PROVISIONAL, not cleared: the shaping block ran 39 of 40
+                     seeds and the missing one is a generator-class miss, seed 230969025, where the
+                     committed generator asserted on its own draw. That makes the sample biased
+                     rather than merely smaller. The generator fix in this group produces a program
+                     at that seed and at three others it also refused, and a 40-seed re-sweep clears
+                     it.
+
+WHAT IS NOT CLAIMED. No entry in the simulation rows is cleared or condemned by this record; those
+rows are pending and the sweep decides them. And a hand mapper's "0 under the bar" clears only the
+bins it examined, which is why the fourth column is beside it rather than in a footnote.
