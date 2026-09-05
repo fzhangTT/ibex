@@ -217,3 +217,11 @@ return (L-7), mret_mpie1_pending (L-8), the fifth unit-test check (L-9), the hyg
 paragraph (my L-1, found independently). Its Info is adopted. Not in the review: my L-2 (the census wording), L-3 (the
 irq manifest's bins on unrendered covergroups) and L-4 (the checker refactor without a re-fired red). Same verdict word.
 If the committed artifact differs from the hash above, the difference is noted by corrigendum.
+
+## Corrigendum (2026-09-05T07:34:09Z, HOLD sent to the Orchestrator first; the verdict above is unchanged)
+Scope, restated so the record covers the checker fix: the group judged here is the three commits e1bee86 (tb-infra-2's
+dbg_dret checker fix with its red and mutant, Section 1), d09ff58 (the CG-IRQ-001 cr_upath_pending plan line, Section 2)
+and 4b5730e (landing 43, Section 3), inside 27212cb..4b5730e. The header's "Range e1bee86..4b5730e" excludes e1bee86 by
+git range semantics (it is the parent of 253f08e); the range review rev51 (253f08e..4b5730e) did not judge it either,
+and it sat unnamed inside rev49's range. It is named here explicitly and was judged on its own retained evidence.
+Section 6's artifact hash 71f2d4001fc47e03 is the one committed at 24da095; no corrigendum on its content is needed.
