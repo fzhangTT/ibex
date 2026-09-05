@@ -333,7 +333,7 @@ package gen_fcov_pkg;
       if (cycle_event && misc_vif != null && misc_vif.core_busy == ibex_pkg::IbexMuBiOff)
         return GEN_FC_IRQ_PENDING_MODEL_CP_STATE_SLEEP;
       if (st == null) return -1;
-      if (st.dcsr[2]) return GEN_FC_IRQ_PENDING_MODEL_CP_STATE_STEP;   // dcsr.step (rtl/ibex_cs_registers.sv:231)
+      if (st.dcsr[GEN_DCSR_STEP_BIT]) return GEN_FC_IRQ_PENDING_MODEL_CP_STATE_STEP;
       if (st.prv == ibex_pkg::PRIV_LVL_U) return GEN_FC_IRQ_PENDING_MODEL_CP_STATE_U_MODE;
       return st.mstatus[ibex_pkg::CSR_MSTATUS_MIE_BIT] ? GEN_FC_IRQ_PENDING_MODEL_CP_STATE_MIE1_M
                                                        : GEN_FC_IRQ_PENDING_MODEL_CP_STATE_MIE0_M;
@@ -564,7 +564,7 @@ package gen_fcov_pkg;
     function void irq_dbg_record(gen_model_state st);
       logic [18:0] pins = irq_pins_at(irq_commit_cycle(st));
       logic [31:0] mie = st.mie;
-      bit stepping = st.dcsr[2] && !st.debug_mode;   // dcsr.step outside debug mode
+      bit stepping = st.dcsr[GEN_DCSR_STEP_BIT] && !st.debug_mode;   // dcsr.step outside debug mode
       if (irq_dbg_cg == null) return;
       if (dbgw_await) begin
         // the first record after the exit decides cp_post_exit: an entry is the taken case, an ordinary

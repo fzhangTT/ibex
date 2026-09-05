@@ -1,0 +1,97 @@
+# gen_fu_l57_perline_enable.log -- the entry bound masks on a line's OWN enable bit, and the dcsr step bit
+# gets one home (TB Infra, 2026-09-05). Landing 57, "irq checker fix 3a", answering rev60's Lows on the
+# per-line enable, the dcsr home, the "exclusion" wording and the fixture retention.
+#
+# WHAT IS NOT IN THIS LANDING, said first because it is the more important fact. rev60's Medium on the
+# NMI-mode mirror is HELD BACK. The mirror counts a nesting depth the design does not have, and the fix is
+# written and compiles, but its red does not exist yet and the DV Lead ruled that a change to what a checker
+# MASKS must land with one: its failure mode is silence, so a citation and green smokes cannot tell "the mask
+# is now right" from "the mask now hides more". It is split out of these files and kept as a re-appliable
+# script rather than carried here unproven.
+#
+# THE BUILDS. Two out-of-tree roots, each an archive of the same commit; A is that archive unchanged, C is
+# that archive with this landing's three files copied over it and nothing else. Each mutant build differs
+# from its clean sibling in gen_dut_top.sv alone, and both roots were reverted to md5
+# 56041635e557a5531283918982a3f37f afterwards.
+#   $ git archive HEAD | tar -x -C <root>
+#   $ FORCE=1 bash <root>/dv/auto_dv/tb/gen_tb_local.sh compile <root>/dv/auto_dv/out_<label>
+#
+# ================ ROW 1: the line's OWN enable bit is a mask term ========================================
+# rtl/ibex_controller.sv:498 gates a take on irq_pending_i & irq_enabled. irq_pending_i needs the line's own
+# bit in the mie CSR; irq_enabled is the global mstatus.MIE term at :490. The bound masked on the global term
+# only, so a line raised while its own bit was clear accrued records in which the design was RIGHT to withhold
+# it, and the comment claimed the count covered records in which the interrupt "COULD have been taken".
+# TWO CONSEQUENCES, and this landing demonstrates the first and states the second.
+#   The expectation is DROPPED. At the eighteenth such record the bound expires, the still-owed test reads the
+#   line's bit as clear, no error is raised and the expectation is deleted. A later enable is never judged.
+#   A FALSE FIRE. If the enabling write retires exactly on the record where the count reaches the bound, the
+#   still-owed test reads the bit as newly set and the checker fires on a correct design.
+# THE SECOND IS NOT ENGINEERED AS A RED AND THE REASON IS DELIBERATE. It needs one instruction to land on one
+# specific count, and a red that depends on a timing coincidence is fragile evidence: it would pass or fail on
+# a scheduling change that has nothing to do with the rule. A robust red for one consequence plus an honest
+# statement of the other is worth more than a fragile red for both.
+#
+# THE RED. Fixture gen_irq_perline_directed.S, retained beside this log, image crc32 33ec7bd6, 150 words,
+# tohost 0x800002b8. A line is raised while its own mie bit is clear; phase two sets every bit. The program
+# carries an EXPLICIT 32-slot vector table at 0x80000200 because a handler address cannot be chosen on this
+# core: a csrw of mtvec keeps only bits [31:8] and forces the mode (rtl/ibex_cs_registers.sv:742-743, under
+# "mtvec.MODE set to vectored" and "mtvec.BASE must be 256-byte aligned"), so an unaligned base silently
+# vectors every trap somewhere else. Module gen_ut_lockstep, storm regime, until_taken hold, seed 1, with
+# MUT-IRQWITHHOLDALL so the raised lines are never taken. No trap is taken at all in the mutant runs.
+#
+#   build                             irq_entry   real UVM_ERROR   open expectations at the end
+#   A (pre-fix)  clean                     0             0                    1          PASS
+#   A (pre-fix)  + MUT-IRQWITHHOLDALL      4           328                    1          FAIL
+#   C (fixed)    clean                     0             0                    5          PASS
+#   C (fixed)    + MUT-IRQWITHHOLDALL      5           329                    1          FAIL
+#   C (fixed)    + MUT + gen_chk_irq_entry=0  0        324                    1          FAIL
+#
+# THE FIFTH FIRE IS THE EARLIEST RAISE AND THAT IS THE WHOLE DEMONSTRATION. The fixed build reports
+#   lines 00100 (enable bits 00200000) raised at cycle 181 (order 28) not taken within 17 records
+#   (now order 68, takeable records 18, mie 7fff0888 mstatus 00000088)
+# which the pre-fix build does not report at all. Order 28 to order 68 is forty records elapsed of which
+# eighteen were takeable: the first twenty-two are the window in which the line's own bit was clear. The
+# pre-fix checker spent its bound in that window and deleted the expectation before the enable arrived. The
+# other four fires are present in both builds with the same lines, cycles and raise orders.
+# THE NAMED RULE ACCOUNTS FOR THE DIFFERENCE EXACTLY: 324 with the check off, 328 with four, 329 with five.
+#
+# A SECOND OBSERVABLE THAT NEEDS NO FAULT AT ALL, and I think it is the better one. On the CLEAN builds, with
+# a correct design and no mutation, the run ends with ONE open expectation before the fix and FIVE after.
+# The four extra are expectations the old checker silently discarded during a window in which the design was
+# right to withhold. That is the defect's footprint measured without injecting anything, and it is the reason
+# the consequence is a loss of coverage rather than a wrong report.
+#
+# ================ ROW 2: the dcsr step bit gets one home, and the home is the GENERATOR'S INPUT ==========
+# The bit position was written in three places: a localparam inside the checker and two bare st.dcsr[2]
+# literals in the coverage package. The team's home for dcsr positions is the constants list beside
+# GEN_DCSR_PRV_BIT_LOW and _HIGH, and that list lives in dv/auto_dv/tb/gen_tb_knobs.yaml: gen_tb_pkg.sv is
+# RENDERED from it, as its own first three lines say. The constant is declared in the yaml and the generator
+# emits it into the SystemVerilog package, the Python mirror and the shim header, so all three agree by
+# construction. It is cited to the packed dcsr_t at rtl/ibex_cs_registers.sv:217-233 and to
+# debug_single_step_o at :1038, and used from both packages.
+# I LEARNED THAT FROM A GATE REFUSAL RATHER THAN FROM READING, and the record should say so. My first version
+# hand-wrote the parameter into gen_tb_pkg.sv beside the existing ones. That file is generated, so the
+# generator's --check went STALE and its unit test failed sixteen cases, and the landing was refused with
+# nothing committed. My pre-hand checks were a compile, one simulation and the manifest self-check, none of
+# which runs a code generator. They now include the generator check and its unit test for any touch of a
+# generated file or of the generator, and the lesson generalises past this one: a file that is rendered from
+# an input cannot be edited at its output, and "it sits beside the other constants" is not evidence that a
+# region is hand-written.
+#
+# ================ ROW 3: "unmasked and counted", not an exclusion ========================================
+# The comment called single step a named exclusion counted rather than masked on. That misnames it: those
+# records are not excluded, they are counted AND judged, which is the right choice and a different thing. The
+# wording is corrected in the source. step_records remains a print-only counter, which is the shape the
+# reviews criticise elsewhere; it is kept because the alternative is a mask on a model mirror I have not
+# proved tracks the pin, and a fixture-side assertion on it is owed when a step fixture exists.
+#
+# ================ ROW 4: the fixtures leave scratch =====================================================
+# rev60 noted that the mutants were prose only and the earlier red's source lived in scratch with an md5,
+# which is the same reproducibility gap my own corrigendum faults an older log for. Retained beside this log
+# under dv/auto_dv/evidence/gen_irq_fixtures/:
+#   gen_mut_irqwithholdall.diff  md5 6bb801edb599b5d3f646151f9c478918
+#   gen_mut_nmiwithhold.diff     md5 49bf2735cdccc195c806fd15b32f3bb8
+#   gen_irq_mie_toggle.S         md5 25a722a9fc12da2c5dbca660a1e8ec09
+#   gen_irq_perline_directed.S   md5 732d4fbc14a94865b008e462f9302340
+# The toggle source's md5 is the value the landing-54 log already records for it, so the retained copy is
+# provably the file that log named rather than a later edit of it.

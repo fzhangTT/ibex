@@ -228,6 +228,7 @@ constants:
   - {name: GEN_CPUCTRLSTS_DUMMY_INSTR_EN_BIT, value: 2, sv_type: int unsigned, desc: "cpuctrlsts.dummy_instr_en bit (cpu_ctrl_sts_part_t, rtl/ibex_cs_registers.sv:239-246); the Zcmp collector reads it from the model"}
   - {name: GEN_DCSR_PRV_BIT_LOW, value: 0, sv_type: int unsigned, desc: "dcsr.prv field low bit (rtl/ibex_pkg.sv dcsr_t prv[1:0]); the dbg_dret rule compares the record's mode with it"}
   - {name: GEN_DCSR_PRV_BIT_HIGH, value: 1, sv_type: int unsigned, desc: "dcsr.prv field high bit (rtl/ibex_pkg.sv dcsr_t prv[1:0])"}
+  - {name: GEN_DCSR_STEP_BIT, value: 2, sv_type: int unsigned, desc: "dcsr.step bit (dcsr_t, rtl/ibex_cs_registers.sv:217-233), driven to debug_single_step_o at :1038; the irq entry bound counts the records carrying it"}
   - {name: GEN_CAUSE_NMI_EXTERNAL, value: 0x8000001F, sv_type: int unsigned, desc: "mcause of an external NMI entry (irq_ext, rtl/ibex_cs_registers.sv:905-945); the shim writes it when it emulates the entry"}
   - {name: GEN_CAUSE_NMI_INTERNAL, value: 0xFFFFFFE0, sv_type: int unsigned, desc: "mcause of an internal NMI entry (irq_int, an integrity error; rtl/ibex_cs_registers.sv:905-945)"}
   - {name: GEN_MEM_ERR_ARM_KIND_ERR, value: 1, sv_type: int unsigned, desc: "MEM_ERR_ARM arg3[7:0] kind: bus error response (gen_bus_driver::arm_err)"}

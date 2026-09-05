@@ -279,6 +279,7 @@ package gen_tb_pkg;
   parameter int unsigned GEN_CPUCTRLSTS_DUMMY_INSTR_EN_BIT = 2;  // cpuctrlsts.dummy_instr_en bit (cpu_ctrl_sts_part_t, rtl/ibex_cs_registers.sv:239-246); the Zcmp collector reads it from the model
   parameter int unsigned GEN_DCSR_PRV_BIT_LOW = 0;  // dcsr.prv field low bit (rtl/ibex_pkg.sv dcsr_t prv[1:0]); the dbg_dret rule compares the record's mode with it
   parameter int unsigned GEN_DCSR_PRV_BIT_HIGH = 1;  // dcsr.prv field high bit (rtl/ibex_pkg.sv dcsr_t prv[1:0])
+  parameter int unsigned GEN_DCSR_STEP_BIT = 2;  // dcsr.step bit (dcsr_t, rtl/ibex_cs_registers.sv:217-233), driven to debug_single_step_o at :1038; the irq entry bound counts the records carrying it
   parameter int unsigned GEN_CAUSE_NMI_EXTERNAL = 2147483679;  // mcause of an external NMI entry (irq_ext, rtl/ibex_cs_registers.sv:905-945); the shim writes it when it emulates the entry
   parameter int unsigned GEN_CAUSE_NMI_INTERNAL = 4294967264;  // mcause of an internal NMI entry (irq_int, an integrity error; rtl/ibex_cs_registers.sv:905-945)
   parameter int unsigned GEN_MEM_ERR_ARM_KIND_ERR = 1;  // MEM_ERR_ARM arg3[7:0] kind: bus error response (gen_bus_driver::arm_err)

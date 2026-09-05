@@ -1,0 +1,8 @@
+# MUT-NMIWITHHOLD: the core's non-maskable interrupt input tied low in the DUT wrapper, so the pin reaches
+# the checker and never the design. Used for the NMI red of the entry bound's enable mask.
+# Applied to an out-of-tree archive only; the committed gen_dut_top.sv is never edited.
+--- a/dv/auto_dv/tb/gen_dut_top.sv
++++ b/dv/auto_dv/tb/gen_dut_top.sv
+@@ port map @@
+-    .irq_nm_i,
++    .irq_nm_i (1'b0),   // MUT-NMIWITHHOLD: the pin reaches the checker but never the core

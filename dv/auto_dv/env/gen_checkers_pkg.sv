@@ -61,10 +61,7 @@ package gen_checkers_pkg;
     bit nmi_mode = 0, intg_wait = 0;
     int nmi_depth = 0;
     int unsigned intg_wait_records = 0, nmi_internal_fail = 0;
-    // dcsr.step is bit 2 of the packed dcsr_t (rtl/ibex_cs_registers.sv:217-233) and drives
-    // debug_single_step_o at :1038; counted, not masked on, because st.dcsr is the model's copy
-    localparam int unsigned GEN_DCSR_STEP_BIT = 2;
-    int unsigned step_records = 0;
+    int unsigned step_records = 0;   // records whose model dcsr has step set: unmasked and counted, never a mask term
     logic [63:0] intg_wait_order = 0;
     function new(string name, uvm_component parent);
       super.new(name, parent);
@@ -128,17 +125,22 @@ package gen_checkers_pkg;
       // across masked gaps; restarting it on a masked record would discard the records already spent, so a
       // line withheld across a software MIE toggle could never expire however long it waited, and a regime
       // whose masked records recur more often than the bound could not be judged at all.
-      // rtl/ibex_controller.sv:498 gates a take on ~debug_mode_q & ~debug_single_step_i & ~nmi_mode_q and, for
-      // regular lines only, irq_enabled = csr_mstatus_mie_i | (priv_mode_i == PRIV_LVL_U) at :490. irq_nm is
-      // ORed OUTSIDE irq_enabled there, so mstatus.MIE must not mask an NMI expectation.
-      // Two terms of :498 are named exclusions, counted rather than masked on: single step, because st.dcsr is
-      // the model's copy and not the DUT's debug_single_step_i, and the Zcmp expansion commit phase, which
-      // needs the micro-op records gen_model_state does not carry. Both are absent from every committed
-      // interrupt fixture; step_records is the count that would show the first one arriving.
+      // rtl/ibex_controller.sv:498 gates a take on ~debug_mode_q & ~debug_single_step_i & ~nmi_mode_q and on
+      // irq_pending_i & irq_enabled, where irq_pending_i needs the line's OWN mie bit and irq_enabled is
+      // csr_mstatus_mie_i | (priv_mode_i == PRIV_LVL_U) at :490. Both halves are mask terms here: a line whose
+      // own enable is clear is not takeable however the global enable reads. irq_nm is ORed OUTSIDE
+      // irq_enabled, so neither term masks an NMI expectation.
+      // Single step is UNMASKED AND COUNTED rather than excluded: st.dcsr is the model's copy and not the DUT's
+      // debug_single_step_i, so a record carrying it is still judged and step_records makes a disagreement
+      // visible instead of silently widening the mask. The Zcmp expansion commit phase is the one term left
+      // out, because it needs the micro-op records gen_model_state does not carry.
       if (st.dcsr[GEN_DCSR_STEP_BIT] === 1'b1) step_records++;
       foreach (expects[i]) begin
-        bit masked = nmi_mode || st.debug_mode ||
-                     (!expects[i].nmi && !st.mstatus[ibex_pkg::CSR_MSTATUS_MIE_BIT] && st.prv == ibex_pkg::PRIV_LVL_M);
+        bit line_enabled = 0, masked;
+        for (int l = 0; l < 18; l++) if (expects[i].lines[l] && st.mie[gen_irq_mie_bit(l)]) line_enabled = 1;
+        masked = nmi_mode || st.debug_mode ||
+                 (!expects[i].nmi && (!line_enabled ||
+                  (!st.mstatus[ibex_pkg::CSR_MSTATUS_MIE_BIT] && st.prv == ibex_pkg::PRIV_LVL_M)));
         if (masked) continue;   // the record neither spends the bound nor judges the expectation
         expects[i].unmasked++;
         if (expects[i].unmasked > GEN_IRQ_ENTRY_BOUND_RECORDS) begin

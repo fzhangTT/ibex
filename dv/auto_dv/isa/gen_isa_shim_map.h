@@ -64,6 +64,7 @@
 #define GEN_CPUCTRLSTS_DUMMY_INSTR_EN_BIT  2u
 #define GEN_DCSR_PRV_BIT_LOW               0u
 #define GEN_DCSR_PRV_BIT_HIGH              1u
+#define GEN_DCSR_STEP_BIT                  2u
 #define GEN_CAUSE_NMI_EXTERNAL             2147483679u
 #define GEN_CAUSE_NMI_INTERNAL             4294967264u
 #define GEN_MEM_ERR_ARM_KIND_ERR           1u
