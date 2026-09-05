@@ -216,3 +216,100 @@ Raised by the Test Writer against the committed verdict (2882446); both items ve
 
 The Test Writer reports the pair fixed at model level (no report store between the two; consecutive at 40 of 40) and
 holds the hand until a run's own report shows the bin hit, which is the proof M-2 asked for. Verdict word unchanged.
+
+## 7. Recorded re-verdict on 4017573..ba4860b, the generator-fixes second landing (written 2026-09-05, HOLD sent to the Orchestrator first; Sections 1-6 and the corrigendum unchanged)
+
+Artifacts at ba4860b (sha256 first 16 hex): dv/auto_dv/tests/gen_programs/gen_bit_ratified_prog.py 70f318080711d784 (the
+full digest 70f318080711d7845c88341a012461bd21d57695536daf2db33189a675a3b8d0 is runtime-2's block-2 pin);
+dv/auto_dv/tests/gen_test_bit_ratified.py, dv/auto_dv/fcov_expectations/gen_test_bit_ratified.fcov.yaml,
+dv/auto_dv/tests/gen_fixtures/gen_run_fixture.sh, dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_fu_binv_pairfix.log,
+the test_writer gen_manifest.md row, gen_tdd_batch3.md Section 18 and the gen_critic_response_batch3.md rows, all read
+from the ba4860b blobs. Method: the transfer check, the 2x2 and the emitted pair re-derived by me on detached archives
+of ba4860b and 4017573 with the two check scripts extracted from the log (their folded text hashing to the digests the
+log states); the declared-set arithmetic and the render re-derived from the committed blobs; the forty-report reading
+taken from block 2's retained files (aa75ecb) as pre-read. Exposure: the Orchestrator's message named rev58's outcome
+(three Lows, one Info) before this section was written; rev58's content is read only in Section 8. Logs:
+dv/auto_dv/work/critic/genfix/README.txt (Pre-read 2), gen_report_slice_check.py, gen_binv_pair_check.py.
+
+### 7.1 M-2, the binv pair: closed
+
+The committed generator is the pinned one: sha256 of the blob at ba4860b (and at 9c28944 and at HEAD) equals the pin
+block 2 ran, so the authority block measured this file and no other. The mechanism is the one the log describes: the
+first binvi carries no_report (:1083 at ba4860b), its chained value parked in aux (:868-872), the second op's fillers
+dropped after they are drawn (:1148), the report store emitted only for ops with expects (:1229-1230). Re-derived by me
+on the two committed blobs: BINV-PAIR-CONSECUTIVE PASS at ba4860b (40 pairs, 0 failures) and FAIL at 4017573 (seeds 9
+and 10 among them, three and four instructions apart); REPORT-SLICE PASS on both (the intermediate 557a4812 that broke
+the index is not in the tree and I did not re-run it; the log's Section C carries its red). At seed 1 the emitted text
+reads op 11 binvi x28,x12,7 immediately followed by op 12 binvi x28,x28,7 and one sw, against the 4017573 text with a
+sw between them. Block 2 (pre-read, aa75ecb) hits cp_binv_twice.yes at 40 of 40 on the runs' own reports with 40 PASS
+and the 617 declared at every seed, which is the proof I asked for in M-2. Closed.
+
+### 7.2 M-1, the shapes: closed for this entry, the cmp_zca half in the next range
+
+The declared set moves from 617 to 654 and the added 37 are exactly the old manifest's 37 not_hit bins (my set
+arithmetic on the two blobs: added 37, removed 0, added == old not_hit; 2 coverpoint bins, cp_binv_twice.yes and
+cp_same_regs.all_same, and 35 cross legs), bins_not_hit is empty, and the manifest re-rendered by me from the committed
+module with the manifest generator is byte-identical to the committed file. The reading that carries the declarations is
+block 2's forty reports through the flow's own checker with the independent reader as control (1480 of 1480
+agreements; every one of the 37 at 40 of 40), which is the measurement M-1 asked for in place of the shape reader. The
+DV Lead's construction-clause rule is met in form: Section 18 names an emission site for each of the 37 (the item
+specs iterating every RS1 class with _plain_rand forcing neg_rand against the sampler's byte_msb/half_msb priority;
+the relationship sweep's same_all and same_rs specs with rd drawn to exclude rs1; the pack legs; the directed pair), and
+the log's Section H prints each cited range from the landing tree with the construct asserted on it and a control that
+refuses six of the nineteen citations against the previous blob, which is the right shape for a line-cited clause. The
+sentence I objected to ("settled by simulation") was corrected by the companion at 03aafce and Section 18 now names
+the simulation that does settle these 37. The empty not_hit list is a strong claim landed knowingly and stated as such:
+a miss at a fresh seed becomes a hard failure of the entry, which is the correct semantics for a generator that
+constructs every bin. Closed for gen_test_bit_ratified; the 21 cmp_zca shapes are the wave re-renders range.
+
+### 7.3 The Lows
+
+L-1 (two header lines in gen_run_fixture.sh naming tools/spike and .venv) FIXED as stated. L-2 (the 41st directory
+named in Section 18 as a PASS probe run of a sweep seed) FIXED in the record. L-3 (the "produced but rare" paragraph)
+WITHDRAWN in Section 18 with the bins' measurement pointed at. L-4 (rev55 Low 1, the intermediate "before") and L-5
+(rev55 Low 2, the fixture comment) were FIXED at 03aafce as the CM229 rows record. L-6 (rev55 Low 3, _NAMED_EXACT
+hand-mirroring the sampler's constants and the bit-7/bit-15 rule) has NO disposition row at ba4860b and stays owed; it
+is a maintenance Low and does not gate.
+
+### 7.4 What I noticed beyond the rows
+
+- L-7 (Low, test; verified on gen_test_bit_ratified.py at ba4860b). The no-report op enters the per-op check with an
+  empty expects list: _ok (:79-80) and fire_ops (:104-115) slice reports[rep:rep+0], which equals [] by construction, so
+  the op passes vacuously while counting in the item's ops and floor totals that the message prints; the pair is really
+  checked through its second op. Say so in the docstring and the message, or exclude the first op from the count.
+- L-8 (Low, comment). _body's report of the no-report op's value spells the aux key as chr() arithmetic
+  (:1240-1241 at ba4860b) for no reason the code states; write the key.
+- The plan documents are untouched by the landing, as Section 18 says (no dv/auto_dv/docs file in the range).
+
+### 7.5 Verdict
+
+CRITIC VERDICT: APPROVE for 4017573..ba4860b. M-1 (for gen_test_bit_ratified) and M-2 are closed by mechanism and
+measurement; the REQUEST-CHANGES of Section 5 is LIFTED for this entry, the cmp_zca half of M-1 being judged in the
+wave re-renders range. L-6, L-7 and L-8 owed as disclosed.
+
+## 8. Reconciliation with the cross-model re-review rev58 (read after Section 7 was written)
+
+dv/auto_dv/reviews/2026-09-05-claude-diff-40175738-ba4860ba.md at e309af3 (claude CLI fallback under A-001;
+APPROVE-WITH-CHANGES; three Lows, one Info, no Major or Medium). Its verified list and Section 7 agree on every shared
+point: the transfer check (the same pin at ba4860b and in block 2's root), the 2x2 on the exact bytes (it re-ran the
+slice check on block 1's bytes and found 40 mismatching slices, one per seed, which I did not re-run and take as its
+measurement), the report arithmetic across the four slice sites (:80, :112, :194, :223 index by op.rep, advanced by
+len(expects)), the sampler agreement for the neg_rand and same-register clauses, the resolving citations, the
+byte-identical render and the flip attribution. It adds two checks of its own worth recording: _red_target excludes ops
+followed by a chained op, so the red fixture cannot land on the no-report op; and the range's env changes touch no
+bit-group sampler, so block 2 transfers to HEAD's env.
+
+- Its Low 1 (the chr() spelling of the aux key) is my L-8.
+- Its Low 2 (the no-report op counted and vacuously passing in the per-op check) is my L-7. Disclosure: the
+  Orchestrator's range message named rev58's outcome as three Lows and an Info before Section 7 was written, and this
+  row was among the headings; I verified it on the module's own lines (:79-80, :104-115) before writing L-7 rather than
+  taking it from the row.
+- Its Low 3 (the two DV Lead rules Section 18 rests on, "a manifest declares guarantees and a count is only evidence"
+  and "a block calibrated on one generator is evidence for that generator alone", have no committed record) is verified:
+  my grep over dv/auto_dv/docs, the DV Lead's work directory and the evidence at ba4860b finds the phrases only in the
+  Test Writer's Section 18, its response rows and its log. Adopted as L-9 (Low, records; Test Writer with the DV Lead):
+  point each clause at the ruling's record, or have the DV Lead record the rulings where plans can cite them.
+- Its Info (clause (c) cites :864-865 for rs2's value becoming rs1's; the assignment is :866) is verified and adopted
+  as a records note for Section 18's next touch.
+- Verdict unchanged: APPROVE for 4017573..ba4860b; the REQUEST-CHANGES of Section 5 lifted for gen_test_bit_ratified;
+  L-6..L-9 owed as disclosed. rev58 and this section agree there is no Major or Medium.
