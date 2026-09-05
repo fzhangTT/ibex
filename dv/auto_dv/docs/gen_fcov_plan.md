@@ -137,6 +137,24 @@ ibex_pkg; compiled with +define+RVFI; cheriot_enable_i tied IbexMuBiOff inside t
   rulings as "P-07", which is a review-LOCAL finding number (the Critic's t010 v2 row P-07, recorded at
   gen_runtime_api.md:299-303 and in LOG-091's title). P-nn ids are per-artifact and several artifacts have their
   own P-07, so the rule is named here and that label is retired for it.
+- DECLARING, the rules a manifest change is judged by. Recorded here because they governed six re-renders and
+  a promotion and were findable only in messages until a reviewer asked where they lived. (a) A COUNT IS
+  EVIDENCE, CONSTRUCTION IS THE GUARANTEE: a bin declares only where the entry's charter covers it, the
+  mechanism producing it is a property of the program's CONSTRUCTION, and a named block measures it at every
+  seed - all three together. A bin at forty of forty whose emission site nobody can name is a thin draw with
+  good luck, which is how six entries came to declare bins that fresh seeds then disproved. A per-run minimum
+  of one is not a disqualifier and a floor of two is not a clause: the question is whether the generator emits
+  the shape by design. (b) A BLOCK IS EVIDENCE FOR THE GENERATOR IT MEASURED and for no other: a manifest
+  re-rendered after a generator change is re-measured at that change's commit rather than carried over, and a
+  bin whose reading flips across such a change is attributed to the commit that changed it, so two committed
+  records that disagree are read as measuring two generators rather than contradicting each other. (c) A
+  REMOVED BIN'S REASON CARRIES ONE OF THREE CLASSES with its N-of-M count and the block's committed path:
+  SEED-DEPENDENT, where the measurement is its own support; GENERATOR DEFECT, where the declaration is wrong
+  rather than unlucky, which must NOT be written as seed-dependence or the defect is buried in a reason field;
+  and SEED-DEPENDENT BY MEASUREMENT WITH THE CAUSE UNDIAGNOSED, in those words, where the count is real and the
+  mechanism is not yet known. (d) The cross-operand rule above runs in the REMOVAL direction too: where an
+  operand bin falls under the every-seed bar, every cross leg naming it goes with it, because a manifest that
+  keeps the leg declares an operand the run does not guarantee.
 - Seeds against the guarantee, the mechanism that makes the seed half checkable: a manifest may carry
   measured_seeds{count, base_seed, commit, bins_sha256}, claiming every bin in that file's bins list was hit in
   every one of `count` runs OF THAT ENTRY, never a bin credited from the merged report or hit by another entry,
