@@ -647,3 +647,20 @@ an event; four figures in this group's history were inflated exactly that way (a
 nine tally lines; two headline figures of a counters log that were line counts labelled as fires). A retained count
 names the pattern it matched and what one match IS, so a reader can re-derive it; a count without its pattern is a
 number, not a measurement.
+
+    ## 20. Companion lines to Section 18 (rev64, two Lows and one deferral)
+
+    (1) Section 18's cycle-level facts about the wave's failing run (the final store at cycle 12368, 17 of 18 entries driven,
+    the c15223 phase applied at cycle 100069) are read from the re-run's own retained lines, gen_tmo_irq_1800473338_red_stdout.log
+    on the build of 9c28944, which reproduce the wave's run to the nanosecond; the committed wave index (gen_wave_4017573/ at
+    1fb417f) carries only the failure message and the 1123735 ns against the typical 65420 ns, not those cycle figures. The
+    wave run's own sim_stdout.log in the out-tree carries them too, and is where I first read them, but an out-tree path is
+    not a citation; the retained re-run is. (2) The fixture's far target sits twenty budgets past the program's end and never
+    becomes reachable, so gen_ut_wait_past_eot exercises the abandoned-waiter defect through the join timeout and the answer
+    timing, not through the wave's other face of it, a wait that reads True because its target passed during its sleep. That
+    face is exercised by the seed-level red (the runner's wait for c15223 returning True at cycle 100069 and applying the
+    phase after the program ended); a third fixture wait with a target inside one budget past the end would exercise it at
+    fixture level too, and is deferred to the next template touch rather than re-opening this landing's fixture runs and
+    retained logs inside a records hand. (3) The API document's wait_cycles row now says a post-end call consumes no
+    simulation time, so a loop over it must test the return value or eot_seen (rev64 L-3).
+    
