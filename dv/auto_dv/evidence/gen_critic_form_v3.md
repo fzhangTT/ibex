@@ -348,3 +348,20 @@ against the wave record; the (a) row, the headers and the provenance record read
 
 CRITIC VERDICT: APPROVE on c1239af..9a8d852. Nothing of mine is open on the round-2 request form: L-4 and L-10 are CLOSED; the checker
 reproduces all 208 claims from any working directory with a fifteen-case self-test whose new controls fail as they should.
+
+### 11.1 Reconciliation with rev83, and one sentence of Section 11 corrected (appended under a HOLD, 2026-09-05T15:19:01Z; Sections 1-11 unchanged)
+
+rev83 (dv/auto_dv/reviews/2026-09-05-claude-diff-c1239af9-9a8d852f.md at 1bc77bb, d97fd182dbfe5e73) on c1239af..9a8d852, read after
+Section 11 was fixed. Its verification agrees with mine (208 claims from the root and a foreign directory, fifteen self-test cases on a
+read-only copy, the v3.5 (a) cell spliced in and failing, the headers, the wave record for the refusal half of L-4). Its Low, VERIFIED
+against the records it cites and adopted as L-11 (Low, records; DV Lead), corrects the form and Section 11 alike: the form's sentence
+(:346-348) says the generator-assert cause "belongs to the PMP blocks at 218e9f3 and 4cd3ff6 ... so that cause is not its own", and
+Section 11 repeated it as "not to this entry". The repository says otherwise one record away: gen_tdd_batch3.md:449-450 names
+gen_pmp_csr_warl_prog.py:615 asserting on its own draw at seed 230969025 at the PMP blocks' pinned commit, and :883 says the backstop
+that closes it landed later, so the asserting generator WAS this entry's, at that commit; the wave at 4017573 measured the fixed
+generator at all forty seeds, which is why the wave's 39 has the other cause. Section 11's sentence is corrected to that reading;
+Section 5 of this file had it right ("seed 230969025 produced no program at all") and Section 11 should have been read against it
+rather than against the form's new wording. L-4 stays CLOSED on the refusal half, which is what it asked for; L-11 carries the
+assert half's owner. Its Infos (a checker comment naming a review finding, the provenance table's row keyed by "the commit carrying
+this row", the digests unverifiable from a checkout) are noted as the DV Lead's. Verdict unchanged: APPROVE on c1239af..9a8d852; L-11
+owed.
