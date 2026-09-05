@@ -167,7 +167,7 @@ class PmcCtrl(GenTest):
 
     def fire_program_verdict(self):
         code = int(self.h.b.evt_eot_code.value)
-        floor = lib.program_min_retired(self.image)
+        floor = lib.program_min_retired(self.image, plan_of(self).min_retired)
         got = self.retired()
         plan = plan_of(self)
         n, bad = compare(plan, self.reports, plan.item_indices("setup"))

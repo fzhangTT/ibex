@@ -428,7 +428,7 @@ class CmpZcmpBasic(GenTest):
 
     def fire_program_verdict(self):
         code = int(self.h.b.evt_eot_code.value)
-        floor = lib.program_min_retired(self.image)
+        floor = lib.program_min_retired(self.image, self.plan.min_retired)
         got = self.retired()
         have_base = "gen_stack" in self.syms
         ok = code == lib.TOHOST_PASS and len(self.reports) == self.plan.k and got >= floor and have_base

@@ -111,9 +111,9 @@ class BitDraft(GenTest):
         per_base("fire_tp_bit_016_single_bit", exp["single_bit_ops"])
         per_base("fire_tp_bit_016_rs2_upper", exp["nonzero_upper_ops"])
         self.check("fire_tp_bit_016_reports", len(got) == p.k, f"{len(got)} report words (plan k={p.k})")
-        floor = lib.program_min_retired(self.image)
+        floor = lib.program_min_retired(self.image, p.min_retired)
         retired = self.retired()
-        self.check("fire_tp_bit_016_retired", retired >= floor >= p.min_retired,
+        self.check("fire_tp_bit_016_retired", retired >= floor,
                    f"retired {retired} (program floor {floor}, plan {p.min_retired})")
         code = int(self.h.b.evt_eot_code.value)
         self.check("fire_tp_bit_016_eot", code == lib.TOHOST_PASS, f"tohost code 0x{code:08x} (pass = {lib.TOHOST_PASS})")

@@ -164,7 +164,7 @@ class CsrTrapSetup(GenTest):
     def fire_program_integrity(self):
         """The program ran its straight-line path: no unexpected trap, the retirement floor reached, tohost 1."""
         bad, n = _compare(self, prog.PROGRAM_ITEM)
-        floor = lib.program_min_retired(self.image)
+        floor = lib.program_min_retired(self.image, _plan(self.seed).min_retired)
         got = self.retired()
         code = int(self.h.b.evt_eot_code.value)
         self.check("fire_program_integrity", n > 0 and not bad and got >= floor and code == lib.TOHOST_PASS,

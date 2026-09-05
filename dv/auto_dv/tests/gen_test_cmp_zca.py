@@ -199,7 +199,7 @@ class CmpZca(GenTest):
 
     def fire_program_verdict(self):
         code = int(self.h.b.evt_eot_code.value)
-        floor = lib.program_min_retired(self.image)
+        floor = lib.program_min_retired(self.image, _plan(self).min_retired)
         got = self.eot_retired
         n, k = len(self.reports), _plan(self).k
         self.check("fire_program_verdict", code == lib.TOHOST_PASS and got >= floor and n == k,

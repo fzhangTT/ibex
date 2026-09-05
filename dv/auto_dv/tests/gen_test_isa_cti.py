@@ -175,7 +175,7 @@ class IsaCti(GenTest):
     def fire_program_verdict(self):
         p = _plan(self)
         code = int(self.h.b.evt_eot_code.value)
-        floor = lib.program_min_retired(self.image)
+        floor = lib.program_min_retired(self.image, p.min_retired)
         got = self.eot_retired
         n, k = len(self.reports), p.k
         drift = [u.n for u in p.units if u.kind == "jump" and (_half(self, f"gen_j{u.n}") != u.site_half or _half(self, f"gen_t{u.n}") != u.target_half)]

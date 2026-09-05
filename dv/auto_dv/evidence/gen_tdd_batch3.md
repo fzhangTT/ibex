@@ -493,3 +493,61 @@ declaring bins must have a manifest. That rule fires in finish(), after sampling
 counts come from is real; the positive control's own database carries all four covergroups with
 non-zero counts where the identical control at the previous commit carried none. The flip is what makes
 these entries pass again, and until it lands the three entries fail at HEAD.
+
+## 13. The retirement floor becomes an identity: a check that could not catch what it was for
+
+WHAT WAS WRONG. Every directed entry ends its verdict with the program's own retirement floor read out
+of the IMAGE and the same number recomputed by the imported module:
+
+    floor = lib.program_min_retired(self.image)
+    self.check("...", retired >= floor >= p.min_retired, f"retired {retired} (program floor {floor}, plan {p.min_retired})")
+
+Those two numbers are equal BY CONSTRUCTION for a matched pair: the generator writes gen_min_retired
+into the image and the plan recomputes it. Compared with ">=", a mismatched pair passes whenever the
+newer program is longer. So the one check positioned to notice that a program and its checker came
+from different generator versions could not notice it.
+
+HOW IT SURFACED, and the attribution is not mine to soften. A generator sweep built its images from
+edited generators in one root while importing its Python from a mirror synced two days earlier; the
+Runtime Manager found and reported that, and retracted three blocks of results. Before that, the same
+runs read as 57 fire-check failures against one edited generator, which looked like a design bug in
+it. The verdict line above printed both numbers in every one of those runs. Neither the run's owner
+nor I read them.
+
+THE CHANGE. program_min_retired takes the plan's value as an optional second argument and asserts
+equality when it is given; the fifteen directed entries pass it, each with the expression that names
+its plan in its own scope. gen_test_boot_retire is deliberately exempt: it is a riscv-dv entry whose
+floor is an instruction count rather than a plan value, and the library skips the identity for any
+entry whose sidecar names a riscv-dv test. Two verdicts that repeated the comparison the identity now
+owns are simplified to "retired >= floor".
+
+THE RED AND THE GREEN, on one real image and two real plan values, retained at
+gen_tdd_logs/test_writer/gen_fu_floor_identity.log with the proof script folded in:
+  the image's gen_min_retired word          3332   (built from the pre-fix generator)
+  the plan of the generator it came from    3332
+  the plan of the COMMITTED generator       3065   (what a stale import hands the checker)
+  committed library, mismatched pair        3332 >= 3065 is True, the fault escapes
+  changed library, no plan given            3332, unchanged
+  changed library, matched plan             3332, passes
+  changed library, mismatched plan          AssertionError naming both numbers and the mechanism
+
+THE SELF-TEST PASSES, exit 0, and it now carries this policy as a case of its own: a stub image with
+a gen_min_retired symbol asserting all four arms, no plan given returning the image's word, a matched
+plan passing, a mismatched plan raising, and a riscv-dv sidecar exempt because its floor is an
+instruction count. The self-test had been exiting 1 on one pre-existing case unrelated to this
+change, the irq red entry having no retained pinned-red log; that log is retained in this touch and
+the case is satisfied. An earlier draft of this section and of the retained log said the self-test
+exits 1 either way, which was true when written and is not true now.
+
+WHAT THIS IS NOT. It is not the stronger check. Two plans can coincide on a number, and one of the
+retracted runs did exactly that, printing "reports 761 (k 761)" while the floor disagreed at 3862
+against 3802; two files cannot coincide on a digest. The Runtime Manager owns that half as a flow
+item, threading the generator path and its recorded sha256 into the simulation, and the library will
+grow the digest arm beside this identity rather than a second check. This identity is the cheap
+always-on half that needs no plumbing at all.
+
+ONE THING NOT PROVEN, recorded because it would be easy to imply otherwise. While chasing the same
+failure I found and fixed a real defect in gen_bit_ratified_prog.py, where the derived x0 probe set
+held three mnemonics that the draft probe set already covered, so each was probed twice. That fix
+stands on having read the source. Whether the duplicate could ever have changed a result is untested,
+because the failure it was proposed to explain never existed.

@@ -1,0 +1,112 @@
+# gen_fu_floor_identity: the retirement-floor check becomes an identity, and why >= let a fault through
+
+WHAT THIS CLAIMS. A directed program carries the number its generator computed, gen_min_retired,
+and the caller's plan recomputes it, so for a matched pair the two are EQUAL BY CONSTRUCTION.
+The committed check compares them with >=, which a mismatched pair clears whenever the newer
+program is longer. Claimed here: on one real image and two real plan values, the committed
+library lets that pair through and the changed library refuses it, while the no-plan and
+matched-plan paths are unchanged. NOT claimed: any simulation result.
+
+WHY IT MATTERS, from the run that produced these numbers. A sweep built its images from an
+edited generator and imported its Python from a mirror synced two days earlier, so every
+program was checked against a different generator's plan. It surfaced as 57 fire-check
+failures reading like a design bug. The verdict line of every one of those runs already
+printed both numbers; this check is what turns them into a verdict instead of a footnote.
+
+INPUTS BY DIGEST (sha256 first 12).
+  proof script                                         9f4a1a8869c5
+  image under test (built from the pre-fix generator)  7b871f4b892d
+  committed gen_test_lib.py, the red side              59cc37f09cc7
+  gen_test_lib.py with the identity, the green side    6908cebcff70
+
+COMMAND, from the clone root with PYTHONPATH unset:
+  python3 gen_floor_identity_proof.py <image>/prog.vmem <a copy of HEAD's gen_test_lib.py>
+  exit 0; the full text of the script is at the end of this log.
+
+====================================================================================================
+THE PAIR: an image whose gen_min_retired word is 3332, and a plan that recomputes 3065.
+Both numbers are real: the image was built from the pre-fix generator, the plan is the
+committed generator's at the same seed. A matched pair gives 3332 twice.
+
+RED, the committed library (gen_test_lib.py at HEAD):
+  program_min_retired(image) -> 3332, and the caller's check is 'retired >= floor >= plan'
+  the mismatched pair reaches that check as 3332 >= 3065 -> True   <- the fault escapes
+
+GREEN, the library with the guard applied:
+  no plan given             -> 3332   (unchanged: riscv-dv entries and any caller that passes none)
+  matched plan 3332         -> 3332   (passes)
+  MISMATCHED plan 3065      -> AssertionError:
+      GEN_TEST_LIB: the image's gen_min_retired is 3332 and the plan recomputes 3065; the program and the Python checking it came from different generator versions, so no report word means what this test thinks it means
+
+====================================================================================================
+THE LIBRARY SELF-TEST PASSES, exit 0, and it carries this policy as a case of its own: a stub
+image with a gen_min_retired symbol, asserting all four arms (no plan given returns the image's
+word, a matched plan passes, a mismatched plan raises, and a riscv-dv sidecar is exempt because
+its floor is an instruction count). Its last line, filtered to the tail:
+
+  GEN_TEST_LIB self-test PASS (consumed knobs now: ['knob_imem_gnt_delay', 'knob_imem_rvalid_delay', 'knob_imem_err_rate', 'knob_imem_intg_err_rate', 'k
+
+For the record, because an earlier version of this log said otherwise: the self-test had been
+exiting 1 on ONE pre-existing case unrelated to this change, the irq red entry having no
+retained pinned-red log. That log is now retained beside this one and the case is satisfied, so
+the statement 'it exits 1 both with and without this change' was true when written and is not
+true now.
+
+====================================================================================================
+THE PROOF SCRIPT IN FULL, so this log names its own instrument
+====================================================================================================
+
+"""Red and green for the retirement-floor identity, on a real image and two real plan values.
+
+The image carries the number its generator computed (gen_min_retired) and the caller's plan
+recomputes it, so a matched pair gives one number twice. This runs both libraries over the same
+image: the committed one, whose caller compares with >=, and the one with the identity applied.
+
+Run from the clone root with PYTHONPATH unset; the second argument is a copy of the committed
+gen_test_lib.py (git show HEAD:dv/auto_dv/tests/gen_test_lib.py > <path>).
+
+  python3 gen_floor_identity_proof.py <image .vmem> <committed gen_test_lib.py>
+"""
+import importlib.util
+import sys
+
+BUILT, STALE = 3332, 3065     # the image's own generator, and the committed generator at the same seed
+
+
+def main():
+    vmem, head_lib = sys.argv[1], sys.argv[2]
+    sys.path.insert(0, "/localdev/fzhang/ws/ibex-challenge")
+    from dv.auto_dv.gen_tb.gen_image import GenImage
+    from dv.auto_dv.tests import gen_test_lib as applied     # the tree, with the guard applied
+    spec = importlib.util.spec_from_file_location("head_lib", head_lib)
+    head = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(head)
+
+    img = GenImage(vmem)
+    print("THE PAIR: an image whose gen_min_retired word is %d, and a plan that recomputes %d." % (BUILT, STALE))
+    print("Both numbers are real: the image was built from the pre-fix generator, the plan is the")
+    print("committed generator's at the same seed. A matched pair gives %d twice." % BUILT)
+    print("")
+    print("RED, the committed library (gen_test_lib.py at HEAD):")
+    f = head.program_min_retired(img)
+    print("  program_min_retired(image) -> %d, and the caller's check is 'retired >= floor >= plan'" % f)
+    print("  the mismatched pair reaches that check as %d >= %d -> %s   <- the fault escapes"
+          % (f, STALE, f >= STALE))
+    print("")
+    print("GREEN, the library with the guard applied:")
+    print("  no plan given             -> %d   (unchanged: riscv-dv entries and any caller that passes none)"
+          % applied.program_min_retired(img))
+    print("  matched plan %d         -> %d   (passes)" % (BUILT, applied.program_min_retired(img, BUILT)))
+    try:
+        applied.program_min_retired(img, STALE)
+    except AssertionError as exc:
+        print("  MISMATCHED plan %d      -> AssertionError:" % STALE)
+        for line in str(exc).split("\n"):
+            print("      " + line.strip())
+        return 0
+    print("  MISMATCHED plan %d      -> returned; THE GUARD FAILED" % STALE)
+    return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -362,7 +362,7 @@ class PmpCsrWarl(GenTest):
 
     def fire_program_verdict(self):
         code = int(self.h.b.evt_eot_code.value)
-        floor = lib.program_min_retired(self.image)
+        floor = lib.program_min_retired(self.image, prog.plan(self.seed).min_retired)
         got = self.retired()
         plan = prog.plan(self.seed)
         n, bad = compare(plan, self.reports, bases_of(self), plan.item_indices("setup"))

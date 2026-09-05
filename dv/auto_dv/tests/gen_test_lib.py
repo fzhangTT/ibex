@@ -310,15 +310,27 @@ def program_symbol_word(image, symbol):
     return image.words[addr // 4]
 
 
-def program_min_retired(image):
+def program_min_retired(image, plan_min_retired=None):
     """Retirement floor of a program: riscv-dv +instr_cnt for a generated program, the program's own
-    gen_min_retired word for a directed one (every directed test program declares it)."""
+    gen_min_retired word for a directed one (every directed test program declares it).
+
+    plan_min_retired makes the read an IDENTITY. A directed program carries the number its generator
+    computed, and the caller's plan recomputes it, so the two are equal unless the image and the
+    Python checking it came from different versions of that generator. An inequality cannot see that:
+    a newer, longer program clears an older floor and every later comparison is against another op's
+    word. riscv-dv entries are exempt because their floor is an instruction count, not a plan value.
+    """
     test = image.sidecar.get("test")
     if test:
         n = riscv_dv_instr_cnt(test)
         assert n is not None, f"GEN_TEST_LIB: riscv-dv test {test} has no +instr_cnt"
         return n
-    return program_symbol_word(image, "gen_min_retired")
+    word = program_symbol_word(image, "gen_min_retired")
+    assert plan_min_retired is None or word == plan_min_retired, (
+        f"GEN_TEST_LIB: the image's gen_min_retired is {word} and the plan recomputes "
+        f"{plan_min_retired}; the program and the Python checking it came from different generator "
+        f"versions, so no report word means what this test thinks it means")
+    return word
 
 
 FLOW_TESTLIST = REPO_ROOT / "dv/auto_dv/flow/gen_testlist.yaml"
@@ -1049,6 +1061,22 @@ def _self_test():
     assert served == [True, False, True], f"add_arms re-arms only for a nearer target, got {served}"
     assert served != naive, "arming on every add re-arms for a target the slot already carries"
     assert w5.armed_target() == 200, "the earliest of the three targets is the armed one"
+    # program_min_retired: the image carries the number its generator computed and the caller's plan
+    # recomputes it, so the two are equal by construction and an ordering cannot see a program and a
+    # checker that came from different generator versions
+    _addr = 0x80000100
+    _img = type("_Img", (), {"sidecar": {"symbols": {"gen_min_retired": hex(_addr)}}, "words": {_addr // 4: 3332}})()
+    assert program_min_retired(_img) == 3332, "no plan given: the floor is the image's own word"
+    assert program_min_retired(_img, 3332) == 3332, "a matched plan passes"
+    _caught = ""
+    try:
+        program_min_retired(_img, 3065)
+    except AssertionError as _exc:
+        _caught = str(_exc)
+    assert "different generator versions" in _caught, f"a mismatched plan was accepted or raised {_caught!r}"
+    _rv = type("_Img", (), {"sidecar": {"test": "gen_rand_smoke", "symbols": {}}, "words": {}})()
+    assert program_min_retired(_rv, 1) == riscv_dv_instr_cnt("gen_rand_smoke"), \
+        "a riscv-dv entry is exempt: its floor is an instruction count, not a plan value"
     empty = Schedule.derive(seed, [])
     assert empty.k == 0 and empty.text() == "" and empty.phases == [], "empty schedule"
     s1 = Schedule.derive(seed, names)

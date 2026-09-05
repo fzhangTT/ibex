@@ -305,9 +305,9 @@ class BitRatified(GenTest):
         p = self._p
         code = int(self.h.b.evt_eot_code.value)
         self.check("fire_program_verdict_eot", code == lib.TOHOST_PASS, f"tohost code 0x{code:08x} (pass = {lib.TOHOST_PASS})")
-        floor = lib.program_min_retired(self.image)
+        floor = lib.program_min_retired(self.image, p.min_retired)
         retired = self.retired()
-        self.check("fire_program_verdict_retired", retired >= floor >= p.min_retired,
+        self.check("fire_program_verdict_retired", retired >= floor,
                    f"retired {retired} (program floor {floor}, plan {p.min_retired})")
         self.check("fire_program_verdict_reports", len(self.reports) == p.k, f"{len(self.reports)} report words (plan k={p.k})")
 
