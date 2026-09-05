@@ -253,3 +253,113 @@ run (gen_ibus_props_irq_signature_reading.md:51-54, where sva_rvalid_legal is no
 counter and the properties' counter are the same computation, stands on my run's equal pair and on round 0's equal
 attempt counts; the wave run's 70199 is not part of it. Nothing else in M-1 moves; the 71 fires and the dead cover were
 measured on my own builds (Section 2's table).
+
+## 7. Recorded re-verdict on 69eb33f..8ee50ea, the outstanding-counters group (landings 53 and 55; HOLD sent to the Orchestrator first; Sections 1-6 and the corrigendum unchanged)
+
+Artifacts at 8ee50ea (sha256 first 16 hex): dv/auto_dv/tb/gen_bus_if.sv f9f602e73787bd96; dv/auto_dv/tb/gen_protocol_props.sv
+b75e705d84f13b23; dv/auto_dv/env/gen_fcov_pkg.sv a78b6d8b986c3b19; dv/auto_dv/evidence/gen_tdd_logs/fcov/gen_fu_l55_bus_if_saturate.log
+15fa378b6168086e; dv/auto_dv/evidence/gen_tdd_logs/gen_manifest.md b3d1ce2025bce3ad (3514 rows; the l55 row 13529 bytes /
+828722b01dfb20087bc3ce3e3150fa68 equals the blob; ASCII). Method: the diff read from the blobs; the fix measured by me on the fixture
+that found the defect (a build of 8ee50ea with my one-shot spurious-response mutation, identity d0198afb576c3e3f, the random program
+of Section 2); the log's four build identities recomputed offline from archives of committed trees with gen_tb_local.sh's own
+recipe; the :216 comment checked against the RTL and the build's parameters. Exposure: the Orchestrator's range message named
+rev66's two Mediums and three of its Lows before this section was written; rev66's content is read only in 7.4. Logs:
+dv/auto_dv/work/critic/l53/ (README.txt, preread_l55.txt, runs/ab_rand2_sat55).
+
+### 7.1 M-1, the interface counter: closed
+
+gen_bus_if.sv:38-40 at 8ee50ea saturates with the same expression as the properties' counters (rvalid with nothing counted and no
+grant leaves zero). Measured by me on the fixture of Section 2 that found the defect (one spurious data response at driver cycle
+400, then 70 legitimate responses): sva_rvalid_legal fires once where it fired 71 times at c045115, cov_rvalid_legal matches 70 of
+70 where it matched none, the properties' response obligation fires once, the bounds and the no-third-request rule zero. The
+landing's own two reds read and consistent: four consecutive injections caught 4 of 4 by the saturating interface against 1 of 4 by
+the wrapping one with the c045115 properties counter as the oracle reporting 4 in both; one early injection on the storm smoke
+producing the wrapping interface's second, false fire at cycle 17508 against one real event in both. The population sentences are
+corrected in the l53 corrigendum ("twelve readers, in two files"; the sweep scoped to one file), and its line-count correction of
+the l53 A/B (response obligation 1 not 3, bound 2642 not 5285) agrees with my Section 2 figures (1 and 2742 on my injection
+cycle). The gen_fcov_pkg.sv comment is folded to one line without the process reference (my L-6). M-1 CLOSED.
+
+### 7.2 Two things the landing gets wrong
+
+- M-2 (Medium, records and identity; tb-infra-2). The l55 log's header says its four builds come from "an archive of HEAD and
+  nothing else", W unchanged and S "with this landing's two tb files copied over it", and names them by identity: W clean
+  665d62e97890e7ca, S clean 4ebaa0bc49091b37. Recomputed by me with the runner's own recipe (the sorted sha256 list over
+  env, tb, isa and gen_tb, then its digest) on archives of committed trees: a pure c045115 tree gives 665d62e97890e7ca, so W is
+  c045115's tree and "HEAD" means c045115, the commit before landing 54, not the HEAD the landing was handed against; and NO
+  assembly of committed blobs gives S: c045115 plus the landing's two tb files 83b4e1c21e7e215e, plus its three changed files
+  1f0ef6bfcfd6c7b6, plus gen_bus_if.sv alone 8cfd1adbd78ef5dc, plus gen_bus_if.sv and gen_fcov_pkg.sv 3181568c3e0ac532;
+  b9e5fad plus the two tb files 35046bc4793eb3a3, plus the three 2f874eb63deeb6bb (which is the pure 8ee50ea tree). The S root
+  therefore carried at least one tb file that is not a committed blob, and the log's evidence certifies sources the tree does
+  not hold; the same holds for the two l53 A/B builds the corrigendum now names (cb66d1b569cba4fb, 0d548320b34bf9d9), whose
+  mutation text is not retained. My run on the committed sources supplies the fix's measurement, so the code is not in doubt;
+  the record is. Fix: retain the S root's two tb file digests beside the identities and say how they differ from the committed
+  blobs, or re-run the two reds on a root assembled from committed blobs; and name the archive's commit by sha.
+- M-3 (Medium, a design-obligation comment stating an RTL route that does not exist; tb-infra-2). gen_protocol_props.sv:216 at
+  8ee50ea now reads "never more than 2 data beats in flight, reached either by the two halves of one split or by a
+  boundary-shaped access with a pipelined unrelated request behind it, as :219-220 records". The second route cannot reach
+  two. This build has WritebackStage=1 (every retained run banner reads WritebackStage=1; gen_dut_top's default of 0 is
+  overridden by the build), so a new memory instruction issues only when data_req_allowed = ~outstanding_memory_access
+  (rtl/ibex_id_stage.sv:1015-1019), which releases in the cycle lsu_resp_valid arrives: the unrelated request is granted no
+  earlier than the previous access's response cycle, and the counter reads 1 + 1 - 1 = 1 in that cycle. The comment it cites,
+  :219-220, says exactly that ("with one outstanding"). Only the split, whose second half is issued while the first is
+  unanswered (WAIT_RVALID_MIS), reaches two. My Section 6 rejected this route when rev61 offered it as its Low 2, with these
+  terms; the landing adopted the row into the obligation comment without a measurement or an RTL citation. Fix: restore the
+  split-only wording, or write that the :219-220 case leaves one outstanding and is not a route to two.
+
+### 7.3 The Lows of Section 5 and two new ones
+
+- L-1 answered: the corrigendum names both l53 A/B builds, the fixture and the plusargs (with the identity limit of M-2).
+- L-2 not answered: the corrigendum restates "the response obligation fires the SAME number of times in both builds" as the
+  deciding claim; with data traffic after the injection the wrapping arm fires it more, not the same (Section 2: 71 against
+  1; 2 against 1 on the storm), those extra fires being false. The claim to make is "saturation loses no real report", which
+  the four-injection red now proves; the equality sentence should go. Owed.
+- L-3 answered: the log says the ibus arm is verified by inspection.
+- L-4 and L-5 (the vacuity regime's name; the promotion conditions' home) belong to the l52 vacuity corrigendum and the DV Lead
+  and are untouched by this landing; still owed there, and my irq re-verdict (gen_critic_irq_checker_fix.md Section 7, M-3)
+  now measures that the storm-shape vacuity persists, which is the regime statement those rows asked for.
+- L-6 answered: the comment at gen_fcov_pkg.sv:450-451 is one line and names no reviewer.
+- L-7 (Low, records). The log's "archive of HEAD" is c045115's tree by identity while the landing commits on top of b9e5fad;
+  name the base by sha. (Part of M-2's fix.)
+- L-8 (Low, records). The l55 log calls the c045115 properties counter "fixed and reviewed at c045115" as its oracle; reviewed
+  is right, but the identity of the oracle in the S build is the same unresolved root as M-2, so the oracle's provenance
+  inherits the gap until M-2 closes.
+
+### 7.4 Reconciliation with the cross-model artifact rev66
+
+Read after 7.1-7.3 were written: dv/auto_dv/reviews/2026-09-05-claude-diff-69eb33fa-8ee50eac.md at a516fef (claude CLI
+fallback under A-001; APPROVE-WITH-CHANGES; two Mediums, seven Lows). Its verified list agrees with 7.1 on the saturation
+arithmetic, the twelve-reader sweep (it adds the driver's pend.size() counters and the Python export as non-wrapping, which I
+had not listed), the reverted mutant, the reds' arithmetic, the corrigendum's figures and the manifest row; it recomputed the W
+identity as I did and got the same value.
+
+- Its Medium 1 (the :216 second route) is my M-3, found independently with the same RTL terms and the same fix. One correction to
+  its premise: it says this build has WritebackStage=0 from gen_dut_top.sv:51's default; the build overrides it and every
+  retained run banner reads WritebackStage=1, so the governing line is ibex_id_stage.sv:1015-1019 (the branch it also cites),
+  not :1146. The conclusion holds on either branch.
+- Its Medium 2 (the S identity) is my M-2; its recomputed values (83b4e1c21e7e215e, 35046bc4793eb3a3, 861209d7f0fd1ed1) equal
+  mine, and I add four further candidates that also miss (1f0ef6bfcfd6c7b6, 8cfd1adbd78ef5dc, 3181568c3e0ac532,
+  2f874eb63deeb6bb).
+- Its Low 1 (a grant and a spurious response in one cycle with nothing outstanding leave the count at 0 with one truly in flight,
+  a bounded residual the l53 log's "exactly" sentence does not admit; the decrement form outstanding + gnt - (rvalid &&
+  outstanding > 0) reads the truth on every path) is the residual my Section 2 named as shared by both designs; its expression
+  is a real improvement and is adopted as L-9 (Low, code; tb-infra-2), with the l53 sentence to be qualified.
+- Its Low 2 (cov_rvalid_legal measured in neither l55 table, though my re-review scope asked for it) is right and adopted as L-10
+  (Low, records); my run supplies 0 against 70 at c045115 and 70 at 8ee50ea.
+- Its Low 3 (the three mutants described in prose only) is my L-1 of Section 5 seen again; adopted as L-11 (Low, records) with
+  my grading reason as the acceptable decline.
+- Its Low 4 (the counting rule's "+1" is UVM's per-id report-count line, not the message-less tally) is verified on the retained log rev66 cites, which prints the per-id table under 'Report counts by id'; adopted as
+  L-12 (Low, records wording).
+- Its Low 5 is my L-2, still owed (7.3).
+- Its Low 6 (the storm red's "no event at all" and "the whole rest of the run is traffic" overstate: the 17508 fire is the
+  fixture's one legitimate data response, reported falsely) is right and adopted as L-13 (Low, records).
+- Its Low 7 (my L-4 undispositioned; L-5's home is the form's promotion-conditions table at 242a64b, uncited) agrees with 7.3;
+  the L-5 home is right and I cite it there.
+- On the verdict we agree on both Mediums and differ on the form as before: rev66 approves with changes; under my rules an
+  identity that does not resolve and an obligation comment contradicting the RTL are REQUEST-CHANGES until the companion lands.
+
+### 7.5 Verdict
+
+CRITIC VERDICT: REQUEST-CHANGES on 69eb33f..8ee50ea, confined to M-2 and M-3. M-1 is CLOSED (the fix measured by me on the
+committed sources: 71 fires to 1, a dead cover to 70 of 70) and the saturation of both counters is approved; the l53 corrigendum's
+corrections are right. What remains is a record that cannot be tied to the tree (M-2) and one obligation comment that names a
+route the RTL does not permit (M-3), both small to fix. L-2, L-4, L-5, L-7, L-8 and, from 7.4, L-9..L-13 owed as disclosed.
