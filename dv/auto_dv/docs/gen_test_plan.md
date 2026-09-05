@@ -338,7 +338,7 @@ Bug candidates whose spec-direction check is a test-level compare (no C5.3b row)
 | Informational items (outside the gate; Section 1.2) | 11 (5 for a downgraded or record-only bug candidate, 6 for non-bug reasons: Q-010 informational tests, observations with no gating check) |
 | Items outside the Phase 1 pass gate (expected-fail + informational) of 1205 | 42 |
 | Test groups | 231 |
-| Covergroups (spec-derived and adopted) / distinct bins referenced / adopted bins | 207 / 15829 / 49 |
+| Covergroups (spec-derived and adopted) / distinct bins referenced / adopted bins | 207 / 15833 / 49 |
 | Witnessed-clause ledger (CG-WIT-001, outside the score, the bin total and traceability) | 220 bins for 19 marked items |
 
 ## 1.1 Expected-fail items per bug candidate

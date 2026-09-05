@@ -177,7 +177,30 @@ elif args.build_manifest:
         sunset_note = f'export sources unknown: {args.build_manifest} has neither export_sources_emitted nor export_sources (Runtime request, gen_test_plan.md Section 2a WP-6)'
 else:
     sunset_note = f'export sources unknown: no --build-manifest given; {args.knobs} renders {len(yaml_rows)} exact rows and {len(wildcard_rows)} wildcard rows (absent); {len(in_yaml)} of {len(marked)} marked items have every export row rendered in the yaml and would be checked against a build'
-for lst, msg in [(no_tp, 'ACTIVE feature without TP item'), (no_bin, 'ACTIVE feature without bin'), (tp_no_bin, 'TP item without bins'), (tp_no_feat, 'TP item without feature'), (cg_bad, 'covergroup mapping'), (unnamed, 'ACTIVE feature named by no non-ledger covergroup (condition 2 reverse, Critic W-4)'), (bin_missing, 'CSV bin not declared in the plan'), (adopted_bad, 'adopted=1 bin in a covergroup without an Adopted source'), (wit_errors, 'witness ledger'), (sunset_fail, 'sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0)')]:
+# The prose totals are derived from this CSV, so they are checked against it. A missing cell is a violation too:
+# a check that passes when the table is renamed would be worse than no check.
+count_bad = []
+_wit = [b for b in bins if b[0] == 'CG-WIT-001']
+_ncg = len(cgs) - (1 if 'CG-WIT-001' in cgs else 0)
+_want_bins, _want_adopted = len(bins) - len(_wit), len(adopted)
+for _rel, _pat, _fields in [
+        ('gen_fcov_plan.md',
+         r'^\| Distinct bins referenced by TP items \(spec-derived and adopted\) \| (\d+) \|$',
+         [('distinct bins', lambda g: int(g[0]), lambda: _want_bins)]),
+        ('gen_test_plan.md',
+         r'^\| Covergroups \(spec-derived and adopted\) / distinct bins referenced / adopted bins \| (\d+) / (\d+) / (\d+) \|$',
+         [('covergroups', lambda g: int(g[0]), lambda: _ncg),
+          ('distinct bins', lambda g: int(g[1]), lambda: _want_bins),
+          ('adopted bins', lambda g: int(g[2]), lambda: _want_adopted)])]:
+    _m = re.search(_pat, (D/_rel).read_text(encoding='ascii'), re.M)
+    if not _m:
+        count_bad.append(f'{_rel}: the counts row this check reads is absent or reworded ({_pat})')
+        continue
+    for _name, _get, _want in _fields:
+        if _get(_m.groups()) != _want():
+            count_bad.append(f'{_rel}: {_name} says {_get(_m.groups())}, gen_trace_tp_bin.csv gives {_want()}')
+
+for lst, msg in [(no_tp, 'ACTIVE feature without TP item'), (no_bin, 'ACTIVE feature without bin'), (tp_no_bin, 'TP item without bins'), (tp_no_feat, 'TP item without feature'), (cg_bad, 'covergroup mapping'), (unnamed, 'ACTIVE feature named by no non-ledger covergroup (condition 2 reverse, Critic W-4)'), (bin_missing, 'CSV bin not declared in the plan'), (adopted_bad, 'adopted=1 bin in a covergroup without an Adopted source'), (wit_errors, 'witness ledger'), (sunset_fail, 'sunset: still-marked item whose export rows are all present in the build (remove the token, gen_test_plan.md Section 0)'), (count_bad, 'stated total disagrees with the traceability CSV')]:
     errors += [f'{msg}: {x}' for x in lst]
 wit_bins = [b for b in bins if b[0] == 'CG-WIT-001']
 ncg = len(cgs) - (1 if 'CG-WIT-001' in cgs else 0)

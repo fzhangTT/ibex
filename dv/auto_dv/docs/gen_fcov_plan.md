@@ -102,9 +102,10 @@ ibex_pkg; compiled with +define+RVFI; cheriot_enable_i tied IbexMuBiOff inside t
   they are, and it is what makes declaring them possible at all, since the manifest generator excludes any
   coverpoint whose line carries the phrase (gen_fcov_manifest.py excluded_coverpoints, keyed on the literal "not in
   manifest"). THREE OF THE FOUR ARE DECLARED NOW: the manifests of gen_test_pmp_csr_warl, gen_test_pmp_lock and
-  gen_test_pmp_mseccfg are committed at 253f08e and declare bins of CG-PMP-001, CG-PMP-002 and CG-PMP-004, while
-  the testlist still detaches those entries (fcov_expectation_file null, measured false) until the flip that
-  closes this group. CG-PMP-014 IS THE FOURTH AND IS DECLARED BY NO MANIFEST, by design and permanently: its TP
+  gen_test_pmp_mseccfg are committed at 253f08e and declare bins of CG-PMP-001, CG-PMP-002 and CG-PMP-004.
+  Whether the testlist references a manifest at a given commit is NOT restated here: it changes faster than a plan
+  sentence, and this paragraph's first draft said those three entries were still detached when the flip had
+  already landed at b74ca93. CG-PMP-014 IS THE FOURTH AND IS DECLARED BY NO MANIFEST, by design and permanently: its TP
   list carries the Phase 2 random items TP-PMP-100 and TP-PMP-106, its coverpoints are table-SHAPE properties no
   targeted entry drives on every run, and locking is STICKY, so a run that reaches all-locked cannot come back -
   declaring them would be a per-run guarantee no entry can keep. It is an EXPECTED-FROM-RANDOM-TESTS covergroup
@@ -276,7 +277,7 @@ the count.
 | Metric | Value |
 |---|---|
 | Covergroups (spec-derived and adopted; the ledger CG-WIT-001 is counted separately) | 207 |
-| Distinct bins referenced by TP items (spec-derived and adopted) | 15829 |
+| Distinct bins referenced by TP items (spec-derived and adopted) | 15833 |
 | Witnessed-clause ledger bins (CG-WIT-001; outside the score, the bin total and traceability condition 2) | 220 |
 | Adopted bins (riscv-dv, counted separately) | 49 |
 | ACTIVE features with >= 1 bin | 705 |
