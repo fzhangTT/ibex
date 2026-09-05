@@ -66,7 +66,8 @@ That is the same-cycle case the file names at :119-120: with a grant and its res
 expression is 0 + 1 - 1 = 0, so the obligation fails while the counter never wraps. The bound-8 flood
 starts only when a response finally arrives without a same-cycle grant.
 
-The grant-without-request firing is first in BOTH runs and fires exactly ONCE in each. In 165313640 it
+The grant-without-request firing is first of the three IBUS properties in BOTH runs and fires
+exactly ONCE in each. In 165313640 it
 precedes the other two by 11 and 12 cycles.
 
 So the signature reduces to one root event per run, a grant asserted in a cycle whose request is low,
@@ -268,12 +269,27 @@ already carries as 3 firings first at 6591500, and Section 4 already gives the d
 cycles in this run and 4773 in 165313640, and already argues the exclusivity condition is neither
 necessary nor sufficient. No fact changes.
 
-CORRIGENDUM to Section 3, because the wording is what caused the report. Section 3 says "The
-grant-without-request firing is first in BOTH runs and fires exactly ONCE in each." Its scope is the
-three ibus properties, which the following sentence fixes by naming "the other two". Read on its own
-that sentence claims the grant firing was first of any event, which the table two paragraphs earlier
-contradicts. The scoped reading is the intended one and the only one the rest of the file uses. The
-sentence should be read as: first of the three IBUS properties in both runs.
+CORRIGENDUM to Section 3, applied in place because the wording is what caused the report and a
+corrigendum 250 lines below a defective sentence does not reach the next reader of it.
+
+Before, as committed at 9f2edda: "The grant-without-request firing is first in BOTH runs and fires
+exactly ONCE in each."
+
+After, as this commit has it: "The grant-without-request firing is first of the three IBUS properties
+in BOTH runs and fires exactly ONCE in each."
+
+The scope was always the three ibus properties, which the sentence after it fixes by naming "the
+other two". Read on its own the old sentence claimed the grant firing was first of any event, which
+the table two paragraphs earlier contradicts, and two readers took it that way. Only the scoping words
+changed; no figure, no claim and no other sentence was touched.
+
+THE PREFIX CHAIN BREAKS AT BYTE OFFSET 4375, the first byte that differs from the 9f2edda blob. Every
+prefix anchor this file previously carried lies after that offset, so none of them holds any longer:
+the 8473-byte prefix that equalled the d8afbfd blob, the 12252-byte prefix that equalled the 7a0b6de
+blob, and the 17620-byte prefix that equalled the f90fa636e886 blob of Sections 1 to 8. They are
+retired rather than restated, because a prefix hash that no longer reproduces is worse than no hash.
+The chain re-anchors from this commit: the byte-identical region shared with 9f2edda is the first 4375
+bytes, and future appends are measured against this commit's blob.
 
 ### 9.2 The unmapped store is the divergent instruction, not a precursor
 
@@ -299,3 +315,92 @@ regress_chkfix (mirror 9c7f8f63957d), both lines are identical: MEM_UNMAPPED at 
 
 NOT CLAIMED: that x5 held 0x40000000 for any traced reason. The store's address follows from its
 operand and the RVFI record states it directly; where that operand value came from is not read here.
+
+## 10. The window from the exclusivity firing to the unmapped store, seed 1207954461
+
+The question this answers: what happened in the 2693 cycles between the first exclusivity firing at
+6591500 and the unmapped store at 9284500. Read from the surviving sim.log of the run this file
+already cites, regress_wave_4017573, mirror 40175738c709, with program/prog.dis from the same run.
+
+### 10.1 Five events, and no scoreboard mismatch
+
+The whole span occupies sim.log lines 44 to 56 and holds exactly five TB events, in order:
+sva_rvfi_irq_valid_exclusive at 6591500 (cycle 6587), the same at 6646500 (cycle 6642),
+sva_ibus_gnt_only_with_req at 9250500 (cycle 9246), sva_rvfi_irq_valid_exclusive at 9253500
+(cycle 9249), and MEM_UNMAPPED at 9284500. Nothing else is logged in 2693 cycles.
+
+The third exclusivity firing at 9253500 is new to this file's records. It falls three cycles AFTER the
+grant event, not before it, and 31 cycles before the divergence. Section 3's table counted three
+firings for this run but gave only the first.
+
+No scoreboard mismatch occurs anywhere in the window; the first is at 9290500, order 462. This is an
+absence claim, so it carries a positive control: the scoreboard announces itself ready at time 0
+(sim.log line 30, "ISA model ready: pc=80000080 mtvec=80000001") and goes on to emit 79169 isa_*
+errors in the run. It was armed and it was silent. The model and the DUT therefore agreed on every
+retired instruction through order 461.
+
+### 10.2 The store's origin is the program's own end-of-test store
+
+From program/prog.dis:
+
+  80000154 <gen_irq_wait>:
+  80000154: 018b1063   bne   s6,s8,80000154
+  80000158: 017da023   sw    s7,0(s11)
+  8000015c: 00000297   auipc t0,0x0
+  80000160: 26428293   addi  t0,t0,612    # 800003c0 <tohost>
+  80000164: 00100313   li    t1,1
+  80000168: 0062a023   sw    t1,0(t0)
+
+The word 0062a023 lives at 0x80000168 and is `sw t1,0(t0)`, the write of 1 to tohost that ends the
+test. Its address operand is set by the auipc at 0x8000015c and the addi at 0x80000160 immediately
+above it. The DUT executed that word at pc 0x80000154, where the image holds the spin loop the model
+expected, without executing either of the two instructions that set the operand. The operand was
+therefore stale, and the record states its value: order=462 pc=80000154 insn=0062a023 rd=x0/00000000
+mem=40000000 w1111 r0000 mode=3 cyc=9285.
+
+Twelve instructions in the image write t0: auipc at 80000124, addi at 80000128, ori at 8000012c, lui
+at 80000134, addi at 80000138, lui at 80000140, addi at 80000144, li t0,8 at 8000014c, auipc at
+8000015c, addi at 80000160, `and t0,s6,t2` at 80000178, and `csrr t0,mtval` at 8000018c. Ten write a
+constant and none of those constants is 0x40000000. The only two data-dependent writes are the last
+two, both inside the interrupt handler. NOT ESTABLISHED: which of them ran, or what mtval held. No
+record in the window shows either, and neither is asserted here.
+
+### 10.3 The delivered words are wrong by whole fetch beats
+
+IC_LINE_SIZE is 64 bits (rtl/ibex_pkg.sv:402), so a line is 8 bytes and IC_LINE_BEATS is 2 (:406) of
+BUS_SIZE 32 bits (:397). A beat is a 4-byte word, two per line. Each word the DUT retired in this
+span is unique in the image except 00000297, which appears twice.
+
+| order | rvfi pc  | word delivered | its address in the image | offset in beats |
+|---|---|---|---|---|
+| 462 | 80000154 | 0062a023 | 80000168 | +5 |
+| 463 | 80000158 | 018b1063 | 80000154 | -1 |
+| 464 | 80000158 | 00100313 | 80000164 | +3 |
+| 465 | 8000015c | 017da023 | 80000158 | -1 |
+| 466 | 80000160 | 00000297 | 8000015c | -1 |
+
+Order 466 is the ambiguous word; its other copy is at 80000124, and that record's rd=x5/80000160
+shows the auipc executed at pc 80000160, so the near copy is tabulated. Order 465 is the sharpest
+single case: the pc is beat 1 of the line at 80000158 and the word delivered is beat 0 of that SAME
+line. Orders 463 and 466 have the identical relationship one line back, a pc at beat 0 of a line
+receiving beat 1 of the line before it. All three are a one-beat lag.
+
+CONSISTENT WITH, not established: a fetch-path delivery fault at beat granularity. That is the shape
+the grant-hold mechanism predicts, an unmatched response advancing fill_rvd_cnt_q and with it
+fill_rvd_beat, flipping the output mux from fill_data_rvd on the equality to fill_data_reg on the
+greater-than. The two positive offsets, +5 and +3, are NOT explained by a one-beat lag and are not
+fitted to it here. Which mechanism delivered the wrong word is still open between the grant-hold path
+and an incomplete capture-edge fix, and the exonerating check on the icache registers comes first.
+
+### 10.4 What this settles
+
+The program was not off its rails before the wrong word. The model and the DUT agreed on every
+instruction through order 461; the pc at the divergence is the spin loop the program is supposed to be
+in; and the register the store used held architectural state the model also held.
+
+The unmapped store is unmapped for a mechanical reason. The DUT was handed the store word without the
+two instructions that set up its address operand, so the operand was stale. It is not a runaway
+program reaching an unmapped address.
+
+No wider dump span is needed for this question. The log answered it, and the re-dump span already
+requested stands unchanged.
