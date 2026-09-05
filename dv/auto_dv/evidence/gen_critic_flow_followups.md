@@ -156,3 +156,98 @@ export_check; and measured_refusal returning None for the real entry with measur
   proof sentence that names a test the tree does not hold. The fixes are companions and one row edit.
 
 Verdict unchanged: REQUEST-CHANGES on a58f562..44a24f5 confined to M-1..M-3; the rt39 REQUEST-CHANGES lifted; L-1..L-7 owed.
+
+## 7. Re-verdict on 44a24f5..ccd755d: runtime-2's fixes close M-1..M-3 and L-1..L-7; the verdict-reason item and the reds2 block (2026-09-05T13:51:22Z)
+
+Artifacts at ccd755d: gen_export_default_red2.log (md5 1e04690700283de6, 5783 bytes), gen_build_identity_basis.log
+(3d4d2295e072a2ac, 4718), gen_verdict_reason_red.log at 1fa0bc7 (1b4191463188964c, 4829), gen_critic_response_flow.md's new
+section, gen_round.py, gen_flow_util.py, gen_build.py, gen_verdict.py, gen_flow_const.py, gen_regress.py, gen_fcov.py,
+gen_runtime_api.md; the reds2 block gen_reds2_b9e5fad.yaml at 67c6ac1 (sha256 ea5795b0beeb762c, 3406 bytes); rev73
+(dv/auto_dv/reviews/2026-09-05-claude-diff-44a24f5e-ccd755dc.md at e340561, 2726e57cc55cfde5). The range's other commits are
+other roles' records and reviews and my own verdicts, not judged here. Method: a detached archive of ccd755d for the six
+self-tests that need no git metadata and a detached worktree of ccd755d for the four that do (gen_flow_util,
+gen_serve_requests, gen_mirror, gen_cov_report's self-test subcommand) plus the const check; every digest, count and field the
+three logs and the block state re-derived from git blobs and the out-tree run directories; the verdict-reason red re-run on
+4b8d667 and 1fa0bc7 flow archives and its population re-decided over the wave's 403 result.yaml files with gen_run's own
+decide() arguments; rev73 read only after the findings were fixed (dv/auto_dv/work/critic/flow2/draft_s7_prerev73.txt).
+Exposure: the Orchestrator's message naming the range summarised ccd755d's contents. Logs: dv/auto_dv/work/critic/flow2/
+(rederive_*.txt, selftests_ccd755d*.log, reviewid_sweep_ccd755d.txt, l4_predicate_check.txt, reds2_check.txt,
+wave_population_discovery.txt, redecide.py with redecide_pre.txt and redecide_post.txt, rev73_rows_check.txt).
+
+Self-tests: ten green plus CONST-CHECK PASS. On the archive gen_flow_util and gen_serve_requests fail one case each because
+git ls-files and HEAD..HEAD have no repository to read; on the worktree both pass, as do gen_mirror (one case skipped, no
+mirror_root) and gen_cov_report. Those two archive failures are the missing .git, not defects, and are stated so a reader of
+selftests_ccd755d.log does not take them for one.
+
+- M-1 CLOSED. gen_export_default_red2.log Section 0 re-derives: all eight sha256[:16] equal the fb7226c and 44a24f5 blobs;
+  EXPORT_DEFAULT_FEATURE_GROUPS 0 then 1; git diff --stat names exactly the four flow files; the regress_chkfix build manifest
+  reads status ok, sources fb0798b2432ca7e1, mirror tree 55636b8b63b0f3c6; both run directories' result.yaml fields and
+  run_cmd.sh plusargs match the log (PRE no export file; POST gen_export.txt 152069 bytes, export_origin default, the plusarg
+  present in POST alone). The old log keeps its bytes and its fault (a rev-parse at write time) is recorded.
+- M-2 CLOSED. round_source_digests (gen_round.py:89) exists and its five-input case is green; at 44a24f5 the inline code gave
+  False for two builds of different sources with a canary, which I read as the row says, and the function gives None; the rt39
+  L-2 row carries a dated CORRECTED note; the index key round_sources_sha256_all is written at :302.
+- M-3 CLOSED. The companion's counts (vpi_lib_identity 0 at acbb40d, 1 at 7930d04; vpi_lib 1 and 2), the two digests at
+  7930d04 (31de9b984c3e0692, 1f5d9503043d0970) and the folded script (md5 dfd3d96d1c2407ba, 2643 bytes) all re-derive; the
+  script with its sys.path line substituted prints RED PROVEN on my 7930d04 archive.
+- L-1 CLOSED: the three-consumer case (gen_round.py:500) drives the real group_cell, metric_row and dut_scope_row and is green.
+  L-2 CLOSED as disclosed; the new folded script hardcodes the clone path too and the companion says the substitution. L-3
+  CLOSED: my own sweep finds no review id in any comment or docstring under dv/auto_dv/flow; every remaining hit is a
+  self-test case label, listed in reviewid_sweep_ccd755d.txt. L-4 CLOSED: under_pinned_venv (gen_flow_util.py:311) is True
+  inside the venv, False on a '.venv-sibling' path where the old substring test is True, False on None; no substring test
+  remains; the callers are gen_build.py:49, :56 and the version-record helper at :324. L-5, L-6, L-7 CLOSED: the comment
+  states the limit; the API sentence scopes the check to the argv and names export_origin; the row and the regress_bid3
+  manifest both read 11:18:05Z and 11:18:29Z. The Info is closed (the export name derives from sv_plusarg_names).
+- The verdict-reason item (1fa0bc7). The self-test's three directions are green at ccd755d. My decide_lines re-run reproduces
+  the log: at 4b8d667 (no MECHANISM_LOOKAHEAD, no mechanism_id) the three-line input reads "assertion_failure at log line 2"
+  unnamed; at 1fa0bc7 it reads "(sva_rvfi_irq_valid_exclusive)", the far case stays unnamed, the own-id case names isa_insn,
+  evidence_line is the Offending line in both. The population re-derives exactly: 22 non-fcov non-PASS runs in the wave (21
+  FAIL, 1 RED-OK), 22 of 22 verdicts equal pre, post and recorded, 22 of 22 pre reasons equal the recorded reasons (so my
+  harness mirrors gen_run.py:496-500), 20 gain a name (15 irq_entry, 5 sva_rvfi_irq_valid_exclusive) and the same two stay
+  unnamed. L-9 (Low, records; runtime-2): the log's Section 2 names no tree, the red and control scripts are not folded in,
+  and Section 4 names neither the run-directory root nor the re-decide script, so the 15/5 split and the two corrected false
+  results cannot be re-derived from the record; my re-decide script and both outputs are retained beside this section as the
+  control. Sections 1 and 3 have a basis and reproduce.
+- The reds2 block (67c6ac1). The yaml's bytes and sha256 match its index row; the served copy under work/runtime/done is
+  byte-identical; gen_run.py at b9e5fad hashes 7632eca5b10f840c; the four runs read FAIL, RED-OK, RED-OK, RED-OK with irq_entry
+  firings 258, 0, 0, 0 by the counting rule; the build manifest reads head b9e5fad, mirror tree e2ef252f23091d9a, status ok;
+  the 258 run's earliest failing lines are the exclusivity property at 65915000ps. I-1 (Info): "export_origin is null on all
+  four" is the block's own per-run field; the runs' result.yaml carry no such key, the b9e5fad driver predating it.
+- L-8 (Low, test hygiene; runtime-2). gen_round's self-test writes its three fabricated manifests under the scratch tree at
+  gen_round.py:464 after remove_selftest_tree(d) at :462 removed it (dump_yaml recreates the directory) and never removes
+  them: three files are left under selftest_tmp on every run, measured on the archive and on the worktree.
+
+Reconciliation with rev73 (read after the rows above were fixed; each row checked at ccd755d, rev73_rows_check.txt):
+- Its verification list matches mine item for item, including the two byte-identical flow trees and the folded script; its
+  self-test list omits the four that need git metadata, which I ran on a worktree.
+- Its Low on gen_round's scratch leftovers is my L-8.
+- Its Low on the look-ahead's class, VERIFIED and adopted as L-10 (Low, code; runtime-2): mechanism_id (gen_verdict.py:133)
+  runs for every mechanism class, so "Error-[FCIBH] Illegal bin hit" with an unrelated UVM_ERROR two lines below reads
+  "vcs_runtime_error at log line 1 (irq_entry)", and an unbracketed UVM_ERROR takes the next bracketed line's id; gate the
+  look-ahead on the assertion shape or mark a borrowed id. My miss: I tested the three directions the log names and not the
+  other classes the window applies to.
+- Its Low on the three-consumer guard, VERIFIED and adopted as L-11 (Low, test and records; runtime-2): the guard is
+  other != view[0] and other differs by its field element alone, so three cells of (group_bins_all, None, None, None) pass
+  it (measured on the fixture); the L-1 response row's sentence "cannot pass by all three being empty" overstates the guard.
+  The case's primary assertion (three consumers, one cell) holds and the test exists, which keeps this out of M-2's class.
+  My miss: I accepted the proof sentence without constructing the degenerate input.
+- Its Low on gen_runtime_api.md:1097-1101, VERIFIED and adopted as L-12 (Low, records; runtime-2): the canary paragraph still
+  says the match "reads false" and names no round_sources_sha256_all (0 occurrences) and no None rule.
+- Its Low on the red2 log's PRE block, VERIFIED and adopted as L-13 (Low, records; runtime-2): line 53 prints
+  "export_origin None" under a heading that says the fields are quoted, and the PRE result.yaml carries no export_origin key;
+  the same shape as my I-1 on the reds2 block, which I saw there and not here.
+- Its Low on the predecessor's fault, VERIFIED and adopted as L-14 (Low, records; runtime-2): git diff --stat 7d1a6fe edbe821
+  over dv/auto_dv/flow is empty, so the mis-named tree held the same eight blobs and the fault is a false provenance claim
+  with no effect on the bytes; the new log should say so rather than leave "a tree that never ran" to suggest different code.
+- Its Low on the verdict-reason log's basis is my L-9 in a broader form; L-9 above carries all three parts.
+- Its Low on gen_critic_response_flow.md:1121, VERIFIED and adopted as L-15 (Low, records; runtime-2): the rev62 L-2 row
+  still says "the case fires if the write ever stops carrying them" while the L-5 row and the gen_build comment now say it
+  cannot; a dated correction on that row is owed.
+- Its Info on the companion's "SO THE BASIS IS" wording is fair: the counts prove acbb40d lacks the code; that the bytes which
+  ran equal 7930d04's blobs is inferred, and the companion should say inferred. Its Info on plan-item tags in comments is out
+  of this range's scope; noted for the next sweep.
+
+CRITIC VERDICT: APPROVE on 44a24f5..ccd755d for runtime-2's three commits (1fa0bc7, 67c6ac1, ccd755d). The REQUEST-CHANGES of
+this file's Section 5 on a58f562..44a24f5 is LIFTED: M-1, M-2 and M-3 are closed by measurement, L-1..L-7 and the Info are
+closed. Owed to runtime-2's next records touch as disclosed: L-8..L-15 and I-1, all Low or Info, none a claim the tree
+contradicts; rev73 and this section agree there is no Major and no Medium.
