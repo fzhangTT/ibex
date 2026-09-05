@@ -1,0 +1,74 @@
+WAVE CENSUS, declared bins, from each run's own inline fcov check
+commit 40175738c709d1151a7d6a448ac46034767b7a09 | out regress_wave_4017573
+import path: every run's run_cmd.sh names /proj_soc/user_dev/fzhang/ibex_dv_mirror_head/40175738c709
+
+=== gen_test_bit_ratified: 40 runs, 40 with a coverage report | declared 617 | EVERY 617  SOME 0  NEVER 0
+    cross legs declared 494 | at every seed 494 | BELOW the bar 0
+    every declared bin hit at every seed
+
+=== gen_test_cmp_zca: 40 runs, 40 with a coverage report | declared 300 | EVERY 300  SOME 0  NEVER 0
+    cross legs declared 201 | at every seed 201 | BELOW the bar 0
+    every declared bin hit at every seed
+
+=== gen_test_cmp_zcb: 40 runs, 40 with a coverage report | declared 96 | EVERY 87  SOME 9  NEVER 0
+    cross legs declared 61 | at every seed 55 | BELOW the bar 6
+    DECLARED BINS UNDER THE EVERY-SEED BAR (a broken per-run guarantee), per bin:
+       30/40  gen_mul_ops_cg.cp_rs1_class.p16
+       30/40  gen_mul_ops_cg.cr_op_rs1.c_mul_p16 [CROSS LEG]
+       34/40  gen_mul_ops_cg.cp_rs1_class.two
+       34/40  gen_mul_ops_cg.cr_op_rs1.c_mul_two [CROSS LEG]
+       38/40  gen_mul_ops_cg.cp_rs1_class.one
+       38/40  gen_mul_ops_cg.cr_op_rs1.c_mul_one [CROSS LEG]
+       39/40  gen_cmp_zcb_cg.cr_half_misaligned.c_lh_mis1 [CROSS LEG]
+       39/40  gen_cmp_zcb_cg.cr_half_misaligned.c_lh_mis3 [CROSS LEG]
+       39/40  gen_cmp_zcb_cg.cr_half_misaligned.c_lhu_mis3 [CROSS LEG]
+
+=== gen_test_cmp_zcmp_basic: 40 runs, 40 with a coverage report | declared 325 | EVERY 319  SOME 6  NEVER 0
+    cross legs declared 240 | at every seed 235 | BELOW the bar 5
+    DECLARED BINS UNDER THE EVERY-SEED BAR (a broken per-run guarantee), per bin:
+       11/40  gen_cmp_zcmp_pushpop_cg.cr_insn_rlist_spimm.cm_popret_r4_s1 [CROSS LEG]
+       16/40  gen_cmp_zcmp_hazard_cg.cr_ft_kind.popretz_ft_cm_cm_pop [CROSS LEG]
+       21/40  gen_cmp_zcmp_hazard_cg.cr_ft_kind.popret_ft_cm_cm_push [CROSS LEG]
+       32/40  gen_cmp_zcmp_hazard_cg.cr_hazard_rlist.store_same_slot_then_pop_r5_14 [CROSS LEG]
+       34/40  gen_cmp_zcmp_hazard_cg.cr_hazard_rlist.write_pushed_reg_then_push_r5_14 [CROSS LEG]
+       39/40  gen_cmp_zcmp_hazard_cg.cp_hazard.popretz_ft_cm
+
+=== gen_test_irq_basic: 40 runs | NO MANIFEST (unmeasured entry, null fcov_expectation_file)
+    no declared bins: nothing to place under the every-seed bar, and no mapper exists for this entry
+
+=== gen_test_irq_basic_red: 3 runs | NO MANIFEST (unmeasured entry, null fcov_expectation_file)
+    no declared bins: nothing to place under the every-seed bar, and no mapper exists for this entry
+
+=== gen_test_isa_shift: 40 runs, 40 with a coverage report | declared 120 | EVERY 116  SOME 4  NEVER 0
+    cross legs declared 89 | at every seed 85 | BELOW the bar 4
+    DECLARED BINS UNDER THE EVERY-SEED BAR (a broken per-run guarantee), per bin:
+       38/40  gen_isa_shift_cg.cr_op_operand.slli_all_ones [CROSS LEG]
+       39/40  gen_isa_shift_cg.cr_op_operand.slli_msb_only [CROSS LEG]
+       39/40  gen_isa_shift_cg.cr_op_operand.srli_lsb_only [CROSS LEG]
+       39/40  gen_isa_shift_cg.cr_op_shamt.slli_s1 [CROSS LEG]
+
+=== gen_test_mul_div: 40 runs, 40 with a coverage report | declared 196 | EVERY 190  SOME 6  NEVER 0
+    cross legs declared 139 | at every seed 134 | BELOW the bar 5
+    DECLARED BINS UNDER THE EVERY-SEED BAR (a broken per-run guarantee), per bin:
+       36/40  gen_div_ops_cg.cr_op_divisor.divu_pos_rand [CROSS LEG]
+       37/40  gen_div_ops_cg.cr_op_divisor.remu_pos_rand [CROSS LEG]
+       38/40  gen_div_ops_cg.cr_op_divisor.div_pos_rand [CROSS LEG]
+       39/40  gen_div_ops_cg.cr_op_divisor.rem_pos_rand [CROSS LEG]
+       39/40  gen_div_timing_cg.cp_delta.d2
+       39/40  gen_div_timing_cg.cr_dit_div0_delta.dit0_div0_d2 [CROSS LEG]
+
+=== gen_test_mul_mul: 40 runs, 40 with a coverage report | declared 338 | EVERY 336  SOME 2  NEVER 0
+    cross legs declared 289 | at every seed 287 | BELOW the bar 2
+    DECLARED BINS UNDER THE EVERY-SEED BAR (a broken per-run guarantee), per bin:
+       38/40  gen_mul_timing_cg.cr_op_delta_clean.mulhsu_d2 [CROSS LEG]
+       38/40  gen_mul_timing_cg.cr_op_delta_clean.mulhu_d2 [CROSS LEG]
+
+=== gen_test_pmp_csr_warl: 40 runs, 40 with a coverage report | declared 179 | EVERY 178  SOME 1  NEVER 0
+    cross legs declared 91 | at every seed 90 | BELOW the bar 1
+    DECLARED BINS UNDER THE EVERY-SEED BAR (a broken per-run guarantee), per bin:
+       39/40  gen_pmp_addr_write_cg.cr_hi_mode.bit30_napot [CROSS LEG]
+
+=== gen_test_rst_boot: 40 runs, 40 with a coverage report | declared 6 | EVERY 6  SOME 0  NEVER 0
+    cross legs declared 0 | at every seed 0 | BELOW the bar 0
+    every declared bin hit at every seed
+

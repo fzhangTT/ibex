@@ -1,0 +1,81 @@
+wave: ten-entry robustness wave at forty seeds, plus the irq red fixture at three
+served_utc: '2026-09-05T09:58:00Z'
+served_by: runtime-2
+kind: unmeasured for the round; coverage on; fcov check INLINE in every run; PINNED
+head_sha: 40175738c709d1151a7d6a448ac46034767b7a09
+source_root: /proj_soc/user_dev/fzhang/ibex_dv_mirror_head/40175738c709
+source_tree_sha256: a9176c840e23ea5b118b2d132077cbb0d4837e157e0f1f48743cadc30c4fd29b
+driver: a detached archive of 4017573 whose gen_run.py hashes to the committed blob ad3e464a39b4
+outdir: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_wave_4017573
+import_path: every run's run_cmd.sh names the head mirror /proj_soc/user_dev/fzhang/ibex_dv_mirror_head/40175738c709
+seeds: >
+  FRESH BY DESIGN, not the fix sweep's. Each entry draws forty from its own stream keyed by the wave base and
+  the entry name; all 403 are distinct and NONE collides with the fix sweep's bit_ratified set (checked before
+  dispatch). Re-using the fix sweep's seeds would have re-measured what was already measured; the robustness
+  question is whether an entry holds on draws nobody has seen, and the fix sweep already carries the paired half.
+planned_runs: 403
+ran: 403
+outcome_by_entry:
+  gen_test_bit_ratified: {runs: 40, pass: 40, declared: 617, every_seed: 617, under_bar: 0}
+  gen_test_cmp_zca: {runs: 40, pass: 40, declared: 300, every_seed: 300, under_bar: 0}
+  gen_test_rst_boot: {runs: 40, pass: 40, declared: 6, every_seed: 6, under_bar: 0}
+  gen_test_pmp_csr_warl: {runs: 40, pass: 39, declared: 179, every_seed: 178, under_bar: 1}
+  gen_test_mul_mul: {runs: 40, pass: 38, declared: 338, every_seed: 336, under_bar: 2}
+  gen_test_isa_shift: {runs: 40, pass: 35, declared: 120, every_seed: 116, under_bar: 4}
+  gen_test_mul_div: {runs: 40, pass: 30, declared: 196, every_seed: 190, under_bar: 6}
+  gen_test_cmp_zcb: {runs: 40, pass: 22, declared: 96, every_seed: 87, under_bar: 9}
+  gen_test_cmp_zcmp_basic: {runs: 40, pass: 1, declared: 325, every_seed: 319, under_bar: 6}
+  gen_test_irq_basic: {runs: 40, pass: 21, declared: 0, note: 'unmeasured, null manifest; 19 REAL failures'}
+  gen_test_irq_basic_red: {runs: 3, red_ok: 1, note: '2 masked by the irq_entry checker fire'}
+the_fixes_hold_on_unseen_draws: >
+  bit_ratified and cmp_zca are 40 of 40 PASS with every declared bin hit at every seed, on seeds sharing nothing
+  with the sweep that measured the fixes. csr_warl produced a program at ALL FORTY seeds, so the Test Writer's
+  backstop closes the generator-assert class and the entry's provisional status clears on that criterion.
+cross_legs: >
+  Per the cross-operand rule, cross legs are reported by leg. Declared cross legs per entry: bit_ratified 494 all
+  at every seed, cmp_zca 201 all at every seed, cmp_zcmp_basic 240 with 5 below, mul_mul 289 with 2 below,
+  mul_div 139 with 5 below, isa_shift 89 with 4 below, csr_warl 91 with 1 below, cmp_zcb 61 with 6 below,
+  rst_boot 0. OBSERVATION WORTH THE DV LEAD'S RULE: of the 28 declared bins under the every-seed bar across the
+  whole wave, 24 are CROSS LEGS. The fragility is concentrated in crosses, which is what the rule predicts.
+bins_no_reader_could_examine: >
+  gen_test_irq_basic and gen_test_irq_basic_red declare no bins at all (unmeasured entries with a null
+  fcov_expectation_file), so nothing can be placed under the every-seed bar for them and NO MAPPER EXISTS FOR
+  THESE GENERATORS. For the nine entries with manifests, the inline check covers every declared bin, so the
+  under-bar count and the examined count coincide and no separate unexamined count arises.
+irq_entry_real_failures: >
+  19 of 40, on mechanisms rather than coverage, kept separate because they have different owners.
+  13 runs: the irq_entry CHECKER fires (gen_checkers_pkg.sv:133), "lines 00001 raised at cycle 44238 (order
+  1381) not taken within 17 records (now order 1400, mie 7fff0888 mstatus 00000088)". mie bit 0 is clear while
+  the raised line is bit 0, so the checker requires a line the enable mask does not enable to be taken. Reads as
+  checker-versus-stimulus; the classification is the Test Writer's and tb-infra-2's.
+  3 runs: sva_rvfi_irq_valid_exclusive ONLY. Already ruled at this very commit: the committed ruling says the
+  property fires legitimately and the PROPERTY must change, not the stimulus, and the property has not changed
+  since. A known-wrong property, not a new finding.
+  2 runs: the ruled property PLUS three UNRULED ibus properties (sva_ibus_gnt_only_with_req,
+  sva_ibus_outstanding_max, sva_ibus_rvalid_outstanding). The ruled one fires first and the ibus ones tens of
+  MICROseconds later: 47.73 us in gen_test_irq_basic_165313640 and 26.59 us in gen_test_irq_basic_1207954461,
+  at 10 ps ticks. NOT called a cascade and NOT called independent: an unruled signature that appears only in
+  runs where the ruled one also fired. For rtl-arch and tb-infra-2.
+  1 run: a HARNESS timeout, classified and named. Run directory
+  /proj_soc/user_dev/fzhang/ibex_dv_out/regress_wave_4017573/runs/gen_test_irq_basic_1800473338. The failure is
+  "GEN_TEST: stimulus() did not finish after the end of test (SimTimeoutError)" at gen_test_template.py:482,
+  with zero UVM errors, finish seen, no pass marker, and a simulation that ran to 1123735 ns against a typical
+  65420 ns. A fixed cocotb timeout in the stimulus path at this seed: seed-dependent harness, not a design
+  finding, and the class that can kill a measured round.
+red_fixture: >
+  RED-OK at 1 of 3. The other two failed "for an undeclared reason" and the reason is the SAME irq_entry checker
+  fire, so the fixture's designed failure is MASKED rather than absent. This is the failure the Test Writer said
+  it most wanted surfaced if it existed.
+not_hit_stimulus_shapes: >
+  The 46 stimulus-class not_hit lines of the two manifests, measured per seed from each run's own report because
+  they are undeclared and no coverage check mentions them. 23 of bit_ratified's 24 and 21 of cmp_zca's 22 are hit
+  at EVERY one of the forty seeds, so the re-render may declare those 44. The two that are never hit are
+  gen_bit_sbit_cg.cp_binv_twice.yes and gen_cmp_imm_edges_cg.cp_cj_off.self. This reproduces the Critic's
+  measurement independently, by a different route and on different seeds, and names the same two.
+binv_pair_not_measured_here: >
+  The wave was NOT re-pinned for the Test Writer's binv-pair fix, on the Orchestrator's ruling and the Test
+  Writer's recommendation: it buys one bin and costs 400 runs plus a round-2 delay. cp_binv_twice.yes is
+  therefore 0 of 40 here BY CONSTRUCTION and is measured by the separate post-fix block instead.
+full_listings:
+  declared_bins: dv/auto_dv/evidence/gen_wave_4017573/gen_wave_census.txt
+  not_hit_shapes: dv/auto_dv/evidence/gen_wave_4017573/gen_wave_nothit.txt
