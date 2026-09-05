@@ -827,3 +827,25 @@ reopened: gen_fu_mepc_identity_sidecar.md gives the path-free identity of the si
 measured on two builds of mine whose file digests differ and whose symbols-block digests agree. L-8 is
 answered by citation: Section 14's corrigendum now names the retained sweep log that carries the
 figures it quotes.
+
+CORRIGENDUM TO THIS SECTION (CM229), and it corrects the two sentences this section rests hardest on.
+"56 bins fail" counts 45 stimulus-class not_hit COMMENT lines together with 11 declared bins; not one
+of the 45 appears in either manifest's bins list, checked against the committed files rather than
+against the checker's labels. And "every declared bin hit at every seed" is what the sweep graded,
+617 and 300 of them, which does not settle the 45: no run in that sweep could pass or fail on their
+account. The same limit from the other side is the sweep's "before", an intermediate generator pair
+(7f3ec33390c2, aaa8e29f7370) that already carried the pack family, the relationship sweep, the
+binv-twice pair, the compressed-successor clones, the control-transfer unit and the alignment block.
+The before/after therefore measured only the four later fixes, +26 -2 lines in bit_ratified and
++10 -0 in cmp_zca, counted excluding the diff's own header lines (24 and 10 once blank added lines
+are set aside, which is the convention the Runtime Manager's index uses); the deltas themselves are
+retained at gen_generator_sweep/gen_prefix_delta_bit_ratified.diff and gen_prefix_delta_cmp_zca.diff,
+and applying each to its pre-fix file returns the committed blob. Everything serving the 45 shapes
+sat in both arms and was never a variable. So the 46
+stimulus-class reasons still say "the program never ...", 24 of 24 and 21 of 22 of them, and those
+sentences are false for the committed generators while nothing declares the shapes as a per-run
+guarantee. Both halves close together and neither closes here: when the wave's 40-seed blocks of the
+two entries land, the manifests are re-rendered so the shapes produced at EVERY seed become declared
+bins, coverpoint and cross halves separate, with none of the 46 credited before that measurement.
+The full accounting is beside the log it corrects, at
+gen_tdd_logs/test_writer/gen_fu_shape_check_corrigendum.md, because a retained log is not reopened.

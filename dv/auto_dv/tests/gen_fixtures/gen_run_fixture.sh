@@ -13,9 +13,10 @@ PYROOTS="${GEN_TB_PYROOT:+$GEN_TB_PYROOT:}$ROOT"
 export PYTHONPATH=$PYROOTS
 ARGS=$(python3 -c "from dv.auto_dv.gen_tb.gen_image import GenImage; print(' '.join(GenImage('$VMEM').plusargs()))")
 # cocotb-config must be the clone's pinned one. With the venv off PATH the site Python 3.9 install
-# answers: --lib-name-path exits 0 with a real 3.9 library while --libpython exits 1 empty, so an
-# unchecked assignment links the wrong cocotb and says nothing. Same rule as gen_mirror.venv_info:
-# the tool and its VPI library must resolve under the clone's .venv.
+# answers inconsistently: --lib-name-path exits 0 with a real 3.9 library while --libpython exits 1
+# empty. An unchecked assignment carries that mismatch into vcs, which fails on the site library's
+# baked prefix and names Python encodings rather than the venv; refusing here names the cause.
+# Same rule as gen_mirror.venv_info: the tool and its VPI library must resolve under the clone's .venv.
 VENV=$(cd "$ROOT/.venv" 2>/dev/null && pwd -P) || { echo "gen_run_fixture.sh: no .venv under $ROOT" >&2; exit 2; }
 CC=$(command -v cocotb-config) || { echo "gen_run_fixture.sh: no cocotb-config on PATH; source the clone's .venv" >&2; exit 2; }
 CCDIR=$(cd "$(dirname "$CC")" && pwd -P)
