@@ -47,7 +47,7 @@ from collections import namedtuple
 import cocotb
 from cocotb.triggers import Edge, Event, First, Lock, with_timeout
 
-from dv.auto_dv.gen_tb.gen_bridge import GenBridge
+from dv.auto_dv.gen_tb.gen_bridge import GenBridge, finish_timeout_cycles
 from dv.auto_dv.gen_tb.gen_handles import GenHandles
 from dv.auto_dv.gen_tb.gen_image import GenImage
 from dv.auto_dv.gen_tb.gen_knobs import CONSTANTS
@@ -82,8 +82,11 @@ class GenTest:
     # treats store number expected_reports + 1 as the end of test. 0 = tohost only (riscv-dv programs).
     expected_reports = 0
     # bins of built items the test cannot hit (precondition not applied), left out of the manifest, each
-    # with its reason and class: a seed-dependent bin is credited from the merged report, a stimulus bin
-    # needs a program change, a declaration bin cannot be a per-run guarantee at all
+    # with its reason and class: a seed-dependent bin is credited from the merged report (with its N-of-40
+    # count and the block it was read from), a stimulus bin needs a program change, a declaration bin cannot
+    # be a per-run guarantee at all, a generator-label-defect bin names a generator whose label is not the
+    # sampler's class and the fix owed, and a seed-dependent-by-measurement-cause-undiagnosed bin names the
+    # diagnosis owed; a bin returns to the manifest only with a fresh forty-seed measurement at a fix's commit
     bins_not_hit = {}
     # The handlers the program carries ("dbg": a debug ROM in the DM window, "irq": a returning interrupt handler, also for the NMI,
     # "exc": a trap handler for injected bus faults) and whether it keeps mstatus.MIE at 0 throughout: a regime knob may be in play
@@ -190,7 +193,9 @@ class GenTest:
         while len(self._cycle_waiters):
             self._arm_cycle_slot()
             if not await self._edge_or_eot(b.evt_cycle_hit, self.program_budget_cycles, "evt_cycle_hit"):
-                break                                  # the program ended: leave the waiters to their own budgets
+                for ev in self._cycle_waiters.ended():   # the program ended: a pending target is answered now, not after its budget
+                    ev.set()
+                break
             for ev in self._cycle_waiters.on_hit(self.cycle()):
                 ev.set()
         self._cycle_service = None
@@ -199,10 +204,11 @@ class GenTest:
         """Wait until the absolute cycle `count`; False if the program ended or the budget ran out.
 
         Concurrent waiters share one bridge slot, so a caller registers a target here and never
-        writes that slot itself.
+        writes that slot itself. The end of test answers every waiter in that cycle: a target the
+        program did not live to see reads False then, never after the wait's own budget.
         """
-        if count <= self.cycle():
-            return True
+        if count <= self.cycle() or self.eot_seen:
+            return count <= self.cycle()
         ev = Event()
         rearm = self._cycle_waiters.add_arms(count, ev)
         if self._cycle_service is None:
@@ -214,8 +220,7 @@ class GenTest:
             await with_timeout(ev.wait(), budget * self.period_ns, "ns")
         except Exception:
             self._cycle_waiters.drop(ev)
-            return count <= self.cycle()
-        return True
+        return count <= self.cycle()   # a hit reached the target; an end-of-test wake answers for the cycle the program stopped in
 
     async def wait_retired(self, count, timeout_cycles):
         """Arm the bridge retirement threshold at the absolute count; False if the program ended first."""
@@ -471,21 +476,28 @@ class GenTest:
             bins = await self.bridge.cov_witness(tp, own)
             self.log.info("GEN_TEST_WITNESS id=%s code=%d group=%s group_idx=%d bins=%s", tp, code, own, lib.WITNESS_GROUPS[own], bins)
 
+    def drain_budget_cycles(self):
+        """Cycles stimulus() and the schedule runner may take to wind up after the program's final store: the TB's
+        finish-handshake budget (+gen_finish_timeout), independent of the program's length. Every wait they can be in
+        answers at the end of test, so this bounds a hang, never a long program."""
+        return self.finish_timeout_cycles if self.finish_timeout_cycles is not None else finish_timeout_cycles()
+
     async def run(self):
         await self.setup()
         sched_task = cocotb.start_soon(self.run_schedule())
         stim_task = cocotb.start_soon(self.stimulus())
         await self.wait_eot()
+        drain = self.drain_budget_cycles()
         try:
-            await with_timeout(stim_task.join(), self.program_budget_cycles * self.period_ns, "ns")
+            await with_timeout(stim_task.join(), drain * self.period_ns, "ns")
         except Exception as exc:
-            raise AssertionError(f"GEN_TEST: stimulus() did not finish after the end of test ({type(exc).__name__})") from None
+            raise AssertionError(f"GEN_TEST: stimulus() did not finish within {drain} cycles after the end of test ({type(exc).__name__})") from None
         if self._applying:   # a boundary reached in the end-of-test cycle is still being applied
             t0 = self.cycle()
             try:
-                await with_timeout(self._drained.wait(), self.program_budget_cycles * self.period_ns, "ns")
+                await with_timeout(self._drained.wait(), drain * self.period_ns, "ns")
             except Exception as exc:
-                raise AssertionError(f"GEN_TEST: the schedule runner did not finish its last boundary ({type(exc).__name__})") from None
+                raise AssertionError(f"GEN_TEST: the schedule runner did not finish its last boundary within {drain} cycles ({type(exc).__name__})") from None
             self.log.info("GEN_TEST_DRAIN waited cycles=%d for the runner's last boundary", self.cycle() - t0)
         sched_task.kill()
         self.schedule_check()

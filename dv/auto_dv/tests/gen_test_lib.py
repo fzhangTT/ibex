@@ -105,6 +105,12 @@ class CycleWaiters:
         """Remove a waiter that gave up (timeout, or the program ended)."""
         self._pending = [(t, k) for t, k in self._pending if k is not key]
 
+    def ended(self):
+        """The program ended: every pending waiter is answered now, not after its own budget; return their keys."""
+        woken = [k for _, k in self._pending]
+        self._pending = []
+        return woken
+
     def __len__(self):
         return len(self._pending)
 
@@ -1061,6 +1067,10 @@ def _self_test():
     # an arm costs that cycle its compare, so only a new earliest target may arm
     w5 = CycleWaiters()
     served = [w5.add_arms(t, object()) for t in (500, 900, 200)]
+    w6 = CycleWaiters()
+    w6.add(100, "a"); w6.add(300, "b")
+    assert w6.ended() == ["a", "b"] and len(w6) == 0 and w6.armed_target() is None, "CycleWaiters.ended wakes every pending waiter and empties the list"
+    assert w6.ended() == [], "CycleWaiters.ended on an empty list wakes nothing"
     naive = [True, True, True]
     assert served == [True, False, True], f"add_arms re-arms only for a nearer target, got {served}"
     assert served != naive, "arming on every add re-arms for a target the slot already carries"

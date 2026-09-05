@@ -558,3 +558,82 @@ accepted as listed, and the alias and the helper given self.bridge stay accepted
 check_regime_handlers paragraph names the class keyword on any GenTest-derived class, and the residual paragraph says the same target forms
 naming a template method are refused. Verified from a detached archive of HEAD with the touch overlaid
 (dv/auto_dv/work/test-writer/head_final_selftest_rows.log names the HEAD).
+
+## 18. The template timeout item: a wait past the program's end answers at the end of test; the post-end bound is the finish budget
+
+WHAT THE WAVE FOUND. One of the forty gen_test_irq_basic runs of the wave (regress_wave_4017573, seed 1800473338,
+retained at 1fb417f and classified there as a harness timeout) failed with `GEN_TEST: stimulus() did not finish after
+the end of test (SimTimeoutError)` at gen_test_template.py:482 after 1123735 ns, against a typical 65420 ns, with
+zero UVM errors and the pass marker absent. The DV Lead made "the fixed cocotb timeout replaced by a seed-independent
+bound" one of the four conditions for that entry's promotion to measured (condition (c)), and this section is that
+item. The class matters beyond the one seed: a fixed harness timeout that a legitimate run can exceed fails a measured
+round on a seed no one chose.
+
+WHAT THE RUN'S OWN LOG SAYS, read from its sim_stdout.log rather than from the summary. The program reached its final
+store at cycle 12368 (`GEN_TEST_EOT ... retired=405 cycle=12368`) with 17 of the 18 armed entries driven by the test:
+the schedule's regime entries took the eighteenth vector, and the program, which spins until every armed vector has
+been entered, finished. The stimulus was inside hold_for_last_phase at that moment, waiting in wait_cycles for the
+schedule's trigger cycle 15223 before driving its last entry. At the end of test the cycle-slot service saw the final
+store and returned, leaving its waiters "to their own budgets" (the comment on the old line), so that wait_cycles slept
+its budget of program_budget_cycles = 100000 cycles and then returned True, because the target cycle had passed
+meanwhile; the hold went on to its settle wait, which registered a new waiter, started a new slot service that saw the
+end of test at once and again returned without waking anyone, and slept another budget. run() had given stimulus() the
+SAME 100000 cycles after the end of test to finish, so the join expired at 1123735 ns while the stimulus still slept.
+The same defect showed as a second symptom in the same log: the schedule runner applied its c15223 phase at cycle
+100069, eighty-five thousand cycles after the program ended, because its own wait_cycles returned True after its
+budget. The budget was never too small for the program; it was the answer to a question that had already been settled
+by the final store, delivered a hundred thousand cycles late.
+
+THE FIX, in the template and its policy class, no test module touched. (1) CycleWaiters.ended() (gen_test_lib.py):
+the program ended, every pending waiter is answered now, return their keys and empty the list; the library self-test
+gains the case (two waiters woken in order, the list empty, a second call wakes nothing). (2) The cycle-slot service
+(gen_test_template.py, _cycle_slot_service) calls it when _edge_or_eot reports the end of test and sets every waiter's
+event before it breaks. (3) wait_cycles answers in the cycle the program stopped in: a call made after the end of test
+returns at once, and a woken waiter returns `count <= self.cycle()` whether a hit or the end woke it, so a target the
+program did not live to see reads False at the final store and never after the wait's own budget, which is what the
+docstring already promised. (4) run() gives stimulus() and the schedule runner drain_budget_cycles() after the end of
+test, the TB's finish-handshake budget (finish_timeout_cycles when the test sets it, else +gen_finish_timeout and its
+default GEN_FINISH_TIMEOUT_CYCLES_DEFAULT = 20000), which does not depend on the program's length: every wait either
+coroutine can be in answers at the end of test, so the bound is for a hang and never for a long program, and the
+message names the budget. The API document's wait_cycles row and step 3 say the same. hold_for_last_phase in the irq
+entry needed no change: it already returns on False. Riding this touch as rev63 routed it: the template's comment on
+bins_not_hit documents five reason classes instead of three (the two the wave re-renders introduced, generator label
+defect and seed-dependent by measurement cause undiagnosed, and the return rule).
+
+WHAT REMAINS FIXED BY DESIGN AND IS NOT THIS ITEM, named so the scope is read rather than assumed. program_budget_cycles
+still bounds two things: the no-progress rule (next_report_edge fails only when retirement STOPPED for a budget, and a
+program that keeps retiring is waited for up to progress_rounds_max budgets), and the schedule runner's wait for its
+next trigger (lib.DURATION_CLASSES ends "long" at that budget so a drawn trigger cannot outrun the wait). Neither is a
+fixed wall on the program's length; both are stated in the API document.
+
+THE EVIDENCE, red and green on ONE build. The build is out_head19, compiled by gen_tb_local.sh from an export of
+9c28944 (sources sha 665d62e97890e7ca in every run header); the four runs differ only in the Python tree they load,
+the export's (the committed template, sha256 first 16 b285b41845799d14) or the clone's (the fixed template as this
+landing commits it, cc749fd5a35cb623), which the run headers record as template_sha; the green runs were re-run after the
+last edit of the template (the class-list comment rev63 asked for), so the retained headers name the landing's blob.
+  gen_ut_wait_past_eot, the new committed fixture (gen_fixtures/gen_ut_wait_past_eot.py, test_sha dfa65595ccdc2f1e):
+    the report-channel program with the budget lowered to 5000 cycles; stimulus() waits for a cycle far past the
+    program's end and then for a 64-cycle settle window, the two-wait shape hold_for_last_phase takes; fire_check()
+    requires both waits to read False and to have answered within eight cycles of the end of test.
+    RED   committed template: `GEN_TEST_EOT ... cycle=84`, then `stimulus() did not finish after the end of test
+          (SimTimeoutError)` at 50895 ns: the first wait slept its budget, the second registered after the end and
+          slept again, the join lost. gen_tmo_wait_past_eot_red_stdout.log.
+    GREEN fixed template: PASS at 2075 ns; `fire_far_answered_at_eot ... answered at cycle 84, end of test at 84` and
+          the same for the settle wait; both read False; the report-channel checks pass unchanged.
+          gen_tmo_wait_past_eot_green_stdout.log.
+  gen_test_irq_basic at seed 1800473338, the wave's failing seed, its program built at that seed (words=217
+  crc32=0x03c84170):
+    RED   committed template: the wave's failure to the nanosecond, `GEN_TEST_EOT ... retired=405 cycle=12368`, the
+          c15223 phase applied at cycle 100069, the SimTimeoutError at 1123735 ns; 17 entries driven.
+          gen_tmo_irq_1800473338_red_stdout.log.
+    GREEN fixed template: `gen_test_irq_basic GEN_TEST_PASS` at 131275 ns, 17 entries driven, no phase applied after
+          the end of test, UVM_ERROR 0. gen_tmo_irq_1800473338_green_stdout.log.
+  The library self-test and py_compile on the fixed template, library and fixture: gen_tmo_lib_selftest.log.
+The red reproducing on the current build shows the wave's failure was the template's and not the 4017573 testbench's;
+the fixture's red shows the mechanism without the irq entry, so the fixture guards the template on its own.
+
+WHAT IS NOT CLAIMED. The irq entry's promotion: its conditions (a), (b) and (d) are the checker fix group's and a
+fresh forty-seed sweep at a fix commit, runtime-2's run; this section closes (c) only. Nothing about the other
+entries' behaviour under the changed drain bound: their stimulus() bodies end before the program does (the pinned
+sweeps and the wave show it), and a stimulus that legitimately outlives the program by more than the finish budget
+would be a defect this bound now names rather than hides.
