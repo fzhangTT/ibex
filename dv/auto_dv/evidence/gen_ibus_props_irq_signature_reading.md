@@ -404,3 +404,138 @@ program reaching an unmapped address.
 
 No wider dump span is needed for this question. The log answered it, and the re-dump span already
 requested stands unchanged.
+
+## 11. The re-dump: the exonerating check, the walk, and what stays open
+
+Source: /proj_soc/user_dev/fzhang/ibex_dv_out/redump_4017573/runs/gen_test_irq_basic_165313640,
+waves.fsdb 665424 bytes with gen_export.txt 1117105 bytes, both matching runtime-2's stated sizes;
+design DB regress_ibus_wave/build/gen_tb/vcs_simv.daidir. Times below are ns; the FSDB scale is 10 ps
+and one cycle is 10 ns.
+
+### 11.1 A label owed to Section 7, and fidelity on two counts
+
+Section 7 says the firing totals matched the original runs in both seeds, 291 and 520233, without
+naming the quantity. Those are lines containing GEN_PROTO, the protocol-property firings. Counting
+every UVM_ERROR message line instead gives 627 and 693238, which is the quantity runtime-2 used. Both
+are correct and they count different things; the omission was the label, not the numbers.
+
+The re-dump reproduces the original run on BOTH definitions: 291 and 520233 for GEN_PROTO, 627 and
+693238 for UVM_ERROR message lines, identical across regress_wave_4017573, regress_ibus_wave and
+redump_4017573. Fidelity now rests on two independent counts rather than one.
+
+### 11.2 The exonerating check does not exonerate
+
+At the rising edge 183385 ns, instr_req_o's preponed value is 0, because it falls at the falling edge
+183380 and returns high at 183385, while instr_gnt_i holds high with zero transitions across the
+window. That is the edge sva_ibus_gnt_only_with_req fires on.
+
+The decision is taken on registers, because the terms that gate the icache's counting are
+combinational and are transitioning at that very edge. fill_ext_cnt_q is {2,2,1,2} in the cycle before
+and {2,2,1,2} in the cycle after: it does not advance, so the icache counted no grant there.
+
+POSITIVE CONTROL, because that is an absence claim. The same register transitions at 183355, 183365,
+183375 and 183395 ns and at no time between them. It was live in every neighbouring cycle and stood
+still only at the firing edge. fill_alloc agrees: it reads 8 at 183375 and 8 again at 183385 with a 0
+between, so its preponed value at the firing edge is 0 and no buffer was allocated there either; the
+allocation registers one cycle later and fill_ext_cnt_q moves to {1,2,1,2} at 183395.
+
+### 11.3 The driver enqueued anyway, with an address one half cycle stale
+
+The export carries the driver's own view. At its cycle 18333 the request line names 0x80000350 and the
+grant line names 0x80000168. In the twenty-cycle window from 18320 to 18340 that is the only cycle
+where the two differ; every other names one address twice. The two lines are written at different
+edges, so they are the same pin one half cycle apart: in the build the dump was made from, commit
+4017573, dv/auto_dv/env/gen_agents_pkg.sv:302-303 writes the request line at the falling edge and
+:354-355 writes the grant line after the accepting rising edge.
+
+That file has since changed. At the time of writing it carries tb-infra-2's two-process repair, where
+the grant line reports a captured copy rather than the live pin and the two writes sit at :321 and
+:388. The citations above are pinned to 4017573 deliberately, because they describe the driver whose
+behaviour this section measures, not the driver that replaced it. A re-run on current HEAD is not
+expected to reproduce this event.
+
+The wave confirms both values and the one after: instr_addr_o reads 0x80000350 at 183375, 0x80000168
+at 183380, 0x80000154 at 183385 and 0x80000158 at 183395. So at the accepting edge the core's address
+had moved to 0x80000154, the core booked nothing because its own request was low, and the driver
+enqueued 0x80000168. One surplus entry.
+
+Export cycle N corresponds to the wave falling edge at (N+5) microcycles, fixed by two independent
+landmarks: the anomaly at export 18333 against the firing edge, and the export's rvalid of 0x80000168
+at cycle 18337 against that word appearing on the bus at 183420.
+
+### 11.4 The walk to the delivery
+
+The word 0062a023, which lives at 0x80000168 in the image, is driven onto instr_rdata_i at 183420 ns
+and consumed by fill buffer 3. No fill buffer in that cycle holds 0x80000168: the four addresses are
+0x80000160, 0x80000158, 0x80000160 and 0x80000154. The core takes delivery of a word that no buffer
+requested.
+
+The array index order was resolved twice by independent means and both agree, so it is not in doubt:
+at the 183385 edge fill_alloc's preponed value 8 moves the first printed element of fill_ext_cnt_q,
+and at the 183385 edge a response taken with fill_rvd_arb 1 moves the last printed element of
+fill_rvd_cnt_q. First printed is index 3, last is index 0.
+
+### 11.5 The icache does not check addresses on responses
+
+`fill_rvd_arb[fb] = instr_rvalid_i & fill_rvd_exp[fb] & ~|(fill_rvd_exp & fill_older_q[fb])`
+(rtl/ibex_icache.sv:851-852). Three terms: the response valid, whether the buffer still expects data,
+and the age matrix. There is no address term anywhere in the response path and the bus carries no
+response tag; the whole response path from :845 to :856 contains no occurrence of an address.
+
+That is what makes one surplus entry expensive. A response the icache did not ask for cannot be
+rejected, because nothing compares it to anything. It is absorbed by the oldest expecting buffer and
+every later response is assigned one position off. There is nothing for the design to correct
+against.
+
+A CHECK OF MINE FAILED AND IS REPORTED AS FAILED. I tried to verify the delivery by comparing each
+response's word against the address of the buffer that consumed it. Every sample mismatched, including
+one eight cycles BEFORE the firing edge, which is not credible as a defect. The check is invalid
+rather than the design: since responses are assigned by age and never by address, a buffer's stored
+address does not predict which word it should receive next. It is recorded here so nobody repeats it.
+
+### 11.6 The same address in three places, and what stays open
+
+| seed | order | time | pc | model | dut | the dut word lives at |
+|---|---|---|---|---|---|---|
+| 165313640 | 1658 | 18373500 | 80000154 | 018b1063 | 0062a023 | 80000168 |
+| 1207954461 | 462 | 9290500 | 80000154 | 018b1063 | 0062a023 | 80000168 |
+
+0x80000168 is the address the driver captured at the uncounted grant in the first seed. It is also the
+home of the word both seeds retire at pc 0x80000154, the +5 row of Section 10 that a one-beat lag
+could not explain. The next record repeats across both seeds as well: order 1659 and order 463 each
+take 018b1063 at pc 80000158, a one-beat lag.
+
+NOT ESTABLISHED. The causal chain from the surplus response to the retired word is not walked end to
+end; the export shows the driver's queue draining to zero outstanding at cycle 18344, well before
+either divergence at 35 and 40 cycles after the grant event. An address appearing three times is a
+strong coincidence, not a mechanism.
+
+ALSO NOT ESTABLISHED, and possibly not measurable in this dump. Which of the two symptoms at that
+edge delivers the wrong word: the surplus entry, or the capture reading an address one half cycle
+stale. They occur in the same event because they are one race, not two, and because the icache pairs
+responses by order alone there is no per-response evidence that separates them.
+
+### 11.7 Derivation: why the error is not bounded to one beat
+
+Labelled derivation. No wave supports this subsection; it is read from the RTL and it predicts.
+
+A buffer stops expecting data when fill_rvd_done[fb] = (fill_ext_done_q[fb] & ~fill_ext_hold_q[fb]) &
+(fill_rvd_cnt_q[fb] == fill_ext_cnt_q[fb]) (:783-784), which gates fill_rvd_exp[fb] (:777) and so the
+arbitration above. A surplus response raises fill_rvd_cnt_q with no matching rise in fill_ext_cnt_q,
+because fill_ext_cnt_q moves only on terms the icache counts for itself (:759-762).
+
+Two regimes follow, and which one occurs depends on when in a buffer's fill the surplus lands. Early,
+with beats still outstanding, it only advances the beat pointer: fill_rvd_beat = base + fill_rvd_cnt_q
+(:833-834) moves one ahead and the output mux flips from fill_data_rvd on the equality (:871) to
+fill_data_reg on the greater-than (:863). That is bounded, and it is the one-beat-lag shape. At the
+completion boundary it is worse: fill_rvd_done goes true early, the buffer stops expecting with a real
+beat still owed, and the displaced response is redirected to a buffer filling a different line. Every
+response after that is one position off until the surplus is absorbed at the end of the burst.
+
+The magnitude has a ceiling. NUM_FB is 4 (:72) and a line is 8 bytes, so at most four lines are in
+flight and a cross-buffer offset cannot exceed about eight beats. The +5 and +3 offsets of Section 10
+sit inside that, and the address span observed there is exactly four lines.
+
+So the offsets do not need two mechanisms. One surplus can produce both the small and the large ones,
+which means the check in 11.2 is decisive for all five records of Section 10 rather than for some of
+them.
