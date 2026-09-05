@@ -400,3 +400,39 @@ appears as a bad row. Measured in both directions: 700 manifest rows against 701
 0 rows pointing outside the directory, and 0 rows failing size or md5, so no retention gap exists in these records. No
 trace_core_*-shaped file exists anywhere under committed dv/auto_dv/evidence either; the nested-.gitignore case measured under the
 export copies reaches only the working copies under work/, which are never the retained record.
+
+## 11. Bridge cycle-slot service (library; the irq-entry group's first landing)
+
+WHAT WAS WRONG. The bridge carries one cycle-threshold slot (gen_bridge_if.sv:24-25, :35, :77-80) and every
+GenTest.wait_cycles caller wrote it directly. run() runs the schedule runner and stimulus() as concurrent tasks, so
+a stimulus that waits on cycles overwrites a pending target: in the irq red at seed 694904681 an eight-cycle poll
+took the runner's c11664 boundary, the whole phase group applied at cycles 77-82 (sim_stdout.log:44, :68), and the
+run carried the storm interrupt regime from cycle 77 to the end. The check reported it honestly at :367.
+
+THE FIX. lib.CycleWaiters holds every pending target; GenTest arms the slot only with the earliest, re-arms after
+each hit, and wakes only the waiters a hit reaches. wait_cycles registers and awaits its own event, so the slot has
+exactly one writer. run_schedule needs no change and got none: it reaches the fix by calling wait_cycles.
+
+WHAT IS PROVEN HERE, and it is deliberately less than the fix.
+  - The waking POLICY, red before green. Against a stand-in that behaves as the bridge did (one target, last writer
+    wins), the far waiter wakes at the near waiter's hit and never wakes at its own: two assertions fail, which is
+    the defect in nine lines. Against CycleWaiters all pass, plus a hit past several targets waking all of them, a
+    dropped waiter leaving the others armed, and each waiter keeping its own budget. Retained at
+    gen_tdd_logs/test_writer/gen_fu_cycle_slot_service.log with its commands and the filter on its self-test line.
+  - The SINGLE-WRITER property, measured: one occurrence of evt_cycle_target.value in the whole tests tree.
+
+WHAT IS NOT PROVEN HERE. The cocotb layer: the service task, the Event handshake, the _edge_or_eot interaction
+when the program ends mid-wait, and the re-arm when a nearer target arrives while the service waits. Those are
+simulator behaviours and the log says so itself. Two head-mode runs after this commit prove them: a scheduled entry
+with the runner as sole waiter, expected every phase at its own cycle; and the irq red at 694904681, expected the
+idx=1 group not applied at cycle 77. A defect found there is fixed inside this group before GROUP COMPLETE.
+
+WHY THE POLICY IS A SEPARATE CLASS. So the red could run without a simulator. Splitting the waking rule from the
+cocotb plumbing is what let the defect be reproduced and the fix demonstrated at all; a service written as one
+piece would have had no red until a wave was free.
+
+WORDS OVER READINGS. On the fault this entry exposed, three of my inferences were corrected while the evidence I
+gathered was right each time: I called a record internally inconsistent when the fetch was wrong and the record
+faithful; I said the wrong stub ran under the wrong cause when the cause was correct; and I made a point of "three
+slots" when the third address was a pc+4 link value. The finding survived because the three slot words and the two
+record lines were quoted. Quote the words; label the reading as one.

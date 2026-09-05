@@ -58,6 +58,47 @@ TIMING_ONLY_KNOBS = ("knob_imem_gnt_delay", "knob_imem_rvalid_delay", "knob_imem
 TOHOST_PASS = 1
 TOHOST_FAIL = 3
 
+class CycleWaiters:
+    """Which cycle-threshold waiters to wake, and what to arm the bridge with.
+
+    The bridge has ONE cycle-threshold slot (evt_cycle_target / evt_cycle_arm / evt_cycle_hit) and
+    every waiter shares it, so a caller that writes its own target destroys a pending one: a
+    stimulus polling a near target once stole the schedule runner's far boundary and applied a
+    whole phase group thousands of cycles early. This holds every pending target instead, arms
+    only the earliest, and wakes only the waiters whose own target has been reached.
+
+    Policy only, no cocotb: the caller owns the events and the bridge writes, so the waking rule
+    is testable without a simulator.
+    """
+
+    def __init__(self):
+        self._pending = []      # (target, key) in insertion order; keys are opaque to this class
+
+    def add(self, target, key):
+        self._pending.append((int(target), key))
+
+    def armed_target(self):
+        """The target the bridge should carry: the earliest pending, or None when nothing waits."""
+        return min((t for t, _ in self._pending), default=None)
+
+    def on_hit(self, cycle):
+        """A hit arrived at `cycle`: return the keys whose targets are reached, dropping them.
+
+        Every reached target wakes, not just the armed one, because a hit at or past a later
+        target satisfies it too and leaving it pending would wait for an edge that never comes.
+        """
+        woken = [k for t, k in self._pending if t <= cycle]
+        self._pending = [(t, k) for t, k in self._pending if t > cycle]
+        return woken
+
+    def drop(self, key):
+        """Remove a waiter that gave up (timeout, or the program ended)."""
+        self._pending = [(t, k) for t, k in self._pending if k is not key]
+
+    def __len__(self):
+        return len(self._pending)
+
+
 # CG-REG-007 duration classes (gen_fcov_plan.md Section 3.8): TB-side phase length in cycles.
 # "long" ends at the schedule runner's per-trigger wait budget (GEN_ALIVE_TIMEOUT_CYCLES_DEFAULT): a longer phase would time the wait out.
 DURATION_CLASSES = {"short": (500, 2000), "medium": (2001, 20000), "long": (20001, 100000)}
@@ -962,6 +1003,33 @@ def _self_test():
     from dv.auto_dv.tests import gen_fcov_manifest as _gm
     seed = 12345
     names = list(TIMING_ONLY_KNOBS)   # the mechanics are tested independent of the consumer gate
+    # CycleWaiters: the bridge has one cycle-threshold slot and every waiter shares it, so a near
+    # target used to destroy a pending far one (a stimulus poll stole the schedule runner's c11664
+    # boundary and applied a phase group at cycle 77). Two concurrent waiters, near and far:
+    w = CycleWaiters()
+    w.add(11664, "runner")
+    w.add(85, "poll")
+    assert w.armed_target() == 85, f"CycleWaiters arms the earliest, not {w.armed_target()}"
+    woken = w.on_hit(85)
+    assert "poll" in woken, "the near waiter must wake at its own target"
+    assert "runner" not in woken, "the far waiter must NOT wake at the near waiter's hit"
+    assert w.armed_target() == 11664, "the slot re-arms with the next earliest after a hit"
+    assert "runner" in w.on_hit(11664), "the far waiter must wake at its own target"
+    assert len(w) == 0 and w.armed_target() is None, "a woken waiter is dropped"
+    w2 = CycleWaiters()
+    w2.add(50, "a"); w2.add(60, "b")
+    assert sorted(w2.on_hit(70)) == ["a", "b"], "a hit past several targets wakes all of them"
+    w3 = CycleWaiters()
+    k = object(); w3.add(9, k); w3.drop(k)
+    assert len(w3) == 0 and w3.armed_target() is None, "a waiter that gave up is removed"
+    # each waiter keeps its OWN budget: one whose target lies past the run's end times out alone,
+    # and dropping it disturbs neither the others nor the service
+    w4 = CycleWaiters()
+    near, far = object(), object()
+    w4.add(85, near); w4.add(10 ** 9, far)
+    w4.drop(far)
+    assert len(w4) == 1 and w4.armed_target() == 85, "dropping the far waiter leaves the near one armed"
+    assert w4.on_hit(85) == [near], "the near waiter still wakes after the far one gave up"
     empty = Schedule.derive(seed, [])
     assert empty.k == 0 and empty.text() == "" and empty.phases == [], "empty schedule"
     s1 = Schedule.derive(seed, names)

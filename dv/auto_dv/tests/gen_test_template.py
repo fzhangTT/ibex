@@ -113,6 +113,8 @@ class GenTest:
         self.schedule = None
         self.applied = []          # Phase objects applied through REGIME_SET, in order
         self.reports = []          # program report words (EOT-register stores before the final code)
+        self._cycle_waiters = lib.CycleWaiters()   # the one bridge cycle slot, multiplexed
+        self._cycle_service = None                 # the task that owns the slot
         self.eot_seen = False
         self.eot_cycle = None      # bridge counts at the end-of-test store (the schedule check's reference)
         self.eot_retired = None
@@ -168,14 +170,53 @@ class GenTest:
             if getattr(fired, "signal", None) is not b.evt_eot_seen or int(sig.value) != was:
                 return True   # the awaited edge (a store in the same cycle does not hide it)
 
-    async def wait_cycles(self, count, timeout_cycles=None):
-        """Arm the bridge cycle threshold at the absolute cycle `count`; False if the program ended first."""
+    def _arm_cycle_slot(self):
+        """Write the bridge's one cycle-threshold slot with the earliest pending target."""
+        target = self._cycle_waiters.armed_target()
+        if target is None:
+            return
         b = self.h.b
-        b.evt_cycle_target.value = count & 0xFFFFFFFF
+        b.evt_cycle_target.value = target & 0xFFFFFFFF
         b.evt_cycle_arm.value = 0 if int(b.evt_cycle_arm.value) else 1
+
+    async def _cycle_slot_service(self):
+        """Sole owner of the bridge cycle slot: arm the earliest, wake only what a hit reaches.
+
+        The slot is one register shared by every waiter, so a caller writing its own target
+        destroys a pending one. Concurrent tasks make that ordinary rather than exotic: run() runs
+        the schedule runner and stimulus() together, and a stimulus polling a near target once
+        stole the runner's far boundary and applied a whole phase group thousands of cycles early.
+        """
+        b = self.h.b
+        while len(self._cycle_waiters):
+            self._arm_cycle_slot()
+            if not await self._edge_or_eot(b.evt_cycle_hit, self.program_budget_cycles, "evt_cycle_hit"):
+                break                                  # the program ended: leave the waiters to their own budgets
+            for ev in self._cycle_waiters.on_hit(self.cycle()):
+                ev.set()
+        self._cycle_service = None
+
+    async def wait_cycles(self, count, timeout_cycles=None):
+        """Wait until the absolute cycle `count`; False if the program ended or the budget ran out.
+
+        Concurrent waiters share one bridge slot, so a caller registers a target here and never
+        writes that slot itself.
+        """
+        if count <= self.cycle():
+            return True
+        ev = Event()
+        self._cycle_waiters.add(count, ev)
+        if self._cycle_service is None:
+            self._cycle_service = cocotb.start_soon(self._cycle_slot_service())
+        else:
+            self._arm_cycle_slot()                     # a nearer target than the armed one
         budget = timeout_cycles if timeout_cycles is not None else max(count - self.cycle(), 0) + 100
-        hit = await self._edge_or_eot(b.evt_cycle_hit, budget, f"evt_cycle_hit for cycle {count}")
-        return hit or count <= self.cycle()   # the boundary passed in the end-of-test cycle itself
+        try:
+            await with_timeout(ev.wait(), budget * self.period_ns, "ns")
+        except Exception:
+            self._cycle_waiters.drop(ev)
+            return count <= self.cycle()
+        return True
 
     async def wait_retired(self, count, timeout_cycles):
         """Arm the bridge retirement threshold at the absolute count; False if the program ended first."""

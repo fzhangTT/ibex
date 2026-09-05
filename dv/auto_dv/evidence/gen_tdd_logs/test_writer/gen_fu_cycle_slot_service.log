@@ -1,0 +1,24 @@
+# gen_fu_cycle_slot_service.log -- TDD red/green for the bridge cycle-slot service
+# Produced 2026-09-05T03:44:20Z against HEAD 07653dd873fa3dff0b18c419f9345a2e9977b993 with the two subject files
+# dirty in the working tree (gen_test_lib.py, gen_test_template.py); this log claims the POLICY only.
+#
+# CLAIM: the bridge has ONE cycle-threshold slot (gen_bridge_if.sv:24-25,:35,:77-80) shared by every
+# wait_cycles caller. lib.CycleWaiters holds every pending target, arms only the earliest and wakes only
+# the waiters a hit reaches. NOT CLAIMED HERE: the cocotb layer (service task, Event handshake,
+# _edge_or_eot interaction at end of test, re-arm on a nearer target) -- those need a simulation.
+#
+# COMMAND 1 (red then green), run from the clone root with PYTHONPATH unset:
+#   python3 <the inline script below>
+
+RED (the shared slot as it behaves today) then GREEN (CycleWaiters):
+  shared slot (today)    armed=85     far_asleep_at_near_hit=False near_woke=True  far_woke_at_own=False
+  CycleWaiters           armed=85     far_asleep_at_near_hit=True  near_woke=True  far_woke_at_own=True
+  naive passes all three: False   <- must be False, this is the red
+  CycleWaiters passes all three: True   <- must be True
+
+# COMMAND 2: python3 -m dv.auto_dv.tests.gen_test_lib --self-test
+# FILTER: the CycleWaiters case sits before the Schedule cases; the run below is shown as its LAST line
+# only. The run exits 1 on a PRE-EXISTING failure unrelated to this service (gen_test_irq_basic_red has no
+# retained pinned-red log yet); every structural case including the CycleWaiters one runs before it.
+AssertionError: red entry gen_test_irq_basic_red: no retained pinned-red log under dv/auto_dv/evidence/gen_tdd_logs/test_writer
+# self-test exit: 1 (1 = the pre-existing missing-red-log case named above)
