@@ -1,0 +1,82 @@
+record: irq quiet-probe served blocks (Runtime), re-measured from the run artifacts
+kind: triage evidence, unmeasured, no manifest row
+seed: 694904681
+entry: gen_test_irq_basic_red (committed, unchanged)
+head_sha: 07653dd873fa3dff0b18c419f9345a2e9977b993
+runs:
+  control:
+    purpose: 'committed entry and committed testlist, no added plusarg: the reference the two quiet runs are read against'
+    dir: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_irq_probe_b2/runs/ctrl_694904681
+    verdict: FAIL
+    reason: 'red fixture failed for an undeclared reason: uvm_error at sim.log:52; red_expect ''GEN_TEST_FAIL gen_test_irq_basic:
+      [0-9]+ fire-check failure\\(s\\):.*\\bfire_t'
+    report_words: 92
+    lines_driven: 18
+    uvm_errors_sim_log: 173
+    gen_test_phase_lines: 14
+    sva:
+      sva_rvfi_irq_valid_seen: 6542 attempts, 63 match
+      sva_irq_pending_seen: 6542 attempts, 1389 match
+    knobs_line: GEN_TEST_KNOBS pinned=knob_irq_line_mix drawn=dmem_gnt_delay=same_cycle dmem_rvalid_delay=long imem_gnt_delay=short
+      imem_outstanding_cap=cap8 imem_rvalid_delay=short irq_hold=pulse irq_regime=quiet scr_key_delay=withheld_then_valid
+    sched_line: GEN_TEST_SCHED source=derived k=2 sched=imem_gnt_delay:short@c0,imem_rvalid_delay:short@c0,imem_outstanding_cap:cap8@c0,dmem_gnt_delay:same_cycle@c0,dmem_rvalid_delay:long@c0,scr_key_delay:withheld_then_valid@c0,irq_regime:quiet@c0,irq_hold:pulse@c0,irq_regime:storm@c11664,imem_rvalid_delay:min1@c11664,imem_outstanding_cap:cap1@c11664,irq_hold:through_handler@c11664,imem_gnt_delay:same_cycle@c1166
+    fire_line: 'GEN_TEST_FAIL gen_test_irq_basic: 3 fire-check failure(s): fire_schedule_applied: reached 8 of 14 scheduled
+      entries by EOT (cycle 6537, retired 3212), applied 14, early [''irq_regime:storm@c11664'', ''imem_rvalid_delay:min1@c11664'',
+      ''imem_outstanding_cap:cap1@c11664'', ''irq_hold:through_handler@c11664'', ''imem_gnt_delay:same_cycle@c11664'', ''dmem_rvalid_delay:short@c11664'']
+      (k=2, source=derived) | fire_'
+    stop_line: null
+  quiet_single_variable:
+    purpose: the control's own schedule text supplied with its two irq_regime phases removed, so every other knob follows
+      the control
+    dir: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_irq_probe_b2/runs/schedquiet_694904681
+    verdict: FAIL
+    reason: 'red fixture failed for an undeclared reason: cocotb_summary at sim_stdout.log:97; red_expect ''GEN_TEST_FAIL
+      gen_test_irq_basic: [0-9]+ fire-check failure\\(s\\)'
+    report_words: 6
+    lines_driven: 2
+    uvm_errors_sim_log: 0
+    gen_test_phase_lines: 12
+    sva:
+      sva_rvfi_irq_valid_seen: 4158 attempts, 1 match
+      sva_irq_pending_seen: 4158 attempts, 45 match
+    knobs_line: GEN_TEST_KNOBS pinned=knob_irq_line_mix drawn=-
+    sched_line: GEN_TEST_SCHED source=supplied k=2 sched=imem_gnt_delay:short@c0,imem_rvalid_delay:short@c0,imem_outstanding_cap:cap8@c0,dmem_gnt_delay:same_cycle@c0,dmem_rvalid_delay:long@c0,scr_key_delay:withheld_then_valid@c0,irq_hold:pulse@c0,imem_rvalid_delay:min1@c11664,imem_outstanding_cap:cap1@c11664,irq_hold:through_handler@c11664,imem_gnt_delay:same_cycle@c11664,dmem_rvalid_delay:short@c11664
+    fire_line: null
+    stop_line: 'AssertionError: GEN_TEST_IRQ: 6 report words at cycle 4153, expected 11 by cycle 4148'
+  quiet_by_pin:
+    purpose: +gen_knob_irq_regime=quiet; corroboration only, because pinning a schedulable knob changes the draw for every
+      knob
+    dir: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_irq_probe_b2/runs/quietpin_694904681
+    verdict: FAIL
+    reason: 'red fixture failed for an undeclared reason: cocotb_summary at sim_stdout.log:92; red_expect ''GEN_TEST_FAIL
+      gen_test_irq_basic: [0-9]+ fire-check failure\\(s\\)'
+    report_words: 6
+    lines_driven: 2
+    uvm_errors_sim_log: 0
+    gen_test_phase_lines: 10
+    sva:
+      sva_rvfi_irq_valid_seen: 4329 attempts, 3 match
+      sva_irq_pending_seen: 4329 attempts, 190 match
+    knobs_line: GEN_TEST_KNOBS pinned=knob_irq_line_mix,knob_irq_regime drawn=dmem_gnt_delay=same_cycle dmem_rvalid_delay=long
+      imem_gnt_delay=short imem_outstanding_cap=cap8 imem_rvalid_delay=short irq_hold=until_taken scr_key_delay=withheld_then_valid
+    sched_line: GEN_TEST_SCHED source=derived k=2 sched=imem_gnt_delay:short@c0,imem_rvalid_delay:short@c0,imem_outstanding_cap:cap8@c0,dmem_gnt_delay:same_cycle@c0,dmem_rvalid_delay:long@c0,scr_key_delay:withheld_then_valid@c0,irq_hold:until_taken@c0,dmem_gnt_delay:short@c11664,imem_rvalid_delay:min1@c11664,imem_outstanding_cap:cap2@c11664
+    fire_line: null
+    stop_line: 'AssertionError: GEN_TEST_IRQ: 6 report words at cycle 4324, expected 11 by cycle 4319'
+  quiet_by_pin_scratch_testlist:
+    purpose: the first attempt, through a scratch testlist entry; superseded by quiet_by_pin, which is pinned to the commit
+    dir: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_irq_probe_b/runs/gen_test_irq_probe_quiet_694904681
+    verdict: FAIL
+    reason: cocotb_summary at sim_stdout.log:92
+    report_words: 6
+    lines_driven: 2
+    uvm_errors_sim_log: 0
+    gen_test_phase_lines: 10
+    sva:
+      sva_rvfi_irq_valid_seen: 4329 attempts, 3 match
+      sva_irq_pending_seen: 4329 attempts, 190 match
+    knobs_line: GEN_TEST_KNOBS pinned=knob_irq_line_mix,knob_irq_regime drawn=dmem_gnt_delay=same_cycle dmem_rvalid_delay=long
+      imem_gnt_delay=short imem_outstanding_cap=cap8 imem_rvalid_delay=short irq_hold=until_taken scr_key_delay=withheld_then_valid
+    sched_line: GEN_TEST_SCHED source=derived k=2 sched=imem_gnt_delay:short@c0,imem_rvalid_delay:short@c0,imem_outstanding_cap:cap8@c0,dmem_gnt_delay:same_cycle@c0,dmem_rvalid_delay:long@c0,scr_key_delay:withheld_then_valid@c0,irq_hold:until_taken@c0,dmem_gnt_delay:short@c11664,imem_rvalid_delay:min1@c11664,imem_outstanding_cap:cap2@c11664
+    fire_line: null
+    stop_line: 'AssertionError: GEN_TEST_IRQ: 6 report words at cycle 4324, expected 11 by cycle 4319'
+

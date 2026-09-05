@@ -1,0 +1,38 @@
+request: rtl-arch-010
+requester: rtl-arch
+served_utc: '2026-09-05T03:59:24Z'
+served_by: runtime-2
+purpose: 3
+status: SERVED
+kind: triage evidence, no property of any commit; unmeasured, no manifest row
+build:
+  dir: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_irq_wave010/build/gen_tb
+  flags: --waves (VCS_DEBUG_WAVES_FLAGS, -debug_access+all), no coverage
+  source_mode: head
+  head_sha: 07653dd873fa3dff0b18c419f9345a2e9977b993
+  source_root: /proj_soc/user_dev/fzhang/ibex_dv_mirror_head/07653dd873fa
+  vcs_rc: 0
+  vcs_errors: 0
+run:
+  dir: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_irq_wave010/runs/gen_test_irq_basic_red_694904681
+  entry: gen_test_irq_basic_red (committed, unchanged)
+  seed: 694904681
+  testlist: /proj_soc/user_dev/fzhang/ibex_dv_mirror_head/07653dd873fa/dv/auto_dv/flow/gen_testlist.yaml
+  extra_plusargs: ['+gen_export_file=gen_export.txt', '+gen_export_flush_every=1000']
+  lsf_job: 10997343 on soc-c-20
+  verdict: FAIL (red fixture failed for an undeclared reason; uvm_error at sim.log:71)
+artifacts:
+  fsdb: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_irq_wave010/runs/gen_test_irq_basic_red_694904681/waves.fsdb
+  fsdb_bytes: 606509
+  fsdb_time_range_ns: [0, 65420.01]
+  design_db: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_irq_wave010/build/gen_tb/vcs_simv.daidir
+  export: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_irq_wave010/runs/gen_test_irq_basic_red_694904681/gen_export.txt
+  export_bytes: 1320756
+reproduction_check:
+  program_image_sha256: 6269d7b98b5679e47d98528b4a1370e76a3226b872abab9cf600b61c6841f07a
+  program_image_matches_run3: true
+  gen_test_phase_lines: 14, byte-identical to run 3 (test view, sim_stdout.log)
+  gen_phase_lines: 14, byte-identical to run 3 (env view, sim.log)
+  uvm_error_count: 173
+  first_isa_insn: 'order=548 pc=80000340 model=eb9ff06f dut=ec1ff06f cyc=1180 at 1185500 (10 ps ticks)'
+  harness_line: '3 fire-check failure(s): fire_schedule_applied | fire_tp_irq_002 | fire_tp_irq_004'

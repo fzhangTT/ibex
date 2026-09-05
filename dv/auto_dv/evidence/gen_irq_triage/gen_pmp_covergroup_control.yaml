@@ -1,0 +1,32 @@
+control: PMP covergroup presence at HEAD 2d87642 (positive control for a blocking absence claim)
+served_utc: '2026-09-05T04:19:58Z'
+served_by: runtime-2
+why: >
+  The Orchestrator ordered a 40-seed PMP measurement reporting cp_mml.mml1 and cp_rlb.rlb1 on the
+  committed sources at 2d87642. Those coverpoints belong to gen_pmp_cfg_write_cg, which is not in the
+  commit. An absence claim needs a positive control, so this measures the covergroup set through URG
+  rather than by reading source.
+source_evidence:
+  head_sha: 2d87642b1d36a943fc08f7cb47258310c9199e81
+  gen_fcov_groups_svh_at_head_pmp_hits: 0 (git show HEAD:... | grep -c gen_pmp_cfg_write_cg)
+  cp_mml_cp_rlb_at_head: 0
+  covergroups_declared_at_head: 25 (none PMP)
+  working_tree_delta: gen_fcov_groups.svh +514 lines, four PMP covergroups, uncommitted (tb-infra-2's held render)
+archival_control:
+  claim: the covergroup sources are unchanged since round 1, so round 1's own report is a control for HEAD
+  gen_fcov_groups.svh sha256 at 4a0070285557a2a7dfb50cea9390597143b984b0 == at HEAD: true
+  gen_fcov_pkg.sv sha256 at round-1 head == at HEAD: true
+  committed_round1_group_report: dv/auto_dv/evidence/gen_round_0/gen_groups.txt, 26 covergroup names, 0 gen_pmp
+direct_control:
+  run: /proj_soc/user_dev/fzhang/ibex_dv_out/regress_pmp_cg_control
+  entry: gen_test_pmp_mseccfg, seed 1396647892, head mode 2d87642, coverage on, unmeasured, LSF 10997996
+  verdict: PASS
+  gen_test_bins_line: 'GEN_TEST_BINS n=0 -'  (the entry declares no bins at this commit)
+  gen_pmp_in_either_log: 0
+  urg: 'urg -full64 -format both -dir <cov_unmeasured/merged.vdb> -report <out> -show ratios, rc 0'
+  covergroups_urg_reported: 26, of which gen_pmp: 0
+  group_total_line: 'GROUP 8.32 355/4268'  (same 4268-bin denominator as round 1, i.e. the same covergroup set)
+conclusion: >
+  A build from 2d87642 contains no PMP covergroup. A 120-run sweep on committed sources would report
+  nothing about cp_mml.mml1 or cp_rlb.rlb1 and cannot shape a manifest. Not run. Recommendation put to
+  the Orchestrator: land tb-infra-2's held render first, then run the 40 seeds pinned to that commit.

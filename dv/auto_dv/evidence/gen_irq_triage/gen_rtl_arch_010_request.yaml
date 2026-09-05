@@ -1,0 +1,186 @@
+requester: rtl-arch
+purpose: 3
+tests: [gen_test_irq_basic_red]
+seeds: [694904681]
+coverage: no
+waves: yes
+source: head
+notes: >
+  TRIAGE EVIDENCE, NO PROPERTY OF ANY COMMIT. Ordered by the Orchestrator. Unmeasured, no manifest
+  row. This reproduces one already-recorded run so a waveform can place the mechanism behind its
+  first interrupt record; it establishes nothing about any commit's quality.
+
+  WHAT TO RUN: the committed gen_test_irq_basic_red entry UNCHANGED, seed 694904681, from head, with
+  a -debug_access+all compile in a FRESH output directory. The run being reproduced is
+  /proj_soc/user_dev/fzhang/ibex_dv_out/regress_irq_red3/runs/gen_test_irq_basic_red_694904681/
+  (head mode 92d6ea2ecb6b, tag irq_red3). The Orchestrator has asked you to merge this with the
+  planned probe C so one compile serves both.
+
+  THE ONE THING THAT WOULD WASTE THE RUN: the debug build and the export must not change any random
+  draw. The entry's program is generated per seed, so a different draw gives a different image and
+  the window below will not exist. Before the wave is read I will check the entry banner and the
+  knob-change lines of this run against the third run; if the program image or the knob timeline
+  differs, say so and I will not read the wave rather than reason from a different program.
+
+  DUMP WINDOW: the record of interest retires at 1185500 ns in the reproduced run. Dump with margin
+  on both sides, at least 1150000 to 1220000 ns; wider is better if cost allows, since the storm
+  regime was applied at 81500 ns and the fetch state that matters may be older than the record.
+
+  WHY: the first interrupt record of that run carries pc 0x80000340 with instruction word ec1ff06f,
+  and that word lives only at 0x80000348 in the image. I have traced the RTL and the pair cannot be
+  produced by the RVFI stage, the IF/ID register or the re-vector recapture, so the wave has to show
+  which side of the instruction-fetch handshake first carried 0x80000348's word against address
+  0x80000340. My trace is dv/auto_dv/work/rtl-arch/gen_irq_vector_pc_insn_rtl_trace.md (scratch).
+
+  THREE MECHANISMS THE SIGNAL LIST MUST SEPARATE, so the wave is not read twice:
+  (1) the icache pairs its output address with the wrong data;
+  (2) the cause or vector path picked a different slot than the fetch;
+  (3) the TB instruction-memory model answered an outstanding request with the wrong word.
+
+  SIGNALS. Hierarchy prefix H = gen_tb_top.u_dut.u_ibex_core, and C = H.if_stage_i.gen_icache.icache_i.
+
+  A. Boundary handshake, which decides side (1)/(2) against (3):
+     gen_tb_top.u_ibus_if.{req,gnt,rvalid,addr,rdata,err,outstanding,cycle}
+     gen_tb_top.{instr_req,instr_addr,instr_gnt,instr_rvalid,instr_rdata}
+     gen_tb_top.u_dut.{instr_req_o,instr_addr_o,instr_gnt_i,instr_rvalid_i,instr_rdata_i,instr_err_i}
+     The interface's own `outstanding` counter is the field that shows a response matched to the
+     wrong request, which is why it is named explicitly.
+
+  B. The icache output pairing and its discard state, mechanism (1). This is the structural reason the
+     mechanism is credible: in this cache the output ADDRESS and the output DATA are two paths kept in
+     step by control, not one tagged pair. addr_o is {output_addr_q, 1'b0} (rtl/ibex_icache.sv:1193)
+     while rdata_o comes from the fill-buffer arbiter and the skid register (:1192), and the half-word
+     select inside the line is taken from output_addr_q (:1182). The register that is supposed to stop
+     a redirected-away fill from driving the output is fill_stale_q, set by
+     fill_stale_d[fb] = fill_busy_q[fb] & (branch_i | fill_stale_q[fb]) (:741) and consumed by
+     fill_out_req[fb] (:796). So dump:
+     C.{branch_i,addr_i,req_i,ready_i,valid_o,rdata_o,addr_o,err_o}
+     C.{output_addr_q,output_addr_d,output_addr_en,output_addr_incr,output_valid,output_ready,data_valid}
+     C.{output_data,output_data_lo,output_data_hi}
+     C.{skid_valid_q,skid_data_q,skid_en,skid_complete_instr}
+     C.{fill_busy_q,fill_stale_q,fill_stale_d,fill_out_req,fill_out_arb,fill_out_done,fill_data_sel}
+     C.{prefetch_addr_q,prefetch_addr_en,lookup_addr_ic0,lookup_grant_ic0,lookup_req_ic0}
+     If the cache is the culprit the wave shows addr_o stepping to 0x80000340 while the buffer driving
+     output_data is one the branch should have marked stale.
+
+  C. Fetch to ID to RVFI, which fixes the cycle the wrong word entered the pipeline:
+     H.if_stage_i.{fetch_valid,fetch_rdata,fetch_addr,if_instr_valid,if_instr_rdata,if_instr_addr}
+     H.if_stage_i.{pc_if_o,branch_req,prefetch_branch,prefetch_addr,instr_new_id_d,if_id_pipe_reg_we}
+     H.if_stage_i.{instr_out,insert_dummy_instr,exc_pc,irq_vec,exc_pc_mux_i,exc_cause}
+     H.{pc_id,instr_rdata_id,instr_valid_id}
+     H.{rvfi_valid,rvfi_order,rvfi_pc_rdata,rvfi_pc_wdata,rvfi_insn,rvfi_intr,rvfi_mem_addr,rvfi_mem_rmask}
+     insert_dummy_instr is included to keep the dummy-instruction path visible even though I have
+     already ruled it out by opcode; a wave that contradicts my reading is worth more than my reading.
+
+  D. Cause and vector, mechanism (2):
+     H.id_stage_i.controller_i.{handle_irq,irq_nm,irq_nm_ext_i,nmi_mode_q,exc_cause_o,csr_save_cause_o,csr_mtval_o}
+     H.cs_registers_i.{mcause_q,mcause_en,mtvec_q,csr_mtvec_o}
+     H.{irq_fast_i,irq_software_i,irq_timer_i,irq_external_i,irq_pending_o,csr_mstatus_mie}
+     gen_tb_top.u_irq_if.* (the driven lines, so the wave shows what was pending at the decision)
+
+  E. tb-infra-2 is sending the memory agent's own signal names; add them to group A when they arrive.
+     I have named the interface fields I could find myself so this request is complete without them.
+
+  EXPECTED OUTCOME, stated so a wrong run is caught by the run and not by me. The run should fail the
+  same way: 173 scoreboard UVM_ERRORs beginning at order 548, the first being
+  "[isa_insn] insn model=eb9ff06f dut=ec1ff06f (order=548 pc=80000340 ...)", and the harness line
+  "fast id 1 entry: vector 17 carried mcause 0x80000010, expected 0x80000011". If the reproduced run
+  does NOT show those, the seed no longer reproduces and the wave is not worth reading; tell me that
+  rather than handing me a dump of a different failure.
+
+  WHAT I NEED BACK: the FSDB path, the dumped time range, the compile's out dir, and a one-line
+  confirmation that the program image and the knob timeline match the third run. I read the wave.
+
+  ---- ADDENDUM after tb-infra-2's message, each claim of theirs re-checked by me before folding ----
+
+  RETENTION, add to the run: +gen_export_file=gen_export.txt, leaving +gen_export_sources at its
+  default so BOTH the pin rows and the ibus rows are written, plus +gen_export_flush_every=<n> so a
+  killed run still leaves a usable file. The wave and the export are read together: the driver's
+  request queue is a class member (gen_bus_driver.pend), NOT a wave-visible signal, so the
+  per-transaction view with cycles and depth comes from the export's ibus req / gnt / rvalid lines.
+  The interface's `outstanding` counter IS wave-visible (dv/auto_dv/tb/gen_bus_if.sv:31, updated :38)
+  and stays in group A; the interface also carries its own assertion that rvalid needs an older
+  outstanding grant (:47), so a plain protocol violation would already have fired in the first run.
+
+  ADD to group A: gen_tb_top.u_ibus_if.{intg_corrupt,clk,rst_n}.
+
+  THE FIRST THING TO LOOK AT, and it decides the question in one comparison: the ibus addr AT THE
+  GRANT against the rdata at its matching rvalid. I verified the agent's contract rather than taking
+  it: the pending entry latches the address and reads its word at grant time
+  (`p.word = mem.read32(p.addr)`, dv/auto_dv/env/gen_agents_pkg.sv:321, with the entry pushed at :342
+  and popped in order at :275), so the agent cannot reorder responses and cannot answer with a word
+  for an address it never latched.
+
+  I also checked the memory image itself, which removes one branch before the run: the run's own
+  prog.vmem holds eb9ff06f at 0x80000340, ebdff06f at 0x80000344 and ec1ff06f at 0x80000348, i.e.
+  exactly the disassembly. So the model's CONTENT is right, and the decision rule is:
+    - if the grant whose response carried ec1ff06f had addr 0x80000348, the TB did exactly what it was
+      asked and the fault is inside the core: the icache paired that word with output address
+      0x80000340. Mechanism (1).
+    - if that grant's addr was 0x80000340, the TB returned a word the image does not hold there, which
+      given the read-at-grant contract means the latch or the model's indexing. Mechanism (3).
+    - mechanism (2) is separately visible on exc_cause with csr_save_cause_o and on mcause_q.
+
+  RETRACTED, and replaced by the paragraph below: an earlier version of this request said no
+  instruction-bus knob is set in this run. That was wrong. tb-infra-2 corrected it and I re-derived it
+  from the run rather than accepting the correction: the bus agents' knob changes do not appear in the
+  UVM knob-change log or on the command line, which are the two places I checked, but in the cocotb
+  stdout as GEN_TEST_PHASE lines. There are 14 of them.
+
+  THE INSTRUCTION BUS SHAPE AT THE FAILING FETCH, from those lines, re-derived by me:
+  phase idx=0 at cycles 60-67 set imem_gnt_delay=short, imem_rvalid_delay=short,
+  imem_outstanding_cap=cap8; phase idx=1 at cycles 77-82 then set imem_rvalid_delay=min1,
+  imem_outstanding_cap=cap1 and imem_gnt_delay=same_cycle (alongside irq_regime=storm and
+  irq_hold=through_handler). Nothing changes them afterwards, so at the failing fetch near cycle 1180
+  the instruction bus was at CAP1, SAME-CYCLE GRANT, MIN1 RVALID. Read the wave with those, not with
+  the defaults.
+
+  WHAT THAT SHAPE DOES TO THE THREE MECHANISMS, and it helps:
+  with an outstanding cap of one the agent grants only while its queue is empty
+  (dv/auto_dv/env/gen_agents_pkg.sv:305), so at most one fetch is in flight at any moment. Every
+  response therefore belongs to exactly one grant with no ambiguity, which makes the decision rule
+  above airtight rather than a judgement call, and it removes the "answered the wrong outstanding
+  request" half of mechanism (3) entirely: with a depth-one queue there is no other outstanding
+  request to confuse. What survives of (3) is only a wrong latch or wrong indexing.
+  It also makes the sequence around the redirect short and completely visible: each fetch is one
+  req / gnt-same-cycle / rvalid triple, so the reading is to list those triples around cycle 1180 and
+  find the one whose data is ec1ff06f.
+
+  THE SHAPE CHECK TO RUN BEFORE THE WAVE IS READ, now covering the bus and not only the interrupts.
+  READ THE TAG CAREFULLY: the same fourteen events are logged TWICE, by two layers, with cycles that
+  differ by one, so comparing one log's numbers against the other's produces a false mismatch on
+  thirteen of fourteen lines. Both views must be quoted with the file and tag they came from.
+
+    sim_stdout.log, tag GEN_TEST_PHASE, the TEST's view (its send):
+      idx=0: imem_gnt_delay=short 60, imem_rvalid_delay=short 61, imem_outstanding_cap=cap8 62,
+             dmem_gnt_delay=same_cycle 63, dmem_rvalid_delay=long 64,
+             scr_key_delay=withheld_then_valid 65, irq_regime=quiet 66, irq_hold=pulse 67
+      idx=1: irq_regime=storm 77, imem_rvalid_delay=min1 78, imem_outstanding_cap=cap1 79,
+             irq_hold=through_handler 80, imem_gnt_delay=same_cycle 81, dmem_rvalid_delay=short 82
+
+    sim.log, tag GEN_PHASE, the ENV's view (the application the agent accepted), phases 1..14:
+      knob_imem_gnt_delay=short 59, knob_imem_rvalid_delay=short 60,
+      knob_imem_outstanding_cap=cap8 61, knob_dmem_gnt_delay=same_cycle 62,
+      knob_dmem_rvalid_delay=long 63, knob_scr_key_delay=withheld_then_valid 64,
+      knob_irq_regime=quiet 65, knob_irq_hold=pulse 66, knob_irq_regime=storm 77,
+      knob_imem_rvalid_delay=min1 77, knob_imem_outstanding_cap=cap1 78,
+      knob_irq_hold=through_handler 79, knob_imem_gnt_delay=same_cycle 80,
+      knob_dmem_rvalid_delay=short 81
+
+  The env cycle is the test cycle minus one on every line EXCEPT phase 9 (irq_regime=storm), where
+  both read 77. That offset is expected and is not a discrepancy; a reproduced run showing it is
+  matching, not differing. Compare like against like: knob and value on all fourteen, in order, and
+  cycles against the same tag they are quoted from. If a knob, a value or the ORDER differs, the bus
+  shape differs and I do not read the wave.
+
+  WHY THE KNOBS WERE LIVE AND NOT MERELY LOGGED, which is a proof rather than an inference and comes
+  from tb-infra-2: the env's apply_knob routes the imem knob ids to the instruction-bus agent's config
+  and `uvm_fatal`s with "ibus refused <name>" if the agent does not take one. The run did not fatal,
+  so every imem application in it was accepted by the agent's config.
+
+  KNOWN AND NOT MINE TO FIX: the idx=1 group carries trigger c11664 but was applied at cycles 77-82,
+  about 11,500 cycles early, which runtime-2 traced to a shared cycle-threshold slot in the bridge
+  interface with no waiter identity. The stimulus is legal either way, so the wrong-word fetch stands
+  as a real divergence; it does mean this run's mix was never the one scheduled for that phase. The
+  debug build on the same seed is expected to reproduce the early application deterministically, which
+  is exactly what the fourteen-line check above confirms.
