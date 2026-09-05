@@ -391,3 +391,23 @@ Disagreement: none. rev54 records nothing Section 7 disputes, and Section 7's L-
 inflation), L-13 (smoke recipes not retained) and L-16 (no red for the cycle-0 drain check) are rows rev54 does not
 carry; they stand. Verdict unchanged: APPROVE for 55ef529, the REQUEST-CHANGES lifted; L-2, L-11..L-20 owed as
 disclosed. Sections 1-7 and the corrigendum above are byte-identical to the 31903f9 commit (6b86f0c732cc05f5).
+
+## Corrigendum to Section 7.3 (L-8) and 7.4 (written 2026-09-05T09:21:12Z, HOLD sent to the Orchestrator first; Sections 1-8 unchanged)
+
+Section 7.3 says of L-8: "The 173-to-1 argument is sound: mret_mpie0_pending uncovered in both builds means MIE was set
+after each mret; all 173 booking no-edge means it was set before; my fetch-enable run counts 60 such mrets with the bin
+at 0." Section 7.4 says "the mret bin removed is honesty over green". Both rest on the classifier's pre-state, which is
+the PREVIOUS RETIRED RECORD's MIE, and that is not the mret's pre-state when the mret is the first instruction of an
+interrupt handler: the entry retires no record and clears MIE (rtl/ibex_cs_registers.sv:924), so the previous record
+is the interrupted instruction with MIE 1. Both smoke programs make every regular vector a bare mret (gen_irq_directed.S
+"every handler is one mret"; gen_nmi_long_directed.S gen_vec ".rept 31 / mret"), so all 173 storm samples, the 60 of
+my fetch-enable run and the six of the lines run were true MIE 0 -> 1 set edges with MPIE = 1, MPP = M and a line
+pending: the declared bin mret_mpie1_pending. Landing 46's edge fix therefore did not remove false coverage; it
+dropped 173 true hits of the declared bin to unclassified, and my Section 7 approved that reading. The correct
+statement of L-8's disposition: the edge semantics the fix introduced are right, but the pre-state it compares
+against is wrong at an entry record, and the bin's count fell for that reason. Found by rev56 (96825af) on the
+follow-on range 03aafce..dc60063, where the same pre-state books the 173 into the new bin; verified by me from the two
+programs, the RTL and my own runs on a dc60063 build (lines: mret_mie1_mpie1_pending 6, mret_mpie1_pending 0; storm:
+173 and 0), and recorded as M-1 of gen_critic_mret_hold.md, which owns the fix and the corrigenda to the two landing
+logs. My earlier verdict word for 55ef529 stands as recorded; the misjudgement is this closure's, and it is stated
+here rather than edited away.
