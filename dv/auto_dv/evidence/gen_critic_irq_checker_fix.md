@@ -168,3 +168,24 @@ post-state semantics, the helper, the is_trap exclusion, the parser red, the log
 Sections 1-4, which add the wave-seed red and green, the storm-fixture catch count and the seed-1207954461 attribution.
 
 Disagreement: none. Verdict words agree: REQUEST-CHANGES, confined to M-1 and M-2.
+
+## Corrigendum to Section 3 (appended after the HOLD of 2026-09-05; the sections above are unchanged)
+
+Raised by tb-infra-2's landing-54 log, which reproduces every figure I state for the 9c7f8f6 run of seed 1207954461
+and corrects one sentence; checked against my own retained records under dv/auto_dv/work/critic/irqchk/.
+
+- "its table names 1207954461 with the same firing counts" is WRONG. rtl-arch's table
+  (gen_ibus_props_irq_signature_reading.md:51-54) gives 70199 sva_ibus_rvalid_outstanding and 449948
+  sva_ibus_outstanding_max for the 4017573 wave run of that seed; my run on the 9c7f8f6 build gave 70208 and 450021.
+  Two runs of one seed on two builds, the same signature and the same ordering (the T-044 property first, the ibus
+  properties from cycle 9246, the irq_entry fires downstream), different counts. The attribution to the ibus-signature
+  mechanism rests on the signature and the ordering and stands; the words "the same firing counts" do not.
+- "on the clean 9c7f8f6 build the same recipe takes the NMI and the test passes" overstates the control. My retained
+  record (nmi_withhold_demonstration.txt, nm_fix_clean) reads: nmi_entry fires 0, GEN_UT_IRQ_NMI_LONG_PASS with retired
+  400 and 0 mismatches, and TWO UVM_ERRORs with the run's verdict FAIL. The test's own marker passes; the run does not.
+  tb-infra-2's diagnosis, consistent with the tree: the reset-reads program installs no NMI handler and the NMI vector
+  (mtvec base 0x80000000 plus 4 x 31 = 0x8000007c) lies below the linker script's PROG origin 0x80000080, so the entry
+  double-faults. The control's claim is therefore "nmi_entry fires zero times on the clean build", not "a clean run".
+- A counting note for anyone re-deriving my totals: a `grep -c UVM_ERROR` over a sim.log counts the UVM summary tally
+  line as well and reads one high. My retained "all UVM_ERROR" counts excluded it (seed 159577667: 17 fires and 17
+  errors; the NMI control: 2), so no figure above moves; the 693238 total is reproduced by tb-infra-2 exactly.
