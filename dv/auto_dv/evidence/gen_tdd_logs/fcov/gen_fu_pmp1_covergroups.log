@@ -1,0 +1,128 @@
+# gen_fu_pmp1_covergroups.log -- PMP step 1: four covergroups and their samplers (TB Infra, 2026-09-05)
+#
+# WHAT THIS IS. The TB half of the joint PMP step-1 feature group: CG-PMP-001 gen_pmp_cfg_write_cg, CG-PMP-002
+# gen_pmp_addr_write_cg, CG-PMP-004 gen_pmp_csr_access_cg and CG-PMP-014 gen_pmp_table_state_cg, rendered from the
+# plan and sampled from the model's PMP table. Under LOG-096 a covergroup landing carries NO red fixture and NO
+# mutation proof; it carries the render, the codegen unit test, a head-mode compile with its identity, the sample
+# event and signal source per covergroup, the field caveats, and any bin that cannot be hit with a reason.
+# CG-PMP-003 is step 1b: its plan text needs 46 items (33 cr_state_trans bins, 8 cr_op_trans tuple parts, 5
+# cr_rlb_trans bins) before it renders, and its MML bins are undeclared by the DV Lead's ruling meanwhile.
+#
+# ================ THE SAMPLE EVENT AND SIGNAL SOURCE, PER COVERGROUP ================
+# All four sample from ONE per-record entry point, gen_fcov_pkg.sv pmp_record(t), fed by the RVFI monitor's
+# analysis port. The table they read is the MODEL's, through the ISA shim.
+#   CG-PMP-004 gen_pmp_csr_access_cg: every retired PMP CSR instruction, TRAPPED ONES INCLUDED. Sources: the
+#     record's insn (the CSR number and funct3 give class, op and read-only), t.mode (priv), t.ext_debug_mode
+#     (debug), t.trap (the trap bin), and a first-access flag for cp_first_after_reset.
+#   CG-PMP-001 gen_pmp_cfg_write_cg: a retired, untrapped, non-read-only pmpcfg write, ONE SAMPLE PER ENTRY BYTE
+#     of the written word (four per write, the plan's grain). Sources: the attempted value from the record's
+#     rs1_rdata or its 5-bit immediate combined with the pre-state word (read-modify-write), the pre and post
+#     table bytes, and mseccfg's MML and RLB at the write.
+#   CG-PMP-002 gen_pmp_addr_write_cg: a retired, untrapped, non-read-only pmpaddr write, one sample. Sources: the
+#     attempted address, the entry's own cfg byte before the write, the NEXT entry's cfg (cp_next_cfg), RLB, and
+#     the post-write readback for cp_outcome.
+#   CG-PMP-014 gen_pmp_table_state_cg: a snapshot of the whole table after any PMP CSR write, DEFERRED until a
+#     record retires before the next table change, which is the plan's own condition and also when cp_all_off_u is
+#     decided. Sources: the 16 cfg bytes and 16 addresses (active, locked, modes, TOR-empty and overlap are counted
+#     from them), mseccfg's three bits, and cfg.knob_pmp_regime for the operand-only cp_regime.
+#
+# ================ THE FIELD CAVEAT THAT DECIDES THE DESIGN, MEASURED NOT ASSUMED ================
+# At this subscriber the model has NOT yet executed the record being handled, so gen_isa_read_csr returns the table
+# BEFORE it. A probe on the deny program showed the snapshot taken at the pmpcfg write still reading cfg0=00; the
+# samplers therefore read a write's effect at the NEXT record, which also gives pre and post for free. The probe
+# then read the written values:
+# $ a scratch-only probe printing the table at each snapshot, deny program, seed 1
+#   snapshot: cfg0=00 addr0=200000ab mseccfg=0 active_bin=0 e0_tor=0     [after the pmpaddr write]
+#   snapshot: cfg0=98 addr0=200000ab mseccfg=0 active_bin=1 e0_tor=0     [after the pmpcfg write]
+# $ command grep -n 'li   t2' dv/auto_dv/stim/gen_directed/gen_pmp_deny_directed.S
+#   15:  li   t2, 0x98                     # pmpcfg0 entry 0: L = 1, A = NAPOT (11), R/W/X = 0
+# cfg0=98 is exactly what that program writes (L=1, A=NAPOT, no R/W/X), so the read is the post-write state.
+# Two more caveats the samplers respect, both from the plan and the TB:
+#   - a CSR write reaches RVFI two cycles after its commit edge (gen_tb_pkg.sv:240), which is why the table is read
+#     per RECORD and never per cycle here;
+#   - rvfi_mem_rmask is not gated by a load in this RTL (gen_rvfi_pkg.sv:550), which is why nothing in these four
+#     groups infers an access type from a mask: class and op come from the decoded instruction.
+#
+# ================ THE RENDER ================
+# $ python3 dv/auto_dv/tb/gen_fcov_codegen.py   [in a root carrying the plan overlay]
+#   gen_fcov_codegen: rendered dv/auto_dv/env/gen_fcov_groups.svh (29 covergroups, 1065 coverpoint bins, 3390 cross bins)
+# $ the overlay command above, counted: tag lines removed, token fixed, and the token's occurrences
+#   tag lines removed 41   token fixed 1   occurrences of the token in the committed plan 1
+#   cmp of that output against the plan my render was built from: identical
+# $ command grep -oE 'covergroup gen_pmp[a-z0-9_]*' dv/auto_dv/env/gen_fcov_groups.svh | sort -u
+#   covergroup gen_pmp_addr_write_cg
+#   covergroup gen_pmp_cfg_write_cg
+#   covergroup gen_pmp_csr_access_cg
+#   covergroup gen_pmp_table_state_cg
+# THE OVERLAY, and this is why the three parts of the group must land in ONE commit: the render matches the plan
+# after the DV Lead's edit, so gen_fcov_codegen --check reads STALE against a tree that has my include without that
+# plan. THE OVERLAY IS ONE COMMAND OVER THE COMMITTED PLAN, so the render reproduces without any scratchpad:
+#
+#   awk 'BEGIN{split("CG-PMP-001 CG-PMP-002 CG-PMP-004 CG-PMP-014",a," ");for(i in a)f[a[i]]=1}
+#        /^### CG-[A-Z]+-[0-9]+:/{split($2,b,":");cur=b[1]}
+#        {if(cur in f)gsub(/ \[covergroup not built, not in manifest\]/,"");
+#         gsub(/written verbatim}/,"written: stored verbatim}");print}' dv/auto_dv/docs/gen_fcov_plan.md
+#
+# It drops the tag inside the four groups only and names the one tuple part of CG-PMP-001 cr_rw01_mml, where the
+# part read "written verbatim" while the coverpoint's bin is "written"; the prose survives after the colon.
+#
+# ================ THE CODEGEN FIX AND ITS UNIT TEST, BOTH DIRECTIONS MEASURED ================
+# The parser split a bin's braces on commas BEFORE stripping the prose after a colon, so a description containing a
+# comma broke the tuple's arity and the bin silently lost its explicit tuple. That is what hid CG-PMP-001's
+# rw01_mml0_wdrop, whose tuple ends "w_dropped: W cleared, X and L kept".
+# $ python3 dv/auto_dv/tb/unit/gen_ut_fcov_codegen.py   [on the FIXED codegen, in the landing's root]
+#   GEN_UT_FCOV_CODEGEN PASS (0 failures)
+#   ut rc=0
+# $ the same unit test against an archive of HEAD, whose codegen is the committed one
+#   FAIL a cross tuple whose prose after the colon contains a comma still parses (gen_fcov_codegen:
+#     CG-CSR-002.cr_csr_op.zzpair: does not split into bins of ['cp_csr', 'cp_op']
+#   GEN_UT_FCOV_CODEGEN FAIL (1 failures)
+#
+# ================ THE COMPILE AND ITS TWO IDENTITIES, WHICH ARE DIFFERENT KEYS ================
+# $ command grep -h 'sources sha256' <the landing root>/outF/config_opts.txt   [the LOCAL runner's find-digest]
+#   sources sha256 (dv/auto_dv env, tb, isa, gen_tb): 209a5ce1a9452030
+# $ python3 dv/auto_dv/tools/gen_build_identity.py --root <the landing root>   [the COMMITTER GATE's key]
+#   build identity   596b04c95332e2aa   (filelist_digest over gen_rtl.f + gen_tb.f, 117 sources)
+# The two are different keys over different sets and are never compared. The gate identity MOVES with this landing,
+# because gen_fcov_pkg.sv and gen_fcov_groups.svh are in gen_tb.f: round 2's canary rebuilds.
+#
+# ================ THE SMOKE: every group sampled, every group has coverage ================
+# $ gen_tb_local.sh run ... gen_ut_lockstep on a locally built gen_pmp_deny_directed program, seed 1
+#   verdict: PASS
+#   pmp samples: cfg_write=4 addr_write=1 csr_access=2 table_state=2 (dropped without a retire 0)
+#   GEN_FCOV_REF errors: 0
+# The referee is the house rule of this package: a group the sampler fed must show coverage, so zero referee errors
+# means none of the four sampled into thin air. cfg_write=4 is the four entry bytes of the one pmpcfg word write,
+# addr_write=1 the one pmpaddr write, csr_access=2 both CSR instructions, table_state=2 both snapshots, and none
+# was dropped for want of a retire.
+#
+# ================ BINS THAT CANNOT BE HIT TODAY, WITH THE REASON ================
+# NONE of the four groups has a bin that is unreachable at this configuration: PMPEnable is 1, PMPNumRegions 16 and
+# PMPGranularity 0, so every entry index and every A mode is live, and the mseccfg bits exist because the PMP CSR
+# block is gated on PMPEnable (rtl/ibex_cs_registers.sv:1362).
+# What no stimulus reaches TODAY, which is a stimulus statement and not a prune:
+#   - CG-PMP-014 cp_regime's sparse, dense and mml_on bins: knob_pmp_regime is declared (gen_tb_pkg.sv:93) with
+#     values off, sparse, dense and mml_on, but there is no program-side implementation of the regime, so only the
+#     off bin is reachable. That one stands on its own evidence.
+#   - CG-PMP-001 cp_mml.mml1 and cp_rlb.rlb1 are NOT in that class, and an earlier draft of this log said they were,
+#     on the false premise that no program writes mseccfg. THE PREMISE IS WRONG and the Test Writer measured it:
+#     gen_pmp_lock_prog.py:313-320 is a whole RLB phase for TP-PMP-021 and :790 sets MML in the tail;
+#     gen_pmp_csr_warl_prog.py:939 does a csrrs of RLB for TP-PMP-007 and :960 builds an MML operand;
+#     gen_pmp_mseccfg_prog.py:836 sets MML for TP-PMP-022. What is TRUE is narrower: both coverpoints sample the
+#     bit AT a pmpcfg or pmpaddr WRITE, so hitting mml1 or rlb1 needs a qualifying write while the bit is set, and
+#     whether an entry's seeds produce one is decided by the 40-seed measurement rather than by this log. The
+#     error was mine: I inferred the premise from the mml_on regime being unimplemented and grepped the directed
+#     programs under dv/auto_dv/stim rather than the Test Writer's under dv/auto_dv/tests/gen_programs.
+#   - CG-PMP-004 cp_priv.u and cp_dbg.d1 need a PMP CSR access from U mode and from debug mode respectively; the
+#     Test Writer's PMP programs handle MPP and U mode, so the first is reachable with their entries, and the
+#     second needs a debug-mode CSR access that no current program makes.
+#
+# ================ WHAT P-07 NEEDS BEFORE THE TESTLIST FLIP CAN RUN ================
+# A measured entry must carry a manifest, and a manifest may not name a bin of a covergroup that does not exist.
+# With this landing the four covergroups exist, so the three PMP entries can go measured true once each carries a
+# manifest naming only bins its own stimulus hits per run: gen_test_pmp_csr_warl.fcov.yaml (its programs write
+# pmpcfg and pmpaddr, so the cfg_write, addr_write and csr_access bins its run reaches), gen_test_pmp_lock.fcov.yaml
+# and gen_test_pmp_mseccfg.fcov.yaml. None of the three may declare a cp_regime bin other than off, which no
+# stimulus reaches; an mml1 or rlb1 bin may be declared only where the 40-seed measurement shows that entry's own
+# runs hit it, because a declared bin no run hits fails P-07 at every seed.
+# END. Every figure above is produced by the command printed above its block.

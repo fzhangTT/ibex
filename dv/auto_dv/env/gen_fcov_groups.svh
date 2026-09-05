@@ -4655,3 +4655,517 @@
       bins single_rare= binsof(cp_bits.single) && binsof(cp_knob.rare);
     }
   endgroup
+
+  // CG-PMP-001 (gen_pmp_cfg_write_cg), 54 coverpoint bins, 100 cross bins
+  localparam int GEN_FC_PMP_CFG_WRITE_CP_ENTRY_E0 = 0;
+  localparam int GEN_FC_PMP_CFG_WRITE_CP_ENTRY_E1 = 1;
+  localparam int GEN_FC_PMP_CFG_WRITE_CP_ENTRY_E2 = 2;
+  localparam int GEN_FC_PMP_CFG_WRITE_CP_ENTRY_E3 = 3;
+  localparam int GEN_FC_PMP_CFG_WRITE_CP_ENTRY_E4 = 4;
+  localparam int GEN_FC_PMP_CFG_WRITE_CP_ENTRY_E5 = 5;
+  localparam int GEN_FC_PMP_CFG_WRITE_CP_ENTRY_E6 = 6;
+  localparam int GEN_FC_PMP_CFG_WRITE_CP_ENTRY_E7 = 7;
+  localparam int GEN_FC_PMP_CFG_WRITE_CP_ENTRY_E8 = 8;
+  localparam int GEN_FC_PMP_CFG_WRITE_CP_ENTRY_E9 = 9;
+  localparam int GEN_FC_PMP_CFG_WRITE_CP_ENTRY_E10 = 10;
+  localparam int GEN_FC_PMP_CFG_WRITE_CP_ENTRY_E11 = 11;
+  localparam int GEN_FC_PMP_CFG_WRITE_CP_ENTRY_E12 = 12;
+  localparam int GEN_FC_PMP_CFG_WRITE_CP_ENTRY_E13 = 13;
+  localparam int GEN_FC_PMP_CFG_WRITE_CP_ENTRY_E14 = 14;
+  localparam int GEN_FC_PMP_CFG_WRITE_CP_ENTRY_E15 = 15;
+  localparam int GEN_FC_PMP_CFG_WRITE_CP_OP_CSRRW = 0;
+  localparam int GEN_FC_PMP_CFG_WRITE_CP_OP_CSRRS = 1;
+  localparam int GEN_FC_PMP_CFG_WRITE_CP_OP_CSRRC = 2;
+  localparam int GEN_FC_PMP_CFG_WRITE_CP_WR_MODE_OFF = 0;
+  localparam int GEN_FC_PMP_CFG_WRITE_CP_WR_MODE_TOR = 1;
+  localparam int GEN_FC_PMP_CFG_WRITE_CP_WR_MODE_NA4 = 2;
+  localparam int GEN_FC_PMP_CFG_WRITE_CP_WR_MODE_NAPOT = 3;
+  localparam int GEN_FC_PMP_CFG_WRITE_CP_WR_LRWX_C0000 = 0;
+  localparam int GEN_FC_PMP_CFG_WRITE_CP_WR_LRWX_C0001 = 1;
+  localparam int GEN_FC_PMP_CFG_WRITE_CP_WR_LRWX_C0010 = 2;
+  localparam int GEN_FC_PMP_CFG_WRITE_CP_WR_LRWX_C0011 = 3;
+  localparam int GEN_FC_PMP_CFG_WRITE_CP_WR_LRWX_C0100 = 4;
+  localparam int GEN_FC_PMP_CFG_WRITE_CP_WR_LRWX_C0101 = 5;
+  localparam int GEN_FC_PMP_CFG_WRITE_CP_WR_LRWX_C0110 = 6;
+  localparam int GEN_FC_PMP_CFG_WRITE_CP_WR_LRWX_C0111 = 7;
+  localparam int GEN_FC_PMP_CFG_WRITE_CP_WR_LRWX_C1000 = 8;
+  localparam int GEN_FC_PMP_CFG_WRITE_CP_WR_LRWX_C1001 = 9;
+  localparam int GEN_FC_PMP_CFG_WRITE_CP_WR_LRWX_C1010 = 10;
+  localparam int GEN_FC_PMP_CFG_WRITE_CP_WR_LRWX_C1011 = 11;
+  localparam int GEN_FC_PMP_CFG_WRITE_CP_WR_LRWX_C1100 = 12;
+  localparam int GEN_FC_PMP_CFG_WRITE_CP_WR_LRWX_C1101 = 13;
+  localparam int GEN_FC_PMP_CFG_WRITE_CP_WR_LRWX_C1110 = 14;
+  localparam int GEN_FC_PMP_CFG_WRITE_CP_WR_LRWX_C1111 = 15;
+  localparam int GEN_FC_PMP_CFG_WRITE_CP_RES_BITS_ZERO = 0;
+  localparam int GEN_FC_PMP_CFG_WRITE_CP_RES_BITS_NONZERO = 1;
+  localparam int GEN_FC_PMP_CFG_WRITE_CP_MML_MML0 = 0;
+  localparam int GEN_FC_PMP_CFG_WRITE_CP_MML_MML1 = 1;
+  localparam int GEN_FC_PMP_CFG_WRITE_CP_RLB_RLB0 = 0;
+  localparam int GEN_FC_PMP_CFG_WRITE_CP_RLB_RLB1 = 1;
+  localparam int GEN_FC_PMP_CFG_WRITE_CP_PRELOCK_UNLOCKED = 0;
+  localparam int GEN_FC_PMP_CFG_WRITE_CP_PRELOCK_LOCKED = 1;
+  localparam int GEN_FC_PMP_CFG_WRITE_CP_OUTCOME_WRITTEN = 0;
+  localparam int GEN_FC_PMP_CFG_WRITE_CP_OUTCOME_W_DROPPED = 1;
+  localparam int GEN_FC_PMP_CFG_WRITE_CP_OUTCOME_IGNORED_LOCK = 2;
+  localparam int GEN_FC_PMP_CFG_WRITE_CP_OUTCOME_IGNORED_MML_EXEC = 3;
+  localparam int GEN_FC_PMP_CFG_WRITE_CP_WORD_LOCKMIX_NONE = 0;
+  localparam int GEN_FC_PMP_CFG_WRITE_CP_WORD_LOCKMIX_SOME = 1;
+  localparam int GEN_FC_PMP_CFG_WRITE_CP_WORD_LOCKMIX_ALL = 2;
+  covergroup gen_pmp_cfg_write_cg with function sample(int v_cp_entry, int v_cp_op, int v_cp_wr_mode, int v_cp_wr_lrwx, int v_cp_res_bits, int v_cp_mml, int v_cp_rlb, int v_cp_prelock, int v_cp_outcome, int v_cp_word_lockmix);
+    option.per_instance = 0;
+    option.cross_auto_bin_max = 0;   // a cross has exactly the CSV's named bins: no automatic bins for the plan's ignored tuples
+    cp_entry: coverpoint v_cp_entry { bins e0= {0}; bins e1= {1}; bins e2= {2}; bins e3= {3}; bins e4= {4}; bins e5= {5}; bins e6= {6}; bins e7= {7}; bins e8= {8}; bins e9= {9}; bins e10= {10}; bins e11= {11}; bins e12= {12}; bins e13= {13}; bins e14= {14}; bins e15= {15}; ignore_bins na = {-1}; }
+    cp_op: coverpoint v_cp_op { bins csrrw= {0}; bins csrrs= {1}; bins csrrc= {2}; ignore_bins na = {-1}; }
+    cp_wr_mode: coverpoint v_cp_wr_mode { bins off= {0}; bins tor= {1}; bins na4= {2}; bins napot= {3}; ignore_bins na = {-1}; }
+    cp_wr_lrwx: coverpoint v_cp_wr_lrwx { bins c0000= {0}; bins c0001= {1}; bins c0010= {2}; bins c0011= {3}; bins c0100= {4}; bins c0101= {5}; bins c0110= {6}; bins c0111= {7}; bins c1000= {8}; bins c1001= {9}; bins c1010= {10}; bins c1011= {11}; bins c1100= {12}; bins c1101= {13}; bins c1110= {14}; bins c1111= {15}; ignore_bins na = {-1}; }
+    cp_res_bits: coverpoint v_cp_res_bits { bins zero= {0}; bins nonzero= {1}; ignore_bins na = {-1}; }
+    cp_mml: coverpoint v_cp_mml { bins mml0= {0}; bins mml1= {1}; ignore_bins na = {-1}; }
+    cp_rlb: coverpoint v_cp_rlb { bins rlb0= {0}; bins rlb1= {1}; ignore_bins na = {-1}; }
+    cp_prelock: coverpoint v_cp_prelock { bins unlocked= {0}; bins locked= {1}; ignore_bins na = {-1}; }
+    cp_outcome: coverpoint v_cp_outcome { bins written= {0}; bins w_dropped= {1}; bins ignored_lock= {2}; bins ignored_mml_exec= {3}; ignore_bins na = {-1}; }
+    cp_word_lockmix: coverpoint v_cp_word_lockmix { bins none= {0}; bins some= {1}; bins all= {2}; ignore_bins na = {-1}; }
+    cr_mode_lrwx: cross cp_wr_mode, cp_wr_lrwx {
+      bins na4_c0000= binsof(cp_wr_mode.na4) && binsof(cp_wr_lrwx.c0000);
+      bins na4_c0001= binsof(cp_wr_mode.na4) && binsof(cp_wr_lrwx.c0001);
+      bins na4_c0010= binsof(cp_wr_mode.na4) && binsof(cp_wr_lrwx.c0010);
+      bins na4_c0011= binsof(cp_wr_mode.na4) && binsof(cp_wr_lrwx.c0011);
+      bins na4_c0100= binsof(cp_wr_mode.na4) && binsof(cp_wr_lrwx.c0100);
+      bins na4_c0101= binsof(cp_wr_mode.na4) && binsof(cp_wr_lrwx.c0101);
+      bins na4_c0110= binsof(cp_wr_mode.na4) && binsof(cp_wr_lrwx.c0110);
+      bins na4_c0111= binsof(cp_wr_mode.na4) && binsof(cp_wr_lrwx.c0111);
+      bins na4_c1000= binsof(cp_wr_mode.na4) && binsof(cp_wr_lrwx.c1000);
+      bins na4_c1001= binsof(cp_wr_mode.na4) && binsof(cp_wr_lrwx.c1001);
+      bins na4_c1010= binsof(cp_wr_mode.na4) && binsof(cp_wr_lrwx.c1010);
+      bins na4_c1011= binsof(cp_wr_mode.na4) && binsof(cp_wr_lrwx.c1011);
+      bins na4_c1100= binsof(cp_wr_mode.na4) && binsof(cp_wr_lrwx.c1100);
+      bins na4_c1101= binsof(cp_wr_mode.na4) && binsof(cp_wr_lrwx.c1101);
+      bins na4_c1110= binsof(cp_wr_mode.na4) && binsof(cp_wr_lrwx.c1110);
+      bins na4_c1111= binsof(cp_wr_mode.na4) && binsof(cp_wr_lrwx.c1111);
+      bins napot_c0000= binsof(cp_wr_mode.napot) && binsof(cp_wr_lrwx.c0000);
+      bins napot_c0001= binsof(cp_wr_mode.napot) && binsof(cp_wr_lrwx.c0001);
+      bins napot_c0010= binsof(cp_wr_mode.napot) && binsof(cp_wr_lrwx.c0010);
+      bins napot_c0011= binsof(cp_wr_mode.napot) && binsof(cp_wr_lrwx.c0011);
+      bins napot_c0100= binsof(cp_wr_mode.napot) && binsof(cp_wr_lrwx.c0100);
+      bins napot_c0101= binsof(cp_wr_mode.napot) && binsof(cp_wr_lrwx.c0101);
+      bins napot_c0110= binsof(cp_wr_mode.napot) && binsof(cp_wr_lrwx.c0110);
+      bins napot_c0111= binsof(cp_wr_mode.napot) && binsof(cp_wr_lrwx.c0111);
+      bins napot_c1000= binsof(cp_wr_mode.napot) && binsof(cp_wr_lrwx.c1000);
+      bins napot_c1001= binsof(cp_wr_mode.napot) && binsof(cp_wr_lrwx.c1001);
+      bins napot_c1010= binsof(cp_wr_mode.napot) && binsof(cp_wr_lrwx.c1010);
+      bins napot_c1011= binsof(cp_wr_mode.napot) && binsof(cp_wr_lrwx.c1011);
+      bins napot_c1100= binsof(cp_wr_mode.napot) && binsof(cp_wr_lrwx.c1100);
+      bins napot_c1101= binsof(cp_wr_mode.napot) && binsof(cp_wr_lrwx.c1101);
+      bins napot_c1110= binsof(cp_wr_mode.napot) && binsof(cp_wr_lrwx.c1110);
+      bins napot_c1111= binsof(cp_wr_mode.napot) && binsof(cp_wr_lrwx.c1111);
+      bins off_c0000= binsof(cp_wr_mode.off) && binsof(cp_wr_lrwx.c0000);
+      bins off_c0001= binsof(cp_wr_mode.off) && binsof(cp_wr_lrwx.c0001);
+      bins off_c0010= binsof(cp_wr_mode.off) && binsof(cp_wr_lrwx.c0010);
+      bins off_c0011= binsof(cp_wr_mode.off) && binsof(cp_wr_lrwx.c0011);
+      bins off_c0100= binsof(cp_wr_mode.off) && binsof(cp_wr_lrwx.c0100);
+      bins off_c0101= binsof(cp_wr_mode.off) && binsof(cp_wr_lrwx.c0101);
+      bins off_c0110= binsof(cp_wr_mode.off) && binsof(cp_wr_lrwx.c0110);
+      bins off_c0111= binsof(cp_wr_mode.off) && binsof(cp_wr_lrwx.c0111);
+      bins off_c1000= binsof(cp_wr_mode.off) && binsof(cp_wr_lrwx.c1000);
+      bins off_c1001= binsof(cp_wr_mode.off) && binsof(cp_wr_lrwx.c1001);
+      bins off_c1010= binsof(cp_wr_mode.off) && binsof(cp_wr_lrwx.c1010);
+      bins off_c1011= binsof(cp_wr_mode.off) && binsof(cp_wr_lrwx.c1011);
+      bins off_c1100= binsof(cp_wr_mode.off) && binsof(cp_wr_lrwx.c1100);
+      bins off_c1101= binsof(cp_wr_mode.off) && binsof(cp_wr_lrwx.c1101);
+      bins off_c1110= binsof(cp_wr_mode.off) && binsof(cp_wr_lrwx.c1110);
+      bins off_c1111= binsof(cp_wr_mode.off) && binsof(cp_wr_lrwx.c1111);
+      bins tor_c0000= binsof(cp_wr_mode.tor) && binsof(cp_wr_lrwx.c0000);
+      bins tor_c0001= binsof(cp_wr_mode.tor) && binsof(cp_wr_lrwx.c0001);
+      bins tor_c0010= binsof(cp_wr_mode.tor) && binsof(cp_wr_lrwx.c0010);
+      bins tor_c0011= binsof(cp_wr_mode.tor) && binsof(cp_wr_lrwx.c0011);
+      bins tor_c0100= binsof(cp_wr_mode.tor) && binsof(cp_wr_lrwx.c0100);
+      bins tor_c0101= binsof(cp_wr_mode.tor) && binsof(cp_wr_lrwx.c0101);
+      bins tor_c0110= binsof(cp_wr_mode.tor) && binsof(cp_wr_lrwx.c0110);
+      bins tor_c0111= binsof(cp_wr_mode.tor) && binsof(cp_wr_lrwx.c0111);
+      bins tor_c1000= binsof(cp_wr_mode.tor) && binsof(cp_wr_lrwx.c1000);
+      bins tor_c1001= binsof(cp_wr_mode.tor) && binsof(cp_wr_lrwx.c1001);
+      bins tor_c1010= binsof(cp_wr_mode.tor) && binsof(cp_wr_lrwx.c1010);
+      bins tor_c1011= binsof(cp_wr_mode.tor) && binsof(cp_wr_lrwx.c1011);
+      bins tor_c1100= binsof(cp_wr_mode.tor) && binsof(cp_wr_lrwx.c1100);
+      bins tor_c1101= binsof(cp_wr_mode.tor) && binsof(cp_wr_lrwx.c1101);
+      bins tor_c1110= binsof(cp_wr_mode.tor) && binsof(cp_wr_lrwx.c1110);
+      bins tor_c1111= binsof(cp_wr_mode.tor) && binsof(cp_wr_lrwx.c1111);
+    }
+    cr_res_op: cross cp_res_bits, cp_op {
+      bins nonzero_csrrc= binsof(cp_res_bits.nonzero) && binsof(cp_op.csrrc);
+      bins nonzero_csrrs= binsof(cp_res_bits.nonzero) && binsof(cp_op.csrrs);
+      bins nonzero_csrrw= binsof(cp_res_bits.nonzero) && binsof(cp_op.csrrw);
+    }
+    cr_rw01_mml: cross cp_wr_lrwx, cp_mml, cp_rlb, cp_outcome {
+      bins rw01_mml0_wdrop= (binsof(cp_wr_lrwx.c0010) || binsof(cp_wr_lrwx.c0011) || binsof(cp_wr_lrwx.c1010) || binsof(cp_wr_lrwx.c1011)) && binsof(cp_mml.mml0) && binsof(cp_outcome.w_dropped);
+      bins rw01_mml1_l1_rlb1_stored= (binsof(cp_wr_lrwx.c1010) || binsof(cp_wr_lrwx.c1011)) && binsof(cp_mml.mml1) && binsof(cp_rlb.rlb1) && binsof(cp_outcome.written);
+      bins rw01_mml1_stored= (binsof(cp_wr_lrwx.c0010) || binsof(cp_wr_lrwx.c0011)) && binsof(cp_mml.mml1) && binsof(cp_outcome.written);
+      bins rw01_mml1_l1_rlb0_suppressed= (binsof(cp_wr_lrwx.c1010) || binsof(cp_wr_lrwx.c1011)) && binsof(cp_mml.mml1) && binsof(cp_rlb.rlb0) && binsof(cp_outcome.ignored_mml_exec);
+    }
+    cr_lock_outcome: cross cp_prelock, cp_rlb, cp_outcome {
+      bins locked_rlb0_ignored= binsof(cp_prelock.locked) && binsof(cp_rlb.rlb0) && binsof(cp_outcome.ignored_lock);
+      bins unlocked_rlb0_written= binsof(cp_prelock.unlocked) && binsof(cp_rlb.rlb0) && binsof(cp_outcome.written);
+      bins locked_rlb1_written= binsof(cp_prelock.locked) && binsof(cp_rlb.rlb1) && binsof(cp_outcome.written);
+      bins unlocked_rlb1_written= binsof(cp_prelock.unlocked) && binsof(cp_rlb.rlb1) && binsof(cp_outcome.written);
+    }
+    cr_lockmix_op: cross cp_word_lockmix, cp_op {
+      bins some_csrrc= binsof(cp_word_lockmix.some) && binsof(cp_op.csrrc);
+      bins some_csrrs= binsof(cp_word_lockmix.some) && binsof(cp_op.csrrs);
+      bins some_csrrw= binsof(cp_word_lockmix.some) && binsof(cp_op.csrrw);
+    }
+    cr_prelock_wrl: cross cp_prelock, cp_wr_lrwx, cp_outcome, cp_mml {
+      bins setlock_c1000= binsof(cp_prelock.unlocked) && binsof(cp_wr_lrwx.c1000) && binsof(cp_outcome.written) && binsof(cp_mml.mml0);
+      bins setlock_c1001= binsof(cp_prelock.unlocked) && binsof(cp_wr_lrwx.c1001) && binsof(cp_outcome.written) && binsof(cp_mml.mml0);
+      bins setlock_c1100= binsof(cp_prelock.unlocked) && binsof(cp_wr_lrwx.c1100) && binsof(cp_outcome.written) && binsof(cp_mml.mml0);
+      bins setlock_c1101= binsof(cp_prelock.unlocked) && binsof(cp_wr_lrwx.c1101) && binsof(cp_outcome.written) && binsof(cp_mml.mml0);
+      bins setlock_c1110= binsof(cp_prelock.unlocked) && binsof(cp_wr_lrwx.c1110) && binsof(cp_outcome.written) && binsof(cp_mml.mml0);
+      bins setlock_c1111= binsof(cp_prelock.unlocked) && binsof(cp_wr_lrwx.c1111) && binsof(cp_outcome.written) && binsof(cp_mml.mml0);
+    }
+    cr_mml_exec_suppress: cross cp_mml, cp_rlb, cp_wr_lrwx, cp_outcome {
+      bins rlb0_c1001_suppressed= binsof(cp_mml.mml1) && binsof(cp_rlb.rlb0) && binsof(cp_wr_lrwx.c1001) && binsof(cp_outcome.ignored_mml_exec);
+      bins rlb0_c1010_suppressed= binsof(cp_mml.mml1) && binsof(cp_rlb.rlb0) && binsof(cp_wr_lrwx.c1010) && binsof(cp_outcome.ignored_mml_exec);
+      bins rlb0_c1011_suppressed= binsof(cp_mml.mml1) && binsof(cp_rlb.rlb0) && binsof(cp_wr_lrwx.c1011) && binsof(cp_outcome.ignored_mml_exec);
+      bins rlb0_c1101_suppressed= binsof(cp_mml.mml1) && binsof(cp_rlb.rlb0) && binsof(cp_wr_lrwx.c1101) && binsof(cp_outcome.ignored_mml_exec);
+      bins rlb1_c1001_written= binsof(cp_mml.mml1) && binsof(cp_rlb.rlb1) && binsof(cp_wr_lrwx.c1001) && binsof(cp_outcome.written);
+      bins rlb1_c1010_written= binsof(cp_mml.mml1) && binsof(cp_rlb.rlb1) && binsof(cp_wr_lrwx.c1010) && binsof(cp_outcome.written);
+      bins rlb1_c1011_written= binsof(cp_mml.mml1) && binsof(cp_rlb.rlb1) && binsof(cp_wr_lrwx.c1011) && binsof(cp_outcome.written);
+      bins rlb1_c1101_written= binsof(cp_mml.mml1) && binsof(cp_rlb.rlb1) && binsof(cp_wr_lrwx.c1101) && binsof(cp_outcome.written);
+    }
+    cr_suppress_mode: cross cp_outcome, cp_wr_mode {
+      bins na4= binsof(cp_outcome.ignored_mml_exec) && binsof(cp_wr_mode.na4);
+      bins napot= binsof(cp_outcome.ignored_mml_exec) && binsof(cp_wr_mode.napot);
+      bins tor= binsof(cp_outcome.ignored_mml_exec) && binsof(cp_wr_mode.tor);
+      bins off= binsof(cp_outcome.ignored_mml_exec) && binsof(cp_wr_mode.off);
+    }
+    cr_mml_nonexec_accept: cross cp_mml, cp_rlb, cp_wr_lrwx, cp_outcome {
+      bins c1000_written= binsof(cp_mml.mml1) && binsof(cp_rlb.rlb0) && binsof(cp_wr_lrwx.c1000) && binsof(cp_outcome.written);
+      bins c1100_written= binsof(cp_mml.mml1) && binsof(cp_rlb.rlb0) && binsof(cp_wr_lrwx.c1100) && binsof(cp_outcome.written);
+      bins c1110_written= binsof(cp_mml.mml1) && binsof(cp_rlb.rlb0) && binsof(cp_wr_lrwx.c1110) && binsof(cp_outcome.written);
+      bins c1111_written= binsof(cp_mml.mml1) && binsof(cp_rlb.rlb0) && binsof(cp_wr_lrwx.c1111) && binsof(cp_outcome.written);
+    }
+  endgroup
+
+  // CG-PMP-002 (gen_pmp_addr_write_cg), 39 coverpoint bins, 70 cross bins
+  localparam int GEN_FC_PMP_ADDR_WRITE_CP_IDX_A0 = 0;
+  localparam int GEN_FC_PMP_ADDR_WRITE_CP_IDX_A1 = 1;
+  localparam int GEN_FC_PMP_ADDR_WRITE_CP_IDX_A2 = 2;
+  localparam int GEN_FC_PMP_ADDR_WRITE_CP_IDX_A3 = 3;
+  localparam int GEN_FC_PMP_ADDR_WRITE_CP_IDX_A4 = 4;
+  localparam int GEN_FC_PMP_ADDR_WRITE_CP_IDX_A5 = 5;
+  localparam int GEN_FC_PMP_ADDR_WRITE_CP_IDX_A6 = 6;
+  localparam int GEN_FC_PMP_ADDR_WRITE_CP_IDX_A7 = 7;
+  localparam int GEN_FC_PMP_ADDR_WRITE_CP_IDX_A8 = 8;
+  localparam int GEN_FC_PMP_ADDR_WRITE_CP_IDX_A9 = 9;
+  localparam int GEN_FC_PMP_ADDR_WRITE_CP_IDX_A10 = 10;
+  localparam int GEN_FC_PMP_ADDR_WRITE_CP_IDX_A11 = 11;
+  localparam int GEN_FC_PMP_ADDR_WRITE_CP_IDX_A12 = 12;
+  localparam int GEN_FC_PMP_ADDR_WRITE_CP_IDX_A13 = 13;
+  localparam int GEN_FC_PMP_ADDR_WRITE_CP_IDX_A14 = 14;
+  localparam int GEN_FC_PMP_ADDR_WRITE_CP_IDX_A15 = 15;
+  localparam int GEN_FC_PMP_ADDR_WRITE_CP_OP_CSRRW = 0;
+  localparam int GEN_FC_PMP_ADDR_WRITE_CP_OP_CSRRS = 1;
+  localparam int GEN_FC_PMP_ADDR_WRITE_CP_OP_CSRRC = 2;
+  localparam int GEN_FC_PMP_ADDR_WRITE_CP_SELF_LOCK_UNLOCKED = 0;
+  localparam int GEN_FC_PMP_ADDR_WRITE_CP_SELF_LOCK_LOCKED = 1;
+  localparam int GEN_FC_PMP_ADDR_WRITE_CP_NEXT_CFG_NEXT_UNLOCKED_TOR = 0;
+  localparam int GEN_FC_PMP_ADDR_WRITE_CP_NEXT_CFG_NEXT_UNLOCKED_OTHER = 1;
+  localparam int GEN_FC_PMP_ADDR_WRITE_CP_NEXT_CFG_NEXT_LOCKED_TOR = 2;
+  localparam int GEN_FC_PMP_ADDR_WRITE_CP_NEXT_CFG_NEXT_LOCKED_OTHER = 3;
+  localparam int GEN_FC_PMP_ADDR_WRITE_CP_NEXT_CFG_TOP = 4;
+  localparam int GEN_FC_PMP_ADDR_WRITE_CP_RLB_RLB0 = 0;
+  localparam int GEN_FC_PMP_ADDR_WRITE_CP_RLB_RLB1 = 1;
+  localparam int GEN_FC_PMP_ADDR_WRITE_CP_OUTCOME_WRITTEN = 0;
+  localparam int GEN_FC_PMP_ADDR_WRITE_CP_OUTCOME_IGNORED_SELF_LOCK = 1;
+  localparam int GEN_FC_PMP_ADDR_WRITE_CP_OUTCOME_IGNORED_TOR_LOCK = 2;
+  localparam int GEN_FC_PMP_ADDR_WRITE_CP_HI_BITS_NONE = 0;
+  localparam int GEN_FC_PMP_ADDR_WRITE_CP_HI_BITS_BIT30 = 1;
+  localparam int GEN_FC_PMP_ADDR_WRITE_CP_HI_BITS_BIT31 = 2;
+  localparam int GEN_FC_PMP_ADDR_WRITE_CP_HI_BITS_BOTH = 3;
+  localparam int GEN_FC_PMP_ADDR_WRITE_CP_SELF_MODE_OFF = 0;
+  localparam int GEN_FC_PMP_ADDR_WRITE_CP_SELF_MODE_TOR = 1;
+  localparam int GEN_FC_PMP_ADDR_WRITE_CP_SELF_MODE_NA4 = 2;
+  localparam int GEN_FC_PMP_ADDR_WRITE_CP_SELF_MODE_NAPOT = 3;
+  covergroup gen_pmp_addr_write_cg with function sample(int v_cp_idx, int v_cp_op, int v_cp_self_lock, int v_cp_next_cfg, int v_cp_rlb, int v_cp_outcome, int v_cp_hi_bits, int v_cp_self_mode);
+    option.per_instance = 0;
+    option.cross_auto_bin_max = 0;   // a cross has exactly the CSV's named bins: no automatic bins for the plan's ignored tuples
+    cp_idx: coverpoint v_cp_idx { bins a0= {0}; bins a1= {1}; bins a2= {2}; bins a3= {3}; bins a4= {4}; bins a5= {5}; bins a6= {6}; bins a7= {7}; bins a8= {8}; bins a9= {9}; bins a10= {10}; bins a11= {11}; bins a12= {12}; bins a13= {13}; bins a14= {14}; bins a15= {15}; ignore_bins na = {-1}; }
+    cp_op: coverpoint v_cp_op { bins csrrw= {0}; bins csrrs= {1}; bins csrrc= {2}; ignore_bins na = {-1}; }
+    cp_self_lock: coverpoint v_cp_self_lock { bins unlocked= {0}; bins locked= {1}; ignore_bins na = {-1}; }
+    cp_next_cfg: coverpoint v_cp_next_cfg { bins next_unlocked_tor= {0}; bins next_unlocked_other= {1}; bins next_locked_tor= {2}; bins next_locked_other= {3}; bins top= {4}; ignore_bins na = {-1}; }
+    cp_rlb: coverpoint v_cp_rlb { bins rlb0= {0}; bins rlb1= {1}; ignore_bins na = {-1}; }
+    cp_outcome: coverpoint v_cp_outcome { bins written= {0}; bins ignored_self_lock= {1}; bins ignored_tor_lock= {2}; ignore_bins na = {-1}; }
+    cp_hi_bits: coverpoint v_cp_hi_bits { bins none= {0}; bins bit30= {1}; bins bit31= {2}; bins both= {3}; ignore_bins na = {-1}; }
+    cp_self_mode: coverpoint v_cp_self_mode { bins off= {0}; bins tor= {1}; bins na4= {2}; bins napot= {3}; ignore_bins na = {-1}; }
+    cr_hi_mode: cross cp_hi_bits, cp_self_mode {
+      bins bit30_na4= binsof(cp_hi_bits.bit30) && binsof(cp_self_mode.na4);
+      bins bit30_napot= binsof(cp_hi_bits.bit30) && binsof(cp_self_mode.napot);
+      bins bit30_off= binsof(cp_hi_bits.bit30) && binsof(cp_self_mode.off);
+      bins bit30_tor= binsof(cp_hi_bits.bit30) && binsof(cp_self_mode.tor);
+      bins bit31_na4= binsof(cp_hi_bits.bit31) && binsof(cp_self_mode.na4);
+      bins bit31_napot= binsof(cp_hi_bits.bit31) && binsof(cp_self_mode.napot);
+      bins bit31_off= binsof(cp_hi_bits.bit31) && binsof(cp_self_mode.off);
+      bins bit31_tor= binsof(cp_hi_bits.bit31) && binsof(cp_self_mode.tor);
+      bins both_na4= binsof(cp_hi_bits.both) && binsof(cp_self_mode.na4);
+      bins both_napot= binsof(cp_hi_bits.both) && binsof(cp_self_mode.napot);
+      bins both_off= binsof(cp_hi_bits.both) && binsof(cp_self_mode.off);
+      bins both_tor= binsof(cp_hi_bits.both) && binsof(cp_self_mode.tor);
+    }
+    cr_self_lock: cross cp_self_lock, cp_rlb, cp_outcome {
+      bins unlocked_rlb0_written= binsof(cp_self_lock.unlocked) && binsof(cp_rlb.rlb0) && binsof(cp_outcome.written);
+      bins locked_rlb0_ignored= binsof(cp_self_lock.locked) && binsof(cp_rlb.rlb0) && binsof(cp_outcome.ignored_self_lock);
+      bins locked_rlb1_written= binsof(cp_self_lock.locked) && binsof(cp_rlb.rlb1) && binsof(cp_outcome.written);
+    }
+    cr_idx_op: cross cp_idx, cp_op {
+      bins a0_csrrc= binsof(cp_idx.a0) && binsof(cp_op.csrrc);
+      bins a0_csrrs= binsof(cp_idx.a0) && binsof(cp_op.csrrs);
+      bins a0_csrrw= binsof(cp_idx.a0) && binsof(cp_op.csrrw);
+      bins a10_csrrc= binsof(cp_idx.a10) && binsof(cp_op.csrrc);
+      bins a10_csrrs= binsof(cp_idx.a10) && binsof(cp_op.csrrs);
+      bins a10_csrrw= binsof(cp_idx.a10) && binsof(cp_op.csrrw);
+      bins a11_csrrc= binsof(cp_idx.a11) && binsof(cp_op.csrrc);
+      bins a11_csrrs= binsof(cp_idx.a11) && binsof(cp_op.csrrs);
+      bins a11_csrrw= binsof(cp_idx.a11) && binsof(cp_op.csrrw);
+      bins a12_csrrc= binsof(cp_idx.a12) && binsof(cp_op.csrrc);
+      bins a12_csrrs= binsof(cp_idx.a12) && binsof(cp_op.csrrs);
+      bins a12_csrrw= binsof(cp_idx.a12) && binsof(cp_op.csrrw);
+      bins a13_csrrc= binsof(cp_idx.a13) && binsof(cp_op.csrrc);
+      bins a13_csrrs= binsof(cp_idx.a13) && binsof(cp_op.csrrs);
+      bins a13_csrrw= binsof(cp_idx.a13) && binsof(cp_op.csrrw);
+      bins a14_csrrc= binsof(cp_idx.a14) && binsof(cp_op.csrrc);
+      bins a14_csrrs= binsof(cp_idx.a14) && binsof(cp_op.csrrs);
+      bins a14_csrrw= binsof(cp_idx.a14) && binsof(cp_op.csrrw);
+      bins a15_csrrc= binsof(cp_idx.a15) && binsof(cp_op.csrrc);
+      bins a15_csrrs= binsof(cp_idx.a15) && binsof(cp_op.csrrs);
+      bins a15_csrrw= binsof(cp_idx.a15) && binsof(cp_op.csrrw);
+      bins a1_csrrc= binsof(cp_idx.a1) && binsof(cp_op.csrrc);
+      bins a1_csrrs= binsof(cp_idx.a1) && binsof(cp_op.csrrs);
+      bins a1_csrrw= binsof(cp_idx.a1) && binsof(cp_op.csrrw);
+      bins a2_csrrc= binsof(cp_idx.a2) && binsof(cp_op.csrrc);
+      bins a2_csrrs= binsof(cp_idx.a2) && binsof(cp_op.csrrs);
+      bins a2_csrrw= binsof(cp_idx.a2) && binsof(cp_op.csrrw);
+      bins a3_csrrc= binsof(cp_idx.a3) && binsof(cp_op.csrrc);
+      bins a3_csrrs= binsof(cp_idx.a3) && binsof(cp_op.csrrs);
+      bins a3_csrrw= binsof(cp_idx.a3) && binsof(cp_op.csrrw);
+      bins a4_csrrc= binsof(cp_idx.a4) && binsof(cp_op.csrrc);
+      bins a4_csrrs= binsof(cp_idx.a4) && binsof(cp_op.csrrs);
+      bins a4_csrrw= binsof(cp_idx.a4) && binsof(cp_op.csrrw);
+      bins a5_csrrc= binsof(cp_idx.a5) && binsof(cp_op.csrrc);
+      bins a5_csrrs= binsof(cp_idx.a5) && binsof(cp_op.csrrs);
+      bins a5_csrrw= binsof(cp_idx.a5) && binsof(cp_op.csrrw);
+      bins a6_csrrc= binsof(cp_idx.a6) && binsof(cp_op.csrrc);
+      bins a6_csrrs= binsof(cp_idx.a6) && binsof(cp_op.csrrs);
+      bins a6_csrrw= binsof(cp_idx.a6) && binsof(cp_op.csrrw);
+      bins a7_csrrc= binsof(cp_idx.a7) && binsof(cp_op.csrrc);
+      bins a7_csrrs= binsof(cp_idx.a7) && binsof(cp_op.csrrs);
+      bins a7_csrrw= binsof(cp_idx.a7) && binsof(cp_op.csrrw);
+      bins a8_csrrc= binsof(cp_idx.a8) && binsof(cp_op.csrrc);
+      bins a8_csrrs= binsof(cp_idx.a8) && binsof(cp_op.csrrs);
+      bins a8_csrrw= binsof(cp_idx.a8) && binsof(cp_op.csrrw);
+      bins a9_csrrc= binsof(cp_idx.a9) && binsof(cp_op.csrrc);
+      bins a9_csrrs= binsof(cp_idx.a9) && binsof(cp_op.csrrs);
+      bins a9_csrrw= binsof(cp_idx.a9) && binsof(cp_op.csrrw);
+    }
+    cr_tor_lock: cross cp_self_lock, cp_next_cfg, cp_rlb, cp_outcome {
+      bins nl_tor_rlb0_ignored= binsof(cp_self_lock.unlocked) && binsof(cp_next_cfg.next_locked_tor) && binsof(cp_rlb.rlb0) && binsof(cp_outcome.ignored_tor_lock);
+      bins nl_other_rlb0_written= binsof(cp_self_lock.unlocked) && binsof(cp_next_cfg.next_locked_other) && binsof(cp_rlb.rlb0) && binsof(cp_outcome.written);
+      bins nu_tor_rlb0_written= binsof(cp_self_lock.unlocked) && binsof(cp_next_cfg.next_unlocked_tor) && binsof(cp_rlb.rlb0) && binsof(cp_outcome.written);
+      bins top_rlb0_written= binsof(cp_self_lock.unlocked) && binsof(cp_next_cfg.top) && binsof(cp_rlb.rlb0) && binsof(cp_outcome.written);
+      bins nl_tor_rlb1_written= binsof(cp_self_lock.unlocked) && binsof(cp_next_cfg.next_locked_tor) && binsof(cp_rlb.rlb1) && binsof(cp_outcome.written);
+    }
+    cr_top_lock: cross cp_idx, cp_self_lock, cp_outcome {
+      bins top_locked_ignored= binsof(cp_idx.a15) && binsof(cp_self_lock.locked) && binsof(cp_outcome.ignored_self_lock);
+      bins top_unlocked_written= binsof(cp_idx.a15) && binsof(cp_self_lock.unlocked) && binsof(cp_outcome.written);
+    }
+  endgroup
+
+  // CG-PMP-004 (gen_pmp_csr_access_cg), 20 coverpoint bins, 46 cross bins
+  localparam int GEN_FC_PMP_CSR_ACCESS_CP_CLASS_PMPCFG = 0;
+  localparam int GEN_FC_PMP_CSR_ACCESS_CP_CLASS_PMPADDR = 1;
+  localparam int GEN_FC_PMP_CSR_ACCESS_CP_CLASS_MSECCFG = 2;
+  localparam int GEN_FC_PMP_CSR_ACCESS_CP_CLASS_MSECCFGH = 3;
+  localparam int GEN_FC_PMP_CSR_ACCESS_CP_PRIV_M = 0;
+  localparam int GEN_FC_PMP_CSR_ACCESS_CP_PRIV_U = 1;
+  localparam int GEN_FC_PMP_CSR_ACCESS_CP_DBG_D0 = 0;
+  localparam int GEN_FC_PMP_CSR_ACCESS_CP_DBG_D1 = 1;
+  localparam int GEN_FC_PMP_CSR_ACCESS_CP_OP_CSRRW = 0;
+  localparam int GEN_FC_PMP_CSR_ACCESS_CP_OP_CSRRS = 1;
+  localparam int GEN_FC_PMP_CSR_ACCESS_CP_OP_CSRRC = 2;
+  localparam int GEN_FC_PMP_CSR_ACCESS_CP_OP_CSRRWI = 3;
+  localparam int GEN_FC_PMP_CSR_ACCESS_CP_OP_CSRRSI = 4;
+  localparam int GEN_FC_PMP_CSR_ACCESS_CP_OP_CSRRCI = 5;
+  localparam int GEN_FC_PMP_CSR_ACCESS_CP_RW_READ_ONLY = 0;
+  localparam int GEN_FC_PMP_CSR_ACCESS_CP_RW_WRITE = 1;
+  localparam int GEN_FC_PMP_CSR_ACCESS_CP_TRAP_NONE = 0;
+  localparam int GEN_FC_PMP_CSR_ACCESS_CP_TRAP_ILLEGAL = 1;
+  localparam int GEN_FC_PMP_CSR_ACCESS_CP_FIRST_AFTER_RESET_NO = 0;
+  localparam int GEN_FC_PMP_CSR_ACCESS_CP_FIRST_AFTER_RESET_YES = 1;
+  covergroup gen_pmp_csr_access_cg with function sample(int v_cp_class, int v_cp_priv, int v_cp_dbg, int v_cp_op, int v_cp_rw, int v_cp_trap, int v_cp_first_after_reset);
+    option.per_instance = 0;
+    option.cross_auto_bin_max = 0;   // a cross has exactly the CSV's named bins: no automatic bins for the plan's ignored tuples
+    cp_class: coverpoint v_cp_class { bins pmpcfg= {0}; bins pmpaddr= {1}; bins mseccfg= {2}; bins mseccfgh= {3}; ignore_bins na = {-1}; }
+    cp_priv: coverpoint v_cp_priv { bins m= {0}; bins u= {1}; ignore_bins na = {-1}; }
+    cp_dbg: coverpoint v_cp_dbg { bins d0= {0}; bins d1= {1}; ignore_bins na = {-1}; }
+    cp_op: coverpoint v_cp_op { bins csrrw= {0}; bins csrrs= {1}; bins csrrc= {2}; bins csrrwi= {3}; bins csrrsi= {4}; bins csrrci= {5}; ignore_bins na = {-1}; }
+    cp_rw: coverpoint v_cp_rw { bins read_only= {0}; bins write= {1}; ignore_bins na = {-1}; }
+    cp_trap: coverpoint v_cp_trap { bins none= {0}; bins illegal= {1}; ignore_bins na = {-1}; }
+    cp_first_after_reset: coverpoint v_cp_first_after_reset { bins no= {0}; bins yes= {1}; ignore_bins na = {-1}; }
+    cr_op_class: cross cp_op, cp_class {
+      bins csrrw_pmpcfg= binsof(cp_op.csrrw) && binsof(cp_class.pmpcfg);
+      bins csrrw_pmpaddr= binsof(cp_op.csrrw) && binsof(cp_class.pmpaddr);
+      bins csrrc_mseccfg= binsof(cp_op.csrrc) && binsof(cp_class.mseccfg);
+      bins csrrc_mseccfgh= binsof(cp_op.csrrc) && binsof(cp_class.mseccfgh);
+      bins csrrc_pmpaddr= binsof(cp_op.csrrc) && binsof(cp_class.pmpaddr);
+      bins csrrc_pmpcfg= binsof(cp_op.csrrc) && binsof(cp_class.pmpcfg);
+      bins csrrci_mseccfg= binsof(cp_op.csrrci) && binsof(cp_class.mseccfg);
+      bins csrrci_mseccfgh= binsof(cp_op.csrrci) && binsof(cp_class.mseccfgh);
+      bins csrrci_pmpaddr= binsof(cp_op.csrrci) && binsof(cp_class.pmpaddr);
+      bins csrrci_pmpcfg= binsof(cp_op.csrrci) && binsof(cp_class.pmpcfg);
+      bins csrrs_mseccfg= binsof(cp_op.csrrs) && binsof(cp_class.mseccfg);
+      bins csrrs_mseccfgh= binsof(cp_op.csrrs) && binsof(cp_class.mseccfgh);
+      bins csrrs_pmpaddr= binsof(cp_op.csrrs) && binsof(cp_class.pmpaddr);
+      bins csrrs_pmpcfg= binsof(cp_op.csrrs) && binsof(cp_class.pmpcfg);
+      bins csrrsi_mseccfg= binsof(cp_op.csrrsi) && binsof(cp_class.mseccfg);
+      bins csrrsi_mseccfgh= binsof(cp_op.csrrsi) && binsof(cp_class.mseccfgh);
+      bins csrrsi_pmpaddr= binsof(cp_op.csrrsi) && binsof(cp_class.pmpaddr);
+      bins csrrsi_pmpcfg= binsof(cp_op.csrrsi) && binsof(cp_class.pmpcfg);
+      bins csrrw_mseccfg= binsof(cp_op.csrrw) && binsof(cp_class.mseccfg);
+      bins csrrw_mseccfgh= binsof(cp_op.csrrw) && binsof(cp_class.mseccfgh);
+      bins csrrwi_mseccfg= binsof(cp_op.csrrwi) && binsof(cp_class.mseccfg);
+      bins csrrwi_mseccfgh= binsof(cp_op.csrrwi) && binsof(cp_class.mseccfgh);
+      bins csrrwi_pmpaddr= binsof(cp_op.csrrwi) && binsof(cp_class.pmpaddr);
+      bins csrrwi_pmpcfg= binsof(cp_op.csrrwi) && binsof(cp_class.pmpcfg);
+    }
+    cr_priv_trap: cross cp_priv, cp_trap {
+      bins m_none= binsof(cp_priv.m) && binsof(cp_trap.none);
+      bins u_illegal= binsof(cp_priv.u) && binsof(cp_trap.illegal);
+    }
+    cr_u_class: cross cp_priv, cp_class, cp_rw {
+      bins u_mseccfg_read_only= binsof(cp_priv.u) && binsof(cp_class.mseccfg) && binsof(cp_rw.read_only);
+      bins u_mseccfg_write= binsof(cp_priv.u) && binsof(cp_class.mseccfg) && binsof(cp_rw.write);
+      bins u_mseccfgh_read_only= binsof(cp_priv.u) && binsof(cp_class.mseccfgh) && binsof(cp_rw.read_only);
+      bins u_mseccfgh_write= binsof(cp_priv.u) && binsof(cp_class.mseccfgh) && binsof(cp_rw.write);
+      bins u_pmpaddr_read_only= binsof(cp_priv.u) && binsof(cp_class.pmpaddr) && binsof(cp_rw.read_only);
+      bins u_pmpaddr_write= binsof(cp_priv.u) && binsof(cp_class.pmpaddr) && binsof(cp_rw.write);
+      bins u_pmpcfg_read_only= binsof(cp_priv.u) && binsof(cp_class.pmpcfg) && binsof(cp_rw.read_only);
+      bins u_pmpcfg_write= binsof(cp_priv.u) && binsof(cp_class.pmpcfg) && binsof(cp_rw.write);
+    }
+    cr_dbg_class: cross cp_dbg, cp_class, cp_rw {
+      bins d1_mseccfg_read_only= binsof(cp_dbg.d1) && binsof(cp_class.mseccfg) && binsof(cp_rw.read_only);
+      bins d1_mseccfg_write= binsof(cp_dbg.d1) && binsof(cp_class.mseccfg) && binsof(cp_rw.write);
+      bins d1_mseccfgh_read_only= binsof(cp_dbg.d1) && binsof(cp_class.mseccfgh) && binsof(cp_rw.read_only);
+      bins d1_mseccfgh_write= binsof(cp_dbg.d1) && binsof(cp_class.mseccfgh) && binsof(cp_rw.write);
+      bins d1_pmpaddr_read_only= binsof(cp_dbg.d1) && binsof(cp_class.pmpaddr) && binsof(cp_rw.read_only);
+      bins d1_pmpaddr_write= binsof(cp_dbg.d1) && binsof(cp_class.pmpaddr) && binsof(cp_rw.write);
+      bins d1_pmpcfg_read_only= binsof(cp_dbg.d1) && binsof(cp_class.pmpcfg) && binsof(cp_rw.read_only);
+      bins d1_pmpcfg_write= binsof(cp_dbg.d1) && binsof(cp_class.pmpcfg) && binsof(cp_rw.write);
+    }
+    cr_reset_read: cross cp_first_after_reset, cp_class, cp_rw {
+      bins rst_mseccfg= binsof(cp_first_after_reset.yes) && binsof(cp_class.mseccfg) && binsof(cp_rw.read_only);
+      bins rst_mseccfgh= binsof(cp_first_after_reset.yes) && binsof(cp_class.mseccfgh) && binsof(cp_rw.read_only);
+      bins rst_pmpaddr= binsof(cp_first_after_reset.yes) && binsof(cp_class.pmpaddr) && binsof(cp_rw.read_only);
+      bins rst_pmpcfg= binsof(cp_first_after_reset.yes) && binsof(cp_class.pmpcfg) && binsof(cp_rw.read_only);
+    }
+  endgroup
+
+  // CG-PMP-014 (gen_pmp_table_state_cg), 36 coverpoint bins, 42 cross bins
+  localparam int GEN_FC_PMP_TABLE_STATE_CP_ACTIVE_N0 = 0;
+  localparam int GEN_FC_PMP_TABLE_STATE_CP_ACTIVE_N1 = 1;
+  localparam int GEN_FC_PMP_TABLE_STATE_CP_ACTIVE_N2_4 = 2;
+  localparam int GEN_FC_PMP_TABLE_STATE_CP_ACTIVE_N5_8 = 3;
+  localparam int GEN_FC_PMP_TABLE_STATE_CP_ACTIVE_N9_15 = 4;
+  localparam int GEN_FC_PMP_TABLE_STATE_CP_ACTIVE_N16 = 5;
+  localparam int GEN_FC_PMP_TABLE_STATE_CP_LOCKED_N0 = 0;
+  localparam int GEN_FC_PMP_TABLE_STATE_CP_LOCKED_N1_4 = 1;
+  localparam int GEN_FC_PMP_TABLE_STATE_CP_LOCKED_N5_15 = 2;
+  localparam int GEN_FC_PMP_TABLE_STATE_CP_LOCKED_N16 = 3;
+  localparam int GEN_FC_PMP_TABLE_STATE_CP_MODES_NONE = 0;
+  localparam int GEN_FC_PMP_TABLE_STATE_CP_MODES_TOR_ONLY = 1;
+  localparam int GEN_FC_PMP_TABLE_STATE_CP_MODES_NA_ONLY = 2;
+  localparam int GEN_FC_PMP_TABLE_STATE_CP_MODES_MIXED = 3;
+  localparam int GEN_FC_PMP_TABLE_STATE_CP_TOR_EMPTY_NONE = 0;
+  localparam int GEN_FC_PMP_TABLE_STATE_CP_TOR_EMPTY_SOME = 1;
+  localparam int GEN_FC_PMP_TABLE_STATE_CP_OVERLAP_NONE = 0;
+  localparam int GEN_FC_PMP_TABLE_STATE_CP_OVERLAP_SOME = 1;
+  localparam int GEN_FC_PMP_TABLE_STATE_CP_REGIME_OFF = 0;
+  localparam int GEN_FC_PMP_TABLE_STATE_CP_REGIME_SPARSE = 1;
+  localparam int GEN_FC_PMP_TABLE_STATE_CP_REGIME_DENSE = 2;
+  localparam int GEN_FC_PMP_TABLE_STATE_CP_REGIME_MML_ON = 3;
+  localparam int GEN_FC_PMP_TABLE_STATE_CP_ALL_OFF_U_NO = 0;
+  localparam int GEN_FC_PMP_TABLE_STATE_CP_ALL_OFF_U_YES = 1;
+  localparam int GEN_FC_PMP_TABLE_STATE_CP_E15_OFF = 0;
+  localparam int GEN_FC_PMP_TABLE_STATE_CP_E15_ACTIVE = 1;
+  localparam int GEN_FC_PMP_TABLE_STATE_CP_E0_TOR_NO = 0;
+  localparam int GEN_FC_PMP_TABLE_STATE_CP_E0_TOR_YES = 1;
+  localparam int GEN_FC_PMP_TABLE_STATE_CP_MSECCFG_S000 = 0;
+  localparam int GEN_FC_PMP_TABLE_STATE_CP_MSECCFG_S001 = 1;
+  localparam int GEN_FC_PMP_TABLE_STATE_CP_MSECCFG_S010 = 2;
+  localparam int GEN_FC_PMP_TABLE_STATE_CP_MSECCFG_S011 = 3;
+  localparam int GEN_FC_PMP_TABLE_STATE_CP_MSECCFG_S100 = 4;
+  localparam int GEN_FC_PMP_TABLE_STATE_CP_MSECCFG_S101 = 5;
+  localparam int GEN_FC_PMP_TABLE_STATE_CP_MSECCFG_S110 = 6;
+  localparam int GEN_FC_PMP_TABLE_STATE_CP_MSECCFG_S111 = 7;
+  covergroup gen_pmp_table_state_cg with function sample(int v_cp_active, int v_cp_locked, int v_cp_modes, int v_cp_tor_empty, int v_cp_overlap, int v_cp_regime, int v_cp_all_off_u, int v_cp_e15, int v_cp_e0_tor, int v_cp_mseccfg);
+    option.per_instance = 0;
+    option.cross_auto_bin_max = 0;   // a cross has exactly the CSV's named bins: no automatic bins for the plan's ignored tuples
+    cp_active: coverpoint v_cp_active { bins n0= {0}; bins n1= {1}; bins n2_4= {2}; bins n5_8= {3}; bins n9_15= {4}; bins n16= {5}; ignore_bins na = {-1}; }
+    cp_locked: coverpoint v_cp_locked { bins n0= {0}; bins n1_4= {1}; bins n5_15= {2}; bins n16= {3}; ignore_bins na = {-1}; }
+    cp_modes: coverpoint v_cp_modes { bins none= {0}; bins tor_only= {1}; bins na_only= {2}; bins mixed= {3}; ignore_bins na = {-1}; }
+    cp_tor_empty: coverpoint v_cp_tor_empty { bins none= {0}; bins some= {1}; ignore_bins na = {-1}; }
+    cp_overlap: coverpoint v_cp_overlap { bins none= {0}; bins some= {1}; ignore_bins na = {-1}; }
+    cp_regime: coverpoint v_cp_regime { bins off= {0}; bins sparse= {1}; bins dense= {2}; bins mml_on= {3}; ignore_bins na = {-1}; }
+    cp_all_off_u: coverpoint v_cp_all_off_u { bins no= {0}; bins yes= {1}; ignore_bins na = {-1}; }
+    cp_e15: coverpoint v_cp_e15 { bins off= {0}; bins active= {1}; ignore_bins na = {-1}; }
+    cp_e0_tor: coverpoint v_cp_e0_tor { bins no= {0}; bins yes= {1}; ignore_bins na = {-1}; }
+    cp_mseccfg: coverpoint v_cp_mseccfg { bins s000= {0}; bins s001= {1}; bins s010= {2}; bins s011= {3}; bins s100= {4}; bins s101= {5}; bins s110= {6}; bins s111= {7}; ignore_bins na = {-1}; }
+    cr_overlap_modes: cross cp_overlap, cp_modes {
+      bins overlap_mixed= binsof(cp_overlap.some) && binsof(cp_modes.mixed);
+      bins overlap_na_only= binsof(cp_overlap.some) && binsof(cp_modes.na_only);
+      bins overlap_tor_only= binsof(cp_overlap.some) && binsof(cp_modes.tor_only);
+    }
+    cr_e15_e0: cross cp_e15, cp_e0_tor {
+      bins e15_active_e0tor_no= binsof(cp_e15.active) && binsof(cp_e0_tor.no);
+      bins e15_active_e0tor_yes= binsof(cp_e15.active) && binsof(cp_e0_tor.yes);
+    }
+    cr_locked_regime: cross cp_locked, cp_regime {
+      bins n0_dense= binsof(cp_locked.n0) && binsof(cp_regime.dense);
+      bins n0_mml_on= binsof(cp_locked.n0) && binsof(cp_regime.mml_on);
+      bins n0_sparse= binsof(cp_locked.n0) && binsof(cp_regime.sparse);
+      bins n16_dense= binsof(cp_locked.n16) && binsof(cp_regime.dense);
+      bins n16_mml_on= binsof(cp_locked.n16) && binsof(cp_regime.mml_on);
+      bins n1_4_dense= binsof(cp_locked.n1_4) && binsof(cp_regime.dense);
+      bins n1_4_mml_on= binsof(cp_locked.n1_4) && binsof(cp_regime.mml_on);
+      bins n1_4_sparse= binsof(cp_locked.n1_4) && binsof(cp_regime.sparse);
+      bins n5_15_dense= binsof(cp_locked.n5_15) && binsof(cp_regime.dense);
+      bins n5_15_mml_on= binsof(cp_locked.n5_15) && binsof(cp_regime.mml_on);
+    }
+    cr_regime_active: cross cp_regime, cp_active {
+      bins dense_n16= binsof(cp_regime.dense) && binsof(cp_active.n16);
+      bins dense_n5_8= binsof(cp_regime.dense) && binsof(cp_active.n5_8);
+      bins dense_n9_15= binsof(cp_regime.dense) && binsof(cp_active.n9_15);
+      bins sparse_n1= binsof(cp_regime.sparse) && binsof(cp_active.n1);
+      bins sparse_n2_4= binsof(cp_regime.sparse) && binsof(cp_active.n2_4);
+      bins mml_on_n1= binsof(cp_regime.mml_on) && binsof(cp_active.n1);
+      bins mml_on_n16= binsof(cp_regime.mml_on) && binsof(cp_active.n16);
+      bins mml_on_n2_4= binsof(cp_regime.mml_on) && binsof(cp_active.n2_4);
+      bins mml_on_n5_8= binsof(cp_regime.mml_on) && binsof(cp_active.n5_8);
+      bins mml_on_n9_15= binsof(cp_regime.mml_on) && binsof(cp_active.n9_15);
+      bins off_n0= binsof(cp_regime.off) && binsof(cp_active.n0);
+    }
+    cr_regime_mseccfg: cross cp_regime, cp_mseccfg {
+      bins dense_s000= binsof(cp_regime.dense) && binsof(cp_mseccfg.s000);
+      bins dense_s001= binsof(cp_regime.dense) && binsof(cp_mseccfg.s001);
+      bins dense_s010= binsof(cp_regime.dense) && binsof(cp_mseccfg.s010);
+      bins dense_s011= binsof(cp_regime.dense) && binsof(cp_mseccfg.s011);
+      bins sparse_s000= binsof(cp_regime.sparse) && binsof(cp_mseccfg.s000);
+      bins sparse_s001= binsof(cp_regime.sparse) && binsof(cp_mseccfg.s001);
+      bins sparse_s010= binsof(cp_regime.sparse) && binsof(cp_mseccfg.s010);
+      bins sparse_s011= binsof(cp_regime.sparse) && binsof(cp_mseccfg.s011);
+      bins mml_on_s100= binsof(cp_regime.mml_on) && binsof(cp_mseccfg.s100);
+      bins mml_on_s101= binsof(cp_regime.mml_on) && binsof(cp_mseccfg.s101);
+      bins mml_on_s110= binsof(cp_regime.mml_on) && binsof(cp_mseccfg.s110);
+      bins mml_on_s111= binsof(cp_regime.mml_on) && binsof(cp_mseccfg.s111);
+      bins off_s000= binsof(cp_regime.off) && binsof(cp_mseccfg.s000);
+      bins off_s001= binsof(cp_regime.off) && binsof(cp_mseccfg.s001);
+      bins off_s010= binsof(cp_regime.off) && binsof(cp_mseccfg.s010);
+      bins off_s011= binsof(cp_regime.off) && binsof(cp_mseccfg.s011);
+    }
+  endgroup

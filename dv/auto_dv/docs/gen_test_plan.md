@@ -31,7 +31,7 @@ ibex_pkg; compiled with +define+RVFI; cheriot_enable_i tied IbexMuBiOff inside t
   declared bin fails the run).
 - Tier of a testlist entry: the LOWEST tier among its plan group's items, because the testlist runs a tier-T entry in every
   higher tier too (gen_testlist.yaml header); an entry with no plan group stays at tier check, measured: false. The per-entry
-  ruling for the 16 built tests is dv/auto_dv/evidence/gen_round0_promotion_table.md (applied by landing 3e at 7ef16a0 and Runtime's
+  ruling for the 20 built tests is dv/auto_dv/evidence/gen_round1_promotion_table.md (applied by landing 3e at 7ef16a0 and Runtime's
   promotion landing 3e6f1b2; LOG-024e, LOG-039).
 - Expected: `pass`; `pass (doc mismatch Dn)` where the RTL is spec-legal and the Ibex doc is wrong
   (checker follows the RTL, doc defect logged); `expected-fail (Bn)` where the RTL contradicts a

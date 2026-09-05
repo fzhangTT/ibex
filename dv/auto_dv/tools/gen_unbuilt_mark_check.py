@@ -61,7 +61,8 @@ def rendered_covergroups(root: pathlib.Path) -> set[str]:
     for rel in COVERGROUP_SOURCES:
         f = root / rel
         if f.is_file():
-            names |= set(re.findall(r"covergroup\s+(\w+)", f.read_text(encoding="ascii")))
+            # anchored: a comment that mentions a covergroup is prose, not a declaration
+            names |= set(re.findall(r"^\s*covergroup\s+(\w+)", f.read_text(encoding="ascii"), re.M))
     return names
 
 
@@ -165,10 +166,13 @@ def self_test() -> int:
     cases = [
         ("mark on an unbuilt covergroup passes", PLAN_MARKED, SVH_NEITHER, {"a.fcov.yaml": MAN_CLEAN}, 0, ""),
         ("mark on a BUILT covergroup fails", PLAN_MARKED, SVH_ALPHA, {"a.fcov.yaml": MAN_CLEAN}, 1, ""),
-        # The blind spot: alpha is built, but in the PACKAGE rather than the rendered file. Before the fix this
-        # case passed, which is the whole defect: a built covergroup read as unbuilt.
+        # A covergroup defined in the package must read as BUILT; a reader of the rendered file alone misses it.
         ("mark on a covergroup built in the PACKAGE fails", PLAN_MARKED, SVH_NEITHER,
          {"a.fcov.yaml": MAN_CLEAN}, 1, "package gen_fcov_pkg;\ncovergroup gen_alpha_cg;\nendgroup\nendpackage\n"),
+        # A covergroup NAMED IN PROSE is not declared, so the mark on it stays correct.
+        ("a comment naming a covergroup does not make it built", PLAN_MARKED, SVH_NEITHER,
+         {"a.fcov.yaml": MAN_CLEAN}, 0,
+         "package gen_fcov_pkg;\n// the covergroup gen_alpha_cg is described here, not declared\nendpackage\n"),
         ("a manifest declaring an unrendered bin fails", PLAN_MARKED, SVH_NEITHER,
          {"a.fcov.yaml": MAN_CLEAN, "b.fcov.yaml": MAN_DIRTY}, 1, ""),
         ("no marks and clean manifests pass", "### CG-XXX-002: gen_cg_beta\n  - cp_two = t: bins c{0}\n",

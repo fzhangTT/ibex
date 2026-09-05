@@ -83,6 +83,21 @@ def main():
                 "a bin listed before the clause and named by it leaves the comparison and renders nothing (the CSV has no row for it: Slice-A-1)")
     same_render("names_only_cross", "  - cr_funct3_rd_x0 = cp_funct3 x cp_rd_x0: bins auto{all combinations}\n",
                 "  - cr_funct3_rd_x0 = cp_funct3 x cp_rd_x0: f0_no, f0_yes, f1_no, f1_yes, f2_no, f2_yes, f3_no, f3_yes\n", "a cross line listing bin names without tuples declares no tuple and renders from the CSV")
+    # a tuple followed by prose after a colon, where the prose itself contains a comma, and a bin name that does
+    # NOT split into its components: before the parser cut the tuple at the colon, the extra comma made the arity
+    # wrong, the tuple was dropped and the renderer fell back to splitting the name, which refuses.
+    root = scratch_tree("tuple_colon_prose_comma")
+    p = root / PLAN; s = p.read_text()
+    s2 = s.replace("bins mstatus_csrrw{mstatus csrrw}", "bins zzpair{mstatus, csrrw: a write, then a read}", 1)
+    check("fixture differs (tuple with colon prose)", s2 != s); p.write_text(s2)
+    q = root / CSV; c = q.read_text()
+    c2 = c.replace("CG-CSR-002,cr_csr_op,mstatus_csrrw,", "CG-CSR-002,cr_csr_op,zzpair,", 1)
+    check("fixture differs (CSV bin renamed)", c2 != c); q.write_text(c2)
+    r = codegen("--root", str(root))   # a render, not --check: the renamed bin makes the include differ by design
+    check("a cross tuple whose prose after the colon contains a comma still parses", r.returncode == 0, (r.stdout + r.stderr)[-300:])
+    if r.returncode == 0:
+        check("that tuple renders its two components", "bins zzpair= binsof(cp_csr.mstatus) && binsof(cp_op.csrrw);" in (root / OUT).read_text())
+
     # ---- refusals on scratch copies
     root = scratch_tree("plan_bins_differ")
     p = root / PLAN; s = p.read_text()

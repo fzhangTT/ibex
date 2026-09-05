@@ -26,7 +26,8 @@ REL_OUT = "dv/auto_dv/env/gen_fcov_groups.svh"
 # the covergroups whose samplers exist (gen_fcov_pkg.sv); plan order of implementation (evidence/gen_round0_covergroup_set.md)
 IMPLEMENTED = ("CG-MUL-001", "CG-MUL-003", "CG-ISA-002", "CG-BIT-001", "CG-ISA-001", "CG-ISA-003", "CG-BIT-002", "CG-CMP-001", "CG-CMP-006",
                "CG-CMP-007", "CG-CSR-002", "CG-ISA-007", "CG-BIT-006", "CG-CMP-005", "CG-MUL-002", "CG-RST-001", "CG-SEC-005", "CG-RVFI-001", "CG-CMP-009",
-               "CG-ISA-004", "CG-ISA-005", "CG-ISA-006", "CG-MUL-004", "CG-CMP-002", "CG-IC-006")
+               "CG-ISA-004", "CG-ISA-005", "CG-ISA-006", "CG-MUL-004", "CG-CMP-002", "CG-IC-006",
+               "CG-PMP-001", "CG-PMP-002", "CG-PMP-004", "CG-PMP-014")
 
 
 def die(msg):
@@ -93,6 +94,11 @@ def load_plan(root):
             explicit = {}
             for name, inside in re.findall(r"([a-z0-9_]+)\{([^}]*)\}", m.group(3)):
                 raw = [x.strip() for x in inside.split(",")] if "," in inside else inside.split()
+                # a tuple may be followed by prose after a colon, and that prose may itself contain commas
+                # (`w_dropped: W cleared, X and L kept`): the tuple ends at the first colon-bearing part
+                cut = next((i for i, x in enumerate(raw) if ":" in x), None)
+                if cut is not None:
+                    raw = raw[:cut] + [raw[cut].split(":")[0].strip()]
                 parts = []
                 for x in raw:
                     x = re.sub(r"\s*\(.*\)\s*$", "", x.split(":")[0]).strip()   # `written (including ...)`, `mml0: the write ...`

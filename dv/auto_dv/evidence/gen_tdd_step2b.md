@@ -1241,3 +1241,27 @@ Landing 40d retains the mutation itself (CR-38 L-1): gen_tdd_logs/mutations/gen_
 one-line fault in gen_bridge_if.sv that both landing 40 and landing 40c ran, with its manifest row carrying the base
 and mutated digests measured from the files and the fact that it applies cleanly to an archive of the tree it was cut
 from. The two landing logs stay closed at their committed bytes; the row is where a reader now finds the fault.
+
+## PMP step 1: four covergroups, the TB half of a joint feature group
+
+Under LOG-096 a covergroup landing carries no red fixture and no mutation proof, so the evidence is the render, the
+codegen unit test, the compile with its identity, and a smoke in which every group samples and none samples without
+coverage. CG-PMP-001, 002, 004 and 014 render from the plan and are sampled from ONE per-record entry point in
+gen_fcov_pkg.sv, reading the MODEL's PMP table through the ISA shim.
+
+THE MEASUREMENT THAT SHAPED THE DESIGN: at the coverage subscriber the model has not yet executed the record being
+handled, so the shim read returns the table BEFORE it. My first design assumed the opposite; a probe on the directed
+deny program showed the snapshot at the pmpcfg write still reading an empty entry, and the samplers now read a
+write's effect at the NEXT record, which is also the grain CG-PMP-014's own condition asks for and which yields the
+pre and post tables for free. The probe then reads exactly the byte that program writes.
+
+The codegen needed one fix, and it rides this group with a unit-test case measured in both directions: the tuple
+parser split a bin's braces on commas before stripping the prose after a colon, so a description containing a comma
+broke the tuple's arity and the bin fell back to name splitting, which refuses. The new case fails on the committed
+codegen and passes on the fixed one. The renderer's strictness about the plan's "not built" tag is deliberate and
+unchanged: building a family means the plan stops calling it unbuilt, which is why this group's three parts land in
+one commit.
+
+Retained: gen_tdd_logs/fcov/gen_fu_pmp1_covergroups.log, with the sample event and signal source per covergroup, the
+field caveats, the bins no stimulus reaches today and their reasons, and what P-07 needs before the three PMP entries
+flip to measured. One manifest row.

@@ -185,7 +185,7 @@ package gen_fcov_pkg;
       if (!uvm_config_db#(virtual gen_irq_if)::get(this, "", "irq_vif", irq_vif)) `uvm_fatal("GEN_FCOV", "irq vif not in uvm_config_db")
       if (!uvm_config_db#(virtual gen_dbg_if)::get(this, "", "dbg_vif", dbg_vif)) `uvm_fatal("GEN_FCOV", "dbg vif not in uvm_config_db")
       hart_id_v = cfg.hart_id;
-      if (cfg.fcov_en) begin mul_cg = new(); div_cg = new(); alu_cg = new(); bit_cg = new(); imm_cg = new(); sh_cg = new(); cnt_cg = new(); zca_cg = new(); zcmp_cg = new(); mv_cg = new(); csr_cg = new(); br_cg = new(); sbit_cg = new(); zcb_cg = new(); rec_cg = new(); mt_cg = new(); rst_cg = new(); ic_ecc_cg = new(); sec_cg = new(); hz_cg = new(); lu_cg = new(); hx_cg = new(); jp_cg = new(); dt_cg = new(); ie_cg = new(); end
+      if (cfg.fcov_en) begin mul_cg = new(); div_cg = new(); alu_cg = new(); bit_cg = new(); imm_cg = new(); sh_cg = new(); cnt_cg = new(); zca_cg = new(); zcmp_cg = new(); mv_cg = new(); csr_cg = new(); br_cg = new(); sbit_cg = new(); zcb_cg = new(); rec_cg = new(); mt_cg = new(); rst_cg = new(); ic_ecc_cg = new(); sec_cg = new(); hz_cg = new(); lu_cg = new(); hx_cg = new(); jp_cg = new(); dt_cg = new(); ie_cg = new(); pmp_acc_cg = new(); pmp_tbl_cg = new(); pmp_cfg_cg = new(); pmp_addr_cg = new(); end
     endfunction
     // ---- classifiers (plan bin order = the rendered GEN_FC_* indices)
     // CG-IC-006 cp_no_alert_case, most-masking first, which is the fcov plan's precedence: the enable and the sweep are terms
@@ -1599,6 +1599,331 @@ package gen_fcov_pkg;
         end
       end
     endtask
+    // ---- PMP: the model's table and the samplers of CG-PMP-004 and CG-PMP-014 ----------------------------
+    // The table read here is the MODEL's, through the ISA shim (gen_isa_read_csr passes the CSR number to the
+    // model). MEASURED, not assumed: at this subscriber the model has NOT yet executed the record being handled,
+    // so the read is the state BEFORE it. A write's effect is therefore read at the NEXT record, which is also the
+    // grain CG-PMP-014 asks for (a snapshot counts only once a record retires after the table change).
+    gen_pmp_csr_access_cg  pmp_acc_cg;
+    gen_pmp_table_state_cg pmp_tbl_cg;
+    logic [7:0]  pmp_cfg_now [16], pmp_cfg_pre [16];
+    logic [31:0] pmp_addr_now [16], pmp_addr_pre [16];
+    logic [31:0] pmp_msec_now = '0, pmp_msec_pre = '0;
+    bit pmp_have_pre = 0, pmp_first_acc = 1, pmp_wr_pend = 0;
+    int unsigned n_pmp_acc = 0, n_pmp_tbl = 0, n_pmp_tbl_dropped = 0;
+    // CG-PMP-014 defers: a snapshot is sampled only once a record retires before the next table change (the plan's
+    // condition), which is also when cp_all_off_u is decided.
+    bit pmp_snap_pend = 0, pmp_snap_all_off = 0, pmp_snap_u_seen = 0;
+    int pmp_snap [10]; int unsigned pmp_snap_retires = 0;
+
+    function void pmp_read_now();
+      logic [31:0] v;
+      for (int w = 0; w < 4; w++) begin
+        v = gen_isa_read_csr(int'(ibex_pkg::CSR_PMPCFG0) + w);
+        for (int b = 0; b < 4; b++) pmp_cfg_now[4*w + b] = v[8*b +: 8];
+      end
+      for (int i = 0; i < 16; i++) pmp_addr_now[i] = gen_isa_read_csr(int'(ibex_pkg::CSR_PMPADDR0) + i);
+      pmp_msec_now = gen_isa_read_csr(int'(ibex_pkg::CSR_MSECCFG));
+    endfunction
+
+    function void pmp_keep_pre();
+      for (int i = 0; i < 16; i++) begin pmp_cfg_pre[i] = pmp_cfg_now[i]; pmp_addr_pre[i] = pmp_addr_now[i]; end
+      pmp_msec_pre = pmp_msec_now; pmp_have_pre = 1;
+    endfunction
+
+    // 0 pmpcfg, 1 pmpaddr, 2 mseccfg, 3 mseccfgh, -1 not a PMP CSR instruction; idx = the entry or word index
+    function int pmp_csr_class(logic [31:0] insn, output int idx);
+      logic [11:0] csr = insn[31:20];
+      logic [11:0] c_cfg = 12'(ibex_pkg::CSR_PMPCFG0), c_addr = 12'(ibex_pkg::CSR_PMPADDR0);
+      logic [11:0] c_ms = 12'(ibex_pkg::CSR_MSECCFG), c_msh = 12'(ibex_pkg::CSR_MSECCFGH);
+      idx = -1;
+      if (insn[6:0] != ibex_pkg::OPCODE_SYSTEM || insn[14:12] == 3'b000) return -1;
+      if (csr >= c_cfg && csr < c_cfg + 4) begin idx = int'(csr - c_cfg); return 0; end
+      if (csr >= c_addr && csr < c_addr + 16) begin idx = int'(csr - c_addr); return 1; end
+      if (csr == c_ms) return 2;
+      if (csr == c_msh) return 3;
+      return -1;
+    endfunction
+
+    // the CSR op bin of a system instruction, in the plan's order; -1 when funct3 names none
+    function int pmp_op_bin(logic [31:0] insn);
+      case (insn[14:12])
+        3'b001: return GEN_FC_PMP_CSR_ACCESS_CP_OP_CSRRW;
+        3'b010: return GEN_FC_PMP_CSR_ACCESS_CP_OP_CSRRS;
+        3'b011: return GEN_FC_PMP_CSR_ACCESS_CP_OP_CSRRC;
+        3'b101: return GEN_FC_PMP_CSR_ACCESS_CP_OP_CSRRWI;
+        3'b110: return GEN_FC_PMP_CSR_ACCESS_CP_OP_CSRRSI;
+        3'b111: return GEN_FC_PMP_CSR_ACCESS_CP_OP_CSRRCI;
+        default: return -1;
+      endcase
+    endfunction
+
+    // a set/clear whose operand is zero writes nothing; csrrw / csrrwi always write
+    function bit pmp_is_write(logic [31:0] insn);
+      bit set_clear = insn[13:12] inside {2'b10, 2'b11};
+      return !set_clear || insn[19:15] != 5'd0;
+    endfunction
+
+    // CG-PMP-004: every PMP CSR instruction, trapped ones included
+    function void pmp_acc_sample(gen_rvfi_txn t);
+      int idx, cls = pmp_csr_class(t.insn, idx);
+      int v_cls, v_priv, v_op;
+      if (cls < 0 || pmp_acc_cg == null) return;
+      case (cls)
+        0: v_cls = GEN_FC_PMP_CSR_ACCESS_CP_CLASS_PMPCFG;
+        1: v_cls = GEN_FC_PMP_CSR_ACCESS_CP_CLASS_PMPADDR;
+        2: v_cls = GEN_FC_PMP_CSR_ACCESS_CP_CLASS_MSECCFG;
+        default: v_cls = GEN_FC_PMP_CSR_ACCESS_CP_CLASS_MSECCFGH;
+      endcase
+      v_priv = (t.mode == 2'b11) ? GEN_FC_PMP_CSR_ACCESS_CP_PRIV_M :
+               (t.mode == 2'b00) ? GEN_FC_PMP_CSR_ACCESS_CP_PRIV_U : -1;
+      v_op = pmp_op_bin(t.insn);
+      pmp_acc_cg.sample(v_cls, v_priv,
+                        t.ext_debug_mode ? GEN_FC_PMP_CSR_ACCESS_CP_DBG_D1 : GEN_FC_PMP_CSR_ACCESS_CP_DBG_D0,
+                        v_op,
+                        pmp_is_write(t.insn) ? GEN_FC_PMP_CSR_ACCESS_CP_RW_WRITE
+                                             : GEN_FC_PMP_CSR_ACCESS_CP_RW_READ_ONLY,
+                        t.trap ? GEN_FC_PMP_CSR_ACCESS_CP_TRAP_ILLEGAL : GEN_FC_PMP_CSR_ACCESS_CP_TRAP_NONE,
+                        pmp_first_acc ? GEN_FC_PMP_CSR_ACCESS_CP_FIRST_AFTER_RESET_YES
+                                      : GEN_FC_PMP_CSR_ACCESS_CP_FIRST_AFTER_RESET_NO);
+      n_pmp_acc++; pmp_first_acc = 0;
+    endfunction
+
+    // the byte range of entry i in words of four bytes, from the model's table; returns 0 when the entry is off
+    function bit pmp_range(int i, output logic [33:0] lo, output logic [33:0] hi);
+      logic [1:0] a = pmp_cfg_now[i][4:3];
+      logic [31:0] addr = pmp_addr_now[i];
+      logic [33:0] base;
+      int k;
+      lo = '0; hi = '0;
+      case (a)
+        2'b00: return 1'b0;
+        2'b01: begin lo = (i == 0) ? '0 : {2'b0, pmp_addr_now[i-1]}; hi = {2'b0, addr}; return hi > lo; end
+        2'b10: begin lo = {2'b0, addr}; hi = lo + 1; return 1'b1; end
+        default: begin
+          k = 0;
+          while (k < 32 && addr[k] == 1'b1) k++;      // NAPOT: the run of low ones sets the size
+          base = {2'b0, addr} & ~((34'd1 << (k + 1)) - 1);
+          lo = base; hi = base + (34'd1 << (k + 1));
+          return 1'b1;
+        end
+      endcase
+    endfunction
+
+    // CG-PMP-014's ten values from the table this class last read
+    function void pmp_snap_build();
+      int n_active = 0, n_locked = 0, n_tor_empty = 0, n_overlap = 0;
+      bit have_tor = 0, have_na = 0;
+      logic [33:0] lo_i, hi_i, lo_j, hi_j;
+      for (int i = 0; i < 16; i++) begin
+        if (pmp_cfg_now[i][4:3] != 2'b00) begin
+          n_active++;
+          if (pmp_cfg_now[i][4:3] == 2'b01) begin
+            logic [33:0] prev = (i == 0) ? '0 : {2'b0, pmp_addr_now[i-1]};
+            have_tor = 1;
+            if (prev >= {2'b0, pmp_addr_now[i]}) n_tor_empty++;
+          end else have_na = 1;
+        end
+        if (pmp_cfg_now[i][7]) n_locked++;
+      end
+      for (int i = 0; i < 16; i++)
+        for (int j = i + 1; j < 16; j++)
+          if (pmp_range(i, lo_i, hi_i) && pmp_range(j, lo_j, hi_j) && lo_i < hi_j && lo_j < hi_i) n_overlap++;
+      pmp_snap[0] = (n_active == 0) ? GEN_FC_PMP_TABLE_STATE_CP_ACTIVE_N0 :
+                    (n_active == 1) ? GEN_FC_PMP_TABLE_STATE_CP_ACTIVE_N1 :
+                    (n_active <= 4) ? GEN_FC_PMP_TABLE_STATE_CP_ACTIVE_N2_4 :
+                    (n_active <= 8) ? GEN_FC_PMP_TABLE_STATE_CP_ACTIVE_N5_8 :
+                    (n_active <= 15) ? GEN_FC_PMP_TABLE_STATE_CP_ACTIVE_N9_15 : GEN_FC_PMP_TABLE_STATE_CP_ACTIVE_N16;
+      pmp_snap[1] = (n_locked == 0) ? GEN_FC_PMP_TABLE_STATE_CP_LOCKED_N0 :
+                    (n_locked <= 4) ? GEN_FC_PMP_TABLE_STATE_CP_LOCKED_N1_4 :
+                    (n_locked <= 15) ? GEN_FC_PMP_TABLE_STATE_CP_LOCKED_N5_15 : GEN_FC_PMP_TABLE_STATE_CP_LOCKED_N16;
+      pmp_snap[2] = (!have_tor && !have_na) ? GEN_FC_PMP_TABLE_STATE_CP_MODES_NONE :
+                    (have_tor && !have_na)  ? GEN_FC_PMP_TABLE_STATE_CP_MODES_TOR_ONLY :
+                    (!have_tor && have_na)  ? GEN_FC_PMP_TABLE_STATE_CP_MODES_NA_ONLY :
+                                              GEN_FC_PMP_TABLE_STATE_CP_MODES_MIXED;
+      pmp_snap[3] = (n_tor_empty == 0) ? GEN_FC_PMP_TABLE_STATE_CP_TOR_EMPTY_NONE : GEN_FC_PMP_TABLE_STATE_CP_TOR_EMPTY_SOME;
+      pmp_snap[4] = (n_overlap == 0) ? GEN_FC_PMP_TABLE_STATE_CP_OVERLAP_NONE : GEN_FC_PMP_TABLE_STATE_CP_OVERLAP_SOME;
+      case (cfg.knob_pmp_regime)
+        "sparse":  pmp_snap[5] = GEN_FC_PMP_TABLE_STATE_CP_REGIME_SPARSE;
+        "dense":   pmp_snap[5] = GEN_FC_PMP_TABLE_STATE_CP_REGIME_DENSE;
+        "mml_on":  pmp_snap[5] = GEN_FC_PMP_TABLE_STATE_CP_REGIME_MML_ON;
+        default:   pmp_snap[5] = GEN_FC_PMP_TABLE_STATE_CP_REGIME_OFF;
+      endcase
+      pmp_snap[6] = GEN_FC_PMP_TABLE_STATE_CP_ALL_OFF_U_NO;   // resolved when the snapshot closes
+      pmp_snap[7] = (pmp_cfg_now[15][4:3] == 2'b00) ? GEN_FC_PMP_TABLE_STATE_CP_E15_OFF : GEN_FC_PMP_TABLE_STATE_CP_E15_ACTIVE;
+      pmp_snap[8] = (pmp_cfg_now[0][4:3] == 2'b01) ? GEN_FC_PMP_TABLE_STATE_CP_E0_TOR_YES : GEN_FC_PMP_TABLE_STATE_CP_E0_TOR_NO;
+      pmp_snap[9] = GEN_FC_PMP_TABLE_STATE_CP_MSECCFG_S000 + int'(pmp_msec_now[2:0]);
+      pmp_snap_all_off = (n_active == 0);
+      pmp_snap_pend = 1; pmp_snap_retires = 0; pmp_snap_u_seen = 0;
+    endfunction
+
+    // the plan's condition: a snapshot counts only when a record retires before the next table change
+    function void pmp_snap_close();
+      if (!pmp_snap_pend) return;
+      if (pmp_snap_retires == 0) begin n_pmp_tbl_dropped++; pmp_snap_pend = 0; return; end
+      if (pmp_snap_all_off && pmp_snap_u_seen) pmp_snap[6] = GEN_FC_PMP_TABLE_STATE_CP_ALL_OFF_U_YES;
+      if (pmp_tbl_cg != null) begin
+        pmp_tbl_cg.sample(pmp_snap[0], pmp_snap[1], pmp_snap[2], pmp_snap[3], pmp_snap[4],
+                          pmp_snap[5], pmp_snap[6], pmp_snap[7], pmp_snap[8], pmp_snap[9]);
+        n_pmp_tbl++;
+      end
+      pmp_snap_pend = 0;
+    endfunction
+
+    // one entry point per retired record
+    function void pmp_record(gen_rvfi_txn t);
+      int idx, cls = pmp_csr_class(t.insn, idx);
+      if (pmp_acc_cg == null) return;
+      pmp_read_now();                 // the model state BEFORE this record executes
+      if (pmp_wr_pend) begin          // the read above is the effect of the write one record back
+        pmp_snap_close();             // the snapshot that write replaced closes first
+        if (pmp_wr_idx >= 0) begin
+          if (pmp_wr_is_cfg) pmp_cfg_sample(); else pmp_addr_sample();
+        end
+        pmp_snap_build();
+        pmp_wr_pend = 0;
+      end
+      if (cls >= 0) pmp_acc_sample(t);
+      if (pmp_snap_pend) begin
+        pmp_snap_retires++;
+        if (t.mode == 2'b00) pmp_snap_u_seen = 1;
+      end
+      if (cls >= 0 && !t.trap && pmp_is_write(t.insn)) begin
+        logic [31:0] old_w = '0;
+        pmp_keep_pre();               // this record's pre-state is the table the write starts from
+        pmp_wr_pend = 1; pmp_wr_is_cfg = (cls == 0); pmp_wr_idx = (cls <= 1) ? idx : -1;
+        pmp_wr_op = (cls == 0) ? pmp_op_class_cfg(t) : pmp_op_class_addr(t);
+        if (cls == 0) begin
+          for (int b = 0; b < 4; b++) old_w[8*b +: 8] = pmp_cfg_pre[4*idx + b];
+          pmp_wr_val = pmp_rmw(t, old_w);
+        end else if (cls == 1) begin
+          pmp_wr_val = pmp_rmw(t, pmp_addr_pre[idx]);
+        end
+      end
+    endfunction
+
+    // the run's last record leaves a write unread: at the report phase the model has executed everything
+    function void pmp_final();
+      if (!pmp_wr_pend) return;
+      pmp_read_now();
+      pmp_snap_close();
+      if (pmp_wr_idx >= 0) begin
+        if (pmp_wr_is_cfg) pmp_cfg_sample(); else pmp_addr_sample();
+      end
+      pmp_snap_build();
+      pmp_wr_pend = 0;
+    endfunction
+
+    // ---- CG-PMP-001 and CG-PMP-002: the two write groups -------------------------------------------------
+    gen_pmp_cfg_write_cg  pmp_cfg_cg;
+    gen_pmp_addr_write_cg pmp_addr_cg;
+    int unsigned n_pmp_cfg = 0, n_pmp_addr = 0;
+    // the write being resolved: its facts are taken at the write record, its outcome at the next one
+    bit pmp_wr_is_cfg = 0; int pmp_wr_idx = -1; logic [31:0] pmp_wr_val = '0; int pmp_wr_op = -1;
+
+    // the value a CSR instruction attempts to write, after the read-modify-write combine
+    function logic [31:0] pmp_rmw(gen_rvfi_txn t, logic [31:0] old_w);
+      logic [31:0] opnd = t.insn[14] ? {27'b0, t.insn[19:15]} : t.rs1_rdata;
+      case (t.insn[13:12])
+        2'b01: return opnd;
+        2'b10: return old_w | opnd;
+        default: return old_w & ~opnd;
+      endcase
+    endfunction
+
+    // the plan's three op classes: the immediate forms share a bin with their register form
+    function int pmp_op_class_cfg(gen_rvfi_txn t);
+      case (t.insn[13:12])
+        2'b01: return GEN_FC_PMP_CFG_WRITE_CP_OP_CSRRW;
+        2'b10: return GEN_FC_PMP_CFG_WRITE_CP_OP_CSRRS;
+        default: return GEN_FC_PMP_CFG_WRITE_CP_OP_CSRRC;
+      endcase
+    endfunction
+
+    function int pmp_op_class_addr(gen_rvfi_txn t);
+      case (t.insn[13:12])
+        2'b01: return GEN_FC_PMP_ADDR_WRITE_CP_OP_CSRRW;
+        2'b10: return GEN_FC_PMP_ADDR_WRITE_CP_OP_CSRRS;
+        default: return GEN_FC_PMP_ADDR_WRITE_CP_OP_CSRRC;
+      endcase
+    endfunction
+
+    // CG-PMP-001: one sample per entry byte of the written word, resolved against the readback
+    function void pmp_cfg_sample();
+      logic [31:0] old_w = '0;
+      logic [31:0] att;
+      logic [7:0]  a_b, pre_b, post_b;
+      int lockmix = 0, v_lrwx, v_outcome;
+      bit mml = pmp_msec_pre[ibex_pkg::CSR_MSECCFG_MML_BIT], rlb = pmp_msec_pre[ibex_pkg::CSR_MSECCFG_RLB_BIT];
+      if (pmp_cfg_cg == null || pmp_wr_idx < 0) return;
+      for (int b = 0; b < 4; b++) old_w[8*b +: 8] = pmp_cfg_pre[4*pmp_wr_idx + b];
+      att = pmp_wr_val;                                     // the attempted word, already combined
+      for (int b = 0; b < 4; b++) if (!rlb && pmp_cfg_pre[4*pmp_wr_idx + b][7]) lockmix++;
+      for (int b = 0; b < 4; b++) begin
+        int i = 4*pmp_wr_idx + b;
+        a_b = att[8*b +: 8]; pre_b = pmp_cfg_pre[i]; post_b = pmp_cfg_now[i];
+        v_lrwx = GEN_FC_PMP_CFG_WRITE_CP_WR_LRWX_C0000 + int'({a_b[7], a_b[0], a_b[1], a_b[2]});
+        if (post_b == pre_b && a_b != pre_b) begin
+          v_outcome = (mml && !rlb && a_b[7] && (a_b[2] || (!a_b[0] && a_b[1])))
+                      ? GEN_FC_PMP_CFG_WRITE_CP_OUTCOME_IGNORED_MML_EXEC
+                      : GEN_FC_PMP_CFG_WRITE_CP_OUTCOME_IGNORED_LOCK;
+        end else if (!mml && !a_b[0] && a_b[1] && post_b == (a_b & 8'hfd)) begin
+          v_outcome = GEN_FC_PMP_CFG_WRITE_CP_OUTCOME_W_DROPPED;   // W without R is dropped when MML is 0
+        end else begin
+          v_outcome = GEN_FC_PMP_CFG_WRITE_CP_OUTCOME_WRITTEN;
+        end
+        pmp_cfg_cg.sample(GEN_FC_PMP_CFG_WRITE_CP_ENTRY_E0 + i,
+                          pmp_wr_op,
+                          GEN_FC_PMP_CFG_WRITE_CP_WR_MODE_OFF + int'(a_b[4:3]),
+                          v_lrwx,
+                          (a_b[6:5] == 2'b00) ? GEN_FC_PMP_CFG_WRITE_CP_RES_BITS_ZERO
+                                              : GEN_FC_PMP_CFG_WRITE_CP_RES_BITS_NONZERO,
+                          mml ? GEN_FC_PMP_CFG_WRITE_CP_MML_MML1 : GEN_FC_PMP_CFG_WRITE_CP_MML_MML0,
+                          rlb ? GEN_FC_PMP_CFG_WRITE_CP_RLB_RLB1 : GEN_FC_PMP_CFG_WRITE_CP_RLB_RLB0,
+                          pre_b[7] ? GEN_FC_PMP_CFG_WRITE_CP_PRELOCK_LOCKED
+                                   : GEN_FC_PMP_CFG_WRITE_CP_PRELOCK_UNLOCKED,
+                          v_outcome,
+                          (lockmix == 0) ? GEN_FC_PMP_CFG_WRITE_CP_WORD_LOCKMIX_NONE :
+                          (lockmix == 4) ? GEN_FC_PMP_CFG_WRITE_CP_WORD_LOCKMIX_ALL
+                                         : GEN_FC_PMP_CFG_WRITE_CP_WORD_LOCKMIX_SOME);
+        n_pmp_cfg++;
+      end
+    endfunction
+
+    // CG-PMP-002: one sample per pmpaddr write, resolved against the readback
+    function void pmp_addr_sample();
+      int i = pmp_wr_idx, v_outcome, v_next;
+      bit rlb = pmp_msec_pre[ibex_pkg::CSR_MSECCFG_RLB_BIT];
+      bit self_locked = pmp_cfg_pre[i][7] && !rlb;
+      bit next_locked, next_tor;
+      if (pmp_addr_cg == null || i < 0) return;
+      if (pmp_addr_now[i] == pmp_wr_val)
+        v_outcome = GEN_FC_PMP_ADDR_WRITE_CP_OUTCOME_WRITTEN;
+      else if (self_locked)
+        v_outcome = GEN_FC_PMP_ADDR_WRITE_CP_OUTCOME_IGNORED_SELF_LOCK;
+      else
+        v_outcome = GEN_FC_PMP_ADDR_WRITE_CP_OUTCOME_IGNORED_TOR_LOCK;
+      if (i == 15) v_next = GEN_FC_PMP_ADDR_WRITE_CP_NEXT_CFG_TOP;
+      else begin
+        next_locked = pmp_cfg_pre[i+1][7] && !rlb;
+        next_tor = (pmp_cfg_pre[i+1][4:3] == 2'b01);
+        v_next = next_locked ? (next_tor ? GEN_FC_PMP_ADDR_WRITE_CP_NEXT_CFG_NEXT_LOCKED_TOR
+                                         : GEN_FC_PMP_ADDR_WRITE_CP_NEXT_CFG_NEXT_LOCKED_OTHER)
+                             : (next_tor ? GEN_FC_PMP_ADDR_WRITE_CP_NEXT_CFG_NEXT_UNLOCKED_TOR
+                                         : GEN_FC_PMP_ADDR_WRITE_CP_NEXT_CFG_NEXT_UNLOCKED_OTHER);
+      end
+      pmp_addr_cg.sample(GEN_FC_PMP_ADDR_WRITE_CP_IDX_A0 + i,
+                         pmp_wr_op,
+                         self_locked ? GEN_FC_PMP_ADDR_WRITE_CP_SELF_LOCK_LOCKED
+                                     : GEN_FC_PMP_ADDR_WRITE_CP_SELF_LOCK_UNLOCKED,
+                         v_next,
+                         rlb ? GEN_FC_PMP_ADDR_WRITE_CP_RLB_RLB1 : GEN_FC_PMP_ADDR_WRITE_CP_RLB_RLB0,
+                         v_outcome,
+                         GEN_FC_PMP_ADDR_WRITE_CP_HI_BITS_NONE + int'(pmp_wr_val[31:30]),
+                         GEN_FC_PMP_ADDR_WRITE_CP_SELF_MODE_OFF + int'(pmp_cfg_pre[i][4:3]));
+      n_pmp_addr++;
+    endfunction
+
     function void write(gen_rvfi_txn t);
       logic [6:0] f7 = t.insn[31:25]; logic [2:0] f3 = t.insn[14:12];
       bit is_op = (t.insn[6:0] == ibex_pkg::OPCODE_OP), is_opimm = (t.insn[6:0] == ibex_pkg::OPCODE_OP_IMM);
@@ -1610,6 +1935,7 @@ package gen_fcov_pkg;
       dt_flush(t);
       hx_flush(t);
       rec_sample(t);
+      pmp_record(t);
       if (!rst_sampled) rst_sample(rst_first_event_cls(t.intr, t.ext_nmi, t.ext_debug_mode));
       sec_record(t);
       last_t = prev_t; have_last = have_prev;   // the neighbour facts of the rest of write() (the multiply's cp_prev / cp_delta) read the record before this one
@@ -1941,11 +2267,17 @@ package gen_fcov_pkg;
       hz_flush(null);    // a popret at the very end has no target record
       if (!rst_sampled && rst_release_seen && rst_fetch_en != GEN_FC_RST_BOOT_CP_FETCH_EN_AT_RELEASE_ON) rst_sample(GEN_FC_RST_BOOT_CP_FIRST_EVENT_NONE_FETCH_DISABLED);   // no record: fetch stayed disabled
       mv_flush(null);    // a move pair at the very end has no neighbour after
+      pmp_final(); pmp_snap_close();  // the last write is read and the standing snapshot closes at the end
       zcmp_flush(null);  // a sequence at the very end has no record after it: minstret_once not applicable
       `uvm_info("GEN_FCOV", $sformatf("move pairs: %0d sampled, %0d with mismatching micro-ops (%0d of them the self-test's)", n_mv, n_mv_miss, ut_mv_miss_expected), UVM_LOW)
       `uvm_info("GEN_FCOV", $sformatf("slice A samples: records=%0d mul_timing=%0d rst_boot=%0d (boot_to_req %0d) sec_ctrl_inputs=%0d zcmp_hazard=%0d", n_rec, n_mt, n_rst, boot_to_req, n_sec, n_hz), UVM_LOW)
+      `uvm_info("GEN_FCOV", $sformatf("pmp samples: cfg_write=%0d addr_write=%0d csr_access=%0d table_state=%0d (dropped without a retire %0d)", n_pmp_cfg, n_pmp_addr, n_pmp_acc, n_pmp_tbl, n_pmp_tbl_dropped), UVM_LOW)
       if (mul_cg != null) begin   // referee: a group the sampler fed must show coverage, a dropped sample is a collected failure
         if (n_mv_miss > ut_mv_miss_expected) `uvm_error("GEN_FCOV_REF", $sformatf("gen_cmp_zcmp_mv_cg: %0d legal move pairs whose micro-ops did not match the expansion", n_mv_miss - ut_mv_miss_expected))
+        if (n_pmp_acc > 0 && pmp_acc_cg.get_coverage() == 0.0) `uvm_error("GEN_FCOV_REF", "gen_pmp_csr_access_cg sampled without coverage")
+        if (n_pmp_tbl > 0 && pmp_tbl_cg.get_coverage() == 0.0) `uvm_error("GEN_FCOV_REF", "gen_pmp_table_state_cg sampled without coverage")
+        if (n_pmp_cfg > 0 && pmp_cfg_cg.get_coverage() == 0.0) `uvm_error("GEN_FCOV_REF", "gen_pmp_cfg_write_cg sampled without coverage")
+        if (n_pmp_addr > 0 && pmp_addr_cg.get_coverage() == 0.0) `uvm_error("GEN_FCOV_REF", "gen_pmp_addr_write_cg sampled without coverage")
         if (n_mul > 0 && mul_cg.get_coverage() == 0.0) `uvm_error("GEN_FCOV_REF", "gen_mul_ops_cg sampled without coverage")
         if (n_div > 0 && div_cg.get_coverage() == 0.0) `uvm_error("GEN_FCOV_REF", "gen_div_ops_cg sampled without coverage")
         if (n_alu > 0 && alu_cg.get_coverage() == 0.0) `uvm_error("GEN_FCOV_REF", "gen_isa_alu_reg_cg sampled without coverage")
