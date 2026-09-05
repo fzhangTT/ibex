@@ -2636,3 +2636,16 @@ the Critic's form Section 13 on e4aef00..2f92709 is the one written-but-unhanded
 STOPPED and a handoff written: each role's STATUS.md carries its state and owed items; the Orchestrator's handoff is
 dv/auto_dv/work/orchestrator/HANDOFF_2026-09-05.md with the chain scripts copied out of the session scratchpad into
 dv/auto_dv/work/orchestrator/chains/. A new team may be created at resume.
+
+### LOG-100 corrigendum (2026-09-05T19:13:07Z, Orchestrator; from the DV Lead's handover check)
+LOG-100 names the plan's criterion text as gen_fcov_plan.md:50-52, :97-99 and :6731-6735. Those are LOG-097 addendum 4's
+line numbers at its own commit, copied forward; at 2f92709 two of the three ranges land on other paragraphs (the
+unbuilt-covergroup mark paragraph and a cross-bin list). The criterion lives at four sites the DV Lead's STATUS handover
+names (the gate sentence, its restatement, the completeness-measure section and the reporting clause) plus the two
+generator sources that produce them; a successor edits those, not the numbers above. Second correction, from runtime-2:
+the comment-census figure quoted in the Orchestrator's 18:45Z relay (27 occurrences on 24 lines) was an intermediate
+anchor-blind count; the committed figure at 5dcee83 is 39 on 36, one arithmetic under three scopes with the Critic's 35 on
+32 (Python only) and rev90's 37 on 34 (Python and yaml). Third, a live gap runtime-2 found while preparing the LOG-099
+facts: the linked VPI library is recorded as an identity term in the build manifest but nothing reads it back at run time,
+so a build that linked the wrong Python's library is distinguishable after the fact and refused by nothing; a run-time check
+against the pinned venv is runtime-2's follow-on.
