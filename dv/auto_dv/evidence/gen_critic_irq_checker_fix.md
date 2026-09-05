@@ -599,3 +599,19 @@ isolate it as rev81 says, so the mirror did not move the figure and the unnamed 
 Its Low on the <scratch> roots is folded in L-25. Its Low on the manifest row for the l61 log, VERIFIED and adopted as L-26 (Low,
 records; tb-infra-2): the row says three landings where the log says four and five bus-protocol ids where the log and the run say
 four. Its Info on the identity recipe's locale dependence is noted, as in Section 11. Verdict unchanged: APPROVE, L-25 and L-26 owed.
+
+### 12.2 Landing 62, 41bcbe8..a8792ce: L-25 and L-26 closed (appended under a HOLD, 2026-09-05T15:50:28Z; Sections 1-12.1 unchanged)
+
+gen_fu_l62_counters_m2_companion.log at a8792ce, Rows 7 and 8, read against this file and the retained runs (l53/l62_checks.txt).
+L-25 CLOSED: Row 7 corrects the ledger on the four lines against this file's Section 12.1 and names the document. L-26 CLOSED: the
+l61 manifest row reads FOUR landings, and the "five bus-protocol ids" wording is shown to live in 41bcbe8's commit message and not the
+row, which I confirmed (the manifest at 41bcbe8 has no "five bus"). rev81's Lows on the l61 log: the five runs' roots, headers, whole fire
+lines and whole summary lines are given, and on the retained g_mut, h_mut and h_abl I read irq_pending 867 and irq_entry 1, 1 and 0
+with the summary line md5 71a730485766 on all three, as the log says; the ablation sentence is corrected to zero errors OF THE NAMED
+CHECK beside the 867 from the mutation's own signature, which is the precision Section 9 adopted and Section 12 should have read that
+way too; the mirror is ruled out as the 250's cause by my 244 on a pre-mirror archive; the locale is named beside the recipe; the
+fetch-enable plusarg is recorded (the log does not measure a run without it; Section 11 did).
+
+No review of a8792ce has landed at this writing; its reconciliation follows as a further line if the Orchestrator asks for one.
+
+Verdict unchanged: APPROVE; nothing owed to tb-infra-2 on the irq checker group from this file.

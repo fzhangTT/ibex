@@ -480,3 +480,38 @@ cb66d1b569cba4fb and 0d548320b34bf9d9 being MUT-SPURIOUSRVALID mutant builds wit
 L-9 (Low, records; tb-infra-2): the l61 log repeats them without saying so, the shape its own Row 2 corrects for the l58 pair. Its Info
 on the locale-dependent identity recipe is noted. Verdict unchanged: APPROVE on 139c325..41bcbe8, the group's standing verdict APPROVE;
 L-6, L-8, L-9 and L-10 owed to tb-infra-2's counters follow-up, L-4 and L-5 to the DV Lead.
+
+### 9.2 Landing 62 (the counters companion), 41bcbe8..a8792ce: L-6, L-8, L-9, L-10 and I-1 closed; nothing owed on the group (appended under a HOLD, 2026-09-05T15:50:28Z; Sections 1-9.1 unchanged)
+
+Artifacts at a8792ce: gen_mut_spuriouswindow.diff (md5 2e780973943c9c56, 1701 bytes), gen_fu_l62_counters_m2_companion.log
+(f02c280fe7c42c6d, 22154 bytes), gen_manifest.md; rev89 is running on the range and is not read here. Method: the retained diff applied by git apply to my own archives and
+compiled; the retained runs the log names read on the shared scratchpad and the clone's out directories; every id counted with the
+log's own commands; the manifest's 3527 rows checked; findings fixed before any review of the landing (l53/draft_s10_l62_prerev.txt).
+Logs: l53/l62_checks.txt, l62_log_at_a8792ce.txt.
+
+- L-8 CLOSED, the decisive tie: the retained MUT-SPURIOUSWINDOW diff applied to a 4bd933f archive compiles to build identity
+  1c4f99930208695f, and to a 4bd933f archive with ac2d306's two tb files laid over it to dd9f4cd5ddd825de, exactly the l58 log's E and
+  F, so both mutant builds now recompute from committed blobs plus the retained diff; the mutated gen_agents_pkg.sv reads
+  34d354bb18468154 as the log says, and the two copied files' digests are the ac2d306 blobs (my F build read them so in Section 9.1).
+- L-6 CLOSED: on the retained e_mut and f_mut runs (headers 1c4f99930208695f and dd9f4cd5ddd825de) my own per-id count reads totals
+  2640 and 2602 with exactly two ids differing, sva_rvalid_legal 129 to 110 and sva_ibus_rvalid_outstanding 29 to 10, every other id
+  equal; the log's reading is right: the whole-run total was the wrong statistic and the per-id table is the claim. Its third
+  measurement, the same mutation on a c736d29 archive (w_mut, identity 93e8b0487eeda480: 110, 10, 100, total 2603, the one being
+  irq_entry 4 to 5 from the per-line enable term) and its clean control (c_clean, d9a0553bd4e0b326: PASS, 0) read on the retained runs
+  exactly. My totals of 2684 and 2646 stand as my builds' figures with the same 38.
+- L-9 CLOSED: out_l53wrapmut and out_l53satmut record gen_agents_pkg.sv 0b9b7ed9e3e808bf against the committed c271ef7cce08c653 and
+  differ only in gen_protocol_props.sv (4b00a9824f2ff843 wrapping, 231d124e01347a9b saturating); out_l53 is the clean sibling at
+  713ecb4610393977; read on the clone's out directories.
+- L-10 CLOSED as stated unresolved: 4ebaa0bc49091b37 matches none of the 35 out directories' identities by my own hash of each
+  sources_sha256.txt, and the log records the search rather than an identity a reader cannot reproduce.
+- I-1 CLOSED: the l58 cycle list is the IBUS side, 297 in four ids and 330 omitted with the omitted ids listed; my count agrees, and the
+  log reconciles rev76's 328 as counting the two sva_rvfi_irq_valid_exclusive lines as shown.
+- The l53 counting triple and Row 5 figures the l58 log stated were verified in Section 9 on the clone's out_l53wrapmut/r and
+  out_l53satmut/r. L-4 and L-5 stay with the DV Lead, as the log says. The manifest's 3527 rows match an archive; no TB source change.
+- I-2 (Info): the retained runs' roots are the session's shared scratchpad, named by its full prefix; the durable part is the identities,
+  which now recompute from committed blobs plus the diff.
+
+No review of a8792ce has landed at this writing; its reconciliation follows as a further line if the Orchestrator asks for one.
+
+CRITIC VERDICT: APPROVE on 41bcbe8..a8792ce. The outstanding-counters group's standing verdict is APPROVE with nothing owed to tb-infra-2; L-4
+and L-5 remain the DV Lead's.
