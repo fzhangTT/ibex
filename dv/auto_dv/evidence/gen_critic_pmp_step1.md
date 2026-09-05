@@ -208,3 +208,96 @@ review: L-1 (the two addr_write cross bins dead by construction, unmarked in the
 words differ: the review's APPROVE-WITH-CHANGES and my REQUEST-CHANGES rest on the same facts; my standard treats a bin
 booked by a mechanism the plan excludes as blocking for the covergroup that books it (the tb_l4 rule), while the manifests
 and the flip, which no false hit touches, are not blocked.
+
+## Section 7. Recorded re-review: the step-1b fix 4cd3ff6 and its re-measured block 2956a8a (written 2026-09-05T09:48:25Z)
+
+Scope. The range the Orchestrator announced is d15d969 to the PMP block retention commit, 2956a8a; the commits judged
+are 4cd3ff6 (landing 44: the sampler fixes, the retained log gen_fu_l44_pmp_step1b.log and the corrigendum beside the
+landing-43 log) and 2956a8a (runtime-2's second block under gen_pmp_measurement/), with the DV Lead's PMP plan lines at
+73e94d7 read as the classifiers' reference. Every other commit inside the range belongs to another group and is judged
+at its own range. Method: the diff read in full; each classifier traced against the RTL terms it names; the block's
+figures re-derived from its run directories with the flow's own checker; the block's listings re-parsed; the
+predictions re-checked; my logs under dv/auto_dv/work/critic/pmp1b/ (README.txt with the commands). Exposure: the
+Orchestrator's messages summarised the landing and the block; rev53 has not landed and is read only for a Section 8.
+dv_principles.md sha256 d9c27db18f511411, unchanged.
+
+7.1 Gates, identities, records.
+- On a detached worktree of 2956a8a: gen_fcov_codegen --check up to date, gen_knobs_codegen --check up to date,
+  GEN_UT_FCOV_CODEGEN PASS, gen_unbuilt_mark_check PASS; gate key dd9d079062611298 at the range end; TB-source digest
+  424d9a01b3f5b2a8 at the range end and, recomputed from a git archive of 4cd3ff6's four TB directories,
+  1105ddfa05dd0163, the compile identity the l44 log names. No sampler line touching PMP changed after 4cd3ff6
+  (55ef529 and dc60063 diffs carry zero PMP lines); gen_fcov_groups.svh's PMP covergroups are unchanged since 218e9f3,
+  so the render did not move and the three manifests are untouched since the flip at b74ca93 (md5
+  faf7e54976f4c947f85c7a2eb778513c, 91c204336115865799239be1ea3d5b0b, 63b486a37ad3f121a62bf15a98613c12; 179, 39 and 26
+  declared bins).
+- The block's four files hash to the index table's sizes and sha256s; the yaml pins 4cd3ff6 with the driver's
+  gen_run.py at the committed blob; all three files are ASCII-clean.
+- My fixture (c) control on a copy of the 2956a8a tree: the pristine copy passes (DECL 25 of 27, 0 declarations on an
+  unrendered covergroup); a referenced manifest declaring counts.cp_x.b fails DECL with rc 1.
+
+7.2 The two Mediums of Section 5, traced and measured.
+- M-1 (cp_outcome compared the raw attempted byte) FIXED. pmp_stored_byte masks 8'h9f and drops W when R is clear
+  under MML=0; the RTL stores lock from bit 7, mode from [4:3], exec, write = mml ? w : (r & w), read
+  (rtl/ibex_cs_registers.sv:1429-1446), has no field for bits 6:5, and keeps NA4 in this configuration
+  (PMPGranularity 0 in ibex_configs.yaml), so the helper is the stored byte. The arms: post == pre with exp != pre is
+  ignored (mml exec if mml && !rlb && pmp_mml_exec_lock, else lock); post == exp with exp != (a & 9f) is w_dropped;
+  else written. pmp_mml_exec_lock names {001, 010, 011, 101} over {R, W, X}, the RTL's is_mml_m_exec_cfg (:164-176),
+  which the RTL applies to the legalised wdata under mml & ~rlb (:1466-1468); under MML the legalised W equals the raw
+  W, so the two agree. L-3 (the RWX=111 misroute) is the Minor-1 half of this fix. MEASURED: tb-infra-2's prediction,
+  filed before the block, holds on every clause in the block's own listing, which I re-parsed to 407 bins per entry
+  with the header totals (csr_warl 214/125/68, lock 142/174/91, mseccfg 177/80/150): the four cr_mml_exec_suppress legs
+  unmoved in all three entries (3/4/3/6 of 39, 4/3/3/7 of 40, 40 of 40), cp_outcome.ignored_mml_exec 13 to 13, 12 to
+  11, 40 to 40, cr_lock_outcome.locked_rlb0_ignored 23 to 23, 40 to 40, 0 to 0, c1111_written 3/15/40 held.
+- M-2 (cp_first_after_reset one run-wide flag) FIXED. pmp_first_acc is a four-entry array indexed by the CSR class
+  and cleared per class at the first access; the plan defines the bin per CSR. The corrigendum beside the landing-43
+  log withdraws that log's "no bin unreachable" sentence, as the row asked.
+
+7.3 The Lows of Section 5.
+- L-1 (the dead cr_self_lock / cr_tor_lock rlb1 bins) CLOSED by the raw-lock change at 73e94d7 and 4cd3ff6: cp_self_lock
+  and cp_next_cfg carry the raw lock bit, cp_rlb carries RLB, the effective lock (lock & ~rlb, the RTL's pmp_cfg_locked
+  at :1463) decides the outcome only. MEASURED: cr_self_lock.locked_rlb1_written 0 to 14 of 39 in csr_warl and 0 to 40
+  of 40 in lock, cr_tor_lock.nl_tor_rlb1_written 0 to 1 and 0 to 40, the two bins the change was meant to reach.
+- L-2 (seeds 3 against 12) unchanged here; it is the round-2 form v3's item.
+- L-4 (address cp_outcome decided by the readback) CLOSED: the outcome is the pre-state rule (self_blocked = lock &
+  !rlb; next_blocked && next_tor, the RTL's pmp_addr_we terms at :1475-1479) and the readback only confirms; a
+  disagreement increments n_pmp_addr_readback_odd, printed in the run summary ("readback disagreed with the pre-state
+  rule"), 0 on the landing's fixture.
+- L-5 (cp_trap.illegal by elimination) ACCEPTED as the stated caveat, the alternative the row allowed: rvfi_trap is one
+  bit in this TB and a PMP CSR access traps only as an illegal instruction on this DUT; the log says so as Minor-3.
+- L-6 (the Sample line's regime-phase trigger) CLOSED: the plan line now states the trigger is NOT BUILT and arrives
+  with the regime in step 2, and that the reset-state table is never snapshotted today.
+- O-1, O-2 stand as observations; the block's verdicts are now 119 PASS (the manifests exist at 4cd3ff6).
+
+7.4 The block, re-derived from its run directories.
+- ci/check_fcov_expectations.py --report-dir on each run's retained urgReport_variable_form with the committed manifest
+  of its entry: csr_warl 39 runs (seed 230969025 has no report, as the yaml states: the generator at 4cd3ff6 asserts
+  on its draw, fixed later at 4017573 and not part of this block), 179 x 39 = 6981 HIT, 0 unmet; lock 40 x 39 = 1560
+  HIT; mseccfg 40 x 26 = 1040 HIT; every run's own post-hoc fcov_check.log agrees with mine on every declared bin. The
+  claim "all three manifests hold at every seed" is exact.
+- The listing's every-seed set contains every declared bin of each manifest and no declared bin is below the bar.
+  Newly every-seed since the first block (declarable now, not before): in lock cr_self_lock.locked_rlb1_written,
+  cr_tor_lock.nl_tor_rlb1_written and cr_reset_read.rst_mseccfg (0 to 40 of 40); in mseccfg cp_outcome.w_dropped and
+  cr_rw01_mml.rw01_mml0_wdrop (38 to 40 of 40); none in csr_warl. Fifteen mover rows beyond the ten predicted (eleven
+  distinct bins), all in the listing.
+- The index's three disclosures (ten csr_warl runs re-run after their dispatcher was killed; the post-hoc check through
+  gen_fcov.check_test with result.yaml untouched and the used manifest renamed .post; the caller defect caught by its
+  shape before reporting) are the honest form; nothing in them changes a figure above, and the caller defect's
+  mechanism (run_checker's --vdb branch skipping the cross rewrite) is the one my own first attempt at the shape
+  tally would have hit had I not used --report-dir.
+
+7.5 New rows, conformance, verdict.
+- L-7 (Low, records; runtime-2 and the Test Writer). The index's consumer sentence says the re-render "lock promotes two
+  bins; csr_warl and mseccfg unchanged". The listing carries three newly every-seed bins in lock (the two raw-lock bins
+  and cr_reset_read.rst_mseccfg at 40 of 40) and two in mseccfg (cp_outcome.w_dropped, cr_rw01_mml.rw01_mml0_wdrop at
+  40 of 40). The re-render may decline any of them under the cross-operand rule or a seed-dependence reason, but the
+  record should name each candidate and the decision rather than say unchanged.
+- L-8 (Low, records). "Two left the every-seed set" names cp_outcome.ignored_lock in csr_warl (39 to 23 of 39, which
+  did) and in mseccfg (7 to 0 of 40, which was never every-seed there and moved from some to never). Say so.
+- Conformance (dv_principles.md): the classifiers now read what the RTL stores and the rule the RTL applies; the
+  readback disagreement is counted and reported rather than absorbed; the refused Minor is a stated caveat; the block
+  discloses its re-runs and its post-hoc method; LOG-096 is met (render unchanged and checked, compile identity named
+  and reproduced, sampling points and field semantics stated, the refused row stated, no manifest consequence since
+  every declared bin is every-seed in the new block).
+CRITIC VERDICT: APPROVE for 4cd3ff6 and 2956a8a. The REQUEST-CHANGES of Section 5 on 2d87642..5db73d4 is LIFTED on
+this record: the pmp-step1 group stands approved with L-2 (form v3), L-7 and L-8 owed as disclosed. Sections 1-6
+above are byte-identical to the 2897920 commit (136a1e78eb187626).
