@@ -188,15 +188,28 @@ def check_selection(c, plan_path=None):
     # The per-entry checks find each row by name, so an EXTRA row is invisible to them; count the table.
     rows = re.findall(r'\| gen_\w+ \| \d+ \| \d+ \| \d+ of \d+ \|', c.flat)
     c.check('Section 7 row count', len(rows), len(meas))
-    # The prose count of open conditions is a claim about the table beside it, so read the table.
-    conds = re.findall(r'\| [a-f] \| [^|]+ \| ([^|]+) \|', c.flat)
+    # The prose count of open conditions is a claim about the table beside it, so read the table. Every status
+    # cell must BEGIN with open or closed: counting only the cells that start with open reads a cell leading
+    # with its history as closed, which let a condition whose cell said OPEN in its middle pass this check.
+    # The row count is read from the prose too, since a dropped closed row leaves the open count right.
+    conds = re.findall(r'\| ([a-f]) \| [^|]+ \| ([^|]+) \|', c.flat)
     words = {'one': 1, 'two': 2, 'three': 3, 'four': 4, 'five': 5, 'six': 6}
-    m = re.search(r'(\w+) of the six are open at this commit', c.flat)
-    if m is None or m.group(1).lower() not in words:
+    n_open = n_closed = 0
+    for key, cell in conds:
+        head = cell.strip().lower()
+        if head.startswith('open'):
+            n_open += 1
+        elif head.startswith('closed'):
+            n_closed += 1
+        else:
+            c.fail(f'condition ({key}) status: the cell begins {cell.strip()[:20]!r}, not open or closed')
+    m = re.search(r'(\w+) of the (\w+) are open at this commit', c.flat)
+    if m is None or m.group(1).lower() not in words or m.group(2).lower() not in words:
         c.fail('open conditions: the form states no readable open count')
     else:
-        c.check('open conditions', words[m.group(1).lower()],
-                sum(1 for s in conds if s.strip().lower().startswith('open')))
+        c.check('condition rows', words[m.group(2).lower()], len(conds))
+        c.check('conditions with a classified status', len(conds), n_open + n_closed)
+        c.check('open conditions', words[m.group(1).lower()], n_open)
 
 
 def run_checks(form_text, manifest, preflight_text, quiet=False, plan_path=None):
@@ -393,9 +406,15 @@ def self_test():
          '| gen_test_mul_div | 3 | 194 |'),
         ('a dropped Section 7 row fails', r'\| gen_test_rst_boot \| 3 \| 6 \| 3 of 3 \|[^\n]*\n', ''),
         ('a wrong restated plan run count fails', r"(\| THE ROUND'S PLAN AT \w+ \| 20 \| )56 \|", r'\g<1>57 |'),
-        # The per-entry checks look each row up by name, so only a count catches an EXTRA row.
         ('a wrong open-condition count fails', r'Three of the six are open at this commit',
          'Four of the six are open at this commit'),
+        # The cell M-2 was about: a status that opens with its history and says CLOSED further in. Counting
+        # cells that START with open read this as closed, so an open condition passed the count.
+        ('a condition cell that begins with neither open nor closed fails',
+         r'\| a \| the irq_entry checker item classified and fixed \| CLOSED at 5f9bea6',
+         '| a | the irq_entry checker item classified and fixed | fixed at b9e5fad; CLOSED at 5f9bea6'),
+        ('a dropped condition row fails', r'\| c \| the fixed cocotb timeout[^\n]*\n', ''),
+        # The per-entry checks look each row up by name, so only a count catches an EXTRA row.
         ('an extra Section 7 row fails', r'(\| gen_test_rst_boot \| 3 \| 6 \| 3 of 3 \|[^\n]*\n)',
          r'\g<1>| gen_test_ghost | 3 | 9 | 1 of 1 | PASS |\n'),
     ]:

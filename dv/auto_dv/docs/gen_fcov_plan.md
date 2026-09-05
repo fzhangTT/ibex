@@ -2,7 +2,7 @@
 
 Deliverable 3 (DV_prompt.txt Section 11): the definition of every functional-coverage bin (not the
 implementation; TB Infra implements covergroups in the gen_ namespace from this plan). Owner: dv-lead.
-Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in), generated (inputs digest f9a685486369 over every part file, no clock) from dv/auto_dv/work/dv-lead/parts6/fcov_*.md. Part-file names in this document (tp_<area>.md, fcov_<area>.md, gen_part_<area>.md, trace_*_<area>.csv and the README_*_BRIEF.md briefs) are this plan set's own gitignored sources, named as provenance: the content they hold is in the corresponding area of gen_test_plan.md, gen_fcov_plan.md or gen_feature_list.md, and the bug and doc-defect number series they define are in gen_bug_log.md. No claim in this document rests on opening one. Three rtl-arch notes this plan set cites are committed references, not work files: dv/auto_dv/evidence/gen_multdiv_bound_props.md (the MD-n bound properties and covers), dv/auto_dv/evidence/gen_bug_reproducer_specs.md (the reproducer recipes behind the bug log) and dv/auto_dv/evidence/gen_interface_inventory.md (the numbered driver and protocol rules); citations name them by basename and resolve there.
+Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in), generated (inputs digest cdb6e3abfe31 over every part file and over the generator's own source, no clock; what the digest covers and the commands that reproduce it are recorded at dv/auto_dv/evidence/gen_plan_digest_provenance.md) from dv/auto_dv/work/dv-lead/parts6/fcov_*.md. Part-file names in this document (tp_<area>.md, fcov_<area>.md, gen_part_<area>.md, trace_*_<area>.csv and the README_*_BRIEF.md briefs) are this plan set's own gitignored sources, named as provenance: the content they hold is in the corresponding area of gen_test_plan.md, gen_fcov_plan.md or gen_feature_list.md, and the bug and doc-defect number series they define are in gen_bug_log.md. No claim in this document rests on opening one. Three rtl-arch notes this plan set cites are committed references, not work files: dv/auto_dv/evidence/gen_multdiv_bound_props.md (the MD-n bound properties and covers), dv/auto_dv/evidence/gen_bug_reproducer_specs.md (the reproducer recipes behind the bug log) and dv/auto_dv/evidence/gen_interface_inventory.md (the numbered driver and protocol rules); citations name them by basename and resolve there.
 
 Build configuration: `opentitan` (ibex_configs.yaml): BaseIsa=RV32IorCHERIoT (CHERIoT mode excluded
 by owner ruling), RV32E=0, RV32M=RV32MSingleCycle, RV32B=RV32BOTEarlGrey, RV32ZC=RV32ZcaZcbZcmp,
@@ -158,7 +158,10 @@ ibex_pkg; compiled with +define+RVFI; cheriot_enable_i tied IbexMuBiOff inside t
   a red. AND THE COMPARISON IS RECORDED WHERE THE BLOCK IS, not in a commit message: the seeds compared, the
   red forms compared, the per-seed result and the script that produced it land beside the block, because a
   carry-over asserted in prose with the diff run in somebody's shell satisfies the letter of this rule and
-  leaves a reader nothing to check. (c) A
+  leaves a reader nothing to check. THIS RULE BINDS THE PLAN SET'S OWN EVIDENCE TOO: the inputs digest these
+  documents carry in their headers is explained in a record, dv/auto_dv/evidence/gen_plan_digest_provenance.md,
+  which states what the digest covers and prints the commands that reproduce it, because the digest was first
+  asserted in a commit message and computed from files no reader can see. (c) A
   REMOVED BIN'S REASON CARRIES ONE OF THREE CLASSES with its N-of-M count and the block's committed path:
   SEED-DEPENDENT, where the measurement is its own support; GENERATOR DEFECT, where the declaration is wrong
   rather than unlucky, which must NOT be written as seed-dependence or the defect is buried in a reason field;

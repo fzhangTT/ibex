@@ -338,9 +338,15 @@ covers the other 37, whose per-bin evidence is Section E of gen_fu_binv_pairfix.
 index. gen_test_pmp_csr_warl IS measured at every one of forty seeds and an earlier sentence of mine said
 otherwise. The census reads 40 runs with 40 coverage reports and EVERY 178 of 179 declared bins, the one
 exception being a single cross leg at 39 of 40, and the manifest was re-rendered at 9c28944 to exactly those
-178. So the current declared set is measured at forty seeds. The 39-of-40 figure belongs to the PMP blocks at
-218e9f3 and 4cd3ff6, where the cause was a generator assert producing no program rather than any coverage
-refusal, and I carried it here from a message instead of reading the census. The four that were not measured over forty seeds
+178. So the current declared set is measured at forty seeds. TWO DIFFERENT 39-OF-40 FIGURES ARE IN PLAY and an
+earlier version of this sentence merged them. The entry's own row in the wave record
+(gen_wave_4017573/gen_wave_4017573.yaml: runs 40, pass 39, declared 179, every_seed 178, under_bar 1, whose
+index says those figures are each run's own checker verdict) IS a coverage refusal: one run's verdict against
+the 179-bin set refused on the single cross leg, and that leg left the set when the manifest was re-rendered
+at 9c28944 to 178. The other figure, a generator assert producing no program rather than refusing on coverage,
+belongs to the PMP blocks at 218e9f3 and 4cd3ff6; the same wave record states that this entry produced a
+program at all forty seeds, so that cause is not its own. I carried the PMP cause onto this entry from a
+message instead of reading the census. The four that were not measured over forty seeds
 are gen_test_csr_access, gen_test_csr_trap_setup, gen_test_isa_alu and gen_test_isa_cti, whose declared sets
 are the round-1 sets calibrated to three seeds.
 
@@ -355,12 +361,17 @@ own favour: gen_fcov_plan.md Section 0, the "Seeds against the guarantee" rule, 
 current declared sets were calibrated over, and no manifest carries the field today, so under the plan's own
 words all fifteen are capped at their calibrated count and NONE at forty. The blocks above are what those
 entries were measured over; they are not the field the rule reads. So this paragraph is the evidence for a
-future cap and not a licence for Section 3.5's twelve, and the licence arrives when the field does. The inputs digest those documents carry, and what a reader can and cannot recompute from it, is recorded
-in dv/auto_dv/evidence/gen_plan_digest_provenance.md. THE CAP
+future cap and not a licence for Section 3.5's twelve, and the licence arrives when the field does. THE CAP
 IS APPLIED BY HAND TODAY: the plan places it in a single testlist-header value beside
 fcov_manifest_required_tiers (the same Section 0 rule), and that value is absent from gen_testlist.yaml:59,
 so nothing in the flow reads it and a reviewer checks this by hand until it exists. Until that lands the
 rows above are the plan, and this section is restated from a fresh selector call if it does.
+
+THE INPUTS DIGEST THE PLAN DOCUMENTS CARRY, the number in the header of gen_fcov_plan.md,
+gen_test_plan.md and gen_feature_list.md, is explained at
+dv/auto_dv/evidence/gen_plan_digest_provenance.md: what it covers, the commands that reproduce it, and
+what a reader of the repository alone cannot recompute from it, since the generator and its parts are
+gitignored. The three headers name that record too.
 
 TWO OPEN ITEMS THIS FORM DOES NOT CLAIM. The hart_id plusargs on gen_test_csr_access and gen_test_rst_boot
 are an ask of mine rather than an item any record owes, so no row above claims them and the round does not
@@ -373,7 +384,7 @@ this form records rather than re-argues, each with its status at this commit.
 
 | # | condition | status |
 |---|---|---|
-| a | the irq_entry checker item classified and fixed | fixed at b9e5fad; rev60 APPROVE-WITH-CHANGES with rows owed; the Critic's re-verdict REQUEST-CHANGES confined to one records sentence; CLOSED at 5f9bea6: gen_critic_irq_checker_fix.md now records M-3 closed by landing 56's companion at fab8a61 and the REQUEST-CHANGES on 65b7cb0..b9e5fad lifted, with the standing verdict APPROVE. rev60's and the Critic's Lows are owed inside tb-infra-2's irq follow-ups, and the NMI-mode change is its own future landing |
+| a | the irq_entry checker item classified and fixed | CLOSED at 5f9bea6: gen_critic_irq_checker_fix.md now records M-3 closed by landing 56's companion at fab8a61 and the REQUEST-CHANGES on 65b7cb0..b9e5fad lifted, with the standing verdict APPROVE. The item was fixed at b9e5fad and reviewed rev60 APPROVE-WITH-CHANGES with rows owed, and the Critic's re-verdict was REQUEST-CHANGES confined to one records sentence. rev60's and the Critic's Lows are owed inside tb-infra-2's irq follow-ups, and the NMI-mode change is its own future landing |
 | b | its red fixture RED-OK at three of three rather than masked | CLOSED at 67c6ac1: the three seeds re-run on a b9e5fad build read 3 of 3 RED-OK with zero irq_entry firings, beside the earlier block with its records untouched |
 | c | the fixed cocotb timeout in the stimulus path replaced by a seed-independent bound | CLOSED: fixed at 6b894ab, rev64 APPROVE-WITH-CHANGES at 348e4ae with its rows at 2c63b83, no re-review owed |
 | d | a fresh forty-seed sweep at the fix commit with its manifest rendered FROM that sweep | open |
@@ -390,6 +401,10 @@ the stimulus is byte-identical, which is the same reasoning reaching a different
 CONDITION (f) IS NOT A FOOTNOTE TO (a). A wedged run's coverage measures nothing and its failures mask every
 other signal in it, so no promotion can rest on a run set containing one. Whether the wedge is a design
 finding or a testbench one is being classified and does not change the condition.
+
+EVERY STATUS CELL ABOVE BEGINS WITH open OR closed and carries its history after that word. The count
+below is read from the first word of each cell, by a reader and by gen_round_form_check.py alike, and a
+cell that led with its history is how a condition still open once got counted closed by that check.
 
 Three of the six are open at this commit, and the round runs the entry unmeasured, exactly as the wave did.
 
