@@ -168,11 +168,13 @@ executes. Not part of the B8 reproduction; listed because the same mechanism app
   dv/auto_dv/tb/gen_binds.sv:15-24 behind the knob chk_sva_b8 (default off; LOG-067, name ruled in LOG-076); retained reds with
   the knob on: dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_fu_l10_b8_zcmp_dummy_on_* (35 firings on gen_zcmp_dummy_directed.S)
   and gen_fu_l10_b8_zcmp_dummy_popret_on_* (59 firings on gen_zcmp_dummy_popret_directed.S), counts per the excerpt headers;
+  each excerpt retains every SVA failure line of the property, 35 and 59, equal to those header totals, and truncates only the
+  UVM_ERROR report lines, to the first 12 of any reporter;
   with the knob off the same programs show 0 firings (gen_fu_l10_lockstep_zcmp_dummy_* and gen_fu_l10_lockstep_zcmp_dummy_popret_*,
   same build and programs, shorter retire target +gen_ut_boot_retire=10 against 1000 for the knob-on runs; coverage of the
-  firing window per pair: for zcmp_dummy the kept firings end at 6375000 ps and both runs reach the tohost store (excerpt line
+  firing window per pair: for zcmp_dummy the firings end at 6375000 ps (6375 ns) and both runs reach the tohost store (excerpt line
   "tohost 0x00000001"); for popret neither run reaches tohost, both end in "no tohost store (SimTimeoutError)", the knob-on
-  run at 279455 ns with its last kept firing at 11415000 ps and the knob-off run at 201095 ns, far beyond that window; excerpt
+  run at 279455 ns with its last firing at 11415000 ps (11415 ns) and the knob-off run at 201095 ns, far beyond that window; excerpt
   headers "sva_b8_dummy_in_expansion: 0").
 
 ## 7. Anchors table
