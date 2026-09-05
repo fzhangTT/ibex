@@ -1,0 +1,45 @@
+# Cross-model review - committed diff de1ccf32..255dca32
+
+**Reviewer:** claude CLI 2.1.261 (Claude Code); run-reported model: claude-fable-5-1,claude-haiku-4-5-20251001; requested effort: high (the CLI does not report the effective setting); fresh session 2aba4173-3958-4961-be88-e98e0f0d2eba; sandbox: bubblewrap, working directory = detached read-only checkout of commit 255dca32dd85fa13e36e3bc140553d3ae8baa927 (the live working tree is not read), filesystem read-only except this run's own output directory, scratch HOME (no access to the executing model's settings, instructions or memory), private PID namespace; network open for the model API, web tools disallowed by policy (fallback reviewer per owner ruling A-001)
+**Codex unavailable because:** ERROR: You hit your spend cap set by the owner of your workspace. Ask an owner to increase your spend cap to continue.
+**Wrapper:** dv/auto_dv/tools/gen_cross_review.sh blob 713e8c09 (the copy executed; equals the wrapper committed at the reviewed commit); reviewed commit 255dca32dd85fa13e36e3bc140553d3ae8baa927
+**Date:** 2026-09-04
+**Target:** committed diff de1ccf32..255dca32 (echo at raw line 1)
+
+---
+
+TARGET: de1ccf321119818ac3824670ab1ea5c77726fd70..255dca32dd85fa13e36e3bc140553d3ae8baa927
+
+Reviewer identity: Claude Fable 5.1 (claude-fable-5-1), fresh session, detached read-only checkout of 255dca3. Every figure below was re-derived from the committed blobs in this checkout. The out-tree under /proj_soc was not read, so out-tree claims (archive tarball hashes, the rtl-arch-009 manifest) are marked unverified rather than confirmed.
+
+## Verified (reproduces)
+
+- **Range scope.** 20 commits, 19 files. Nothing under rtl/, ci/, dv/auto_dv/tb, env, tests, flow or tools. The only code change is 7 lines in gen_excl_select.py. The two binaries are the gzipped modlist/modinfo.
+- **Exclusion file identity.** md5 1cfb35e2…, sha256 91dbc8c7… match the README COUNTS block and the section 3 flow bullet. Entry lines 1424 = 3 Assert, 189 Block, 83 Branch, 667 Condition, 2 Fsm, 5 State, 463 Toggle, 12 Transition, matching COUNTS. 13 MODULE scopes. Per-module entry count for ibex_cheriot_ex is 531, matching the carve-out figure quoted in the analysis and LOG-094.
+- **Entry-set delta vs pass 13 (focus 1).** Sorted entry diff against de1ccf3 is exactly three added Blocks (controller ctrl_fsm default at :990-993, LSU ls_fsm default at :605-607, multdiv md_state default at :522-524) plus Condition index renumbering with identical text. Each of the three carries a Class D annotation naming the guarding assertion, the EC-3 attempts 5408327 / failures 0, and the Part C row. gen_asserts.txt lines 195, 228, 273 show IbexMultDivStateValid, IbexCtrlStateValid, IbexLsuStateValid with 5408327 attempts and 0 failures. The ruling chain is recorded: Critic draft v2 R-2a and F-3 (docs/gen_critic_exclusions_draft_v2.md:32, :140). The CHERIoT annotations cite the owner ruling (DV_prompt.txt Section 2) and the gen_dut_top tie. No control-logic exclusion without a recorded ruling was found.
+- **Gated rows (focus 2).** gen_round_0/gen_hierarchy_dut_rows.txt sums: line 3525+129=3654 / 4229+130=4359, cond 6464/9624, toggle 16877/25044, fsm 38/86, branch 1831/2428, assert 166/179. The precheck dashboard's report-wide row with the file moves the totals by exactly 201 / 249 / 3942 / 12 / 65 / 3 with covered counts unchanged (3688, 6471, 19231, 38, 1848, 229), and those deltas equal the README's "objects removed" column and reproduce the "with this file" gated row from the "without" row. Consistent.
+- **Naming sentence (focus 3).** Present in the pass-14 row, consistent with gen_r1_preflight_classification.md (8 added lines), the archive manifest and LOG-094. The "owed / not yet run" text of 98b643e is replaced in 255dca3 by the rtl-arch-009 identifier, timestamps and verdict.
+- **Percentages (focus 4).** No percentage appears in gen_exclusions_README.md, gen_exclusions_select_report.md or gen_critic_response_exclusions.md. Every 81.47 / 78.29 / 85.89 occurrence in the analysis, tables, LOG, Critic files, rt39 plan and archive manifest carries its scope.
+- **gen_excl_select.py (focus 5).** ann_ex() emits the evidence sentence only when the reason lacks it (CM-18); the global statements now follow the docstring (CM-19); self_test() holds 15 cases (11+2+2), matching the corrected CM-10 row (CM-20). The finish script gen_excl_f1_pass.py still emits the placeholder `Runtime elcheck: <request id> (received <utc>, finished <utc>), verdict <ok>` at :331; the committed README carries the fact in words, not the template.
+- **Records riding the range.** gen_modlist.txt.gz / gen_modinfo.txt.gz decompress to 10945 / 3408372 bytes with sha256 b5aad208… / e0585cfe…, matching a6f811a. Dead-line counts quoted in analysis Section 5 (decoder 150, if_stage 85, LSU 59, controller 44, cs_registers 37, compressed_decoder 33, id_stage 11, core 2, register_file_ff 2) match the select report lines 6-17. The review artifact carries the identity header and a machine-readable verdict. The Critic files carry explicit verdicts. All touched text files are ASCII.
+- **Rubrics.** rtl-purity PASS (no rtl/ lines). forces-and-hier-access PASS. magic-numbers PASS. assertion-integrity PASS (no assertion or checker touched). ai-slop-comments PASS (the py diff adds no comment text).
+
+## Findings
+
+[medium][dv/auto_dv/excl/gen_exclusions_README.md:111] Section 2 content table still says "Class D spare-encoding arms (rows 1, 23, 33) | 0 (held out) | emitted only with --allow-unfilled-ec3 after the EC-3 fields are filled", and section 6 row F-3 (:276) still reads "OPEN, and the file no longer carries the unfilled groups: they are held out", with :227 saying "the three 2b arms are held out". The pass-14 file carries all three arms with EC-3 filled (the .el header line 5 says INCLUDED; the select report shows the three groups "selected (explicit enum-default entry)"). - Update the section 2 row to 3 Blocks with the EC-3 source, flip F-3 to CLOSED at pass 14 citing gen_round_0/gen_asserts.txt, and fix :227.
+
+[medium][dv/auto_dv/excl/gen_exclusions_README.md:95] Section 1 says "Reference dump used today: the round-0 re-baseline" and the section 3 intro (:127-128) says the author pre-checks ran "against regress_round_0_rebaseline/cov_unmeasured/merged.vdb", while the pass-14 file was generated from the round_1 dump and loaded against the round_1 merged vdb (select report line 2, precheck dashboard command line). The naming sentence in the pass-14 row says the rebaseline is not this round, but these two sentences still present it as the current provenance. - Rewrite section 1 and the section 3 intro so the current dump and vdb are the round_0 measured merge, and name the rebaseline as the history of passes 1-13 only.
+
+[medium][dv/auto_dv/excl/gen_exclusions_README.md:144] The ASSERT row note "URG's top summary row 143/178 nets out no-attempt assertions and does not move" is carried over from the rebaseline and is false for this round: the committed precheck dashboard shows the report-wide ASSERT row moving from 229/257 to 229/254. - Replace with the round_0 figures and state that the report-wide row moves by the same 3.
+
+[medium][dv/auto_dv/excl/gen_exclusions_README.md:190] The rtl-arch-009 result (received 01:53:02Z, finished 01:57:16Z, PASS, six gated rows equal) is quoted from a manifest that exists nowhere in the committed tree; unlike the rtl-arch-004..007 bullets, this bullet names no manifest path, and no rtl-arch-009 file is tracked. The claim closing the strict-load caveat cannot be re-derived from the commit. - Name the manifest path and commit a copy (or its sha256 and the gated-row block) under dv/auto_dv/evidence/gen_round_0/ so the closing evidence is in the record.
+
+[low][dv/auto_dv/excl/gen_exclusions_select_report.md:141] "Emitted 1424 entry lines ... to /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/excl/gen_exclusions.el" leaks an absolute clone path into a committed report; the previous version was repo-relative and CM-17 removed the same kind of path from the header. - Have the generator print the repo-relative path.
+
+[low][dv/auto_dv/evidence/gen_round_0_coverage_analysis.md:205] The join figures "105 entries are no-ops and 84 effective" appear only in this analysis and commit messages; the per-object join table lives under the untracked work directory and no committed excl file records the totals. - Add the join summary (the five-class table the finish script generates) to README section 3 or retain the join file under gen_precheck/.
+
+[low][dv/auto_dv/evidence/gen_round_0/gen_archive_manifest.md:8] "The record is commit d29d5db (23 files under dv/auto_dv/evidence/gen_round_0)"; d29d5db adds 21 files there (the Critic record and the cross-model review both say 21). - Correct to 21.
+
+[info][dv/auto_dv/evidence/gen_round_0/gen_archive_manifest.md:17] The two tarball sizes and sha256 values and the extraction check are out-tree claims not verifiable from the commit; recorded as stated, not confirmed here.
+
+Final verdict: APPROVE-WITH-CHANGES
