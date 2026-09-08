@@ -2,8 +2,8 @@
 
 Branch `cleanroom/run-a` of the Zone A cleanroom export (export commit 1908ddd). Written 2026-09-07T18:17Z by the
 Orchestrator at HEAD 041e2b3 after the owner stopped the agent team on 2026-09-05 19:05Z (owner ruling LOG-100 in
-`dv/auto_dv/docs/gen_intervention_log.md`); refreshed 2026-09-08T03:59Z at HEAD d660ec8 (1169 commits above the export) after the
-team was restarted on 2026-09-07 for the bug-log rewrite and the expected-fail bug tests (Section 10). Every count below
+`dv/auto_dv/docs/gen_intervention_log.md`); refreshed 2026-09-08T04:44:52Z at HEAD fdd1e7d (1175 commits above the export) at the
+2026-09-08 stop (owner directive LOG-104; Section 10). Every count below
 was taken from `git ls-files` and `dv/auto_dv/flow/gen_testlist.yaml` at that HEAD; the commit that refreshes this file
 comes after it.
 
@@ -42,7 +42,7 @@ Everything the team produced is under `dv/auto_dv/**` with the `gen_` prefix (th
 | Test Writer plan | `dv/auto_dv/docs/gen_test_writer_plan.md` | test-writer | |
 | Round requests | `dv/auto_dv/evidence/gen_round1_request.md`, `gen_round2_request.md` | dv-lead | the request form of record for each measured round |
 
-## 3. Tree map (tracked files under `dv/auto_dv/`, 5652 in total)
+## 3. Tree map (tracked files under `dv/auto_dv/`, 5678 in total)
 
 | Directory | Files | What it holds |
 |---|---|---|
@@ -58,7 +58,7 @@ Everything the team produced is under `dv/auto_dv/**` with the `gen_` prefix (th
 | `fcov_expectations/` | 27 | one `<test>.fcov.yaml` manifest per cocotb test that declares bins (17: the 15 measured tests plus `gen_test_irq_basic` and `gen_test_pmc_ctrl`, unmeasured at HEAD) and per icache-ECC unit test (10) |
 | `excl/` | 20 | the exclusion file and its generators, `gen_precheck/` (URG pre-check logs of every pass) |
 | `mutations/` | 7 | mutation records (`gen_mut_*.md`), one block per mutation next to the checker it proves |
-| `evidence/` | 4865 | see Section 8: `gen_tdd_logs/` (4294 retained run logs with a manifest), the round records, formal evidence, fixtures, verdict excerpts, 84 Critic verdicts and response records |
+| `evidence/` | 4891 | see Section 8: `gen_tdd_logs/` (4294 retained run logs with a manifest), the round records, formal evidence, fixtures, verdict excerpts, 84 Critic verdicts and response records |
 | `reviews/` | 332 | cross-model review artifacts (Section 7) |
 | `tools/` | 23 | record and plan checkers (`gen_record_check.py`, `gen_section_check.py`, `gen_register_cites.py`, `gen_trace_check.py`, `gen_comment_census.py`, `gen_round_form_check.py`, ...), `gen_cross_review.sh` (the review wrapper), `gen_launch_check.sh` (DV_prompt Section 12 launch preconditions) |
 | `handoff/` | 7 | committed copies of the Orchestrator handoff and the six role STATUS files (added with this inventory) |
@@ -219,7 +219,7 @@ Critic role (owner directive LOG-095: one cross-model review per feature group, 
   template) and 84 under `dv/auto_dv/evidence/gen_critic_*.md` (rounds, records, responses).
 - Review rubrics the wrapper asserts: `ci/reviews/GUIDE.md` and its five rubric files.
 
-## 8. Evidence tree (`dv/auto_dv/evidence/`, 4865 files)
+## 8. Evidence tree (`dv/auto_dv/evidence/`, 4891 files)
 
 - `gen_tdd_logs/<area>/` (4294 files): ASCII-normalised copies of run logs (red, green, mutation, sweep) for every
   component and test, indexed by `gen_tdd_logs/gen_manifest.md`. Retained logs are never edited; corrections are
@@ -250,6 +250,20 @@ Both need to be carried by hand or dropped at landing. Two untracked files at th
 `agent_team_prompt.txt`, are the seed prompt and the team prompt; they were never committed.
 
 ## 10. State at the stop, in one screen
+
+State at the 2026-09-08 stop (HEAD fdd1e7d; owner directive LOG-104, "make sure bugs doc is updated. Stop the agents and
+the watchdog monitors once this is done"):
+
+- Bug log at v2j (df50a9b): every P1 and P2 entry has a committed expected-fail test; the seven P3 entries without a test
+  are B3, B5, B10 (blocked on TB defect T12), B14, B15, B19 and B22, whose green control run is committed (record
+  Section 10 at 1391ab1) but not yet cited in the bug log (the DV Lead's first owed item).
+- Committed after the previous state block: bug log v2h (d660ec8), inventory (de4f7d9), TB defect T11 FIXED (d8a2324),
+  test-writer hand 5 (8869874: comment census sweep, third fixture wait, B16 record correction), the census-tool fix with
+  LOG-104 (df50a9b), hand 6 (1391ab1: B22 control), landing 67 (fdd1e7d: the bus-agent grant repair; read
+  `dv/auto_dv/evidence/gen_tdd_gnt_repair.md` Section 3 for the one ruled clause not built).
+- Handoff: `dv/auto_dv/handoff/gen_orchestrator_handoff_2026-09-08.md` and the four `gen_status_<role>_2026-09-08.md`
+  copies (the commit after fdd1e7d). Runtime and Critic were not respawned in this window.
+- Open owner decisions: witness-bin marking (a/b/c), a B10 test at P3, what follows (round 2, backlog, or pause).
 
 State at 2026-09-08T03:59Z (HEAD d660ec8), after the 2026-09-07 restart:
 
