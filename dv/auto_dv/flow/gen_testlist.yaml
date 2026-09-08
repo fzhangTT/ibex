@@ -2505,3 +2505,74 @@ tests:
     expected_fail: false
     component: gen_tb_top
     measured: false
+  - name: gen_prv_debug_b2_xfail
+    description: 'B2 reproducer for TP-PRV-035 (aliases TP-DBG-060, TP-PMP-074): with every PMP region OFF and
+      mstatus.MPRV set with MPP = U, the debug ROM of gen_prv_debug_b2_directed.S loads a word outside the
+      debug-module window. The core checks that load with the MPP privilege although dcsr.mprven reads 0 and takes
+      an exception inside debug mode, while the model ignores MPRV in debug mode and completes it, so the lock-step
+      comparator raises [isa_trap] on the load record and [isa_pc] on the next one. Expected to fail until the RTL
+      is fixed or the owner rules otherwise; an unexpected PASS means the behaviour changed and the finding must be
+      re-examined'
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs:
+      - +gen_fetch_en_at_reset=0
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_prv_debug_b2_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 900
+    owner: test-writer
+    pass_marker: GEN_UT_DBG_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_dbg
+    expected_fail: true
+    keep_artifacts: true
+    component: gen_rvfi_pkg
+    measured: false
+    notes: 'RTL finding B2 (dv/auto_dv/docs/gen_bug_log.md); the retained red and its passing control are
+      dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_bug_b2_dbg_mprv_{red1,ctrl1}_* with the record
+      dv/auto_dv/evidence/gen_tdd_bug_tests.md Section 1. The designed failure is the scoreboard UVM_ERROR
+      [isa_trap] "dut trapped, model retired 1" on the ROM load record (pc 1a110814), followed by [isa_pc]
+      "pc model=1a110818 dut=1a110808" (the core goes to DmExceptionAddr), and the module assertion
+      "GEN_UT_DBG: 4 ISA mismatches across the debug entries"; a FAIL through any other mechanism is not the B2
+      red and needs triage. The control program gen_prv_debug_b2_ctrl_directed.S (MPRV cleared) passes and has
+      no entry of its own'
+  - name: gen_pmc_minstret_xfail
+    description: 'B7 reproducer for TP-PMC-013 (alias TP-DIT-019): gen_pmc_minstret_dummy_directed.S sets
+      cpuctrlsts.dummy_instr_en with mask 0 and reads minstret around 64 nops. The core counts every inserted
+      dummy instruction in minstret while RVFI emits no record for one, so its second read and the delta it
+      computes exceed the model, which serves minstret from its own retirement count, and the lock-step comparator
+      raises [isa_rd] on both records. Expected to fail until the RTL is fixed or the owner rules otherwise; an
+      unexpected PASS means the behaviour changed and the finding must be re-examined'
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs:
+      - +gen_fetch_en_at_reset=0
+      - +gen_ut_boot_retire=20
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_pmc_minstret_dummy_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 600
+    owner: test-writer
+    pass_marker: GEN_UT_LOCKSTEP_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep
+    expected_fail: true
+    keep_artifacts: true
+    component: gen_rvfi_pkg
+    measured: false
+    notes: 'RTL finding B7 (dv/auto_dv/docs/gen_bug_log.md); the retained red and its passing control are
+      dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_bug_b7_minstret_{red1,ctrl1}_* with the record
+      dv/auto_dv/evidence/gen_tdd_bug_tests.md Section 2. The designed failure is the scoreboard UVM_ERROR
+      [isa_rd] on the second minstret read (pc 8000019a, insn b02023f3) and on the subtraction that follows it
+      (the model measures 65, the core more), with the module assertion "GEN_UT_LOCKSTEP: N ISA mismatches"; the
+      number of dummies an LFSR inserts decides N and the values, so the record names the seed-1 figures and a
+      FAIL through any other mechanism is not the B7 red. The control program
+      gen_pmc_minstret_dummy_ctrl_directed.S (the same stream with the enable value 0) passes and has no entry
+      of its own'
