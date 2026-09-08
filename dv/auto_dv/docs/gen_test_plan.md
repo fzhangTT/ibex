@@ -1,7 +1,7 @@
 # Test plan - Ibex core, opentitan configuration
 
 Deliverable 2 (DV_prompt.txt Section 11): feature -> test-plan items -> tests -> bins. Owner: dv-lead.
-Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in: checker direction per gen_bug_log.md, rvfi_trap-on-ebreak-into-debug rule, vacuity fixes, impossible bins pruned, layer-1 weight tables, timing qualifiers), generated from dv/auto_dv/work/dv-lead/parts6/tp_*.md (inputs digest 1350851f6b7c over every part file and over the generator's own source; no clock, so a regeneration from unchanged inputs is byte-identical; what the digest covers and the commands that reproduce it are recorded at dv/auto_dv/evidence/gen_plan_digest_provenance.md). Part-file names in this document (tp_<area>.md, fcov_<area>.md, gen_part_<area>.md, trace_*_<area>.csv and the README_*_BRIEF.md briefs) are this plan set's own gitignored sources, named as provenance: the content they hold is in the corresponding area of gen_test_plan.md, gen_fcov_plan.md or gen_feature_list.md, and the bug and doc-defect number series they define are in gen_bug_log.md. No claim in this document rests on opening one. Three rtl-arch notes this plan set cites are committed references, not work files: dv/auto_dv/evidence/gen_multdiv_bound_props.md (the MD-n bound properties and covers), dv/auto_dv/evidence/gen_bug_reproducer_specs.md (the reproducer recipes behind the bug log) and dv/auto_dv/evidence/gen_interface_inventory.md (the numbered driver and protocol rules); citations name them by basename and resolve there. Companion documents:
+Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in: checker direction per gen_bug_log.md, rvfi_trap-on-ebreak-into-debug rule, vacuity fixes, impossible bins pruned, layer-1 weight tables, timing qualifiers), generated from dv/auto_dv/work/dv-lead/parts6/tp_*.md (inputs digest 4376983919b1 over every part file and over the generator's own source; no clock, so a regeneration from unchanged inputs is byte-identical; what the digest covers and the commands that reproduce it are recorded at dv/auto_dv/evidence/gen_plan_digest_provenance.md). Part-file names in this document (tp_<area>.md, fcov_<area>.md, gen_part_<area>.md, trace_*_<area>.csv and the README_*_BRIEF.md briefs) are this plan set's own gitignored sources, named as provenance: the content they hold is in the corresponding area of gen_test_plan.md, gen_fcov_plan.md or gen_feature_list.md, and the bug and doc-defect number series they define are in gen_bug_log.md. No claim in this document rests on opening one. Three rtl-arch notes this plan set cites are committed references, not work files: dv/auto_dv/evidence/gen_multdiv_bound_props.md (the MD-n bound properties and covers), dv/auto_dv/evidence/gen_bug_reproducer_specs.md (the reproducer recipes behind the bug log) and dv/auto_dv/evidence/gen_interface_inventory.md (the numbered driver and protocol rules); citations name them by basename and resolve there. Companion documents:
 dv/auto_dv/docs/gen_feature_list.md (features), gen_fcov_plan.md (bins), gen_bug_log.md (B/D lists),
 gen_trace_feature_tp.csv and gen_trace_tp_bin.csv (machine-readable traceability), checked by
 dv/auto_dv/tools/gen_trace_check.py.
@@ -332,6 +332,16 @@ ibex_pkg; compiled with +define+RVFI; cheriot_enable_i tied IbexMuBiOff inside t
 - Test groups: a proposed test hosts a group of closely related items; each item keeps its own
   fire-check (DV_prompt.txt Section 5 step 4). Groups are named gen_<area>_<topic>; the Test Writer
   may split a group but never merges fire-checks.
+  A group whose own test is not built may be CARRIED by a testlist entry of another name: the item's Test
+  group line names the entry, its commit and its record section, and the entry's collected failure is the
+  item's predicted deviation on the item's minimal window (for an expected-fail item, an expected_fail entry
+  whose firing is attributable to that item's counter or field); the group label stays the plan's key for the
+  item, and the item's randomized stimulus, its fire-check and its bins stay unbuilt until a test of its own
+  group lands. The first carried items are the seven of B11, B17 and B20 (TP-PMC-043, 058, 059, 060, 061,
+  TP-BTALU-016, 018), carried by the three gen_ut_counters_*_xfail entries at 5edd560; their labels are kept
+  rather than renamed because gen_trace_witness_ids.csv and the witness tables that gen_knobs_codegen.py
+  renders from it carry the labels of TP-PMC-058, 059, 060 and TP-BTALU-018, and because one entry carries
+  the three B17 items while this section keeps one group per expected-fail item.
 
 
 # 0a. Checker-id concordance (plan id -> architecture ids -> knob; DV Lead owns, TB Infra agrees)
@@ -4104,7 +4114,7 @@ the fence as source but is rendered in tools/specs/riscv-bitmanip/bitmanip-draft
 - Fire-check: >= 100 not-taken branches under DIT = 1 with the taken-branch counter delta recorded per branch (rvfi_ext_mhpmcounters).
 - Pass criteria: gen_chk_counters following performance_counters.rst (taken-branch counter increments only for taken branches); B11 predicts an increment for not-taken branches under DIT.
 - Expected: expected-fail (B11)
-- Test group: gen_btalu_dit_xfail   (own test: an expected-fail or informational item never shares a test with pass items, Section 0)
+- Test group: gen_btalu_dit_xfail   (own test: an expected-fail or informational item never shares a test with pass items, Section 0; CARRIED by the testlist entry gen_ut_counters_b11_taken_xfail at 5edd560 (record dv/auto_dv/evidence/gen_tdd_bug_tests.md Section 7, the same firing as TP-PMC-043: sixteen never-taken branches under DIT = 1, not this item's hundred); the item's own fire-check and bins are not built by that entry)
 - Bins: CG-BTALU-001.cr_perf.nt_dit1_inc1, CG-BTALU-001.cr_perf.t_dit1_inc1 (cr_perf nt_dit1_inc0 is the spec-outcome bin of B11: ignore_bins until B11 is fixed, so not in this manifest)
 
 ### TP-BTALU-017: Random branch-heavy regime (Phase 2)
@@ -4132,7 +4142,7 @@ the fence as source but is rendered in tools/specs/riscv-bitmanip/bitmanip-draft
 - Fire-check: per seed >= 50 branches whose preceding access's data_rvalid_i is timestamped W >= 1 cycles after the branch entered ID (dbus monitor against the previous retirement and the branch's fetch delivery); each such branch retires exactly once with the correct outcome; the mhpmcounter8 delta over it is recorded from rvfi_ext_mhpmcounters[8 - MHPMCOUNTER_BASE] and the csrr pair; the test ASSERTS the documented count (doc/03_reference/performance_counters.rst:41, one per conditional branch: delta == 1) and logs the RTL count (1 + W: perf_branch_o is asserted in every waiting FIRST_CYCLE under instr_executing_spec, which lacks the ~outstanding_memory_access term, rtl/ibex_id_stage.sv:886-934, :1054-1057, while the state advances only under instr_executing, :866-869); the W = 0 controls give 1; the jal/jalr controls give mhpmcounter7 delta 1. [export-rows: dbus rvalid; ibus rvalid] (source: +gen_export_file E lines, architecture Section 9; RVFI-only fallback: the branch record rvfi_ext_mcycle gap from the preceding access record and the mhpmcounter8 delta (rvfi_ext_mhpmcounters / csrr pair))
 - Pass criteria: gen_chk_counters following the doc for counter 8 (one count per retired conditional branch); the RTL gives 1 + W for the waiting class => the assertion fails (B17). Counters 7 and 9 are exact (deduped by branch_jump_set_done_q) and their check under the same wait is the pass item TP-BTALU-011.
 - Expected: expected-fail (B17)
-- Test group: gen_btalu_perf_b17_xfail   (own test: an expected-fail or informational item never shares a test with pass items, Section 0)
+- Test group: gen_btalu_perf_b17_xfail   (own test: an expected-fail or informational item never shares a test with pass items, Section 0; CARRIED by the testlist entry gen_ut_counters_b17_wait_xfail at 5edd560 (record dv/auto_dv/evidence/gen_tdd_bug_tests.md Section 8, the same firing as TP-PMC-058: one branch behind a load with the response pinned to eight cycles, not this item's fifty across the six opcodes and W = 1..16); the item's own fire-check and bins, the CG-WIT-001 row included, are not built by that entry)
 - Bins: CG-BTALU-001.cr_perf_wb.wb_inc2plus, CG-BTALU-001.cp_branch_inc.inc2plus, CG-BTALU-001.cp_wb_busy.yes, CG-WIT-001.cp_clause.w_tp_btalu_018
 
 ---------------------------------------------------------------------------------------------------
@@ -13873,7 +13883,7 @@ fcov_dbg_trg_pmc.md. Conventions:
 - Pass criteria: gen_chk_counters follows the doc (Q-009 default): mhpmcounter9 delta == taken
   branches; the RTL delta (== mhpmcounter8 delta) is recorded. Control window with DIT=0 must pass.
 - Expected: expected-fail (B11)
-- Test group: gen_pmc_hpm_event_xfail   (own test: an expected-fail or informational item never shares a test with pass items, Section 0)
+- Test group: gen_pmc_hpm_event_xfail   (own test: an expected-fail or informational item never shares a test with pass items, Section 0; CARRIED by the testlist entry gen_ut_counters_b11_taken_xfail at 5edd560, record dv/auto_dv/evidence/gen_tdd_bug_tests.md Section 7: the armed window of sixteen never-taken branches under data_ind_timing = 1 and the DIT = 0 control window, judged by the counter model's documentation rule +gen_ctr_rtl_taken_dit=0, whose firing [ctr_hpm_exact] mhpmcounter9 advanced 16, 0 predicted is this item's; the item's randomized windows, its RVFI fire-check and its bins are not built by that entry, which declares no manifest)
 - Bins: CG-PMC-003.cr_variant_rel.dittaken_eq, CG-PMC-003.cr_variant_rel.ditnot_gt, CG-PMC-003.cr_variant_rel.ditnot_eq, CG-PMC-003.cr_idx_dit.tk_dit1, CG-PMC-003.cp_dit.on
 
 ### TP-PMC-044: mhpmcounter10 (NumInstrRetC) counts retired 16-bit instructions with the same exclusions as minstret; Zcmp counts once
@@ -14194,7 +14204,7 @@ fcov_dbg_trg_pmc.md. Conventions:
   which lacks ~outstanding_memory_access, while id_fsm_q advances only under instr_executing,
   rtl/ibex_id_stage.sv:886-934, :1054-1062, :866-869) is recorded. Control window must pass.
 - Expected: expected-fail (B17)
-- Test group: gen_pmc_hpm_b17_br_xfail   (own test: an expected-fail or informational item never shares a test with pass items, Section 0)
+- Test group: gen_pmc_hpm_b17_br_xfail   (own test: an expected-fail or informational item never shares a test with pass items, Section 0; CARRIED by the testlist entry gen_ut_counters_b17_wait_xfail at 5edd560, record dv/auto_dv/evidence/gen_tdd_bug_tests.md Section 8: one conditional branch decoding behind a load whose response is pinned to eight cycles (+gen_dbus_rvalid_min=8 +gen_dbus_rvalid_max=8) and the separated-branch control window, judged by the counter model's documentation rule +gen_ctr_rtl_branches_wait=0, whose firing [ctr_hpm_exact] mhpmcounter8 advanced 8, 1 predicted is this item's; the item's random K, opcodes and outcomes, its boundary-model fire-check and its bins, the CG-WIT-001 row included, are not built by that entry, which declares no manifest)
 - Bins: CG-PMC-003.cr_variant_rel.brwait_gt, CG-WIT-001.cp_clause.w_tp_pmc_058
 
 ### TP-PMC-059: mhpmcounter11 (NumCyclesMulWait) for a mul / mulh that waits in ID behind an outstanding WB load/store: the doc count is the multiply's own stall (mul 0, mulh-class 1), the RTL adds one per waiting cycle
@@ -14219,7 +14229,7 @@ fcov_dbg_trg_pmc.md. Conventions:
   RV32MSingleCycle): delta == mulh-class count of the window; the RTL delta (+ the cycles each
   multiply waited in ID, for `mul` too) is recorded. Control window must pass.
 - Expected: expected-fail (B17)
-- Test group: gen_pmc_hpm_b17_mul_xfail   (own test: an expected-fail or informational item never shares a test with pass items, Section 0)
+- Test group: gen_pmc_hpm_b17_mul_xfail   (own test: an expected-fail or informational item never shares a test with pass items, Section 0; CARRIED by the same testlist entry gen_ut_counters_b17_wait_xfail at 5edd560 (record dv/auto_dv/evidence/gen_tdd_bug_tests.md Section 8) as TP-PMC-058: its multiply window behind the pinned load and the separated-multiply control window (delta 0), judged by +gen_ctr_rtl_wait_cycles=0, whose firing [ctr_hpm_bound] mhpmcounter11 advanced 6, at most 1 documented is this item's; the item's random K, opcode mix, fire-check and bins, the CG-WIT-001 row included, are not built by that entry)
 - Bins: CG-PMC-003.cr_variant_rel.mulwait_gt, CG-WIT-001.cp_clause.w_tp_pmc_059
 
 ### TP-PMC-060: mhpmcounter12 (NumCyclesDivWait) for a divide that waits in ID behind an outstanding WB load/store: the doc count is the divider's own stall (DIV_STALL_FULL / DIV_STALL_ZERO), the RTL adds one per waiting cycle
@@ -14246,7 +14256,7 @@ fcov_dbg_trg_pmc.md. Conventions:
   NumCyclesDivWait: cycles the divider is busy): delta == sum over the divides of DIV_STALL_FULL or
   DIV_STALL_ZERO; the RTL delta (+ W per waiting divide) is recorded. Control window must pass.
 - Expected: expected-fail (B17)
-- Test group: gen_pmc_hpm_b17_div_xfail   (own test: an expected-fail or informational item never shares a test with pass items, Section 0)
+- Test group: gen_pmc_hpm_b17_div_xfail   (own test: an expected-fail or informational item never shares a test with pass items, Section 0; CARRIED by the same testlist entry gen_ut_counters_b17_wait_xfail at 5edd560 (record dv/auto_dv/evidence/gen_tdd_bug_tests.md Section 8) as TP-PMC-058: its divide window behind the pinned load and the separated-divide control window (delta 36, the divider's own cycles), judged by +gen_ctr_rtl_wait_cycles=0, whose firing [ctr_hpm_bound] mhpmcounter12 advanced 43, at most 36 documented is this item's; the item's random K, divide-by-zero share, fire-check and bins, the CG-WIT-001 row included, are not built by that entry)
 - Bins: CG-PMC-003.cr_variant_rel.divwait_gt, CG-WIT-001.cp_clause.w_tp_pmc_060
 
 ---------------------------------------------------------------------------------------------------
@@ -14262,7 +14272,7 @@ fcov_dbg_trg_pmc.md. Conventions:
 - Fire-check: per seed >= 1 window per count class whose RVFI records show exactly N fence.i retirements (rvfi_insn == 32'h0000100f) and no jump-class retirement, and the control windows pass (gen_test_pmc_hpm_b20_fencei_xfail).
 - Pass criteria: gen_chk_counters following the doc (performance_counters.rst:39: NumJumps = j, jal, jr, jalr): delta == 0 in a fence.i-only window; the RTL gives delta == N because FENCE.I sets jump_in_dec_o / jump_set_o in its first decode cycle (rtl/ibex_decoder.sv:704-720) and the controller counts jump_set (rtl/ibex_controller.sv:687); gen_isa_compare.
 - Expected: expected-fail (B20)
-- Test group: gen_pmc_hpm_b20_fencei_xfail
+- Test group: gen_pmc_hpm_b20_fencei_xfail   (CARRIED by the testlist entry gen_ut_counters_b20_jumps_xfail at 5edd560, record dv/auto_dv/evidence/gen_tdd_bug_tests.md Section 6: the minimal window of one fence.i with the nop and call control windows, judged by the counter model's documentation rule +gen_ctr_rtl_jumps_fencei=0, whose firing [ctr_hpm_exact] mhpmcounter7 advanced 1, 0 predicted is this item's; the few and many count classes, the RVFI fire-check and the bins are not built by that entry, which declares no manifest)
 - Bins: CG-PMC-003.cp_variant.fence_i, CG-PMC-003.cr_variant_rel.fencei_gt
 
 ## Test groups

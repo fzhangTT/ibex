@@ -160,18 +160,18 @@ a citation target on its own. Anchor text does not move when lines do; a line nu
 | B3 | unimplemented trigger CSRs read 0 instead of trapping | P3 | candidate | no test yet | S (two CSRs) / M (all four) |
 | B4 | reserved cm.mvsa01 encoding (r1s' == r2s') executes | P3 | reproduced | gen_ut_lockstep_zcmp_mv_reserved seed 1 (XFAIL) | - |
 | B5 | dcsr.nmip never reports a pending NMI | P3 | candidate | no test yet | M |
-| B7 | dummy instructions are counted in minstret and the wait counters | P2 | reproduced | gen_pmc_minstret_xfail seed 1 (XFAIL) | - |
+| B7 | dummy instructions are counted in minstret and the wait counters | P2 | reproduced | gen_pmc_minstret_xfail and gen_dit_dummy_xfail, seed 1 (XFAIL) | - |
 | B8 | a dummy instruction inside a Zcmp push / pop corrupts registers or the stack | P1 | reproduced, cause stated | gen_ut_lockstep_zcmp_dummy seed 1 (XFAIL) | - |
 | B10 | ebreak entry records cause 2 when the next instruction matches the trigger | P3 | confirmed on the core, no entry | no test yet | M (blocked on T12) |
-| B11 | NumBranchesTaken counts not-taken branches under DIT | P2 | candidate | no test yet | M |
+| B11 | NumBranchesTaken counts not-taken branches under DIT | P2 | reproduced | gen_ut_counters_b11_taken_xfail seed 1 (XFAIL) | - |
 | B13 | RVFI next-PC keeps bit 0 on jalr to an odd target | P3 | observed (retained logs) | gen_test_isa_cti passes by policy; raw-rule red retained | - |
 | B14 | RVFI drops the ID trap record when a WB error coincides (downgraded) | P3 | downgraded, confirmation pending | no test yet | S |
 | B15 | dcsr.ebreaks is writable although there is no S-mode | P3 | candidate | no test yet | S |
 | B16 | misaligned load with a bad first beat still writes rd | P2 | reproduced | gen_dmem_intg_xfail seed 1 (XFAIL) | - |
-| B17 | counters 8, 11, 12 over-count while a load or store is outstanding | P2 | candidate | no test yet | M |
+| B17 | counters 8, 11, 12 over-count while a load or store is outstanding | P2 | reproduced | gen_ut_counters_b17_wait_xfail seed 1 (XFAIL) | - |
 | B18 | RVFI read mask and address set on every non-store record | P3 | observed (retained logs) | passes by policy | - |
 | B19 | RVFI trap flag cleared on an illegal ebreak variant | P3 | candidate | no test yet | S |
-| B20 | fence.i is counted as a jump | P2 | candidate | no test yet | M |
+| B20 | fence.i is counted as a jump | P2 | reproduced | gen_ut_counters_b20_jumps_xfail seed 1 (XFAIL) | - |
 | B22 | an ebreak that enters debug mode spends an rvfi_order index with no record | P3 | candidate | no test yet | S |
 | B6 | exception in debug mode forces M privilege | P3 | not a bug (RTL-defined) | TP-EXC-046, TP-DBG-034 pass | - |
 | B9 | a debug request that drops in the FLUSH cycle records cause 0 | P3 | RTL-defined corner, out-of-spec stimulus | record only | - |
@@ -444,7 +444,7 @@ test command or the scoping of a quick test; evidence; notes.
 
       python3 dv/auto_dv/flow/gen_regress.py --repro gen_pmc_minstret_xfail 1 --waves --tag b7_repro
 
-  Seed 1 is the retained run's seed (dv/auto_dv/evidence/gen_tdd_bug_tests.md Section 2). The collected failure is the scoreboard UVM_ERROR [isa_rd] rd model=x7/00000048 dut=x7/0000006f on the second minstret read (order 73, pc 8000019a, insn b02023f3) and [isa_rd] rd model=x29/00000041 dut=x29/00000068 on the program's own subtraction: the model measures the specification's 65, the core 104, so 39 dummy instructions were counted at seed 1 (the count is seed-dependent: an LFSR places the dummies, so another seed gives other values and another mismatch count); the module assertion "GEN_UT_LOCKSTEP: 2 ISA mismatches" is the collected failure and the flow reason string is "expected-fail: uvm_error at sim.log:32 (isa_rd)". The control program gen_pmc_minstret_dummy_ctrl_directed.S (cpuctrlsts written 0) PASSES. Program dv/auto_dv/stim/gen_directed/gen_pmc_minstret_dummy_directed.S, cocotb module gen_ut_lockstep, +gen_ut_boot_retire=20, tier check, measured false; retained logs dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_bug_b7_minstret_red1_{stdout.log,sim.log,verdict.txt}. Not covered by this test: the mhpmcounter11 / 12 half of B7 (the shim holds the core's HPM values, so the comparator cannot see it; it needs tb-infra's counter rule like B11, B17 and B20). The flow reports XFAIL for the
+  Seed 1 is the retained run's seed (dv/auto_dv/evidence/gen_tdd_bug_tests.md Section 2). The collected failure is the scoreboard UVM_ERROR [isa_rd] rd model=x7/00000048 dut=x7/0000006f on the second minstret read (order 73, pc 8000019a, insn b02023f3) and [isa_rd] rd model=x29/00000041 dut=x29/00000068 on the program's own subtraction: the model measures the specification's 65, the core 104, so 39 dummy instructions were counted at seed 1 (the count is seed-dependent: an LFSR places the dummies, so another seed gives other values and another mismatch count); the module assertion "GEN_UT_LOCKSTEP: 2 ISA mismatches" is the collected failure and the flow reason string is "expected-fail: uvm_error at sim.log:32 (isa_rd)". The control program gen_pmc_minstret_dummy_ctrl_directed.S (cpuctrlsts written 0) PASSES. Program dv/auto_dv/stim/gen_directed/gen_pmc_minstret_dummy_directed.S, cocotb module gen_ut_lockstep, +gen_ut_boot_retire=20, tier check, measured false; retained logs dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_bug_b7_minstret_red1_{stdout.log,sim.log,verdict.txt}. The mhpmcounter11 / 12 half of B7 (the shim holds the core's HPM values, so the comparator cannot see it) has its own second entry, gen_dit_dummy_xfail (TP-DIT-019; tier check, measured false, seed 1; python3 dv/auto_dv/flow/gen_regress.py --repro gen_dit_dummy_xfail 1 --waves --tag b7wait_repro; dv/auto_dv/evidence/gen_tdd_bug_tests.md Section 9 (at 42436d5)). Program dv/auto_dv/stim/gen_directed/gen_pmc_dummy_wait_directed.S reads mhpmcounter12 around eight divides with cpuctrlsts.dummy_instr_en clear and then set, and mhpmcounter11 around eight multiplies the same way, each cpuctrlsts write outside both windows of its pair, and compares each pair against the documented intent that a dummy instruction has no functional impact (doc/03_reference/security.rst). The collected failure is the module assertion "GEN_UT_LOCKSTEP: program did not report pass" with the end-of-test code in the log line "GEN_UT_LOCKSTEP retired 106 consumed 106 mismatches 0 tohost 0x00000101": bit 0 is the divide pair, 288 divide-wait cycles with dummies off (exactly the eight divides' own 36 each) against 289 with them on; the multiply pair reads 0 and 0, the program's internal control; verdict XFAIL; the figures are the same at seeds 1, 2 and 7 because the dummy pattern comes from a build-time LFSR seed. The effect size is one cycle over eight divides (two over thirty-two in a probe): the divide-wait counter advances in a cycle a dummy occupies, not a whole dummy divide stall. The control program gen_pmc_dummy_wait_ctrl_directed.S (cpuctrlsts 0, no dummy inserted) PASSES. Retained logs dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_bug_b7w_dummywait_{red1,ctrl1}_{stdout.log,sim.log,verdict.txt}; the FSDB is test-writer's out tree out_tw22/bug_b7w_dummywait_red1_waves/waves.fsdb, its run header retained as gen_bug_b7w_dummywait_red1_waves_run_header.txt (at 5285 ns a dummy is in decode, dummy_instr_id = 1, while cs_registers_i.mhpmcounter_incr reads 0x00001005: bit 12, the divide-wait event, and bit 2, minstret, asserted in the same cycle, one picture for both halves of B7). The counter model's bound (dv/auto_dv/env/gen_counter_model.sv, +gen_ctr_rtl_wait_cycles=0) does NOT fire on this program, measured by test-writer on the gen_ut_counters module (UVM_ERROR 0 in both directions, "B7 dummy=0"): a one-cycle excess over eight divides sits inside its per-instruction latency ceiling, and that module does not judge the end-of-test code, so this half is witnessed by the program's paired-window equality alone; the tighter form for the rule, if tb-infra wants one, is that equality. The flow reports XFAIL for the
   expected_fail entry; an unexpected PASS means the behaviour changed. The retained FSDB is test-writer's out tree out_tw20/bug_b7_minstret_red1_waves/waves.fsdb, its run header retained as dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_bug_b7_minstret_red1_waves_run_header.txt (dummy_instr_wb high from 1025 to 1055 ns and rvfi_valid low from 1035 to 1065 ns while cs_registers_i.minstret_raw steps 0x8 to 0x9 at 1035 ns and 0x9 to 0xa at 1045 ns: the counter advances over instructions the trace never reports); a fresh run lands its
   waves at <out root>/regress_b7_repro/runs/gen_pmc_minstret_xfail_1/waves.fsdb.
 - Evidence: dv/auto_dv/evidence/gen_tdd_bug_tests.md Section 2 (the retained red run with its signature, the green control, the FSDB path); an owner ruling on the RTL is the open item.
@@ -616,12 +616,16 @@ test command or the scoping of a quick test; evidence; notes.
   RTL-level picture is the one Steps 3 describes; the loud test waits for T12.
 - Notes: rtl-arch T-017: confirmed statically (trigger_match evaluated on pc_if every cycle; during the FLUSH
   cycle of an ebreak-into-debug pc_if holds the next address). Arming happens inside the debug ROM (trigger
-  CSRs writable only in debug mode); T-041 reproducer spec.
+  CSRs writable only in debug mode); T-041 reproducer spec. The looping consequence Section 2.4 of
+  gen_b10_b16_rtl_facts.md predicts for a debugger that dispatches on dcsr.cause alone is now MEASURED on this design
+  (gen_rvfi_order_debug_entry_rtl_facts.md Section 5a at f77ac6e: the B22 reproducer's own ROM resumed at the ebreak
+  and entered debug a third time); it strengthens P3 rather than disturbing it, the two-read discrimination (dpc
+  against tdata2) remaining the workaround.
 
 ### B11: NumBranchesTaken (mhpmcounter9) counts not-taken branches when cpuctrlsts.data_ind_timing = 1
 - Rating: P2. The counter reports a wrong event under one configuration; the workaround is to read
   NumBranchesTaken with DIT off, or to use NumBranches (counter 8) instead.
-- Status: candidate, reproducer pending
+- Status: REPRODUCED by test-writer (dv/auto_dv/evidence/gen_tdd_bug_tests.md Section 7 (at 5edd560): retained red and green runs and a waveform confirmation, LOG-103); still a candidate for the owner ruling
 - Feature: mhpmcounter9 over-counts with cpuctrlsts.data_ind_timing=1: not-taken branches also count (bug
   candidate) (F-PMC-041)
 - Plan items (expected-fail): TP-PMC-043, TP-BTALU-016
@@ -637,22 +641,20 @@ test command or the scoping of a quick test; evidence; notes.
   3. RTL: t1 - t0 = 100.
   4. Documentation: t1 - t0 = 0.
   5. Control: data_ind_timing = 0 gives 0.
-- Test: No test yet. Proposed tests to build: plan test groups gen_pmc_hpm_event_xfail (TP-PMC-043) and
-  gen_btalu_dit_xfail (TP-BTALU-016), with expected_fail: true. Scoping: (a) a directed program (DIT on,
-  never-taken branches around two counter reads) and a checker rule that predicts NumBranchesTaken from the
-  RVFI records (a branch record whose next PC is not the fall-through); (b) extends gen_ut_lockstep with the
-  directed program, and the counter model the plan names (dv/auto_dv/docs/gen_component_api_counter_model.md,
-  ctr_hpm_exact for counters 5..10) for the rule; (c) test-writer for the program, tb-infra for the rule;
-  (d) M: the ISA shim keeps the core's HPM counter values in holders synced from the core
-  (gen_component_api_isa_shim.md, Counter CSRs), so the lock-step comparator cannot see a wrong HPM count and
-  one new predicted-count rule is needed. Building the whole counter model (the four ctr_* checkers behind
-  B11, B17 and B20 together) is L.
-- Evidence: none yet.
+- Test (exists; expected_fail: true; verdict XFAIL):
+
+      python3 dv/auto_dv/flow/gen_regress.py --repro gen_ut_counters_b11_taken_xfail 1 --waves --tag b11_repro
+
+  Seed 1 is the retained run's seed (dv/auto_dv/evidence/gen_tdd_bug_tests.md Section 7 (at 5edd560)). The collected failure is the counter model's UVM_ERROR [ctr_hpm_exact] "mhpmcounter9 advanced 16, 0 predicted: read 00000000 -> 00000010, cycles 48..176, order 29" (dv/auto_dv/env/gen_counter_model.sv, tb-infra's landing 65 at c746629) on the armed window of sixteen never-taken branches, and a second row "mhpmcounter9 advanced 1, 0 predicted: read 00000010 -> 00000011, cycles 176..200, order 34" on the program's own check branch, which runs while data_ind_timing is still set and is counted for the same reason (the same finding, not a second one); the mode-off window raises nothing; the flow reason string is "expected-fail: uvm_error at sim.log:32 (ctr_hpm_exact)". The entry runs the documentation rule (+gen_ctr_rtl_taken_dit=0, Section 0.6); the paired default-direction entry gen_ut_counters_b11_taken (knob at 1, two B11 accommodations counted) PASSES with UVM_ERROR 0, and the control program gen_pmc_dit_branch_ctrl_directed.S (data_ind_timing left clear) PASSES on gen_ut_lockstep with the end-of-test code 1. Program dv/auto_dv/stim/gen_directed/gen_pmc_dit_branch_directed.S reads mhpmcounter9 around the same sixteen never-taken branches with data_ind_timing set and then clear, compares each window with the documentation itself (differences 16, 0; end-of-test code 0x00000101), and the cocotb module gen_ut_counters refuses other differences (+gen_ut_ctr_delta_expect=16,0,1); tier check, measured false, the entry's one seed. The lock-step comparator sees none of it (mismatches 0 in every run). Measured on the build of c746629; retained logs dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_bug_b11_dit_{doc1,default1,ctrl1}_{stdout.log,sim.log,verdict.txt}. The flow reports XFAIL for the
+  expected_fail entry; an unexpected PASS means the behaviour changed. The retained FSDB is test-writer's out tree out_tw21/bug_b11_dit_red1_waves/waves.fsdb, from the build before landing 65 (data_ind_timing high; at 1085 ns the decode stage holds the first never-taken beq, pc_id 80000124, while mhpmcounter_incr is 00000201: bit 9, the taken-branch event, asserted although the record's next PC is the fall-through 80000128; at 1075 ns the same branch raises bit 8, the conditional-branch event, which is correct in both directions); a fresh run lands its
+  waves at <out root>/regress_b11_repro/runs/gen_ut_counters_b11_taken_xfail_1/waves.fsdb.
+- Evidence: dv/auto_dv/evidence/gen_tdd_bug_tests.md Section 7 (at 5edd560) (the retained red run with its signature, the green control, the FSDB path); an owner ruling on the RTL is the open item.
 - Notes: rtl-arch T-017 confirmed statically (perf_tbranch_o = branch_set_i; branch_set_raw_d =
   branch_decision_i | data_ind_timing_i). Decision requested from the DV Lead (T-017 Section 6): treated as a
   counter bug candidate (the doc defines the event as taken branches); items TP-PMC-043 / TP-BTALU-016 stay
   expected-fail. Classified B, not D, by the criterion in Section 0.6 (wrong event under a configuration, not
   a mis-described convention; contrast D6).
+  Scoping before the test landed: Proposed tests to build: plan test groups gen_pmc_hpm_event_xfail (TP-PMC-043) and gen_btalu_dit_xfail (TP-BTALU-016), with expected_fail: true. Scoping: (a) a directed program (DIT on, never-taken branches around two counter reads) and a checker rule that predicts NumBranchesTaken from the RVFI records (a branch record whose next PC is not the fall-through); (b) extends gen_ut_lockstep with the directed program, and the counter model the plan names (dv/auto_dv/docs/gen_component_api_counter_model.md, ctr_hpm_exact for counters 5..10) for the rule; (c) test-writer for the program, tb-infra for the rule; (d) M: the ISA shim keeps the core's HPM counter values in holders synced from the core (gen_component_api_isa_shim.md, Counter CSRs), so the lock-step comparator cannot see a wrong HPM count and one new predicted-count rule is needed. Building the whole counter model (the four ctr_* checkers behind B11, B17 and B20 together) is L.
 
 ### B13: rvfi_pc_wdata keeps bit 0 for a jalr to an odd target while the fetch clears it (RVFI-only)
 - Rating: P3. Trace-only: the core executes jalr per the specification (the fetch address and every
@@ -830,7 +832,7 @@ test command or the scoping of a quick test; evidence; notes.
 - Rating: P2. The counts depend on memory latency; the workaround is to put independent instructions (a
   delay) between a load or store and the following branch, multiply or divide, so the response has arrived
   before that instruction reaches decode.
-- Status: candidate, reproducer pending (rtl-arch T-053 X-13)
+- Status: REPRODUCED by test-writer (dv/auto_dv/evidence/gen_tdd_bug_tests.md Section 8 (at 5edd560): retained red and green runs and a waveform confirmation, LOG-103); still a candidate for the owner ruling (rtl-arch T-053 X-13)
 - Feature: HPM counters 8 (NumBranches), 11 (NumCyclesMulWait) and 12 (NumCyclesDivWait) over-count an
   instruction waiting in ID behind an outstanding WB memory access (bug candidate B17) (F-PMC-053,
   canonical); counter features mhpmcounter8 (NumBranches) counts every conditional branch, taken or not
@@ -851,17 +853,15 @@ test command or the scoping of a quick test; evidence; notes.
   3. RTL: t1 - t0 is about K (one count per cycle the beq waited in decode).
   4. Documentation: t1 - t0 = 1.
   5. Control: enough independent instructions between the lw and the beq (or a one-cycle response) gives 1.
-- Test: No test yet. Proposed tests to build: plan test groups gen_pmc_hpm_b17_br_xfail (TP-PMC-058),
-  gen_pmc_hpm_b17_mul_xfail (TP-PMC-059), gen_pmc_hpm_b17_div_xfail (TP-PMC-060) and gen_btalu_perf_b17_xfail
-  (TP-BTALU-018), with expected_fail: true. Scoping: (a) a directed program as in the steps with the long
-  data-response regime pinned from the command line, and a checker rule that predicts counter 8 as one per
-  retired conditional branch (and counters 11 / 12 from the multiply and divide records); (b) extends
-  gen_ut_lockstep with the directed program, and the counter model the plan names (ctr_hpm_exact,
-  ctr_hpm_bound) for the rule; (c) test-writer for the program, tb-infra for the rule; (d) M: the shim holds
-  the core's HPM values (synced), so the comparator cannot see the over-count; the counter-8 rule is simple
-  (count branch records) but the bound rule for 11 / 12 needs the bus timing from the export; the whole
-  counter model is L.
-- Evidence: none yet.
+- Test (exists; expected_fail: true; verdict XFAIL):
+
+      python3 dv/auto_dv/flow/gen_regress.py --repro gen_ut_counters_b17_wait_xfail 1 --waves --tag b17_repro
+
+  Seed 1 is the retained run's seed (dv/auto_dv/evidence/gen_tdd_bug_tests.md Section 8 (at 5edd560)). The collected failure is three counter-model rows in one run (dv/auto_dv/env/gen_counter_model.sv, tb-infra's landing 65 at c746629), with the data response pinned to eight cycles (+gen_dbus_rvalid_min=8 +gen_dbus_rvalid_max=8): UVM_ERROR [ctr_hpm_exact] "mhpmcounter8 advanced 8, 1 predicted: read 00000000 -> 00000008, cycles 49..66, order 17" on a branch decoding behind an outstanding load, [ctr_hpm_bound] "mhpmcounter11 advanced 6, at most 1 documented (1 multiply record(s) at 1 cycles each, and 8 of the window's 13 cycles had a data access outstanding leaving 5 free)" and [ctr_hpm_bound] "mhpmcounter12 advanced 43, at most 36 documented (1 divide record(s) at 36 cycles each, and 8 of the window's 49 cycles had a data access outstanding leaving 41 free)" on a multiply and a divide in the same position, one row per counter, while the three separated control windows raise nothing (counter 8 counts 1, counter 11 does not move, counter 12 moves by the divider's own 36 cycles), which attributes the firings to the outstanding access rather than to the instructions; the flow reason string is "expected-fail: uvm_error at sim.log:32 (ctr_hpm_exact)". The entry runs the documentation rules (+gen_ctr_rtl_branches_wait=0 +gen_ctr_rtl_wait_cycles=0, Section 0.6); the paired default-direction entry gen_ut_counters_b17_wait (knobs at 1, the B17 accommodations counted) PASSES with UVM_ERROR 0, and the control program gen_pmc_wb_wait_ctrl_directed.S (eight independent instructions between the load and the event in every window, the workaround the Rating names) PASSES on gen_ut_lockstep with the end-of-test code 1. Program dv/auto_dv/stim/gen_directed/gen_pmc_wb_wait_directed.S has six windows in three pairs, compares each with the documentation itself (differences 8, 1, 6, 0, 43, 36; verdict word 21; end-of-test code 0x00000115, bits 0, 2 and 4), and the cocotb module gen_ut_counters refuses other differences (+gen_ut_ctr_delta_expect=8,1,6,0,43,36,21 at 5edd560; 8,1,4:10,0,40:46,36,21 since 42436d5, ranges on the two seed-dependent words); tier check, measured false, the entry's one seed. Read the counts with care: the documented values are fixed (counter 8: 1 and 1; counter 11: 0 and 0; counter 12: the two windows equal, the control window measuring the divider's own 36 stall cycles, which the divider FSM predicts from the RTL, so the control's 36 is silent while the load-shadowed 43 fires); the measured counts are seed 1's, and the two behind-the-load wait counts (counter 11's 6, counter 12's 43) are seed- and regime-dependent (tb-infra's grant-delay probe took 5, 6 and 7 and 42 and 43 across two seeds and three grant settings: when the multiply or divide reaches decode relative to the load's response), while the other four differences and the verdict word are stable across those runs; test-writer's hand 4 at 42436d5 relaxed those two expect words to the ranges 4:10 and 40:46. An earlier report that the differences were build-sensitive (6, 1, 7, 0, 41, 36 on the build before landing 65) is RETRACTED by test-writer on re-measurement: that figure came from the program before its self-check was added, and the committed program gives 8, 1, 6, 0, 43, 36 on both builds and under both modules; the commit message of 5edd560 repeats the retracted claim and gen_tdd_bug_tests.md Section 8 at 42436d5 carries the correction with the retained gen_bug_b17_head_buildB / head_buildC runs. The lock-step comparator sees none of it (mismatches 0 in every run). Measured on the build of c746629; retained logs dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_bug_b17_wbwait_{doc1,default1,ctrl1}_{stdout.log,sim.log,verdict.txt}. The flow reports XFAIL for the
+  expected_fail entry; an unexpected PASS means the behaviour changed. The retained FSDB is test-writer's out tree out_tw21/bug_b17_wbwait_red1_waves/waves.fsdb, from the build before landing 65 (from 1155 ns to 1230 ns mhpmcounter_incr holds 00000109 with bit 8, the conditional-branch event, asserted while pc_id stays 8000012a, the window's branch, and data_rvalid_i is low; the response arrives at 1230 ns and the branch leaves decode in the next cycle, so the event is held for every cycle the branch waits); a fresh run lands its
+  waves at <out root>/regress_b17_repro/runs/gen_ut_counters_b17_wait_xfail_1/waves.fsdb.
+- Evidence: dv/auto_dv/evidence/gen_tdd_bug_tests.md Section 8 (at 5edd560) (the retained red run with its signature, the green control, the FSDB path); an owner ruling on the RTL is the open item.
+- Notes: Scoping before the test landed: Proposed tests to build: plan test groups gen_pmc_hpm_b17_br_xfail (TP-PMC-058), gen_pmc_hpm_b17_mul_xfail (TP-PMC-059), gen_pmc_hpm_b17_div_xfail (TP-PMC-060) and gen_btalu_perf_b17_xfail (TP-BTALU-018), with expected_fail: true. Scoping: (a) a directed program as in the steps with the long data-response regime pinned from the command line, and a checker rule that predicts counter 8 as one per retired conditional branch (and counters 11 / 12 from the multiply and divide records); (b) extends gen_ut_lockstep with the directed program, and the counter model the plan names (ctr_hpm_exact, ctr_hpm_bound) for the rule; (c) test-writer for the program, tb-infra for the rule; (d) M: the shim holds the core's HPM values (synced), so the comparator cannot see the over-count; the counter-8 rule is simple (count branch records) but the bound rule for 11 / 12 needs the bus timing from the export; the whole counter model is L.
 
 ### B18: rvfi_mem_rmask is non-zero and rvfi_mem_addr is the ALU result on every record that is not a store (RVFI-only)
 - Rating: P3. Trace-only: the fields are wrong on records of instructions that access no memory; the memory
@@ -934,8 +934,9 @@ test command or the scoping of a quick test; evidence; notes.
 ### B20: fence.i increments mhpmcounter7 (NumJumps), which the documentation defines as unconditional jumps only
 - Rating: P2. One extra count per fence.i in a counter the documentation defines precisely; software can
   subtract its fence.i count, or the owner can re-document (then B20 becomes a D entry).
-- Status: candidate, reproducer spec available (rtl-arch reading, dv/auto_dv/evidence/gen_hpm_event_defs.md
-  Section 3, D-NUMJUMPS-FENCEI; no run yet)
+- Status: REPRODUCED by test-writer (dv/auto_dv/evidence/gen_tdd_bug_tests.md Section 6 (at 5edd560): retained red and
+  green runs and a waveform confirmation, LOG-103); still a candidate for the owner ruling (rtl-arch reading
+  dv/auto_dv/evidence/gen_hpm_event_defs.md Section 3, D-NUMJUMPS-FENCEI)
 - Feature: mhpmcounter7 (NumJumps) counts jal/jalr (including c.j, c.jal, c.jr, c.jalr, cm.popret's return
   jump); the RTL also counts fence.i against the doc (B20) (F-PMC-038); item TP-PMC-061 (expected-fail);
   TP-PMC-040 keeps fence.i out of its windows
@@ -951,29 +952,33 @@ test command or the scoping of a quick test; evidence; notes.
   2. Do: csrr t0, mhpmcounter7; fence.i; csrr t1, mhpmcounter7.
   3. RTL: t1 - t0 = 1.
   4. Documentation: t1 - t0 = 0.
-- Test: No test yet. Proposed test to build: plan test group gen_pmc_hpm_b20_fencei_xfail (TP-PMC-061), with
-  expected_fail: true. Scoping: (a) a directed program as in the steps and a checker rule that predicts
-  NumJumps from the RVFI records (jal / jalr and their compressed forms, cm.popret's return; not fence.i);
-  (b) extends gen_ut_lockstep with the directed program and the counter model the plan names (ctr_hpm_exact,
-  counter 7) for the rule; (c) test-writer for the program, tb-infra for the rule; (d) M: the shim holds the
-  core's HPM values (synced), so the comparator cannot see the extra count; the rule itself is simple, and
-  the plan's bin CG-PMC-003.cr_variant_rel.fencei_gt is its witness.
-- Evidence: none yet.
+- Test (exists; expected_fail: true; verdict XFAIL):
+
+      python3 dv/auto_dv/flow/gen_regress.py --repro gen_ut_counters_b20_jumps_xfail 1 --waves --tag b20_repro
+
+  Seed 1 is the retained run's seed (dv/auto_dv/evidence/gen_tdd_bug_tests.md Section 6 (at 5edd560)). The collected failure is the counter model's UVM_ERROR [ctr_hpm_exact] "mhpmcounter7 advanced 1, 0 predicted: read 00000001 -> 00000002, cycles 40..56, order 10" (dv/auto_dv/env/gen_counter_model.sv, tb-infra's landing 65 at c746629), one firing on the fence.i window while the nop and call windows raise nothing, so the rule accuses only the fence.i; the flow reason string is "expected-fail: uvm_error at sim.log:32 (ctr_hpm_exact)". The entry runs the documentation rule (+gen_ctr_rtl_jumps_fencei=0, Section 0.6); the paired default-direction entry gen_ut_counters_b20_jumps (knob at 1, the RTL rule with one B20 accommodation counted) PASSES with UVM_ERROR 0, and the control program gen_pmc_fencei_jump_ctrl_directed.S (the fence.i replaced by a nop) PASSES on gen_ut_lockstep with the end-of-test code 1. Program dv/auto_dv/stim/gen_directed/gen_pmc_fencei_jump_directed.S reads mhpmcounter7 around a fence.i, around two nops and around a call with its return, compares each window with the documentation itself (differences 1, 0, 2; end-of-test code 0x00000101, bit 0 for the fence.i window), and the cocotb module gen_ut_counters refuses a run whose differences are not the RTL's known numbers (+gen_ut_ctr_delta_expect=1,0,2,1), so a green rule judged this behaviour; tier check, measured false, the entry's one seed. The lock-step comparator sees none of it (mismatches 0 in every run: the ISA shim mirrors the core's HPM values), which is why the counter rule is the witness. Measured on the build of c746629; retained logs dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_bug_b20_fencei_{doc1,default1,ctrl1}_{stdout.log,sim.log,verdict.txt}. The flow reports XFAIL for the
+  expected_fail entry; an unexpected PASS means the behaviour changed. The retained FSDB is test-writer's out tree out_tw21/bug_b20_fencei_red1_waves/waves.fsdb, from the build before landing 65 (at 1035 ns the decode stage holds pc_id 8000011a with instr_rdata 0000100f, the fence.i, and cs_registers_i.mhpmcounter_incr is 00000081: bit 7, the NumJumps event, asserted for it, bit 0 being mcycle; the event pulse is the same on both builds, the counts above are the c746629 build's); a fresh run lands its
+  waves at <out root>/regress_b20_repro/runs/gen_ut_counters_b20_jumps_xfail_1/waves.fsdb.
+- Evidence: dv/auto_dv/evidence/gen_tdd_bug_tests.md Section 6 (at 5edd560) (the retained red run with its signature, the green control, the FSDB path); an owner ruling on the RTL is the open item.
 - Notes: severity low; the RTL fix is a one-term gate on perf_jump or a separate flush request; the owner may
   instead accept the RTL and re-document, in which case B20 becomes a doc defect and TP-PMC-061 a pass item
   (owner question Q-016, filed 2026-09-03 in dv/auto_dv/docs/gen_intervention_log.md, unanswered; default while
   pending: the checker follows the doc, TP-PMC-061 expected-fail); the independent counter model
   follows the doc and treats fence.i windows as the B20 witness (CG-PMC-003.cr_variant_rel.fencei_gt).
+  Scoping before the test landed: Proposed test to build: plan test group gen_pmc_hpm_b20_fencei_xfail (TP-PMC-061), with expected_fail: true. Scoping: (a) a directed program as in the steps and a checker rule that predicts NumJumps from the RVFI records (jal / jalr and their compressed forms, cm.popret's return; not fence.i); (b) extends gen_ut_lockstep with the directed program and the counter model the plan names (ctr_hpm_exact, counter 7) for the rule; (c) test-writer for the program, tb-infra for the rule; (d) M: the shim holds the core's HPM values (synced), so the comparator cannot see the extra count; the rule itself is simple, and the plan's bin CG-PMC-003.cr_variant_rel.fencei_gt is its witness.
 
 ### B22: an ebreak that enters debug mode consumes one rvfi_order index and emits no record (RVFI-only)
 - Rating: P3. Trace-only: the ebreak correctly does not retire, dpc points at it and it re-executes on resume,
   and the debug entry is right; only the RVFI order sequence has a gap (rtl-arch: gen_rvfi_order_debug_entry_rtl_facts.md
   at 5758828, Section 1 for the verdict and Section 6 for the rating).
 - Status: candidate, observed by test-writer on 2026-09-08 (a gap of one order index at every debug entry an
-  ebreak causes) and explained by rtl-arch at the RTL (the record above, Sections 2 and 3). Only the ebreak half is
-  a finding: a second gap the observation attributed to a trigger match is NOT confirmed by the RTL (Section 5: a
-  trigger entry is taken with the ID stage empty, so the matched instruction never took an index), and no plan item
-  or bug entry claims it.
+  ebreak causes) and explained by rtl-arch at the RTL (the record above, Sections 2 and 3). The second gap the
+  observation attributed to a trigger match is RESOLVED as a second occurrence of the same ebreak mechanism, not a
+  finding of its own (Section 5a, added at f77ac6e, on test-writer's counts from the full logs: two order failures with
+  the trigger armed, one without; with the trigger armed B10 reports cause 2, the reproducer's debug ROM takes its
+  trigger branch and drets with dpc still at the ebreak, the core re-enters debug a third time and that entry spends
+  an index by Section 3's mechanism). Section 5 stands: a trigger entry is taken with the ID stage empty and spends no
+  index; no plan item or bug entry claims a trigger-entry gap.
 - Feature: rvfi_order increments by exactly 1 per retired instruction (F-RVFI-003, canonical); cross-reference ebreak
   that enters debug mode is not reported as a trap (F-RVFI-025)
 - Plan items (expected-fail): TP-RVFI-028 (its rvfi_order rule; the trap = 0 convention of F-RVFI-025 is unchanged)
@@ -991,8 +996,14 @@ test command or the scoping of a quick test; evidence; notes.
   3. RTL: the record after the ebreak (the debug ROM's first instruction) has rvfi_order = the last order + 2;
      the ebreak itself has no record; rvfi_trap on the missing record would have been 0.
   4. Specification: no gaps in rvfi_order; the RVFI definition admits no index without a record.
-  5. Control: a debug entry by debug_req_i (no instruction causes it) spends no index (record Section 5's
-     reasoning for entries taken with the ID stage empty); a trapping ebreak (ebreakm clear) has its own record.
+  5. Control: a debug entry by debug_req_i (no instruction causes it) spends no index, for a reason other than
+     Section 5's: a debug_req is a PRIORITY entry (enter_debug_mode_prio_d = (debug_req_i | do_single_step_d) & ...,
+     rtl/ibex_controller.sv:474-475, which names no trigger; a trigger appears only in the non-priority disjunct of
+     enter_debug_mode, :476-477), and FLUSH diverts it to DBG_TAKEN_IF (:985) with an instruction possibly in ID,
+     but that instruction keeps its index either way: with no ID exception the second term of rvfi_id_done
+     (rtl/ibex_core.sv:1851-1853) is 0 and it completes with its record; with an ID exception rvfi_trap_id is 1
+     (:1885-1886 excludes only the ebreak-into-debug case) and rvfi_wb_done emits it as a trap record (:1890); record
+     Sections 2 and 4 carry the terms (rtl-arch, 2026-09-08). A trapping ebreak (ebreakm clear) has its own record.
 - Test: No test yet. Proposed test to build: plan test group gen_rvfi_trap_dbg_xfail (TP-RVFI-028, expected-fail),
   with expected_fail: true. Scoping: (a) a directed program whose debug ROM sets dcsr.ebreakm and drets, then an
   ebreak, run under lock-step; (b) extends gen_ut_dbg (DBG_REQ through the bridge) with the directed program;
@@ -1000,8 +1011,13 @@ test command or the scoping of a quick test; evidence; notes.
   dv/auto_dv/env/gen_rvfi_pkg.sv:142-143, which stays without exemption (Section 0.6, the DV Lead's ruling of
   2026-09-08); (c) test-writer; (d) S: the rule is built and fires on every debug-entering ebreak, so the program is
   the whole work; test-writer's B10 attempt already runs this shape.
-- Evidence: none retained yet (test-writer's observation of 2026-09-08 is the origin; the record above explains
-  it from the RTL with every gating term).
+- Evidence: the red is retained in test-writer's B10 pair (dv/auto_dv/evidence/gen_tdd_logs/test_writer/
+  gen_bug_b10_cause_red1_sim_excerpt.log and gen_bug_b10_cause_ctrl1_sim_excerpt.log with their verdict files and the
+  waves run header, committed at d0428e0): both arms contain an ebreak that enters debug mode, so both show the gap
+  (the comparator's rvfi_order error with the matching SVA firing). That pair is a red for B22 but NOT a red-and-green
+  pair for B22, its control arm being B10's control; the green control step 5 names, a debug entry that no instruction
+  causes (debug_req only), is the one run still owed under LOG-103. The record above explains the gap from the RTL
+  with every gating term.
 - Notes: RVFI-only class (B13, B18, B19). The comparator's contiguity rule is correct and is not relaxed: an
   exemption for a debug entry would remove a rule that catches a real interface violation, so the carrying test
   records the deviation (the B13 shape with the raw rule, not the B18 pass-by-policy shape, because no
@@ -1196,3 +1212,21 @@ documentation there changes the privilege an mret lands in.
   scoping clause (d) corrected: the comparator arms Spike's debug entry as a halt request for every entry, so the model
   reads cause 3 and a test written to the old clause would fail for the wrong reason (TB limitation T12 in
   gen_tb_defects.md).
+- v2h (2026-09-08 03:37 UTC): B20, B11 and B17 have tests: tb-infra's six gen_ut_counters entries, folded by test-writer at 5edd560
+  (gen_ut_counters_b20_jumps_xfail, _b11_taken_xfail and _b17_wait_xfail with the documentation-rule knob as the red, their
+  default-direction twins and the three control programs as the greens; gen_tdd_bug_tests.md Sections 6 to 8), so every P1
+  and P2 entry now has an expected-fail test. The plan keeps its group labels (gen_pmc_hpm_b20_fencei_xfail,
+  gen_pmc_hpm_event_xfail, gen_pmc_hpm_b17_br_xfail, _b17_mul_xfail, _b17_div_xfail, gen_btalu_dit_xfail,
+  gen_btalu_perf_b17_xfail) and records on each of the seven items the entry that CARRIES it (gen_test_plan.md Section 0,
+  Test groups): a rename would move gen_trace_witness_ids.csv rows and the witness tables rendered from it, and one entry
+  carries the three B17 items while the plan keeps one group per expected-fail item. B7's wait half (counters 11 and 12)
+  has its test from test-writer's hand 4 at 42436d5 (gen_dit_dummy_xfail, seed 1, XFAIL through the program's paired-window
+  equality, one cycle over eight divides; the counter model's bound does not fire on it, measured), and the same hand
+  retracts the B17 build-sensitivity claim in Section 8, so the B17 paragraph states the seed and regime dependence of
+  the two behind-the-load wait counts instead, their expect words now the ranges 4:10 and 40:46. Read at HEAD f77ac6e
+  before hashing: rtl-arch's Section 5a resolves B22's second gap as a second occurrence of the ebreak mechanism (a
+  third debug entry through B10's wrong cause and the reproducer's ROM), so B22's Status no longer calls it unconfirmed,
+  and B10's Notes record the measured looping consequence; from rtl-arch's read of the handed text, B22's step 5
+  attributes the debug_req control to the priority-entry FLUSH path (the index kept because the ID instruction completes
+  or emits a trap record) rather than to Section 5, and its Evidence names the B10 pair's retained excerpts as the red
+  with the debug_req-only green as the one run owed.
