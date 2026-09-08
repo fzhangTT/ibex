@@ -2649,3 +2649,16 @@ anchor-blind count; the committed figure at 5dcee83 is 39 on 36, one arithmetic 
 facts: the linked VPI library is recorded as an identity term in the build manifest but nothing reads it back at run time,
 so a build that linked the wrong Python's library is distinguishable after the fact and refused by nothing; a run-time check
 against the pinned venv is runtime-2's follow-on.
+
+## LOG-101 - 2026-09-08 01:00Z - Owner directive: no cross-model review and no Critic verdict from this point
+
+Owner (verbatim, 2026-09-08 ~01:0xZ, after the DV Lead's first report on the bug-log rewrite): "I do not need any
+cross-model checking or critics from this point."
+
+Effect, recorded by the Orchestrator: from this entry on, a hand-off that passes the Orchestrator's commit gate is committed
+and confirmed without a cross-model review launch and without a Critic verdict; no CMnnn or CR-nn rows are generated for new
+touches. This supersedes, for this branch and until the owner says otherwise, the review cadence of LOG-095 and the
+CLAUDE.md cross-model review policy (an owner ruling recorded here is the disagreement channel that policy names). Review
+artifacts already committed under dv/auto_dv/reviews/ and Critic verdicts already committed stand as they are; rows they left
+open remain owed as work items but no longer gate a landing. The first touch under this rule is the DV Lead's bug-log v2
+(owner request of 2026-09-07, TASKS.md). The Critic role is not respawned.
