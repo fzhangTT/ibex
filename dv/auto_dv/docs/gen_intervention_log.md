@@ -2670,3 +2670,19 @@ agents that you spawn." Effect: the running DV Lead instance (spawned 2026-09-08
 Fable, because no model was named at spawn) continues as it is; every other agent the Orchestrator spawns from this entry on
 is created with the Opus model named explicitly. Subagents a role fans out for mechanical work keep the LOG-083a/b rule
 (sonnet or haiku at the role's discretion).
+
+## LOG-103 - 2026-09-08 01:52Z - Owner directive: evidence bar lowered to basic TDD plus waveform confirmation
+
+Owner (verbatim, 2026-09-08 ~02:0xZ): "We don't need rigorous checks from this point forward - basic TDD (unit tests) and
+waveform confirmation is enough."
+
+Effect, recorded by the Orchestrator: from this entry on, a new test, checker rule or TB change lands with (1) a retained
+red run and a retained green run (the unit test: for an expected-fail bug test the red is the XFAIL verdict on the RTL with
+its failure signature, the green is a control that passes), and (2) a waveform confirmation where the behaviour is visible
+in waves (the FSDB path recorded, one sentence on what was seen). No longer required for new work: the mutation proof, the
+forty-seed sweep, the fcov-expectation manifest, the template's Section 22 pre-hand evidence rule, ablations, and the full
+per-test record template; the record is a short entry (what ran, seed, verdict, signature, FSDB location). This supersedes
+the trust-triad requirement of docs/dv/dv_principles.md and the generator-robustness rule for this branch until the owner says
+otherwise; records already committed are unchanged. The Orchestrator's mechanical commit gate (hashes on a detached
+archive, ASCII, boundary, the flow and TB self-checks) stays as it is. LOG-101 (no review, no Critic) and LOG-102 (Opus
+for new agents) stand.
