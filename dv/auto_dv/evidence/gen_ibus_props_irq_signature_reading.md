@@ -693,3 +693,79 @@ gone, measured as no response enqueued for a request not presented at the accept
 The earlier prediction of one firing was made about the decision-only shape and is correct for it. It
 was wrong for the gated shape, and an acceptance criterion inherits the scope of the prediction it is
 built on.
+
+## 13. Reconciliation of the three facts landing 63 attributes to this role (added 2026-09-08T02:24Z)
+
+The landing-63 fixture log attributes three statements to rtl-arch that were not in this file. The rev94 low
+(dv/auto_dv/reviews/2026-09-05-claude-diff-a8792ce3-36011eaf.md, its low on
+dv/auto_dv/evidence/gen_tdd_logs/fcov/gen_fu_l63_separation_fixtures.log:114-116) asked for each one to be landed
+here with its reconciliation or marked unrecorded. That is done below, one by one, and the answer is different
+for each. The landing-63 log is a retained log and is not edited; this section is its companion.
+
+### 13.1 The vector-table reading of 0x80000350: PARTLY LANDED, one half unrecorded
+
+The log's sentence (gen_fu_l63_separation_fixtures.log:114-116) is that at the granting negative edge the core
+presented 0x80000350, "which in that run's own disassembly is a jump into gen_irq_vectors", so the redirect
+that withdrew the request was an interrupt vector fetch.
+
+The address itself is already in this file: Section 11.3 (:444) and the wave reading (:457) both name
+0x80000350 on the request line at export cycle 18333 and on instr_addr_o at 183375. That part needs nothing.
+
+The CONTAINMENT is landed here, and it is the load-bearing half, because it is what makes the firing condition
+interrupt-vectoring specific. Its terms:
+
+- The program's trap vector base is the symbol gen_irq_vectors: `mtvec_base_sym="gen_irq_vectors"`
+  (dv/auto_dv/tests/gen_programs/gen_irq_basic_prog.py:133).
+- The table is `.balign 256` followed by exactly one jump per slot, `out = [".balign 256",
+  f"{p.mtvec_base_sym}:"]` then one `j` per slot in `for slot in range(VEC_SLOTS)` (:140-146), with
+  `VEC_SLOTS = FAST_CAUSE_LO + N_FAST  # 31 slots: causes 0..30` (:62).
+- The vector base is 0x80000300. Provenance, not a tree anchor: the two region disassemblies of the wave runs
+  that this role holds in its own work directory (gen_progdis_region_165313640.txt and
+  gen_progdis_region_1207954461.txt, gitignored, byte-identical to each other) both carry the line
+  `addi t0,t0,476 # 80000300 <gen_irq_vectors>`. A reader cannot resolve that from the tree, which is why it
+  is given as provenance with the text quoted rather than as a file-and-line citation.
+- 0x80000350 - 0x80000300 = 0x50 = 80 bytes. At four bytes per slot that is slot 20, which exists in a
+  31-slot table. At two bytes per slot it would be slot 40, which does not exist. So the four-byte reading is
+  the only one the address admits, and 0x80000350 lies inside the vector table.
+
+UNRECORDED, and it stays unrecorded: the exact disassembly text and the branch target of slot 20. The earlier
+communication gave it as `j 80000208 <gen_irq_vec_20>`. That target depends on the stub layout, which depends
+on which causes the run armed, so it needs that run's own ELF or listing. Neither is retained anywhere in the
+tree or in this role's work directory. Nothing in this file rests on the target address; only the containment
+does, and the containment is established above without it.
+
+### 13.2 The phase schedule moving at 70500 and 71500: UNRECORDED
+
+The log's sentence (gen_fu_l63_separation_fixtures.log:126-129) is that the run's banner opens with the irq
+regime quiet and the phase schedule moves the regime at 70500 and again at 71500, so a fixture must reproduce
+the phase schedule and not only the seed and the program.
+
+The two times are in no committed record. They were read from that run's own banner, which is out-tree and was
+not retained. The nearest retained artefact does not carry them and cannot be made to: the export at
+dv/auto_dv/evidence/gen_irq_triage/gen_export.txt.gz is seed 694904681, a different run from the two wave runs
+(165313640 and 1207954461), and its regime rows are `E <cyc> regime phase <knob_id>,<value_idx>,<phase_idx>`,
+so they carry phase indices against cycles rather than the banner's picosecond times.
+
+So this one is marked unrecorded rather than landed. What survives without the two numbers is the point the
+sentence was making, and that point does not depend on them: the stimulus is not fixed by the seed, because
+the regime moves during the run under a schedule the seed does not determine, so a hand-built fixture has to
+reproduce the schedule as well. That much follows from the schedule existing at all. The two times would only
+be needed by someone rebuilding that specific window, and such a person needs the run, not this citation.
+
+### 13.3 The "two symptoms are one event" reading: NOT a fact of this file, and corrected here
+
+The log records this one accurately as a conditional and says so
+(gen_fu_l63_separation_fixtures.log:96-101: "rtl-arch reads the null as stronger than a null: if a stale
+capture is not reachable without a surplus, the two symptoms are ONE event rather than two mechanisms ... That
+is its call to make and this row supports only the narrower half"). It is repeated here so it is not later
+read back as settled.
+
+The antecedent was never established. The fixture could not construct the no-surplus variant at all, which is
+why its arm B is closed by construction, so "a stale capture is not reachable without a surplus" was not
+measured; it was not reached. A conditional whose antecedent is unmeasured licenses nothing.
+
+Section 11.9 of this file governs and is unchanged: "the surplus entry and the stale capture remain
+unseparated. Measuring the precondition does not settle the delivery question by association, and no sentence
+in this file should be read as if it had" (:589-591). That includes the conditional above. This role does not
+claim the two symptoms are one event, and any later record that cites rtl-arch for that claim is citing a
+conditional as a conclusion.

@@ -5,7 +5,9 @@ response. Scope: RTL-side confirmation only, every fact with an rtl/ file:line; 
 policies remain tb-infra's decisions. Inputs read: the batch-1 s1 logs under
 dv/auto_dv/work/test-writer/out_head/ (csr_reset_s1, csr_trap_setup_s1, rst_boot_s1, pmp_csr_warl_s1),
 the Critic's attribution (dv/auto_dv/docs/gen_critic_batch1_v1.md section 2), plan convention C-1
-(dv/auto_dv/docs/gen_test_plan.md:776), bug-log row D20 (dv/auto_dv/docs/gen_bug_log.md:274), the
+(dv/auto_dv/docs/gen_test_plan.md:776), bug-log row D20 (the row D20 of dv/auto_dv/docs/gen_bug_log.md, at
+dv/auto_dv/docs/gen_bug_log.md:1073 as of commit d04ada4; the line 274 cited here before was that row in version 1 and
+it has since moved, so the id is the anchor and the line is given with its commit), the
 shim (dv/auto_dv/isa/gen_isa_shim.cc) and the comparator (dv/auto_dv/env/gen_rvfi_pkg.sv:328-372).
 Configuration: opentitan (dv/auto_dv/evidence/gen_param_resolution.md; MHPMCounterNum 10, DbgTriggerEn 1,
 DbgHwBreakNum 1, ICache 1); cheriot_enable_i tied to IbexMuBiOff (dv/auto_dv/tb/gen_dut_top.sv:206, :284).

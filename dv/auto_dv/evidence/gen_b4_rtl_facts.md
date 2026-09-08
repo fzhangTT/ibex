@@ -3,7 +3,9 @@
 Owner: rtl-arch. Written 2026-09-03T20:02Z from rtl/ibex_compressed_decoder.sv, rtl/ibex_core.sv, rtl/ibex_register_file_ff.sv,
 the Zc chapter of the ISA manual in this clone (tools/specs/riscv-isa-manual/src/unpriv/zcmp.adoc, on-disk revision fa794b6 of 2026-09-02, an untracked local copy) and the upstream Spike
 source in this clone (tools/riscv-isa-sim, revision 4ffd6ba8 of 2026-09-02; an allowed upstream project, docs/dv/FENCE.md:65-66).
-Scope: the RTL-side facts behind bug candidate B4 (dv/auto_dv/docs/gen_bug_log.md:60). The DV consequence (the manifest bin,
+Scope: the RTL-side facts behind bug candidate B4 (the entry B4 of dv/auto_dv/docs/gen_bug_log.md, its heading at
+dv/auto_dv/docs/gen_bug_log.md:332 as of commit d04ada4; the line 60 cited here before was the entry's heading in
+version 1 of that file and the entry has since moved, so the id is the anchor and the line is given with its commit). The DV consequence (the manifest bin,
 the comparator's isa_trap / isa_rd / isa_pc_next rows) is the DV Lead's ruling and is kept out of this note; the owner item is
 whether Ibex's behaviour stands. RTL is read-only; no fix proposal.
 
