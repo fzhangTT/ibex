@@ -13,6 +13,7 @@ package gen_env_pkg;
   import gen_fcov_pkg::*;
   import gen_rvfi_pkg::*;
   import gen_checkers_pkg::*;
+  import gen_counter_pkg::*;
   `include "uvm_macros.svh"
 
   // ------------------------------------------------------------------------------------------
@@ -163,6 +164,7 @@ package gen_env_pkg;
     gen_irq_checker   irq_chk;
     gen_dbg_checker   dbg_chk;
     gen_misc_monitor  misc_mon;
+    gen_counter_model ctr;
     gen_eot_handler    eot_h;
     gen_record_handler sig_h, ack_h, phase_h;
     virtual gen_bridge_if bvif;
@@ -217,6 +219,7 @@ package gen_env_pkg;
       irq_chk  = gen_irq_checker::type_id::create("irq_chk", this);
       dbg_chk  = gen_dbg_checker::type_id::create("dbg_chk", this);
       misc_mon = gen_misc_monitor::type_id::create("misc_mon", this);
+      ctr      = gen_counter_model::type_id::create("ctr", this);
       bridge = gen_bridge::type_id::create("bridge", this);
       `uvm_info("GEN_ENV", {"ibus: ", ibus_agent.cfg.describe()}, UVM_LOW)
       `uvm_info("GEN_ENV", {"dbus: ", dbus_agent.cfg.describe()}, UVM_LOW)
@@ -242,8 +245,10 @@ package gen_env_pkg;
       misc_mon.ic_cov = isa_cov;   // CG-IC-006 samples at the injection closure and the never-written drain, both in the misc monitor
       bridge.cmd_ap.connect(dispatch.analysis_export);
       rvfi_mon.ap.connect(sb.analysis_export);
+      rvfi_mon.ap.connect(ctr.analysis_export);   // the counter model reads the record stream, not the model of record: it must see the folded Zcmp micro-ops and the draft-B records the scoreboard's state port skips
       rvfi_mon.ap.connect(isa_cov.analysis_export);
       dbus_agent.ap.connect(isa_cov.dbus_imp);   // completed data-bus transactions: the Zcmp collector's observed latency class
+      dbus_agent.ap.connect(ctr.imp_ctr_dbus);   // the same transactions give the counter model the cycles a data access was outstanding
       ibus_agent.ap.connect(isa_cov.ibus_imp);   // fetches: the multiply's fetch-stall class and the boot-to-request distance
       scrkey.ap.connect(isa_cov.key_imp);        // scramble-key req / valid changes: the security-input events
       irq.ap.connect(isa_cov.irq_imp);           // line assertions: the divider's mid-op events and the irq latency

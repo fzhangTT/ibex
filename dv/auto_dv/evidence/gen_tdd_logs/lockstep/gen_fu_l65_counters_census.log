@@ -1,0 +1,60 @@
+# counter-rule runs, build b60a9b31cee9f9e7
+# programs (source md5 and image crc32 of each):
+#   cbb8ace54429d309eb72a2b881004539  dv/auto_dv/stim/gen_directed/gen_pmc_fencei_jump_directed.S  crc32=0x73846487 202 words
+#   a529fed03cd95d2b227d9528e10a5db6  dv/auto_dv/stim/gen_directed/gen_pmc_dit_branch_directed.S  crc32=0x5604eea9 175 words
+#   63e0020138ceec99909248d75bac79e1  dv/auto_dv/stim/gen_directed/gen_pmc_wb_wait_directed.S  crc32=0xf75e1215 237 words
+b20_default
+  plusargs +gen_ut_boot_retire=40 +gen_ut_ctr_delta_sym=gen_b20_delta +gen_ut_ctr_delta_expect=1,0,2,1
+  deltas   ['1', '0', '2', '1'] (expected ['1..1', '0..0', '2..2', '1..1'])
+  windows  windows exact=5 bound=5 unjudged(write)=0 unjudged(inhibit)=0 misses exact=0 bound=0
+  accom    B20 fence.i=1 B11 dit=0 B17 counter8=0 B17 counter11/12=0 B7 dummy=0; records fence.i=1 branch-under-dit=0 multiply=0 divide=0
+  knobs    jumps_fencei=1 taken_dit=1 branches_wait=1 wait_cycles=1
+  errors   0
+  verdict  PASS (no collected failure mechanism; end marker and config banner present)
+b20_doc
+  plusargs +gen_ut_boot_retire=40 +gen_ut_ctr_delta_sym=gen_b20_delta +gen_ut_ctr_delta_expect=1,0,2,1 +gen_ctr_rtl_jumps_fencei=0
+  deltas   ['1', '0', '2', '1'] (expected ['1..1', '0..0', '2..2', '1..1'])
+  windows  windows exact=5 bound=5 unjudged(write)=0 unjudged(inhibit)=0 misses exact=1 bound=0
+  accom    B20 fence.i=0 B11 dit=0 B17 counter8=0 B17 counter11/12=0 B7 dummy=0; records fence.i=1 branch-under-dit=0 multiply=0 divide=0
+  knobs    jumps_fencei=0 taken_dit=1 branches_wait=1 wait_cycles=1
+  errors   1
+    UVM_ERROR dv/auto_dv/env/gen_counter_model.sv(334) @ 61500: uvm_test_top.env.ctr [ctr_hpm_exact] mhpmcounter7 advanced 1, 0 predicted: read 00000001 -> 00000002, cycles 40..56, order 10
+  verdict  FAIL (uvm_error at sim.log:32 (ctr_hpm_exact))
+b11_default
+  plusargs +gen_ut_boot_retire=60 +gen_ut_ctr_delta_sym=gen_b11_delta +gen_ut_ctr_delta_expect=16,0,1
+  deltas   ['16', '0', '1'] (expected ['16..16', '0..0', '1..1'])
+  windows  windows exact=3 bound=3 unjudged(write)=0 unjudged(inhibit)=0 misses exact=0 bound=0
+  accom    B20 fence.i=0 B11 dit=2 B17 counter8=0 B17 counter11/12=0 B7 dummy=0; records fence.i=0 branch-under-dit=17 multiply=0 divide=0
+  knobs    jumps_fencei=1 taken_dit=1 branches_wait=1 wait_cycles=1
+  errors   0
+  verdict  PASS (no collected failure mechanism; end marker and config banner present)
+b11_doc
+  plusargs +gen_ut_boot_retire=60 +gen_ut_ctr_delta_sym=gen_b11_delta +gen_ut_ctr_delta_expect=16,0,1 +gen_ctr_rtl_taken_dit=0
+  deltas   ['16', '0', '1'] (expected ['16..16', '0..0', '1..1'])
+  windows  windows exact=3 bound=3 unjudged(write)=0 unjudged(inhibit)=0 misses exact=2 bound=0
+  accom    B20 fence.i=0 B11 dit=0 B17 counter8=0 B17 counter11/12=0 B7 dummy=0; records fence.i=0 branch-under-dit=17 multiply=0 divide=0
+  knobs    jumps_fencei=1 taken_dit=0 branches_wait=1 wait_cycles=1
+  errors   2
+    UVM_ERROR dv/auto_dv/env/gen_counter_model.sv(334) @ 181500: uvm_test_top.env.ctr [ctr_hpm_exact] mhpmcounter9 advanced 16, 0 predicted: read 00000000 -> 00000010, cycles 48..176, order 29
+    UVM_ERROR dv/auto_dv/env/gen_counter_model.sv(334) @ 205500: uvm_test_top.env.ctr [ctr_hpm_exact] mhpmcounter9 advanced 1, 0 predicted: read 00000010 -> 00000011, cycles 176..200, order 34
+  verdict  FAIL (uvm_error at sim.log:32 (ctr_hpm_exact))
+b17_default
+  plusargs +gen_ut_boot_retire=70 +gen_ut_ctr_delta_sym=gen_b17_delta +gen_ut_ctr_delta_expect=8,1,6,0,43,36,21 +gen_dbus_rvalid_min=8 +gen_dbus_rvalid_max=8
+  deltas   ['8', '1', '6', '0', '43', '36', '21'] (expected ['8..8', '1..1', '6..6', '0..0', '43..43', '36..36', '21..21'])
+  windows  windows exact=1 bound=11 unjudged(write)=0 unjudged(inhibit)=0 misses exact=0 bound=0
+  accom    B20 fence.i=0 B11 dit=0 B17 counter8=1 B17 counter11/12=2 B7 dummy=0; records fence.i=0 branch-under-dit=0 multiply=2 divide=2
+  knobs    jumps_fencei=1 taken_dit=1 branches_wait=1 wait_cycles=1
+  errors   0
+  verdict  PASS (no collected failure mechanism; end marker and config banner present)
+b17_doc
+  plusargs +gen_ut_boot_retire=70 +gen_ut_ctr_delta_sym=gen_b17_delta +gen_ut_ctr_delta_expect=8,1,6,0,43,36,21 +gen_dbus_rvalid_min=8 +gen_dbus_rvalid_max=8 +gen_ctr_rtl_branches_wait=0 +gen_ctr_rtl_wait_cycles=0
+  deltas   ['8', '1', '6', '0', '43', '36', '21'] (expected ['8..8', '1..1', '6..6', '0..0', '43..43', '36..36', '21..21'])
+  windows  windows exact=3 bound=9 unjudged(write)=0 unjudged(inhibit)=0 misses exact=1 bound=2
+  accom    B20 fence.i=0 B11 dit=0 B17 counter8=0 B17 counter11/12=0 B7 dummy=0; records fence.i=0 branch-under-dit=0 multiply=2 divide=2
+  knobs    jumps_fencei=1 taken_dit=1 branches_wait=0 wait_cycles=0
+  errors   3
+    UVM_ERROR dv/auto_dv/env/gen_counter_model.sv(334) @ 71500: uvm_test_top.env.ctr [ctr_hpm_exact] mhpmcounter8 advanced 8, 1 predicted: read 00000000 -> 00000008, cycles 49..66, order 17
+    UVM_ERROR dv/auto_dv/env/gen_counter_model.sv(302) @ 121500: uvm_test_top.env.ctr [ctr_hpm_bound] mhpmcounter11 advanced 6, at most 1 documented (1 multiply record(s) at 1 cycles each, and 8 of the window's 13 cycles had a data access outstanding leaving 5 free): read 00000000 -> 00000006, cycles 103..116, order 39
+    UVM_ERROR dv/auto_dv/env/gen_counter_model.sv(302) @ 216500: uvm_test_top.env.ctr [ctr_hpm_bound] mhpmcounter12 advanced 43, at most 36 documented (1 divide record(s) at 36 cycles each, and 8 of the window's 49 cycles had a data access outstanding leaving 41 free): read 00000000 -> 0000002b, cycles 162..211, order 60
+  verdict  FAIL (uvm_error at sim.log:32 (ctr_hpm_exact))
+L65_RERUN_DONE

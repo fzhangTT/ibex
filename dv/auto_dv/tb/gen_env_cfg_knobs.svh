@@ -69,6 +69,10 @@
   bit ut_rows_set_set = 1'b0;
   int unsigned ut_intg_span_arm_count = 2;
   bit ut_intg_span_arm_count_set = 1'b0;
+  string ut_ctr_delta_sym = "";
+  bit ut_ctr_delta_sym_set = 1'b0;
+  string ut_ctr_delta_expect = "";
+  bit ut_ctr_delta_expect_set = 1'b0;
   int unsigned ibus_gnt_min = 0;
   bit ibus_gnt_min_set = 1'b0;
   int unsigned ibus_gnt_max = 0;
@@ -169,6 +173,14 @@
   bit knob_priv_regime_set = 1'b0;
   string knob_pmp_regime = "off";
   bit knob_pmp_regime_set = 1'b0;
+  bit ctr_rtl_jumps_fencei = 1'b1;
+  bit ctr_rtl_jumps_fencei_set = 1'b0;
+  bit ctr_rtl_taken_dit = 1'b1;
+  bit ctr_rtl_taken_dit_set = 1'b0;
+  bit ctr_rtl_branches_wait = 1'b1;
+  bit ctr_rtl_branches_wait_set = 1'b0;
+  bit ctr_rtl_wait_cycles = 1'b1;
+  bit ctr_rtl_wait_cycles_set = 1'b0;
   bit chk_all = 1'b1;
   bit chk_all_set = 1'b0;
   bit chk_ibus_proto = 1'b1;
@@ -323,6 +335,8 @@
     if ($value$plusargs({PLUSARG_UT_FCOV_EXPECT, "=%d"}, u)) begin ut_fcov_expect = u; ut_fcov_expect_set = 1'b1; end
     if ($value$plusargs({PLUSARG_UT_ROWS_SET, "=%s"}, s)) begin ut_rows_set = s; ut_rows_set_set = 1'b1; end
     if ($value$plusargs({PLUSARG_UT_INTG_SPAN_ARM_COUNT, "=%d"}, u)) begin ut_intg_span_arm_count = u; ut_intg_span_arm_count_set = 1'b1; end
+    if ($value$plusargs({PLUSARG_UT_CTR_DELTA_SYM, "=%s"}, s)) begin ut_ctr_delta_sym = s; ut_ctr_delta_sym_set = 1'b1; end
+    if ($value$plusargs({PLUSARG_UT_CTR_DELTA_EXPECT, "=%s"}, s)) begin ut_ctr_delta_expect = s; ut_ctr_delta_expect_set = 1'b1; end
     if ($value$plusargs({PLUSARG_IBUS_GNT_MIN, "=%d"}, u)) begin ibus_gnt_min = u; ibus_gnt_min_set = 1'b1; end
     if ($value$plusargs({PLUSARG_IBUS_GNT_MAX, "=%d"}, u)) begin ibus_gnt_max = u; ibus_gnt_max_set = 1'b1; end
     if ($value$plusargs({PLUSARG_IBUS_RVALID_MIN, "=%d"}, u)) begin ibus_rvalid_min = u; ibus_rvalid_min_set = 1'b1; end
@@ -373,6 +387,10 @@
     if ($value$plusargs({PLUSARG_KNOB_INSTR_MIX, "=%s"}, s)) begin knob_instr_mix = s; knob_instr_mix_set = 1'b1; end
     if ($value$plusargs({PLUSARG_KNOB_PRIV_REGIME, "=%s"}, s)) begin knob_priv_regime = s; knob_priv_regime_set = 1'b1; end
     if ($value$plusargs({PLUSARG_KNOB_PMP_REGIME, "=%s"}, s)) begin knob_pmp_regime = s; knob_pmp_regime_set = 1'b1; end
+    if ($value$plusargs({PLUSARG_CTR_RTL_JUMPS_FENCEI, "=%d"}, u)) begin ctr_rtl_jumps_fencei = (u != 0); ctr_rtl_jumps_fencei_set = 1'b1; end
+    if ($value$plusargs({PLUSARG_CTR_RTL_TAKEN_DIT, "=%d"}, u)) begin ctr_rtl_taken_dit = (u != 0); ctr_rtl_taken_dit_set = 1'b1; end
+    if ($value$plusargs({PLUSARG_CTR_RTL_BRANCHES_WAIT, "=%d"}, u)) begin ctr_rtl_branches_wait = (u != 0); ctr_rtl_branches_wait_set = 1'b1; end
+    if ($value$plusargs({PLUSARG_CTR_RTL_WAIT_CYCLES, "=%d"}, u)) begin ctr_rtl_wait_cycles = (u != 0); ctr_rtl_wait_cycles_set = 1'b1; end
     if ($value$plusargs({PLUSARG_CHK_ALL, "=%d"}, u)) begin chk_all = (u != 0); chk_all_set = 1'b1; end
     if ($value$plusargs({PLUSARG_CHK_IBUS_PROTO, "=%d"}, u)) begin chk_ibus_proto = (u != 0); chk_ibus_proto_set = 1'b1; end
     if ($value$plusargs({PLUSARG_CHK_IBUS_OUTSTANDING, "=%d"}, u)) begin chk_ibus_outstanding = (u != 0); chk_ibus_outstanding_set = 1'b1; end

@@ -45,6 +45,8 @@ plusargs:
   - {name: ut_fcov_expect, kind: int, default: 0, desc: "gen_ut_isa_cov: the value the program is known to produce for that counter"}
   - {name: ut_rows_set, kind: enum, values: [regime_nmi, regime_dbg], default: regime_nmi, desc: "gen_ut_export_rows: the pin row exercised beside regime phase (irq_nm through NMI_PULSE, or debug_req through DBG_REQ)"}
   - {name: ut_intg_span_arm_count, kind: int, default: 2, desc: "gen_ut_intg_span: integrity corruptions armed on the spanning load's buffer (MEM_ERR_ARM count, arg3[31:8]); the address range always covers both of the load's words, so 1 corrupts the first bus access only (bug candidate B16) and the default 2 corrupts both"}
+  - {name: ut_ctr_delta_sym, kind: string, default: null, desc: "gen_ut_counters: the program symbol holding its own measured counter differences, read back through MEM_PEEK as the fire-check"}
+  - {name: ut_ctr_delta_expect, kind: string, default: null, desc: "gen_ut_counters: the words expected at that symbol, comma separated, each either a value or lo:hi for a latency-dependent one"}
   # ---- numeric agent overrides (layer 1 windows; an enum knob below sets them unless overridden) ----
   - {name: ibus_gnt_min, kind: int, default: null, desc: "instruction bus grant latency low bound (cycles)"}
   - {name: ibus_gnt_max, kind: int, default: null, desc: "instruction bus grant latency high bound"}
@@ -99,6 +101,13 @@ plusargs:
   - {name: knob_instr_mix, kind: enum, values: [isa_only, m_heavy, compressed_heavy, bitmanip_heavy, csr_heavy, ls_heavy, branch_heavy, mixed], default: mixed, regime_set_consumer: program, desc: "program-side instruction mix (region marker)"}
   - {name: knob_priv_regime, kind: enum, values: [m_only, u_heavy, alternating], default: m_only, regime_set_consumer: program, desc: "program-side privilege regime (region marker)"}
   - {name: knob_pmp_regime, kind: enum, values: ["off", sparse, dense, mml_on], default: "off", regime_set_consumer: program, desc: "program-side PMP regime (region marker)"}
+  # ---- counter-model direction knobs (gen_bug_log.md Section 0.6): 1 follows the RTL, 0 follows the
+  # documentation, one sense across the family; the default is 1 so an ordinary run stays green and the
+  # counter model counts every accommodation per bug and reports the counts at the end of the run ----
+  - {name: ctr_rtl_jumps_fencei, kind: bool, default: 1, desc: "NumJumps (mhpmcounter7) counts fence.i as this RTL does (rtl/ibex_decoder.sv:704-720 implements it as a jump); 0 = the documentation's rule (jal and jalr only), the expected-fail run of bug candidate B20"}
+  - {name: ctr_rtl_taken_dit, kind: bool, default: 1, desc: "NumBranchesTaken (mhpmcounter9) counts every conditional branch while cpuctrlsts.data_ind_timing is set, as this RTL does (rtl/ibex_id_stage.sv:928); 0 = the documentation's rule (taken branches only), the expected-fail run of bug candidate B11"}
+  - {name: ctr_rtl_branches_wait, kind: bool, default: 1, desc: "NumBranches (mhpmcounter8) is judged as a bound over a window that held a data access, because this RTL gains one count per cycle a branch waits in decode behind an outstanding access and the waiting cycles are not derivable from the record stream; 0 = the documentation's exact rule everywhere, the expected-fail run of bug candidate B17"}
+  - {name: ctr_rtl_wait_cycles, kind: bool, default: 1, desc: "mhpmcounter11 and 12 keep only the one-per-cycle bound and the no-multiply-no-count rule, because this RTL counts the deferred-start cycles of a multiply or divide waiting behind an outstanding memory access (bug candidate B17) and the wait cycles of its own dummy multiplies and divides (bug candidate B7), and neither is derivable from the record stream; 0 = the documentation's bound, at most the window cycles in which no data access was outstanding, the expected-fail run of B17 counters 11 and 12 and of B7's counter half"}
   # ---- checker enables (+gen_chk_<id>=0|1, default 1; +gen_chk_all=0 disables all unless re-enabled) ----
   - {name: chk_all, kind: bool, default: 1, desc: "master checker enable (isolation mode +gen_chk_all=0 +gen_chk_<id>=1)"}
   - {name: chk_ibus_proto, kind: bool, default: 1, desc: "checker enable"}
@@ -218,6 +227,8 @@ constants:
   - {name: GEN_CSR_MARCHID_VALUE, derive: csr_marchid_value, sv: "ibex_pkg::CSR_MARCHID_VALUE", sv_type: "logic [31:0]", desc: "marchid the DUT reports (rtl/ibex_pkg.sv CSR_MARCHID_VALUE); the shim installs it as a read-only CSR"}
   - {name: GEN_CSR_CPUCTRLSTS, derive: csr_addr_cpuctrlsts, sv: "ibex_pkg::CSR_CPUCTRLSTS", sv_type: "logic [11:0]", desc: "custom CSR address cpuctrlsts (rtl/ibex_pkg.sv); the shim's masked CSR with the ic_scr_key_valid status bit"}
   - {name: GEN_CSR_SECURESEED, derive: csr_addr_secureseed, sv: "ibex_pkg::CSR_SECURESEED", sv_type: "logic [11:0]", desc: "custom CSR address secureseed (rtl/ibex_pkg.sv); reads 0 in the shim"}
+  - {name: GEN_MUL_WAIT_MAX_CYCLES, value: 1, sv_type: int unsigned, desc: "cycles a multiply can stall in decode under RV32MSingleCycle: the fast multiplier runs MD_OP_MULL in one cycle and a high form as MULL then MULH (rtl/ibex_multdiv_fast.sv:139-232), so at most one cycle of the instruction is a wait; the counter model bounds mhpmcounter11 by this per multiply record"}
+  - {name: GEN_DIV_WAIT_MAX_CYCLES, value: 36, sv_type: int unsigned, desc: "cycles a divide can stall in decode: the divider FSM takes MD_IDLE, MD_ABS_A, MD_ABS_B, 31 MD_COMP iterations, MD_LAST, MD_CHANGE_SIGN and MD_FINISH (rtl/ibex_multdiv_fast.sv:91, :426-517), 37 cycles of which the last retires, and the zero-operand short circuit at :434 only shortens it; the counter model bounds mhpmcounter12 by this per divide record"}
   - {name: GEN_MHPM_COUNTER_NUM, value: 10, sv_type: int unsigned, desc: "MHPMCounterNum of the build (Runtime's -pvalue; gen_tb_top fatals when u_dut.MHPMCounterNum differs); the shim's mhpmevent values and the counter sync use it"}
   - {name: GEN_INSN_MRET, value: 0x30200073, sv_type: "logic [31:0]", desc: "mret encoding (privileged spec); plan C-1: its RVFI pc_wdata is pc + 4, so isa_pc_next and the export continuity rule skip it"}
   - {name: GEN_INSN_DRET, value: 0x7B200073, sv_type: "logic [31:0]", desc: "dret encoding (debug spec); plan C-1 as for mret"}

@@ -3547,3 +3547,14 @@ Each file is an ASCII-normalised copy of the run artifact named in the source co
 | dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_fu_l64_b16_waveform.log | scratch b16_waveform.log, the fsdb-mcp-server transition tables of both waves runs with their reading | 2685 | 4b070cfd6c6f915772141653c071bcb0 |
 | dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_fu_l64_b16_waves_c1_result.yaml | dv/auto_dv/out_b16waves/runs/l64_c1/result.yaml (gen_run.py --waves, the FSDB path is in it) | 7601 | 617a84c77b77c72711833dfd930b83a6 |
 | dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_fu_l64_b16_waves_c2_result.yaml | dv/auto_dv/out_b16waves/runs/l64_c2/result.yaml (gen_run.py --waves, the control) | 7148 | 83ccf8b3052268a42431dfdce1e88e48 |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_fu_l65_counters_census.log | scratch l65_census.log, the redirected output of scratch l65_census.sh over dv/auto_dv/out_l65 | 5646 | c907d02a1d139a40bc49603e684d4ef3 |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_fu_l65_waveform.log | scratch l65_waveform.log, the fsdb-mcp-server transition tables of both waves runs with their reading | 4407 | 164e71962581c9f230e58653c6009e30 |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_fu_l65_b20_doc_run_header.txt | dv/auto_dv/out_l65/b20_doc/run_header.txt | 572 | 8608ac8681041fae8d3671e4921a6597 |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_fu_l65_b20_doc_verdict.txt | gen_verdict.decide on dv/auto_dv/out_l65/b20_doc | 439 | ecd674795d56dddb261341134e860cf9 |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_fu_l65_b20_doc_sim.log | dv/auto_dv/out_l65/b20_doc/sim.log | 13587 | e4bc3a225626da9944f7b619008fd097 |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_fu_l65_b11_doc_run_header.txt | dv/auto_dv/out_l65/b11_doc/run_header.txt | 567 | 0356027dc4aea1584c07c3cd93ccb39e |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_fu_l65_b11_doc_verdict.txt | gen_verdict.decide on dv/auto_dv/out_l65/b11_doc | 442 | 4b6aeb20abe8005658e0d85dd4320bc6 |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_fu_l65_b11_doc_sim.log | dv/auto_dv/out_l65/b11_doc/sim.log | 13778 | 8bdd80103f58abb5e0eeb80d80a986b6 |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_fu_l65_b17_doc_run_header.txt | dv/auto_dv/out_l65/b17_doc/run_header.txt | 651 | 489ee77a0f73ad65e092fba39db67bcc |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_fu_l65_b17_doc_verdict.txt | gen_verdict.decide on dv/auto_dv/out_l65/b17_doc | 439 | 2bb47fbe6066dea6b3582b755d85dcf8 |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_fu_l65_b17_doc_sim.log | dv/auto_dv/out_l65/b17_doc/sim.log | 14328 | deeb575cc2a2733f9f34faf59d9a624c |

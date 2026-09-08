@@ -53,6 +53,8 @@
 #define GEN_CSR_MARCHID_VALUE              22u
 #define GEN_CSR_CPUCTRLSTS                 1984u
 #define GEN_CSR_SECURESEED                 1985u
+#define GEN_MUL_WAIT_MAX_CYCLES            1u
+#define GEN_DIV_WAIT_MAX_CYCLES            36u
 #define GEN_MHPM_COUNTER_NUM               10u
 #define GEN_INSN_MRET                      807403635u
 #define GEN_INSN_DRET                      2065694835u
