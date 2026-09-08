@@ -24,13 +24,13 @@ that has moved rather than like an absent input; a reviewer running it from a re
 that.
 
     $ sha256sum dv/auto_dv/work/dv-lead/gen_build_docs.py | cut -c1-16
-    f229629c33ad88a8
+    ac7738729666ff95
 
     $ python3 -c "import hashlib,pathlib; W=pathlib.Path('dv/auto_dv/work/dv-lead'); fs=[f for f in sorted((W/'parts').glob('*'))+sorted((W/'parts6').glob('*')) if f.is_file()]; assert fs, 'no part files here: dv/auto_dv/work/dv-lead is gitignored and absent from a plain checkout'; h=hashlib.sha256(); [(h.update(f.name.encode()), h.update(f.read_bytes())) for f in fs]; print(h.hexdigest()[:12])"
-    96084e1f4714                                  # the parts alone (916cc594a845 before the LOG-100 touch)
+    d07b56b9d317                                  # the parts alone (916cc594a845 before the LOG-100 touch); 96084e1f4714 before the tier touch
 
     $ python3 -c "import hashlib,pathlib; W=pathlib.Path('dv/auto_dv/work/dv-lead'); fs=[f for f in sorted((W/'parts').glob('*'))+sorted((W/'parts6').glob('*')) if f.is_file()]; me=W/'gen_build_docs.py'; assert fs and me.is_file(), 'no parts or no generator here: dv/auto_dv/work/dv-lead is gitignored and absent from a plain checkout'; h=hashlib.sha256(); [(h.update(f.name.encode()), h.update(f.read_bytes())) for f in fs]; h.update(me.name.encode()); h.update(me.resolve().read_bytes()); print(h.hexdigest()[:12])"
-    b5f81ff45ce8                                  # the parts and then the generator, which is what the
+    7b102723d9d2                                  # the parts and then the generator, which is what the
                                                   # header carries today
 
 ## What it settles
@@ -46,17 +46,19 @@ that.
 | 2f92709 | 9606552cc192 | the comment rule's four cases written out in one entry (rev88); a generator edit |
 | 9f14230 | 7a13c5e7344f | LOG-100: the functional-coverage gate criterion rewritten to the bin fraction with the witness ledger out of both terms, the equal-weight group score reported beside it, at its five source sites (four in parts6/fcov_xcut.md, two in the generator); the first touch that edits a PART FILE, so the parts-only digest moves to 96084e1f4714 |
 | 31f9850 | 710d8cac6e12 | Section 0 of the code-comment rule names Orchestrator task and work-package ids in WHAT GOES and records the fifth-case clause-attachment ruling (LOG-030); a generator edit, the parts unchanged (parts-only digest 96084e1f4714) |
-| the commit carrying this row | b5f81ff45ce8 | Section 0 records owner directive LOG-103, the evidence bar for new tests, checker rules and TB changes; a generator edit, the parts unchanged |
+| d04ada4 | b5f81ff45ce8 | Section 0 records owner directive LOG-103, the evidence bar for new tests, checker rules and TB changes; a generator edit, the parts unchanged |
+| the commit carrying this row | 7b102723d9d2 | the 42 expected-fail and informational items move to tier check and the tier vocabulary gains check (parts6 tp_*.md and tp_isa.md edited, the generator's rank table and metrics row edited), so BOTH digests move: parts-only d07b56b9d317 (from 96084e1f4714), parts+generator 7b102723d9d2 |
 
-The parts-only digest of the tree TODAY is 96084e1f4714. Up to and including the 2f92709 row it was 916cc594a845,
+The parts-only digest of the tree TODAY is d07b56b9d317; it was 96084e1f4714 from the LOG-100 row to the d04ada4 row. Up to and including the 2f92709 row it was 916cc594a845,
 exactly the digest the documents carried before the provenance touch: no part file changed across those
 touches, and every digest movement up to that row is the generator's own source, which is what those commit
 messages said. The LOG-100 row is the first whose touch edits a part file (parts6/fcov_xcut.md, the
 completeness-measure section) as well as the generator, so the parts-only digest moves there for the first
-time. The parts+generator digest of the tree today, b5f81ff45ce8, is what the three documents in the commit
-carrying this row carry, so the tree reproduces the committed header. The row above it, 710d8cac6e12, is what
-those documents carried at 31f9850, and the movement between the two is this touch's generator edit and
-nothing else: the parts-only digest is the same number on both sides of it.
+time. The parts+generator digest of the tree today, 7b102723d9d2, is what the three documents in the commit
+carrying this row carry, so the tree reproduces the committed header. The row above it, b5f81ff45ce8, is what
+those documents carried at d04ada4, and the movement between the two is this touch's part-file edits (the tier
+lines of 42 items and the tier definition in tp_isa.md) and generator edit together: the parts-only digest moves
+from 96084e1f4714 to d07b56b9d317, its second movement after the LOG-100 row.
 
 ## Why this file exists rather than a sentence in a commit message
 

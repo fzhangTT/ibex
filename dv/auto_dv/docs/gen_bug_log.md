@@ -153,11 +153,11 @@ Effort is the class of Section 0.3 for the entries with no test yet; "-" where a
 | Id | Short name | Rating | Status | Test | Effort |
 |---|---|---|---|---|---|
 | B1 | dret to U-mode leaves mstatus.MPRV set | P2 | candidate | no test yet | M |
-| B2 | MPRV applied to debug-mode loads and stores although dcsr.mprven is 0 | P2 | candidate | no test yet | S |
+| B2 | MPRV applied to debug-mode loads and stores although dcsr.mprven is 0 | P2 | reproduced | gen_prv_debug_b2_xfail seed 1 (XFAIL) | - |
 | B3 | unimplemented trigger CSRs read 0 instead of trapping | P3 | candidate | no test yet | S (two CSRs) / M (all four) |
 | B4 | reserved cm.mvsa01 encoding (r1s' == r2s') executes | P3 | reproduced | gen_ut_lockstep_zcmp_mv_reserved seed 1 (XFAIL) | - |
 | B5 | dcsr.nmip never reports a pending NMI | P3 | candidate | no test yet | M |
-| B7 | dummy instructions are counted in minstret and the wait counters | P2 | candidate | no test yet | S |
+| B7 | dummy instructions are counted in minstret and the wait counters | P2 | reproduced | gen_pmc_minstret_xfail seed 1 (XFAIL) | - |
 | B8 | a dummy instruction inside a Zcmp push / pop corrupts registers or the stack | P1 | reproduced, cause stated | gen_ut_lockstep_zcmp_dummy seed 1 (XFAIL) | - |
 | B10 | ebreak entry records cause 2 when the next instruction matches the trigger | P2 (pending rtl-arch) | candidate | no test yet | M |
 | B11 | NumBranchesTaken counts not-taken branches under DIT | P2 | candidate | no test yet | M |
@@ -220,6 +220,17 @@ bad first beat; B11: NumBranchesTaken counts a not-taken branch under one config
 event and not a convention, unlike D6 where the doc merely mis-states the RTL's uniform counting convention
 for misaligned accesses). The checker follows the RTL for a D and the documentation for a B.
 
+How a checker carries a known candidate without failing every ordinary run (the B13 convention, LOG-032, applied to
+the counter rules by the DV Lead's ruling of 2026-09-08 on tb-infra's counter cut, dv/auto_dv/work/tb-infra/
+gen_counter_cut_2026-09-08.md Section 2). "The checker follows the documentation for a B" states the rule the bug's
+expected-fail test enforces, not the default of every run. Where the candidate occurs in ordinary traffic (B17: counter 8
+over-counts in every run with realistic bus latency; B11 under DIT; B20 on every fence.i; B13 on every odd jalr target)
+the checker's default follows the RTL, COUNTS each accommodated interval or record per bug and reports the counts at
+the end of the run so nothing is silent, and a knob selects the documentation rule; the bug's expected-fail test alone
+runs with that knob set, and that run is the loud failure. The knobs of one family share one sense (the same value
+selects the documentation rule on all of them) and are named in the component's API document. A run whose accommodation
+count is nonzero met the candidate; a run whose count is zero did not exercise it.
+
 ## 1. Bug candidates (RTL against a specification or against documented intent)
 
 Entry layout: rating; status; the feature by name with its id; the plan items that expect the failure; the RTL
@@ -269,7 +280,7 @@ test command or the scoping of a quick test; evidence; notes.
 ### B2: mstatus.MPRV is applied to debug-mode loads and stores although dcsr.mprven is hardwired 0
 - Rating: P2. A specification violation with a security angle (a debugger cannot rely on M privilege while
   MPRV is set), but the debugger can clear MPRV before its memory accesses and restore it before dret.
-- Status: candidate, reproducer pending
+- Status: REPRODUCED by test-writer (dv/auto_dv/evidence/gen_tdd_bug_tests.md Section 1: retained red and green runs and a waveform confirmation, LOG-103); still a candidate for the owner ruling
 - Feature: mstatus.MPRV is honoured for data accesses in debug mode although dcsr.mprven=0 (F-DBG-055,
   canonical); alias F-PMP-076
 - Plan items (expected-fail): TP-PRV-035, TP-DBG-060, TP-PMP-074
@@ -287,15 +298,16 @@ test command or the scoping of a quick test; evidence; notes.
      (an exception inside debug mode).
   4. Specification: MPRV is ignored in debug mode, the load runs with M privilege and completes.
   5. Control: MPRV = 0, the load completes on both.
-- Test: No test yet. Proposed test to build: plan test group gen_prv_debug_b2_xfail (TP-PRV-035), with
-  expected_fail: true. Scoping: (a) a directed program (PMP off, MPRV = 1 with MPP = U, a .debug_rom that
-  performs the load and stores a result word) and a testlist entry; (b) extends gen_ut_dbg (DBG_REQ through
-  the bridge, zero-mismatch assertion) with the directed program; (c) test-writer; (d) S: the ISA model
-  ignores MPRV in debug mode when mprven is 0 (tools/riscv-isa-sim/riscv/mmu.h:572), so the model completes
-  the load while the core traps to DmExceptionAddr and the comparator raises [isa_trap] on that record; the
-  program has two parts and the debug-entry shape is the one gen_ut_dbg already runs.
-- Evidence: none yet.
+- Test (exists; expected_fail: true; verdict XFAIL):
+
+      python3 dv/auto_dv/flow/gen_regress.py --repro gen_prv_debug_b2_xfail 1 --waves --tag b2_repro
+
+  Seed 1 is the retained run's seed (dv/auto_dv/evidence/gen_tdd_bug_tests.md Section 1). The collected failure is the scoreboard UVM_ERROR [isa_trap] "dut trapped, model retired 1 trap=0 cause=00000000" on the debug ROM's load record (order 304, pc 1a110814, insn 000e2e83), then [isa_pc] pc model=1a110818 dut=1a110808 (the model drets from the ROM body, the core from DmExceptionAddr), the pair repeating on the second debug entry, and the module assertion "GEN_UT_DBG: 4 ISA mismatches across the debug entries"; the flow reason string is "expected-fail: uvm_error at sim.log:33 (isa_trap)". The control program gen_prv_debug_b2_ctrl_directed.S (MPRV cleared) PASSES. Program dv/auto_dv/stim/gen_directed/gen_prv_debug_b2_directed.S with its own .debug_rom, cocotb module gen_ut_dbg, tier check, measured false; retained logs dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_bug_b2_dbg_mprv_red1_{stdout.log,sim.log,verdict.txt}. The flow reports XFAIL for the
+  expected_fail entry; an unexpected PASS means the behaviour changed. The retained FSDB is test-writer's out tree out_tw20/bug_b2_dbg_mprv_red1_waves/waves.fsdb, its run header retained as dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_bug_b2_dbg_mprv_red1_waves_run_header.txt (at 11575 ns debug_mode = 1, priv_mode_id = 3 (M) while priv_mode_lsu = 0 (U), the ROM's load record carries rvfi_trap = 1 and data_req_o never asserts between 11500 and 11620 ns); a fresh run lands its
+  waves at <out root>/regress_b2_repro/runs/gen_prv_debug_b2_xfail_1/waves.fsdb.
+- Evidence: dv/auto_dv/evidence/gen_tdd_bug_tests.md Section 1 (the retained red run with its signature, the green control, the FSDB path); an owner ruling on the RTL is the open item.
 - Notes: security-relevant. B1 and B2 share one program and one PMP region.
+  Scoping before the test landed: Proposed test to build: plan test group gen_prv_debug_b2_xfail (TP-PRV-035), with expected_fail: true. Scoping: (a) a directed program (PMP off, MPRV = 1 with MPP = U, a .debug_rom that performs the load and stores a result word) and a testlist entry; (b) extends gen_ut_dbg (DBG_REQ through the bridge, zero-mismatch assertion) with the directed program; (c) test-writer; (d) S: the ISA model ignores MPRV in debug mode when mprven is 0 (tools/riscv-isa-sim/riscv/mmu.h:572), so the model completes the load while the core traps to DmExceptionAddr and the comparator raises [isa_trap] on that record; the program has two parts and the debug-entry shape is the one gen_ut_dbg already runs.
 
 ### B3: tdata3, mcontext, scontext and mscontext read 0 and ignore writes instead of trapping
 - Rating: P3. Reading 0 instead of trapping changes no execution and no state; only software that probes for
@@ -407,7 +419,7 @@ test command or the scoping of a quick test; evidence; notes.
 - Rating: P2. minstret and the wait counters are wrong whenever dummy instructions are enabled; the
   workaround is to measure with dummy_instr_en = 0 (the Q-005 default already does this) or to accept that
   the counts include the dummies.
-- Status: candidate, reproducer pending
+- Status: REPRODUCED by test-writer (dv/auto_dv/evidence/gen_tdd_bug_tests.md Section 2: retained red and green runs and a waveform confirmation, LOG-103); still a candidate for the owner ruling
 - Feature: SecureIbex dummy instructions increment minstret and the div-wait counter (bug candidate); the
   dummy mul adds no mul-wait cycles (F-PMC-011, canonical); alias Dummy instructions are counted by minstret
   and the mul/div wait events (F-DIT-018)
@@ -427,17 +439,18 @@ test command or the scoping of a quick test; evidence; notes.
      exactly 65).
   4. Specification: t1 - t0 = 65.
   5. Control: dummy_instr_en = 0 gives 65.
-- Test: No test yet. Proposed tests to build: plan test groups gen_pmc_minstret_xfail (TP-PMC-013) and
-  gen_dit_dummy_xfail (TP-DIT-019), with expected_fail: true. Scoping: (a) a directed program that enables
-  dummies and reads minstret around a block of nops, run under lock-step; (b) extends gen_ut_lockstep with a
-  directed program (gen_zcmp_dummy_directed.S already enables dummies the same way); (c) test-writer; (d) S:
-  the ISA shim serves minstret from the model's own retirement count and does not model dummies
-  (dv/auto_dv/docs/gen_component_api_isa_shim.md, section Counter CSRs), so the second csrr differs and the
-  comparator raises [isa_rd] on that record.
-- Evidence: none yet.
+- Test (exists; expected_fail: true; verdict XFAIL):
+
+      python3 dv/auto_dv/flow/gen_regress.py --repro gen_pmc_minstret_xfail 1 --waves --tag b7_repro
+
+  Seed 1 is the retained run's seed (dv/auto_dv/evidence/gen_tdd_bug_tests.md Section 2). The collected failure is the scoreboard UVM_ERROR [isa_rd] rd model=x7/00000048 dut=x7/0000006f on the second minstret read (order 73, pc 8000019a, insn b02023f3) and [isa_rd] rd model=x29/00000041 dut=x29/00000068 on the program's own subtraction: the model measures the specification's 65, the core 104, so 39 dummy instructions were counted at seed 1 (the count is seed-dependent: an LFSR places the dummies, so another seed gives other values and another mismatch count); the module assertion "GEN_UT_LOCKSTEP: 2 ISA mismatches" is the collected failure and the flow reason string is "expected-fail: uvm_error at sim.log:32 (isa_rd)". The control program gen_pmc_minstret_dummy_ctrl_directed.S (cpuctrlsts written 0) PASSES. Program dv/auto_dv/stim/gen_directed/gen_pmc_minstret_dummy_directed.S, cocotb module gen_ut_lockstep, +gen_ut_boot_retire=20, tier check, measured false; retained logs dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_bug_b7_minstret_red1_{stdout.log,sim.log,verdict.txt}. Not covered by this test: the mhpmcounter11 / 12 half of B7 (the shim holds the core's HPM values, so the comparator cannot see it; it needs tb-infra's counter rule like B11, B17 and B20). The flow reports XFAIL for the
+  expected_fail entry; an unexpected PASS means the behaviour changed. The retained FSDB is test-writer's out tree out_tw20/bug_b7_minstret_red1_waves/waves.fsdb, its run header retained as dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_bug_b7_minstret_red1_waves_run_header.txt (dummy_instr_wb high from 1025 to 1055 ns and rvfi_valid low from 1035 to 1065 ns while cs_registers_i.minstret_raw steps 0x8 to 0x9 at 1035 ns and 0x9 to 0xa at 1045 ns: the counter advances over instructions the trace never reports); a fresh run lands its
+  waves at <out root>/regress_b7_repro/runs/gen_pmc_minstret_xfail_1/waves.fsdb.
+- Evidence: dv/auto_dv/evidence/gen_tdd_bug_tests.md Section 2 (the retained red run with its signature, the green control, the FSDB path); an owner ruling on the RTL is the open item.
 - Notes: needs one directed simulation (static reading so far). The counter model the plan names
   (ctr_minstret) is designed to run a bound check while dummies are on, so it would not fire on B7 by itself;
   the lock-step comparator is the witness.
+  Scoping before the test landed: Proposed tests to build: plan test groups gen_pmc_minstret_xfail (TP-PMC-013) and gen_dit_dummy_xfail (TP-DIT-019), with expected_fail: true. Scoping: (a) a directed program that enables dummies and reads minstret around a block of nops, run under lock-step; (b) extends gen_ut_lockstep with a directed program (gen_zcmp_dummy_directed.S already enables dummies the same way); (c) test-writer; (d) S: the ISA shim serves minstret from the model's own retirement count and does not model dummies (dv/auto_dv/docs/gen_component_api_isa_shim.md, section Counter CSRs), so the second csrr differs and the comparator raises [isa_rd] on that record.
 
 ### B8: a dummy instruction inserted inside a Zcmp push / pop sequence drops a micro-op or replays the whole expansion
 - Rating: P1. Silent corruption of architectural state (a register not saved or not restored, registers
@@ -1094,3 +1107,8 @@ documentation there changes the privilege an mret lands in.
 - v2 (2026-09-08 01:25 UTC): owner request of 2026-09-07: plain language, numbered steps, feature names, test commands, effort scoping, P-ratings. Section 0 added (glossary, rating and effort definitions, the test-command form and where the FSDB lands, the summary table, the policies moved here and shortened). Every B entry rewritten in the Section 1 layout with its feature named first, its steps as a numbered list, its test command (B4, B8 exist; B13 and B18 pass by policy with the raw-rule witness given) or "No test yet" with the item-5 scoping, and its rating (P1: B8; P2: B1, B2, B7, B10, B11, B16, B17, B20; P3: the rest, S1-S6 and D1-D22); B10 and B16 marked pending rtl-arch confirmation. B21 given its own Section 1b entry. Section 2 and Section 3 tables gained a Rating column. No plan item id, RTL cite or specification cite was dropped and every feature id is kept, with one correction: version 1's B8 cross-reference "F-DIT-032 item" named an id that has no feature heading (the case is the plan item TP-DIT-032), so it is now written as the plan item; the B-versus-D criterion, ruling B4-R1 and the B8 mechanism text are kept with their wording. Two rtl-arch records cite version-1 line numbers of this file (gen_b4_rtl_facts.md:6 "gen_bug_log.md:60", gen_t102_rtl_facts.md:8 "gen_bug_log.md:274"); they resolve by id (B4, D20) and are rtl-arch's to re-point at their next touch.
 - v2a (2026-09-08 01:32 UTC): Orchestrator citation instruction of 2026-09-08: every Spike source cite carries the clone-relative path tools/riscv-isa-sim/... (the clone's own copy of the allowed upstream project, not the fenced cosim fork); the glossary names Spike as the reference model in those words.
 - v2b (2026-09-08 01:59 UTC): B16 and B20 said their owner questions were still to be filed; Q-015 and Q-016 were filed on 2026-09-03 and are unanswered, so both entries now say so with the default applied while pending; Section 0.3 states the LOG-103 evidence bar (red and green retained runs plus a waveform confirmation) for the proposed quick tests.
+- v2c (2026-09-08 02:24 UTC): B2 and B7 have tests: their Test, Status and Evidence read the landed expected-fail entries
+  gen_prv_debug_b2_xfail and gen_pmc_minstret_xfail (seed 1, XFAIL, signatures, controls, FSDB locations) from
+  dv/auto_dv/evidence/gen_tdd_bug_tests.md, the earlier scoping kept under Notes; the summary table follows. Section
+  0.6 records the counter-rule direction ruling of 2026-09-08 (the B13 convention applied to the B11, B17 and B20
+  checker rules: RTL default with counted accommodation, knob to the documentation rule for the expected-fail run).

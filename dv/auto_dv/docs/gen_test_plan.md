@@ -1,7 +1,7 @@
 # Test plan - Ibex core, opentitan configuration
 
 Deliverable 2 (DV_prompt.txt Section 11): feature -> test-plan items -> tests -> bins. Owner: dv-lead.
-Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in: checker direction per gen_bug_log.md, rvfi_trap-on-ebreak-into-debug rule, vacuity fixes, impossible bins pruned, layer-1 weight tables, timing qualifiers), generated from dv/auto_dv/work/dv-lead/parts6/tp_*.md (inputs digest b5f81ff45ce8 over every part file and over the generator's own source; no clock, so a regeneration from unchanged inputs is byte-identical; what the digest covers and the commands that reproduce it are recorded at dv/auto_dv/evidence/gen_plan_digest_provenance.md). Part-file names in this document (tp_<area>.md, fcov_<area>.md, gen_part_<area>.md, trace_*_<area>.csv and the README_*_BRIEF.md briefs) are this plan set's own gitignored sources, named as provenance: the content they hold is in the corresponding area of gen_test_plan.md, gen_fcov_plan.md or gen_feature_list.md, and the bug and doc-defect number series they define are in gen_bug_log.md. No claim in this document rests on opening one. Three rtl-arch notes this plan set cites are committed references, not work files: dv/auto_dv/evidence/gen_multdiv_bound_props.md (the MD-n bound properties and covers), dv/auto_dv/evidence/gen_bug_reproducer_specs.md (the reproducer recipes behind the bug log) and dv/auto_dv/evidence/gen_interface_inventory.md (the numbered driver and protocol rules); citations name them by basename and resolve there. Companion documents:
+Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in: checker direction per gen_bug_log.md, rvfi_trap-on-ebreak-into-debug rule, vacuity fixes, impossible bins pruned, layer-1 weight tables, timing qualifiers), generated from dv/auto_dv/work/dv-lead/parts6/tp_*.md (inputs digest 7b102723d9d2 over every part file and over the generator's own source; no clock, so a regeneration from unchanged inputs is byte-identical; what the digest covers and the commands that reproduce it are recorded at dv/auto_dv/evidence/gen_plan_digest_provenance.md). Part-file names in this document (tp_<area>.md, fcov_<area>.md, gen_part_<area>.md, trace_*_<area>.csv and the README_*_BRIEF.md briefs) are this plan set's own gitignored sources, named as provenance: the content they hold is in the corresponding area of gen_test_plan.md, gen_fcov_plan.md or gen_feature_list.md, and the bug and doc-defect number series they define are in gen_bug_log.md. No claim in this document rests on opening one. Three rtl-arch notes this plan set cites are committed references, not work files: dv/auto_dv/evidence/gen_multdiv_bound_props.md (the MD-n bound properties and covers), dv/auto_dv/evidence/gen_bug_reproducer_specs.md (the reproducer recipes behind the bug log) and dv/auto_dv/evidence/gen_interface_inventory.md (the numbered driver and protocol rules); citations name them by basename and resolve there. Companion documents:
 dv/auto_dv/docs/gen_feature_list.md (features), gen_fcov_plan.md (bins), gen_bug_log.md (B/D lists),
 gen_trace_feature_tp.csv and gen_trace_tp_bin.csv (machine-readable traceability), checked by
 dv/auto_dv/tools/gen_trace_check.py.
@@ -372,7 +372,7 @@ Bug candidates whose spec-direction check is a test-level compare (no C5.3b row)
 | TP items | 1205 |
 | ACTIVE features covered (of 705) | 705 |
 | Phase 1 / Phase 2 items | 1094 / 111 |
-| Tier smoke / targeted / full | 289 / 804 / 112 |
+| Tier smoke / targeted / full / check | 289 / 762 / 112 / 42 |
 | Expected-fail items (bug candidates) | 31 |
 | Informational items (outside the gate; Section 1.2) | 11 (5 for a downgraded or record-only bug candidate, 6 for non-bug reasons: Q-010 informational tests, observations with no gating check) |
 | Items outside the Phase 1 pass gate (expected-fail + informational) of 1205 | 42 |
@@ -835,7 +835,11 @@ Conventions used in every item
 - Cross-area references (F-DIT-*, F-PMC-041, F-IRQ-*, F-DBG-*, F-PMP-*) are given in the text;
   the Features line lists only this area's F-IDs so the trace CSV stays per area.
 - Tier: smoke = per-instruction sanity (short), targeted = corner-heavy Phase-1 (medium), full =
-  Phase-2 random regimes (long).
+  Phase-2 random regimes (long), check = unmeasured: the expected-fail and informational groups, whose
+  tests carry expected_fail or record-only outcomes and, under owner directive LOG-103 (2026-09-08), no
+  fcov-expectation manifest; the flow runs them in its check tier or by name with measured: false, since a
+  measured entry in a manifest-required tier must carry a manifest (gen_regress.py
+  fcov_manifest_required_tiers). Bins owned only by such an item are never hit in a measured merge.
 - Timing terms: "delta" and "unstalled" follow fcov_isa.md's conventions: the delta is measured
   from the previous retirement (rvfi_ext_mcycle is captured when the instruction leaves ID,
   rtl/ibex_core.sv:2102) and "unstalled" means gap_clean (fetch_stall == no, cpuctrlsts.
@@ -1691,7 +1695,7 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 ### TP-ISA-051: RVFI record confirmation for the ID-stage illegal trap that coincides with a WB error (B14)
 - Features: F-ISA-050
 - Phase: 1
-- Tier: targeted
+- Tier: check
 - Preconditions: as TP-ISA-050, fault iterations only. The priority behaviour itself (the WB error outranks the ID exception; the killed ID instruction re-executes after the handler) is the pass item TP-ISA-050; this item only confirms the RVFI record count (gen_bug_log.md B14, downgraded to an RVFI convention note pending this simulation).
 - Stimulus: store/load with a slow error response followed immediately by an illegal instruction; the RVFI monitor records every rvfi_trap entry.
 - Randomized: as TP-ISA-050.
@@ -1775,7 +1779,7 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 ### TP-ISA-057: Illegal ebreak variant with dcsr.ebreakm/u set retires with rvfi_trap = 0 (RVFI quirk, informational)
 - Features: F-ISA-042, F-ISA-047
 - Phase: 1
-- Tier: targeted
+- Tier: check
 - Preconditions: debug ROM at DmHaltAddr; dcsr.ebreakm / dcsr.ebreaku programmed inside debug mode (entered via debug_req_i) then dret; handler as TP-ISA-012 (skips 4 bytes, records mcause/mtval/mepc); M and U iterations (U per C-2).
 - Stimulus: SYSTEM funct3 = 000, funct12 = 0x001 with rs1 != 0, rd != 0 or both nonzero, executed in M with ebreakm in {0, 1} and in U with ebreaku in {0, 1}; canonical ebreak controls (TP-ISA-034/035 behaviour); random legal code around.
 - Randomized: which field is nonzero and its value, privilege, dcsr configuration, position, alignment.
@@ -2915,7 +2919,7 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 ### TP-CMP-051: cm.mvsa01 with r1s' == r2s' is reserved
 - Features: F-CMP-051
 - Phase: 1
-- Tier: targeted
+- Tier: check
 - Preconditions: M/U; handler as TP-ISA-047; U per C-2.
 - Stimulus: cm.mvsa01 with r1s' == r2s' for all eight values, a0 != a1, destination pre-loaded with a third value.
 - Randomized: r1s', a0/a1, privilege.
@@ -3112,7 +3116,7 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 ### TP-CMP-065: Dummy instruction insertion during a Zcmp sequence
 - Features: F-CMP-064
 - Phase: 1
-- Tier: targeted
+- Tier: check
 - Preconditions: M-mode; cpuctrlsts.dummy_instr_en = 1 with dummy_instr_mask giving the highest insertion rate (programmed by csrw; cross-ref F-DIT-*/SEC dummy features); stack pre-cleared; probe P1 (dummy_instr_id_o wrapper net) is coverage-only and not yet registered, so the CG-CMP-008 dummy_* bins are probe-gated and not in this item's manifest (OQ-6).
 - Stimulus: many cm.push {ra, s0-s11} and cm.pop/cm.popret sequences with random data-response regimes so insertion cycles land inside sequences; interleaved cm.mvsa01 / cm.mva01s pairs with distinct operand values (a dummy on the FIRST move is never replayed because the second move carries LAST, so r1s' (mvsa01) or a0 (mva01s) stays permanently unwritten, facts file Section 3; a dummy on the second move replays benignly).
 - Randomized: rlist/spimm, contents, response regime, mv register pairs and operand values, secureseed writes.
@@ -3239,7 +3243,7 @@ CG-BTALU-001..003; W7 for CG-MUL-001..005; W8 + W4 for CG-CMP-001..010; W9 for C
 ### TP-CMP-074: Interrupt or debug request taken on a dummy instruction inside a Zcmp expansion (B8 secondary exposure)
 - Features: F-CMP-064; cross-ref F-IRQ-020, F-DBG-010
 - Phase: 1
-- Tier: targeted
+- Tier: check
 - Preconditions: M-mode; cpuctrlsts.dummy_instr_en = 1 with dummy_instr_mask giving the highest insertion rate (csrw, as TP-CMP-065); mstatus.MIE = 1 and mie enabling the storm lines; stack pre-cleared with a recognisable pattern; the controller holds an expansion together only while the ID instruction carries the EXPANDED or COMMIT tag (interrupts: COMMIT only, rtl/ibex_controller.sv:498-500; debug: both, :474-477) and a dummy in ID carries INSTR_NOT_EXPANDED (rtl/ibex_if_stage.sv:528), so an event pending in the insertion cycle is taken mid-expansion (dv/auto_dv/evidence/gen_b8_rtl_facts.md Section 5, 1eb2ede; stated from the RTL, not reproduced).
 - Stimulus: the TP-CMP-065 program (many cm.push / cm.pop / cm.popret / cm.popretz over rlist 4..15 with a checkable stack pattern) under the interrupt storm regime (all lines; the handler reads mepc and x2, then mret) and, in a second half, under the debug_req_i regime (the debug ROM reads dpc and x2, then dret); random data-response regimes so insertions and pending events land inside expansions.
 - Randomized: rlist/spimm, contents, response regime, irq line mix and inter-arrival, debug_req spacing, secureseed writes.
@@ -3978,7 +3982,7 @@ the fence as source but is rendered in tools/specs/riscv-bitmanip/bitmanip-draft
 ### TP-BTALU-008: rvfi_pc_wdata keeps bit 0 for jalr to an odd target
 - Features: F-BTALU-008
 - Phase: 1
-- Tier: targeted
+- Tier: check
 - Preconditions: M-mode.
 - Stimulus: jalr/c.jr/c.jalr with odd rs1 + imm sums; the RVFI monitor records rvfi_pc_wdata[0] and the next rvfi_pc_rdata.
 - Randomized: form, odd construction, target.
@@ -4090,7 +4094,7 @@ the fence as source but is rendered in tools/specs/riscv-bitmanip/bitmanip-draft
 ### TP-BTALU-016: Not-taken branches under data_ind_timing = 1 are not counted as taken
 - Features: F-BTALU-015, F-BTALU-006
 - Phase: 1
-- Tier: targeted
+- Tier: check
 - Preconditions: as TP-BTALU-015 (including the no-WB-wait precondition of C-10, so that mhpmcounter8 stays exact and only the B11 effect on mhpmcounter9 is measured; the B17 waiting class is TP-BTALU-018) with data_ind_timing = 1 (cross-ref F-PMC-041 in the PMC area).
 - Stimulus: blocks of branches with a known number of not-taken branches under DIT = 1; counters read before/after.
 - Randomized: block contents, mix, N.
@@ -4118,7 +4122,7 @@ the fence as source but is rendered in tools/specs/riscv-bitmanip/bitmanip-draft
 ### TP-BTALU-018: NumBranches (mhpmcounter8) over-counts a conditional branch waiting in ID behind an outstanding WB access (B17)
 - Features: F-BTALU-016, F-BTALU-011
 - Phase: 1
-- Tier: targeted
+- Tier: check
 - Preconditions: M-mode; mcountinhibit = 0; data_ind_timing = 0; cpuctrlsts.icache_enable = 0 pinned for the whole test (the branch's ID-entry cycle is derived from the ibus/dbus monitors; excluded from random cpuctrlsts writes); handler as TP-ISA-050 for the fault iterations.
 - Stimulus: csrr t0, mhpmcounter8; lw/sw (result unused by the branch) with the response delayed W = 1..16 cycles beyond min1; a conditional branch (taken and not-taken, all six ops) immediately after it; csrr t1, mhpmcounter8 (the gen_bug_log.md B17 reproducer); controls with W = 0 and with the branch separated from the access by >= 2 non-branch instructions; some iterations with jal/jalr in place of the branch (counter 7 control).
 - Randomized: W, access kind, op, operands (taken/not-taken), block contents, alignment.
@@ -4145,9 +4149,9 @@ regimes (>= 20000 instructions per seed, multiple regimes per run).
 | gen_isa_fence | TP-ISA-029, 030, 031 | 1 | targeted | medium |
 | gen_isa_system | TP-ISA-032, 033, 034, 035, 036, 037, 038, 039, 040, 041 | 1 | smoke/targeted | short/medium |
 | gen_isa_csr_insn | TP-ISA-043, 044, 045 | 1 | smoke/targeted | short/medium |
-| gen_isa_illegal_info | TP-ISA-051 | 1 | targeted | medium |
+| gen_isa_illegal_info | TP-ISA-051 | 1 | check | medium |
 | gen_isa_random | TP-ISA-054, 055, 056 | 2 | full | long |
-| gen_isa_illegal_ebreak_info | TP-ISA-057 | 1 | targeted | medium |
+| gen_isa_illegal_ebreak_info | TP-ISA-057 | 1 | check | medium |
 | gen_mul_mul | TP-MUL-001, 002, 003, 004, 005, 006, 007, 008, 027 | 1 | smoke/targeted | short/medium |
 | gen_mul_timing | TP-MUL-009, 010, 011, 023, 024, 025, 030 | 1 | targeted | medium |
 | gen_mul_div | TP-MUL-012, 013, 014, 015, 016, 017, 018, 019, 020, 021, 022, 026 | 1 | smoke/targeted | short/medium |
@@ -4157,11 +4161,11 @@ regimes (>= 20000 instructions per seed, multiple regimes per run).
 | gen_cmp_hints | TP-CMP-009, 013, 027, 031 | 1 | targeted | medium |
 | gen_cmp_zcb | TP-CMP-034, 036, 038 | 1 | smoke | short |
 | gen_cmp_zcmp_basic | TP-CMP-039, 040, 041, 042, 043, 045, 046, 047, 048, 049, 050, 052, 053, 055, 066, 068, 069, 073 | 1 | smoke/targeted | short/medium |
-| gen_cmp_zcmp_basic_xfail | TP-CMP-051 | 1 | targeted | medium |
+| gen_cmp_zcmp_basic_xfail | TP-CMP-051 | 1 | check | medium |
 | gen_cmp_zcmp_events | TP-CMP-056, 057, 058, 059, 064 | 1 | targeted | medium |
 | gen_cmp_zcmp_faults | TP-CMP-060, 061, 062, 063, 072 | 1 | targeted | medium |
-| gen_cmp_zcmp_events_xfail | TP-CMP-065 | 1 | targeted | medium |
-| gen_cmp_zcmp_irq_dummy_xfail | TP-CMP-074 | 1 | targeted | medium |
+| gen_cmp_zcmp_events_xfail | TP-CMP-065 | 1 | check | medium |
+| gen_cmp_zcmp_irq_dummy_xfail | TP-CMP-074 | 1 | check | medium |
 | gen_cmp_random | TP-CMP-070, 071 | 2 | full | long |
 | gen_bit_ratified | TP-BIT-001, 002, 003, 004, 005, 006, 007, 008, 009, 010, 014, 015, 017, 018, 019, 020, 021, 038, 040 | 1 | smoke/targeted | short/medium |
 | gen_bit_draft | TP-BIT-011, 016, 022, 023, 024, 025, 026, 027, 028, 029, 030, 031, 032, 033 | 1 | targeted | medium |
@@ -4170,11 +4174,11 @@ regimes (>= 20000 instructions per seed, multiple regimes per run).
 | gen_bit_random | TP-BIT-041, 042 | 2 | full | long |
 | gen_btalu_basic | TP-BTALU-001, 002, 003, 004, 005, 007, 009, 012, 014 | 1 | smoke/targeted | short/medium |
 | gen_btalu_dit | TP-BTALU-006, 015 | 1 | targeted | medium |
-| gen_btalu_hazard_xfail | TP-BTALU-008 | 1 | targeted | medium |
+| gen_btalu_hazard_xfail | TP-BTALU-008 | 1 | check | medium |
 | gen_btalu_hazard | TP-BTALU-010, 011, 013 | 1 | targeted | medium |
-| gen_btalu_dit_xfail | TP-BTALU-016 | 1 | targeted | medium |
+| gen_btalu_dit_xfail | TP-BTALU-016 | 1 | check | medium |
 | gen_btalu_random | TP-BTALU-017 | 2 | full | long |
-| gen_btalu_perf_b17_xfail | TP-BTALU-018 | 1 | targeted | medium |
+| gen_btalu_perf_b17_xfail | TP-BTALU-018 | 1 | check | medium |
 
 Expected-fail items (5): TP-CMP-051 (B4), TP-CMP-065 (B8), TP-BTALU-008 (B13), TP-BTALU-016 (B11),
 TP-BTALU-018 (B17). Informational, excluded from the pass gate (2): TP-ISA-051 (B14 record
@@ -5482,7 +5486,7 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 ### TP-CSR-075: dcsr write of all-ones must read back 0x4000_9007 | (cause << 6) (bit 13 forced 0); current RTL returns 0x4000_B007 (B15)
 - Features: F-CSR-075
 - Phase: 1
-- Tier: targeted
+- Tier: check
 - Preconditions: debug mode; the entry cause (haltreq 3, ebreak 1, step 4, trigger 2) is known to the TB from the entry stimulus.
 - Stimulus: csrrw dcsr, -1 ; csrr ; csrrs dcsr, -1 ; csrr ; then restore dcsr to the legal pre-entry value; 4 entries per seed with different causes. Weights: per the Layer-1 weight tables unless stated.
 - Randomized: cause of entry, order, rd.
@@ -5496,7 +5500,7 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 ### TP-CSR-076: dcsr.ebreaks (bit 13) must read 0 without S-mode; current RTL stores it (B15)
 - Features: F-CSR-076
 - Phase: 1
-- Tier: targeted
+- Tier: check
 - Preconditions: debug mode. C-2 U-mode prologue before the first entry to U.
 - Stimulus: csrrs dcsr, 0x2000 ; csrr ; csrrc dcsr, 0x2000 ; csrr ; csrrw with bit 13 alone; 20 rounds per seed; then dret and an ebreak in M/U to show no functional effect (ebreak behaviour per ebreakm/ebreaku only). Weights: per the Layer-1 weight tables unless stated.
 - Randomized: op, other bits, round order.
@@ -5594,7 +5598,7 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 ### TP-CSR-083: tdata3, mcontext, mscontext, scontext read 0 and ignore writes in M; U-mode access traps
 - Features: F-CSR-083
 - Phase: 1
-- Tier: targeted
+- Tier: check
 - Preconditions: M-mode, debug mode and U-mode rounds. C-2 U-mode prologue before the first entry to U.
 - Stimulus: read and write forms (6 ops, all1/rand operands) to 0x7A3, 0x7A8, 0x7AA, 0x5A8 in M-mode and debug mode, followed by csrr; the same in U-mode (all trap); 80 accesses per seed. Weights: per the Layer-1 weight tables unless stated.
 - Randomized: op, operand, address, mode, rd.
@@ -6311,7 +6315,7 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 ### TP-PRV-014: dret into U-mode leaves mstatus.MPRV set; U-mode data accesses run with MPP privilege (B1)
 - Features: F-PRV-015
 - Phase: 1
-- Tier: targeted
+- Tier: check
 - Preconditions: M-mode program sets MPRV = 1, MPP = M (also MPP = U variant); PMP: the C-2 U-mode prologue (U-executable code region for the U block, U-RW stack/signature region; fact-check note 4) plus an M-only data region readable from M, not from U; debug_req_i asserted; debug ROM sets dcsr.prv = U, dpc = a U-mode block, executes dret; the U block loads from the M-only region then ecalls; handler reads mstatus.
 - Stimulus: 30 rounds per seed; control rounds with MPRV = 0 (MPP = M or U kept across the dret). Weights: per the Layer-1 weight tables unless stated.
 - Randomized: MPP (M/U), address in the M-only region, load vs store, dpc target.
@@ -6605,7 +6609,7 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 ### TP-PRV-035: MPRV honoured for loads/stores in debug mode although dcsr.mprven reads 0 (B2, owned by DBG/PMP; MPRV cross)
 - Features: F-PRV-013
 - Phase: 1
-- Tier: targeted
+- Tier: check
 - Preconditions: MPRV = 1, MPP = U set in M before debug_req_i; PMP: all regions OFF (reset) or an M-only region; debug ROM executes loads/stores to addresses outside the DM window.
 - Stimulus: 20 entries per seed; control with MPRV = 0. Weights: per the Layer-1 weight tables unless stated.
 - Randomized: address, load vs store, MPP, PMP setup.
@@ -6686,7 +6690,7 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 | gen_csr_umode | TP-CSR-015, 053, 054, 055, 056, 057; TP-PRV-033 | 1 | smoke/targeted | short |
 | gen_csr_debug_csr | TP-CSR-017, 018, 074, 077, 078, 079 | 1 | targeted | medium |
 | gen_csr_trigger_csr | TP-CSR-080, 081, 082, 084 | 1 | smoke/targeted | short |
-| gen_csr_trigger_csr_xfail | TP-CSR-083 | 1 | targeted | short |
+| gen_csr_trigger_csr_xfail | TP-CSR-083 | 1 | check | short |
 | gen_csr_cpuctrl | TP-CSR-085, 086, 087, 088, 089, 090, 091, 092, 093, 094 | 1 | smoke/targeted | medium |
 | gen_csr_pmp_warl | TP-CSR-095, 096, 097 | 1 | smoke/targeted | short |
 | gen_csr_cheriot_gate | TP-CSR-098, 099 | 1 | smoke | short |
@@ -6702,10 +6706,10 @@ item only. Classes that do not apply to the addressed CSR are dropped and the re
 | gen_prv_debug | TP-PRV-004, 024, 025, 026, 039 | 1 | smoke/targeted | medium |
 | gen_prv_storm | TP-PRV-036, 037, 038 | 2 | full | long |
 | gen_csr_trap_setup_irq | TP-CSR-026, 031 | 1 | targeted | - |
-| gen_csr_debug_csr_b15a_xfail | TP-CSR-075 | 1 | targeted | - |
-| gen_csr_debug_csr_b15b_xfail | TP-CSR-076 | 1 | targeted | - |
-| gen_prv_debug_b1_xfail | TP-PRV-014 | 1 | targeted | - |
-| gen_prv_debug_b2_xfail | TP-PRV-035 | 1 | targeted | - |
+| gen_csr_debug_csr_b15a_xfail | TP-CSR-075 | 1 | check | - |
+| gen_csr_debug_csr_b15b_xfail | TP-CSR-076 | 1 | check | - |
+| gen_prv_debug_b1_xfail | TP-PRV-014 | 1 | check | - |
+| gen_prv_debug_b2_xfail | TP-PRV-035 | 1 | check | - |
 
 Expected-fail items: TP-CSR-075 and TP-CSR-076 (B15), TP-CSR-083 (B3), TP-PRV-014 (B1),
 TP-PRV-035 (B2). TP-CSR-075 joins the B15 list because an all-ones write necessarily sets bit 13
@@ -7832,7 +7836,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 ### TP-EXC-065: RVFI record confirmation for the WB-error / ID-trap collision (B14 confirmation; priority behaviour is TP-EXC-035)
 - Features: F-EXC-064, F-EXC-036
 - Phase: 1
-- Tier: targeted
+- Tier: check
 - Preconditions: as TP-EXC-035.
 - Stimulus: the TP-EXC-035 collision: a faulting load/store whose error response arrives while ID holds ecall, ebreak or an illegal encoding.
 - Randomized: as TP-EXC-035.
@@ -9111,7 +9115,7 @@ their Stimulus line does not spell the distribution out. Weights are relative.
 | gen_exc_fetch_fault | TP-EXC-002, 003, 004, 005 | 1 | targeted | short |
 | gen_exc_illegal | TP-EXC-008, 009, 010, 011, 013 | 1 | targeted | short |
 | gen_exc_priority | TP-EXC-006, 012, 015, 035, 040, 070 | 1 | targeted | medium |
-| gen_exc_priority_info | TP-EXC-065 | 1 | targeted | short |
+| gen_exc_priority_info | TP-EXC-065 | 1 | check | short |
 | gen_exc_ebreak_ecall | TP-EXC-017, 018, 020, 021 | 1 | targeted | short |
 | gen_exc_zcmp | TP-EXC-014, 042, 043, 044 | 1 | targeted | medium |
 | gen_exc_lsu_fault | TP-EXC-025, 027, 028, 029, 030, 031, 032, 033, 034, 036, 037, 038, 039 | 1 | targeted | medium |
@@ -10271,7 +10275,7 @@ Conventions used below:
 ### TP-PMP-073: dret into U leaves MPRV set: U-mode data accesses run with MPP privilege
 - Features: F-PMP-075, F-PRV-015
 - Phase: 1
-- Tier: targeted
+- Tier: check
 - Preconditions: C-2 (the U code window and U stack of variant A); debug entry from M with MPRV = 1, MPP = M; debug code sets dcsr.prv = U and dpc to the U code window (variant A); control variant B: MPRV = 1, MPP = U before entry, debug code sets dcsr.prv = M; an M-allowed / U-denied data window per C-PMP-MONLY (unmatched with MMWP=0 or a matching L=0 RWX=000 entry under MML=0; LRWX=1110 under MML=1). Not "L=1 RW under MML=0" (U-accessible: L is ignored for U when MML=0) and not "MMWP=1 with no U rule" (denies M as well), otherwise neither the Sdext-predicted trap nor the RTL contrast is observable (X-20, fact-check TP-PMP-073).
 - Stimulus: Variant A: dret to U; the U code loads from and stores to the M-only window and then to a U window; ecall back to M reads mstatus. Variant B: dret to M; the M code loads from the M-only window (checked as U through MPP=U: trap), then csrr mstatus.
 - Randomized: windows, MML/MMWP, order, debug_req_i timing.
@@ -10285,7 +10289,7 @@ Conventions used below:
 ### TP-PMP-074: MPRV honoured for debug-mode loads/stores although dcsr.mprven reads 0
 - Features: F-PMP-076, F-DBG-055
 - Phase: 1
-- Tier: targeted
+- Tier: check
 - Preconditions: Debug entry with MPRV = 1, MPP = U; a data window outside the DM range that is M-allowed but U-denied (the model's U-vs-M verdicts differ: CG-PMP-012.cp_uvm.u_deny_m_allow); debug ROM performs loads/stores to it; the ROM at DmExceptionAddr records the redirect and drets.
 - Stimulus: Debug-mode load and store to the window; also with MPRV = 0 for contrast.
 - Randomized: window, MML/MMWP, sizes, debug_req_i timing.
@@ -10837,7 +10841,7 @@ Conventions used below:
 | gen_pmp_csr_warl | TP-PMP-001, 002, 003, 004, 005, 006, 007, 008 | 1 | smoke/targeted | short |
 | gen_pmp_data_fault | TP-PMP-069, 080, 081, 082, 083 | 1 | smoke/targeted | medium |
 | gen_pmp_debug | TP-PMP-009, 094, 095, 096, 097, 098, 099 | 1 | targeted | medium |
-| gen_pmp_debug_xfail | TP-PMP-074 | 1 | targeted | medium |
+| gen_pmp_debug_xfail | TP-PMP-074 | 1 | check | medium |
 | gen_pmp_fetch_fault | TP-PMP-064, 065, 066, 067, 068, 076, 077, 078, 079 | 1 | smoke/targeted | medium |
 | gen_pmp_icache_dummy | TP-PMP-092, 093 | 1 | targeted | medium |
 | gen_pmp_lock | TP-PMP-013, 014, 015, 016, 017, 018, 019, 020, 021, 112 | 1 | targeted | short |
@@ -10847,7 +10851,7 @@ Conventions used below:
 | gen_pmp_match_tor | TP-PMP-038, 039, 040, 041, 042 | 1 | targeted | medium |
 | gen_pmp_misaligned | TP-PMP-084, 085, 086, 087, 088, 089 | 1 | targeted | medium |
 | gen_pmp_mprv | TP-PMP-070, 071, 072, 075 | 1 | targeted | medium |
-| gen_pmp_mprv_xfail | TP-PMP-073 | 1 | targeted | medium |
+| gen_pmp_mprv_xfail | TP-PMP-073 | 1 | check | medium |
 | gen_pmp_mseccfg | TP-PMP-011, 012, 022, 023, 024, 025, 026, 027, 028, 029, 030, 031, 108 | 1 | targeted | short |
 | gen_pmp_perm_mml0 | TP-PMP-047, 048, 049, 050, 051, 052 | 1 | smoke/targeted | medium |
 | gen_pmp_perm_mml1 | TP-PMP-054, 055, 056, 057, 058, 059, 060, 061, 062 | 1 | targeted/full | medium |
@@ -11242,7 +11246,7 @@ fcov_dbg_trg_pmc.md. Conventions:
 ### TP-DBG-011: debug_req_i deasserted exactly in W-FLUSH(ecall), the cycle before W-DBGTAKEN, records dcsr.cause = 0
 - Features: F-DBG-006
 - Phase: 1
-- Tier: targeted
+- Tier: check
 - Preconditions: dcsr.step=0; mtvec set; a trapping instruction (ecall) at a known address;
   icache_enable=0 (the mtvec-target request identifies W-FLUSH, C-14).
 - Stimulus: debug_req_i rises in W-DEC(ecall) (ibus-fetch-triggered, as in TP-DBG-006) and falls
@@ -11377,7 +11381,7 @@ fcov_dbg_trg_pmc.md. Conventions:
 ### TP-DBG-018: dcsr WARL: all-ones, all-zeros, walking-one and random writes read back with only ebreakm/ebreaku/step/prv changed; bit 13 (ebreaks) must read 0 (B15)
 - Features: F-DBG-012, F-DBG-015, F-DBG-016
 - Phase: 1
-- Tier: targeted
+- Tier: check
 - Preconditions: debug mode (any cause); irq_nm_i low throughout (the nmip compare with an NMI
   pending belongs to TP-DBG-021, the single B5 owner).
 - Stimulus: debug program performs 8..32 dcsr writes (csrrw/csrrs/csrrc/csrrwi/csrrsi/csrrci) with
@@ -11434,7 +11438,7 @@ fcov_dbg_trg_pmc.md. Conventions:
 ### TP-DBG-021: dcsr.nmip stays 0 while an NMI is pending in debug mode (spec: nmip reports the pending NMI)
 - Features: F-DBG-015, F-DBG-043, F-DBG-057
 - Phase: 1
-- Tier: targeted
+- Tier: check
 - Preconditions: debug mode via haltreq; irq_nm_i low at entry.
 - Stimulus: irq driver asserts irq_nm_i during the debug window (held); debug program reads dcsr
   repeatedly (>= 3 reads after the assertion); dret; NMI handler acks via MMIO.
@@ -11757,7 +11761,7 @@ fcov_dbg_trg_pmc.md. Conventions:
 ### TP-DBG-038: dret into U-mode with mstatus.MPRV=1 must clear MPRV (spec); RTL leaves it set so U-mode accesses use MPP privilege
 - Features: F-DBG-033
 - Phase: 1
-- Tier: targeted
+- Tier: check
 - Preconditions: debug mode; debug program writes mstatus.MPRV=1, MPP=M; dcsr.prv=U; PMP region R
   with M-only R/W over a data page and a U-permitted code page (MML=0); dpc = U code.
 - Stimulus: dret; the U code performs a load and a store to page R, then ecall to M where the
@@ -12204,7 +12208,7 @@ fcov_dbg_trg_pmc.md. Conventions:
 ### TP-DBG-060: mstatus.MPRV is honoured for debug-mode data accesses although dcsr.mprven reads 0 (spec: MPRV ignored in debug mode)
 - Features: F-DBG-055
 - Phase: 1
-- Tier: targeted
+- Tier: check
 - Preconditions: M-mode program sets mstatus.MPRV=1, MPP=U before the halt (or the debug program
   writes it); PMP region with M-only R/W over a far data page (MML=0), a U-permitted page as
   control; DM window bypass unaffected.
@@ -12638,7 +12642,7 @@ fcov_dbg_trg_pmc.md. Conventions:
 ### TP-TRG-008: tdata3, mcontext, mscontext, scontext read 0 and ignore writes in M and debug mode (Sdtrig: unused trigger CSRs must trap)
 - Features: F-TRG-008
 - Phase: 1
-- Tier: targeted
+- Tier: check
 - Preconditions: M-mode and debug mode sections; mtvec handler present.
 - Stimulus: reads and writes (random data, all ops) of CSR_TDATA3, CSR_MCONTEXT, CSR_MSCONTEXT, CSR_SCONTEXT in both
   modes.
@@ -12842,7 +12846,7 @@ fcov_dbg_trg_pmc.md. Conventions:
 ### TP-TRG-020: ebreak entering debug mode while the next instruction's address matches tdata2: RTL records cause 2 with dpc = ebreak pc (inconsistent pair)
 - Features: F-TRG-020
 - Phase: 1
-- Tier: targeted
+- Tier: check
 - Preconditions: dcsr.ebreakm=1 (or ebreaku=1); tdata2 := ebreak pc + 2 or + 4 (matching the ebreak
   form), execute := 1.
 - Stimulus: the program executes the ebreak; the debug window reads dcsr/dpc/tdata2, disarms and
@@ -13310,7 +13314,7 @@ fcov_dbg_trg_pmc.md. Conventions:
 ### TP-PMC-013: SecureIbex dummy instructions increment minstret and the div-wait counter (doc: no functional impact); the dummy mul adds no mul-wait cycles
 - Features: F-PMC-011
 - Phase: 1
-- Tier: targeted
+- Tier: check
 - Preconditions: cpuctrlsts.dummy_instr_en=1, dummy_instr_mask random; mcountinhibit=0.
 - Stimulus: straight-line ALU windows of 200..5000 instructions bounded by reads of minstret,
   mhpmcounter11 and mhpmcounter12; control window with dummy_instr_en=0. No load/store in the
@@ -13855,7 +13859,7 @@ fcov_dbg_trg_pmc.md. Conventions:
 ### TP-PMC-043: mhpmcounter9 with cpuctrlsts.data_ind_timing=1: RTL also counts not-taken branches (doc: taken only)
 - Features: F-PMC-041
 - Phase: 1
-- Tier: targeted
+- Tier: check
 - Preconditions: mcountinhibit[8:9]=0; cpuctrlsts.data_ind_timing=1 written in M-mode;
   dummy_instr_en=0.
 - Stimulus: windows with a known mix of taken/not-taken branches bounded by mhpmcounter8 and
@@ -14167,7 +14171,7 @@ fcov_dbg_trg_pmc.md. Conventions:
 ### TP-PMC-058: mhpmcounter8 (NumBranches) for a conditional branch that waits in ID behind an outstanding WB load/store: the doc count is one per branch, the RTL adds one per waiting cycle
 - Features: F-PMC-053, F-PMC-039
 - Phase: 1
-- Tier: targeted
+- Tier: check
 - Preconditions: mcountinhibit[8]=0; dummy_instr_en=0; cpuctrlsts.data_ind_timing random; dmem
   agent with rvalid delay K in [2:20] on the chosen access.
 - Stimulus: windows bounded by mhpmcounter8 reads containing `lw/sw ; b<cond>` pairs in which the
@@ -14194,7 +14198,7 @@ fcov_dbg_trg_pmc.md. Conventions:
 ### TP-PMC-059: mhpmcounter11 (NumCyclesMulWait) for a mul / mulh that waits in ID behind an outstanding WB load/store: the doc count is the multiply's own stall (mul 0, mulh-class 1), the RTL adds one per waiting cycle
 - Features: F-PMC-053, F-PMC-043
 - Phase: 1
-- Tier: targeted
+- Tier: check
 - Preconditions: mcountinhibit[11]=0; dummy_instr_en=0; dmem agent with rvalid delay K in [2:20] on
   the chosen access.
 - Stimulus: windows bounded by mhpmcounter11 reads containing `lw/sw ; mul|mulh|mulhsu|mulhu` pairs
@@ -14219,7 +14223,7 @@ fcov_dbg_trg_pmc.md. Conventions:
 ### TP-PMC-060: mhpmcounter12 (NumCyclesDivWait) for a divide that waits in ID behind an outstanding WB load/store: the doc count is the divider's own stall (DIV_STALL_FULL / DIV_STALL_ZERO), the RTL adds one per waiting cycle
 - Features: F-PMC-053, F-PMC-044
 - Phase: 1
-- Tier: targeted
+- Tier: check
 - Preconditions: mcountinhibit[12]=0; dummy_instr_en=0; icache_enable=0 (no fetch stall on the
   divide, the TP-PMC-046 qualifier); dmem agent with rvalid delay K in [2:20] on the chosen access.
 - Stimulus: windows bounded by mhpmcounter12 reads containing `lw/sw ; div|divu|rem|remu` pairs in
@@ -14248,7 +14252,7 @@ fcov_dbg_trg_pmc.md. Conventions:
 ### TP-PMC-061: fence.i must not increment mhpmcounter7 (NumJumps): the doc counts unconditional jumps only; the RTL counts fence.i, which it implements as a jump to pc + 4
 - Features: F-PMC-038
 - Phase: 1
-- Tier: targeted
+- Tier: check
 - Preconditions: M-mode; mcountinhibit[7]=0; dummy_instr_en=0; icache_enable either value.
 - Stimulus: windows bounded by mhpmcounter7 reads containing 1, few or many fence.i and no jal/jalr-class instruction (csrr t0, mhpmcounter7; fence.i; csrr t1, mhpmcounter7 is the minimal window: doc predicts 0, RTL gives 1; rtl-arch dv/auto_dv/evidence/gen_hpm_event_defs.md section 3); control windows with the same number of jal instead of fence.i.
 - Randomized: fence.i count per window (1, few, many), spacing, icache_enable; weights: W10.
@@ -14283,19 +14287,19 @@ fcov_dbg_trg_pmc.md. Conventions:
 | gen_trg_csr | TP-TRG-001, 002, 003, 004, 005, 006, 007, 009, 028, 029 | 1 | smoke/targeted | short |
 | gen_trg_fire | TP-TRG-010, 011, 012, 013, 014, 015, 016, 017, 018, 019, 021, 022, 023, 024, 025, 026, 027, 031, 032 | 1 | smoke/targeted/full | medium |
 | gen_trg_random | TP-TRG-030 | 2 | full | long |
-| gen_dbg_req_shape_info | TP-DBG-011 | 1 | targeted | short |
-| gen_dbg_csr_xfail | TP-DBG-018 | 1 | targeted | short |
-| gen_dbg_irq_mask_xfail | TP-DBG-021 | 1 | targeted | short |
-| gen_dbg_dret_xfail | TP-DBG-038 | 1 | targeted | short |
-| gen_dbg_pmp_dm_xfail | TP-DBG-060 | 1 | targeted | short |
-| gen_pmc_minstret_xfail | TP-PMC-013 | 1 | targeted | short |
-| gen_pmc_hpm_event_xfail | TP-PMC-043 | 1 | targeted | short |
-| gen_pmc_hpm_b17_br_xfail | TP-PMC-058 | 1 | targeted | short |
-| gen_pmc_hpm_b17_mul_xfail | TP-PMC-059 | 1 | targeted | short |
-| gen_pmc_hpm_b17_div_xfail | TP-PMC-060 | 1 | targeted | short |
-| gen_trg_csr_xfail | TP-TRG-008 | 1 | targeted | short |
-| gen_trg_fire_xfail | TP-TRG-020 | 1 | targeted | short |
-| gen_pmc_hpm_b20_fencei_xfail | TP-PMC-061 | 1 | targeted | - |
+| gen_dbg_req_shape_info | TP-DBG-011 | 1 | check | short |
+| gen_dbg_csr_xfail | TP-DBG-018 | 1 | check | short |
+| gen_dbg_irq_mask_xfail | TP-DBG-021 | 1 | check | short |
+| gen_dbg_dret_xfail | TP-DBG-038 | 1 | check | short |
+| gen_dbg_pmp_dm_xfail | TP-DBG-060 | 1 | check | short |
+| gen_pmc_minstret_xfail | TP-PMC-013 | 1 | check | short |
+| gen_pmc_hpm_event_xfail | TP-PMC-043 | 1 | check | short |
+| gen_pmc_hpm_b17_br_xfail | TP-PMC-058 | 1 | check | short |
+| gen_pmc_hpm_b17_mul_xfail | TP-PMC-059 | 1 | check | short |
+| gen_pmc_hpm_b17_div_xfail | TP-PMC-060 | 1 | check | short |
+| gen_trg_csr_xfail | TP-TRG-008 | 1 | check | short |
+| gen_trg_fire_xfail | TP-TRG-020 | 1 | check | short |
+| gen_pmc_hpm_b20_fencei_xfail | TP-PMC-061 | 1 | check | - |
 
 Runtime classes: short < 2 min per seed on the verified flow; medium 2-10 min (slow-memory
 regimes, many debug windows); long > 10 min (Phase 2 random regimes with the ISA model).
@@ -15345,7 +15349,7 @@ draw weights of the agent / program generator per transaction.
 ### TP-IMEM-040: Unsolicited instruction-side rvalid demonstration (informational, outside the pass gate)
 - Features: F-IMEM-032
 - Phase: 2
-- Tier: targeted (informational)
+- Tier: check (informational)
 - Preconditions: informational knob set; gen_chk_ibus_proto, gen_chk_icache and gen_isa_compare stay
   ON with their verdicts recorded, not gated, for this test only (C-15; Q-DL-9 default)
 - Stimulus: (a) with no beat outstanding (warm loop, hits only) the agent drives one extra
@@ -16594,7 +16598,7 @@ draw weights of the agent / program generator per transaction.
 ### TP-DMEM-062: Unsolicited data-side rvalid demonstration (informational, outside the pass gate)
 - Features: F-DMEM-006, F-DMEM-007
 - Phase: 2
-- Tier: targeted (informational)
+- Tier: check (informational)
 - Preconditions: informational knob set; gen_chk_dbus_proto, gen_chk_bus_intg_rsp, gen_chk_nmi and
   gen_isa_compare stay ON with their verdicts recorded, not gated, for this test only (C-15; Q-DL-9
   default; gen_bug_log.md S3,
@@ -16621,7 +16625,7 @@ draw weights of the agent / program generator per transaction.
 ### TP-DMEM-063: RVFI records for a WB error coinciding with an ID exception (B14 confirmation, informational)
 - Features: F-DMEM-038
 - Phase: 1
-- Tier: targeted (informational)
+- Tier: check (informational)
 - Preconditions: as TP-DMEM-034; the ID instruction is one that traps again on re-execution (illegal,
   ecall, ebreak with dcsr.ebreakm = 0, instruction with a persistent instr_err_i)
 - Stimulus: as TP-DMEM-034: load/store with data_err_i and rvalid latency 2..6 immediately followed
@@ -16644,7 +16648,7 @@ draw weights of the agent / program generator per transaction.
 ### TP-DMEM-064: Misaligned load with an integrity error on the first beat only: rd is written (B16, expected-fail)
 - Features: F-DMEM-041
 - Phase: 1
-- Tier: targeted
+- Tier: check
 - Preconditions: as TP-DMEM-039; rd preloaded with a sentinel the handler stores out
 - Stimulus: split loads (lw at offsets 1/2/3, lh/lhu at offset 3; weights: W-LS misaligned share)
   whose FIRST beat's response carries an integrity corruption (single bit 50%, double bit 50%) and
@@ -17947,7 +17951,7 @@ draw weights of the agent / program generator per transaction.
 correction refetch)
 - Features: F-IC-042
 - Phase: 1
-- Tier: targeted (informational)
+- Tier: check (informational)
 - Preconditions: icache_enable = 1; the two-way copy of the line is produced by the corrected
   TP-IC-025 recipe (both ways valid at the index and an odd number of lookups between the two
   lookups of L; the cold-index stimulus overwrites the same way and never yields two copies,
@@ -18333,7 +18337,7 @@ correction refetch)
 | gen_dmem_load_data | TP-DMEM-028, 030, 031, 050 | 1 | smoke/targeted | medium |
 | gen_dmem_ctx | TP-DMEM-035, 036, 044, 046, 047, 048, 051, 061 | 1 | smoke/targeted | medium |
 | gen_dmem_intg | TP-DMEM-039, 040, 041, 042, 043 | 1 | targeted | medium |
-| gen_dmem_intg_xfail | TP-DMEM-064 | 1 | targeted | medium |
+| gen_dmem_intg_xfail | TP-DMEM-064 | 1 | check | medium |
 | gen_dmem_zcmp | TP-DMEM-052, 053 | 1 | targeted | medium |
 | gen_fe_boot | TP-FE-001, 002, 003, 027 | 1 | smoke/targeted | medium |
 | gen_fe_redirect | TP-FE-004, 005, 012, 013, 014 | 1 | smoke/targeted | medium |
@@ -18346,14 +18350,14 @@ correction refetch)
 | gen_ic_inval | TP-IC-007, 008, 009, 010, 011, 012, 013, 014, 015, 016 | 1 | smoke/targeted | medium |
 | gen_ic_enable | TP-IC-017, 018, 019, 020, 029, 030, 031, 032, 033, 034, 057 | 1 | smoke/targeted | medium |
 | gen_ic_replace | TP-IC-021, 022 | 1 | targeted | medium |
-| gen_ic_replace_info | TP-IC-038 | 1 | targeted | medium |
+| gen_ic_replace_info | TP-IC-038 | 1 | check | medium |
 | gen_ic_fill | TP-IC-023, 024, 025, 026, 027, 028, 039 | 1 | smoke/targeted | medium |
 | gen_ic_ecc | TP-IC-035, 036, 037, 042, 043, 044 | 1 | smoke/targeted | medium |
 | gen_ic_regime | TP-IC-040, 041, 047, 048, 049, 054, 055, 056 | 2 | full | long |
 | gen_ic_busy | TP-IC-050, 051, 052, 053 | 1 | smoke/targeted | medium |
-| gen_imem_proto_basic_info | TP-IMEM-040 | 2 | targeted | - |
-| gen_dmem_proto_basic_info | TP-DMEM-062 | 2 | targeted | - |
-| gen_dmem_err_info | TP-DMEM-063 | 1 | targeted | - |
+| gen_imem_proto_basic_info | TP-IMEM-040 | 2 | check | - |
+| gen_dmem_proto_basic_info | TP-DMEM-062 | 2 | check | - |
+| gen_dmem_err_info | TP-DMEM-063 | 1 | check | - |
 
 Total: 189 items in 34 groups; TP-IMEM-040, TP-DMEM-062 (Q-DL-9 unsolicited-rvalid demonstrations, one
 per bus), TP-DMEM-063 (B14 two-record confirmation) and TP-IC-038 (multi-way hit, software-constraint
@@ -19053,7 +19057,7 @@ Stimulus line override the table for that item.
 ### TP-DIT-019: Dummies are counted by minstret and the mul/div-wait HPM events
 - Features: F-DIT-018
 - Phase: 1
-- Tier: targeted
+- Tier: check
 - Preconditions: dummy_instr_en = 1, mask 000; mcountinhibit = 0; the hardwired event counters
   mhpmcounter11 (mul wait) and mhpmcounter12 (div wait) are read (X-4: no selector is
   programmable; mhpmeventN reads 1 << (N - 3), D20).
@@ -19364,7 +19368,7 @@ Stimulus line override the table for that item.
 ### TP-DIT-032: Dummy insertion in the middle of a Zcmp expanded sequence
 - Features: F-DIT-011, F-DIT-021
 - Phase: 1
-- Tier: targeted
+- Tier: check
 - Preconditions: dummy_instr_en = 1, mask 000; stack region readable/writable.
 - Stimulus: dense cm.push/cm.pop/cm.popret/cm.popretz/cm.mvsa01/cm.mva01s with 2..13 registers,
   interleaved with 0-3 filler instructions; many reseeds.
@@ -19756,7 +19760,7 @@ Stimulus line override the table for that item.
 ### TP-SEC-010: Integrity error on an unsolicited data response (informational)
 - Features: F-SEC-017
 - Phase: 1
-- Tier: targeted
+- Tier: check
 - Preconditions: no data access outstanding (pipeline idle after a fence or straight ALU code);
   NoMemResponseWithoutPendingAccess assertion waived for this item only.
 - Stimulus: the dmem agent drives data_rvalid_i for one cycle with corrupted check bits while no
@@ -19783,7 +19787,7 @@ Stimulus line override the table for that item.
 ### TP-SEC-011: Unsolicited data response without integrity error is ignored (informational)
 - Features: F-SEC-019
 - Phase: 1
-- Tier: targeted
+- Tier: check
 - Preconditions: as TP-SEC-010.
 - Stimulus: data_rvalid_i pulses with valid check bits and data_err_i = 1 (50%) or 0 while no
   request is outstanding, 3-10 per run.
@@ -20440,7 +20444,7 @@ Stimulus line override the table for that item.
 ### TP-SEC-040: Misaligned load with an integrity error on the FIRST beat: rd is written (B16)
 - Features: F-SEC-015, F-SEC-003
 - Phase: 1
-- Tier: targeted
+- Tier: check
 - Preconditions: as TP-SEC-008 (NMI handler at base+0x7C logging mcause/mtval/mepc); M-mode or
   U-mode with the U data region programmed (C-2 convention); the dmem agent corrupts the check
   bits of the FIRST rvalid beat of a misaligned load only (word at 4n+2 / 4n+1 / 4n+3, half at
@@ -21453,7 +21457,7 @@ Stimulus line override the table for that item.
 ### TP-RVFI-013: jalr to an odd target: pc_wdata keeps bit 0 while the fetch clears it (B13)
 - Features: F-RVFI-010
 - Phase: 1
-- Tier: targeted
+- Tier: check
 - Preconditions: none.
 - Stimulus: jalr/c.jr/c.jalr with rs1 holding an odd address (target instruction placed at the
   even address below), 20-100 times.
@@ -22073,7 +22077,7 @@ Stimulus line override the table for that item.
 ### TP-RVFI-039: RVFI record convention on a WB-error / ID-exception coincidence: two trap records in order (B14 confirmation)
 - Features: F-RVFI-015
 - Phase: 1
-- Tier: targeted
+- Tier: check
 - Preconditions: as TP-RVFI-018 (shared run).
 - Stimulus: as TP-RVFI-018.
 - Randomized: as TP-RVFI-018.
@@ -22096,7 +22100,7 @@ Stimulus line override the table for that item.
 ### TP-RVFI-040: rvfi_ext_rf_wr_suppress on a misaligned load whose FIRST beat had an integrity error (B16)
 - Features: F-RVFI-021
 - Phase: 1
-- Tier: targeted
+- Tier: check
 - Preconditions: as TP-SEC-040 (shared stimulus class: the FIRST rvalid beat of a misaligned load
   corrupted, the second beat clean, both beats data_err_i = 0).
 - Stimulus: as TP-SEC-040; plus the control class (second beat corrupted) in the same program.
@@ -22248,10 +22252,10 @@ TP-CHERI-002.
 | gen_sec_cpuctrlsts | TP-DIT-001; TP-SEC-033, 034 | 1 | smoke/targeted | short |
 | gen_dit_timing | TP-DIT-002, 003, 004, 005, 006, 007, 008, 009, 011 | 1 | targeted | medium |
 | gen_dit_dummy | TP-DIT-010, 012, 013, 014, 016, 017, 018, 026, 029; TP-RVFI-027 | 1 | smoke/targeted | medium |
-| gen_dit_dummy_xfail | TP-DIT-019 | 1 | targeted | short |
-| gen_dit_dummy_events_xfail | TP-DIT-032 | 1 | targeted | short |
-| gen_rvfi_proto_basic_xfail | TP-RVFI-013 | 1 | targeted | short |
-| gen_rvfi_trap_info | TP-RVFI-039 | 1 | targeted | short |
+| gen_dit_dummy_xfail | TP-DIT-019 | 1 | check | short |
+| gen_dit_dummy_events_xfail | TP-DIT-032 | 1 | check | short |
+| gen_rvfi_proto_basic_xfail | TP-RVFI-013 | 1 | check | short |
+| gen_rvfi_trap_info | TP-RVFI-039 | 1 | check | short |
 | gen_dit_dummy_events | TP-DIT-020, 021, 022, 023, 024, 025, 030, 031, 034 | 1 | targeted | medium |
 | gen_dit_secureseed | TP-DIT-015, 027, 028 | 1 | targeted | short |
 | gen_dit_random | TP-DIT-033 | 2 | full | long |
@@ -22260,10 +22264,10 @@ TP-CHERI-002.
 | gen_sec_alert_fault_pc | TP-SEC-004 | 1 | targeted | short |
 | gen_sec_alert_inject_ibus | TP-SEC-007, 012 | 1 | targeted | medium |
 | gen_sec_alert_inject_dbus | TP-RVFI-024; TP-SEC-008, 009 | 1 | targeted | medium |
-| gen_sec_alert_inject_dbus_info | TP-SEC-010 | 1 | targeted | short |
-| gen_sec_alert_inject_dbus_clean_info | TP-SEC-011 | 1 | targeted | short |
-| gen_sec_alert_inject_dbus_first_beat_xfail | TP-SEC-040 | 1 | targeted | short |
-| gen_rvfi_ext_rf_wr_suppress_xfail | TP-RVFI-040 | 1 | targeted | short |
+| gen_sec_alert_inject_dbus_info | TP-SEC-010 | 1 | check | short |
+| gen_sec_alert_inject_dbus_clean_info | TP-SEC-011 | 1 | check | short |
+| gen_sec_alert_inject_dbus_first_beat_xfail | TP-SEC-040 | 1 | check | short |
+| gen_rvfi_ext_rf_wr_suppress_xfail | TP-RVFI-040 | 1 | check | short |
 | gen_sec_inputs_mubi | TP-SEC-016, 019 | 1 | targeted | short |
 | gen_sec_boundary | TP-RST-020, 028; TP-SEC-017, 037, 038 | 1 | smoke | short |
 | gen_sec_scr_key | TP-RVFI-023; TP-SEC-020 | 1 | targeted | short |
