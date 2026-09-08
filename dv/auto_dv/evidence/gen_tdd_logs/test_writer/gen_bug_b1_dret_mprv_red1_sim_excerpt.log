@@ -1,0 +1,69 @@
+# excerpt of the run artifact named in the manifest row: the run header, the first 25 lines, the first collected failure with context, and the last 25 lines (LOG-034 retention rule)
+# run bug_b1_dret_mprv_red1: 2026-09-08T02:50:15Z host=soc-l-11 seed=1 module=dv.auto_dv.gen_tb.gen_tests.gen_ut_dbg build=/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/head_export21/dv/auto_dv/work/test-writer/out_tw21 sources_sha=047718cec02eec6a template_sha=cc749fd5a35cb623 test_sha=8d1fdc06dfaa332d pyroot=/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/head_export21 vmem=/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/img_hand2/b1/prog.vmem plusargs=[]
+Command: /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/head_export21/dv/auto_dv/work/test-writer/out_tw21/vcs_simv +vcs+lic+wait +ntb_random_seed=1 +UVM_TESTNAME=gen_base_test +UVM_VERBOSITY=UVM_LOW +UVM_NO_RELNOTES +gen_build_config=opentitan +gen_mem_image=/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/img_hand2/b1/prog.vmem +gen_mem_image_crc32=205daa2c +gen_mem_image_words=150 +gen_boot_addr=80000000 +gen_tohost_addr=80000288 +gen_fetch_en_at_reset=0 -l /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/head_export21/dv/auto_dv/work/test-writer/out_tw21/bug_b1_dret_mprv_red1/sim.log
+Chronologic VCS simulator copyright 1991-2025
+Contains Synopsys proprietary information.
+Compiler version X-2025.06-SP2_Full64; Runtime version X-2025.06-SP2_Full64;  Sep  7 22:50 2026
+GEN_CONFIG_BANNER build_config=opentitan
+GEN_CONFIG_BANNER BaseIsa=BaseIsaRV32IorCHERIoT RV32M=RV32MSingleCycle RV32B=RV32BOTEarlGrey RV32ZC=RV32ZcaZcbZcmp RegFile=RegFileFF
+GEN_CONFIG_BANNER RV32E=0 BranchTargetALU=1 WritebackStage=1 ICache=1 ICacheECC=1 ICacheScramble=1
+GEN_CONFIG_BANNER BranchPredictor=0 DbgTriggerEn=1 DbgHwBreakNum=1 SecureIbex=1
+GEN_CONFIG_BANNER PMPEnable=1 PMPGranularity=0 PMPNumRegions=16 MHPMCounterNum=10 MHPMCounterWidth=32
+GEN_CONFIG_BANNER RegFileECC=0 ResetAll=1 DummyInstructions=1 MemECC=1 ICacheTweakInfection=1
+GEN_CONFIG_BANNER MemDataWidth=39 RegFileDataWidth=32 RegFileCapEccWidth=35 BusSizeECC=39 TagSizeECC=28 LineSizeECC=78
+GEN_CONFIG_BANNER DmBaseAddr=0x1a110000 DmAddrMask=0x00000fff DmHaltAddr=0x1a110800 DmExceptionAddr=0x1a110808
+GEN_CONFIG_BANNER CsrMvendorId=0x00000000 CsrMimpId=0x00000000 cheriot_enable=Off rf_test_en=0
+GEN_CONFIG_BANNER RndCnstLfsrSeed=0xac533bf4 RndCnstLfsrPerm=0x1e35ecba467fd1b12e958152c04fa43878a8daed
+GEN_CONFIG_BANNER PMPRstCfg/PMPRstAddr/PMPRstMsecCfg=ibex_pkg::PmpCfgRst/PmpAddrRst/PmpMseccfgRst (ibex_core defaults, all regions OFF)
+GEN_CONFIG_BANNER RVFI=1
+GEN_CONFIG_BANNER GEN_DUT_SPLIT_INTG=0
+UVM_INFO @ 0: reporter [RNTST] Running test gen_base_test...
+GEN_CONFIG_BANNER tb=gen_tb_top uvm_test=gen_base_test seed=1 build_config=opentitan pinned_knobs=0 regime_sched=derived
+GEN_CONFIG_BANNER define SIMULATION=0 (F-DIT-025)
+GEN_CONFIG_BANNER define COCOTB_SIM=1 (cocotb-master run)
+GEN_CONFIG_BANNER boot_addr=0x80000000 hart_id=0x00000000 alive_timeout=100000 finish_timeout=20000 mem_image=/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/img_hand2/b1/prog.vmem tohost=0x80000288
+GEN_CONFIG_BANNER knobs imem gnt=short rvalid=short err=none intg=none cap=cap8 dmem gnt=short rvalid=short err=none intg=none key=immediate icram_init=random
+GEN_CONFIG_BANNER knobs irq regime=quiet line_mix=single hold=until_taken debug_req=none fetch_enable=always_on icache_ecc=none data_ecc=none ecc_bits=one
+UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(189) @ 0: uvm_test_top.env [MEM_LOAD] image /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/img_hand2/b1/prog.vmem: 150 words, crc32 0x205daa2c verified
+...
+UVM_INFO dv/auto_dv/env/gen_agents_pkg.sv(387) @ 0: uvm_test_top.env.ibus_agent [gen_bus_agent] uvm_test_top.env.ibus_agent: sva_rvalid_legal armed
+UVM_INFO dv/auto_dv/env/gen_rvfi_pkg.sv(253) @ 0: uvm_test_top.env.sb [GEN_SB] ISA model ready: pc=80000080 mtvec=80000001
+UVM_INFO dv/auto_dv/env/gen_agents_pkg.sv(797) @ 9000: uvm_test_top.env.ctrl [GEN_CTRL] fetch_enable_i <= On (FETCH_EN arg 1)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(260) @ 1295500: uvm_test_top.env.sb [isa_trap] dut retired, model retired 0 trap=1 cause=00000005 tval=80000298 (order=315 pc=80000140 insn=00082783 trap=0 intr=0 rd=x15/b1b1b1b1 mem=80000298 w0000 r1111 mode=0 cyc=1290)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(260) @ 1295500: uvm_test_top.env.sb [isa_rd] dut wrote x15/b1b1b1b1, model wrote nothing (order=315 pc=80000140 insn=00082783 trap=0 intr=0 rd=x15/b1b1b1b1 mem=80000298 w0000 r1111 mode=0 cyc=1290)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(260) @ 1295500: uvm_test_top.env.sb [isa_pc_next] pc_next model=80000200 dut=80000144 (order=315 pc=80000140 insn=00082783 trap=0 intr=0 rd=x15/b1b1b1b1 mem=80000298 w0000 r1111 mode=0 cyc=1290)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(260) @ 1296500: uvm_test_top.env.sb [isa_pc] pc model=80000200 dut=80000144 (order=316 pc=80000144 insn=00000073 trap=1 intr=0 rd=x0/00000000 mem=00000000 w0000 r1111 mode=0 cyc=1291)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(260) @ 1296500: uvm_test_top.env.sb [isa_insn] insn model=0800006f dut=00000073 (order=316 pc=80000144 insn=00000073 trap=1 intr=0 rd=x0/00000000 mem=00000000 w0000 r1111 mode=0 cyc=1291)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(260) @ 1296500: uvm_test_top.env.sb [isa_trap] dut trapped, model retired 1 trap=0 cause=00000000 (order=316 pc=80000144 insn=00000073 trap=1 intr=0 rd=x0/00000000 mem=00000000 w0000 r1111 mode=0 cyc=1291)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(260) @ 1296500: uvm_test_top.env.sb [isa_prv] priv model=3 (before the step) dut mode=0 (order=316 pc=80000144 insn=00000073 trap=1 intr=0 rd=x0/00000000 mem=00000000 w0000 r1111 mode=0 cyc=1291)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(260) @ 1305500: uvm_test_top.env.sb [isa_pc] pc model=80000280 dut=80000200 (order=317 pc=80000200 insn=0800006f trap=0 intr=0 rd=x0/00000000 mem=80000204 w0000 r1111 mode=3 cyc=1300)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(260) @ 1305500: uvm_test_top.env.sb [isa_insn] insn model=0000006f dut=0800006f (order=317 pc=80000200 insn=0800006f trap=0 intr=0 rd=x0/00000000 mem=80000204 w0000 r1111 mode=3 cyc=1300)
+UVM_ERROR dv/auto_dv/env/gen_checkers_pkg.sv(467) @ 1305500: uvm_test_top.env.misc_mon [crash_dump] crash_dump exception_pc/exception_addr 80000144/00000000 at order 316: model mepc/mtval 80000140/80000298, previous 80000140/80000298, next 80000140/80000298
+UVM_ERROR dv/auto_dv/env/gen_checkers_pkg.sv(467) @ 1313500: uvm_test_top.env.misc_mon [crash_dump] crash_dump exception_pc/exception_addr 80000144/00000000 at order 317: model mepc/mtval 80000140/80000298, previous 80000140/80000298, next 80000140/80000298
+UVM_ERROR dv/auto_dv/env/gen_checkers_pkg.sv(467) @ 1320500: uvm_test_top.env.misc_mon [crash_dump] crash_dump exception_pc/exception_addr 80000144/00000000 at order 318: model mepc/mtval 80000140/80000298, previous 80000140/80000298, next 80000140/80000298
+...
+"dv/auto_dv/tb/gen_protocol_props.sv", 199: gen_tb_top.u_dut.gen_protocol_props_i.sva_ibus_gnt_same_cycle, 2270 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 201: gen_tb_top.u_dut.gen_protocol_props_i.sva_ibus_err_beat, 2270 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 224: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_split_second_addr, 2270 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 225: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_split_second_be, 2270 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 234: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_split_seen, 2270 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 235: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_depth_two_seen, 2270 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 237: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_store_err_resp, 2270 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 256: gen_tb_top.u_dut.gen_protocol_props_i.sva_icram_alloc_write, 2270 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 257: gen_tb_top.u_dut.gen_protocol_props_i.sva_icram_inval_write, 2270 attempts, 256 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 266: gen_tb_top.u_dut.gen_protocol_props_i.sva_scrkey_req_seen, 2270 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 267: gen_tb_top.u_dut.gen_protocol_props_i.sva_scrkey_req_while_valid, 2270 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 273: gen_tb_top.u_dut.gen_protocol_props_i.sva_irq_pending_seen, 2270 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 274: gen_tb_top.u_dut.gen_protocol_props_i.sva_irq_nmi_seen, 2270 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 289: gen_tb_top.u_dut.gen_protocol_props_i.sva_alert_bus_seen, 2270 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 290: gen_tb_top.u_dut.gen_protocol_props_i.sva_alert_minor_seen, 2270 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 312: gen_tb_top.u_dut.gen_protocol_props_i.sva_rvfi_trap_seen, 2270 attempts, 2 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 313: gen_tb_top.u_dut.gen_protocol_props_i.sva_rvfi_irq_valid_seen, 2270 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 200: gen_tb_top.u_dut.gen_protocol_props_i.sva_ibus_gnt_delayed, 2270 attempts, 761 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 236: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_gnt_delayed, 2270 attempts, 2 match
+"dv/auto_dv/tb/gen_bus_if.sv", 55: gen_tb_top.u_dbus_if.cov_rvalid_legal, 2270 attempts, 2 match
+"dv/auto_dv/tb/gen_bus_if.sv", 55: gen_tb_top.u_ibus_if.cov_rvalid_legal, 2270 attempts, 760 match
+           V C S   S i m u l a t i o n   R e p o r t 
+Time: 22695010 ps
+CPU Time:      0.370 seconds;       Data structure size:   8.9Mb
+Mon Sep  7 22:50:23 2026

@@ -1,0 +1,69 @@
+# excerpt of the run artifact named in the manifest row: the run header, the first 25 lines, the first collected failure with context, and the last 25 lines (LOG-034 retention rule)
+# run bug_b10_cause_ctrl1: 2026-09-08T02:50:36Z host=soc-l-11 seed=1 module=dv.auto_dv.gen_tb.gen_tests.gen_ut_dbg build=/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/head_export21/dv/auto_dv/work/test-writer/out_tw21 sources_sha=047718cec02eec6a template_sha=cc749fd5a35cb623 test_sha=8d1fdc06dfaa332d pyroot=/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/head_export21 vmem=/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/img_hand2/b10c/prog.vmem plusargs=[+gen_export_file=gen_export.txt]
+Info: [VCS_SAVE_RESTORE_INFO] ASLR (Address Space Layout Randomization) is detected on the machine. To enable $save functionality, ASLR will be switched off and simv re-executed.
+Please use '-no_save' simv switch to avoid re-execution or '-suppress=ASLR_DETECTED_INFO' to suppress this message.
+Chronologic VCS simulator copyright 1991-2025
+Contains Synopsys proprietary information.
+Compiler version X-2025.06-SP2_Full64; Runtime version X-2025.06-SP2_Full64;  Sep  7 22:50 2026
+     -.--ns INFO     gpi                                ..mbed/gpi_embed.cpp:108  in set_program_name_in_venv        Using Python virtual environment interpreter at /localdev/fzhang/ws/ibex-challenge/.venv/bin/python
+     -.--ns INFO     gpi                                ../gpi/GpiCommon.cpp:101  in gpi_print_registered_impl       VPI registered
+     0.00ns INFO     cocotb                             Running on Chronologic Simulation VCS Release version X-2025.06-SP2_Full64
+     0.00ns INFO     cocotb                             Running tests with cocotb v1.9.2 from /localdev/fzhang/ws/ibex-challenge/.venv/lib/python3.12/site-packages/cocotb
+     0.00ns INFO     cocotb                             Seeding Python random module with supplied seed 1
+     0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages
+     0.00ns INFO     cocotb.regression                  Found test dv.auto_dv.gen_tb.gen_tests.gen_ut_dbg.gen_ut_dbg
+     0.00ns INFO     cocotb.regression                  running gen_ut_dbg (1/1)
+GEN_CONFIG_BANNER build_config=opentitan
+GEN_CONFIG_BANNER BaseIsa=BaseIsaRV32IorCHERIoT RV32M=RV32MSingleCycle RV32B=RV32BOTEarlGrey RV32ZC=RV32ZcaZcbZcmp RegFile=RegFileFF
+GEN_CONFIG_BANNER RV32E=0 BranchTargetALU=1 WritebackStage=1 ICache=1 ICacheECC=1 ICacheScramble=1
+GEN_CONFIG_BANNER BranchPredictor=0 DbgTriggerEn=1 DbgHwBreakNum=1 SecureIbex=1
+GEN_CONFIG_BANNER PMPEnable=1 PMPGranularity=0 PMPNumRegions=16 MHPMCounterNum=10 MHPMCounterWidth=32
+GEN_CONFIG_BANNER RegFileECC=0 ResetAll=1 DummyInstructions=1 MemECC=1 ICacheTweakInfection=1
+GEN_CONFIG_BANNER MemDataWidth=39 RegFileDataWidth=32 RegFileCapEccWidth=35 BusSizeECC=39 TagSizeECC=28 LineSizeECC=78
+GEN_CONFIG_BANNER DmBaseAddr=0x1a110000 DmAddrMask=0x00000fff DmHaltAddr=0x1a110800 DmExceptionAddr=0x1a110808
+GEN_CONFIG_BANNER CsrMvendorId=0x00000000 CsrMimpId=0x00000000 cheriot_enable=Off rf_test_en=0
+GEN_CONFIG_BANNER RndCnstLfsrSeed=0xac533bf4 RndCnstLfsrPerm=0x1e35ecba467fd1b12e958152c04fa43878a8daed
+GEN_CONFIG_BANNER PMPRstCfg/PMPRstAddr/PMPRstMsecCfg=ibex_pkg::PmpCfgRst/PmpAddrRst/PmpMseccfgRst (ibex_core defaults, all regions OFF)
+GEN_CONFIG_BANNER RVFI=1
+...
+     0.00ns INFO     cocotb                             Running on Chronologic Simulation VCS Release version X-2025.06-SP2_Full64
+     0.00ns INFO     cocotb                             Running tests with cocotb v1.9.2 from /localdev/fzhang/ws/ibex-challenge/.venv/lib/python3.12/site-packages/cocotb
+     0.00ns INFO     cocotb                             Seeding Python random module with supplied seed 1
+     0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages
+     0.00ns INFO     cocotb.regression                  Found test dv.auto_dv.gen_tb.gen_tests.gen_ut_dbg.gen_ut_dbg
+     0.00ns INFO     cocotb.regression                  running gen_ut_dbg (1/1)
+GEN_CONFIG_BANNER build_config=opentitan
+GEN_CONFIG_BANNER BaseIsa=BaseIsaRV32IorCHERIoT RV32M=RV32MSingleCycle RV32B=RV32BOTEarlGrey RV32ZC=RV32ZcaZcbZcmp RegFile=RegFileFF
+GEN_CONFIG_BANNER RV32E=0 BranchTargetALU=1 WritebackStage=1 ICache=1 ICacheECC=1 ICacheScramble=1
+GEN_CONFIG_BANNER BranchPredictor=0 DbgTriggerEn=1 DbgHwBreakNum=1 SecureIbex=1
+GEN_CONFIG_BANNER PMPEnable=1 PMPGranularity=0 PMPNumRegions=16 MHPMCounterNum=10 MHPMCounterWidth=32
+GEN_CONFIG_BANNER RegFileECC=0 ResetAll=1 DummyInstructions=1 MemECC=1 ICacheTweakInfection=1
+GEN_CONFIG_BANNER MemDataWidth=39 RegFileDataWidth=32 RegFileCapEccWidth=35 BusSizeECC=39 TagSizeECC=28 LineSizeECC=78
+GEN_CONFIG_BANNER DmBaseAddr=0x1a110000 DmAddrMask=0x00000fff DmHaltAddr=0x1a110800 DmExceptionAddr=0x1a110808
+GEN_CONFIG_BANNER CsrMvendorId=0x00000000 CsrMimpId=0x00000000 cheriot_enable=Off rf_test_en=0
+...
+"dv/auto_dv/tb/gen_protocol_props.sv", 199: gen_tb_top.u_dut.gen_protocol_props_i.sva_ibus_gnt_same_cycle, 2224 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 201: gen_tb_top.u_dut.gen_protocol_props_i.sva_ibus_err_beat, 2224 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 224: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_split_second_addr, 2224 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 225: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_split_second_be, 2224 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 234: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_split_seen, 2224 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 235: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_depth_two_seen, 2224 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 237: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_store_err_resp, 2224 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 256: gen_tb_top.u_dut.gen_protocol_props_i.sva_icram_alloc_write, 2224 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 257: gen_tb_top.u_dut.gen_protocol_props_i.sva_icram_inval_write, 2224 attempts, 256 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 266: gen_tb_top.u_dut.gen_protocol_props_i.sva_scrkey_req_seen, 2224 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 267: gen_tb_top.u_dut.gen_protocol_props_i.sva_scrkey_req_while_valid, 2224 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 273: gen_tb_top.u_dut.gen_protocol_props_i.sva_irq_pending_seen, 2224 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 274: gen_tb_top.u_dut.gen_protocol_props_i.sva_irq_nmi_seen, 2224 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 289: gen_tb_top.u_dut.gen_protocol_props_i.sva_alert_bus_seen, 2224 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 290: gen_tb_top.u_dut.gen_protocol_props_i.sva_alert_minor_seen, 2224 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 312: gen_tb_top.u_dut.gen_protocol_props_i.sva_rvfi_trap_seen, 2224 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 313: gen_tb_top.u_dut.gen_protocol_props_i.sva_rvfi_irq_valid_seen, 2224 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 200: gen_tb_top.u_dut.gen_protocol_props_i.sva_ibus_gnt_delayed, 2224 attempts, 745 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 236: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_gnt_delayed, 2224 attempts, 10 match
+"dv/auto_dv/tb/gen_bus_if.sv", 55: gen_tb_top.u_dbus_if.cov_rvalid_legal, 2224 attempts, 10 match
+"dv/auto_dv/tb/gen_bus_if.sv", 55: gen_tb_top.u_ibus_if.cov_rvalid_legal, 2224 attempts, 743 match
+           V C S   S i m u l a t i o n   R e p o r t 
+Time: 22235010 ps
+CPU Time:      0.390 seconds;       Data structure size:   8.9Mb
+Mon Sep  7 22:50:41 2026
