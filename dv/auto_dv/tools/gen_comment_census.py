@@ -14,7 +14,9 @@ value carrying a "#" is not a comment while a comment after a value is one; for 
 
 An id is an uppercase letter group, a dash, digits and an optional lowercase suffix. Lowercase words with
 digits (utf-8, purpose-4) are not ids, and a dash-less name (P6, a probe register) is outside the shape by
-design. A version's dotted tail (X-2025.06) excludes it. Plan ids are excluded by prefix, except the F family,
+design. A version's dotted tail (X-2025.06) excludes it, and so does a dot before the letters: 1..K-1 is a range
+tail, not a citation (the same letters without the dot still count, since the shape cannot tell arithmetic from
+an id there). Plan ids are excluded by prefix, except the F family,
 which both the feature list and the intervention log use: an F id is an intervention-log identifier when the
 log defines it under that heading and a plan id otherwise, decided by lookup rather than by shape.
 
@@ -23,9 +25,14 @@ the log also defines but the comment rule sweeps), task ids (T-n), exclusion cla
 of the shape. Rulings cited by date are not ids and are counted separately, discriminated by adjacency from
 dates that merely timestamp an observation, and both are reported so no date is dropped in silence.
 
+Files are the ones git tracks under --root; where git lists nothing (a gitignored work directory, or a root outside
+the work tree such as a detached archive) the census walks the filesystem instead, and the header line NAMES the
+enumeration either way, so a record quoting a count says how its files were found. A root under which neither
+lists a file is refused: every class at zero with exit 0 was a vacuous green once.
+
 Usage: gen_comment_census.py [--root DIR] [--verbose] [--self-test]
-Exit: 0 the census ran (a census has no pass or fail); 1 the self-test failed; 2 a file could not be parsed or
-the intervention log is unreadable, which is a refusal and never a short census.
+Exit: 0 the census ran (a census has no pass or fail); 1 the self-test failed; 2 a file could not be parsed, the
+intervention log is unreadable, or no file was found to census, each a refusal and never a short census.
 """
 import re
 import ast
@@ -46,7 +53,7 @@ DEFAULT_ROOT = 'dv/auto_dv/flow'
 INTERVENTION_LOG = R / 'dv/auto_dv/docs/gen_intervention_log.md'
 EXTS = ('.py', '.yaml', '.tcl', '.f')
 
-LABEL = re.compile(r'(?<![A-Za-z0-9_-])([A-Z]{1,4})-(\d+)([a-z]?)(?![A-Za-z0-9])')
+LABEL = re.compile(r'(?<![A-Za-z0-9_.-])([A-Z]{1,4})-(\d+)([a-z]?)(?![A-Za-z0-9])')
 VERSION_TAIL = re.compile(r'^\.\d')
 SHORTHAND_TAIL = re.compile(r'^/\d+[a-z]?')
 LOG_HEADING = re.compile(r'^##\s+([A-Z]{1,4}-\d+[a-z]?)\b', re.M)
@@ -69,12 +76,18 @@ CLASSES = (CLASS_RULING, CLASS_QUESTION, CLASS_TASK, CLASS_EXCL, CLASS_PROCESS,
            CLASS_DATED_RULING, CLASS_DATED_OTHER)
 
 
+def refuse(msg):
+    """A refusal exits 2 with its reason on stderr: SystemExit('<text>') would exit 1 and read as a failed census."""
+    print(msg, file=sys.stderr)
+    raise SystemExit(2)
+
+
 def logged_ids(path=INTERVENTION_LOG):
     """The identifiers the intervention log defines, which is what makes an F id a ruling and not a feature."""
     try:
         return set(LOG_HEADING.findall(path.read_text(encoding='utf-8')))
     except OSError as exc:
-        raise SystemExit(f'{path}: the census cannot classify without the intervention log ({exc})')
+        refuse(f'{path}: the census cannot classify without the intervention log ({exc})')
 
 
 def unquoted_comment(line, mark):
@@ -153,28 +166,43 @@ def census_text(text, logged):
     return hits, shorthand
 
 
+def enumerate_files(root, exts=EXTS):
+    """([(path, name to report)], mode): the files git tracks under root, else a filesystem walk; the mode is
+    returned so the census names its enumeration, and a root with no file is refused rather than censused as zero."""
+    rootp = pathlib.Path(root)
+    rootp = rootp if rootp.is_absolute() else R / rootp
+    listed = subprocess.run(['git', 'ls-files', str(rootp)], capture_output=True, text=True, cwd=R)
+    files = [(R / rel, rel) for rel in listed.stdout.split() if rel.endswith(exts)] if listed.returncode == 0 else []
+    mode = f'{len(files)} tracked file(s) by git ls-files'
+    if not files:
+        if not rootp.is_dir():
+            refuse(f'{root}: git lists nothing under it and it is not a directory to walk; refused')
+        walked = sorted(p for p in rootp.rglob('*') if p.is_file() and p.suffix in exts)
+        files = [(p, str(p.relative_to(R)) if R in p.parents else str(p)) for p in walked]
+        mode = (f'{len(files)} file(s) by filesystem walk: git lists nothing under {root} (a gitignored directory, or a '
+                f'root outside the work tree such as a detached archive)')
+    if not files:
+        refuse(f'{root}: no {", ".join(exts)} file under it by git or by walk; a census of nothing is refused')
+    return files, mode
+
+
 def census(root, exts=EXTS):
-    """{class: [(path, line, token)]} over the tracked files under root, and the shorthand sites."""
+    """({class: [(path, line, token)]}, the shorthand sites, the enumeration mode) over the files under root."""
     logged = logged_ids()
     out = {c: [] for c in CLASSES}
     shorthand = []
-    listed = subprocess.run(['git', 'ls-files', str(root)], capture_output=True, text=True, cwd=R)
-    if listed.returncode:
-        raise SystemExit(f'{root}: not a git checkout, or the path is untracked')
-    for rel in listed.stdout.split():
-        if not rel.endswith(exts):
-            continue
-        path = R / rel
+    files, mode = enumerate_files(root, exts)
+    for path, rel in files:
         try:
             spans = comment_spans(path)
         except (SyntaxError, tokenize.TokenError) as exc:
-            raise SystemExit(f'{rel}: cannot parse, so the census would silently skip it ({exc})')
+            refuse(f'{rel}: cannot parse, so the census would silently skip it ({exc})')
         for line, text in spans:
             hits, short = census_text(text, logged)
             for cls, token in hits:
                 out[cls].append((rel, line, token))
             shorthand.extend((rel, line, s) for s in short)
-    return out, shorthand
+    return out, shorthand, mode
 
 
 def report(found, shorthand, verbose=False):
@@ -196,6 +224,7 @@ OTHER = 1   # trailing comment citing T-215 and the plan id TP-CMP-065, which is
 VERSION = 2  # VCS X-2025.06-SP2 is a tool version, not an id
 LOWER = 3   # utf-8 and purpose-4 are not ids, and P6 has no dash
 MIXED = "F-1 in a string"   # F-001 is an intervention-log id; the F-1 beside it is not a comment
+PHASES = 4   # phases 1..K-1 change a subset: a range tail, not an id; the bare K-1 in this clause is one
 
 
 def f():
@@ -279,6 +308,31 @@ def _self_test():
         print(f'SELF-TEST {"ok  " if good else "BAD "} the "LOG-007/008" shorthand is reported, not counted '
               f'twice in silence: {[s[2] for s in shorthand]}')
 
+        ks = [(n, t) for _, n, t in found[CLASS_PROCESS] if t == 'K-1']
+        good = len(ks) == 1
+        ok = ok and good
+        print(f'SELF-TEST {"ok  " if good else "BAD "} a dot-preceded arithmetic tail (1..K-1) is not an id while '
+              f'the bare K-1 beside it is: {len(ks)} K-1 site(s), want 1')
+
+        # enumeration: this directory is outside the work tree, so git lists nothing under it and the census must walk
+        walked, _, mode = census(d)
+        seen = {pathlib.Path(p).name for c in CLASSES for p, _, _ in walked[c]}
+        good = seen == {'fixture.py', 'fixture.yaml'} and 'walk' in mode
+        ok = ok and good
+        print(f'SELF-TEST {"ok  " if good else "BAD "} a root git lists nothing under is censused by a filesystem walk '
+              f'that names itself: files {sorted(seen)}, mode {mode!r}')
+
+        empty = pathlib.Path(d) / 'empty'
+        empty.mkdir()
+        try:
+            census(empty)
+            good = False
+        except SystemExit as exc:
+            good = exc.code == 2
+        ok = ok and good
+        print(f'SELF-TEST {"ok  " if good else "BAD "} a root with no file to census is refused, never reported as '
+              f'zero of every class, and the refusal exits 2: {good}')
+
     real = logged_ids()
     good = 'F-001' in real and 'LOG-030' in real and 'A-002' in real
     ok = ok and good
@@ -297,8 +351,8 @@ def main():
     a = ap.parse_args()
     if a.self_test:
         return _self_test()
-    found, shorthand = census(a.root)
-    print(f'GEN_COMMENT_CENSUS: comment and docstring lines under {a.root} over ' + ', '.join(EXTS))
+    found, shorthand, mode = census(a.root)
+    print(f'GEN_COMMENT_CENSUS: comment and docstring lines under {a.root} over ' + ', '.join(EXTS) + f'; {mode}')
     report(found, shorthand, a.verbose)
     return 0
 

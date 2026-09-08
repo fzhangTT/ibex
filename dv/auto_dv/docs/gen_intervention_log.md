@@ -2686,3 +2686,17 @@ the trust-triad requirement of docs/dv/dv_principles.md and the generator-robust
 otherwise; records already committed are unchanged. The Orchestrator's mechanical commit gate (hashes on a detached
 archive, ASCII, boundary, the flow and TB self-checks) stays as it is. LOG-101 (no review, no Critic) and LOG-102 (Opus
 for new agents) stand.
+
+## LOG-104 - 2026-09-08 04:15Z - Owner directive: final bug-log update, then stop the agents and the watchdog
+
+Owner (verbatim, 2026-09-08 ~04:15Z): "please make sure bugs doc is updated. Stop the agents and the watchdog monitors once
+this is done"
+
+Effect, recorded by the Orchestrator at 2026-09-08T04:19:24Z: the DV Lead makes one final touch of dv/auto_dv/docs/gen_bug_log.md from
+committed evidence only (the B16 entry's post-T11 single-row red; B22's green-control status as it stands), handed and
+committed through the plan chain; every role writes its final handover at the top of its STATUS.md; tb-infra's in-progress
+bus-agent grant repair is parked as a patch (committed under dv/auto_dv/handoff/, the two tree files restored to HEAD) rather
+than landed unvalidated; the STATUS files and the Orchestrator handoff are committed under dv/auto_dv/handoff/ as on
+2026-09-05; then the four teammates (dv-lead, rtl-arch, tb-infra, test-writer) are stopped and the watchdog cron job removed.
+Open owner items at the stop: the witness-bin marking (options a/b/c), a B10 test at P3, what follows the bus repair (round 2,
+the handover backlog, or a longer pause). LOG-101, LOG-102 and LOG-103 stand.
