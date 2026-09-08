@@ -7,7 +7,7 @@ tool's before / after output under dv/auto_dv/evidence/gen_sunset_pass<n>/; the 
 
 Usage: gen_token_sunset.py --build-manifest <path> [--observed-field <key>] [--observed-rows "a b; c d"] [--exclude-rows "a b; c d"] [--dry | --rehearse]
   LOG-028a: an item loses the token only when EVERY one of its [export-rows: ...] was OBSERVED in a retained run of the pinned
-  build (Runtime's per-row first-seen list in the build manifest, T-140); exclusion is by row, never by source; with no
+  build (Runtime's per-row first-seen list in the build manifest); exclusion is by row, never by source; with no
   observed list the sunset is refused (never the rendered table, never the emitted declaration alone).
   --observed-field  manifest key of the observed-row list (default export_rows_observed; entries {source, event, ...} or strings)
   --observed-rows   rehearsal override: the observed rows as a semicolon-separated list (accepted only with --dry or --rehearse)
@@ -43,7 +43,7 @@ def split_rows(txt):
         else: cur += ch
     if cur.strip(): out.append(cur.strip())
     return out
-def rowset(v):  # entries: {row: "<source> <event>", first_run, first_line} (Runtime T-140), {source, event[, fields]} or "<source> <event>"
+def rowset(v):  # entries: {row: "<source> <event>", first_run, first_line} (Runtime's observed-row list), {source, event[, fields]} or "<source> <event>"
     return {(x['row'] if 'row' in x else f"{x['source']} {x['event']}") if isinstance(x, dict) else str(x) for x in (v or [])}
 if obs_override is not None: observed = {r.strip() for r in obs_override.split(';') if r.strip()}; obs_origin = 'rehearsal override (--observed-rows)'
 elif excl_override is not None: observed = emitted - {r.strip() for r in excl_override.split(';') if r.strip()}; obs_origin = 'rehearsal override: emitted minus --exclude-rows'

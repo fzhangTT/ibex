@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""The minimum covergroup set the promoted fcov manifests reference (T-204; TB Infra implements in rank order, T-205).
+"""The minimum covergroup set the promoted fcov manifests reference; TB Infra implements it in rank order.
 
 Reads the committed testlist (every entry with an fcov_expectation_file), its manifests (dv/auto_dv/fcov_expectations/*.fcov.yaml:
 bins are gen_<x>_cg.<coverpoint>.<bin> tokens; "# not_hit" header lines are excluded bins) and gen_fcov_plan.md (headers

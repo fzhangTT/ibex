@@ -1,7 +1,7 @@
 # Test plan - Ibex core, opentitan configuration
 
 Deliverable 2 (DV_prompt.txt Section 11): feature -> test-plan items -> tests -> bins. Owner: dv-lead.
-Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in: checker direction per gen_bug_log.md, rvfi_trap-on-ebreak-into-debug rule, vacuity fixes, impossible bins pruned, layer-1 weight tables, timing qualifiers), generated from dv/auto_dv/work/dv-lead/parts6/tp_*.md (inputs digest 7a13c5e7344f over every part file and over the generator's own source; no clock, so a regeneration from unchanged inputs is byte-identical; what the digest covers and the commands that reproduce it are recorded at dv/auto_dv/evidence/gen_plan_digest_provenance.md). Part-file names in this document (tp_<area>.md, fcov_<area>.md, gen_part_<area>.md, trace_*_<area>.csv and the README_*_BRIEF.md briefs) are this plan set's own gitignored sources, named as provenance: the content they hold is in the corresponding area of gen_test_plan.md, gen_fcov_plan.md or gen_feature_list.md, and the bug and doc-defect number series they define are in gen_bug_log.md. No claim in this document rests on opening one. Three rtl-arch notes this plan set cites are committed references, not work files: dv/auto_dv/evidence/gen_multdiv_bound_props.md (the MD-n bound properties and covers), dv/auto_dv/evidence/gen_bug_reproducer_specs.md (the reproducer recipes behind the bug log) and dv/auto_dv/evidence/gen_interface_inventory.md (the numbered driver and protocol rules); citations name them by basename and resolve there. Companion documents:
+Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in: checker direction per gen_bug_log.md, rvfi_trap-on-ebreak-into-debug rule, vacuity fixes, impossible bins pruned, layer-1 weight tables, timing qualifiers), generated from dv/auto_dv/work/dv-lead/parts6/tp_*.md (inputs digest 710d8cac6e12 over every part file and over the generator's own source; no clock, so a regeneration from unchanged inputs is byte-identical; what the digest covers and the commands that reproduce it are recorded at dv/auto_dv/evidence/gen_plan_digest_provenance.md). Part-file names in this document (tp_<area>.md, fcov_<area>.md, gen_part_<area>.md, trace_*_<area>.csv and the README_*_BRIEF.md briefs) are this plan set's own gitignored sources, named as provenance: the content they hold is in the corresponding area of gen_test_plan.md, gen_fcov_plan.md or gen_feature_list.md, and the bug and doc-defect number series they define are in gen_bug_log.md. No claim in this document rests on opening one. Three rtl-arch notes this plan set cites are committed references, not work files: dv/auto_dv/evidence/gen_multdiv_bound_props.md (the MD-n bound properties and covers), dv/auto_dv/evidence/gen_bug_reproducer_specs.md (the reproducer recipes behind the bug log) and dv/auto_dv/evidence/gen_interface_inventory.md (the numbered driver and protocol rules); citations name them by basename and resolve there. Companion documents:
 dv/auto_dv/docs/gen_feature_list.md (features), gen_fcov_plan.md (bins), gen_bug_log.md (B/D lists),
 gen_trace_feature_tp.csv and gen_trace_tp_bin.csv (machine-readable traceability), checked by
 dv/auto_dv/tools/gen_trace_check.py.
@@ -45,13 +45,21 @@ ibex_pkg; compiled with +define+RVFI; cheriot_enable_i tied IbexMuBiOff inside t
   ruling (LOG-<n>, A-<n>) or a dated owner ruling, as the lookup key for a STANDING CONSTRAINT with the
   constraint stated in words beside it; and an identifier cited as the SOURCE OF A NAME OR VALUE the code
   carries, since deleting it costs the reader the lookup for where that value was set.
-  WHAT GOES: review ids, plan-item tags, row labels, reviewer and Critic labels, and owner-question ids,
-  because the reason they stand for is either already in the comment or is not a decision at all - an open
-  question to the owner cannot be a guard's reason.
+  WHAT GOES: review ids, plan-item tags, row labels, reviewer and Critic labels, owner-question ids, and
+  Orchestrator task and work-package ids (T-<n>, WP-<n>: a task is where work was scheduled, not a decision
+  the code rests on), because the reason they stand for is either already in the comment or is not a
+  decision at all - an open question to the owner cannot be a guard's reason. The second stay case admits, as
+  the source of a name or value, only an identifier that resolves to a durable artefact: a ruling (LOG-<n>,
+  A-<n>, a dated owner ruling), a specification or RTL file and line, or a committed record by path. A task or
+  work-package id does not qualify even where that task produced the reading, because the task log is where
+  the value was written down and not where it lives: cite the RTL, specification or record the task read.
   A COMMENT STATING A FACT the code depends on, a tool's output format or a harness line rather than a
   constraint a guard enforces, cites where the fact can be VERIFIED: the file, tool or specification that
   produces it. An identifier belongs there only where the fact holds BECAUSE a ruling made it hold, a
-  convention someone decided rather than a behaviour someone observed.
+  convention someone decided rather than a behaviour someone observed; and it attaches to the CLAUSE the
+  ruling decided, not to the whole sentence (DV Lead ruling, 2026-09-05: LOG-030 made the end-of-test wait
+  progress-based and so created the count the flow's constant states, so LOG-030 stays on that clause and
+  nowhere else in the sentence).
   THE TEST IS ON THE COMMENT'S OWN WORDS rather than on the log, so nobody has to read forty entries to apply
   it: if deleting the identifier would cost a reader that lookup, it stays; if the words only make sense as
   "this exists because incident N happened", it is history whatever its prefix, and the fix is to rewrite the

@@ -6,7 +6,7 @@ expected-fail item), its fire check fired in every seed (GEN_TEST_FIRE fire_tp_<
 bin of the item was HIT in the round's fcov checks (a bins_not_hit bin of the test's manifest counts as unhit, rule (g)) and the
 item is under no measurement hold (whichever hold sections the plan carries, discovered by gen_plan_holds; a held item is recorded,
 not credited). Red fixtures (names ending in _red, red_fixture / red_expect entries, RED-OK verdicts) host no items and are excluded from the
-item credit; the per-test table lists every run, reds included. Everything else is recorded with its reason. Witness bins (CG-WIT-001) are listed, never credited, until the covergroup exists (T-179).
+item credit; the per-test table lists every run, reds included. Everything else is recorded with its reason. Witness bins (CG-WIT-001) are listed, never credited, until the covergroup exists.
 
 Usage:
   gen_round_credit.py --regress-manifest <outdir>/manifest.yaml [--plan-dir dv/auto_dv/docs] [--fcov-dir dv/auto_dv/fcov_expectations]

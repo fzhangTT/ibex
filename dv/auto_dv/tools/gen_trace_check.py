@@ -9,7 +9,7 @@ Exits 1 on any violation. Deterministic.
 Options (export_sources entries may be "<source> <event>" strings or {source, event} maps):
   --knobs <path>           export event table (default dv/auto_dv/tb/gen_tb_knobs.yaml); a row whose event is
                            "<name>" is a wildcard and counts as ABSENT (gen_test_plan.md Section 0)
-  --observed-field <key>   manifest key of Runtime's per-row first-seen list (T-140; default export_rows_observed): the sunset
+  --observed-field <key>   manifest key of Runtime's per-row first-seen list (default export_rows_observed): the sunset
                            un-marks an item only when EVERY export row is observed (LOG-028a); absent list = sunset refused
   --build-manifest <path>  a build's build_manifest.yaml. Its export_sources_emitted list (the rows the build's registered writers
                            emit; "<source> <event>" strings or {source, event} maps) only BOUNDS the cycle-clause sunset: it
@@ -108,7 +108,7 @@ def split_rows(txt):
         else: cur += ch
     if cur.strip(): out.append(cur.strip())
     return out
-PLAN_DEMANDED_ROWS = {'icram lookup', 'icram tag_write', 'icram fill_write'}  # gen_test_plan.md Section 0, WP-8
+PLAN_DEMANDED_ROWS = {'icram lookup', 'icram tag_write', 'icram fill_write'}  # the icache RAM rows gen_test_plan.md Section 0 demands of every build
 tok_check = []
 marked = {}; wit_errors = []
 for tid, b in tps.items():
@@ -158,7 +158,7 @@ if args.build_manifest and not pathlib.Path(args.build_manifest).exists():
     wit_errors.append(f'build manifest given but not found: {args.build_manifest} (an explicit path must exist; omit the option for the unknown note)')
 elif args.build_manifest:
     man = yaml.safe_load(open(args.build_manifest)) or {}
-    rowset = lambda v: {(x['row'] if 'row' in x else f"{x['source']} {x['event']}") if isinstance(x, dict) else str(x) for x in (v or [])}  # {row}, {source, event} or string entries (T-140 shape: row, first_run, first_line)
+    rowset = lambda v: {(x['row'] if 'row' in x else f"{x['source']} {x['event']}") if isinstance(x, dict) else str(x) for x in (v or [])}  # {row}, {source, event} or string entries (Runtime's observed-row shape: row, first_run, first_line)
     rendered = rowset(man.get('export_sources')) if 'export_sources' in man else None
     if 'export_sources_emitted' in man:  # the rows the build's registered writers emit (Runtime, from the canary export header sources=)
         export_sources = rowset(man['export_sources_emitted'])
