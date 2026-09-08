@@ -5,9 +5,9 @@ response. Scope: RTL-side confirmation only, every fact with an rtl/ file:line; 
 policies remain tb-infra's decisions. Inputs read: the batch-1 s1 logs under
 dv/auto_dv/work/test-writer/out_head/ (csr_reset_s1, csr_trap_setup_s1, rst_boot_s1, pmp_csr_warl_s1),
 the Critic's attribution (dv/auto_dv/docs/gen_critic_batch1_v1.md section 2), plan convention C-1
-(dv/auto_dv/docs/gen_test_plan.md:776), bug-log row D20 (the row D20 of dv/auto_dv/docs/gen_bug_log.md, at
-dv/auto_dv/docs/gen_bug_log.md:1073 as of commit d04ada4; the line 274 cited here before was that row in version 1 and
-it has since moved, so the id is the anchor and the line is given with its commit), the
+(dv/auto_dv/docs/gen_test_plan.md:776), bug-log row D20 (the row D20 of dv/auto_dv/docs/gen_bug_log.md, found by
+its row prefix `| D20 |` in the Section 3 table; cited by id and anchor text with no line number, because that row has
+moved three times, most recently from line 1073 to 1086, and any line here would be stale on the file's next edit), the
 shim (dv/auto_dv/isa/gen_isa_shim.cc) and the comparator (dv/auto_dv/env/gen_rvfi_pkg.sv:328-372).
 Configuration: opentitan (dv/auto_dv/evidence/gen_param_resolution.md; MHPMCounterNum 10, DbgTriggerEn 1,
 DbgHwBreakNum 1, ICache 1); cheriot_enable_i tied to IbexMuBiOff (dv/auto_dv/tb/gen_dut_top.sv:206, :284).
@@ -37,7 +37,7 @@ adds what the RTL says beyond the one-line convention.
 
 | Id | Item | RTL fact (file:line) | Log evidence | Note |
 |---|---|---|---|---|
-| R8 | mhpmcounter3..12 (0xB03..0xB0C, high halves 0xB83..0xB8C) count microarchitectural events; the values are not ISA-derivable | Event list rtl/ibex_cs_registers.sv:1585-1597: 3 dside_wait cycles, 4 iside_wait cycles, 5 loads, 6 stores, 7 jumps, 8 branches, 9 taken branches, 10 compressed retired, 11 mul_wait cycles, 12 div_wait cycles; counters are MHPMCounterWidth = 40 bits (rtl/ibex_core.sv:26); mcycle (0xB00) counts every cycle (:1585), minstret (0xB02) counts instr_ret_i (:1587). | csr_reset_s1 order 35: insn b0402bf3 (mhpmcounter4) dut 00000048, model 0; order 52: b06028f3 (mhpmcounter6) dut 00000010. | Which counters to compare is a TB policy: only minstret is ISA-derivable; mcycle needs a cycle-exact anchor; 3, 4, 11, 12 are stall counts; 5..10 are event counts the model could reproduce only from its own retired stream. BUG-09 (gen_bug_reproducer_specs.md) notes an over-count of 8, 11, 12 behind an outstanding WB access, so exact-value comparison of those three is unsafe even with a model. |
+| R8 | mhpmcounter3..12 (0xB03..0xB0C, high halves 0xB83..0xB8C) count microarchitectural events; the values are not ISA-derivable | Event list rtl/ibex_cs_registers.sv:1585-1597: 3 dside_wait cycles, 4 iside_wait cycles, 5 loads, 6 stores, 7 jumps, 8 branches, 9 taken branches, 10 compressed retired, 11 mul_wait cycles, 12 div_wait cycles; counters are MHPMCounterWidth bits wide, passed at rtl/ibex_cs_registers.sv:1674, which is 32 for this build (ibex_configs.yaml:60); the 40 at rtl/ibex_core.sv:26 and rtl/ibex_cs_registers.sv:22 is the parameter DEFAULT, corrected here on tb-infra's report of 2026-09-08 and verified at both sources; mcycle (0xB00) counts every cycle (:1585), minstret (0xB02) counts instr_ret_i (:1587). | csr_reset_s1 order 35: insn b0402bf3 (mhpmcounter4) dut 00000048, model 0; order 52: b06028f3 (mhpmcounter6) dut 00000010. | Which counters to compare is a TB policy: only minstret is ISA-derivable; mcycle needs a cycle-exact anchor; 3, 4, 11, 12 are stall counts; 5..10 are event counts the model could reproduce only from its own retired stream. BUG-09 (gen_bug_reproducer_specs.md) notes an over-count of 8, 11, 12 behind an outstanding WB access, so exact-value comparison of those three is unsafe even with a model. |
 
 ## 4. Batch-2 comparator rows (added 16:45Z on the Orchestrator's ask; cmp_zca and isa_cti runs)
 
