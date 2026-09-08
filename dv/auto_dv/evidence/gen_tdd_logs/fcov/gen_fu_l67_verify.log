@@ -1,0 +1,57 @@
+GEN_FU_L67_VERIFY  the handed tree assembled from the handed list alone, built there, and run there
+written 2026-09-08T04:39:10Z  base 1391ab1da7bbd1311589b03716dd8b88f42d3cc1
+
+WHY THIS EXISTS. After the measurement I trimmed three comment blocks in the two repair files, because the
+global comment rule asks for intent in as few lines as earn their place and one of my blocks had grown to
+ten. A comment change moves the build digest, so the retained after-logs named a build the handed sources no
+longer produce. Rather than assert that the difference was comment-only, this log rebuilds the handed sources
+and re-runs both seeds. Two independent builds, and every figure is the same.
+
+THE TREE. git archive of the base above into a scratch directory, then the sixteen handed paths copied over
+it and nothing else. The only untracked provisioning is two symlinks the build recipe needs and git does not
+carry, tools -> the clone's tools (the Spike include and lib the ISA shim compiles against) and .venv, plus
+the empty dv/auto_dv/work/runtime/out directory the build writes its latest-pointer into. With the tracked
+diff taken against the base, the archive differs from HEAD in exactly the three tracked paths of this hand.
+
+THE BUILD. gen_build.py --build gen_tb --waves --local-cocotb, rc=0, zero compile errors,
+sources_sha256 e2492acab5c48ecc92ed18f8bcd1cf5700b2a549798d2b5ee601d16317173a17. The measurement build was
+3dd4530832d978cdebe71258f2398a61db4e681f9c88f8ec81e187de23e1b8b7.
+
+THE RUNS. gen_test_irq_basic on the two ruled seeds, seed 165313640 with --waves.
+
+| | handed build e2492acab5c48ecc | measurement build 3dd4530832d978cd |
+|---|---|---|
+| 165313640 grant firings | 0 | 0 |
+| 165313640 errors | 2 sva_rvfi_irq_valid_exclusive | 2 sva_rvfi_irq_valid_exclusive |
+| 165313640 ibus | grants=7378 responses=7374 withdrawn=1 | grants=7378 responses=7374 withdrawn=1 |
+| 165313640 dbus | grants=121 responses=121 withdrawn=0 | grants=121 responses=121 withdrawn=0 |
+| 165313640 end of test | 20 of 20 by EOT, cycle 19258, retired 1804 | 20 of 20 by EOT, cycle 19258, retired 1804 |
+| 1207954461 grant firings | 0 | 0 |
+| 1207954461 errors | 5 sva_rvfi_irq_valid_exclusive | 5 sva_rvfi_irq_valid_exclusive |
+| 1207954461 ibus | grants=3779 responses=3779 withdrawn=3 | grants=3779 responses=3779 withdrawn=3 |
+| 1207954461 dbus | grants=216 responses=216 withdrawn=0 | grants=216 responses=216 withdrawn=0 |
+| 1207954461 end of test | 21 of 21 by EOT, cycle 46367, retired 1658 | 21 of 21 by EOT, cycle 46367, retired 1658 |
+| verdict, both seeds | FAIL, reason sva_rvfi_irq_valid_exclusive | FAIL, same reason |
+| cocotb, both seeds | TESTS=1 PASS=1 FAIL=0 | TESTS=1 PASS=1 FAIL=0 |
+
+ONE COUNTING NOTE, so a reader is not misled by my own script. The verification script counted lines
+matching "^UVM_ERROR" and therefore ALSO counted the UVM Report Summary's own "UVM_ERROR :    2" tally line,
+printing errors=3 and errors=6 where the errors are 2 and 5. The measurement script had matched
+"^UVM_ERROR [^:]*@", which excludes the tally. The error rows above are the real counts; the raw script
+output is retained beside this log and shows the inflated ones.
+
+THE WAVEFORM, on the handed build's own FSDB
+  out_v4/runs/after_165313640/waves.fsdb inside the archive, program crc32 03c84170 of 217 words, the same
+  image the committed driver ran.
+  transitions in 18336000..18342000:
+    req        18338000 -> 0    18338500 -> 1
+    gnt_ready  18338500 -> 0    18339000 -> 1
+    gnt        18338000 -> 0    18339000 -> 1
+    outstanding 18338500 -> 3
+  sampled at 183382ns: clk=0 req=0 gnt_ready=1 gnt=0 outstanding=4
+  Every value and every time is identical to the measurement build's read, which is in
+  gen_fu_l67_gnt_waveform.log beside this file.
+
+WHAT THIS DOES NOT COVER. The archive is a scratch directory and is deleted once this log is retained, so a
+reader reproduces it by re-running the recipe above rather than by visiting the path. The before-column runs
+are NOT re-run here: they are the committed driver, which this hand does not change.

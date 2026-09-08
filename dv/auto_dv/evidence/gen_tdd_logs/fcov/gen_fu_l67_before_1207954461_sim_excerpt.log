@@ -1,0 +1,63 @@
+GEN_FU_L67 EXCERPT of the committed driver at seed 1207954461, sim.log
+source: dv/auto_dv/out_l65w3/runs/before_1207954461/sim.log
+filter: the first 40 lines matching UVM_ERROR, then every line matching sva_ibus_gnt_only_with_req,
+        then every line matching sva_rvalid_legal or sva_ibus_rvalid_outstanding, then the last 6 lines.
+        Nothing else is included and nothing included is edited.
+--- UVM_ERROR, first 40 ---
+UVM_ERROR @ 6591500: reporter [sva_rvfi_irq_valid_exclusive] GEN_PROTO sva_rvfi_irq_valid_exclusive: protocol property violated at cycle 6587
+UVM_ERROR @ 6646500: reporter [sva_rvfi_irq_valid_exclusive] GEN_PROTO sva_rvfi_irq_valid_exclusive: protocol property violated at cycle 6642
+UVM_ERROR @ 9250500: reporter [sva_ibus_gnt_only_with_req] GEN_PROTO sva_ibus_gnt_only_with_req: protocol property violated at cycle 9246
+UVM_ERROR @ 9253500: reporter [sva_rvfi_irq_valid_exclusive] GEN_PROTO sva_rvfi_irq_valid_exclusive: protocol property violated at cycle 9249
+UVM_ERROR @ 9284500: reporter [MEM_UNMAPPED] write to unmapped address 0x40000000
+UVM_ERROR /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/env/gen_rvfi_pkg.sv(260) @ 9290500: uvm_test_top.env.sb [isa_insn] insn model=018b1063 dut=0062a023 (order=462 pc=80000154 insn=0062a023 trap=0 intr=0 rd=x0/00000000 mem=40000000 w1111 r0000 mode=3 cyc=9285)
+UVM_ERROR /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/env/gen_rvfi_pkg.sv(260) @ 9290500: uvm_test_top.env.sb [isa_mem] store model=0 dut wmask=1111 (order=462 pc=80000154 insn=0062a023 trap=0 intr=0 rd=x0/00000000 mem=40000000 w1111 r0000 mode=3 cyc=9285)
+UVM_ERROR /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/env/gen_rvfi_pkg.sv(260) @ 9290500: uvm_test_top.env.sb [isa_pc_next] pc_next model=80000154 dut=80000158 (order=462 pc=80000154 insn=0062a023 trap=0 intr=0 rd=x0/00000000 mem=40000000 w1111 r0000 mode=3 cyc=9285)
+UVM_ERROR /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/env/gen_rvfi_pkg.sv(260) @ 9300500: uvm_test_top.env.sb [isa_pc] pc model=80000154 dut=80000158 (order=463 pc=80000158 insn=018b1063 trap=0 intr=0 rd=x0/00000000 mem=ffbbfff8 w0000 r1111 mode=3 cyc=9295)
+UVM_ERROR /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/env/gen_rvfi_pkg.sv(260) @ 9300500: uvm_test_top.env.sb [isa_pc_next] pc_next model=80000154 dut=80000158 (order=463 pc=80000158 insn=018b1063 trap=0 intr=0 rd=x0/00000000 mem=ffbbfff8 w0000 r1111 mode=3 cyc=9295)
+UVM_ERROR /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/env/gen_rvfi_pkg.sv(260) @ 9326500: uvm_test_top.env.sb [isa_pc] pc model=80000154 dut=80000158 (order=464 pc=80000158 insn=00100313 trap=0 intr=0 rd=x6/00000001 mem=00000001 w0000 r1111 mode=3 cyc=9321)
+UVM_ERROR /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/env/gen_rvfi_pkg.sv(260) @ 9326500: uvm_test_top.env.sb [isa_insn] insn model=018b1063 dut=00100313 (order=464 pc=80000158 insn=00100313 trap=0 intr=0 rd=x6/00000001 mem=00000001 w0000 r1111 mode=3 cyc=9321)
+UVM_ERROR /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/env/gen_rvfi_pkg.sv(260) @ 9326500: uvm_test_top.env.sb [isa_rd] dut wrote x6/00000001, model wrote nothing (order=464 pc=80000158 insn=00100313 trap=0 intr=0 rd=x6/00000001 mem=00000001 w0000 r1111 mode=3 cyc=9321)
+UVM_ERROR /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/env/gen_rvfi_pkg.sv(260) @ 9326500: uvm_test_top.env.sb [isa_pc_next] pc_next model=80000154 dut=8000015c (order=464 pc=80000158 insn=00100313 trap=0 intr=0 rd=x6/00000001 mem=00000001 w0000 r1111 mode=3 cyc=9321)
+UVM_ERROR /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/env/gen_rvfi_pkg.sv(260) @ 9343500: uvm_test_top.env.sb [isa_pc] pc model=80000154 dut=8000015c (order=465 pc=8000015c insn=017da023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=9338)
+UVM_ERROR /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/env/gen_rvfi_pkg.sv(260) @ 9343500: uvm_test_top.env.sb [isa_insn] insn model=018b1063 dut=017da023 (order=465 pc=8000015c insn=017da023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=9338)
+UVM_ERROR /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/env/gen_rvfi_pkg.sv(260) @ 9343500: uvm_test_top.env.sb [isa_mem] store model=0 dut wmask=1111 (order=465 pc=8000015c insn=017da023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=9338)
+UVM_ERROR /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/env/gen_rvfi_pkg.sv(260) @ 9343500: uvm_test_top.env.sb [isa_pc_next] pc_next model=80000154 dut=80000160 (order=465 pc=8000015c insn=017da023 trap=0 intr=0 rd=x0/00000000 mem=8ffff104 w1111 r0000 mode=3 cyc=9338)
+UVM_ERROR /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/env/gen_rvfi_pkg.sv(260) @ 9344500: uvm_test_top.env.sb [isa_pc] pc model=80000154 dut=80000160 (order=466 pc=80000160 insn=00000297 trap=0 intr=0 rd=x5/80000160 mem=80000160 w0000 r1111 mode=3 cyc=9339)
+UVM_ERROR /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/env/gen_rvfi_pkg.sv(260) @ 9344500: uvm_test_top.env.sb [isa_insn] insn model=018b1063 dut=00000297 (order=466 pc=80000160 insn=00000297 trap=0 intr=0 rd=x5/80000160 mem=80000160 w0000 r1111 mode=3 cyc=9339)
+UVM_ERROR /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/env/gen_rvfi_pkg.sv(260) @ 9344500: uvm_test_top.env.sb [isa_rd] dut wrote x5/80000160, model wrote nothing (order=466 pc=80000160 insn=00000297 trap=0 intr=0 rd=x5/80000160 mem=80000160 w0000 r1111 mode=3 cyc=9339)
+UVM_ERROR /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/env/gen_rvfi_pkg.sv(260) @ 9344500: uvm_test_top.env.sb [isa_pc_next] pc_next model=80000154 dut=80000164 (order=466 pc=80000160 insn=00000297 trap=0 intr=0 rd=x5/80000160 mem=80000160 w0000 r1111 mode=3 cyc=9339)
+UVM_ERROR /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/env/gen_rvfi_pkg.sv(260) @ 9345500: uvm_test_top.env.sb [isa_pc] pc model=80000154 dut=80000164 (order=467 pc=80000164 insn=26428293 trap=0 intr=0 rd=x5/800003c4 mem=800003c4 w0000 r1111 mode=3 cyc=9340)
+UVM_ERROR /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/env/gen_rvfi_pkg.sv(260) @ 9345500: uvm_test_top.env.sb [isa_insn] insn model=018b1063 dut=26428293 (order=467 pc=80000164 insn=26428293 trap=0 intr=0 rd=x5/800003c4 mem=800003c4 w0000 r1111 mode=3 cyc=9340)
+UVM_ERROR /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/env/gen_rvfi_pkg.sv(260) @ 9345500: uvm_test_top.env.sb [isa_rd] dut wrote x5/800003c4, model wrote nothing (order=467 pc=80000164 insn=26428293 trap=0 intr=0 rd=x5/800003c4 mem=800003c4 w0000 r1111 mode=3 cyc=9340)
+UVM_ERROR /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/env/gen_rvfi_pkg.sv(260) @ 9345500: uvm_test_top.env.sb [isa_pc_next] pc_next model=80000154 dut=80000168 (order=467 pc=80000164 insn=26428293 trap=0 intr=0 rd=x5/800003c4 mem=800003c4 w0000 r1111 mode=3 cyc=9340)
+UVM_ERROR /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/env/gen_rvfi_pkg.sv(260) @ 9346500: uvm_test_top.env.sb [isa_pc] pc model=80000154 dut=80000168 (order=468 pc=80000168 insn=00100313 trap=0 intr=0 rd=x6/00000001 mem=00000001 w0000 r1111 mode=3 cyc=9341)
+UVM_ERROR /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/env/gen_rvfi_pkg.sv(260) @ 9346500: uvm_test_top.env.sb [isa_insn] insn model=018b1063 dut=00100313 (order=468 pc=80000168 insn=00100313 trap=0 intr=0 rd=x6/00000001 mem=00000001 w0000 r1111 mode=3 cyc=9341)
+UVM_ERROR /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/env/gen_rvfi_pkg.sv(260) @ 9346500: uvm_test_top.env.sb [isa_rd] dut wrote x6/00000001, model wrote nothing (order=468 pc=80000168 insn=00100313 trap=0 intr=0 rd=x6/00000001 mem=00000001 w0000 r1111 mode=3 cyc=9341)
+UVM_ERROR /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/env/gen_rvfi_pkg.sv(260) @ 9346500: uvm_test_top.env.sb [isa_pc_next] pc_next model=80000154 dut=8000016c (order=468 pc=80000168 insn=00100313 trap=0 intr=0 rd=x6/00000001 mem=00000001 w0000 r1111 mode=3 cyc=9341)
+UVM_ERROR /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/env/gen_rvfi_pkg.sv(260) @ 9401500: uvm_test_top.env.sb [isa_pc] pc model=80000154 dut=8000016c (order=469 pc=8000016c insn=0062a023 trap=0 intr=0 rd=x0/00000000 mem=800003c4 w1111 r0000 mode=3 cyc=9396)
+UVM_ERROR /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/env/gen_rvfi_pkg.sv(260) @ 9401500: uvm_test_top.env.sb [isa_insn] insn model=018b1063 dut=0062a023 (order=469 pc=8000016c insn=0062a023 trap=0 intr=0 rd=x0/00000000 mem=800003c4 w1111 r0000 mode=3 cyc=9396)
+UVM_ERROR /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/env/gen_rvfi_pkg.sv(260) @ 9401500: uvm_test_top.env.sb [isa_mem] store model=0 dut wmask=1111 (order=469 pc=8000016c insn=0062a023 trap=0 intr=0 rd=x0/00000000 mem=800003c4 w1111 r0000 mode=3 cyc=9396)
+UVM_ERROR /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/env/gen_rvfi_pkg.sv(260) @ 9401500: uvm_test_top.env.sb [isa_pc_next] pc_next model=80000154 dut=80000170 (order=469 pc=8000016c insn=0062a023 trap=0 intr=0 rd=x0/00000000 mem=800003c4 w1111 r0000 mode=3 cyc=9396)
+UVM_ERROR /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/env/gen_rvfi_pkg.sv(260) @ 9402500: uvm_test_top.env.sb [isa_pc] pc model=80000154 dut=80000170 (order=470 pc=80000170 insn=0000006f trap=0 intr=0 rd=x0/00000000 mem=80000174 w0000 r1111 mode=3 cyc=9397)
+UVM_ERROR /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/env/gen_rvfi_pkg.sv(260) @ 9402500: uvm_test_top.env.sb [isa_insn] insn model=018b1063 dut=0000006f (order=470 pc=80000170 insn=0000006f trap=0 intr=0 rd=x0/00000000 mem=80000174 w0000 r1111 mode=3 cyc=9397)
+UVM_ERROR /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/env/gen_rvfi_pkg.sv(260) @ 9402500: uvm_test_top.env.sb [isa_pc_next] pc_next model=80000154 dut=80000170 (order=470 pc=80000170 insn=0000006f trap=0 intr=0 rd=x0/00000000 mem=80000174 w0000 r1111 mode=3 cyc=9397)
+UVM_ERROR /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/env/gen_rvfi_pkg.sv(260) @ 9403500: uvm_test_top.env.sb [isa_pc] pc model=80000154 dut=80000170 (order=471 pc=80000170 insn=34202773 trap=0 intr=0 rd=x14/8000001e mem=fffffcbe w0000 r1111 mode=3 cyc=9398)
+UVM_ERROR /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/env/gen_rvfi_pkg.sv(260) @ 9403500: uvm_test_top.env.sb [isa_insn] insn model=018b1063 dut=34202773 (order=471 pc=80000170 insn=34202773 trap=0 intr=0 rd=x14/8000001e mem=fffffcbe w0000 r1111 mode=3 cyc=9398)
+UVM_ERROR /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/env/gen_rvfi_pkg.sv(260) @ 9403500: uvm_test_top.env.sb [isa_rd] dut wrote x14/8000001e, model wrote nothing (order=471 pc=80000170 insn=34202773 trap=0 intr=0 rd=x14/8000001e mem=fffffcbe w0000 r1111 mode=3 cyc=9398)
+--- sva_ibus_gnt_only_with_req ---
+"/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/tb/gen_protocol_props.sv", 192: gen_tb_top.u_dut.gen_protocol_props_i.sva_ibus_gnt_only_with_req: started at 92505000ps failed at 92505000ps
+UVM_ERROR @ 9250500: reporter [sva_ibus_gnt_only_with_req] GEN_PROTO sva_ibus_gnt_only_with_req: protocol property violated at cycle 9246
+--- the unbooked response ---
+UVM_INFO /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/env/gen_agents_pkg.sv(387) @ 0: uvm_test_top.env.dbus_agent [gen_bus_agent] uvm_test_top.env.dbus_agent: sva_rvalid_legal armed
+UVM_INFO /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/env/gen_agents_pkg.sv(387) @ 0: uvm_test_top.env.ibus_agent [gen_bus_agent] uvm_test_top.env.ibus_agent: sva_rvalid_legal armed
+"/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/tb/gen_bus_if.sv", 53: gen_tb_top.u_ibus_if.sva_rvalid_legal: started at 151585000ps failed at 151585000ps
+UVM_ERROR @ 15158500: reporter [sva_rvalid_legal] ibus: rvalid with no outstanding grant at cycle 15154
+"/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/tb/gen_protocol_props.sv", 193: gen_tb_top.u_dut.gen_protocol_props_i.sva_ibus_rvalid_outstanding: started at 151585000ps failed at 151585000ps
+UVM_ERROR @ 15158500: reporter [sva_ibus_rvalid_outstanding] GEN_PROTO sva_ibus_rvalid_outstanding: protocol property violated at cycle 15154
+--- last 6 lines ---
+"/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/tb/gen_bus_if.sv", 55: gen_tb_top.u_dbus_if.cov_rvalid_legal, 1627543 attempts, 2371 match
+"/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/tb/gen_bus_if.sv", 55: gen_tb_top.u_ibus_if.cov_rvalid_legal, 1627543 attempts, 72462 match
+           V C S   S i m u l a t i o n   R e p o r t 
+Time: 16275425010 ps
+CPU Time:     32.600 seconds;       Data structure size:   9.0Mb
+Tue Sep  8 00:09:39 2026

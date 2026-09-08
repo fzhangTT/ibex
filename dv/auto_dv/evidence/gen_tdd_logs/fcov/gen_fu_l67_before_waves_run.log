@@ -1,0 +1,8 @@
+GEN_RUN_SEED test=gen_test_irq_basic seed=165313640 ntb_random_seed=165313640 RANDOM_SEED=165313640 utc=2026-09-08T03:51:59Z
+GEN_RUN_BUILD gen_tb simv=/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/out_l65w3/build/gen_tb/vcs_simv config=opentitan git=5a64b1e989cfd4e08275f93e72c556ade9748a1e
+GEN_RUN_CMD /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/out_l65w3/build/gen_tb/vcs_simv +vcs+lic+wait +ntb_random_seed=165313640 +UVM_TESTNAME=gen_base_test +UVM_VERBOSITY=UVM_LOW +UVM_NO_RELNOTES +gen_build_config=opentitan +gen_fetch_en_at_reset=0 +gen_knob_irq_line_mix=single +gen_mem_image=/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/out_l65w3/runs/irq_basic_165313640/program/prog.vmem +gen_mem_image_crc32=03c84170 +gen_mem_image_words=217 +gen_boot_addr=80000000 +gen_tohost_addr=800003c0 +gen_export_file=gen_export.txt -l /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/out_l65w3/runs/irq_basic_165313640/sim.log -ucli -do /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/out_l65w3/runs/irq_basic_165313640/dump.tcl
+GEN_RUN_TIMEOUT_S 900 mode=local
+GEN_RUN_ENV env_sh=/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/out_l65w3/build/gen_tb/env.sh VIRTUAL_ENV=/localdev/fzhang/ws/ibex-challenge/.venv LIBPYTHON_LOC=/tools_soc/opensrc/python/python-3.12.10/lib/libpython3.12.so.1.0 python3=/localdev/fzhang/ws/ibex-challenge/.venv/bin/python3
+GEN_RUN_SEED ntb_random_seed=165313640 RANDOM_SEED=165313640 host=soc-l-11 utc=2026-09-08T03:52:01Z
+GEN_RUN_EXIT rc=0 utc=2026-09-08T03:52:07Z
+GEN_RUN_VERDICT FAIL reason=assertion_failure at sim.log:80 (sva_rvfi_irq_valid_exclusive) wall_s=8.0 exit_code=0

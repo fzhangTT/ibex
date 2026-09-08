@@ -206,6 +206,7 @@ package gen_agents_pkg;
     gen_bus_pend_t pend [$];
     int unsigned cycle = 0;
     int unsigned grants = 0, responses = 0, injected_err = 0, injected_intg = 0;
+    int unsigned withdrawn = 0;   // falling-edge decisions the accepting edge refused: phantom grants not made
     // one-shot arming (bridge MEM_ERR_ARM): kind 1 = bus error, 2 = integrity corruption; count accesses in [lo, hi]
     int unsigned arm_kind = 0, arm_count = 0;
     logic [31:0] arm_lo = '0, arm_hi = '0;
@@ -260,11 +261,11 @@ package gen_agents_pkg;
       int unsigned last_due = 0;
       int unsigned data_w = $bits(vif.rdata);
       bit released = 0, first_pending = 1, first_written = 0; int unsigned release_cycle = 0, first_since = 0;   // the boot-to-request distance (CG-RST-001)
-      vif.gnt = 1'b0; vif.rvalid = 1'b0; vif.err = 1'b0; vif.rdata = '0; vif.intg_corrupt = 1'b0;
+      vif.gnt_ready = 1'b0; vif.rvalid = 1'b0; vif.err = 1'b0; vif.rdata = '0; vif.intg_corrupt = 1'b0;
       forever begin
         @(negedge vif.clk);
         if (!vif.rst_n) begin
-          vif.gnt = 1'b0; vif.rvalid = 1'b0; vif.err = 1'b0;
+          vif.gnt_ready = 1'b0; vif.rvalid = 1'b0; vif.err = 1'b0;
           pend.delete(); gnt_armed = 0; cycle = 0; last_due = 0; released = 0; first_pending = 1; first_written = 0;
           continue;
         end
@@ -291,7 +292,7 @@ package gen_agents_pkg;
           ap.write(t);
         end
         // ---- request side
-        vif.gnt = 1'b0;
+        vif.gnt_ready = 1'b0;
         if (vif.req) begin
           if (!gnt_armed) begin
             gnt_armed = 1;
@@ -310,14 +311,23 @@ package gen_agents_pkg;
             p.gnt_delay = cycle - req_cycle; p.cycle_req = req_cycle; p.cycle_gnt = cycle; p.outstanding_at_gnt = pend.size(); p.stamp_gnt = bvif.cycle_count;
             gnt_stamp = ev_on() ? sink.cycle() : 0;   // the export cycle base of THIS edge, before the wait below
             if (first_pending) begin first_since = req_cycle - release_cycle + 1; first_pending = 0; end   // cycles from the release edge to the request (the driver counts from the first post-release negedge, so +1 gives the RTL's count)
-            vif.gnt = 1'b1;
+            // The decision is the driver's own state; the interface ANDs it with a request that is live at the
+            // accepting edge, so a request that withdraws in the half cycle is granted nothing.
+            vif.gnt_ready = 1'b1;
+            @(posedge vif.clk);
+            // Nothing was accepted at that edge, so nothing is counted or queued and the arming is kept
+            // for the request's return. Queueing here is the phantom transaction
+            // (gen_ibus_props_irq_signature_reading.md Section 12.2).
+            if (!vif.gnt) begin
+              withdrawn++;
+              vif.gnt_ready = 1'b0;
+              continue;
+            end
             grants++;
             if (cfg.is_data) bvif.evt_dbus_grants <= bvif.evt_dbus_grants + 32'd1; else bvif.evt_ibus_grants <= bvif.evt_ibus_grants + 32'd1;
-            // the request is READ at the accepting edge, where req and gnt are both sampled high: the core's
-            // bus address is combinational, so a driver writing a DUT input at this falling edge moves it and a
-            // value read here would be a mid-cycle transient the core never presented at any clock edge. Every
-            // figure above is taken at the granting edge, so this moves the value and not the time.
-            @(posedge vif.clk);
+            // Read at the accepting edge the gate just passed, so the gate and the capture use ONE edge. The
+            // falling edge would give a mid-cycle transient of a combinational address; an interface register
+            // sampled at this edge would give the previous edge's, its NBA update landing after this read.
             p.addr = vif.addr; p.we = req_we(); p.be = req_be();
             p.wdata = cfg.is_data ? vif.wdata[31:0] : '0;
             p.err = 0; p.injected = 0; p.intg_bad = 0;
@@ -392,8 +402,8 @@ package gen_agents_pkg;
       driver.ap.connect(ap);
     endfunction
     function void report_phase(uvm_phase phase);
-      `uvm_info(get_type_name(), $sformatf("%s: grants=%0d responses=%0d injected_err=%0d injected_intg=%0d",
-                cfg.describe(), driver.grants, driver.responses, driver.injected_err, driver.injected_intg), UVM_LOW)
+      `uvm_info(get_type_name(), $sformatf("%s: grants=%0d responses=%0d injected_err=%0d injected_intg=%0d withdrawn=%0d",
+                cfg.describe(), driver.grants, driver.responses, driver.injected_err, driver.injected_intg, driver.withdrawn), UVM_LOW)
     endfunction
   endclass
 

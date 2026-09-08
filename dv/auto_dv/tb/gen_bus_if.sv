@@ -13,7 +13,13 @@ interface gen_bus_if #(
   import uvm_pkg::*;
 
   logic              req;
-  logic              gnt;
+  // The grant is the driver's readiness ANDed with a request live at the accepting edge, which is also the
+  // only condition the `outstanding` counter below books a grant on. Without the AND the driver's
+  // falling-edge decision can stand at a rising edge whose request has withdrawn, granting a fetch the core
+  // never booked. No combinational loop: every use of the grant in the fetch path terminates in a registered
+  // next-state signal (gen_ibus_props_irq_signature_reading.md Sections 12.3 and 12.4).
+  logic              gnt_ready = 1'b0;
+  wire               gnt = gnt_ready & req;
   logic              rvalid;
   logic              err;
   logic              we;

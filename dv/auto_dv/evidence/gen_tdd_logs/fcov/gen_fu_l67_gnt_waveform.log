@@ -1,0 +1,72 @@
+GEN_FU_L67_WAVEFORM  the ibus grant repair, the same window read on both drivers
+written 2026-09-08T04:20:43Z  reader: fsdb-mcp-server, times in the FSDB's own 10 ps unit, one cycle is 1000
+
+FSDB files, both kept in place, both gitignored out directories:
+  committed driver  dv/auto_dv/out_l65w3/runs/irq_basic_165313640/waves.fsdb   (660333 bytes)
+                    design db dv/auto_dv/out_l65w3/build/gen_tb/vcs_simv.daidir
+                    build sources_sha256 ee744537bae060fbed5671fb5941a2bf60a7afe4f66bbe7bc448ab9833217533
+  repaired driver   dv/auto_dv/out_gnt2/runs/g1/waves.fsdb                     (660916 bytes)
+                    design db dv/auto_dv/out_gnt2/build/gen_tb/vcs_simv.daidir
+                    build sources_sha256 3dd4530832d978cdebe71258f2398a61db4e681f9c88f8ec81e187de23e1b8b7
+
+Both runs are gen_test_irq_basic at seed 165313640 and both carry THE SAME PROGRAM IMAGE,
++gen_mem_image_crc32=03c84170 +gen_mem_image_words=217, so the two waveforms are the same experiment
+with one variable changed.
+
+The window is the one rtl-arch's pair record names: dv/auto_dv/evidence/gen_ibus_props_irq_signature_reading.md
+Section 3 gives sva_ibus_gnt_only_with_req at 18338500 (cycle 18334) for this seed, and the committed run
+here fires at 183385000 ps, the same tick. The clock's posedges in this window are at ...500 and its
+negedges at ...000.
+
+1. COMMITTED DRIVER, transitions in 18336000..18342000
+
+  clk        13 transitions, every 500
+  req        18338000 -> 0    18338500 -> 1
+  gnt        NO TRANSITION in the window
+  rvalid     no transition
+  outstanding 18338500 -> 3
+
+  sampled at 183382ns, inside the low window and before the accepting posedge:
+  clk=0  req=0  gnt=1  outstanding=4
+
+  So the core withdrew its request for one half cycle, from the negedge at 18338000 to the posedge at
+  18338500, and the grant STOOD THROUGH IT. The pre-edge sample of the accepting posedge is req=0 with
+  gnt=1, which is what the property samples and what it reports.
+
+2. REPAIRED DRIVER, the identical window
+
+  clk        13 transitions, every 500
+  req        18338000 -> 0    18338500 -> 1        (identical to the committed run)
+  gnt_ready  18338500 -> 0    18339000 -> 1
+  gnt        18338000 -> 0    18339000 -> 1
+  rvalid     no transition
+  outstanding 18338500 -> 3                        (identical)
+
+  sampled at 183382ns, the same instant as above:
+  clk=0  req=0  gnt_ready=1  gnt=0  outstanding=4
+
+  The DRIVER'S DECISION IS THE SAME in both runs: gnt_ready is high through the low window, which is the
+  falling-edge decision the committed driver made too. What differs is the gate. gnt tracks req down at
+  18338000, so the pre-edge sample of the accepting posedge is req=0 with gnt=0 and the property has
+  nothing to report. The driver then reads vif.gnt at that posedge, sees 0, counts a withdrawal, drops
+  gnt_ready in the same time step, and enqueues nothing. It re-arms at the next negedge, 18339000, where
+  req is live again and the grant is real.
+
+3. THE REGION ORDERING, which is why the driver and the property cannot disagree
+
+  req rises again AT the accepting posedge, 18338500. That does not race the driver's read, and the
+  waveform shows why: gnt does not rise at 18338500 with it, it rises at 18339000. instr_req_o is
+  combinational out of registers that update in the NBA region of that edge, so the core's reaction to
+  the edge lands strictly after the driver's Active-region read. The driver therefore reads the gate
+  computed from the PRE-EDGE request, which is exactly the value the property's Preponed sample uses.
+  The two look at the same instant of the same signals by construction.
+
+  The same ordering covers the opposite case: a request live in the pre-edge sample that falls because
+  of the edge. There the driver reads gnt=1 and enqueues, and the property samples req=1 and gnt=1 and
+  holds. Both are right, and they agree.
+
+4. WHAT THIS PAIR DOES NOT SHOW
+
+  One window on one seed. It shows the mechanism of the firing and the mechanism of its removal; the
+  claim that no firing survives anywhere in either run is the property's own count in the run logs
+  (one in the committed run, zero in the repaired one), not this read.
