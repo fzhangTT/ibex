@@ -2733,7 +2733,7 @@ tests:
     tier: check
     build: gen_tb
     uvm_test: gen_base_test
-    plusargs: [+gen_fetch_en_at_reset=0, +gen_ut_boot_retire=70, +gen_dbus_rvalid_min=8, +gen_dbus_rvalid_max=8, +gen_ut_ctr_delta_sym=gen_b17_delta, "+gen_ut_ctr_delta_expect=8,1,6,0,43,36,21"]
+    plusargs: [+gen_fetch_en_at_reset=0, +gen_ut_boot_retire=70, +gen_dbus_rvalid_min=8, +gen_dbus_rvalid_max=8, +gen_ut_ctr_delta_sym=gen_b17_delta, "+gen_ut_ctr_delta_expect=8,1,4:10,0,40:46,36,21"]
     program: {directed: [dv/auto_dv/stim/gen_directed/gen_pmc_wb_wait_directed.S], seed: 1}
     seeds: 1
     fcov_expectation_file: null
@@ -2752,7 +2752,7 @@ tests:
     tier: check
     build: gen_tb
     uvm_test: gen_base_test
-    plusargs: [+gen_fetch_en_at_reset=0, +gen_ut_boot_retire=70, +gen_dbus_rvalid_min=8, +gen_dbus_rvalid_max=8, +gen_ut_ctr_delta_sym=gen_b17_delta, "+gen_ut_ctr_delta_expect=8,1,6,0,43,36,21", +gen_ctr_rtl_branches_wait=0, +gen_ctr_rtl_wait_cycles=0]
+    plusargs: [+gen_fetch_en_at_reset=0, +gen_ut_boot_retire=70, +gen_dbus_rvalid_min=8, +gen_dbus_rvalid_max=8, +gen_ut_ctr_delta_sym=gen_b17_delta, "+gen_ut_ctr_delta_expect=8,1,4:10,0,40:46,36,21", +gen_ctr_rtl_branches_wait=0, +gen_ctr_rtl_wait_cycles=0]
     program: {directed: [dv/auto_dv/stim/gen_directed/gen_pmc_wb_wait_directed.S], seed: 1}
     seeds: 1
     fcov_expectation_file: null
@@ -2765,3 +2765,42 @@ tests:
     keep_artifacts: true
     component: gen_counter_model
     measured: false
+  - name: gen_dit_dummy_xfail
+    description: 'B7 wait-counter reproducer for TP-DIT-019 (the minstret half is gen_pmc_minstret_xfail, TP-PMC-013):
+      gen_pmc_dummy_wait_directed.S reads mhpmcounter12 and mhpmcounter11 around the same eight divides and the same eight
+      multiplies twice, once with cpuctrlsts.dummy_instr_en clear and once with it set, with each cpuctrlsts write outside
+      both windows of its pair. The documentation says a dummy instruction has no functional impact on processor state, so
+      each pair must read the same; the core counts a divide-wait cycle in which a dummy occupies the decode stage, so the
+      divide pair disagrees and the program stores the failing end-of-test code. Expected to fail until the RTL is fixed or
+      the owner rules otherwise; an unexpected PASS means the behaviour changed and the finding must be re-examined'
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs:
+      - +gen_fetch_en_at_reset=0
+      - +gen_ut_boot_retire=60
+    program:
+      directed: [dv/auto_dv/stim/gen_directed/gen_pmc_dummy_wait_directed.S]
+      seed: 1
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 600
+    owner: test-writer
+    pass_marker: GEN_UT_LOCKSTEP_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep
+    expected_fail: true
+    keep_artifacts: true
+    component: gen_tb_top
+    measured: false
+    notes: 'RTL finding B7, the wait-counter half (dv/auto_dv/docs/gen_bug_log.md); the retained red and its passing control
+      are dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_bug_b7w_dummywait_{red1,ctrl1}_* with the record
+      dv/auto_dv/evidence/gen_tdd_bug_tests.md Section 9. The designed failure is the module assertion "GEN_UT_LOCKSTEP:
+      program did not report pass" with the end-of-test code 0x00000101 in the log line, bit 0 being the divide pair; the
+      measured windows at this seed are 288 divide-wait cycles with dummies off and 289 with them on, and 0 and 0 for the
+      multiply pair, which is why bit 1 stays clear. The dummy insertion pattern comes from a build-time LFSR seed rather
+      than the run seed, so the figures are identical at seeds 1, 2 and 7. This entry deliberately runs on gen_ut_lockstep
+      rather than gen_ut_counters: the counter model was measured on this program with +gen_ctr_rtl_wait_cycles=0 and does
+      not fire, because its counter-11 and 12 bound is a per-instruction latency ceiling that a one-cycle excess sits
+      inside, so the program own paired-window comparison is the only witness today. The control program
+      gen_pmc_dummy_wait_ctrl_directed.S (the same stream with the cpuctrlsts value 0) passes and has no entry of its own'

@@ -102,6 +102,12 @@ Reproduction once the entry is committed:
 
     python3 dv/auto_dv/flow/gen_regress.py --repro gen_pmc_minstret_xfail 1 --waves --tag b7_repro
 
+That command is verified, not assumed. Run with the out root pointed at a scratch tree it synced the mirror, compiled a
+waves build, built the program from the committed source and reported "gen_pmc_minstret_xfail seed=1: XFAIL
+(expected-fail: uvm_error at sim.log:50 (isa_rd))", one xfail of one, with the waveform at
+runs/gen_pmc_minstret_xfail_1/waves.fsdb. The flow's own sim.log puts that first collected line at :50 where the local
+fixture puts it at :32, because the flow's log carries more preamble; the row and the mechanism are the same.
+
 ## 3. B1: dret to U-mode leaves mstatus.MPRV set (TP-PRV-014)
 
 Test: gen_prv_debug_b1_xfail (tier check, measured: false, expected_fail: true, owner test-writer), cocotb module
@@ -343,12 +349,30 @@ data_rvalid_i is low the whole time; the response arrives at 1230 ns and the bra
 the event is held for every cycle the branch waits, which is where a count of one branch per window becomes a count per
 cycle.
 
-One number to read carefully. The three load-shadowed differences are build-sensitive: on Build B the same program and
-seed gave 6, 1, 7, 0, 41, 36 and on Build C 8, 1, 6, 0, 43, 36, although the data response latency was pinned to eight
-cycles in both. The two builds differ only in TB Infra's landing 65, which added four knobs to the knob table, and the
-instruction-side regime is derived from the seed and that table, so the fetch timing moved. The entries pin the data
-latency and the fire-check refuses any other numbers, which is what keeps that honest; a record that quoted the counts
-without the build would have been wrong within the hour.
+RETRACTED, and replaced by measurement. An earlier version of this section said the three load-shadowed differences were
+build-sensitive, quoting 6, 1, 7, 0, 41, 36 on one build against 8, 1, 6, 0, 43, 36 on another. That was wrong: the two
+figures came from two different PROGRAMS, not two builds. The first belonged to the image crc32 0x454f07f9 with 184
+words, which is this program before its documented-expectation self-check was added; the committed program is crc32
+0xf75e1215 with 237 words. Measured afterwards, the committed program gives
+
+    export of 2f46b1d, gen_ut_lockstep    [8, 1, 6, 0, 43, 36]
+    export of c746629, gen_ut_lockstep    [8, 1, 6, 0, 43, 36]
+    export of c746629, gen_ut_counters    [8, 1, 6, 0, 43, 36, 21]
+
+byte-identical across both builds and both modules, so there is no build sensitivity and no module sensitivity, which is
+what TB Infra measured independently. The retained runs of that check are gen_bug_b17_head_build{B,C}_*.
+
+What IS variable, from TB Infra's grant-delay probe (gen_fu_l66_b17_gnt_probe.log in its landing 66): words 2 and 4, the
+counter 11 and 12 windows behind the load, take 5, 6 and 7 and 42 and 43 across two seeds and three grant-delay
+settings, because the fetch side moves when the multiply or divide reaches decode relative to the load's response;
+pinning the grant delay does not stabilise them. Words 0, 1, 3 and 5 and the verdict word are stable in all six of its
+runs. Both B17 entries therefore carry ranges rather than exact values on those two words,
++gen_ut_ctr_delta_expect=8,1,4:10,0,40:46,36,21, TB Infra's tight bounds.
+
+The programs' own checks pin no measured value at all, only documented ones: B20 requires 0 for the fence.i window, 0
+for the nop window and 2 for the call window; B11 requires 0 for both branch windows; B17 requires 1 for each counter-8
+window, 0 for each counter-11 window and EQUALITY between the two counter-12 windows, because the divider's own stall
+count is not a documented constant.
 
 THE ONE CORRECTION I MADE TO TB INFRA'S SIX ENTRIES. Its file wrote each expect value unquoted inside a YAML flow list,
 for example `plusargs: [..., +gen_ut_ctr_delta_expect=1,0,2,1]`. YAML splits a flow list on those commas, so the value
@@ -357,6 +381,58 @@ became `+gen_ut_ctr_delta_expect=1` followed by three bare integers, which the f
 entry parses to the author's object with that one field corrected, and told TB Infra. The six runs above used the full
 expect string on the command line, so the measurements are of the intended configuration.
 
+## 9. B7 again: the wait-counter half (TP-DIT-019)
+
+Test: gen_dit_dummy_xfail (tier check, measured: false, expected_fail: true, owner test-writer), cocotb module
+dv/auto_dv/gen_tb/gen_tests/gen_ut_lockstep.py, program dv/auto_dv/stim/gen_directed/gen_pmc_dummy_wait_directed.S,
+seed 1, Build C. Section 2 covers B7's minstret half; this is the half the lock-step comparator cannot reach, because
+the shim mirrors the core's HPM values.
+
+Program shape. Four windows in two pairs. The first pair reads mhpmcounter12 (NumCyclesDivWait) around eight divides
+with cpuctrlsts.dummy_instr_en clear and then around the same eight divides with it set; the second pair does the same
+for mhpmcounter11 (NumCyclesMulWait) around eight multiplies. Each cpuctrlsts write sits OUTSIDE both windows of its
+pair, so the interval a counter rule judges holds nothing but the program's own arithmetic. The documented intent is that
+a dummy instruction has no functional impact on processor state (doc/03_reference/security.rst), so each pair's two
+windows must read the same; the program compares them and sets a verdict bit per disagreeing pair. The fetch stage's
+dummy types include MUL and DIV (rtl/ibex_dummy_instr.sv), which is what makes the divide pair the interesting one.
+
+Red. Retained: gen_bug_b7w_dummywait_red1_{stdout.log,sim.log,verdict.txt}. Verdict XFAIL. The collected failure is the
+module's assertion "GEN_UT_LOCKSTEP: program did not report pass" with the end-of-test code in the log line:
+
+    GEN_UT_LOCKSTEP retired 106 consumed 106 mismatches 0 tohost 0x00000101
+
+Bit 0 is the divide pair. The windows measure 288 divide-wait cycles with dummies off, which is exactly the eight
+divides' own 36 cycles each, and 289 with them on; the multiply pair reads 0 and 0, so bit 1 stays clear, which is the
+documented behaviour for a one-cycle multiplier and is this program's internal control. The figures are identical at
+seeds 1, 2 and 7, because the dummy insertion pattern comes from a build-time LFSR seed rather than the run seed.
+
+The excess is small and I state it as measured rather than as the bug log's wording implies: over eight divides it is one
+cycle, and over thirty-two divides (a probe, not the committed program) two. So the observable is not a dummy divide's
+whole 36-cycle stall being added; it is the divide-wait counter advancing in a cycle a dummy occupies.
+
+Green control. gen_pmc_dummy_wait_ctrl_directed.S is the same instruction stream with the cpuctrlsts value 0, so no
+dummy is inserted, each pair's windows agree and the program stores the pass code. Retained:
+gen_bug_b7w_dummywait_ctrl1_*; verdict PASS, UVM_ERROR 0, GEN_UT_LOCKSTEP_PASS.
+
+Why this entry is NOT on gen_ut_counters, measured. I ran the program under TB Infra's counter module with
++gen_ctr_rtl_wait_cycles=0, the documentation direction for counters 11 and 12, and the rule does NOT fire: both
+directions report UVM_ERROR 0, the model's own summary reads "windows exact=0 bound=6 misses exact=0 bound=0" and its
+accommodation line reports "B7 dummy=0". Its counter-11 and 12 bound is a per-instruction latency ceiling, and a
+one-cycle excess sits inside it. The module also does not judge the end-of-test code by design, so on that module the
+program's own finding is invisible and the run passes. Hence gen_ut_lockstep, where the end-of-test code is asserted.
+TB Infra has the measurement; if it wants the rule to witness this half, the tighter form is the paired-window equality
+this program already computes.
+
+Waveform. out_tw22/bug_b7w_dummywait_red1_waves/waves.fsdb. Inside the dummies-on divide window (cycles 411 to 716)
+three dummy instructions reach decode. At 5285 ns the second of them is in decode (dummy_instr_id = 1) while
+cs_registers_i.mhpmcounter_incr reads 0x00001005: bit 12, the divide-wait event, is asserted in that cycle, and bit 2,
+minstret, with it. So one picture carries both halves of B7: a dummy instruction is counted by minstret and, in the same
+cycle, by the divide-wait counter.
+
+Reproduction:
+
+    python3 dv/auto_dv/flow/gen_regress.py --repro gen_dit_dummy_xfail 1 --waves --tag b7wait_repro
+
 ## Record log
 
 - 2026-09-08T02:13:23Z: sections 1 and 2 written from the runs of the same date on out_tw20.
@@ -364,3 +440,6 @@ expect string on the command line, so the measurements are of the intended confi
   runs of the same date on build B; handed on base dab298859cca07e8e4a86e01d9af3b665b955bc0.
 - 2026-09-08T03:16:38Z: sections 6, 7 and 8 (B20, B11, B17) written from the runs of the same date on build C, on
   TB Infra's six folded entries; handed on base 5a64b1e989cfd4e08275f93e72c556ade9748a1e.
+- 2026-09-08T03:40:42Z: Section 8's build-sensitivity claim retracted and replaced by the four-run measurement of the
+  committed program; Section 2 gained the verified flow reproduction; Section 9 (B7's wait-counter half) written from the
+  runs of the same date on build C; handed on base f77ac6ee7c9cfd638086401b8c1e424b7669b15e.
