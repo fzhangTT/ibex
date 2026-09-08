@@ -31,7 +31,7 @@ via fold F-RST-026), TP-RVFI-036 (F-RST-009 via fold F-RVFI-033).
 Program: dv/auto_dv/tests/gen_programs/gen_rst_boot_prog.py at the run seed (testlist `program:
 {generator: ..., seed: run}`); the program stores every observation RAW to the EOT MMIO register and
 the checks below compare self.reports[i] with plan(seed).reports[i]. Every read lands in rd != x0, so
-the ISA comparator sees every value; its cpuctrlsts bit 8 and tdata1 misses are T-102 shim rows and
+the ISA comparator sees every value; its cpuctrlsts bit 8 and tdata1 misses are shim rows and
 FAIL the flow verdict until TB Infra lands them. TB-side facts the expectations need: +gen_boot_addr
 (mtvec), +gen_key_reset_valid with the scramble-key regime (cpuctrlsts bit 8), the image sidecar
 symbols (mepc of the pad). W-BOOT (boot_addr_i class, hart_id_i) is a TB input the program cannot draw;

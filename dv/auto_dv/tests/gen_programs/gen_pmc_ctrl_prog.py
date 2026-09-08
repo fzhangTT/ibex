@@ -8,7 +8,7 @@ a Plan: the assembly lines, the ordered expected report words, k, min_retired an
 mcounteren writes and of everything gated by mcounteren (applied when on, dropped when off or invalid), never the program
 text, so one image serves every pin value.
 
-Semantics modelled (privileged spec Zicntr / Zihpm counter and control CSRs; the plan's PMC conventions S-8 and C-10;
+Semantics modelled (privileged spec Zicntr / Zihpm counter and control CSRs; the plan's PMC parameter shorthands (HPM_LAST, HPM_CTRL_MASK) and its exact-counter separation rule;
 rtl/ibex_cs_registers.sv read only as a cross-check):
   mcountinhibit / mcounteren: WARL, the writable bits are CY, IR and HPM_FIRST..HPM_LAST (HPM_CTRL_MASK); TM and the bits
   above HPM_LAST read 0; mcounteren resets to 0 and its write is dropped without a trap unless the pin is On.
@@ -16,7 +16,7 @@ rtl/ibex_cs_registers.sv read only as a cross-check):
   including itself (the write precedes the writeback, spec: the inhibit takes effect from the next cycle); an inhibited
   counter's delta is 0 while reads and writes keep working; a counter written while inhibited resumes from the written
   value. Exactness classes (plan TP-PMC-023): minstret, loads, stores, jumps, branches (every branch separated from a
-  preceding load/store by an ALU instruction, C-10), taken branches and compressed retirements are exact per window;
+  preceding load/store by an ALU instruction), taken branches and compressed retirements are exact per window;
   mcycle, the IF stall counter and the mul/div wait counters are bound class (lower bound from the window's
   instructions, taken transfers and stalling operations, upper bound the window's mcycle delta); the LSU stall counter
   is bound class without a floor. The speculative +1 of minstret /
@@ -95,7 +95,7 @@ HPM_CTRL_MASK = ((1 << (HPM_FIRST + HPM_NUM)) - 1) & ~(1 << TM) & 0xFFFFFFFF
 # 7 jumps, 8 branches, 9 taken branches, 10 compressed, 11 mul wait, 12 div wait
 COUNTERS = (CY, IR) + tuple(range(HPM_FIRST, HPM_LAST + 1))
 CTR_NAMES = {0: "mcycle", 2: "minstret", 3: "lsu", 4: "if", 5: "ld", 6: "st", 7: "jmp", 8: "br", 9: "tk", 10: "rc", 11: "mul", 12: "div"}
-EXACT = (2, 5, 6, 7, 8, 9, 10)               # exact class under the C-10 separation rule
+EXACT = (2, 5, 6, 7, 8, 9, 10)               # exact class under the separation rule: no branch, mulh or div directly follows a load or store
 BOUND = (0, 3, 4, 11, 12)                    # bound class: lo <= delta <= the window's mcycle delta
 ALIAS_MAX = 31                               # hpmcounter31: last alias of the read-only range
 UNIMPL_KS = tuple(range(HPM_NUM, ALIAS_MAX - HPM_FIRST + 1))   # k with hpmcounter(3 + k) unimplemented
@@ -641,7 +641,7 @@ class Gen:
     # --- counter windows ---------------------------------------------------------------------------------------------------
     def window(self, spec, start_alu=True):
         """Straight-line event window: spec = {counter idx: events}; 5 loads, 6 stores, 7 jumps, 8 branches (taken and
-        not), 9 taken branches (beyond the branch set), 10 compressed, 11 mulh, 12 div; C-10: a branch, mulh or div never
+        not), 9 taken branches (beyond the branch set), 10 compressed, 11 mulh, 12 div; a branch, mulh or div never
         follows a load/store directly."""
         ops = []
         for c, n in spec.items():

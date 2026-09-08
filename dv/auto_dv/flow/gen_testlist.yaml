@@ -2647,9 +2647,9 @@ tests:
       "GEN_UT_INTG_SPAN: no record with rf_wr_suppress", which TB Infra measured on 8 of 8 seeds at this count; at seed 1 the
       first collected line is the scoreboard UVM_ERROR [isa_rd] "rd model=x11/22221111 dut=x11/22220111" on the spanning
       load, the merged word the core wrote, and that row appears on 2 of 8 seeds because the injected bit flip reaches the
-      merged half-word only sometimes (gen_tdd_b16_knob.md Section 6). The run also carries [crash_dump] rows from the TB gap
-      TB Infra reported in that record Section 7 (the model keeps the announced word address while the flag is clear); they
-      are not part of the B16 red. The control is the same program at the default count 2, which is the committed
+      merged half-word only sometimes (gen_tdd_b16_knob.md Section 6). TB Infra''s landing 66a fixed the TB gap that used to add twenty or so
+      [crash_dump] rows to this run (the scoreboard now peeks instead of taking in its internal-NMI correction), so the run
+      carries exactly one UVM_ERROR, the [isa_rd] row, and no crash_dump row; the record''s Section 4 names the measurement. The control is the same program at the default count 2, which is the committed
       gen_ut_intg_span entry and passes. Retained here: gen_bug_b16_first_beat_{red1,ctrl1}_*, record
       dv/auto_dv/evidence/gen_tdd_bug_tests.md Section 4'
   - name: gen_ut_counters_b20_jumps

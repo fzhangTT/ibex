@@ -42,7 +42,7 @@ the DUT fact):
   no independent check until the ctr_* checkers land (step 2d).
 Consistency compares (Expect.pending names the owning checker; counted apart from the verified words):
 the model state these reads are compared against is synchronised from the DUT record before each step
-(T-102, Critic verdict gen_critic_tb_t102.md Section 2), so the test checks them for consistency only
+(dv/auto_dv/docs/gen_component_api_isa_shim.md, Counter CSRs), so the test checks them for consistency only
 and their value verification is pending ctr_* (cycle, hpmcounter3..(2+MHPMCounterNum): a pair of
 adjacent reads is non-decreasing, strictly increasing for cycle with CY running, equal for the event
 counters no adjacent CSR read can bump, and every read is >= the previous read of the same counter)
@@ -51,8 +51,8 @@ the two reads of a sweep block). marchid is a verified constant (RISC-V marchid 
 lowRISC Ibex, gen_feature_list.md Section 4.2; cross-checked against the rendered GEN_CSR_MARCHID_VALUE).
 Not built: TP-CSR-005 (every deliberate trap ends in an mret; its block stays behind F3_100_WORDS /
 --traps with report words mcause 2, mtval = word, mscratch untouched, until the item is re-enabled on
-the T-102 comparator), dscratch0/1 (debug mode is not enterable from a program at HEAD) and the
-U-mode half of TP-CSR-005 (needs the C-2 PMP prologue; this program stays in M-mode).
+the lock-step comparator), dscratch0/1 (debug mode is not enterable from a program at HEAD) and the
+U-mode half of TP-CSR-005 (needs the plan's U-mode PMP prologue; this program stays in M-mode).
 The trap handler stays installed in every program: an unplanned trap reports mcause/mtval and
 bumps the trap count, whose final report word is checked against the planned trap number.
 
@@ -85,7 +85,7 @@ TRAP_COUNT = 31      # x31: number of traps taken
 POOL = [1, 2] + list(range(5, 30))
 POOL_LO = [r for r in POOL if r <= 15]
 POOL_HI = [r for r in POOL if r >= 16]
-F3_100_WORDS = 0     # TP-CSR-005 words per seed; the plan's 40 once the comparator exempts mret records (C-1)
+F3_100_WORDS = 0     # TP-CSR-005 words per seed; the plan's 40 once the comparator exempts mret records
 SEQ_001, SEQ_002, SEQ_003 = 200, 100, 60   # sequences per seed, the items' stimulus lines
 OPS = ("csrrw", "csrrs", "csrrc", "csrrwi", "csrrsi", "csrrci")
 DEMOTED = ("csrrs", "csrrc", "csrrsi", "csrrci")

@@ -36,7 +36,7 @@ Every expectation is a report word compared with the generator's model: csrr rea
 counter deltas the program computes (after minus before) per window, the handler's trap records (mcause << 16 | MPP << 8 |
 instruction index from the armed block base) and difference words (xor / sub / sltu of two counter reads). Raw counter
 values are never expected (they are the comparator's consistency compares, value verification pending the ctr_* checkers).
-Exactness (plan TP-PMC-023, C-10): minstret, loads, stores, jumps, branches (separated from a preceding load/store by an
+Exactness (plan TP-PMC-023): minstret, loads, stores, jumps, branches (separated from a preceding load/store by an
 ALU instruction), taken branches and compressed retirements are exact per window; mcycle and the mul/div wait counters
 are bound class (lower bound one cycle per instruction / one stall per mulh / div, upper bound the window's mcycle
 delta); the IF stall counter is bound class with floor 1 when the window has a taken control transfer (the fetch
@@ -63,8 +63,7 @@ rvalid delays; schedulable = lib.TIMING_ONLY_KNOBS; knob_mcounteren_writable is 
 knob_debug_req_regime and knob_irq_regime are never declared (no debug ROM, no interrupt handler). Always-on checkers
 relied on: gen_isa_compare (lock-step; its uvm_error fails the flow and is reported, never masked), rvfi_proto, the bus
 protocol checkers; gen_chk_csr_readback and gen_chk_counters are unbuilt (plan Section 0a), their compares are carried
-by the fire-checks here. gen_isa_compare follows this program with the ISA shim's counter model (T-235,
-dv/auto_dv/docs/gen_component_api_isa_shim.md): a step under mcountinhibit.IR = 1 retires instead of being synthesised as a trap,
+by the fire-checks here. gen_isa_compare follows this program with the ISA shim's counter model (dv/auto_dv/docs/gen_component_api_isa_shim.md): a step under mcountinhibit.IR = 1 retires instead of being synthesised as a trap,
 minstret is served as Spike's count minus what Ibex did not count, mcountinhibit is masked and mhpmcounter13..31 / mhpmevent13..31
 read as zero; what that record leaves unmodelled (the hazard variant of the high-word write corner, dummy instructions under the
 counters knob) this program does not rely on for its checks. declare_bins() takes the template default (the plan's

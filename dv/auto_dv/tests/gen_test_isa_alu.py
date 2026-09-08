@@ -25,7 +25,7 @@ fire_tp_isa_<nnn>; a `_floor` sub-check asserts the per-seed coverage the item's
 from the observed and matched words): 001 six opcodes x seven rs1 classes and x seven imm classes, rs1 == rd both
 ways, every result class, >= 2000 ops; 002 both wrap signs with the sign flip visible in the word and the pinned pairs;
 003 every cp_slt_case; 004 every cp_hint_class in a HINT/reader pair (reader rs1 = x0 and rs2 = x0 forms, distance
-1..3), minstret delta == 65 per 64-HINT block (64 HINTs plus the first csrr, plan TP-ISA-004 / rtl-arch T-053),
+1..3), minstret delta == 65 per 64-HINT block (64 HINTs plus the first csrr, plan TP-ISA-004),
 mcountinhibit written 0 and read back 0; 005 lui and auipc at both pc[1] values with every imm20
 class and >= 500 each; 006 lui 0xFFFFF -> 0xFFFFF000 and lui 0 -> 0, auipc imm 0 == pc at both alignments, auipc
 address-space wrap (the 33-bit sum pc + sext(imm << 12) past 2^32: imm20 0x7FFFF from pc >= 0x80001000), carry-out
@@ -47,13 +47,13 @@ export (plan Section 6 item 5, TB Infra ASK 5); this test observes the same fact
 (b) TP-ISA-052 "the sw x0 stores 0 on the data bus" is a bus fact (bus record export, ASK 4); the test reads the stored
 word back through memory instead. (c) TP-ISA-006 "auipc at pc >= 0xFFFFF000" and "lui/auipc from the low page
 (pc < 0x1000)": the program window is MEMORY_MAP boot_page + prog_size (0x80000000 + 1 MiB, gen_link.ld PROG), so no
-program text can run in the high or low page until the TB memory map offers those windows (WP-9, owner TB Infra / DV
+program text can run in the high or low page until the TB memory map offers those windows (a TB memory-map request, owner TB Infra / DV
 Lead), and the CG-ISA-004 bins cp_pc_region.high / cp_pc_region.low stay declared not_hit; the address-space wrap that the
 plan's cp_wrap means (the 33-bit sum pc + sext(imm << 12) outside [0, 2^32)) needs no such page: from any pc >= 0x80001000
 an auipc with imm20 0x7FFFF leaves the space, so the program places one per alignment past the first 4 KiB and the fire
 check confirms the wrap from the linked pc; the negative-immediate cases carry out of the 32-bit add (word < pc) without
 leaving the space and are the plan's cp_wrap.no. (d) The "U vs M
-mode 50/50 after an mret" randomization of TP-ISA-001/004/007: batch-2 programs stay in M-mode by design (the C-2 PMP
+mode 50/50 after an mret" randomization of TP-ISA-001/004/007: batch-2 programs stay in M-mode by design (the plan's U-mode PMP
 prologue and mret return belong to the batch-3 privilege groups). (e) TP-ISA-004 dummy_instr_en = 0 is the cpuctrlsts
 reset value (doc/03_reference/cs_registers.rst) and is neither written nor read back: the flow's standalone Spike check
 (gen_program.py --spike-check) has no cpuctrlsts and would trap on the read, so the precondition rests on reset.
@@ -140,7 +140,7 @@ class IsaAlu(GenTest):
     name = "gen_test_isa_alu"
     schedulable = lib.TIMING_ONLY_KNOBS
     # items of the plan group this test does not check, with the reason (two-sided against the group by the structure check)
-    # bins of built items this test cannot hit until WP-9 lands (code windows at address 0 and the top page)
+    # bins of built items this test cannot hit until the TB memory map offers code windows at address 0 and the top page
     bins_not_hit = {
         "gen_isa_alu_reg_cg.cr_slt_boundary.slt_all_ones_int_max":
             "seed-dependent: hit at some seeds and not others, so this test does not guarantee it per run; PLANNED in traceability, credited from the merged report",
@@ -342,7 +342,7 @@ class IsaAlu(GenTest):
         au = [(o, _pc(self, o), _got(self, o.ridx[0])) for o in obs if o.op == "auipc"]
         eq_pc = {pc & 2 for o, pc, g in au if o.imm == 0 and g == pc}
         # the plan's cp_wrap: the 33-bit sum leaves the address space; from this window only the upward wrap (a positive immediate
-        # past 2^32) is reachable, the downward one (a negative immediate from pc < |imm| << 12) joins this set when WP-9's low page
+        # past 2^32) is reachable, the downward one (a negative immediate from pc < |imm| << 12) joins this set when the low page
         # lands; the carry-out of the 32-bit add (word < pc) holds the negative-immediate cases, which stay in the space, plus the
         # space units, whose carry-out is the wrap
         space = {pc & 2 for o, pc, g in au if 0 < o.imm < 0x80000 and pc + (o.imm << 12) >= 1 << 32}

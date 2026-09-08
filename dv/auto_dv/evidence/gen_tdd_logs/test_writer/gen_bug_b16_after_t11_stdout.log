@@ -1,0 +1,89 @@
+# run b16_after_t11: 2026-09-08T04:00:54Z host=soc-l-11 seed=1 module=dv.auto_dv.gen_tb.gen_tests.gen_ut_intg_span build=/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/head_export23/dv/auto_dv/work/test-writer/out_tw23 sources_sha=62bec5dd95834e7f template_sha=cc749fd5a35cb623 test_sha=4c3fc3720deea7fb pyroot=/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/head_export23 vmem=/tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/b16_h23/prog.vmem plusargs=[+gen_ut_boot_retire=30 +gen_export_file=gen_export.txt +gen_ut_intg_span_arm_count=1]
+Info: [VCS_SAVE_RESTORE_INFO] ASLR (Address Space Layout Randomization) is detected on the machine. To enable $save functionality, ASLR will be switched off and simv re-executed.
+Please use '-no_save' simv switch to avoid re-execution or '-suppress=ASLR_DETECTED_INFO' to suppress this message.
+Chronologic VCS simulator copyright 1991-2025
+Contains Synopsys proprietary information.
+Compiler version X-2025.06-SP2_Full64; Runtime version X-2025.06-SP2_Full64;  Sep  8 00:00 2026
+     -.--ns INFO     gpi                                ..mbed/gpi_embed.cpp:108  in set_program_name_in_venv        Using Python virtual environment interpreter at /localdev/fzhang/ws/ibex-challenge/.venv/bin/python
+     -.--ns INFO     gpi                                ../gpi/GpiCommon.cpp:101  in gpi_print_registered_impl       VPI registered
+     0.00ns INFO     cocotb                             Running on Chronologic Simulation VCS Release version X-2025.06-SP2_Full64
+     0.00ns INFO     cocotb                             Running tests with cocotb v1.9.2 from /localdev/fzhang/ws/ibex-challenge/.venv/lib/python3.12/site-packages/cocotb
+     0.00ns INFO     cocotb                             Seeding Python random module with supplied seed 1
+     0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages
+     0.00ns INFO     cocotb.regression                  Found test dv.auto_dv.gen_tb.gen_tests.gen_ut_intg_span.gen_ut_intg_span
+     0.00ns INFO     cocotb.regression                  running gen_ut_intg_span (1/1)
+GEN_CONFIG_BANNER build_config=opentitan
+GEN_CONFIG_BANNER BaseIsa=BaseIsaRV32IorCHERIoT RV32M=RV32MSingleCycle RV32B=RV32BOTEarlGrey RV32ZC=RV32ZcaZcbZcmp RegFile=RegFileFF
+GEN_CONFIG_BANNER RV32E=0 BranchTargetALU=1 WritebackStage=1 ICache=1 ICacheECC=1 ICacheScramble=1
+GEN_CONFIG_BANNER BranchPredictor=0 DbgTriggerEn=1 DbgHwBreakNum=1 SecureIbex=1
+GEN_CONFIG_BANNER PMPEnable=1 PMPGranularity=0 PMPNumRegions=16 MHPMCounterNum=10 MHPMCounterWidth=32
+GEN_CONFIG_BANNER RegFileECC=0 ResetAll=1 DummyInstructions=1 MemECC=1 ICacheTweakInfection=1
+GEN_CONFIG_BANNER MemDataWidth=39 RegFileDataWidth=32 RegFileCapEccWidth=35 BusSizeECC=39 TagSizeECC=28 LineSizeECC=78
+GEN_CONFIG_BANNER DmBaseAddr=0x1a110000 DmAddrMask=0x00000fff DmHaltAddr=0x1a110800 DmExceptionAddr=0x1a110808
+GEN_CONFIG_BANNER CsrMvendorId=0x00000000 CsrMimpId=0x00000000 cheriot_enable=Off rf_test_en=0
+GEN_CONFIG_BANNER RndCnstLfsrSeed=0xac533bf4 RndCnstLfsrPerm=0x1e35ecba467fd1b12e958152c04fa43878a8daed
+GEN_CONFIG_BANNER PMPRstCfg/PMPRstAddr/PMPRstMsecCfg=ibex_pkg::PmpCfgRst/PmpAddrRst/PmpMseccfgRst (ibex_core defaults, all regions OFF)
+GEN_CONFIG_BANNER RVFI=1
+GEN_CONFIG_BANNER GEN_DUT_SPLIT_INTG=0
+UVM_INFO @ 0: reporter [RNTST] Running test gen_base_test...
+GEN_CONFIG_BANNER tb=gen_tb_top uvm_test=gen_base_test seed=1 build_config=opentitan pinned_knobs=0 regime_sched=derived
+GEN_CONFIG_BANNER define SIMULATION=0 (F-DIT-025)
+GEN_CONFIG_BANNER define COCOTB_SIM=1 (cocotb-master run)
+GEN_CONFIG_BANNER boot_addr=0x80000000 hart_id=0x00000000 alive_timeout=100000 finish_timeout=20000 mem_image=/tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/b16_h23/prog.vmem tohost=0x800002d0
+GEN_CONFIG_BANNER knobs imem gnt=short rvalid=short err=none intg=none cap=cap8 dmem gnt=short rvalid=short err=none intg=none key=immediate icram_init=random
+GEN_CONFIG_BANNER knobs irq regime=quiet line_mix=single hold=until_taken debug_req=none fetch_enable=always_on icache_ecc=none data_ecc=none ecc_bits=one
+UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(191) @ 0: uvm_test_top.env [MEM_LOAD] image /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/b16_h23/prog.vmem: 160 words, crc32 0xb01e45ca verified
+UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(224) @ 0: uvm_test_top.env [GEN_ENV] ibus: ibus gnt=1..3(short) rvalid=2..4(short) cap=8(cap8) err=0/1000(none) intg=0/1000(none)x1
+UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(225) @ 0: uvm_test_top.env [GEN_ENV] dbus: dbus gnt=1..3(short) rvalid=2..4(short) cap=2(cap2) err=0/1000(none) intg=0/1000(none)x1
+UVM_INFO dv/auto_dv/env/gen_agents_pkg.sv(387) @ 0: uvm_test_top.env.dbus_agent [gen_bus_agent] uvm_test_top.env.dbus_agent: sva_rvalid_legal armed
+UVM_INFO dv/auto_dv/env/gen_agents_pkg.sv(387) @ 0: uvm_test_top.env.ibus_agent [gen_bus_agent] uvm_test_top.env.ibus_agent: sva_rvalid_legal armed
+UVM_INFO dv/auto_dv/env/gen_rvfi_pkg.sv(253) @ 0: uvm_test_top.env.sb [GEN_SB] ISA model ready: pc=80000080 mtvec=80000001
+UVM_INFO dv/auto_dv/env/gen_export_pkg.sv(131) @ 0: uvm_test_top.env.sink [GEN_EXPORT] export file gen_export.txt open; sources: ibus,dbus,pin,alert,misc,scrkey,regime
+     5.00ns INFO     cocotb.gen_tb_top                  GEN_BRIDGE started: listener armed, stim_active=1
+    85.00ns INFO     cocotb.gen_tb_top                  GEN_UT_INTG_SPAN arming 1 integrity corruption(s) in [800002e0, 800002e7]
+UVM_INFO dv/auto_dv/env/gen_agents_pkg.sv(214) @ 8500: uvm_test_top.env.dbus_agent.driver [GEN_BUS_ARM] dbus: armed kind 2 for 1 accesses in [800002e0, 800002e7]
+UVM_INFO dv/auto_dv/env/gen_agents_pkg.sv(797) @ 10000: uvm_test_top.env.ctrl [GEN_CTRL] fetch_enable_i <= On (FETCH_EN arg 1)
+UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(260) @ 55500: uvm_test_top.env.sb [isa_rd] rd model=x11/22221111 dut=x11/22220111 (order=8 pc=80000118 insn=00252583 trap=0 intr=0 rd=x11/22220111 mem=800002e2 w0000 r1111 mode=3 cyc=50)
+UVM_INFO @ 99500: reporter [GEN_EOT] end-of-test store 0x00000001 at 0x800002d0 (store 1)
+  1405.00ns INFO     cocotb.gen_tb_top                  GEN_UT_INTG_SPAN records 30 suppressed 0 (orders [])
+  1405.01ns INFO     cocotb.regression                  gen_ut_intg_span failed
+                                                        Traceback (most recent call last):
+                                                          File "/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/head_export23/dv/auto_dv/gen_tb/gen_tests/gen_ut_intg_span.py", line 67, in gen_ut_intg_span
+                                                            assert sup, "GEN_UT_INTG_SPAN: no record with rf_wr_suppress (the spanning load's corrupted halves should suppress its write)"
+                                                                   ^^^
+                                                        AssertionError: GEN_UT_INTG_SPAN: no record with rf_wr_suppress (the spanning load's corrupted halves should suppress its write)
+  1405.01ns INFO     cocotb.regression                  ***********************************************************************************************************************
+                                                        ** TEST                                                           STATUS  SIM TIME (ns)  REAL TIME (s)  RATIO (ns/s) **
+                                                        ***********************************************************************************************************************
+                                                        ** dv.auto_dv.gen_tb.gen_tests.gen_ut_intg_span.gen_ut_intg_span   FAIL        1405.01           0.03      41980.09  **
+                                                        ***********************************************************************************************************************
+                                                        ** TESTS=1 PASS=0 FAIL=1 SKIP=0                                                1405.01           0.06      25157.16  **
+                                                        ***********************************************************************************************************************
+                                                        
+$finish at simulation time               140501
+"dv/auto_dv/tb/gen_protocol_props.sv", 198: gen_tb_top.u_dut.gen_protocol_props_i.sva_ibus_depth_max_seen, 141 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 199: gen_tb_top.u_dut.gen_protocol_props_i.sva_ibus_gnt_same_cycle, 141 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 201: gen_tb_top.u_dut.gen_protocol_props_i.sva_ibus_err_beat, 141 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 224: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_split_second_addr, 141 attempts, 3 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 225: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_split_second_be, 141 attempts, 3 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 234: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_split_seen, 141 attempts, 3 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 235: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_depth_two_seen, 141 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 237: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_store_err_resp, 141 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 256: gen_tb_top.u_dut.gen_protocol_props_i.sva_icram_alloc_write, 141 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 257: gen_tb_top.u_dut.gen_protocol_props_i.sva_icram_inval_write, 141 attempts, 134 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 266: gen_tb_top.u_dut.gen_protocol_props_i.sva_scrkey_req_seen, 141 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 267: gen_tb_top.u_dut.gen_protocol_props_i.sva_scrkey_req_while_valid, 141 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 273: gen_tb_top.u_dut.gen_protocol_props_i.sva_irq_pending_seen, 141 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 274: gen_tb_top.u_dut.gen_protocol_props_i.sva_irq_nmi_seen, 141 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 289: gen_tb_top.u_dut.gen_protocol_props_i.sva_alert_bus_seen, 141 attempts, 1 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 290: gen_tb_top.u_dut.gen_protocol_props_i.sva_alert_minor_seen, 141 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 312: gen_tb_top.u_dut.gen_protocol_props_i.sva_rvfi_trap_seen, 141 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 313: gen_tb_top.u_dut.gen_protocol_props_i.sva_rvfi_irq_valid_seen, 141 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 200: gen_tb_top.u_dut.gen_protocol_props_i.sva_ibus_gnt_delayed, 141 attempts, 41 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 236: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_gnt_delayed, 141 attempts, 4 match
+"dv/auto_dv/tb/gen_bus_if.sv", 55: gen_tb_top.u_dbus_if.cov_rvalid_legal, 141 attempts, 4 match
+"dv/auto_dv/tb/gen_bus_if.sv", 55: gen_tb_top.u_ibus_if.cov_rvalid_legal, 141 attempts, 40 match
+           V C S   S i m u l a t i o n   R e p o r t 
+Time: 1405010 ps
+CPU Time:      0.290 seconds;       Data structure size:   8.9Mb
+Tue Sep  8 00:01:00 2026

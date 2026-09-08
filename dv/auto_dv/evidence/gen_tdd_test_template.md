@@ -749,8 +749,45 @@ section-number check that does not exist in the tree (rev84 L-1, the Orchestrato
 exists is dv/auto_dv/tools/gen_section_check.py, committed with this correction: `python3 dv/auto_dv/tools/gen_section_check.py
 dv/auto_dv/evidence/gen_tdd_test_template.md --from 17` and `... gen_critic_response_test_template.md --indent-only`
 fail on a gap, a repeat or an indented header or table row; its self-test's red case is the 2c63b83 shape, and run on the
-2c63b83 blobs it reports this record's :651 and the response file's :200-207. A whole-file run of it on this record
+2c63b83 blobs it reports this record's :651 and seven lines of the response file inside :200-207, which are :200 and
+:202-207 with the separator row at :203 joining once a table row is an indented line with two pipes (rev87-I-1: the
+range is not the count; re-derived by running the committed tool on `git show 2c63b83:<path>`). A whole-file run of it on this record
 reports the pre-existing order of Sections 4, 6, 7, 5, 8 (:148-271): Section 5 stands after Section 7, a placement left
 as it is because review rows cite those numbers. Both blocks are de-indented in this touch with their content unchanged,
 proven byte for byte minus the four leading spaces; the response file's trailing whitespace-only line was dropped and a
 final newline added, the one difference (rev84 I-2).
+
+## 23. The third wait of the end-of-test fixture: a wait ASKED FOR after the end of test (rev64 L-1's deferral)
+
+Owed since rev64 and landed with this touch. Sections 18 and 20 cover two waits registered BEFORE the program's final
+store and answered by the end-of-test edge. Neither reaches the template's other path: `wait_cycles` returns immediately
+when the end of test has ALREADY been seen (gen_test_template.py, wait_cycles: `if count <= self.cycle() or
+self.eot_seen`), which is the case a schedule trigger makes when its phase falls entirely past the program. The clock
+keeps running after the final store, so such a target would be reached later; the rule is that the template answers it
+from its own end-of-test state instead, and until now nothing tested that.
+
+The fixture gains a third wait after the settle window, with two checks: fire_post_not_reached (the answer is False) and
+fire_post_answered_at_once (it answers within EOT_ANSWER_SLACK cycles of the previous wait rather than sleeping its
+budget).
+
+Both runs are on the build of HEAD d660ec8, sources sha256 prefix 62bec5dd95834e7f, which carries TB Infra's landing 66a.
+
+GREEN, the template as handed. Retained gen_wait3_green_stdout.log: GEN_TEST_PASS, UVM_ERROR 0, with
+"fire_post_not_reached ok=True a target asked for after the end of test reads False" and "fire_post_answered_at_once
+ok=True answered 0 cycles after the previous wait". The run header names template_sha 91410152dc26104d, the sha256
+prefix of dv/auto_dv/tests/gen_test_template.py as this hand carries it.
+
+RED, the same fixture against a template whose early-return term is removed. The mutation drops `or self.eot_seen` from
+that one condition and lives only in a scratch python root (a directory of symlinks to the build's export with that one
+file replaced), so the tree is never mutated; the run header names template_sha 98b843ee4095d6f1, the mutated file's own
+sha256 prefix, and both shas are quoted from sha256 of the two files rather than carried over: the mutated sha changes
+whenever the handed template does, which it did in this hand. Retained gen_wait3_red_stdout.log:
+
+    fire_post_not_reached ok=False a target asked for after the end of test reads True
+    fire_post_answered_at_once ok=False answered 5000 cycles after the previous wait, not at once
+
+so without the term the wait sleeps its whole budget past the end of test, which is the defect the rule prevents, and
+the new checks see it. The same mutation also fails the two settle checks of Section 18, which is expected: the term
+serves every wait asked for after the end of test.
+
+Recorded 2026-09-08T03:57:13Z; handed on base de4f7d96bdef1d70c1a56ea48127743e1d41eb9f.

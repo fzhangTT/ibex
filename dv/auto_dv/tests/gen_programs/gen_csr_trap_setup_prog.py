@@ -80,7 +80,7 @@ FIELD_BITS = {"menvcfg": (0, 4, 5, 6, 7), "menvcfgh": (30, 31)}
 
 BOOT_PAGE = MEMORY_MAP["boot_page"]
 PROG_END = MEMORY_MAP["boot_page"] + MEMORY_MAP["prog_size"]
-PMP_TOR_RWX = 0x0F                 # pmpcfg byte: A = TOR, X W R set, L clear (C-2 U-mode prologue)
+PMP_TOR_RWX = 0x0F                 # pmpcfg byte: A = TOR, X W R set, L clear (the U-mode prologue)
 HIGH_COPIES = (0, 1, 2, 3)         # handler copies in .text (bit 31 set)
 LOW_COPY = 4                       # handler copy in .debug_rom (bit 31 clear)
 NUM_HANDLER_COPIES = len(HIGH_COPIES) + 1

@@ -1,4 +1,4 @@
-"""Red fixture for the forked-coroutine failure path (Critic L-1): stimulus() raises an AssertionError
+"""Red fixture for the forked-coroutine failure path: stimulus() raises an AssertionError
 inside the background task; cocotb must abort the test and the flow must report FAIL.
 MODULE=gen_ut_stim_raises, TOPLEVEL=gen_tb_top."""
 import cocotb

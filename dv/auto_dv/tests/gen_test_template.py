@@ -451,7 +451,7 @@ class GenTest:
 
     async def witness_epilogue(self):
         """COV_WITNESS <item index> <group index> for exactly the passed fire_tp_* checks whose cycle-level clause was
-        TRUE (plan v2h witness protocol, Critic C-1), issued through GenBridge.cov_witness with the test's own plan
+        TRUE (the plan's witness protocol), issued through GenBridge.cov_witness with the test's own plan
         group as arg1 (the dispatcher refuses an item of another group: GEN_WITNESS_FOREIGN). The allowed ids come
         from the committed testlist entry of the CLASS's name (read here, never from an instance attribute), the
         records from the template-private list check() fills, the codes and owner groups from the rendered tables;

@@ -38,9 +38,9 @@ linked image for every site and target label.
 Clauses dropped, with the owner: the bus clauses of TP-ISA-015 (ibus request for an uncached target), TP-ISA-019
 (instr_addr_o word-aligned) and TP-ISA-053 (ibus address bit 0) need the bus record export (TB Infra ASK 4); the
 dret kind of TP-ISA-053 needs a debug entry (DBG_REQ codes not rendered); the M/U randomization of 015/018/023 is
-out of scope (batch-2 programs stay in M-mode, C-2); TP-ISA-019's run-wide "no mcause 0" is TP-ISA-053's counter.
+out of scope (batch-2 programs stay in M-mode, the U-mode leg needing the plan's PMP prologue); TP-ISA-019's run-wide "no mcause 0" is TP-ISA-053's counter.
 Always-on checkers relied on (their uvm_error fails the flow): the ISA comparator rows isa_pc, isa_pc_next,
-isa_insn, isa_rd, isa_trap, isa_prv (mret and the returning handler allowed since T-102), rvfi_proto, and the bus
+isa_insn, isa_rd, isa_trap, isa_prv (mret and the returning handler allowed since the comparator's mret rows landed), rvfi_proto, and the bus
 protocol checkers. Knobs (items' lines: imem gnt/rvalid, dmem_rvalid): schedulable = lib.TIMING_ONLY_KNOBS, nothing
 pinned; declare_bins() is
 not overridden: the template declares the plan bins of the eight built items (manifest rendered from this module).

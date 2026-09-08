@@ -1,0 +1,112 @@
+# run wait3_red: 2026-09-08T04:00:05Z host=soc-l-11 seed=1 module=gen_ut_wait_past_eot build=/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/head_export23/dv/auto_dv/work/test-writer/out_tw23 sources_sha=62bec5dd95834e7f template_sha=98b843ee4095d6f1 test_sha=d72c1c26adffff35 pyroot=/tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/pyroot_wait3b vmem=/tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/rptch/prog.vmem plusargs=[]
+Info: [VCS_SAVE_RESTORE_INFO] ASLR (Address Space Layout Randomization) is detected on the machine. To enable $save functionality, ASLR will be switched off and simv re-executed.
+Please use '-no_save' simv switch to avoid re-execution or '-suppress=ASLR_DETECTED_INFO' to suppress this message.
+Chronologic VCS simulator copyright 1991-2025
+Contains Synopsys proprietary information.
+Compiler version X-2025.06-SP2_Full64; Runtime version X-2025.06-SP2_Full64;  Sep  8 00:00 2026
+     -.--ns INFO     gpi                                ..mbed/gpi_embed.cpp:108  in set_program_name_in_venv        Using Python virtual environment interpreter at /localdev/fzhang/ws/ibex-challenge/.venv/bin/python
+     -.--ns INFO     gpi                                ../gpi/GpiCommon.cpp:101  in gpi_print_registered_impl       VPI registered
+     0.00ns INFO     cocotb                             Running on Chronologic Simulation VCS Release version X-2025.06-SP2_Full64
+     0.00ns INFO     cocotb                             Running tests with cocotb v1.9.2 from /localdev/fzhang/ws/ibex-challenge/.venv/lib/python3.12/site-packages/cocotb
+     0.00ns INFO     cocotb                             Seeding Python random module with supplied seed 1
+     0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages
+     0.00ns INFO     cocotb.regression                  Found test gen_ut_wait_past_eot.gen_ut_wait_past_eot
+     0.00ns INFO     cocotb.regression                  running gen_ut_wait_past_eot (1/1)
+     0.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_SEED test=gen_ut_wait_past_eot seed=1 image=/tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/rptch/prog.vmem
+GEN_CONFIG_BANNER build_config=opentitan
+GEN_CONFIG_BANNER BaseIsa=BaseIsaRV32IorCHERIoT RV32M=RV32MSingleCycle RV32B=RV32BOTEarlGrey RV32ZC=RV32ZcaZcbZcmp RegFile=RegFileFF
+GEN_CONFIG_BANNER RV32E=0 BranchTargetALU=1 WritebackStage=1 ICache=1 ICacheECC=1 ICacheScramble=1
+GEN_CONFIG_BANNER BranchPredictor=0 DbgTriggerEn=1 DbgHwBreakNum=1 SecureIbex=1
+GEN_CONFIG_BANNER PMPEnable=1 PMPGranularity=0 PMPNumRegions=16 MHPMCounterNum=10 MHPMCounterWidth=32
+GEN_CONFIG_BANNER RegFileECC=0 ResetAll=1 DummyInstructions=1 MemECC=1 ICacheTweakInfection=1
+GEN_CONFIG_BANNER MemDataWidth=39 RegFileDataWidth=32 RegFileCapEccWidth=35 BusSizeECC=39 TagSizeECC=28 LineSizeECC=78
+GEN_CONFIG_BANNER DmBaseAddr=0x1a110000 DmAddrMask=0x00000fff DmHaltAddr=0x1a110800 DmExceptionAddr=0x1a110808
+GEN_CONFIG_BANNER CsrMvendorId=0x00000000 CsrMimpId=0x00000000 cheriot_enable=Off rf_test_en=0
+GEN_CONFIG_BANNER RndCnstLfsrSeed=0xac533bf4 RndCnstLfsrPerm=0x1e35ecba467fd1b12e958152c04fa43878a8daed
+GEN_CONFIG_BANNER PMPRstCfg/PMPRstAddr/PMPRstMsecCfg=ibex_pkg::PmpCfgRst/PmpAddrRst/PmpMseccfgRst (ibex_core defaults, all regions OFF)
+GEN_CONFIG_BANNER RVFI=1
+GEN_CONFIG_BANNER GEN_DUT_SPLIT_INTG=0
+UVM_INFO @ 0: reporter [RNTST] Running test gen_base_test...
+GEN_CONFIG_BANNER tb=gen_tb_top uvm_test=gen_base_test seed=1 build_config=opentitan pinned_knobs=0 regime_sched=derived
+GEN_CONFIG_BANNER define SIMULATION=0 (F-DIT-025)
+GEN_CONFIG_BANNER define COCOTB_SIM=1 (cocotb-master run)
+GEN_CONFIG_BANNER boot_addr=0x80000000 hart_id=0x00000000 alive_timeout=100000 finish_timeout=20000 mem_image=/tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/rptch/prog.vmem tohost=0x800000c0
+GEN_CONFIG_BANNER knobs imem gnt=short rvalid=short err=none intg=none cap=cap8 dmem gnt=short rvalid=short err=none intg=none key=immediate icram_init=random
+GEN_CONFIG_BANNER knobs irq regime=quiet line_mix=single hold=until_taken debug_req=none fetch_enable=always_on icache_ecc=none data_ecc=none ecc_bits=one
+UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(191) @ 0: uvm_test_top.env [MEM_LOAD] image /tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/rptch/prog.vmem: 25 words, crc32 0xf3fcbccf verified
+UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(224) @ 0: uvm_test_top.env [GEN_ENV] ibus: ibus gnt=1..3(short) rvalid=2..4(short) cap=8(cap8) err=0/1000(none) intg=0/1000(none)x1
+UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(225) @ 0: uvm_test_top.env [GEN_ENV] dbus: dbus gnt=1..3(short) rvalid=2..4(short) cap=2(cap2) err=0/1000(none) intg=0/1000(none)x1
+UVM_INFO dv/auto_dv/env/gen_agents_pkg.sv(387) @ 0: uvm_test_top.env.dbus_agent [gen_bus_agent] uvm_test_top.env.dbus_agent: sva_rvalid_legal armed
+UVM_INFO dv/auto_dv/env/gen_agents_pkg.sv(387) @ 0: uvm_test_top.env.ibus_agent [gen_bus_agent] uvm_test_top.env.ibus_agent: sva_rvalid_legal armed
+UVM_INFO dv/auto_dv/env/gen_rvfi_pkg.sv(253) @ 0: uvm_test_top.env.sb [GEN_SB] ISA model ready: pc=80000080 mtvec=80000001
+     5.00ns INFO     cocotb.gen_tb_top                  GEN_BRIDGE started: listener armed, stim_active=1
+   255.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_READBACK ok words=64
+   255.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_KNOBS pinned=- drawn=-
+   255.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_SCHED source=derived k=0 sched=-
+UVM_INFO dv/auto_dv/env/gen_agents_pkg.sv(797) @ 26000: uvm_test_top.env.ctrl [GEN_CTRL] fetch_enable_i <= On (FETCH_EN arg 1)
+   265.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_RELEASE cycle=21
+   625.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=0 value=0x00006bba cycle=57
+UVM_INFO @ 62500: reporter [GEN_EOT] end-of-test store 0x00006bba at 0x8ffff104 (store 1)
+   695.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=1 value=0x000600d0 cycle=64
+   785.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_REPORT idx=2 value=0xc0de0003 cycle=73
+   895.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_EOT code=0x00000001 stores=4 reports=3 retired=17 cycle=84
+/localdev/fzhang/ws/ibex-challenge/.venv/lib/python3.12/site-packages/cocotb/triggers.py:886: FutureWarning: `await`ing a Join trigger will return the Join trigger and not the result of the joined Task in 2.0.
+  ret = outcomes.Value(await trigger)
+100895.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_LAYERS not_applied reason=no consumable knob varied (declared=-, consumed=imem_gnt_delay,imem_rvalid_delay,imem_err_rate,imem_intg_err_rate,imem_outstanding_cap,dmem_gnt_delay,dmem_rvalid_delay,dmem_err_rate,dmem_intg_err_rate,irq_regime,irq_line_mix,irq_hold,debug_req_regime,scr_key_delay)
+100895.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_FIRE fire_report_count ok=True reports 3 (expected 3)
+100895.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_FIRE fire_report_0 ok=True report 0 0x00006bba (expected 0x00006bba)
+100895.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_FIRE fire_report_1 ok=True report 1 0x000600d0 (expected 0x000600d0)
+100895.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_FIRE fire_report_2 ok=True report 2 0xc0de0003 (expected 0xc0de0003)
+100895.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_FIRE fire_eot_pass_code ok=True tohost code 0x00000001
+100895.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_FIRE fire_retired_floor ok=True retired 1440 (floor 12)
+100895.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_FIRE fire_far_not_reached ok=True a target past the program's end reads False
+100895.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_FIRE fire_far_answered_at_eot ok=True answered at cycle 84, end of test at 84
+100895.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_FIRE fire_settle_not_reached ok=False a settle window past the program's end reads True
+100895.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_FIRE fire_settle_answered_at_eot ok=False answered at cycle 5084, end of test at 84
+100895.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_FIRE fire_post_not_reached ok=False a target asked for after the end of test reads True
+100895.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_FIRE fire_post_answered_at_once ok=False answered 5000 cycles after the previous wait, not at once
+100895.00ns INFO     cocotb.gen_tb_top                  GEN_TEST_BINS n=0 -
+100895.01ns INFO     cocotb.regression                  gen_ut_wait_past_eot failed
+                                                        Traceback (most recent call last):
+                                                          File "/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/tests/gen_fixtures/gen_ut_wait_past_eot.py", line 48, in gen_ut_wait_past_eot
+                                                            await WaitPastEot(dut).run()
+                                                          File "/tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/pyroot_wait3b/dv/auto_dv/tests/gen_test_template.py", line 505, in run
+                                                            await self.finish()
+                                                          File "/tmp/claude-1211405897/-localdev-fzhang-ws-ibex-challenge/b61c04c6-06f1-4059-978d-29bc6123dadd/scratchpad/pyroot_wait3b/dv/auto_dv/tests/gen_test_template.py", line 446, in finish
+                                                            raise AssertionError(lib.fire_fail_line(self.name, self.failures, self.xfail_bug))
+                                                        AssertionError: GEN_TEST_FAIL gen_ut_wait_past_eot: 4 fire-check failure(s): fire_settle_not_reached: a settle window past the program's end reads True | fire_settle_answered_at_eot: answered at cycle 5084, end of test at 84 | fire_post_not_reached: a target asked for after the end of test reads True | fire_post_answered_at_once: answered 5000 cycles after the previous wait, not at once
+100895.01ns INFO     cocotb.regression                  ***************************************************************************************************
+                                                        ** TEST                                       STATUS  SIM TIME (ns)  REAL TIME (s)  RATIO (ns/s) **
+                                                        ***************************************************************************************************
+                                                        ** gen_ut_wait_past_eot.gen_ut_wait_past_eot   FAIL      100895.01           0.22     452301.72  **
+                                                        ***************************************************************************************************
+                                                        ** TESTS=1 PASS=0 FAIL=1 SKIP=0                          100895.01           0.26     391576.67  **
+                                                        ***************************************************************************************************
+                                                        
+$finish at simulation time             10089501
+"dv/auto_dv/tb/gen_protocol_props.sv", 198: gen_tb_top.u_dut.gen_protocol_props_i.sva_ibus_depth_max_seen, 10090 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 199: gen_tb_top.u_dut.gen_protocol_props_i.sva_ibus_gnt_same_cycle, 10090 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 201: gen_tb_top.u_dut.gen_protocol_props_i.sva_ibus_err_beat, 10090 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 224: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_split_second_addr, 10090 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 225: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_split_second_be, 10090 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 234: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_split_seen, 10090 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 235: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_depth_two_seen, 10090 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 237: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_store_err_resp, 10090 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 256: gen_tb_top.u_dut.gen_protocol_props_i.sva_icram_alloc_write, 10090 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 257: gen_tb_top.u_dut.gen_protocol_props_i.sva_icram_inval_write, 10090 attempts, 256 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 266: gen_tb_top.u_dut.gen_protocol_props_i.sva_scrkey_req_seen, 10090 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 267: gen_tb_top.u_dut.gen_protocol_props_i.sva_scrkey_req_while_valid, 10090 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 273: gen_tb_top.u_dut.gen_protocol_props_i.sva_irq_pending_seen, 10090 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 274: gen_tb_top.u_dut.gen_protocol_props_i.sva_irq_nmi_seen, 10090 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 289: gen_tb_top.u_dut.gen_protocol_props_i.sva_alert_bus_seen, 10090 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 290: gen_tb_top.u_dut.gen_protocol_props_i.sva_alert_minor_seen, 10090 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 312: gen_tb_top.u_dut.gen_protocol_props_i.sva_rvfi_trap_seen, 10090 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 313: gen_tb_top.u_dut.gen_protocol_props_i.sva_rvfi_irq_valid_seen, 10090 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 200: gen_tb_top.u_dut.gen_protocol_props_i.sva_ibus_gnt_delayed, 10090 attempts, 3358 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 236: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_gnt_delayed, 10090 attempts, 4 match
+"dv/auto_dv/tb/gen_bus_if.sv", 55: gen_tb_top.u_dbus_if.cov_rvalid_legal, 10090 attempts, 4 match
+"dv/auto_dv/tb/gen_bus_if.sv", 55: gen_tb_top.u_ibus_if.cov_rvalid_legal, 10090 attempts, 3356 match
+           V C S   S i m u l a t i o n   R e p o r t 
+Time: 100895010 ps
+CPU Time:      0.510 seconds;       Data structure size:   8.9Mb
+Tue Sep  8 00:00:27 2026

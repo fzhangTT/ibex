@@ -45,7 +45,7 @@ by every report word matching; "within the first N retirements" is idx < N. The 
 TP-CSR-109; TP-CSR-109) and the fire-check of an item not led reports its positions without gating them.
 
 Comparator: every read lands in rd != x0, so the ISA comparator sees every value; its rows for mstatus,
-marchid, tdata1, cpuctrlsts bit 8 and mcycle/mhpm* are T-102 shim gaps that FAIL the flow verdict through
+marchid, tdata1, cpuctrlsts bit 8 and mcycle/mhpm* are shim gaps that FAIL the flow verdict through
 uvm_error until TB Infra lands them; the program dodges no read and this test's own words are checked here.
 
 Program: dv/auto_dv/tests/gen_programs/gen_csr_reset_prog.py at the run seed (testlist `program:

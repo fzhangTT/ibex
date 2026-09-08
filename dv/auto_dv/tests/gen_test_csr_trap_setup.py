@@ -34,8 +34,8 @@ handler and the build has no irq agent (they belong to the blocked clauses).
 declare_bins() takes the template default (the plan's bins of the items the fire_tp methods name, checked
 against the rendered manifest in finish()).
 Checkers relied on besides the fire-checks: the always-on ISA comparator rows (isa_pc, isa_insn, isa_trap,
-isa_rd, isa_mem, isa_prv, isa_pc_next, isa_csr), rvfi_proto and the bus protocol checkers. T-102 (comparator
-mret target and privilege rows, the shim's mstatus XS mask) is TB Infra's: the flow verdict FAILs through
+isa_rd, isa_mem, isa_prv, isa_pc_next, isa_csr), rvfi_proto and the bus protocol checkers. The comparator's
+mret target and privilege rows and the shim's mstatus XS mask are TB Infra's: the flow verdict FAILs through
 uvm_error on this program until it lands, and no program clause is bent around it.
 MODULE=dv.auto_dv.tests.gen_test_csr_trap_setup, TOPLEVEL=gen_tb_top.
 

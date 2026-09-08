@@ -29,7 +29,7 @@ and fire_program_layout checks them against that table. Every LRWX pattern the d
 LRWX=1111 under MML=1 with RLB=0 included (smepmp.adoc: a locked shared read-only data region, no execute
 privilege, so stored); a shim that legalises it differently shows up as an isa_csr comparator row, never
 as a program change.
-U-mode regions (plan C-2): only the U-executable code region is programmed. No U-RW data/stack region: the
+U-mode regions (the plan's U-mode prologue): only the U-executable code region is programmed. No U-RW data/stack region: the
 U stubs use no stack and touch no data except the probe words whose per-mode verdict TP-PMP-006 checks (an
 R/W region over the pool would decide every load/store probe); the handler's report store runs in M-mode.
 
@@ -40,7 +40,7 @@ read-back; item 008 lets one attempted write land after the return to M (no-writ
 Each red fails exactly its item's fire_tp_pmp_<nnn>.
 
 Flow verdict at HEAD: the program enters U-mode by mret and traps back to M, so the ISA comparator rows
-isa_pc_next (mret records) and isa_prv (records executed in U) raise uvm_error until TB Infra's T-102 lands;
+isa_pc_next (mret records) and isa_prv (records executed in U) raise uvm_error until TB Infra's comparator rows land;
 the flow verdict is FAIL while the cocotb marker is GEN_TEST_PASS, and the program is not shaped to avoid it.
 
 Knobs: the items name program-side region markers (knob:instr_mix csr_heavy, knob:pmp_regime off / mml_on,

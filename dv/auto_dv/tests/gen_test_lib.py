@@ -1318,7 +1318,7 @@ def _self_test():
     # every red entry of a test module here: red_expect must match the harness line synthesized (fire_fail_line) from a check name
     # the module records, as the flow's regex meets it (a boundary after a suffixed id fails here too); and the retained pinned-red
     # log must pass the flow's own rule (gen_flow_util.red_signature_check): present, harness line matched; stale evidence is
-    # reported until T-153 makes RED-OK mandatory
+    # reported until RED-OK becomes mandatory
     import yaml as _yaml
     sys.path.insert(0, str(REPO_ROOT / "dv/auto_dv/flow"))
     import gen_flow_util as _fu

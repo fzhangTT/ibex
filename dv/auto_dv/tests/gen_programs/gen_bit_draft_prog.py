@@ -2,7 +2,7 @@
 """gen_bit_draft_prog: per-seed program generator for gen_test_bit_draft (group gen_bit_draft).
 
 Built item: TP-BIT-016 (generic grevi / gorci / grev / gorc over the 32 control values, brev8 = grevi 7, with the
-ratified aliases rev8 = grevi 24 and orc.b = gorci 7). Blocked items, owner TB Infra (T-102 item 4: gen_isa_exec_reference
+ratified aliases rev8 = grevi 24 and orc.b = gorci 7). Blocked items, owner TB Infra (gen_isa_exec_reference
 in dv/auto_dv/isa/gen_isa_shim.cc lacks pack/packh/packu, slo/sro(i), shfl/unshfl(i), xperm.n/.b/.h, cmov/cmix, fsl/fsr/fsri,
 bfp, crc32*/crc32c*): TP-BIT-011 and TP-BIT-022..TP-BIT-033. No alternative exists until that shim extension lands (any
 other draft op raises uvm_error isa_rd), so this program never emits those ops.

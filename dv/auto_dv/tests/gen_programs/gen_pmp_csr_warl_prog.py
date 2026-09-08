@@ -25,7 +25,7 @@ Program phases (M-mode unless stated; PMP reset state: every entry OFF, mseccfg 
      differently shows up as a comparator row, never as a program change.
 Safety rule: an entry that can deny M-mode (L=1 under MML=0, any entry under MML=1) only ever holds a
 pmpaddr <= SAFE_MAX_WORD, so its region lies below the program window; MMWP is never set.
-U-mode regions (plan C-2): only the U-executable code region is programmed. No U-RW data/stack region:
+U-mode regions (the plan's U-mode prologue): only the U-executable code region is programmed. No U-RW data/stack region:
 the U stubs use no stack and touch no data except the probe words whose per-mode verdict is the
 subject of TP-PMP-006 (an R/W region over the pool would decide every load/store probe), and the
 handler's report store runs in M-mode.

@@ -1,4 +1,4 @@
-"""Red fixture for wait_eot's skip detection (Critic v2 N-2): the observer is faulted (eot_count() reports one store too
+"""Red fixture for wait_eot's skip detection: the observer is faulted (eot_count() reports one store too
 many once, after the first report edge), standing in for a missed edge, so the template must FAIL with
 "report channel skipped a store". Program: gen_report_channel.S (three report words, then tohost 1); the fault is in
 the fixture, never in the template or the program. MODULE=gen_ut_report_skip, TOPLEVEL=gen_tb_top."""

@@ -5,7 +5,7 @@ The program observes the boot state of the core through architectural reads and 
 observation to the EOT MMIO register (GEN_MM_EOT_ADDR, one report word per store, plan order), then
 ends with tohost TOHOST_PASS. It never self-checks: the test (dv/auto_dv/tests/gen_test_rst_boot.py)
 compares self.reports[i] with plan(seed).reports[i]. Every CSR read lands in a register other than x0,
-so the ISA comparator sees every value (the shim gaps on cpuctrlsts bit 8 and tdata1 are T-102 rows).
+so the ISA comparator sees every value (the shim gaps on cpuctrlsts bit 8 and tdata1 are rows of dv/auto_dv/docs/gen_component_api_isa_shim.md).
 
 Scenario (RV32IMC, every instruction 4 bytes through .option norvc so a trap handler can skip the
 trapping instruction with mepc + 4):

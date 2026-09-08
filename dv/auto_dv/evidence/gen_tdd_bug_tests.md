@@ -174,9 +174,14 @@ which TB Infra measured on 8 of 8 seeds at this count. At seed 1 the first colle
     [isa_rd] rd model=x11/22221111 dut=x11/22220111 (order=8 pc=80000118 insn=00252583 mem=800002e2 cyc=50)
 
 the merged word the core wrote, differing from the model's in one bit of the upper half-word; that row appears on 2 of 8
-seeds because the injected flip reaches the merged half-word only sometimes (gen_tdd_b16_knob.md Section 6). The run also
-carries 21 [crash_dump] rows from the TB gap TB Infra reported in that record's Section 7; they are not part of the B16
-red.
+seeds because the injected flip reaches the merged half-word only sometimes (gen_tdd_b16_knob.md Section 6).
+
+CORRECTED after TB Infra's landing 66a. This section first said the run carries 21 [crash_dump] rows from the TB gap of
+gen_tdd_b16_knob.md Section 7. That gap is fixed: landing 66a peeks instead of taking in the scoreboard's internal-NMI
+correction, and the same run on the build of that landing (sources sha256 prefix 62bec5dd95834e7f, retained as
+gen_bug_b16_after_t11_*) carries exactly ONE UVM_ERROR, the [isa_rd] row above, with no crash_dump row at all. The
+module's assertion still fires, so the red is unchanged in mechanism and cleaner in the log. A reader triaging this XFAIL
+should expect one row, not twenty-two.
 
 Green control. The same program at the default arming count 2, which is the committed gen_ut_intg_span entry's own
 configuration: both words are corrupted, the core suppresses the write, and the module finds its suppressed record.
@@ -443,3 +448,5 @@ Reproduction:
 - 2026-09-08T03:40:42Z: Section 8's build-sensitivity claim retracted and replaced by the four-run measurement of the
   committed program; Section 2 gained the verified flow reproduction; Section 9 (B7's wait-counter half) written from the
   runs of the same date on build C; handed on base f77ac6ee7c9cfd638086401b8c1e424b7669b15e.
+- 2026-09-08T04:03:05Z: Section 4 corrected after TB Infra landing 66a removed the crash_dump rows this record predicted;
+  measured on the build of that landing and retained as gen_bug_b16_after_t11_*; handed on base de4f7d96bdef1d70c1a56ea48127743e1d41eb9f.

@@ -32,7 +32,7 @@ Clauses not checked here, with the missing channel named: the RVFI-record form o
 rvfi_rs1_rdata / rvfi_rs2_rdata / rvfi_rd_wdata fields, TP-ISA-011's rvfi_rd_wdata == rvfi_rs1_rdata per record) needs
 the RVFI record export (plan Section 6 item 5, TB Infra ASK 5); the value clause is checked on the architectural rd
 through the report channel and the record itself rests on the always-on ISA comparator (isa_insn, isa_rd, isa_pc,
-isa_trap rows) and rvfi_proto, whose uvm_error the flow collects. The U-mode iterations of TP-ISA-010/013 ("U per C-2")
+isa_trap rows) and rvfi_proto, whose uvm_error the flow collects. The U-mode iterations of TP-ISA-010/013 (their U-mode legs need the plan's PMP prologue)
 are not taken: batch-2 programs stay in M-mode by design (M-mode group rule of the batch-2 brief).
 Knobs (the items' Knobs lines): knob:imem_rvalid_delay (all four items), knob:imem_gnt_delay (TP-ISA-011/014);
 schedulable = lib.TIMING_ONLY_KNOBS (the program needs no handler); nothing is pinned.

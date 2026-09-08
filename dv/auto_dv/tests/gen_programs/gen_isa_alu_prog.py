@@ -65,7 +65,7 @@ RED_ITEMS = (I001, I002, I003, I004, I005, I006, I007, I008, I009, I052)
 # Stimulus floors of the items (plan Stimulus lines): counts per seed.
 N_IMM_MIN, N_REG_MIN, N_U_MIN = 2000, 3000, 500
 HINT_BLOCK = 64
-HINT_BLOCK_DELTA = HINT_BLOCK + 1   # the first csrr retires inside the window (plan TP-ISA-004, rtl-arch T-053)
+HINT_BLOCK_DELTA = HINT_BLOCK + 1   # the first csrr retires inside the window (plan TP-ISA-004)
 
 IMM_OPS = ("addi", "slti", "sltiu", "xori", "ori", "andi")
 REG_OPS = ("add", "sub", "slt", "sltu", "xor", "or", "and")

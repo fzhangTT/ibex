@@ -25,7 +25,7 @@ csrr misa at random points and right after a csrw attempt: bit 23 = 1, bit 1 = 0
 MISA_VALUE.
 
 Items NOT BUILT (blocked, owner TB Infra unless noted): TP-BIT-001 (F-BIT-001): "every cp_legal_insn bin observed on
-RVFI with rvfi_trap = 0" is a per-retirement RVFI record fact (record export, not in batch 2) and its U-mode leg (C-2)
+RVFI with rvfi_trap = 0" is a per-retirement RVFI record fact (record export, not in batch 2) and its U-mode leg (the plan's U-mode PMP prologue)
 leaves M-mode; the ratified rows' decode is exercised by TP-BIT-002..021 here, the draft rows by gen_test_bit_draft.
 Dropped clause of TP-BIT-038: "two-cycle ops still show delta 2 unstalled" (gen_chk_timing_isa, bus records / RVFI
 cycle facts; icache and regime pins) - the value clause is built, the stall clause waits for the record export.

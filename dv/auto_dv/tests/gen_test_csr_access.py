@@ -9,10 +9,10 @@ Items built and their canonical features (ALIAS/FOLDED resolved through gen_feat
 Item of the group NOT built: TP-CSR-005 (SYSTEM funct3 = 100 traps; F-CSR-005, alias F-ISA-046). Its
 program block and report words (handler mcause 2, mtval = word, mscratch untouched, trap count) exist
 in the generator behind F3_100_WORDS / --traps; it joins the test once its mret-ending traps are
-re-proven against the T-102 comparator (its isa_pc_next convention).
+re-proven against the lock-step comparator (its isa_pc_next convention).
 
-Consistency compares (Critic verdict gen_critic_tb_t102.md
-Section 2): the comparator's mcycle, mhpmcounter3..(2+MHPMCounterNum) and cpuctrlsts bit 8 are
+Consistency compares (dv/auto_dv/docs/gen_component_api_isa_shim.md,
+Counter CSRs): the comparator's mcycle, mhpmcounter3..(2+MHPMCounterNum) and cpuctrlsts bit 8 are
 synchronised from the DUT record before each step, so the reads of cycle, the HPM counters and
 cpuctrlsts bit 8 are checked for consistency; value verification pending ctr_* / scrkey_proto. The
 program reads them like every other CSR (rd != x0) and reports them; the fire-check compares a pair of
@@ -70,7 +70,7 @@ def plan_for(test):
 
 
 def pending_detail(test, item):
-    """Words checked for consistency only, by the checker that owns their value (T-102 synchronised state)."""
+    """Words checked for consistency only, by the checker that owns their value (state the comparator synchronises from the DUT record)."""
     pend = prog.pending_words(plan_for(test), item)
     return "; consistency only, value verification pending " + " ".join(f"{k}={v}" for k, v in sorted(pend.items())) if pend else ""
 
