@@ -67,6 +67,8 @@
   bit ut_fcov_expect_set = 1'b0;
   string ut_rows_set = "regime_nmi";
   bit ut_rows_set_set = 1'b0;
+  int unsigned ut_intg_span_arm_count = 2;
+  bit ut_intg_span_arm_count_set = 1'b0;
   int unsigned ibus_gnt_min = 0;
   bit ibus_gnt_min_set = 1'b0;
   int unsigned ibus_gnt_max = 0;
@@ -320,6 +322,7 @@
     if ($value$plusargs({PLUSARG_UT_FCOV_QUERY, "=%d"}, u)) begin ut_fcov_query = u; ut_fcov_query_set = 1'b1; end
     if ($value$plusargs({PLUSARG_UT_FCOV_EXPECT, "=%d"}, u)) begin ut_fcov_expect = u; ut_fcov_expect_set = 1'b1; end
     if ($value$plusargs({PLUSARG_UT_ROWS_SET, "=%s"}, s)) begin ut_rows_set = s; ut_rows_set_set = 1'b1; end
+    if ($value$plusargs({PLUSARG_UT_INTG_SPAN_ARM_COUNT, "=%d"}, u)) begin ut_intg_span_arm_count = u; ut_intg_span_arm_count_set = 1'b1; end
     if ($value$plusargs({PLUSARG_IBUS_GNT_MIN, "=%d"}, u)) begin ibus_gnt_min = u; ibus_gnt_min_set = 1'b1; end
     if ($value$plusargs({PLUSARG_IBUS_GNT_MAX, "=%d"}, u)) begin ibus_gnt_max = u; ibus_gnt_max_set = 1'b1; end
     if ($value$plusargs({PLUSARG_IBUS_RVALID_MIN, "=%d"}, u)) begin ibus_rvalid_min = u; ibus_rvalid_min_set = 1'b1; end

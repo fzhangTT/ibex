@@ -1,0 +1,36 @@
+# B16 arm-count knob: waveform confirmation (LOG-103), seed 1, waves build
+# Build: dv/auto_dv/flow/gen_build.py --build gen_tb --waves --local-cocotb, vcs rc=0, 2026-09-08T02:18:28Z
+# (the waves build compiles the SV only; the module the run loads comes from the clone, at the hash the landing hands)
+# Runs: dv/auto_dv/flow/gen_run.py --test gen_ut_intg_span --seed 1 --waves
+#   count 1 (the knob): dv/auto_dv/out_b16waves/runs/l64_c1/waves.fsdb  FAIL (isa_rd)
+#   count 2 (control):  dv/auto_dv/out_b16waves/runs/l64_c2/waves.fsdb  PASS
+# Read with the fsdb-mcp-server against dv/auto_dv/out_b16waves/build/gen_tb/vcs_simv.daidir.
+# Times below are the FSDB's own 10 ps unit; divide by 100 for nanoseconds.
+# Signals: gen_tb_top.u_dut.data_{req_o,gnt_i,addr_o,rvalid_i,rdata_i}; data_rdata_i is 39 bits, {intg[6:0], word[31:0]}.
+# gen_span_buf = 0x800002e0; the load is lw a1, 2(a0), effective address 0x800002e2, spanning the words at
+# 0x800002e0 and 0x800002e4. The clean image words are 0x11111111 and 0x22222222.
+
+## The request phase, identical in both runs
+data_req_o     43500 -> 1     50500 -> 0        (one request phase covering both accesses)
+data_addr_o    42500 = 800002e0   46500 = 800002e4   50500 = 800002e0 (the output falling back after req drops)
+data_gnt_i     46000 -> 1  47000 -> 0   50000 -> 1  51000 -> 0        (two grants: 0x800002e0 then 0x800002e4)
+
+## count 1 (the knob): only the FIRST beat is corrupted
+data_rvalid_i  49000 -> 1  50000 -> 0   54000 -> 1  55000 -> 0
+data_rdata_i   49000 = 0101111111       54000 = 5d22222222
+#   beat 1 word = 0x01111111, the clean 0x11111111 with bit 28 flipped -> corrupted
+#   beat 2 word = 0x22222222, the clean second word, intg 0x5d -> NOT corrupted
+
+## count 2 (the control): BOTH beats are corrupted
+data_rvalid_i  49000 -> 1  50000 -> 0   52000 -> 1  53000 -> 0
+data_rdata_i   49000 = 0101111111       52000 = 5d22222322
+#   beat 1 word = 0x01111111, byte-identical to the count-1 run (same seed, same first injection)
+#   beat 2 word = 0x22222322, the clean 0x22222222 with bit 8 flipped -> corrupted
+#   the beat-2 instant moves (52000 against 54000) because the extra injection consumes $urandom draws that
+#   the response-delay pick reads afterwards; the request phase and both grants are unchanged
+
+## What the pair shows
+The knob removes the SECOND injection and changes nothing else on the bus: beat 1 is identical in both runs,
+and beat 2 differs exactly by the second corruption's flipped data bit. Bit 28 of the first word is bit 12 of
+the merged result {word[0x800002e4][15:0], word[0x800002e0][31:16]}, which is the bit the count-1 run's isa_rd
+line reports (model 0x22221111, dut 0x22220111).

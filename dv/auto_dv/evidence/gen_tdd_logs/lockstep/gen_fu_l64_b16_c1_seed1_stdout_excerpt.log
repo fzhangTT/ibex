@@ -1,0 +1,6 @@
+     0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages
+    85.00ns INFO     cocotb.gen_tb_top                  GEN_UT_INTG_SPAN arming 1 integrity corruption(s) in [800002e0, 800002e7]
+  1405.00ns INFO     cocotb.gen_tb_top                  GEN_UT_INTG_SPAN records 30 suppressed 0 (orders [])
+                                                            assert sup, "GEN_UT_INTG_SPAN: no record with rf_wr_suppress (the spanning load's corrupted halves should suppress its write)"
+                                                        AssertionError: GEN_UT_INTG_SPAN: no record with rf_wr_suppress (the spanning load's corrupted halves should suppress its write)
+                                                        ** TESTS=1 PASS=0 FAIL=1 SKIP=0                                                1405.01           0.05      29089.65  **

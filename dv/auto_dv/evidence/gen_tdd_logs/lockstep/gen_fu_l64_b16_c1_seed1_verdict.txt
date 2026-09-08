@@ -1,0 +1,8 @@
+verdict: FAIL
+reason: uvm_error at sim.log:34 (isa_rd)
+evidence: UVM_ERROR dv/auto_dv/env/gen_rvfi_pkg.sv(260) @ 55500: uvm_test_top.env.sb [isa_rd] rd model=x11/22221111 dut=x11/22220111 (order=8 pc=80000118 insn=00252583 trap=0 intr=0 rd=x11/22220111 mem=800002e2 w0000 r1111 mode=3 cyc=50)
+uvm_counts: {}
+cocotb_summary: {'tests': 1, 'passed': 0, 'failed': 1, 'skipped': 0}
+marker_seen: False
+banner_seen: True
+exit_code: 0

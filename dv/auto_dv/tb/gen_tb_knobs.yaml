@@ -44,6 +44,7 @@ plusargs:
   - {name: ut_fcov_query, kind: int, default: -1, desc: "gen_ut_isa_cov: the sampler counter index to compare (FCOV_QUERY), -1 for none"}
   - {name: ut_fcov_expect, kind: int, default: 0, desc: "gen_ut_isa_cov: the value the program is known to produce for that counter"}
   - {name: ut_rows_set, kind: enum, values: [regime_nmi, regime_dbg], default: regime_nmi, desc: "gen_ut_export_rows: the pin row exercised beside regime phase (irq_nm through NMI_PULSE, or debug_req through DBG_REQ)"}
+  - {name: ut_intg_span_arm_count, kind: int, default: 2, desc: "gen_ut_intg_span: integrity corruptions armed on the spanning load's buffer (MEM_ERR_ARM count, arg3[31:8]); the address range always covers both of the load's words, so 1 corrupts the first bus access only (bug candidate B16) and the default 2 corrupts both"}
   # ---- numeric agent overrides (layer 1 windows; an enum knob below sets them unless overridden) ----
   - {name: ibus_gnt_min, kind: int, default: null, desc: "instruction bus grant latency low bound (cycles)"}
   - {name: ibus_gnt_max, kind: int, default: null, desc: "instruction bus grant latency high bound"}
