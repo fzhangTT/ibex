@@ -1,7 +1,7 @@
 # Test plan - Ibex core, opentitan configuration
 
 Deliverable 2 (DV_prompt.txt Section 11): feature -> test-plan items -> tests -> bins. Owner: dv-lead.
-Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in: checker direction per gen_bug_log.md, rvfi_trap-on-ebreak-into-debug rule, vacuity fixes, impossible bins pruned, layer-1 weight tables, timing qualifiers), generated from dv/auto_dv/work/dv-lead/parts6/tp_*.md (inputs digest 7b102723d9d2 over every part file and over the generator's own source; no clock, so a regeneration from unchanged inputs is byte-identical; what the digest covers and the commands that reproduce it are recorded at dv/auto_dv/evidence/gen_plan_digest_provenance.md). Part-file names in this document (tp_<area>.md, fcov_<area>.md, gen_part_<area>.md, trace_*_<area>.csv and the README_*_BRIEF.md briefs) are this plan set's own gitignored sources, named as provenance: the content they hold is in the corresponding area of gen_test_plan.md, gen_fcov_plan.md or gen_feature_list.md, and the bug and doc-defect number series they define are in gen_bug_log.md. No claim in this document rests on opening one. Three rtl-arch notes this plan set cites are committed references, not work files: dv/auto_dv/evidence/gen_multdiv_bound_props.md (the MD-n bound properties and covers), dv/auto_dv/evidence/gen_bug_reproducer_specs.md (the reproducer recipes behind the bug log) and dv/auto_dv/evidence/gen_interface_inventory.md (the numbered driver and protocol rules); citations name them by basename and resolve there. Companion documents:
+Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in: checker direction per gen_bug_log.md, rvfi_trap-on-ebreak-into-debug rule, vacuity fixes, impossible bins pruned, layer-1 weight tables, timing qualifiers), generated from dv/auto_dv/work/dv-lead/parts6/tp_*.md (inputs digest 1350851f6b7c over every part file and over the generator's own source; no clock, so a regeneration from unchanged inputs is byte-identical; what the digest covers and the commands that reproduce it are recorded at dv/auto_dv/evidence/gen_plan_digest_provenance.md). Part-file names in this document (tp_<area>.md, fcov_<area>.md, gen_part_<area>.md, trace_*_<area>.csv and the README_*_BRIEF.md briefs) are this plan set's own gitignored sources, named as provenance: the content they hold is in the corresponding area of gen_test_plan.md, gen_fcov_plan.md or gen_feature_list.md, and the bug and doc-defect number series they define are in gen_bug_log.md. No claim in this document rests on opening one. Three rtl-arch notes this plan set cites are committed references, not work files: dv/auto_dv/evidence/gen_multdiv_bound_props.md (the MD-n bound properties and covers), dv/auto_dv/evidence/gen_bug_reproducer_specs.md (the reproducer recipes behind the bug log) and dv/auto_dv/evidence/gen_interface_inventory.md (the numbered driver and protocol rules); citations name them by basename and resolve there. Companion documents:
 dv/auto_dv/docs/gen_feature_list.md (features), gen_fcov_plan.md (bins), gen_bug_log.md (B/D lists),
 gen_trace_feature_tp.csv and gen_trace_tp_bin.csv (machine-readable traceability), checked by
 dv/auto_dv/tools/gen_trace_check.py.
@@ -372,11 +372,11 @@ Bug candidates whose spec-direction check is a test-level compare (no C5.3b row)
 | TP items | 1205 |
 | ACTIVE features covered (of 705) | 705 |
 | Phase 1 / Phase 2 items | 1094 / 111 |
-| Tier smoke / targeted / full / check | 289 / 762 / 112 / 42 |
-| Expected-fail items (bug candidates) | 31 |
+| Tier smoke / targeted / full / check | 289 / 761 / 112 / 43 |
+| Expected-fail items (bug candidates) | 32 |
 | Informational items (outside the gate; Section 1.2) | 11 (5 for a downgraded or record-only bug candidate, 6 for non-bug reasons: Q-010 informational tests, observations with no gating check) |
-| Items outside the Phase 1 pass gate (expected-fail + informational) of 1205 | 42 |
-| Test groups | 231 |
+| Items outside the Phase 1 pass gate (expected-fail + informational) of 1205 | 43 |
+| Test groups | 232 |
 | Covergroups (spec-derived and adopted) / distinct bins referenced / adopted bins | 207 / 15834 / 49 |
 | Witnessed-clause ledger (CG-WIT-001, outside the score, the bin total and traceability) | 220 bins for 19 marked items |
 
@@ -398,6 +398,7 @@ Bug candidates whose spec-direction check is a test-level compare (no C5.3b row)
 | B16 | 3 | TP-DMEM-064, TP-SEC-040, TP-RVFI-040 |
 | B17 | 4 | TP-BTALU-018, TP-PMC-058, TP-PMC-059, TP-PMC-060 |
 | B20 | 1 | TP-PMC-061 |
+| B22 | 1 | TP-RVFI-028 |
 
 ## 1.2 Informational items (outside the Phase 1 pass gate)
 
@@ -758,11 +759,12 @@ Section 0 carries the same lists in prose (the T-136 record points here). Genera
 | gen_rst_pending_at_boot | 3 | TP-RST-024..TP-RST-026 |
 | gen_rst_random | 1 | TP-RST-029..TP-RST-029 |
 | gen_rvfi_proto_basic | 11 | TP-RVFI-001..TP-RVFI-038 |
-| gen_rvfi_trap | 7 | TP-RVFI-005..TP-RVFI-030 |
+| gen_rvfi_trap | 6 | TP-RVFI-005..TP-RVFI-030 |
 | gen_rvfi_ext | 8 | TP-RVFI-006..TP-RVFI-035 |
 | gen_rvfi_proto_basic_xfail | 1 | TP-RVFI-013..TP-RVFI-013 |
 | gen_rvfi_mem | 2 | TP-RVFI-014..TP-RVFI-015 |
 | gen_rvfi_zcmp | 2 | TP-RVFI-025..TP-RVFI-026 |
+| gen_rvfi_trap_dbg_xfail | 1 | TP-RVFI-028..TP-RVFI-028 |
 | gen_cheri_off_quiet | 5 | TP-RVFI-033..TP-CHERI-004 |
 | gen_rvfi_random | 1 | TP-RVFI-037..TP-RVFI-037 |
 | gen_rvfi_trap_info | 1 | TP-RVFI-039..TP-RVFI-039 |
@@ -21851,10 +21853,10 @@ Stimulus line override the table for that item.
 - Test group: gen_dit_dummy
 - Bins: CG-RVFI-001.cp_valid_gap.g2, CG-DIT-004.cp_event.insert
 
-### TP-RVFI-028: ebreak entering debug mode is not a trap record
-- Features: F-RVFI-025
+### TP-RVFI-028: ebreak entering debug mode is not a trap record, and spends an rvfi_order index with no record (B22)
+- Features: F-RVFI-025, F-RVFI-003
 - Phase: 1
-- Tier: targeted
+- Tier: check
 - Preconditions: dcsr.ebreakm / ebreaku set (from the debug ROM) in half the run, clear otherwise.
 - Stimulus: ebreak in M and U mode under both settings.
 - Randomized: mode, setting, position.
@@ -21862,9 +21864,17 @@ Stimulus line override the table for that item.
 - Fire-check: >= 5 ebreak records with rvfi_trap = 0 followed by a record with rvfi_ext_debug_mode
   = 1 at DmHaltAddr, and >= 5 ebreak records with rvfi_trap = 1 (setting clear).
 - Pass criteria: gen_chk_debug (dpc == ebreak PC, dcsr.cause = 1) ; gen_chk_rvfi_proto (trap = 0
-  on debug-entering ebreak; trap = 1 otherwise) ; gen_isa_compare.
-- Expected: pass
-- Test group: gen_rvfi_trap
+  on debug-entering ebreak; trap = 1 otherwise; and its rvfi_order rule, order[n] == order[n-1] + 1,
+  which the RTL breaks once per debug-entering ebreak: the index advances under rvfi_id_done while the
+  record is emitted only under rvfi_wb_done, so the following record's order is last + 2 with nothing
+  in between, dv/auto_dv/env/gen_rvfi_pkg.sv:142-143 firing "order N after M") ; gen_isa_compare.
+- Notes: the rvfi_order rule is kept without exemption (DV Lead ruling of 2026-09-08 on rtl-arch's record
+  dv/auto_dv/evidence/gen_rvfi_order_debug_entry_rtl_facts.md, Section 6): the RVFI definition forbids gaps
+  (rvfi.rst:41-42), so the carrying test records the deviation and the checker does not tolerate it. Only the
+  ebreak half is a finding; a gap at a trigger match is NOT confirmed by the RTL (record Section 5) and is not
+  planned. The trap = 0 convention itself (F-RVFI-025) is unchanged.
+- Expected: expected-fail (B22)
+- Test group: gen_rvfi_trap_dbg_xfail   (own test: an expected-fail or informational item never shares a test with pass items, Section 0)
 - Bins: CG-RVFI-004.cp_ebreak_kind.exception, CG-RVFI-004.cp_ebreak_kind.debug_entry,
   CG-RVFI-004.cr_cause_mode.breakpoint_u, CG-RVFI-004.cr_cause_mode.breakpoint_m
 
@@ -22282,12 +22292,13 @@ TP-CHERI-002.
 | gen_rst_pending_at_boot | TP-RST-024, 025, 026 | 1 | targeted | short |
 | gen_rst_random | TP-RST-029 | 2 | full | long |
 | gen_rvfi_proto_basic | TP-RVFI-001, 002, 003, 004, 007, 008, 009, 010, 011, 012, 038 | 1 | smoke/targeted | short |
-| gen_rvfi_trap | TP-RVFI-005, 016, 017, 018, 028, 029, 030 | 1 | targeted | medium |
+| gen_rvfi_trap | TP-RVFI-005, 016, 017, 018, 029, 030 | 1 | targeted | medium |
 | gen_rvfi_ext | TP-RVFI-006, 019, 020, 021, 022, 032, 034, 035 | 1 | targeted | medium |
 | gen_rvfi_mem | TP-RVFI-014, 015 | 1 | targeted | short |
 | gen_rvfi_zcmp | TP-RVFI-025, 026 | 1 | targeted | short |
 | gen_rvfi_random | TP-RVFI-037 | 2 | full | long |
 | gen_cheri_off_quiet | TP-CHERI-001, 002, 003, 004; TP-RVFI-033 | 1 | smoke/targeted | short |
+| gen_rvfi_trap_dbg_xfail | TP-RVFI-028 | 1 | check | - |
 
 ---------------------------------------------------------------------------------------------------
 ## New checkers requested

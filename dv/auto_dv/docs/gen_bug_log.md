@@ -172,6 +172,7 @@ a citation target on its own. Anchor text does not move when lines do; a line nu
 | B18 | RVFI read mask and address set on every non-store record | P3 | observed (retained logs) | passes by policy | - |
 | B19 | RVFI trap flag cleared on an illegal ebreak variant | P3 | candidate | no test yet | S |
 | B20 | fence.i is counted as a jump | P2 | candidate | no test yet | M |
+| B22 | an ebreak that enters debug mode spends an rvfi_order index with no record | P3 | candidate | no test yet | S |
 | B6 | exception in debug mode forces M privilege | P3 | not a bug (RTL-defined) | TP-EXC-046, TP-DBG-034 pass | - |
 | B9 | a debug request that drops in the FLUSH cycle records cause 0 | P3 | RTL-defined corner, out-of-spec stimulus | record only | - |
 | B12 | mret clears cpuctrlsts.sync_exc_seen | P3 | documented behaviour, design note | items pass with the note | - |
@@ -962,6 +963,49 @@ test command or the scoping of a quick test; evidence; notes.
   pending: the checker follows the doc, TP-PMC-061 expected-fail); the independent counter model
   follows the doc and treats fence.i windows as the B20 witness (CG-PMC-003.cr_variant_rel.fencei_gt).
 
+### B22: an ebreak that enters debug mode consumes one rvfi_order index and emits no record (RVFI-only)
+- Rating: P3. Trace-only: the ebreak correctly does not retire, dpc points at it and it re-executes on resume,
+  and the debug entry is right; only the RVFI order sequence has a gap (rtl-arch: gen_rvfi_order_debug_entry_rtl_facts.md
+  at 5758828, Section 1 for the verdict and Section 6 for the rating).
+- Status: candidate, observed by test-writer on 2026-09-08 (a gap of one order index at every debug entry an
+  ebreak causes) and explained by rtl-arch at the RTL (the record above, Sections 2 and 3). Only the ebreak half is
+  a finding: a second gap the observation attributed to a trigger match is NOT confirmed by the RTL (Section 5: a
+  trigger entry is taken with the ID stage empty, so the matched instruction never took an index), and no plan item
+  or bug entry claims it.
+- Feature: rvfi_order increments by exactly 1 per retired instruction (F-RVFI-003, canonical); cross-reference ebreak
+  that enters debug mode is not reported as a trap (F-RVFI-025)
+- Plan items (expected-fail): TP-RVFI-028 (its rvfi_order rule; the trap = 0 convention of F-RVFI-025 is unchanged)
+- rtl-arch alias: - (gen_rvfi_order_debug_entry_rtl_facts.md)
+- RTL: rtl/ibex_core.sv:1851-1853 (rvfi_id_done = instr_id_done | (rvfi_flush_next & id_exception_o & ~wb_exception_o) advances the index), :1905 (rvfi_stage_order_d = order + 1 unless a dummy), :2072-2076 (the index is captured under rvfi_id_done); the record is emitted only under rvfi_wb_done (:1864-1865, :1868, :1890: rvfi_stage_valid[0] & (instr_done_wb | rvfi_stage_trap[0])), and the trap bit that would have emitted it is excluded for an ebreak that enters debug mode (:1885-1886: rvfi_trap_id = id_exception_o & ~(ebrk_insn & ebreak_into_debug)), so the index is spent and the record never comes
+- Specification / intent: tools/specs/riscv-formal/docs/source/rvfi.rst:41-42 ("The rvfi_order field must be set to the instruction index. No indices must be used twice and there must be no gaps.")
+- What happens: the RVFI order index and the record emission are gated by two different signals. An ebreak that
+  enters debug mode is an exception in the decode stage, so the index advances; but its trap bit is deliberately
+  cleared (the ebreak is not a trap, F-RVFI-025), so no record is emitted for it. The next record carries the
+  previous order plus two. The core's state is right throughout: the ebreak does not retire, dpc holds its address
+  and it re-executes after dret.
+- Steps to reproduce:
+  1. Set up: enter debug mode once (debug_req_i), set dcsr.ebreakm = 1 in the debug ROM, dret.
+  2. Do: execute ebreak in M-mode under the lock-step comparator.
+  3. RTL: the record after the ebreak (the debug ROM's first instruction) has rvfi_order = the last order + 2;
+     the ebreak itself has no record; rvfi_trap on the missing record would have been 0.
+  4. Specification: no gaps in rvfi_order; the RVFI definition admits no index without a record.
+  5. Control: a debug entry by debug_req_i (no instruction causes it) spends no index (record Section 5's
+     reasoning for entries taken with the ID stage empty); a trapping ebreak (ebreakm clear) has its own record.
+- Test: No test yet. Proposed test to build: plan test group gen_rvfi_trap_dbg_xfail (TP-RVFI-028, expected-fail),
+  with expected_fail: true. Scoping: (a) a directed program whose debug ROM sets dcsr.ebreakm and drets, then an
+  ebreak, run under lock-step; (b) extends gen_ut_dbg (DBG_REQ through the bridge) with the directed program;
+  the collected failure is the comparator's own contiguity rule, uvm_error("rvfi_order", "order N after M") at
+  dv/auto_dv/env/gen_rvfi_pkg.sv:142-143, which stays without exemption (Section 0.6, the DV Lead's ruling of
+  2026-09-08); (c) test-writer; (d) S: the rule is built and fires on every debug-entering ebreak, so the program is
+  the whole work; test-writer's B10 attempt already runs this shape.
+- Evidence: none retained yet (test-writer's observation of 2026-09-08 is the origin; the record above explains
+  it from the RTL with every gating term).
+- Notes: RVFI-only class (B13, B18, B19). The comparator's contiguity rule is correct and is not relaxed: an
+  exemption for a debug entry would remove a rule that catches a real interface violation, so the carrying test
+  records the deviation (the B13 shape with the raw rule, not the B18 pass-by-policy shape, because no
+  accommodation knob exists and none is ruled). A fix the RTL owner would make: gate the index advance on the
+  same condition as the emission, or emit the excluded record with rvfi_trap = 0.
+
 ## 1b. Retained IDs that are not bug candidates (kept so plan and review references resolve)
 
 B6 (RTL-defined: debug mode runs at M privilege, Sdext.adoc:32/:51), B9 (RTL-defined corner reachable only
@@ -1139,3 +1183,8 @@ documentation there changes the privilege an mret lands in.
   the dcsr.cause status field is wrong and dpc discriminates it exactly). B16's Evidence and scoping wording corrected per
   rtl-arch: the value-changing bit positions are the ones the misalignment offset merges in, so the register value is not a
   reliable witness for the class and the missing suppression is. Both "pending rtl-arch confirmation" markers dropped.
+- v2f (2026-09-08 03:02 UTC): B22 opened (RVFI-only class, P3): an ebreak that enters debug mode spends one rvfi_order index and
+  emits no record, from test-writer's observation of 2026-09-08 and rtl-arch's record
+  gen_rvfi_order_debug_entry_rtl_facts.md at 5758828; only the ebreak half is recorded, the trigger-match half being
+  unconfirmed by the RTL; TP-RVFI-028 becomes its expected-fail item in its own group gen_rvfi_trap_dbg_xfail; the
+  comparator's rvfi_order rule stays without exemption.
