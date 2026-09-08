@@ -66,8 +66,9 @@ Each term is expanded once here and then used freely.
 - RVFI: the RISC-V formal interface. A per-instruction trace port the core exposes (rvfi_valid, rvfi_pc_wdata,
   rvfi_trap, rvfi_mem_rmask and so on). The testbench compares it with the ISA model. RVFI-only means the
   trace is wrong but the core's real state is right.
-- ISA model, lock-step comparator: the testbench runs upstream Spike (riscv-isa-sim) instruction by
-  instruction beside the core and compares every retired instruction (the gen_isa_compare rows isa_pc,
+- Spike, the reference model (also called the ISA model): upstream riscv-isa-sim, the clone's own copy under
+  tools/riscv-isa-sim/ (an allowed upstream project, not the fenced cosim fork). The lock-step comparator runs
+  it instruction by instruction beside the core and compares every retired instruction (the gen_isa_compare rows isa_pc,
   isa_insn, isa_trap, isa_rd, isa_mem, isa_prv, isa_pc_next, isa_csr in dv/auto_dv/env/gen_rvfi_pkg.sv).
   A mismatch is a collected UVM_ERROR tagged with the row name, for example [isa_trap].
 - TB: the testbench. Checker: a testbench component that predicts a value and raises a collected error on a
@@ -318,7 +319,8 @@ test command or the scoping of a quick test; evidence; notes.
   (c) test-writer; (d) S for two of the four CSRs and M for all four: the ISA model traps on scontext (Spike
   registers it only when S-mode exists, tools/riscv-isa-sim/riscv/csr_init.cc:315) and on mscontext (not in
   the model), so those two reads raise [isa_trap] "model trapped, dut retired" today; the model implements
-  tdata3 (with one trigger) and mcontext (csr_init.cc:303, :319) and returns 0 like the core, so those two
+  tdata3 (with one trigger) and mcontext (tools/riscv-isa-sim/riscv/csr_init.cc:303, :319) and returns 0 like the
+  core, so those two
   numbers need the CSR read-back predictor the plan names (gen_chk_csr_readback, not built) with a rule that
   they trap: M, tb-infra.
 - Evidence: none yet.
@@ -1085,3 +1087,4 @@ documentation there changes the privilege an mret lands in.
 - v1l (2026-09-04 06:36 UTC): S5 and D22 added for tb-infra's finding WP12-F2 with rtl-arch's traced mechanism. Classified RTL-defined behaviour with a documentation gap, NOT a bug candidate: multi-way allocation of one line is documented (icache.rst:73), the ECC-correction refetch is an undocumented second cause of it, and the masked case never detects an error at all, so neither alert sentence (icache.rst:218, security.rst:107, both conditioned on detection) is triggered. F-IC-042's What and Notes carry the corrected consequence and both causes.
 - v1m (2026-09-04 07:04 UTC): S5's rationale narrowed and D22 given its second stale sentence (icache.rst:214, phrased on RAM state, contradicted in the masked case) per the v3z review; S5 and F-IC-042 name the domain of the clearing flip, the un-tweaked word the hit-data mux ORs.
 - v2 (2026-09-08 01:25 UTC): owner request of 2026-09-07: plain language, numbered steps, feature names, test commands, effort scoping, P-ratings. Section 0 added (glossary, rating and effort definitions, the test-command form and where the FSDB lands, the summary table, the policies moved here and shortened). Every B entry rewritten in the Section 1 layout with its feature named first, its steps as a numbered list, its test command (B4, B8 exist; B13 and B18 pass by policy with the raw-rule witness given) or "No test yet" with the item-5 scoping, and its rating (P1: B8; P2: B1, B2, B7, B10, B11, B16, B17, B20; P3: the rest, S1-S6 and D1-D22); B10 and B16 marked pending rtl-arch confirmation. B21 given its own Section 1b entry. Section 2 and Section 3 tables gained a Rating column. No plan item id, RTL cite or specification cite was dropped and every feature id is kept, with one correction: version 1's B8 cross-reference "F-DIT-032 item" named an id that has no feature heading (the case is the plan item TP-DIT-032), so it is now written as the plan item; the B-versus-D criterion, ruling B4-R1 and the B8 mechanism text are kept with their wording. Two rtl-arch records cite version-1 line numbers of this file (gen_b4_rtl_facts.md:6 "gen_bug_log.md:60", gen_t102_rtl_facts.md:8 "gen_bug_log.md:274"); they resolve by id (B4, D20) and are rtl-arch's to re-point at their next touch.
+- v2a (2026-09-08 01:32 UTC): Orchestrator citation instruction of 2026-09-08: every Spike source cite carries the clone-relative path tools/riscv-isa-sim/... (the clone's own copy of the allowed upstream project, not the fenced cosim fork); the glossary names Spike as the reference model in those words.
