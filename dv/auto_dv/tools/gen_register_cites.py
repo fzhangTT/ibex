@@ -32,6 +32,8 @@ REGISTER = R / 'dv/auto_dv/evidence/gen_tb_defects.md'
 CURRENT = '@CUR@'
 
 CITES = [
+ ('T12', '1deec4c', 'dv/auto_dv/env/gen_rvfi_pkg.sv', 377, 'end else if (dbg_entry) begin'),
+ ('T12', '1deec4c', 'dv/auto_dv/env/gen_rvfi_pkg.sv', 378, 'gen_isa_arm_async(t.ext_pre_mip'),
  ('T11', '1deec4c', 'dv/auto_dv/env/gen_rvfi_pkg.sv', 485, 'if (t.ext_rf_wr_suppress && !is_seq) begin'),
  ('T11', '1deec4c', 'dv/auto_dv/env/gen_rvfi_pkg.sv', 493, 'intg_first_addr = t.mem_addr'),
  ('T11', '1deec4c', 'dv/auto_dv/env/gen_rvfi_pkg.sv', 498, 'end'),

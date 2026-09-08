@@ -155,19 +155,19 @@ a citation target on its own. Anchor text does not move when lines do; a line nu
 
 | Id | Short name | Rating | Status | Test | Effort |
 |---|---|---|---|---|---|
-| B1 | dret to U-mode leaves mstatus.MPRV set | P2 | candidate | no test yet | M |
+| B1 | dret to U-mode leaves mstatus.MPRV set | P2 | reproduced | gen_prv_debug_b1_xfail seed 1 (XFAIL) | - |
 | B2 | MPRV applied to debug-mode loads and stores although dcsr.mprven is 0 | P2 | reproduced | gen_prv_debug_b2_xfail seed 1 (XFAIL) | - |
 | B3 | unimplemented trigger CSRs read 0 instead of trapping | P3 | candidate | no test yet | S (two CSRs) / M (all four) |
 | B4 | reserved cm.mvsa01 encoding (r1s' == r2s') executes | P3 | reproduced | gen_ut_lockstep_zcmp_mv_reserved seed 1 (XFAIL) | - |
 | B5 | dcsr.nmip never reports a pending NMI | P3 | candidate | no test yet | M |
 | B7 | dummy instructions are counted in minstret and the wait counters | P2 | reproduced | gen_pmc_minstret_xfail seed 1 (XFAIL) | - |
 | B8 | a dummy instruction inside a Zcmp push / pop corrupts registers or the stack | P1 | reproduced, cause stated | gen_ut_lockstep_zcmp_dummy seed 1 (XFAIL) | - |
-| B10 | ebreak entry records cause 2 when the next instruction matches the trigger | P3 | candidate | no test yet | M |
+| B10 | ebreak entry records cause 2 when the next instruction matches the trigger | P3 | confirmed on the core, no entry | no test yet | M (blocked on T12) |
 | B11 | NumBranchesTaken counts not-taken branches under DIT | P2 | candidate | no test yet | M |
 | B13 | RVFI next-PC keeps bit 0 on jalr to an odd target | P3 | observed (retained logs) | gen_test_isa_cti passes by policy; raw-rule red retained | - |
 | B14 | RVFI drops the ID trap record when a WB error coincides (downgraded) | P3 | downgraded, confirmation pending | no test yet | S |
 | B15 | dcsr.ebreaks is writable although there is no S-mode | P3 | candidate | no test yet | S |
-| B16 | misaligned load with a bad first beat still writes rd | P2 | candidate, measured by tb-infra | no test yet | S (program and knob) / M (the suppression rule) |
+| B16 | misaligned load with a bad first beat still writes rd | P2 | reproduced | gen_dmem_intg_xfail seed 1 (XFAIL) | - |
 | B17 | counters 8, 11, 12 over-count while a load or store is outstanding | P2 | candidate | no test yet | M |
 | B18 | RVFI read mask and address set on every non-store record | P3 | observed (retained logs) | passes by policy | - |
 | B19 | RVFI trap flag cleared on an illegal ebreak variant | P3 | candidate | no test yet | S |
@@ -245,7 +245,7 @@ test command or the scoping of a quick test; evidence; notes.
 - Rating: P2. The behaviour breaks the debug specification and is security-relevant (U-mode code then runs its
   loads and stores with the MPP privilege, possibly M), but the debugger controls the state: clearing
   mstatus.MPRV before dret avoids it.
-- Status: candidate, reproducer pending
+- Status: REPRODUCED by test-writer (dv/auto_dv/evidence/gen_tdd_bug_tests.md Section 3 (at d0428e0): retained red and green runs and a waveform confirmation, LOG-103); still a candidate for the owner ruling
 - Feature: dret to U-mode does not clear mstatus.MPRV, so U-mode loads/stores can run with MPP (possibly M)
   privilege (F-PRV-015, canonical); aliases F-DBG-033, F-PMP-075
 - Plan items (expected-fail): TP-PRV-014, TP-DBG-038, TP-PMP-073
@@ -266,20 +266,17 @@ test command or the scoping of a quick test; evidence; notes.
   4. Specification: MPRV is cleared by the resume to U, the load is checked with U privilege and raises a load
      access fault (mcause 5).
   5. Control: the same sequence with MPRV = 0 faults on both.
-- Test: No test yet. Proposed test to build: plan test group gen_prv_debug_b1_xfail (TP-PRV-014), with
-  expected_fail: true. Scoping: (a) a directed program with four cooperating parts (the PMP setup, its own
-  .debug_rom section that writes dcsr.prv and dpc, the U-mode probe, an M-mode trap handler that records
-  mcause and ends the test) and a cocotb module that sends DBG_REQ once the program is parked; (b) extends
-  gen_ut_dbg (dv/auto_dv/gen_tb/gen_tests/gen_ut_dbg.py already sends DBG_REQ through the bridge and asserts
-  zero ISA mismatches) and the directed-program flow (gen_program.py links a program's own .debug_rom in place
-  of the stub); (c) test-writer; (d) M: no new testbench capability is needed, because the ISA model clears
-  MPRV on a dret to a lower privilege (tools/riscv-isa-sim/riscv/insns/dret.h), so the model faults the U-mode
-  load while the core does not and the comparator raises [isa_trap]; but the program has four parts that must
-  agree with the model under lock-step, and the model's debug-entry step must be shown to carry the dcsr.prv
-  change (gen_ut_dbg only runs a ROM that drets at once).
-- Evidence: none yet.
+- Test (exists; expected_fail: true; verdict XFAIL):
+
+      python3 dv/auto_dv/flow/gen_regress.py --repro gen_prv_debug_b1_xfail 1 --waves --tag b1_repro
+
+  Seed 1 is the retained run's seed (dv/auto_dv/evidence/gen_tdd_bug_tests.md Section 3 (at d0428e0)). The collected failure is the scoreboard UVM_ERROR [isa_trap] "dut retired, model retired 0 trap=1 cause=00000005 tval=80000298" on the U-mode probe load (order 315, pc 80000140, insn 00082783: the model faults the load with U privilege after the dret cleared MPRV, the core performs it with M privilege), with [isa_rd] dut wrote x15/b1b1b1b1 where the model wrote nothing on the same record, nine rows per debug entry, and the module assertion "GEN_UT_DBG: 18 ISA mismatches across the debug entries"; the flow reason string is "expected-fail: uvm_error at sim.log:32 (isa_trap)". The control program gen_prv_debug_b1_ctrl_directed.S (MPRV cleared before every resume, both sides fault) PASSES. Program dv/auto_dv/stim/gen_directed/gen_prv_debug_b1_directed.S with its own .debug_rom (four cooperating parts: the PMP setup, the ROM arming MPRV, MPP and dcsr.prv = U, the U-mode probe, the ecall vector), cocotb module gen_ut_dbg, tier check, measured false; retained logs dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_bug_b1_dret_mprv_red1_{stdout.log,sim.log,verdict.txt}. The flow reports XFAIL for the
+  expected_fail entry; an unexpected PASS means the behaviour changed. The retained FSDB is test-writer's out tree out_tw21/bug_b1_dret_mprv_red1_waves/waves.fsdb (at 12905 ns debug_mode = 0, priv_mode_id = 0 (U), priv_mode_lsu = 3 (M), mstatus MPRV = 1 with MPP = 3, and data_req_o = 1 to 80000298: the load reached the bus with M privilege while the core ran U-mode code); a fresh run lands its
+  waves at <out root>/regress_b1_repro/runs/gen_prv_debug_b1_xfail_1/waves.fsdb.
+- Evidence: dv/auto_dv/evidence/gen_tdd_bug_tests.md Section 3 (at d0428e0) (the retained red run with its signature, the green control, the FSDB path); an owner ruling on the RTL is the open item.
 - Notes: security-relevant (U-mode loads and stores use the MPP privilege for PMP checks until the next trap
   or mret). Pair with B2 in one program: the same PMP region serves both probes (gen_bug_reproducer_specs.md).
+  Scoping before the test landed: Proposed test to build: plan test group gen_prv_debug_b1_xfail (TP-PRV-014), with expected_fail: true. Scoping: (a) a directed program with four cooperating parts (the PMP setup, its own .debug_rom section that writes dcsr.prv and dpc, the U-mode probe, an M-mode trap handler that records mcause and ends the test) and a cocotb module that sends DBG_REQ once the program is parked; (b) extends gen_ut_dbg (dv/auto_dv/gen_tb/gen_tests/gen_ut_dbg.py already sends DBG_REQ through the bridge and asserts zero ISA mismatches) and the directed-program flow (gen_program.py links a program's own .debug_rom in place of the stub); (c) test-writer; (d) M: no new testbench capability is needed, because the ISA model clears MPRV on a dret to a lower privilege (tools/riscv-isa-sim/riscv/insns/dret.h), so the model faults the U-mode load while the core does not and the comparator raises [isa_trap]; but the program has four parts that must agree with the model under lock-step, and the model's debug-entry step must be shown to carry the dcsr.prv change (gen_ut_dbg only runs a ROM that drets at once).
 
 ### B2: mstatus.MPRV is applied to debug-mode loads and stores although dcsr.mprven is hardwired 0
 - Rating: P2. A specification violation with a security angle (a debugger cannot rely on M privilege while
@@ -574,7 +571,10 @@ test command or the scoping of a quick test; evidence; notes.
 
 ### B10: an ebreak that enters debug mode records dcsr.cause = 2 (trigger) when the next instruction's address matches tdata2
 - Rating: P3. Only the dcsr.cause status field is wrong; dpc, mepc, mcause, mtval, mstatus, dcsr.prv, the trigger mechanism and execution are all right, and the false report is exactly discriminable because the ebreak entry is the only debug entry that takes dpc from the ID stage (rtl/ibex_controller.sv:803 with rtl/ibex_cs_registers.sv:899) while the cause comes from a pc_if comparison (rtl/ibex_cs_registers.sv:1872), so dcsr.cause == 2 with dpc != tdata2 never occurs on a genuine trigger entry (Section 2.3); no second-order effect exists (Section 2.4). That is Section 0.2's P3 clause, the rating B5 carries for the parallel debug status field; the earlier P2 rested on avoiding a trigger after an ebreak, a workaround the debugger does not need because it already holds dpc (rtl-arch: dv/auto_dv/evidence/gen_b10_b16_rtl_facts.md at f85c6bb, Section 2.6 for the rating, 2.3 for the discriminator, 2.4 for the second-order sweep).
-- Status: candidate, reproducer pending
+- Status: candidate, CONFIRMED on the core by test-writer (dv/auto_dv/evidence/gen_tdd_bug_tests.md Section 5 at d0428e0):
+  the debug ROM's own dcsr read gives 40008083, cause 2, with the trigger armed on the address after the ebreak and
+  40008043, cause 1, without it, in two runs that differ only in the arming; no expected-fail entry exists because the
+  comparator cannot discriminate the bug (TB limitation T12 in gen_tb_defects.md: the model reads cause 3 in both runs)
 - Feature: ebreak entering debug mode while the following instruction's address matches tdata2: cause
   misreported as 2 (bug candidate) (F-TRG-020)
 - Plan items (expected-fail): TP-TRG-020
@@ -599,11 +599,21 @@ test command or the scoping of a quick test; evidence; notes.
   memory: arm on the first entry, record cause and dpc on the later ones) and a cocotb module that sends the
   first DBG_REQ; (b) extends gen_ut_dbg (DBG_REQ through the bridge, zero ISA mismatches) with the directed
   program; (c) test-writer for the program, tb-infra if a cause rule in gen_dbg_checker is needed (its
-  dbg_entry rule as built checks the entry within a bound, not the cause value); (d) M: the ISA model enters
-  debug mode on an ebreak with ebreakm set and records cause 1, so a dcsr read in the ROM should raise
-  [isa_rd] against the core's 2, but the model's trigger arming through tdata1 / tdata2 in debug mode and its
-  re-fire after dret must be confirmed in the run, and the ROM logic has several parts.
-- Evidence: none yet.
+  dbg_entry rule as built checks the entry within a bound, not the cause value); (d) M, and BLOCKED on the TB
+  limitation T12 (gen_tb_defects.md): the ISA model is capable of cause 1 (ebreak, execute.cc:347-349) and
+  cause 2 (trigger, processor.cc:564), but the comparator arms a halt request for EVERY debug entry
+  (dv/auto_dv/env/gen_rvfi_pkg.sv:377-378 calling gen_isa_arm_async with debug_req = 1, which
+  dv/auto_dv/isa/gen_isa_shim.cc:700 turns into halt_request = HR_REGULAR), and Spike takes that request at the
+  top of its step as cause 3, DCSR_CAUSE_DEBUGINT (tools/riscv-isa-sim/riscv/execute.cc:210-212, encoding.h:119-121),
+  before it can reach its own ebreak or trigger path. So a dcsr read in the ROM would raise [isa_rd] with the model's
+  3 against the core's 2 whatever the core did: a wrong-reason failure that would send the reader to the model, not to
+  the bug. No clean red and control pair exists until the arming is limited to genuine debug-request entries; B10 is
+  P3 and no test is built for it unless the owner asks.
+- Evidence: dv/auto_dv/evidence/gen_tdd_bug_tests.md Section 5 (programs gen_trg_ebreak_cause_directed.S and its control
+  committed at d0428e0, no testlist entry; the two dcsr readings above; waveform out_tw21/bug_b10_cause_red1_waves/waves.fsdb:
+  at 15705 ns the decode stage holds the ebreak, pc_id 80000140, while the fetch stage already holds tdata2, pc_if 80000144,
+  trigger_match_i is 1 and the controller's debug_cause_d is 2, then pc_if becomes the debug ROM entry 1a110800). The
+  RTL-level picture is the one Steps 3 describes; the loud test waits for T12.
 - Notes: rtl-arch T-017: confirmed statically (trigger_match evaluated on pc_if every cycle; during the FLUSH
   cycle of an ebreak-into-debug pc_if holds the next address). Arming happens inside the debug ROM (trigger
   CSRs writable only in debug mode); T-041 reproducer spec.
@@ -767,7 +777,7 @@ test command or the scoping of a quick test; evidence; notes.
 
 ### B16: a misaligned load with a bus-integrity error on the FIRST beat still writes rd
 - Rating: P2. The documented security intent (no register write on bad check bits) is violated for the first-beat class, and the merged word IS consumable: one further instruction can retire on it before the redirect, and a dependent store can carry it to memory (Section 1.3), while the alert fires one cycle before the earliest write and the internal NMI request is never later (Section 1.2), so the event is always reported. The deciding term is the consumption window, bounded at ONE ID entry by stall_mem (rtl/ibex_id_stage.sv:1095-1096) with id_in_ready_o (rtl/ibex_controller.sv:1020): one padding instruction after a misaligned load, or two aligned loads and a merge, is a sufficient workaround, the shape Section 0.2's P2 names. P1 is reachable only by counting misaligned loads as a feature software must give up, which is the owner's clause choice through Q-015; P3 is unavailable because rd is architectural state (rtl-arch: dv/auto_dv/evidence/gen_b10_b16_rtl_facts.md at f85c6bb, Section 1.6 for the rating and its deciding term, 1.3 for the one-entry bound, 1.2 for the cycle order, measured from the waveform in 1.5.1).
-- Status: candidate, reproducer pending (rtl-arch T-053 X-11; security-relevant; owner question Q-015 filed
+- Status: REPRODUCED by test-writer (dv/auto_dv/evidence/gen_tdd_bug_tests.md Section 4 (at d0428e0): retained red and green runs and a waveform confirmation, LOG-103); still a candidate for the owner ruling (rtl-arch T-053 X-11; security-relevant; owner question Q-015 filed
   2026-09-03 in dv/auto_dv/docs/gen_intervention_log.md, unanswered; default while pending: bug candidate,
   expected-fail for the first-beat class, not excluded from the gate)
 - Feature: Load data write suppressed on a bus integrity error (rf_wr_suppress) (F-SEC-015, canonical:
@@ -791,22 +801,13 @@ test command or the scoping of a quick test; evidence; notes.
      internal NMI with mcause 0xFFFF_FFE0.
   4. Documentation: rvfi_rd_addr = 0, rvfi_ext_rf_wr_suppress = 1, x5 unchanged; the same alert and NMI.
   5. Control: the SECOND beat corrupted suppresses the write (both agree).
-- Test: No test yet. Proposed tests to build: plan test groups gen_dmem_intg_xfail (TP-DMEM-064),
-  gen_sec_alert_inject_dbus_first_beat_xfail (TP-SEC-040) and gen_rvfi_ext_rf_wr_suppress_xfail
-  (TP-RVFI-040), with expected_fail: true. Scoping: (a) a directed program variant of
-  gen_intg_span_directed.S with the corruption armed on the first word only, and a count knob for the arming
-  in the cocotb module; (b) extends gen_ut_intg_span (dv/auto_dv/gen_tb/gen_tests/gen_ut_intg_span.py arms
-  two corruptions on the buffer with MEM_ERR_ARM; count 1 arms the first access only) and its testlist
-  entry; (c) test-writer, with tb-infra for the module knob; (d) S: the scoreboard's T-183 gate expects no
-  register write for a load whose corruption the driver announced and compares the core's rd fields against
-  no write, so the core's write raises [isa_rd], and the module's own assertion that a suppressed record
-  exists fails too. CORRECTED by tb-infra's knob landing (dv/auto_dv/evidence/gen_tdd_b16_knob.md Section 8): the
-  T-183 gate as built is entered only when the core asserts rvfi_ext_rf_wr_suppress, so in B16's case it checks
-  nothing; the module's own assertion that a suppressed record exists fires on 8 of 8 seeds and is the
-  seed-independent collected failure, while the isa_rd miss appears only when the flip lands in the bits the offset
-  merges in (16 of the 39 encoded positions for that program's offset 2; 2 of 8 seeds in its sweep, Section 6). The doc-direction rule "an
-  announced corruption of a load's word obliges a suppressed write" is not built: M, tb-infra; until it exists the
-  expected-fail test's loud failure is the module assertion.
+- Test (exists; expected_fail: true; verdict XFAIL):
+
+      python3 dv/auto_dv/flow/gen_regress.py --repro gen_dmem_intg_xfail 1 --waves --tag b16_repro
+
+  Seed 1 is the retained run's seed (dv/auto_dv/evidence/gen_tdd_bug_tests.md Section 4 (at d0428e0)). The collected failure is the module assertion "GEN_UT_INTG_SPAN: no record with rf_wr_suppress", the seed-independent mechanism (8 of 8 seeds in tb-infra's sweep); at seed 1 the first collected line is the scoreboard UVM_ERROR [isa_rd] rd model=x11/22221111 dut=x11/22220111 (order 8, pc 80000118, insn 00252583, mem 800002e2), the merged word, which appears on 2 of 8 seeds; the flow reason string is "expected-fail: uvm_error at sim.log:34 (isa_rd)". The control is the same program at the default arming count 2, the committed gen_ut_intg_span entry, which PASSES. Program: the COMMITTED dv/auto_dv/stim/gen_directed/gen_intg_span_directed.S with +gen_ut_intg_span_arm_count=1 (no program variant was needed: tb-infra's knob keeps the armed range over both words at every count, so the count alone selects the first bus access; the scoping below asked for a variant and is corrected here), cocotb module gen_ut_intg_span, tier check, measured false; retained logs dv/auto_dv/evidence/gen_tdd_logs/test_writer/gen_bug_b16_first_beat_red1_{stdout.log,sim.log,verdict.txt}. The flow reports XFAIL for the
+  expected_fail entry; an unexpected PASS means the behaviour changed. The retained FSDB is test-writer's out tree out_tw21/bug_b16_first_beat_red1_waves/waves.fsdb (the bus alert pulses for one cycle at 490 ns; the load's own record at 550 ns reads rvfi_pc_rdata 80000118, rd_addr 0b, rd_wdata 22220111 and rf_wr_suppress 0); a fresh run lands its
+  waves at <out root>/regress_b16_repro/runs/gen_dmem_intg_xfail_1/waves.fsdb.
 - Evidence: MEASURED by tb-infra with the arming-count knob at count 1 (dv/auto_dv/evidence/gen_tdd_b16_knob.md Sections
   3, 5, 6 and 9; retained logs dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_fu_l64_b16_c1_seed1_{run_header.txt,sim.log,
   stdout_excerpt.log,verdict.txt} and gen_fu_l64_b16_sweep16.log): the core writes rd with the merged word,
@@ -823,6 +824,7 @@ test command or the scoping of a quick test; evidence; notes.
   phase identical to the count-2 control. The expected-fail test itself is test-writer's, not yet landed.
 - Notes: the alert and the internal NMI do fire; only the rd write leaks the merged data. Security-relevant:
   owner question Q-015 (filed 2026-09-03, unanswered).
+  Scoping before the test landed: Proposed tests to build: plan test groups gen_dmem_intg_xfail (TP-DMEM-064), gen_sec_alert_inject_dbus_first_beat_xfail (TP-SEC-040) and gen_rvfi_ext_rf_wr_suppress_xfail (TP-RVFI-040), with expected_fail: true. Scoping: (a) a directed program variant of gen_intg_span_directed.S with the corruption armed on the first word only, and a count knob for the arming in the cocotb module; (b) extends gen_ut_intg_span (dv/auto_dv/gen_tb/gen_tests/gen_ut_intg_span.py arms two corruptions on the buffer with MEM_ERR_ARM; count 1 arms the first access only) and its testlist entry; (c) test-writer, with tb-infra for the module knob; (d) S: the scoreboard's T-183 gate expects no register write for a load whose corruption the driver announced and compares the core's rd fields against no write, so the core's write raises [isa_rd], and the module's own assertion that a suppressed record exists fails too. CORRECTED by tb-infra's knob landing (dv/auto_dv/evidence/gen_tdd_b16_knob.md Section 8): the T-183 gate as built is entered only when the core asserts rvfi_ext_rf_wr_suppress, so in B16's case it checks nothing; the module's own assertion that a suppressed record exists fires on 8 of 8 seeds and is the seed-independent collected failure, while the isa_rd miss appears only when the flip lands in the bits the offset merges in (16 of the 39 encoded positions for that program's offset 2; 2 of 8 seeds in its sweep, Section 6). The doc-direction rule "an announced corruption of a load's word obliges a suppressed write" is not built: M, tb-infra; until it exists the expected-fail test's loud failure is the module assertion.
 
 ### B17: HPM counters 8, 11 and 12 over-count an instruction waiting in ID behind an outstanding WB memory access
 - Rating: P2. The counts depend on memory latency; the workaround is to put independent instructions (a
@@ -1188,3 +1190,9 @@ documentation there changes the privilege an mret lands in.
   gen_rvfi_order_debug_entry_rtl_facts.md at 5758828; only the ebreak half is recorded, the trigger-match half being
   unconfirmed by the RTL; TP-RVFI-028 becomes its expected-fail item in its own group gen_rvfi_trap_dbg_xfail; the
   comparator's rvfi_order rule stays without exemption.
+- v2g (2026-09-08 03:08 UTC): B1 and B16 have tests (gen_prv_debug_b1_xfail, gen_dmem_intg_xfail, seed 1, XFAIL; test-writer's
+  gen_tdd_bug_tests.md Sections 3 and 4 at d0428e0), B16 needing no program variant because the arming knob selects the
+  first access alone; B10 confirmed on the core (Section 5: cause 2 with the trigger armed, 1 without) with no entry, its
+  scoping clause (d) corrected: the comparator arms Spike's debug entry as a halt request for every entry, so the model
+  reads cause 3 and a test written to the old clause would fail for the wrong reason (TB limitation T12 in
+  gen_tb_defects.md).
