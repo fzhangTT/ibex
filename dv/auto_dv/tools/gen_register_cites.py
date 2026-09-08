@@ -32,6 +32,12 @@ REGISTER = R / 'dv/auto_dv/evidence/gen_tb_defects.md'
 CURRENT = '@CUR@'
 
 CITES = [
+ ('T11', '1deec4c', 'dv/auto_dv/env/gen_rvfi_pkg.sv', 485, 'if (t.ext_rf_wr_suppress && !is_seq) begin'),
+ ('T11', '1deec4c', 'dv/auto_dv/env/gen_rvfi_pkg.sv', 493, 'intg_first_addr = t.mem_addr'),
+ ('T11', '1deec4c', 'dv/auto_dv/env/gen_rvfi_pkg.sv', 498, 'end'),
+ ('T11', '41bcbe8', 'dv/auto_dv/env/gen_checkers_pkg.sv', 467, '`uvm_error("crash_dump"'),
+ ('T11', CURRENT, 'rtl/ibex_controller.sv', 416, 'mem_resp_intg_err_addr_d'),
+ ('T11', CURRENT, 'rtl/ibex_load_store_unit.sv', 258, 'addr_last_d = addr_incr_req_o'),
  ('T1', CURRENT, 'dv/auto_dv/tb/gen_bridge_if.sv', 24, 'evt_cycle_target'),
  ('T1', CURRENT, 'dv/auto_dv/tb/gen_bridge_if.sv', 25, 'evt_cycle_arm'),
  ('T1', CURRENT, 'dv/auto_dv/tb/gen_bridge_if.sv', 77, 'evt_cycle_arm != evt_cycle_arm_q'),

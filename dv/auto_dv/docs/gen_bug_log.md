@@ -149,6 +149,9 @@ does not carry is written "proposed test to build: <plan test group>".
 
 Status: "candidate" means not yet reproduced in simulation; "reproduced" means a retained log shows it.
 Effort is the class of Section 0.3 for the entries with no test yet; "-" where a test exists or none is owed.
+Citing into this document: cite an entry by its heading text ("### B4:") or, for a Section 2 or Section 3 row, by the
+section and the row label ("Section 3, row | D20 |"); a bare row label matches this summary table too, so it is never
+a citation target on its own. Anchor text does not move when lines do; a line number does.
 
 | Id | Short name | Rating | Status | Test | Effort |
 |---|---|---|---|---|---|
@@ -164,7 +167,7 @@ Effort is the class of Section 0.3 for the entries with no test yet; "-" where a
 | B13 | RVFI next-PC keeps bit 0 on jalr to an odd target | P3 | observed (retained logs) | gen_test_isa_cti passes by policy; raw-rule red retained | - |
 | B14 | RVFI drops the ID trap record when a WB error coincides (downgraded) | P3 | downgraded, confirmation pending | no test yet | S |
 | B15 | dcsr.ebreaks is writable although there is no S-mode | P3 | candidate | no test yet | S |
-| B16 | misaligned load with a bad first beat still writes rd | P2 (pending rtl-arch) | candidate | no test yet | S |
+| B16 | misaligned load with a bad first beat still writes rd | P2 (pending rtl-arch) | candidate, measured by tb-infra | no test yet | S (program and knob) / M (the suppression rule) |
 | B17 | counters 8, 11, 12 over-count while a load or store is outstanding | P2 | candidate | no test yet | M |
 | B18 | RVFI read mask and address set on every non-store record | P3 | observed (retained logs) | passes by policy | - |
 | B19 | RVFI trap flag cleared on an illegal ebreak variant | P3 | candidate | no test yet | S |
@@ -804,8 +807,23 @@ test command or the scoping of a quick test; evidence; notes.
   entry; (c) test-writer, with tb-infra for the module knob; (d) S: the scoreboard's T-183 gate expects no
   register write for a load whose corruption the driver announced and compares the core's rd fields against
   no write, so the core's write raises [isa_rd], and the module's own assertion that a suppressed record
-  exists fails too.
-- Evidence: none yet.
+  exists fails too. CORRECTED by tb-infra's knob landing (dv/auto_dv/evidence/gen_tdd_b16_knob.md Section 8): the
+  T-183 gate as built is entered only when the core asserts rvfi_ext_rf_wr_suppress, so in B16's case it checks
+  nothing; the module's own assertion that a suppressed record exists fires on 8 of 8 seeds and is the
+  seed-independent collected failure, while the isa_rd miss appears only when the flip lands in the merged
+  half-word (16 of the 39 bit positions; 2 of 8 seeds in its sweep, Section 6). The doc-direction rule "an
+  announced corruption of a load's word obliges a suppressed write" is not built: M, tb-infra; until it exists the
+  expected-fail test's loud failure is the module assertion.
+- Evidence: MEASURED by tb-infra with the arming-count knob at count 1 (dv/auto_dv/evidence/gen_tdd_b16_knob.md Sections
+  3, 5, 6 and 9; retained logs dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_fu_l64_b16_c1_seed1_{run_header.txt,sim.log,
+  stdout_excerpt.log,verdict.txt} and gen_fu_l64_b16_sweep16.log): the core writes rd with the merged word,
+  rvfi_ext_rf_wr_suppress stays 0, the alert fires once and the internal NMI arrives with mtval = the load's own
+  unaligned address 0x800002e2 (its Section 7); the module assertion fires on 8 of 8 seeds while the isa_rd miss appears
+  on 2 of 8 (Section 6: the flip lands in the merged half-word on 16 of the 39 encoded bit positions, so on six of the
+  eight seeds the merged word is clean and only the missing suppression remains, which is the constant part of the
+  defect; a wrong VALUE in rd needs the injection in the data bits). Waveform
+  confirmation (Section 9): beat 1 data_rdata_i 0x0101111111 (bit 28 flipped) against the clean beat 2, bus request
+  phase identical to the count-2 control. The expected-fail test itself is test-writer's, not yet landed.
 - Notes: the alert and the internal NMI do fire; only the rd write leaks the merged data. Security-relevant:
   owner question Q-015 (filed 2026-09-03, unanswered).
 
@@ -1112,3 +1130,9 @@ documentation there changes the privilege an mret lands in.
   dv/auto_dv/evidence/gen_tdd_bug_tests.md, the earlier scoping kept under Notes; the summary table follows. Section
   0.6 records the counter-rule direction ruling of 2026-09-08 (the B13 convention applied to the B11, B17 and B20
   checker rules: RTL default with counted accommodation, knob to the documentation rule for the expected-fail run).
+- v2d (2026-09-08 02:45 UTC): B16 measured by tb-infra's arming-count knob (gen_tdd_b16_knob.md at e7e7a94): the Evidence field, the
+  corrected scoping clause (the suppressed-write gate is never entered in B16's case; the module assertion is the
+  seed-independent mechanism; the suppression rule itself is an M item for tb-infra) and the qualified effort cell;
+  Section 0.5 states the citation-anchor convention (a bare row label such as | D20 | matches twice); the B16 and B10
+  ratings wait for rtl-arch's record. The TB defect T11 (the scoreboard's internal-NMI mtval correction inside the
+  suppress-flag block) is opened in gen_tb_defects.md from the same landing.
