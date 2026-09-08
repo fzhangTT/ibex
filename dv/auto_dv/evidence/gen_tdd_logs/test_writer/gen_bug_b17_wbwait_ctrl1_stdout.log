@@ -1,0 +1,133 @@
+# run ctr_b17_ctrl_prog: 2026-09-08T03:13:12Z host=soc-l-11 seed=1 module=dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep build=/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/head_export22/dv/auto_dv/work/test-writer/out_tw22 sources_sha=b60a9b31cee9f9e7 template_sha=cc749fd5a35cb623 test_sha=0beeec988eba471f pyroot=/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/head_export22 vmem=/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/img_hand3/b17c/prog.vmem plusargs=[+gen_ut_boot_retire=70 +gen_dbus_rvalid_min=8 +gen_dbus_rvalid_max=8]
+Info: [VCS_SAVE_RESTORE_INFO] ASLR (Address Space Layout Randomization) is detected on the machine. To enable $save functionality, ASLR will be switched off and simv re-executed.
+Please use '-no_save' simv switch to avoid re-execution or '-suppress=ASLR_DETECTED_INFO' to suppress this message.
+Chronologic VCS simulator copyright 1991-2025
+Contains Synopsys proprietary information.
+Compiler version X-2025.06-SP2_Full64; Runtime version X-2025.06-SP2_Full64;  Sep  7 23:13 2026
+     -.--ns INFO     gpi                                ..mbed/gpi_embed.cpp:108  in set_program_name_in_venv        Using Python virtual environment interpreter at /localdev/fzhang/ws/ibex-challenge/.venv/bin/python
+     -.--ns INFO     gpi                                ../gpi/GpiCommon.cpp:101  in gpi_print_registered_impl       VPI registered
+     0.00ns INFO     cocotb                             Running on Chronologic Simulation VCS Release version X-2025.06-SP2_Full64
+     0.00ns INFO     cocotb                             Running tests with cocotb v1.9.2 from /localdev/fzhang/ws/ibex-challenge/.venv/lib/python3.12/site-packages/cocotb
+     0.00ns INFO     cocotb                             Seeding Python random module with supplied seed 1
+     0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages
+     0.00ns INFO     cocotb.regression                  Found test dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep.gen_ut_lockstep
+     0.00ns INFO     cocotb.regression                  running gen_ut_lockstep (1/1)
+GEN_CONFIG_BANNER build_config=opentitan
+GEN_CONFIG_BANNER BaseIsa=BaseIsaRV32IorCHERIoT RV32M=RV32MSingleCycle RV32B=RV32BOTEarlGrey RV32ZC=RV32ZcaZcbZcmp RegFile=RegFileFF
+GEN_CONFIG_BANNER RV32E=0 BranchTargetALU=1 WritebackStage=1 ICache=1 ICacheECC=1 ICacheScramble=1
+GEN_CONFIG_BANNER BranchPredictor=0 DbgTriggerEn=1 DbgHwBreakNum=1 SecureIbex=1
+GEN_CONFIG_BANNER PMPEnable=1 PMPGranularity=0 PMPNumRegions=16 MHPMCounterNum=10 MHPMCounterWidth=32
+GEN_CONFIG_BANNER RegFileECC=0 ResetAll=1 DummyInstructions=1 MemECC=1 ICacheTweakInfection=1
+GEN_CONFIG_BANNER MemDataWidth=39 RegFileDataWidth=32 RegFileCapEccWidth=35 BusSizeECC=39 TagSizeECC=28 LineSizeECC=78
+GEN_CONFIG_BANNER DmBaseAddr=0x1a110000 DmAddrMask=0x00000fff DmHaltAddr=0x1a110800 DmExceptionAddr=0x1a110808
+GEN_CONFIG_BANNER CsrMvendorId=0x00000000 CsrMimpId=0x00000000 cheriot_enable=Off rf_test_en=0
+GEN_CONFIG_BANNER RndCnstLfsrSeed=0xac533bf4 RndCnstLfsrPerm=0x1e35ecba467fd1b12e958152c04fa43878a8daed
+GEN_CONFIG_BANNER PMPRstCfg/PMPRstAddr/PMPRstMsecCfg=ibex_pkg::PmpCfgRst/PmpAddrRst/PmpMseccfgRst (ibex_core defaults, all regions OFF)
+GEN_CONFIG_BANNER RVFI=1
+GEN_CONFIG_BANNER GEN_DUT_SPLIT_INTG=0
+UVM_INFO @ 0: reporter [RNTST] Running test gen_base_test...
+GEN_CONFIG_BANNER tb=gen_tb_top uvm_test=gen_base_test seed=1 build_config=opentitan pinned_knobs=0 regime_sched=derived
+GEN_CONFIG_BANNER define SIMULATION=0 (F-DIT-025)
+GEN_CONFIG_BANNER define COCOTB_SIM=1 (cocotb-master run)
+GEN_CONFIG_BANNER boot_addr=0x80000000 hart_id=0x00000000 alive_timeout=100000 finish_timeout=20000 mem_image=/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/img_hand3/b17c/prog.vmem tohost=0x800003b0
+GEN_CONFIG_BANNER knobs imem gnt=short rvalid=short err=none intg=none cap=cap8 dmem gnt=short rvalid=short err=none intg=none key=immediate icram_init=random
+GEN_CONFIG_BANNER knobs irq regime=quiet line_mix=single hold=until_taken debug_req=none fetch_enable=always_on icache_ecc=none data_ecc=none ecc_bits=one
+UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(191) @ 0: uvm_test_top.env [MEM_LOAD] image /localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/img_hand3/b17c/prog.vmem: 225 words, crc32 0x075e1e9b verified
+UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(224) @ 0: uvm_test_top.env [GEN_ENV] ibus: ibus gnt=1..3(short) rvalid=2..4(short) cap=8(cap8) err=0/1000(none) intg=0/1000(none)x1
+UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(225) @ 0: uvm_test_top.env [GEN_ENV] dbus: dbus gnt=1..3(short) rvalid=8..8(short) cap=2(cap2) err=0/1000(none) intg=0/1000(none)x1
+UVM_INFO dv/auto_dv/env/gen_agents_pkg.sv(387) @ 0: uvm_test_top.env.dbus_agent [gen_bus_agent] uvm_test_top.env.dbus_agent: sva_rvalid_legal armed
+UVM_INFO dv/auto_dv/env/gen_agents_pkg.sv(387) @ 0: uvm_test_top.env.ibus_agent [gen_bus_agent] uvm_test_top.env.ibus_agent: sva_rvalid_legal armed
+UVM_INFO dv/auto_dv/env/gen_rvfi_pkg.sv(253) @ 0: uvm_test_top.env.sb [GEN_SB] ISA model ready: pc=80000080 mtvec=80000001
+     5.00ns INFO     cocotb.gen_tb_top                  GEN_BRIDGE started: listener armed, stim_active=1
+UVM_INFO dv/auto_dv/env/gen_agents_pkg.sv(797) @ 65000: uvm_test_top.env.ctrl [GEN_CTRL] fetch_enable_i <= On (FETCH_EN arg 1)
+UVM_INFO @ 475500: reporter [GEN_EOT] end-of-test store 0x00000001 at 0x800003b0 (store 1)
+  4775.00ns INFO     cocotb.gen_tb_top                  GEN_UT_LOCKSTEP retired 110 consumed 110 mismatches 0 tohost 0x00000001
+  4775.00ns INFO     cocotb.gen_tb_top                  GEN_BRIDGE finish budget 5000 cycles (caller)
+UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(372) @ 477500: uvm_test_top [GEN_BASE_TEST] finish_req seen at cycle 473, commands consumed 65, retired 110
+UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(385) @ 592500: uvm_test_top [GEN_BASE_TEST] drain: 18 records in 114 cycles (bound 17 records plus one, cap 274 cycles from the effective bus maxima i 3/4 d 3/8)
+UVM_INFO /tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_objection.svh(1276) @ 592500: reporter [TEST_DONE] 'run' phase is ready to proceed to the 'extract' phase
+UVM_INFO dv/auto_dv/env/gen_counter_model.sv(342) @ 592500: uvm_test_top.env.ctr [GEN_CTR] counter model: windows exact=1 bound=11 unjudged(write)=0 unjudged(inhibit)=0 misses exact=0 bound=0
+UVM_INFO dv/auto_dv/env/gen_counter_model.sv(344) @ 592500: uvm_test_top.env.ctr [GEN_CTR] counter model accommodations (windows where the RTL differed from the documentation and the knob accepted it): B20 fence.i=0 B11 dit=0 B17 counter8=0 B17 counter11/12=0 B7 dummy=0; records fence.i=0 branch-under-dit=0 multiply=2 divide=2
+UVM_INFO dv/auto_dv/env/gen_counter_model.sv(346) @ 592500: uvm_test_top.env.ctr [GEN_CTR] counter model knobs (1 follows the RTL, 0 the documentation): jumps_fencei=1 taken_dit=1 branches_wait=1 wait_cycles=1
+UVM_INFO dv/auto_dv/env/gen_agents_pkg.sv(749) @ 592500: uvm_test_top.env.dbg [GEN_DBG] requests=0 releases=0
+UVM_INFO dv/auto_dv/env/gen_checkers_pkg.sv(364) @ 592500: uvm_test_top.env.dbg_chk [GEN_DBG_CHK] debug entries=0 bound failures=0 masked failures=0 dret checked=0 failures=0
+UVM_INFO dv/auto_dv/env/gen_agents_pkg.sv(395) @ 592500: uvm_test_top.env.dbus_agent [gen_bus_agent] dbus gnt=1..3(short) rvalid=8..8(short) cap=2(cap2) err=0/1000(none) intg=0/1000(none)x1: grants=14 responses=14 injected_err=0 injected_intg=0
+UVM_INFO dv/auto_dv/env/gen_agents_pkg.sv(395) @ 592500: uvm_test_top.env.ibus_agent [gen_bus_agent] ibus gnt=1..3(short) rvalid=2..4(short) cap=8(cap8) err=0/1000(none) intg=0/1000(none)x1: grants=140 responses=139 injected_err=0 injected_intg=0
+UVM_INFO dv/auto_dv/env/gen_agents_pkg.sv(680) @ 592500: uvm_test_top.env.irq [GEN_IRQ] events=0 releases=0 regime_events=0 final_levels=00000
+UVM_INFO dv/auto_dv/env/gen_checkers_pkg.sv(298) @ 592500: uvm_test_top.env.irq_chk [GEN_IRQ_CHK] irq_pending cycles checked=585 mismatches=0; entries=0 nmi=0 (internal 0, accepted on announced corruptions) cause checked=0 mismatches=0 priority undecidable=0 bound failures=0 expectations released=0 open expectations=0 nmi_internal bound failures=0 open after the drain=0; records with the model dcsr step bit set=0; expectation-records held by a clear per-line enable alone=0
+UVM_INFO dv/auto_dv/env/gen_fcov_pkg.sv(2901) @ 592500: uvm_test_top.env.isa_cov [GEN_FCOV] move pairs: 0 sampled, 0 with mismatching micro-ops (0 of them the self-test's)
+UVM_INFO dv/auto_dv/env/gen_fcov_pkg.sv(2902) @ 592500: uvm_test_top.env.isa_cov [GEN_FCOV] slice A samples: records=128 mul_timing=2 rst_boot=1 (boot_to_req 62) sec_ctrl_inputs=1 zcmp_hazard=0
+UVM_INFO dv/auto_dv/env/gen_fcov_pkg.sv(2903) @ 592500: uvm_test_top.env.isa_cov [GEN_FCOV] irq samples: entry=0 entry_rel=0 edge=0 access=0 mie_global=0 debug_window=0 (post-exit undecided 0, dropped unclosed 0) reset=1 fetch_off=1 (windows published 1, dropped as shorter than the minimum 0) view misses 0 (mret masking a pending enabled line, the clear edge with no bin: 0; mrets that are a handler's first instruction: 0, of which wrongly booked stays-set: 0)
+UVM_INFO dv/auto_dv/env/gen_fcov_pkg.sv(2904) @ 592500: uvm_test_top.env.isa_cov [GEN_FCOV] pmp samples: cfg_write=0 addr_write=0 csr_access=0 table_state=0 (dropped without a retire 0, readback disagreed with the pre-state rule 0)
+UVM_INFO dv/auto_dv/env/gen_fcov_pkg.sv(2939) @ 592500: uvm_test_top.env.isa_cov [GEN_FCOV] isa samples: mul=2 div=2 alu_reg=6 zba_zbb=0 alu_imm=5 shift=0 bit_count=0 zca=78 zca32=50 zcmp=0 (abandoned 0; uop_count no 0, order no 0, tags no 0, minstret_once no 0) zcmp_mv=0 branch=8 csr_pairs=0 (writes 1, replaced 0) sbit=0 zcb=0                  
+UVM_INFO dv/auto_dv/env/gen_checkers_pkg.sv(823) @ 592500: uvm_test_top.env.misc_mon [GEN_MISC] alert_bus hits=0 mismatches=0; alert_minor hits=0 mismatches=0 (ecc injections judged=0 qualified=0 missing=0 unobservable=0, pulse latencies '{'h0, 'h0, 'h0} ; data injections judged=0 hit_way=0 other_or_invalid_way=0 (other valid way 0) unjudged=0 (ambiguous 0, pending at the end 0) missing=0 other_way_pulses=0 held_pulses=0 duplicate_copies visible=0 masked=0; forms a/b both=0 agree=0 disagree=0, b latency 0..0); alert_internal hits=0; data_tag hits=0; sync traps=0 double faults expected=0 pulses=0 mismatches=0; crash_dump checked=128 late=0 early=0 mismatches=0; fetch_en records after off=0 late=0; uninitialised data reads reported=0 sampled=0 skipped(injection 0, alert 0) dropped=0
+UVM_INFO dv/auto_dv/env/gen_rvfi_pkg.sv(167) @ 592500: uvm_test_top.env.rvfi_mon [GEN_RVFI_MON] records=128 irq_markers=0
+UVM_INFO dv/auto_dv/env/gen_rvfi_pkg.sv(595) @ 592500: uvm_test_top.env.sb [GEN_SB] ISA compare: records=128 mismatches=0 folded=0 draft_b=0 traps=0 breakpoints=0 irq_entries=0 dbg_entries=0 zcmp_splits=0 faults_armed=0 faults_unannounced=0 bus_err_announced=0 b13_odd_jalr=0 rf_wr_suppressed=0 nmi_preempted=0 rvfi_rmask_on_nonload=114
+UVM_INFO dv/auto_dv/env/gen_fcov_pkg.sv(77) @ 592500: uvm_test_top.env.wit [GEN_WIT] witnesses=0 distinct=0 covergroup=0 foreign=0 out_of_range=0
+UVM_INFO dv/auto_dv/env/gen_env_pkg.sv(272) @ 592500: uvm_test_top.env [GEN_ENV] mem: 225 words, 0 mmio writes, 0 unmapped accesses; eot stores 1 (last code 0x00000001); sig writes 0; key requests 0; commands routed 65 ignored 0
+  5925.00ns INFO     cocotb.gen_tb_top                  GEN_BRIDGE finished: 65 commands sent and consumed, 128 retirements counted
+  5925.00ns INFO     cocotb.gen_tb_top                  GEN_UT_LOCKSTEP_PASS
+UVM_INFO /tools_vendor/synopsys/vcs/X-2025.06-SP2/etc/uvm-1.2/base/uvm_report_server.svh(904) @ 592500: reporter [UVM/REPORT/SERVER] 
+--- UVM Report Summary ---
+
+** Report counts by severity
+UVM_INFO :   31
+UVM_WARNING :    0
+UVM_ERROR :    0
+UVM_FATAL :    0
+** Report counts by id
+[GEN_BASE_TEST]     2
+[GEN_CTR]     3
+[GEN_CTRL]     1
+[GEN_DBG]     1
+[GEN_DBG_CHK]     1
+[GEN_ENV]     3
+[GEN_EOT]     1
+[GEN_FCOV]     5
+[GEN_IRQ]     1
+[GEN_IRQ_CHK]     1
+[GEN_MISC]     1
+[GEN_RVFI_MON]     1
+[GEN_SB]     2
+[GEN_WIT]     1
+[MEM_LOAD]     1
+[RNTST]     1
+[TEST_DONE]     1
+[gen_bus_agent]     4
+
+  5925.01ns INFO     cocotb.regression                  gen_ut_lockstep passed
+  5925.01ns INFO     cocotb.regression                  *********************************************************************************************************************
+                                                        ** TEST                                                         STATUS  SIM TIME (ns)  REAL TIME (s)  RATIO (ns/s) **
+                                                        *********************************************************************************************************************
+                                                        ** dv.auto_dv.gen_tb.gen_tests.gen_ut_lockstep.gen_ut_lockstep   PASS        5925.01           0.05     114047.50  **
+                                                        *********************************************************************************************************************
+                                                        ** TESTS=1 PASS=1 FAIL=0 SKIP=0                                              5925.01           0.07      89310.90  **
+                                                        *********************************************************************************************************************
+                                                        
+$finish at simulation time               592501
+"dv/auto_dv/tb/gen_protocol_props.sv", 198: gen_tb_top.u_dut.gen_protocol_props_i.sva_ibus_depth_max_seen, 593 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 199: gen_tb_top.u_dut.gen_protocol_props_i.sva_ibus_gnt_same_cycle, 593 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 201: gen_tb_top.u_dut.gen_protocol_props_i.sva_ibus_err_beat, 593 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 224: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_split_second_addr, 593 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 225: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_split_second_be, 593 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 234: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_split_seen, 593 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 235: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_depth_two_seen, 593 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 237: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_store_err_resp, 593 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 256: gen_tb_top.u_dut.gen_protocol_props_i.sva_icram_alloc_write, 593 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 257: gen_tb_top.u_dut.gen_protocol_props_i.sva_icram_inval_write, 593 attempts, 256 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 266: gen_tb_top.u_dut.gen_protocol_props_i.sva_scrkey_req_seen, 593 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 267: gen_tb_top.u_dut.gen_protocol_props_i.sva_scrkey_req_while_valid, 593 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 273: gen_tb_top.u_dut.gen_protocol_props_i.sva_irq_pending_seen, 593 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 274: gen_tb_top.u_dut.gen_protocol_props_i.sva_irq_nmi_seen, 593 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 289: gen_tb_top.u_dut.gen_protocol_props_i.sva_alert_bus_seen, 593 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 290: gen_tb_top.u_dut.gen_protocol_props_i.sva_alert_minor_seen, 593 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 312: gen_tb_top.u_dut.gen_protocol_props_i.sva_rvfi_trap_seen, 593 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 313: gen_tb_top.u_dut.gen_protocol_props_i.sva_rvfi_irq_valid_seen, 593 attempts, 0 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 200: gen_tb_top.u_dut.gen_protocol_props_i.sva_ibus_gnt_delayed, 593 attempts, 140 match
+"dv/auto_dv/tb/gen_protocol_props.sv", 236: gen_tb_top.u_dut.gen_protocol_props_i.sva_dbus_gnt_delayed, 593 attempts, 14 match
+"dv/auto_dv/tb/gen_bus_if.sv", 55: gen_tb_top.u_dbus_if.cov_rvalid_legal, 593 attempts, 14 match
+"dv/auto_dv/tb/gen_bus_if.sv", 55: gen_tb_top.u_ibus_if.cov_rvalid_legal, 593 attempts, 139 match
+           V C S   S i m u l a t i o n   R e p o r t 
+Time: 5925010 ps
+CPU Time:      0.310 seconds;       Data structure size:   8.9Mb
+Mon Sep  7 23:13:15 2026

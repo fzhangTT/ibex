@@ -2652,3 +2652,116 @@ tests:
       are not part of the B16 red. The control is the same program at the default count 2, which is the committed
       gen_ut_intg_span entry and passes. Retained here: gen_bug_b16_first_beat_{red1,ctrl1}_*, record
       dv/auto_dv/evidence/gen_tdd_bug_tests.md Section 4'
+  - name: gen_ut_counters_b20_jumps
+    description: "NumJumps (mhpmcounter7) over three read windows of gen_pmc_fencei_jump_directed.S with the RTL direction: the fence.i is counted as a jump, ctr_hpm_exact accepts it and reports one B20 accommodation"
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0, +gen_ut_boot_retire=40, +gen_ut_ctr_delta_sym=gen_b20_delta, "+gen_ut_ctr_delta_expect=1,0,2,1"]
+    program: {directed: [dv/auto_dv/stim/gen_directed/gen_pmc_fencei_jump_directed.S], seed: 1}
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 600
+    owner: tb-infra
+    pass_marker: GEN_UT_COUNTERS_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_counters
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_counter_model
+    measured: false
+
+  - name: gen_ut_counters_b20_jumps_xfail
+    description: "the same windows with the documentation's rule (+gen_ctr_rtl_jumps_fencei=0): ctr_hpm_exact fires once on mhpmcounter7 for the fence.i, bug candidate B20"
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0, +gen_ut_boot_retire=40, +gen_ut_ctr_delta_sym=gen_b20_delta, "+gen_ut_ctr_delta_expect=1,0,2,1", +gen_ctr_rtl_jumps_fencei=0]
+    program: {directed: [dv/auto_dv/stim/gen_directed/gen_pmc_fencei_jump_directed.S], seed: 1}
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 600
+    owner: tb-infra
+    pass_marker: GEN_UT_COUNTERS_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_counters
+    expected_fail: true
+    keep_artifacts: true
+    component: gen_counter_model
+    measured: false
+
+  - name: gen_ut_counters_b11_taken
+    description: "NumBranchesTaken (mhpmcounter9) over the two windows of gen_pmc_dit_branch_directed.S with the RTL direction: a not-taken branch under data_ind_timing counts as taken, ctr_hpm_exact accepts it and reports two B11 accommodations"
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0, +gen_ut_boot_retire=60, +gen_ut_ctr_delta_sym=gen_b11_delta, "+gen_ut_ctr_delta_expect=16,0,1"]
+    program: {directed: [dv/auto_dv/stim/gen_directed/gen_pmc_dit_branch_directed.S], seed: 1}
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 600
+    owner: tb-infra
+    pass_marker: GEN_UT_COUNTERS_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_counters
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_counter_model
+    measured: false
+
+  - name: gen_ut_counters_b11_taken_xfail
+    description: "the same windows with the documentation's rule (+gen_ctr_rtl_taken_dit=0): ctr_hpm_exact fires twice on mhpmcounter9, sixteen not-taken branches in the first window and the check branch in the second, bug candidate B11"
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0, +gen_ut_boot_retire=60, +gen_ut_ctr_delta_sym=gen_b11_delta, "+gen_ut_ctr_delta_expect=16,0,1", +gen_ctr_rtl_taken_dit=0]
+    program: {directed: [dv/auto_dv/stim/gen_directed/gen_pmc_dit_branch_directed.S], seed: 1}
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 600
+    owner: tb-infra
+    pass_marker: GEN_UT_COUNTERS_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_counters
+    expected_fail: true
+    keep_artifacts: true
+    component: gen_counter_model
+    measured: false
+
+  - name: gen_ut_counters_b17_wait
+    description: "NumBranches, NumCyclesMulWait and NumCyclesDivWait over the six windows of gen_pmc_wb_wait_directed.S with the response latency pinned to eight cycles and the RTL direction: ctr_hpm_exact bounds counter 8 and ctr_hpm_bound keeps the weak bound on 11 and 12, reporting one B17 counter-8 and two B17 counter-11/12 accommodations"
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0, +gen_ut_boot_retire=70, +gen_dbus_rvalid_min=8, +gen_dbus_rvalid_max=8, +gen_ut_ctr_delta_sym=gen_b17_delta, "+gen_ut_ctr_delta_expect=8,1,6,0,43,36,21"]
+    program: {directed: [dv/auto_dv/stim/gen_directed/gen_pmc_wb_wait_directed.S], seed: 1}
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 600
+    owner: tb-infra
+    pass_marker: GEN_UT_COUNTERS_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_counters
+    expected_fail: false
+    keep_artifacts: true
+    component: gen_counter_model
+    measured: false
+
+  - name: gen_ut_counters_b17_wait_xfail
+    description: "the same windows with the documentation's rules (+gen_ctr_rtl_branches_wait=0 +gen_ctr_rtl_wait_cycles=0): ctr_hpm_exact fires on mhpmcounter8 and ctr_hpm_bound on 11 and 12, three firings, while the program's own paired control windows stay green, bug candidate B17"
+    tier: check
+    build: gen_tb
+    uvm_test: gen_base_test
+    plusargs: [+gen_fetch_en_at_reset=0, +gen_ut_boot_retire=70, +gen_dbus_rvalid_min=8, +gen_dbus_rvalid_max=8, +gen_ut_ctr_delta_sym=gen_b17_delta, "+gen_ut_ctr_delta_expect=8,1,6,0,43,36,21", +gen_ctr_rtl_branches_wait=0, +gen_ctr_rtl_wait_cycles=0]
+    program: {directed: [dv/auto_dv/stim/gen_directed/gen_pmc_wb_wait_directed.S], seed: 1}
+    seeds: 1
+    fcov_expectation_file: null
+    timeout_s: 600
+    owner: tb-infra
+    pass_marker: GEN_UT_COUNTERS_PASS
+    feature_groups: []
+    cocotb_module: dv.auto_dv.gen_tb.gen_tests.gen_ut_counters
+    expected_fail: true
+    keep_artifacts: true
+    component: gen_counter_model
+    measured: false

@@ -12,9 +12,13 @@ Common to every section below unless a section says otherwise:
   d9a0553bd4e0b326, dv/auto_dv/work/test-writer/head_export20/dv/auto_dv/work/test-writer/out_tw20. Those two tests were
   handed on the later base d04ada46f1688ec8ab7314c9f2943cacb2b30121, and the range 14c2f48..d04ada4 changes plan
   documents, two evidence documents and four files under dv/auto_dv/tools only, so no file the build is made of. Build B,
-  Sections 3 onward: export of 2f46b1d69f7074be51696e86218b754c36536c1d, sources sha256 prefix 047718cec02eec6a,
+  Sections 3 to 5: export of 2f46b1d69f7074be51696e86218b754c36536c1d, sources sha256 prefix 047718cec02eec6a,
   dv/auto_dv/work/test-writer/head_export21/dv/auto_dv/work/test-writer/out_tw21. Build B carries TB Infra's landing 64,
-  so the arming-count knob Section 4 needs is in it.
+  so the arming-count knob Section 4 needs is in it. Build C, Sections 6 to 8: export of
+  c74662939ccd763c67f87a37842dad980ef68030, sources sha256 prefix b60a9b31cee9f9e7,
+  dv/auto_dv/work/test-writer/head_export22/dv/auto_dv/work/test-writer/out_tw22. Build C carries TB Infra's landing 65,
+  the counter model, whose rules are the collected failure of those three sections; its sources digest equals the identity
+  TB Infra's own landing message quotes, b60a9b31cee9f9e7.
 - Runner: dv/auto_dv/tests/gen_fixtures/gen_run_fixture.sh with GEN_TB_PYROOT set to the export root, SEED=1.
 - Images: built by dv/auto_dv/stim/gen_program.py --directed <source> --seed 1 from the committed program named in the
   section. The run headers name the image under a session scratch directory; the flow's own reproduction command
@@ -232,8 +236,131 @@ retained ebreak, the interface definition forbids the gap, and the deviation is 
 P3 recommended, while the comparator's contiguity rule is correct as it stands. No RTL mechanism is stated here on my own
 authority.
 
+## 6. B20: fence.i counted as a jump (TP-PMC-061), and how B20, B11 and B17 are tested
+
+Sections 6, 7 and 8 share one design, so it is stated once here. Each bug has a directed program of mine with two or
+three read windows on the counter under test, and each program compares every window with the value
+doc/03_reference/performance_counters.rst defines for the event, sets a bit of a verdict word per violation, stores the
+window differences and the verdict to memory, and stores the end-of-test code 1 when nothing was violated or 0x100 plus
+the bits when something was. The counter rules of TB Infra's landing 65 (dv/auto_dv/env/gen_counter_model.sv, record
+dv/auto_dv/evidence/gen_tdd_counters.md) are the collected failure: each of the four direction knobs follows the RTL at
+its default 1 and the documentation at 0, so the pair of entries per bug differs in exactly one knob. The cocotb module
+gen_ut_counters is the fire-check: it reads the program's own differences back through +gen_ut_ctr_delta_sym and
++gen_ut_ctr_delta_expect and refuses a run whose numbers are not the ones the RTL is known to produce, which is what
+makes a green rule mean the rule judged this behaviour rather than nothing. The six entries are TB Infra's, folded into
+the testlist by me with one correction recorded at the end of Section 8.
+
+The lock-step comparator sees none of it, and that is measured, not assumed: every one of the six runs reports
+"mismatches 0" and the default-direction runs report UVM_ERROR 0. The ISA shim mirrors the core's HPM values, so a
+counter bug cannot reach the comparator, which is why these three bugs needed a checker of their own.
+
+B20. Entries gen_ut_counters_b20_jumps (default, PASS) and gen_ut_counters_b20_jumps_xfail (documentation,
++gen_ctr_rtl_jumps_fencei=0, expected_fail: true), program gen_pmc_fencei_jump_directed.S, seed 1, Build C. The three
+windows read mhpmcounter7 around a fence.i, around two nops and around a call with its return; the differences are
+1, 0 and 2 with the verdict word 1, and the program's end-of-test code is 0x00000101, bit 0 for the fence.i window.
+
+Red, retained gen_bug_b20_fencei_doc1_*: verdict XFAIL, reason "expected-fail: uvm_error at sim.log:32
+(ctr_hpm_exact)", signature
+
+    [ctr_hpm_exact] mhpmcounter7 advanced 1, 0 predicted: read 00000001 -> 00000002, cycles 40..56, order 10
+
+one firing, and the nop and call windows raise nothing, so the rule accuses only the fence.i.
+
+Green, two of them. The default-direction entry is the paired green: the same program and run with the knob at 1, where
+the rule accepts the count and reports it as one B20 accommodation (retained gen_bug_b20_fencei_default1_*, PASS,
+UVM_ERROR 0). The second green is my control program gen_pmc_fencei_jump_ctrl_directed.S, the same three windows with
+the fence.i replaced by a nop, which stores the pass code 1 and passes on gen_ut_lockstep (retained
+gen_bug_b20_fencei_ctrl1_*): it shows the program's own comparison against the documentation can pass, which the paired
+green does not show because the knob, not the program, is what changes there.
+
+Waveform. out_tw21/bug_b20_fencei_red1_waves/waves.fsdb, Build B. At 1035 ns the decode stage holds pc_id 8000011a with
+instr_rdata 0000100f, the fence.i, and in that cycle cs_registers_i.mhpmcounter_incr is 00000081, so bit 7, the NumJumps
+event, is asserted for it (bit 0 is mcycle). The counters the record quotes are Build C's; this reading is the event
+pulse itself, which Build B and Build C share.
+
+Reproduction:
+
+    python3 dv/auto_dv/flow/gen_regress.py --repro gen_ut_counters_b20_jumps_xfail 1 --waves --tag b20_repro
+
+## 7. B11: not-taken branches counted as taken under data-independent timing (TP-PMC-043, TP-BTALU-016)
+
+Entries gen_ut_counters_b11_taken (default, PASS) and gen_ut_counters_b11_taken_xfail (documentation,
++gen_ctr_rtl_taken_dit=0, expected_fail: true), program gen_pmc_dit_branch_directed.S, seed 1, Build C. Two windows read
+mhpmcounter9 around the same sixteen never-taken branches, the first with cpuctrlsts.data_ind_timing set and the second
+with it clear; the differences are 16 and 0 with the verdict word 1, and the end-of-test code is 0x00000101.
+
+Red, retained gen_bug_b11_dit_doc1_*: verdict XFAIL, reason "expected-fail: uvm_error at sim.log:32 (ctr_hpm_exact)",
+two firings:
+
+    [ctr_hpm_exact] mhpmcounter9 advanced 16, 0 predicted: read 00000000 -> 00000010, cycles 48..176, order 29
+    [ctr_hpm_exact] mhpmcounter9 advanced 1, 0 predicted: read 00000010 -> 00000011, cycles 176..200, order 34
+
+The first is the sixteen never-taken branches of the armed window. The second is the program's own check branch, which
+runs while the mode is still set and is counted for the same reason, so it is the same finding, not a second one; the
+mode-off window raises nothing.
+
+Green, two of them: the default-direction entry, where the rule accepts both windows and reports two B11 accommodations
+(retained gen_bug_b11_dit_default1_*, PASS, UVM_ERROR 0), and my control program gen_pmc_dit_branch_ctrl_directed.S,
+which leaves data_ind_timing clear and passes with the code 1 on gen_ut_lockstep (retained gen_bug_b11_dit_ctrl1_*).
+
+Waveform. out_tw21/bug_b11_dit_red1_waves/waves.fsdb, Build B. data_ind_timing is high, and at 1085 ns the decode stage
+holds the first never-taken beq (pc_id 80000124) while mhpmcounter_incr is 00000201, so bit 9, the taken-branch event, is
+asserted; the record's next PC is the fall-through 80000128, so the branch was not taken. At 1075 ns the same branch
+raises bit 8, the conditional-branch event, which is correct and stays correct in both directions.
+
+Reproduction:
+
+    python3 dv/auto_dv/flow/gen_regress.py --repro gen_ut_counters_b11_taken_xfail 1 --waves --tag b11_repro
+
+## 8. B17: counters 8, 11 and 12 over-count behind an outstanding memory access (TP-PMC-058, 059, 060, TP-BTALU-018)
+
+Entries gen_ut_counters_b17_wait (default, PASS) and gen_ut_counters_b17_wait_xfail (documentation,
++gen_ctr_rtl_branches_wait=0 +gen_ctr_rtl_wait_cycles=0, expected_fail: true), program gen_pmc_wb_wait_directed.S, seed
+1, Build C, with the data response pinned by +gen_dbus_rvalid_min=8 +gen_dbus_rvalid_max=8. Six windows in three pairs:
+counter 8 around a branch that decodes behind an outstanding load and then around the same branch with eight independent
+instructions after the load, and the same shape for counter 11 with a multiply and counter 12 with a divide. The
+differences are 8, 1, 6, 0, 43 and 36 with the verdict word 21, and the end-of-test code is 0x00000115, bits 0, 2 and 4.
+
+Red, retained gen_bug_b17_wbwait_doc1_*: verdict XFAIL, reason "expected-fail: uvm_error at sim.log:32
+(ctr_hpm_exact)", three firings:
+
+    [ctr_hpm_exact] mhpmcounter8 advanced 8, 1 predicted: read 00000000 -> 00000008, cycles 49..66, order 17
+    [ctr_hpm_bound] mhpmcounter11 advanced 6, at most 1 documented (1 multiply record(s) at 1 cycles each, ...)
+    [ctr_hpm_bound] mhpmcounter12 advanced 43, at most 36 documented (1 divide record(s) at 36 cycles each, ...)
+
+one per counter, and all three calibration windows of the program raise nothing: counter 8 counts 1 for the separated
+branch, counter 11 does not move for the separated multiply, and counter 12 moves by exactly the divider's own 36 cycles.
+That pairing is what makes the three firings attributable to the outstanding access rather than to the instructions.
+
+Green, two of them: the default-direction entry, where the rule accepts the counts and reports the B17 accommodations
+(retained gen_bug_b17_wbwait_default1_*, PASS, UVM_ERROR 0), and my control program gen_pmc_wb_wait_ctrl_directed.S,
+which applies the workaround the bug log names (eight independent instructions between the load and the event in every
+window) and passes with the code 1 on gen_ut_lockstep (retained gen_bug_b17_wbwait_ctrl1_*).
+
+Waveform. out_tw21/bug_b17_wbwait_red1_waves/waves.fsdb, Build B. From 1155 ns to 1230 ns mhpmcounter_incr holds
+00000109 with bit 8, the conditional-branch event, asserted while pc_id stays 8000012a, the window's branch, and
+data_rvalid_i is low the whole time; the response arrives at 1230 ns and the branch leaves decode in the next cycle. So
+the event is held for every cycle the branch waits, which is where a count of one branch per window becomes a count per
+cycle.
+
+One number to read carefully. The three load-shadowed differences are build-sensitive: on Build B the same program and
+seed gave 6, 1, 7, 0, 41, 36 and on Build C 8, 1, 6, 0, 43, 36, although the data response latency was pinned to eight
+cycles in both. The two builds differ only in TB Infra's landing 65, which added four knobs to the knob table, and the
+instruction-side regime is derived from the seed and that table, so the fetch timing moved. The entries pin the data
+latency and the fire-check refuses any other numbers, which is what keeps that honest; a record that quoted the counts
+without the build would have been wrong within the hour.
+
+THE ONE CORRECTION I MADE TO TB INFRA'S SIX ENTRIES. Its file wrote each expect value unquoted inside a YAML flow list,
+for example `plusargs: [..., +gen_ut_ctr_delta_expect=1,0,2,1]`. YAML splits a flow list on those commas, so the value
+became `+gen_ut_ctr_delta_expect=1` followed by three bare integers, which the flow's own testlist loader refuses
+(gen_flow_util plusarg_name on an int). I quoted the value in the fold, changed nothing else, asserted that every folded
+entry parses to the author's object with that one field corrected, and told TB Infra. The six runs above used the full
+expect string on the command line, so the measurements are of the intended configuration.
+
 ## Record log
 
 - 2026-09-08T02:13:23Z: sections 1 and 2 written from the runs of the same date on out_tw20.
 - 2026-09-08T02:57:18Z: sections 3 (B1), 4 (B16) and 5 (B10, recorded without a testlist entry) written from the
   runs of the same date on build B; handed on base dab298859cca07e8e4a86e01d9af3b665b955bc0.
+- 2026-09-08T03:16:38Z: sections 6, 7 and 8 (B20, B11, B17) written from the runs of the same date on build C, on
+  TB Infra's six folded entries; handed on base 5a64b1e989cfd4e08275f93e72c556ade9748a1e.

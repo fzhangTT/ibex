@@ -1,0 +1,13 @@
+uvm_counts: {'INFO': 31, 'WARNING': 0, 'ERROR': 2, 'FATAL': 0}
+cocotb_summary: {'tests': 1, 'passed': 1, 'failed': 0, 'skipped': 0}
+finish_seen: True
+marker_seen: True
+banner_seen: True
+banner: ['GEN_CONFIG_BANNER build_config=opentitan', 'GEN_CONFIG_BANNER BaseIsa=BaseIsaRV32IorCHERIoT RV32M=RV32MSingleCycle RV32B=RV32BOTEarlGrey RV32ZC=RV32ZcaZcbZcmp RegFile=RegFileFF', 'GEN_CONFIG_BANNER RV32E=0 BranchTargetALU=1 WritebackStage=1 ICache=1 ICacheECC=1 ICacheScramble=1', 'GEN_CONFIG_BANNER BranchPredictor=0 DbgTriggerEn=1 DbgHwBreakNum=1 SecureIbex=1', 'GEN_CONFIG_BANNER PMPEnable=1 PMPGranularity=0 PMPNumRegions=16 MHPMCounterNum=10 MHPMCounterWidth=32', 'GEN_CONFIG_BANNER RegFileECC=0 ResetAll=1 DummyInstructions=1 MemECC=1 ICacheTweakInfection=1', 'GEN_CONFIG_BANNER MemDataWidth=39 RegFileDataWidth=32 RegFileCapEccWidth=35 BusSizeECC=39 TagSizeECC=28 LineSizeECC=78', 'GEN_CONFIG_BANNER DmBaseAddr=0x1a110000 DmAddrMask=0x00000fff DmHaltAddr=0x1a110800 DmExceptionAddr=0x1a110808', 'GEN_CONFIG_BANNER CsrMvendorId=0x00000000 CsrMimpId=0x00000000 cheriot_enable=Off rf_test_en=0', 'GEN_CONFIG_BANNER RndCnstLfsrSeed=0xac533bf4 RndCnstLfsrPerm=0x1e35ecba467fd1b12e958152c04fa43878a8daed', 'GEN_CONFIG_BANNER PMPRstCfg/PMPRstAddr/PMPRstMsecCfg=ibex_pkg::PmpCfgRst/PmpAddrRst/PmpMseccfgRst (ibex_core defaults, all regions OFF)', 'GEN_CONFIG_BANNER RVFI=1', 'GEN_CONFIG_BANNER GEN_DUT_SPLIT_INTG=0', 'GEN_CONFIG_BANNER tb=gen_tb_top uvm_test=gen_base_test seed=1 build_config=opentitan pinned_knobs=0 regime_sched=derived', 'GEN_CONFIG_BANNER define SIMULATION=0 (F-DIT-025)', 'GEN_CONFIG_BANNER define COCOTB_SIM=1 (cocotb-master run)', 'GEN_CONFIG_BANNER boot_addr=0x80000000 hart_id=0x00000000 alive_timeout=100000 finish_timeout=20000 mem_image=/localdev/fzhang/ws/ibex-challenge/dv/auto_dv/work/test-writer/img_hand3/b11/prog.vmem tohost=0x80000310', 'GEN_CONFIG_BANNER knobs imem gnt=short rvalid=short err=none intg=none cap=cap8 dmem gnt=short rvalid=short err=none intg=none key=immediate icram_init=random', 'GEN_CONFIG_BANNER knobs irq regime=quiet line_mix=single hold=until_taken debug_req=none fetch_enable=always_on icache_ecc=none data_ecc=none ecc_bits=one']
+failure_hits: 6
+verdict: XFAIL
+reason: expected-fail: uvm_error at sim.log:32 (ctr_hpm_exact)
+evidence: UVM_ERROR dv/auto_dv/env/gen_counter_model.sv(334) @ 181500: uvm_test_top.env.ctr [ctr_hpm_exact] mhpmcounter9 advanced 16, 0 predicted: read 00000000 -> 00000010, cycles 48..176, order 29
+evidence_line: UVM_ERROR dv/auto_dv/env/gen_counter_model.sv(334) @ 181500: uvm_test_top.env.ctr [ctr_hpm_exact] mhpmcounter9 advanced 16, 0 predicted: read 00000000 -> 00000010, cycles 48..176, order 29
+exit_code: 0
+crash_signature: None
