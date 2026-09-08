@@ -322,7 +322,8 @@ package gen_rvfi_pkg;
       int retired, trap, rd_we, mem_r, mem_w, csr_n, reg_n;
       int unsigned pc_expect, insn_expect, bytes;
       logic [31:0] gpr_before [32];   // snapshot for a suppressed register write (any encoding of the load)
-      bit is_seq = 0, dbg_entry = 0, is_store, intr_now = 0, sup_ok = 0;
+      bit is_seq = 0, dbg_entry = 0, is_store, intr_now = 0, sup_ok = 0, mtv_store;
+      int unsigned mtv_bytes;
       if (!model_ready) return;
       // the minstret write corners need the retirement gap of EVERY record, whichever path compares it (a folded micro-op, a draft-B op)
       gen_isa_set_retire_gap(int'(t.cycle - last_cycle)); last_cycle = t.cycle;
@@ -481,6 +482,18 @@ package gen_rvfi_pkg;
       // undone after the step and the rd compare is skipped for this record
       // (T-183 gate) accepted only when the data-bus driver announced a corruption for that load's word and the record's rd fields report
       // no write (rtl/ibex_core.sv:2379-2385 clears them with rf_we); a flag without either is an isa_rd miss, never an undo
+      // The DUT's internal-NMI mtval is the LSU's last address (rtl/ibex_controller.sv:416): the access address
+      // itself when the announced corruption hit the access's FIRST word, which for a misaligned access is not
+      // the announced word address (rtl/ibex_load_store_unit.sv:258). The DUT applies that whether or not it
+      // suppressed the write, so this cannot sit inside the suppress-flag block below: with the flag clear the
+      // model keeps the word address and the crash_dump mirror then fails on every record until the window
+      // drains. A load is matched by a PEEK because the block below consumes the announcement as part of the
+      // suppressed-write gate's accounting; a store's corruption is never in that list, so its own write mask
+      // is the match.
+      if (!is_seq && gen_bus_err_log::intg_pending && gen_bus_err_log::intg_first_addr[31:2] == t.mem_addr[31:2] &&
+          gen_insn_mem_access(t.insn, mtv_store, mtv_bytes) &&
+          (mtv_store ? (t.mem_wmask != 0) : gen_bus_err_log::peek_intg_word(t.mem_addr)))
+        gen_bus_err_log::intg_first_addr = t.mem_addr;
       sup_ok = 0;
       if (t.ext_rf_wr_suppress && !is_seq) begin
         bit announced, ld_st, a0, a1; int unsigned ld_bytes;
@@ -488,18 +501,11 @@ package gen_rvfi_pkg;
         a0 = gen_bus_err_log::take_intg_word(t.mem_addr);
         a1 = spans && gen_bus_err_log::take_intg_word(t.mem_addr + 32'd4);   // both words consumed: a doubly corrupted spanning load leaves nothing behind
         announced = a0 || a1;
-        // the DUT's internal-NMI mtval is the LSU's last address (rtl/ibex_controller.sv:416): the access address itself when its first word
-        // was hit, which for a misaligned access is not the announced word (rtl/ibex_load_store_unit.sv:258)
-        if (a0 && gen_bus_err_log::intg_pending && gen_bus_err_log::intg_first_addr[31:2] == t.mem_addr[31:2]) gen_bus_err_log::intg_first_addr = t.mem_addr;
         sup_ok = announced && (t.rd_addr == 0);
         if (!announced) miss("isa_rd", $sformatf("rf_wr_suppress asserted without an announced integrity corruption for %08h", t.mem_addr), t, fld(cfg.chk_isa_rd, cfg.chk_isa_rd_set));
         else if (t.rd_addr != 0) miss("isa_rd", $sformatf("rf_wr_suppress asserted but the record reports a write to x%0d", t.rd_addr), t, fld(cfg.chk_isa_rd, cfg.chk_isa_rd_set));
         if (sup_ok) for (int i = 1; i < 32; i++) gpr_before[i] = gen_isa_read_gpr(i);
       end
-      // a store response's corruption raises the same NMI with the same mtval rule: the store's own address when its first word was the
-      // announced one (for a misaligned store not the word address); the announcement itself is consumed at the NMI entry
-      if (!t.ext_rf_wr_suppress && !is_seq && t.mem_wmask != 0 && gen_bus_err_log::intg_pending && gen_bus_err_log::intg_first_addr[31:2] == t.mem_addr[31:2])
-        gen_bus_err_log::intg_first_addr = t.mem_addr;
       if (!step(pc_b, pc_a, insn, retired, trap, cause, tval, rd_we, rd_addr, rd_wdata, mem_r, mem_w, mem_addr, mem_wdata, mem_rdata, mem_size, prv, prv_b, csr_n, reg_n)) return;
       // cpuctrlsts.icache_enable as this record leaves it (the model's CSR after the step), for the misc monitor's ECC-injection
       // qualification: a lookup made while the cache is disabled reads the tag RAM but is not checked (rtl/ibex_icache.sv:266)

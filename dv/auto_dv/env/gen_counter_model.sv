@@ -14,6 +14,8 @@
 //   cycle at most), and counters 11 (NumCyclesMulWait) and 12 (NumCyclesDivWait) by at most the window's
 //   cycles in which no data-bus access was outstanding, because a cycle spent waiting for a memory response
 //   is not a cycle waiting for the multiply to complete (doc/03_reference/performance_counters.rst:47-50).
+// A window holding a write to the counter, an inhibit of it, or an interrupt, NMI or debug entry is left
+// UNJUDGED and counted as such, never dropped.
 // Four knobs carry the known RTL deviations, all with one sense: 1 follows the RTL and 0 follows the
 // documentation (the direction ruling in gen_bug_log.md Section 0.6). The default is 1 on all four, each
 // accommodation is counted per bug, and the counts are reported at the end of every run, so a run that met a
@@ -37,6 +39,8 @@ package gen_counter_pkg;
   parameter int unsigned GEN_CTR_TAKEN    = 6;   // mhpmcounter9  NumBranchesTaken
   parameter int unsigned GEN_CTR_MULWAIT  = 8;   // mhpmcounter11 NumCyclesMulWait
   parameter int unsigned GEN_CTR_DIVWAIT  = 9;   // mhpmcounter12 NumCyclesDivWait
+  // judged bound windows kept for the retroactive incomplete-data check; a TB-local bound, not a DUT property
+  parameter int unsigned GEN_CTR_JUDGED_RING = 32;
 
   // The counter index a CSR address names, -1 for anything else; `high` reports the h alias, whose value is
   // the counter's bits 63:32 and so reads 0 at MHPMCounterWidth 32.
@@ -68,6 +72,7 @@ package gen_counter_pkg;
       bit          wrote;            // a write to the counter or its h alias fell inside
       bit          inhibited;        // the counter's mcountinhibit bit was set at a record inside
       bit          memtrap;          // a memory-access trap fell inside
+      bit          entry;            // an interrupt, NMI or debug entry fell inside
       bit          dummies;          // cpuctrlsts.dummy_instr_en was set at a record inside
       bit          acc_fencei;       // a fence.i was counted as a jump under the knob
       bit          acc_dit;          // a not-taken branch was counted as taken under the knob
@@ -80,16 +85,26 @@ package gen_counter_pkg;
     logic [31:0] inhibit = 32'h0;   // mcountinhibit, reset 0 (rtl/ibex_cs_registers.sv:1725)
     bit          dit = 1'b0;        // cpuctrlsts.data_ind_timing
     bit          dummy_en = 1'b0;   // cpuctrlsts.dummy_instr_en
+    // the previous record's debug mode and whether it was a dret, so a debug ENTRY is derived the same way
+    // the scoreboard derives it (gen_rvfi_pkg.sv:331-332): a request held through dret re-enters at once
+    bit          dbg_q = 1'b0, dret_q = 1'b0;
 
     // Completed data-bus transactions as [grant, response] spans on the bridge cycle counter, which is the
     // base a record's `cycle` is on (gen_agents_pkg.sv:19-37, :288, :310). An access still outstanding at a
     // closing read has no span yet, which only makes the bound of that window looser, never tighter.
     typedef struct { int unsigned lo, hi; } gen_ctr_span_t;
     gen_ctr_span_t dbus_span [$];
+    // Windows already judged with a bound, kept for a short while: the data-bus port publishes a transaction
+    // only when it COMPLETES, so an access still in flight at a closing read is invisible at that moment and
+    // cannot be counted then. It becomes visible when its span arrives, which is why the judged windows are
+    // held here and checked against each new span (the DV Lead's first condition on the removed hold).
+    typedef struct { int unsigned k, lo, hi; bit counted; } gen_ctr_done_t;
+    gen_ctr_done_t judged_recent [$];
 
     // report counters, per the direction ruling: the accommodations are counted per bug
-    int unsigned judged_exact = 0, judged_bound = 0, unjudged_write = 0, unjudged_inhibit = 0;
+    int unsigned judged_exact = 0, judged_bound = 0, unjudged_write = 0, unjudged_inhibit = 0, unjudged_entry = 0;
     int unsigned miss_exact = 0, miss_bound = 0;
+    int unsigned judged_bound_incomplete = 0;   // bound judgements a later-arriving span showed were made on incomplete data, so the ceiling used was looser than the eventual one
     // Accommodation counts, per the direction ruling: each one counts a window in which the RTL default
     // ACTUALLY differed from the documentation, so a nonzero count says the run met the candidate and a zero
     // count says it did not.
@@ -123,6 +138,13 @@ package gen_counter_pkg;
       s.lo = tr.stamp_gnt;
       s.hi = (tr.stamp_rvalid > tr.stamp_gnt) ? tr.stamp_rvalid : tr.stamp_gnt;
       dbus_span.push_back(s);
+      // a span overlapping a window already judged says that judgement used a ceiling larger than the
+      // eventual one, which is looser and never tighter, so it is a report line and not a failure
+      foreach (judged_recent[i])
+        if (!judged_recent[i].counted && s.lo < judged_recent[i].hi && s.hi > judged_recent[i].lo) begin
+          judged_recent[i].counted = 1'b1;
+          judged_bound_incomplete++;
+        end
       prune();
     endfunction
 
@@ -163,7 +185,7 @@ package gen_counter_pkg;
       logic [31:0] opnd;
       int ctr_k;
       int unsigned bytes;
-      bit is_branch, is_taken, is_jump, is_fencei, is_mul, is_div, is_mem;
+      bit is_branch, is_taken, is_jump, is_fencei, is_mul, is_div, is_mem, dbg_entry;
 
       is_csr   = (t.insn[6:0] == ibex_pkg::OPCODE_SYSTEM) && (t.insn[14:12] != 3'b000) && !t.trap;
       csr      = t.insn[31:20];
@@ -171,6 +193,12 @@ package gen_counter_pkg;
       is_write = is_csr && (f3[1:0] == 2'b01 || t.insn[19:15] != 5'd0);   // csrrw always writes; csrrs / csrrc with rs1 or uimm 0 only read
       opnd     = f3[2] ? 32'(t.insn[19:15]) : t.rs1_rdata;               // uimm for the i forms, rs1 otherwise
       ctr_k    = gen_ctr_index_of_csr(csr, high);
+
+      // ---- an interrupt, NMI or debug entry makes the window it falls in unjudged, and this is marked BEFORE
+      //      the closing read is judged because an entry's first record can itself be that read
+      dbg_entry = t.ext_debug_mode && (!dbg_q || dret_q) && t.pc_rdata == GEN_MM_DM_HALT;
+      dbg_q = t.ext_debug_mode; dret_q = (t.insn == GEN_INSN_DRET);
+      if (t.intr || dbg_entry) foreach (win[ke]) if (win[ke].open) win[ke].entry = 1'b1;
 
       // ---- close the window this record's read of a counter ends, before its own events are added
       if (is_csr && ctr_k >= 0 && !high && t.rd_addr != 5'd0) judge(ctr_k, t);
@@ -258,13 +286,18 @@ package gen_counter_pkg;
       // need not share; every upper bound below carries that offset as slack.
       if (win[k].wrote) begin unjudged_write++; return; end
       if (win[k].inhibited) begin unjudged_inhibit++; return; end
+      if (win[k].entry) begin unjudged_entry++; return; end
       // the accommodated event was predicted, so the RTL's own count is what the window shows: it differed
       // from the documentation exactly when the window's difference matches the accommodated prediction
       if (win[k].acc_fencei && delta == win[k].owed) acc_b20_fencei++;
       if (win[k].acc_dit && delta == win[k].owed) acc_b11_dit++;
 
       if (bound_on()) begin
+        gen_ctr_done_t rec;
         judged_bound++;
+        rec.k = k; rec.lo = lo; rec.hi = hi; rec.counted = 1'b0;
+        judged_recent.push_back(rec);
+        while (judged_recent.size() > GEN_CTR_JUDGED_RING) void'(judged_recent.pop_front());
         if (delta > span + GEN_RVFI_ID_EXIT_OFFSET) begin
           miss_bound++;
           `uvm_error("ctr_hpm_bound", $sformatf("mhpmcounter%0d advanced %0d over a %0d cycle window, and a counter moves by at most one per cycle: read %08h -> %08h, cycles %0d..%0d, order %0d",
@@ -339,8 +372,8 @@ package gen_counter_pkg;
     endfunction
 
     function void report_phase(uvm_phase phase);
-      `uvm_info("GEN_CTR", $sformatf("counter model: windows exact=%0d bound=%0d unjudged(write)=%0d unjudged(inhibit)=%0d misses exact=%0d bound=%0d",
-                judged_exact, judged_bound, unjudged_write, unjudged_inhibit, miss_exact, miss_bound), UVM_LOW)
+      `uvm_info("GEN_CTR", $sformatf("counter model: windows exact=%0d bound=%0d (of which %0d judged before a data access in them completed, so on a looser ceiling) unjudged(write)=%0d unjudged(inhibit)=%0d unjudged(entry)=%0d misses exact=%0d bound=%0d",
+                judged_exact, judged_bound, judged_bound_incomplete, unjudged_write, unjudged_inhibit, unjudged_entry, miss_exact, miss_bound), UVM_LOW)
       `uvm_info("GEN_CTR", $sformatf("counter model accommodations (windows where the RTL differed from the documentation and the knob accepted it): B20 fence.i=%0d B11 dit=%0d B17 counter8=%0d B17 counter11/12=%0d B7 dummy=%0d; records fence.i=%0d branch-under-dit=%0d multiply=%0d divide=%0d",
                 acc_b20_fencei, acc_b11_dit, acc_b17_branch, acc_b17_wait, acc_b7_dummy, rec_fencei, rec_dit_branch, rec_mul, rec_div), UVM_LOW)
       `uvm_info("GEN_CTR", $sformatf("counter model knobs (1 follows the RTL, 0 the documentation): jumps_fencei=%0b taken_dit=%0b branches_wait=%0b wait_cycles=%0b",

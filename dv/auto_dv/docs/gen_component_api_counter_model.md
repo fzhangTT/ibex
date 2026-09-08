@@ -51,6 +51,7 @@ cannot be judged either; the reads must bracket the window and both must use a n
 | `+gen_ctr_rtl_taken_dit` | `PLUSARG_CTR_RTL_TAKEN_DIT` | NumBranchesTaken counts every conditional branch while data_ind_timing is set, as this RTL does; 0 = the documentation's rule | 1 |
 | `+gen_ctr_rtl_branches_wait` | `PLUSARG_CTR_RTL_BRANCHES_WAIT` | NumBranches is bounded over a window that held a data access; 0 = the documentation's exact rule everywhere | 1 |
 | `+gen_ctr_rtl_wait_cycles` | `PLUSARG_CTR_RTL_WAIT_CYCLES` | counters 11 and 12 keep only the one-per-cycle bound and the no-record-no-count rule; 0 = the documentation's bound | 1 |
+| `+gen_ut_ctr_delta_sym`, `+gen_ut_ctr_delta_expect`, `+gen_ut_ctr_nmi_after` | `PLUSARG_UT_CTR_*` | the unit test's fire-check symbol, its expected words, and the retirement count after which one NMI is pulsed so an entry falls inside a window | none, none, 0 |
 
 The four direction knobs are ONE FAMILY WITH ONE SENSE: 1 follows the RTL and 0 follows the documentation,
 on every one of them. That is the direction ruling in `gen_bug_log.md` Section 0.6 (the B13 convention
@@ -83,8 +84,23 @@ Exactness class per counter, AS BUILT:
 Every upper bound carries `GEN_RVFI_ID_EXIT_OFFSET` cycles of slack, because both anchors are CSR-read
 records whose distance from their own ID exit carries no memory wait but need not be identical.
 
+A data access still in flight at a closing read makes a bound LOOSER, never tighter, so no window has to be
+held back for it. The data-bus port publishes a transaction only when it completes, so an access in flight
+contributes no outstanding cycles, the window's free-cycle ceiling comes out larger than the eventual one,
+and the window is judged weakly rather than wrongly. Such a judgement is not silent: the component keeps the
+recently judged bound windows and counts one in `judged_bound_incomplete` when a later-arriving transaction
+turns out to overlap one, which is the only sound moment to see it, and reports the count beside the bound
+total at the end of the run.
+
+The three ways a window is left UNJUDGED are counted separately in that report line: a write to the counter
+or its high half (`unjudged(write)`), the counter's `mcountinhibit` bit set at a record inside the window
+(`unjudged(inhibit)`), and an interrupt, NMI or debug entry inside the window (`unjudged(entry)`).
+
 A window is left UNJUDGED, and counted as such in the report, when a write to the counter or its high half
-fell inside it, or when the counter's `mcountinhibit` bit was set at any record inside it. `mcountinhibit`
+fell inside it, when the counter's `mcountinhibit` bit was set at any record inside it, or when an interrupt,
+NMI or debug entry fell inside it (the DV Lead's ruling on the counter cut, item 3; the debug entry is derived
+the same way the scoreboard derives it, so the two agree). Each of the three has its own count in the report
+line, so an unjudged window is never silently dropped. `mcountinhibit`
 and `cpuctrlsts` are shadowed from the record stream by the architectural write rule (rw takes the operand,
 set ORs it, clear ANDs its complement, the operand being the uimm for the immediate forms), the pattern
 `gen_fcov_pkg.sv:2153-2166` already uses for `cpuctrlsts`; `mcountinhibit` resets to 0

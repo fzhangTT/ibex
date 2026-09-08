@@ -47,6 +47,7 @@ plusargs:
   - {name: ut_intg_span_arm_count, kind: int, default: 2, desc: "gen_ut_intg_span: integrity corruptions armed on the spanning load's buffer (MEM_ERR_ARM count, arg3[31:8]); the address range always covers both of the load's words, so 1 corrupts the first bus access only (bug candidate B16) and the default 2 corrupts both"}
   - {name: ut_ctr_delta_sym, kind: string, default: null, desc: "gen_ut_counters: the program symbol holding its own measured counter differences, read back through MEM_PEEK as the fire-check"}
   - {name: ut_ctr_delta_expect, kind: string, default: null, desc: "gen_ut_counters: the words expected at that symbol, comma separated, each either a value or lo:hi for a latency-dependent one"}
+  - {name: ut_ctr_nmi_after, kind: int, default: 0, desc: "gen_ut_counters: retirements after which one NMI is pulsed through the bridge, so an NMI entry falls inside an open counter read window and the rule's unjudged-entry row is exercised; 0 = no pulse"}
   # ---- numeric agent overrides (layer 1 windows; an enum knob below sets them unless overridden) ----
   - {name: ibus_gnt_min, kind: int, default: null, desc: "instruction bus grant latency low bound (cycles)"}
   - {name: ibus_gnt_max, kind: int, default: null, desc: "instruction bus grant latency high bound"}

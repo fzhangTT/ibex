@@ -1,0 +1,8 @@
+verdict: FAIL
+reason: uvm_error at sim.log:32 (ctr_hpm_exact)
+evidence: UVM_ERROR dv/auto_dv/env/gen_counter_model.sv(367) @ 61500: uvm_test_top.env.ctr [ctr_hpm_exact] mhpmcounter7 advanced 1, 0 predicted: read 00000001 -> 00000002, cycles 40..56, order 10
+uvm_counts: {'INFO': 31, 'WARNING': 0, 'ERROR': 1, 'FATAL': 0}
+cocotb_summary: {'tests': 1, 'passed': 1, 'failed': 0, 'skipped': 0}
+marker_seen: True
+banner_seen: True
+exit_code: 0

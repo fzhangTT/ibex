@@ -6,7 +6,10 @@ counter rules themselves (ctr_hpm_exact, ctr_hpm_bound) fail through their own u
 collects; this module does not repeat their judgement.
 +gen_ut_ctr_delta_sym names the program symbol holding the differences and +gen_ut_ctr_delta_expect the words
 expected there, comma separated, each a value or lo:hi where the RTL's own count depends on the bus latency.
-Plusargs as gen_ut_lockstep plus those two.
++gen_ut_ctr_nmi_after pulses one NMI after that many retirements, which lands an NMI entry inside an open
+counter read window: the counter rules leave such a window unjudged, and that run is how the rule's
+unjudged-entry row is exercised rather than asserted. An NMI needs no interrupt enable, and the programs'
+vector tables answer it with an mret, so no program change is needed. Plusargs as gen_ut_lockstep plus those.
 MODULE=dv.auto_dv.gen_tb.gen_tests.gen_ut_counters, TOPLEVEL=gen_tb_top."""
 import os
 
@@ -20,6 +23,7 @@ from dv.auto_dv.gen_tb.gen_knobs import CONSTANTS, PLUSARGS
 
 PASS_MARKER = "GEN_UT_COUNTERS_PASS"
 QUIESCE_CYCLES = 20   # bound on the wait for the retired and consumed counters to hold equal across a cycle
+NMI_PULSE_CYCLES = 4  # hold on the non-maskable line, as gen_ut_export_rows drives it
 
 
 def plus(name, default=None):
@@ -50,6 +54,7 @@ async def gen_ut_counters(dut):
     retire_target = int(plus("ut_boot_retire", PLUSARGS["ut_boot_retire"]["default"]))
     sym = plus("ut_ctr_delta_sym")
     spec = plus("ut_ctr_delta_expect")
+    nmi_after = int(plus("ut_ctr_nmi_after", PLUSARGS["ut_ctr_nmi_after"]["default"]))
     assert sym, "GEN_UT_COUNTERS: +gen_ut_ctr_delta_sym is required (the fire-check reads the program's own differences)"
     assert spec, "GEN_UT_COUNTERS: +gen_ut_ctr_delta_expect is required"
     assert plus("fetch_en_at_reset") == "0", "GEN_UT_COUNTERS: run with +gen_fetch_en_at_reset=0 (the read-back precedes execution)"
@@ -60,6 +65,12 @@ async def gen_ut_counters(dut):
     for idx, word in img.sample(8, seed):
         assert await b.cmd("MEM_PEEK", (idx * 4, 0, 0, 0)) == word, "GEN_UT_COUNTERS: read-back mismatch"
     await b.cmd("FETCH_EN", (1, 0, 0, 0))
+    if nmi_after:
+        # the pulse must land while a counter window is open, so it is timed off the retirement count the
+        # caller picked from the program's own window layout rather than off a cycle
+        await b.wait_retired_until(nmi_after, timeout_cycles=nmi_after * 40 + 2000)
+        await b.cmd("NMI_PULSE", (NMI_PULSE_CYCLES, 0, 0, 0))
+        log.info("GEN_UT_COUNTERS pulsed one NMI after %d retirements", nmi_after)
     await b.wait_retired_until(retire_target, timeout_cycles=retire_target * 40 + 2000)
     if img.tohost is not None and int(h.b.evt_eot_count.value) == 0:
         try:

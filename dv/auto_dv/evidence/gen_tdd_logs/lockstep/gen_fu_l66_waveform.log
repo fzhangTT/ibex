@@ -1,0 +1,50 @@
+# Counter model: waveform confirmation (LOG-103)
+# Waves build: dv/auto_dv/flow/gen_build.py --build gen_tb --waves --local-cocotb, vcs rc=0, 2026-09-08T03:19:30Z,
+#   outdir dv/auto_dv/out_l65w3/build/gen_tb. The waves build compiles the SV only; the cocotb module the run
+#   loads comes from the clone at the hash the landing hands.
+# Runs (gen_ut_counters against that build with -ucli -do dump.tcl, the form gen_run.py --waves uses):
+#   dv/auto_dv/out_l65w3/runs/b20_doc_waves/waves.fsdb   1 collected UVM_ERROR (ctr_hpm_exact, counter 7)
+#   dv/auto_dv/out_l65w3/runs/b17_doc_waves/waves.fsdb   3 collected UVM_ERRORs (counter 8 exact, counters 11 and 12 bound)
+# The messages those two runs collected, verbatim:
+#   [ctr_hpm_exact] mhpmcounter7 advanced 1, 0 predicted: read 00000001 -> 00000002, cycles 40..56, order 10
+#   [ctr_hpm_exact] mhpmcounter8 advanced 8, 1 predicted: read 00000000 -> 00000008, cycles 49..66, order 17
+#   [ctr_hpm_bound] mhpmcounter11 advanced 6, at most 1 documented (1 multiply record(s) at 1 cycles each, and 8 of the window's 13 cycles had a data access outstanding leaving 5 free): read 00000000 -> 00000006, cycles 103..116, order 39
+#   [ctr_hpm_bound] mhpmcounter12 advanced 43, at most 36 documented (1 divide record(s) at 36 cycles each, and 8 of the window's 49 cycles had a data access outstanding leaving 41 free): read 00000000 -> 0000002b, cycles 162..211, order 60
+# Read with the fsdb-mcp-server against dv/auto_dv/out_l65w3/build/gen_tb/vcs_simv.daidir. The B20 window was
+# re-read on this build after the entry-unjudged row was added and is transition-for-transition identical to
+# the read on the previous build, and the four collected messages are unchanged. Times below are the
+# FSDB's own 10 ps unit and the TB clock period is 10 ns (GEN_CLK_PERIOD_NS), so one cycle is 1000.
+# rvfi_ext_mhpmcounters prints index 0 first, and index 4 is mhpmcounter7 (rtl/ibex_core.sv:2108-2128).
+
+## B20, counter 7: the fence.i is counted as a jump (b20_doc_waves)
+rvfi_order                44500 = 8            49500 = 9            60500 = 10
+rvfi_insn                 44500 = b07022f3     49500 = 0000100f     60500 = b0702373
+#                         csrr t0, mhpmcounter7   FENCE.I              csrr t1, mhpmcounter7
+perf_jump                 47500 -> 1   48500 -> 0        (one cycle, in the fence.i's own decode cycle)
+rvfi_ext_mhpmcounters[4]  44500 = 00000001     49500 = 00000001     60500 = 00000002
+# The window between the two reads holds exactly one instruction, the fence.i, and the counter moved from 1
+# to 2 for it, with a single perf_jump pulse in its decode cycle. The documentation defines the event as
+# unconditional jumps (j, jal, jr, jalr) only, which is what ctr_hpm_exact reported.
+# The same window confirms the sample-point reading the read-anchored design rests on: the fence.i's pulse
+# landed at the end of its own decode cycle and its OWN record still samples 1; only the next read sees 2.
+
+## B17, counter 8: the branch counts once per cycle it waits behind the load (b17_doc_waves)
+rvfi_order      53500 = 13           67500 = 14           68500 = 15
+rvfi_insn       53500 = b08022f3     67500 = 0000429c     68500 = 0ec58f63
+#               csrr t0, mhpmcounter8   c.lw                 BEQ
+data_gnt_i      59000 -> 1   60000 -> 0        (the load is granted)
+perf_branch     59500 -> 1   67500 -> 0        (EIGHT cycles high, one count per cycle)
+data_rvalid_i   67000 -> 1   68000 -> 0        (the response arrives; perf_branch falls one cycle later)
+# perf_branch was high for exactly the cycles the load's response was outstanding. The documentation defines
+# counter 8 as one count per conditional branch, which is what ctr_hpm_exact reported.
+
+## B17, counter 11: the multiply's wait cycles are the load's outstanding cycles (b17_doc_waves)
+rvfi_insn       107500 = b0b02473    118500 = 0000469c    119500 = 02c58833    120500 = b0b024f3
+#               csrr s0, mhpmcounter11  c.lw                 MUL                  csrr s1, mhpmcounter11
+data_gnt_i      110000 -> 1  111000 -> 0
+perf_mul_wait   111500 -> 1  118000 -> 0       (six counted cycles, ending at the response instant)
+data_rvalid_i   118000 -> 1  119000 -> 0
+# perf_mul_wait rose after the load was granted and fell in the SAME cycle the response arrived, so every one
+# of those cycles was spent waiting for memory and none for the multiply, which under RV32MSingleCycle
+# completes MD_OP_MULL in one cycle. That is the derivation the ctr_hpm_bound row rests on.
+# perf_mul_wait is flat across the counter-8 window above, so the two windows are separate events.

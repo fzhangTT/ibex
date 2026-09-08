@@ -82,6 +82,14 @@ merged data equal to the model's and raises no rd miss. The seed-independent mec
 assertion, which fires in 8 of 8: `GEN_UT_INTG_SPAN: no record with rf_wr_suppress`. A test that rests on
 isa_rd alone would pass on six of these eight seeds.
 
+THE 16 IS OFFSET-SPECIFIC and must not be read as a property of the first-beat class (rtl-arch, after this
+record was handed). The value-changing positions are the ones the offset merges in, so their number is the
+width of the first-beat slice the offset selects: 24 at offset 1, 16 at offset 2, which is this program's
+effective address, and 8 at offset 3 (`rtl/ibex_load_store_unit.sv:91`, `:235`, `:272-274`). The harmless
+positions are therefore the seven check bits AND the unmerged half, not the check bits alone. The conclusion
+does not change and is the durable part: the register value is not a reliable witness for this class at any
+offset, because a data-bit corruption in the unmerged half is as invisible in the register as a check-bit one.
+
 ## 7. A TB defect the count-1 runs expose (reported, not fixed here)
 
 Every count-1 run raises 20 or 21 `crash_dump` errors of one shape:

@@ -3558,3 +3558,26 @@ Each file is an ASCII-normalised copy of the run artifact named in the source co
 | dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_fu_l65_b17_doc_run_header.txt | dv/auto_dv/out_l65/b17_doc/run_header.txt | 651 | 489ee77a0f73ad65e092fba39db67bcc |
 | dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_fu_l65_b17_doc_verdict.txt | gen_verdict.decide on dv/auto_dv/out_l65/b17_doc | 439 | 2bb47fbe6066dea6b3582b755d85dcf8 |
 | dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_fu_l65_b17_doc_sim.log | dv/auto_dv/out_l65/b17_doc/sim.log | 14328 | deeb575cc2a2733f9f34faf59d9a624c |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_fu_l66_counters_census.log | scratch l66_census.log, the redirected output of scratch l65_census.sh over dv/auto_dv/out_l66: the six runs plus the entry proof run | 6952 | a33f2d10fe6f67034dd913c9507c0732 |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_fu_l66_waveform.log | scratch l65_waveform.log, the fsdb-mcp-server transition tables of both waves runs with their reading | 4616 | cfbe6cd773baa2898904c458c2a6c02a |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_fu_l66_b17_gnt_probe.log | scratch b17_gnt_probe.log, the redirected output of scratch b17_gnt_probe.sh: six runs of the B17 program over two seeds and three grant-delay settings | 390 | bd0a9cbe54998e55bb4a3bd3530a6353 |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_fu_l66_b20_doc_run_header.txt | dv/auto_dv/out_l66/b20_doc/run_header.txt | 572 | 3eaecbdf530c3e9377b3e287f1ce4f0a |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_fu_l66_b20_doc_verdict.txt | gen_verdict.decide on dv/auto_dv/out_l66/b20_doc | 439 | 1c2b76d2386e730a4c26c0e5d496ce6b |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_fu_l66_b20_doc_sim.log | dv/auto_dv/out_l66/b20_doc/sim.log | 13688 | a13aa9da64ffd415ec5c5b9f86dbe3d7 |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_fu_l66_b11_doc_run_header.txt | dv/auto_dv/out_l66/b11_doc/run_header.txt | 567 | c1b6d4d6ea5fc85b81b7969d00a7f89f |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_fu_l66_b11_doc_verdict.txt | gen_verdict.decide on dv/auto_dv/out_l66/b11_doc | 442 | bd3c924d5bfb7621b328753c0dbab1cd |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_fu_l66_b11_doc_sim.log | dv/auto_dv/out_l66/b11_doc/sim.log | 13879 | c34debd4abeb9c00a72c5e8a2c9384d7 |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_fu_l66_b17_doc_run_header.txt | dv/auto_dv/out_l66/b17_doc/run_header.txt | 651 | 615f3972fed631bca21d77c21e5a53bd |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_fu_l66_b17_doc_verdict.txt | gen_verdict.decide on dv/auto_dv/out_l66/b17_doc | 439 | bdc0b5e4d7bd7c7b4e4b0a1b0522376d |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_fu_l66_b17_doc_sim.log | dv/auto_dv/out_l66/b17_doc/sim.log | 14429 | 885b79a22ea304ed340cd38423988aa4 |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_fu_l66_b11_default_run_header.txt | dv/auto_dv/out_l66/b11_default/run_header.txt | 546 | 07e67d0e0194f6348ec7e519ef9da259 |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_fu_l66_b11_default_verdict.txt | gen_verdict.decide on dv/auto_dv/out_l66/b11_default | 283 | 37b33703c2e52ba9112d413fc2db8322 |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_fu_l66_b11_default_sim.log | dv/auto_dv/out_l66/b11_default/sim.log | 13458 | a88410bbdceda1094b3f88cbc94c2ac7 |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_fu_l66_b11_nmi_run_header.txt | dv/auto_dv/out_l66/b11_nmi/run_header.txt | 567 | ea2ed02b1c5ca1030ec1ebb36dfefe22 |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_fu_l66_b11_nmi_verdict.txt | gen_verdict.decide on dv/auto_dv/out_l66/b11_nmi | 283 | 37b33703c2e52ba9112d413fc2db8322 |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_fu_l66_b11_nmi_sim.log | dv/auto_dv/out_l66/b11_nmi/sim.log | 13479 | e71b907b9a84401bacb46eb4b110b899 |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_fu_t11_before.log | scratch t11_before.log, the four-run table on the pre-fix build 047718cec02eec6a | 419 | 367ad99d04cb311f3ce9c8352dc8deea |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_fu_t11_after.log | scratch t11_after.log, the same four runs on the fixed build ec5ff5d8019e575c | 404 | 645e9d260c66a3d2a4fb20f2171666b8 |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_fu_t11_waveform.log | scratch t11_waveform.log, the fsdb-mcp-server read of crash_dump_o in the count-1 run with its reading | 2542 | 793889475e2dc43b31f5497b190ef65e |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_fu_t11_b16_c1_pre_sim.log | dv/auto_dv/out_b16knob2/b16_c1/sim.log (the count-1 run on the pre-fix build) | 12964 | b717f809b8ea4cdf9df5fcc221bdec97 |
+| dv/auto_dv/evidence/gen_tdd_logs/lockstep/gen_fu_t11_b16_c1_post_sim.log | dv/auto_dv/out_t11/b16_c1/sim.log (the count-1 run on the fixed build) | 7593 | 7c4f4e79f0aa282d935e58fca1ab5a60 |

@@ -1,0 +1,29 @@
+# The crash_dump mtval fix (TB defect row T11): waveform confirmation (LOG-103)
+# Waves build: dv/auto_dv/flow/gen_build.py --build gen_tb --waves --local-cocotb, vcs rc=0, 2026-09-08T03:29:41Z,
+#   outdir dv/auto_dv/out_t11w/build/gen_tb (the build carries the fix).
+# Run: gen_ut_intg_span with +gen_ut_intg_span_arm_count=1 (the B16 case), seed 1,
+#   dv/auto_dv/out_t11w/runs/b16_c1/waves.fsdb, one collected UVM_ERROR and its id is isa_rd.
+# Read with the fsdb-mcp-server against dv/auto_dv/out_t11w/build/gen_tb/vcs_simv.daidir. Times are the FSDB's
+# own 10 ps unit; the TB clock period is 10 ns, so one cycle is 1000.
+# crash_dump_o is {current_pc, next_pc, last_data_addr, exception_pc, exception_addr}.
+# gen_span_buf = 0x800002e0; the load is lw a1, 2(a0), effective address 0x800002e2, spanning the words at
+# 0x800002e0 and 0x800002e4, and the ONE armed corruption hits the first of them.
+
+data_addr_o     42500 = 800002e0   46500 = 800002e4     (the two accesses of the misaligned load)
+data_rvalid_i   49000 -> 1  50000 -> 0   54000 -> 1  55000 -> 0   (the two response beats)
+crash_dump_o    46500 = {80000118, 8000011c, 800002e2, 00000000, 00000000}
+                50500 = {80000118, 8000011c, 800002e4, 00000000, 00000000}
+                55500 = {80000118, 8000027c, 800002e4, 8000011c, 800002e2}
+                63500 = {8000027c, 80000280, 800002e4, 8000011c, 800002e2}
+                ... exception_addr holds 800002e2 through every following record in the window
+rvfi_ext_rf_wr_suppress  no transition in 400..900 ns: the flag stays CLEAR, which is bug candidate B16
+
+## What the window shows, and why the correction cannot sit inside the suppress-flag block
+At 55500, one cycle after the second response, the DUT latches its exception mirror: exception_pc is the
+load's own pc 0x8000011c and EXCEPTION_ADDR IS 0x800002E2, the access address, not the announced word address
+0x800002e0. That matches rtl/ibex_controller.sv:416 with rtl/ibex_load_store_unit.sv:258: the internal NMI's
+mtval is the LSU's last address, and for a misaligned access whose FIRST word carried the corruption that is
+the access address. And rvfi_ext_rf_wr_suppress never rises in the window, so the record the scoreboard sees
+has the flag clear. The correction that turns the announced word address into the access address therefore
+has to run for this record, and before this fix it ran only inside the block guarded by that flag, so the
+model kept 0x800002e0 and the crash_dump rule fired once per following record until the window drained.

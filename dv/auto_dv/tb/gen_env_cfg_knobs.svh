@@ -73,6 +73,8 @@
   bit ut_ctr_delta_sym_set = 1'b0;
   string ut_ctr_delta_expect = "";
   bit ut_ctr_delta_expect_set = 1'b0;
+  int unsigned ut_ctr_nmi_after = 0;
+  bit ut_ctr_nmi_after_set = 1'b0;
   int unsigned ibus_gnt_min = 0;
   bit ibus_gnt_min_set = 1'b0;
   int unsigned ibus_gnt_max = 0;
@@ -337,6 +339,7 @@
     if ($value$plusargs({PLUSARG_UT_INTG_SPAN_ARM_COUNT, "=%d"}, u)) begin ut_intg_span_arm_count = u; ut_intg_span_arm_count_set = 1'b1; end
     if ($value$plusargs({PLUSARG_UT_CTR_DELTA_SYM, "=%s"}, s)) begin ut_ctr_delta_sym = s; ut_ctr_delta_sym_set = 1'b1; end
     if ($value$plusargs({PLUSARG_UT_CTR_DELTA_EXPECT, "=%s"}, s)) begin ut_ctr_delta_expect = s; ut_ctr_delta_expect_set = 1'b1; end
+    if ($value$plusargs({PLUSARG_UT_CTR_NMI_AFTER, "=%d"}, u)) begin ut_ctr_nmi_after = u; ut_ctr_nmi_after_set = 1'b1; end
     if ($value$plusargs({PLUSARG_IBUS_GNT_MIN, "=%d"}, u)) begin ibus_gnt_min = u; ibus_gnt_min_set = 1'b1; end
     if ($value$plusargs({PLUSARG_IBUS_GNT_MAX, "=%d"}, u)) begin ibus_gnt_max = u; ibus_gnt_max_set = 1'b1; end
     if ($value$plusargs({PLUSARG_IBUS_RVALID_MIN, "=%d"}, u)) begin ibus_rvalid_min = u; ibus_rvalid_min_set = 1'b1; end
