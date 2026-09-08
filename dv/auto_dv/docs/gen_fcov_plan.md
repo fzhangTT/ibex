@@ -2,7 +2,7 @@
 
 Deliverable 3 (DV_prompt.txt Section 11): the definition of every functional-coverage bin (not the
 implementation; TB Infra implements covergroups in the gen_ namespace from this plan). Owner: dv-lead.
-Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in), generated (inputs digest 9606552cc192 over every part file and over the generator's own source, no clock; what the digest covers and the commands that reproduce it are recorded at dv/auto_dv/evidence/gen_plan_digest_provenance.md) from dv/auto_dv/work/dv-lead/parts6/fcov_*.md. Part-file names in this document (tp_<area>.md, fcov_<area>.md, gen_part_<area>.md, trace_*_<area>.csv and the README_*_BRIEF.md briefs) are this plan set's own gitignored sources, named as provenance: the content they hold is in the corresponding area of gen_test_plan.md, gen_fcov_plan.md or gen_feature_list.md, and the bug and doc-defect number series they define are in gen_bug_log.md. No claim in this document rests on opening one. Three rtl-arch notes this plan set cites are committed references, not work files: dv/auto_dv/evidence/gen_multdiv_bound_props.md (the MD-n bound properties and covers), dv/auto_dv/evidence/gen_bug_reproducer_specs.md (the reproducer recipes behind the bug log) and dv/auto_dv/evidence/gen_interface_inventory.md (the numbered driver and protocol rules); citations name them by basename and resolve there.
+Version 2 (after the Critic's advisory pre-review gen_critic_fcov_drafts_prereview_v1.md was folded in), generated (inputs digest 7a13c5e7344f over every part file and over the generator's own source, no clock; what the digest covers and the commands that reproduce it are recorded at dv/auto_dv/evidence/gen_plan_digest_provenance.md) from dv/auto_dv/work/dv-lead/parts6/fcov_*.md. Part-file names in this document (tp_<area>.md, fcov_<area>.md, gen_part_<area>.md, trace_*_<area>.csv and the README_*_BRIEF.md briefs) are this plan set's own gitignored sources, named as provenance: the content they hold is in the corresponding area of gen_test_plan.md, gen_fcov_plan.md or gen_feature_list.md, and the bug and doc-defect number series they define are in gen_bug_log.md. No claim in this document rests on opening one. Three rtl-arch notes this plan set cites are committed references, not work files: dv/auto_dv/evidence/gen_multdiv_bound_props.md (the MD-n bound properties and covers), dv/auto_dv/evidence/gen_bug_reproducer_specs.md (the reproducer recipes behind the bug log) and dv/auto_dv/evidence/gen_interface_inventory.md (the numbered driver and protocol rules); citations name them by basename and resolve there.
 
 Build configuration: `opentitan` (ibex_configs.yaml): BaseIsa=RV32IorCHERIoT (CHERIoT mode excluded
 by owner ruling), RV32E=0, RV32M=RV32MSingleCycle, RV32B=RV32BOTEarlGrey, RV32ZC=RV32ZcaZcbZcmp,
@@ -47,10 +47,11 @@ ibex_pkg; compiled with +define+RVFI; cheriot_enable_i tied IbexMuBiOff inside t
   tables (W-*) that its items reference, so DV_prompt Section 6 layer 1 is stated once per class.
 - Code-coverage gate: the scope ruling is gen_tb_architecture.md Section 5 (intervention log Q-014): the
   two inner instances are gated and combined per metric by the summing rule; the wrapper is informational;
-  -cm_glitch 0 on every measured build (R-002). Functional coverage gate: the URG functional-group score
-  with equal group weights after ignore_bins (cross bins counted per expanded bin), not a flat ratio over
-  declared bins, over the spec-derived and adopted groups only: the witness group CG-WIT-001 is excluded from the
-  number and reported separately (Section 1).
+  -cm_glitch 0 on every measured build (R-002). Functional coverage gate (owner ruling LOG-100): the bin
+  fraction, hit bins over declared bins in gate scope after ignore_bins (cross bins counted per expanded
+  bin), with the witness ledger covergroup CG-WIT-001 out of both terms, at or above 80 percent; the
+  equal-weight group score over the spec-derived and adopted groups (each total separately) is reported
+  beside it as the secondary metric, never as the gate; the ledger is reported separately (Section 1).
 - Adoption policy (DV_prompt Section 3, riscv-dv ruling): a bin is "adopted" only when riscv-dv's coverage
   model was its source (CG-ADOPT-* groups, adopted=1 in the CSV, counted separately). A partition that was
   derived independently from the ISA text and coincides with a riscv-dv coverpoint is spec-derived and is
@@ -211,10 +212,13 @@ extra condition where a reader will see it. Recorded so the next audit does not 
 
 # 1. Completeness measure (definition; DV_prompt.txt Section 4)
 
-The functional-coverage gate is: the URG functional-group score over the spec-derived and adopted covergroups (equal group
-weights, computed after ignore_bins, cross bins counted per expanded bin) is at or above 80 percent AND the traceability
-conditions below hold; both totals must pass. The cycle-clause witness group CG-WIT-001 (gen_cg_wit_cycle_clause) is
-EXCLUDED from that number without exception: the mechanism of record is Runtime's combining rule (dv/auto_dv/flow/gen_flow_const.py LEDGER_COVERGROUPS / LEDGER_PLAN_IDS and gen_cov_report.py group_score_excluding, keyed on the covergroup's SystemVerilog name gen_wit_cycle_clause_cg (addendum v4c, 50256f0: declared in gen_fcov_pkg, one instance in gen_env with handle wit_cg, URG shows the type name), which is authoritative for the exclusion while the plan id CG-WIT-001 names the report line; a report whose groups.txt lacks an expected ledger covergroup fails the merge with ledger_missing; c5b5bc0, keyed on the SV name since 5506f23 with the plan name as alias, ledger_missing from e30b693; Orchestrator ruling 11:5x UTC), with TB Infra's rendered option.weight = 0 as defence in depth; it is reported beside the score by gen_cov_report.py ledger_summary
+The functional-coverage gate is (owner ruling LOG-100, 2026-09-05 19:05Z): the bin fraction, hit bins in gate scope over
+declared bins in gate scope, computed after ignore_bins (cross bins counted per expanded bin), with the cycle-clause
+witness group CG-WIT-001 (gen_cg_wit_cycle_clause) out of BOTH terms, is at or above 80 percent (round 1: 3477/4048 =
+85.89, first condition passed) AND the traceability conditions below hold, confirmed by a reviewer other than the author
+(a separate finding, not yet claimed). The equal-weight group score over the spec-derived and adopted covergroups, each
+total separately, is reported beside the gate as the secondary metric and never as the gate. The witness group is
+EXCLUDED from both terms without exception: the mechanism of record is Runtime's combining rule (dv/auto_dv/flow/gen_flow_const.py LEDGER_COVERGROUPS / LEDGER_PLAN_IDS and gen_cov_report.py group_score_excluding, keyed on the covergroup's SystemVerilog name gen_wit_cycle_clause_cg (addendum v4c, 50256f0: declared in gen_fcov_pkg, one instance in gen_env with handle wit_cg, URG shows the type name), which is authoritative for the exclusion while the plan id CG-WIT-001 names the report line; a report whose groups.txt lacks an expected ledger covergroup fails the merge with ledger_missing; c5b5bc0, keyed on the SV name since 5506f23 with the plan name as alias, ledger_missing from e30b693; Orchestrator ruling 11:5x UTC), with TB Infra's rendered option.weight = 0 as defence in depth; it is reported beside the score by gen_cov_report.py ledger_summary
 as "witnessed clauses: N of M marked items", the way adopted bins are counted separately; its bins stay in the per-test
 manifests after the sunset (Critic gen_critic_plan_witness_v1.md conditions C-4 and W-1).
 
@@ -6857,12 +6861,17 @@ Regime-relevant first event per knob (value bins and `_tr` bins are sampled here
 - Crosses: none
 - Adopted (riscv-dv): none
 - TP items: TP-REG-027
-## Completeness measure (adopted; the 80 percent gate is the URG functional-group score after ignore_bins, equal group weights, both totals at or above 80 percent)
+## Completeness measure (adopted; the 80 percent gate is the bin fraction with the witness ledger out of both terms, owner ruling LOG-100; the equal-weight group score is reported beside it)
 
-The functional-coverage condition passes when the URG functional-group score (per covergroup the
-fraction of its bins hit after ignore_bins, averaged over the covergroups with equal group weights) is
-at or above 80 percent for BOTH the spec-derived total and the adopted total. Adopted definition
-(DV_prompt Section 4, functional-coverage condition 2); the rules that define the inputs:
+The functional-coverage condition's first part passes when the bin fraction, hit bins in gate scope over
+declared bins in gate scope with the witness ledger covergroup (gen_wit_cycle_clause_cg / CG-WIT-001) out
+of BOTH terms, is at or above 80 percent (owner ruling LOG-100, 2026-09-05 19:05Z, on DV_prompt.txt:112-113
+"at least 80% of declared bins hit" with :110 "the URG report is the number": both terms are URG's own bin
+counts; round 1 reads 3477/4048 = 85.89, so its first condition passes). The second part, traceability
+completeness confirmed by a reviewer other than the author, is a separate finding and is not claimed by
+the number. The per-family equal-weight group score of rule 3 is REPORTED BESIDE the gate as the
+secondary metric (the prompt's secondary goal), never as the gate. Adopted definition (DV_prompt Section
+4, functional-coverage condition 2); the rules that define the inputs:
 
 1. Every feature F-<AREA>-<nnn> in gen_feature_list maps to >= 1 TP item (trace_feat_tp_*.csv,
    `feature,tp_item`) and, through those items, to >= 1 bin (trace_tp_bin_*.csv,
@@ -6873,17 +6882,24 @@ at or above 80 percent for BOTH the spec-derived total and the adopted total. Ad
    check. Bin references are `CG-<AREA>-<nnn>.<cp>.<bin>` (cross bins `CG-...cr_<name>.<bin>`);
    the SV covergroup name is the `gen_cg_<area>_<name>` in the CG header and the URG key is
    `<gen_cg_name>.<cp>.<bin>`.
-3. Gate definition (Critic S-11a): the 80% gate is the URG functional-coverage group score, not a
-   flat declared-bin ratio: per covergroup the fraction of its bins hit AFTER ignore_bins (cross
-   bins counted per expanded bin; no `illegal_bins` anywhere), averaged over the covergroups with
-   equal weights (URG default weight 1 per group), read from the merged report's functional summary
-   (dashboard.txt / grpinfo.txt). Adopted bins (riscv-dv) are counted separately: the adopted total
-   is the bin-level hit ratio over the `adopted = 1` CSV rows (read per bin from grpinfo.txt, so a
-   mixed group such as CG-ADOPT-004, whose five non_link cp_ras bins are spec-derived, splits
-   correctly), reported beside the spec-derived group score; the spec-derived score excludes the
-   CG-ADOPT-* groups. TEAM POLICY (stricter than DV_prompt Section 4, recorded by the DV Lead): the
-   functional-coverage condition passes only if BOTH totals reach 80%. An adopted bin still needs a
-   real F-ID (rule 2); the `Adopted (riscv-dv):` field names the source covergroup.
+3. Gate definition (owner ruling LOG-100, which supersedes the Critic S-11a group-score gate and the DV
+   Lead's BOTH-totals team policy that stood here from plan v2 until 2026-09-05): the 80% gate is the
+   bin fraction, hit bins over declared bins in gate scope, computed AFTER ignore_bins (cross bins
+   counted per expanded bin; no `illegal_bins` anywhere), with the witness ledger covergroup out of
+   both terms. Mechanics (the DV Lead's ruling of 2026-09-05 02:15Z, LOG-097 addendum 3, reinstated by
+   LOG-100): both terms come from ONE filtered covergroup list; the percent is emitted with its
+   denominator and a scope string naming what is in and out, the same string in the report's summary
+   header and the dashboard; URG's bin counts are the number (dashboard.txt / grpinfo.txt). Spec-derived
+   and adopted bins alike are declared bins of the gate scope. Reported BESIDE the gate, never as it:
+   (i) the equal-weight group score, per covergroup the fraction of its bins hit after ignore_bins,
+   averaged over the covergroups with equal weights (URG default weight 1 per group), computed per
+   family with the spec-derived total (CG-ADOPT-* excluded) and the adopted total separately (LOG-100
+   names it the secondary "push higher" metric; no artifact computed it at LOG-100, so the tool is
+   owed to Runtime); (ii) the adopted bin-level hit ratio over the `adopted = 1` CSV rows (read per bin
+   from grpinfo.txt, so a mixed group such as CG-ADOPT-004, whose five non_link cp_ras bins are
+   spec-derived, splits correctly), the separate count of adopted bins DV_prompt Section 3 asks for. An
+   adopted bin still needs a real F-ID (rule 2); the `Adopted (riscv-dv):` field names the source
+   covergroup.
 4. Per-test fcov-expectation manifest rule (dv_principles.md s6 rule 3; ci/check_fcov_expectations.py):
    every test declares in dv/auto_dv/fcov_expectations/<test>.fcov.yaml the bins it intends to
    hit; a declared bin unhit in that test's own coverage (urg -tests isolation) fails the run
@@ -6924,8 +6940,10 @@ Check script inputs and outputs (proposal for the DV Lead's tooling, `gen_check_
   in the test plan; (c) every (covergroup, coverpoint, bin) in trace_tp_bin exists in the fcov
   plan and its `adopted` flag matches the CG's Adopted field; (d) every CG's Features F-IDs exist;
   (e) every F-ID reaches >= 1 bin through (a)+(c); (f) every bin reaches >= 1 F-ID through (c)+(d)
-  and the coverpoint tags of rule 7; (g) with URG input: the group score after ignore_bins
-  (spec-derived, equal group weights) and the bin-level adopted ratio, separately; (h) every
+  and the coverpoint tags of rule 7; (g) with URG input: the gate bin fraction (hit over declared
+  bins in gate scope, the witness ledger out of both terms, LOG-100) with its denominator and scope
+  string, and beside it the equal-weight group score (spec-derived and adopted totals separately) and
+  the bin-level adopted ratio; (h) every
   fcov_expectations/<test>.fcov.yaml bin exists in the plan, is neither ignored nor probe-gated,
   and covers >= 1 unconditional cp per owned CG; (i) every CG Features F-ID is claimed by an owning
   TP item (rule 7).

@@ -447,4 +447,14 @@ check-tier failure is not: the round does not select that tier.
 
 The round does NOT claim the functional gate. The gate's functional condition has two parts, both required,
 and the second is traceability completeness confirmed by a reviewer other than the author. This form governs
-the first part's measurement only.
+the first part's measurement only. That first part is the quantity owner ruling LOG-100 (2026-09-05 19:05Z)
+names: the bin fraction, hit bins in gate scope over declared bins in gate scope, with the witness ledger
+covergroup gen_wit_cycle_clause_cg (CG-WIT-001) out of both terms, at or above 80 percent, emitted with its
+denominator and a scope string; the equal-weight group score is reported beside it as the secondary metric
+and is not the gate. The flow already computes that quantity as group_bins_gate (gen_cov_report.py
+group_quantities: hit over declared with the ledger out of both terms, its scope string GROUP_SCOPE_GATE),
+but the one selector GROUP_CELL_FIELD in gen_flow_const.py still names group_bins_all (the LOG-097 addendum 4
+suspension); moving the selector to group_bins_gate, the selector note and the dashboard label with it, the
+index restatement 81.47 -> 85.89 beside the stored value, and the per-family group-score tool are runtime-2's
+half of the LOG-100 landing. Until it lands, the round's gate cell is read from the merged report as
+round 1's was (gen_round1_request.md Section 12).

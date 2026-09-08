@@ -345,3 +345,11 @@ itself witnessed 0 of 220 clauses under CG-WIT-001.
 Two figures that are NOT gates: URG's report-wide score 72.64 covers the whole report including the testbench,
 and the informational scope gen_tb_top.u_dut at 71.25 is reported and never gated. Quote either only with its
 scope attached.
+
+LOG-100 (owner, 2026-09-05 19:05Z) settles which of the three is the gate: the THIRD quantity, bins with the
+witness ledger out of both terms, 3477/4048 = 85.89 per cent, so round 1's first functional condition PASSES.
+The 81.47 stored in the index (gen_rounds.yaml) is the ledger-inclusive ratio and is restated beside the
+stored value in runtime-2's half of the LOG-100 landing; the collected record files under gen_round_0 are not
+edited (LOG-092). The 78.29 weight-averaged group score becomes the secondary metric reported beside the
+gate, computed per family once Runtime's tool exists. The second functional condition, traceability
+completeness confirmed by a reviewer other than the author, is not claimed by this record.
