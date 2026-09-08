@@ -93,7 +93,7 @@ gaps. Either the index should not advance for this class, or the class should be
 neither. This is the same shape as B13 and B18: the trace interface is wrong while execution and
 architectural state are right.
 
-## 5. The trigger-match half: NOT CONFIRMED, with the discriminator
+## 5. The trigger-match half: not confirmed when this note was written (RESOLVED in 5a, which supersedes this section's open question; the argument below stands and is what 5a confirms)
 
 The observation reported two gaps and attributed the second to the trigger-matched instruction. This note
 does NOT confirm that, and the RTL argues against it:
@@ -117,6 +117,59 @@ it from the export, and both are cheap for whoever holds it:
 - For each gap, read the record AFTER it. An ebreak-caused gap is followed by the debug ROM's entry point,
   with the ebreak's own address left in dpc. If any gap is followed by something else, that one needs its
   own trace and this note does not cover it.
+
+## 5a. Section 5 RESOLVED: both gaps are ebreak gaps, and the trigger causes the second one indirectly
+
+Added 2026-09-08T03:30Z. The Test Writer used Section 5's discriminators and returned the counts, which
+settle it. Both readings turn out to be right at once, and the distinction between them is the thing a
+later reader would otherwise get wrong.
+
+MEASURED by the Test Writer, from the full sim logs rather than the retained excerpts (the excerpts keep
+only the first collected failure under the LOG-034 rule, which is why this could not be counted from them):
+
+| run | order failures |
+|---|---|
+| red, trigger armed (tdata1 execute) | 2: "order 322 after 320" and "order 345 after 343" |
+| control, tdata1 written 0 | 1: "order 322 after 320" |
+
+So the extra gap does depend on arming the trigger, which appears to contradict Section 5. It does not. The
+chain runs through B10 and through the reproducer's own debug ROM, not through the trigger entry mechanism.
+Verified here from the committed program, dv/auto_dv/stim/gen_directed/gen_trg_ebreak_cause_directed.S at
+commit d0428e0, rather than inferred:
+
+- The ROM dispatches on the cause it just read: it extracts the field with `srli t6, t3, 6` and
+  `andi t6, t6, 7` (:66-67), then branches `beq t6, t2, gen_rom_trigger` for cause 2 (:68-69) and
+  `beq t6, t2, gen_rom_step_over` for cause 1 (:70-71).
+- The two branches resume DIFFERENTLY. `gen_rom_step_over` advances the resume address first,
+  `addi t4, t4, 4` then `csrw 0x7b1, t4` then `dret` (:73-76). `gen_rom_trigger` only disarms and returns,
+  `csrw tdata1, zero` then `dret` (:77-79), leaving dpc unchanged.
+- With the trigger armed, B10 makes the ebreak entry report cause 2, so the ROM takes the trigger branch
+  and drets with dpc still holding the ebreak's own address. The core therefore resumes AT the ebreak,
+  which enters debug a third time, and that third entry spends an index by Section 3's mechanism.
+- In the control the cause is 1, the step-over branch advances dpc past the ebreak, there is no third
+  entry, and there is one gap.
+
+So both gaps are ebreak-into-debug gaps: ONE mechanism, two occurrences. Nothing in either run charges an
+index to a trigger entry, and Section 5's argument that a trigger entry cannot spend one stands untouched.
+The second gap is NOT an independent defect and must not be counted as a second instance of anything.
+
+One correction to the observation as first reported, and it is what unlocked the chain: the post-dret
+resume was read as landing on the trigger-matched instruction. It lands on the EBREAK. dpc holds the
+ebreak's address, and the program places the ebreak at gen_b10_seq (:25) with the matched instruction one
+instruction later at gen_b10_target (:28) under `.option norvc`, so the matched address is the ebreak's
+plus four. The ROM's trigger branch therefore never lets the matched instruction run, and its comment at
+:78, "a trigger entry disarms, so the matched instruction can run", is correct for a GENUINE trigger entry,
+where dpc equals the matched address. B10 is precisely the case where that assumption fails.
+
+WHAT THIS ESTABLISHES BEYOND THIS NOTE. Section 2.4 of dv/auto_dv/evidence/gen_b10_b16_rtl_facts.md argues
+that a debugger dispatching on dcsr.cause alone resumes at dpc and loops on the ebreak. This ROM is exactly
+such a debugger and it looped, so that consequence of B10 is now measured on this design rather than
+predicted. It strengthens B10's P3 rating rather than disturbing it: the misreport has a real observable
+consequence, and it stays avoidable with the two register reads Section 2.3 of that record names, comparing
+dpc against tdata2 and treating a mismatch as an ebreak entry to step over.
+
+Credit: the counts, the export excerpt around the second gap and the program are the Test Writer's; this
+section is the mechanism and the correction. No further run was needed and none was asked for.
 
 ## 6. Consequences for the testbench and the plan
 
@@ -143,4 +196,6 @@ it from the export, and both are cheap for whoever holds it:
 | A retained instruction does not reach WB | rtl/ibex_id_stage.sv:1130 |
 | A trigger entry requires an empty ID stage | rtl/ibex_controller.sv:296, :704, :707; rtl/ibex_cs_registers.sv:1872 |
 | No gaps are permitted in the index | tools/specs/riscv-formal/docs/source/rvfi.rst:41-42 |
+| Both gaps are ebreak gaps; the ROM's cause dispatch and its two resume branches | dv/auto_dv/stim/gen_directed/gen_trg_ebreak_cause_directed.S:25, :28, :66-67, :68-71, :73-76, :77-79 (commit d0428e0) |
+| The looping-debugger consequence, now measured | dv/auto_dv/evidence/gen_b10_b16_rtl_facts.md Sections 2.3 and 2.4 |
 | The comparator rule this bears on | dv/auto_dv/env/gen_rvfi_pkg.sv:142-143 |
