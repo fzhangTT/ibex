@@ -120,7 +120,10 @@ read-back predictor (gen_chk_csr_readback), the PMP model (gen_chk_pmp) and the 
 - L: more than two days. A new testbench capability, such as the whole counter model.
 
 Each scoping names (a) what must exist, (b) what it extends, (c) who builds it (test-writer or tb-infra),
-(d) the class and why.
+(d) the class and why. Evidence bar for these tests (owner directive LOG-103, 2026-09-08): a retained red run
+(for an expected-fail bug test, the XFAIL verdict on the RTL with its failure signature) and a retained green
+control run, plus a waveform confirmation with the FSDB path recorded; no mutation proof, seed sweep or
+fcov-expectation manifest is required for them.
 
 ### 0.4 Test commands
 
@@ -755,8 +758,9 @@ test command or the scoping of a quick test; evidence; notes.
   before the NMI is taken; rtl-arch X-11 states the alert and NMI path but not how many instructions can
   consume the register first (D21 says up to two ordinary instructions retire before the internal NMI), so
   rtl-arch's confirmation is asked.
-- Status: candidate, reproducer pending (rtl-arch T-053 X-11; security-relevant; owner question Q-015 worded
-  for the Orchestrator to file)
+- Status: candidate, reproducer pending (rtl-arch T-053 X-11; security-relevant; owner question Q-015 filed
+  2026-09-03 in dv/auto_dv/docs/gen_intervention_log.md, unanswered; default while pending: bug candidate,
+  expected-fail for the first-beat class, not excluded from the gate)
 - Feature: Load data write suppressed on a bus integrity error (rf_wr_suppress) (F-SEC-015, canonical:
   security.rst:88); cross-references Bus integrity on the data interface (MemECC only) (F-DMEM-041), Dummy
   instructions produce no record (cross-reference) (F-RVFI-024), Integrity error on an unexpected (spurious)
@@ -790,7 +794,7 @@ test command or the scoping of a quick test; evidence; notes.
   exists fails too.
 - Evidence: none yet.
 - Notes: the alert and the internal NMI do fire; only the rd write leaks the merged data. Security-relevant:
-  owner question Q-015.
+  owner question Q-015 (filed 2026-09-03, unanswered).
 
 ### B17: HPM counters 8, 11 and 12 over-count an instruction waiting in ID behind an outstanding WB memory access
 - Rating: P2. The counts depend on memory latency; the workaround is to put independent instructions (a
@@ -927,7 +931,8 @@ test command or the scoping of a quick test; evidence; notes.
 - Evidence: none yet.
 - Notes: severity low; the RTL fix is a one-term gate on perf_jump or a separate flush request; the owner may
   instead accept the RTL and re-document, in which case B20 becomes a doc defect and TP-PMC-061 a pass item
-  (owner question to be filed by the Orchestrator, as for Q-004/Q-005); the independent counter model
+  (owner question Q-016, filed 2026-09-03 in dv/auto_dv/docs/gen_intervention_log.md, unanswered; default while
+  pending: the checker follows the doc, TP-PMC-061 expected-fail); the independent counter model
   follows the doc and treats fence.i windows as the B20 witness (CG-PMC-003.cr_variant_rel.fencei_gt).
 
 ## 1b. Retained IDs that are not bug candidates (kept so plan and review references resolve)
@@ -1088,3 +1093,4 @@ documentation there changes the privilege an mret lands in.
 - v1m (2026-09-04 07:04 UTC): S5's rationale narrowed and D22 given its second stale sentence (icache.rst:214, phrased on RAM state, contradicted in the masked case) per the v3z review; S5 and F-IC-042 name the domain of the clearing flip, the un-tweaked word the hit-data mux ORs.
 - v2 (2026-09-08 01:25 UTC): owner request of 2026-09-07: plain language, numbered steps, feature names, test commands, effort scoping, P-ratings. Section 0 added (glossary, rating and effort definitions, the test-command form and where the FSDB lands, the summary table, the policies moved here and shortened). Every B entry rewritten in the Section 1 layout with its feature named first, its steps as a numbered list, its test command (B4, B8 exist; B13 and B18 pass by policy with the raw-rule witness given) or "No test yet" with the item-5 scoping, and its rating (P1: B8; P2: B1, B2, B7, B10, B11, B16, B17, B20; P3: the rest, S1-S6 and D1-D22); B10 and B16 marked pending rtl-arch confirmation. B21 given its own Section 1b entry. Section 2 and Section 3 tables gained a Rating column. No plan item id, RTL cite or specification cite was dropped and every feature id is kept, with one correction: version 1's B8 cross-reference "F-DIT-032 item" named an id that has no feature heading (the case is the plan item TP-DIT-032), so it is now written as the plan item; the B-versus-D criterion, ruling B4-R1 and the B8 mechanism text are kept with their wording. Two rtl-arch records cite version-1 line numbers of this file (gen_b4_rtl_facts.md:6 "gen_bug_log.md:60", gen_t102_rtl_facts.md:8 "gen_bug_log.md:274"); they resolve by id (B4, D20) and are rtl-arch's to re-point at their next touch.
 - v2a (2026-09-08 01:32 UTC): Orchestrator citation instruction of 2026-09-08: every Spike source cite carries the clone-relative path tools/riscv-isa-sim/... (the clone's own copy of the allowed upstream project, not the fenced cosim fork); the glossary names Spike as the reference model in those words.
+- v2b (2026-09-08 01:59 UTC): B16 and B20 said their owner questions were still to be filed; Q-015 and Q-016 were filed on 2026-09-03 and are unanswered, so both entries now say so with the default applied while pending; Section 0.3 states the LOG-103 evidence bar (red and green retained runs plus a waveform confirmation) for the proposed quick tests.
