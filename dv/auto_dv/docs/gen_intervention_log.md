@@ -2662,3 +2662,11 @@ CLAUDE.md cross-model review policy (an owner ruling recorded here is the disagr
 artifacts already committed under dv/auto_dv/reviews/ and Critic verdicts already committed stand as they are; rows they left
 open remain owed as work items but no longer gate a landing. The first touch under this rule is the DV Lead's bug-log v2
 (owner request of 2026-09-07, TASKS.md). The Critic role is not respawned.
+
+## LOG-102 - 2026-09-08 01:01Z - Owner steer: agent models from this point
+
+Owner (verbatim, 2026-09-08 ~01:1xZ): "Also I see that DV Lead is Fable. This is fine, but be sure to use Opus for other
+agents that you spawn." Effect: the running DV Lead instance (spawned 2026-09-08 00:5xZ on the Orchestrator's own model,
+Fable, because no model was named at spawn) continues as it is; every other agent the Orchestrator spawns from this entry on
+is created with the Opus model named explicitly. Subagents a role fans out for mechanical work keep the LOG-083a/b rule
+(sonnet or haiku at the role's discretion).
