@@ -1003,7 +1003,8 @@ test command or the scoping of a quick test; evidence; notes.
      but that instruction keeps its index either way: with no ID exception the second term of rvfi_id_done
      (rtl/ibex_core.sv:1851-1853) is 0 and it completes with its record; with an ID exception rvfi_trap_id is 1
      (:1885-1886 excludes only the ebreak-into-debug case) and rvfi_wb_done emits it as a trap record (:1890); record
-     Sections 2 and 4 carry the terms (rtl-arch, 2026-09-08). A trapping ebreak (ebreakm clear) has its own record.
+     Sections 2 and 4 carry the core terms, and gen_b10_b16_rtl_facts.md lines 573-576 with its anchors row (at f85c6bb)
+     carry the controller terms (rtl-arch, 2026-09-08). A trapping ebreak (ebreakm clear) has its own record.
 - Test: No test yet. Proposed test to build: plan test group gen_rvfi_trap_dbg_xfail (TP-RVFI-028, expected-fail),
   with expected_fail: true. Scoping: (a) a directed program whose debug ROM sets dcsr.ebreakm and drets, then an
   ebreak, run under lock-step; (b) extends gen_ut_dbg (DBG_REQ through the bridge) with the directed program;
@@ -1230,3 +1231,8 @@ documentation there changes the privilege an mret lands in.
   attributes the debug_req control to the priority-entry FLUSH path (the index kept because the ID instruction completes
   or emits a trap record) rather than to Section 5, and its Evidence names the B10 pair's retained excerpts as the red
   with the debug_req-only green as the one run owed.
+- v2i (2026-09-08 04:02 UTC): B22's step 5 names the committed record that carries its controller cites, gen_b10_b16_rtl_facts.md
+  lines 573-576 and its anchors row at f85c6bb (the Orchestrator's rule: a line correction is folded from a committed record,
+  not from a message); no other bug-log change. The same touch fills TB defect T11's Fixed cell in gen_tb_defects.md from
+  tb-infra's landing 66a at 87fd39f (gen_tdd_t11_mtval.md), which is the suppression-rule gap B16's scoping and the v2d entry
+  name.
