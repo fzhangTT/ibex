@@ -1,9 +1,11 @@
 # Ibex auto-DV cleanroom: inventory for human review
 
 Branch `cleanroom/run-a` of the Zone A cleanroom export (export commit 1908ddd). Written 2026-09-07T18:17Z by the
-Orchestrator at HEAD 041e2b3 (1141 commits above the export), after the owner stopped the agent team on 2026-09-05
-19:05Z (owner ruling LOG-100 in `dv/auto_dv/docs/gen_intervention_log.md`). Every count below was taken from
-`git ls-files` at that HEAD; the two commits that add this file and the handoff copies come after it.
+Orchestrator at HEAD 041e2b3 after the owner stopped the agent team on 2026-09-05 19:05Z (owner ruling LOG-100 in
+`dv/auto_dv/docs/gen_intervention_log.md`); refreshed 2026-09-08T03:59Z at HEAD d660ec8 (1169 commits above the export) after the
+team was restarted on 2026-09-07 for the bug-log rewrite and the expected-fail bug tests (Section 10). Every count below
+was taken from `git ls-files` and `dv/auto_dv/flow/gen_testlist.yaml` at that HEAD; the commit that refreshes this file
+comes after it.
 
 Everything the team produced is under `dv/auto_dv/**` with the `gen_` prefix (the contract in
 `dv/auto_dv/contract/README.md`; two exceptions are listed in Section 9). The RTL under `rtl/` was never modified.
@@ -32,7 +34,7 @@ Everything the team produced is under `dv/auto_dv/**` with the `gen_` prefix (th
 | Component APIs | `dv/auto_dv/docs/gen_component_api_*.md` (24 files) | tb-infra | one per TB component |
 | Runtime flow API | `dv/auto_dv/docs/gen_runtime_api.md` | runtime | the testlist schema and every flow script's contract |
 | 5 Probe register | `dv/auto_dv/docs/gen_probe_register.md` | tb-infra / Critic | every TB probe into the DUT, with the Critic's approval status |
-| 7 Bug log | `dv/auto_dv/docs/gen_bug_log.md` | dv-lead | B1..B20 RTL bug candidates (every one "candidate" until a committed reproducer log exists); Section 2 security-relevant behaviours for owner decision; Section 3 doc defects |
+| 7 Bug log | `dv/auto_dv/docs/gen_bug_log.md` | dv-lead | B1..B22 RTL bugs in plain language: per entry a P1/P2/P3 impact rating, numbered reproduction steps, the feature by name, the test command that fails loud with waves, the retained red and green runs; every P1 and P2 entry has a committed expected-fail test (B10 at P3 has none); Section 2 security-relevant behaviours for owner decision; Section 3 doc defects |
 | TB defect register | `dv/auto_dv/evidence/gen_tb_defects.md` | dv-lead | defects of the team's own TB, tests and harness (kept out of the bug log) |
 | Coverage exclusions | `dv/auto_dv/excl/gen_exclusions.el`, `gen_exclusions_README.md`, `gen_excl_f1_pass.py`, `gen_excl_select.py`, `gen_precheck/` | rtl-arch | pass 14, generated from the measured round; the README carries the authority chain |
 | Unreachability evidence | `dv/auto_dv/evidence/gen_unreachability_evidence.md`, `dv/auto_dv/evidence/gen_t022_formal/` (113 files) | rtl-arch | machine evidence (formal jobs, logs, model) behind the exclusion candidates |
@@ -40,23 +42,23 @@ Everything the team produced is under `dv/auto_dv/**` with the `gen_` prefix (th
 | Test Writer plan | `dv/auto_dv/docs/gen_test_writer_plan.md` | test-writer | |
 | Round requests | `dv/auto_dv/evidence/gen_round1_request.md`, `gen_round2_request.md` | dv-lead | the request form of record for each measured round |
 
-## 3. Tree map (tracked files under `dv/auto_dv/`, 5499 in total)
+## 3. Tree map (tracked files under `dv/auto_dv/`, 5652 in total)
 
 | Directory | Files | What it holds |
 |---|---|---|
 | `contract/` | 1 | the landing contract (README) |
 | `docs/` | 125 | the deliverables above, 81 Critic verdicts (`gen_critic_*.md`), the intervention log, the dashboard, the plan sets |
-| `env/` | 12 | SystemVerilog packages: agents, checkers, config, export (RVFI record lines), fcov covergroups, memory model, RVFI |
+| `env/` | 13 | SystemVerilog packages: agents, checkers, config, export (RVFI record lines), fcov covergroups, memory model, RVFI |
 | `tb/` | 37 | `gen_tb_top.sv`, `gen_dut_top.sv` (wraps `ibex_core`), interfaces, binds, protocol properties, probes, file lists (`gen_tb.f`, `gen_rtl.f`, `gen_smoke_tb.f`), the knobs and fcov code generators, `gen_tb_local.sh` (local compile/run), `unit/` (SV unit-test tops) |
-| `gen_tb/` | 25 | the cocotb side: bridge, export, handles, image, knobs, and `gen_tests/` (the `gen_ut_*` unit and lockstep tests) |
+| `gen_tb/` | 26 | the cocotb side: bridge, export, handles, image, knobs, and `gen_tests/` (the `gen_ut_*` unit and lockstep tests) |
 | `tests/` | 69 | `gen_test_*.py` cocotb tests on `gen_test_lib.py`, `gen_programs/` (per-test program generators), `gen_fixtures/` (harness unit tests and the local run fixture), `gen_fcov_manifest.py` (renders the fcov manifests) |
-| `stim/` | 53 | `gen_program.py` (assemble and link a program image), `gen_directed/` (39 directed `.S` programs), the riscv-dv target, ELF to memory tools |
+| `stim/` | 69 | `gen_program.py` (assemble and link a program image), `gen_directed/` (39 directed `.S` programs), the riscv-dv target, ELF to memory tools |
 | `isa/` | 8 | the Spike ISA shim (DPI): `gen_isa_shim.cc`, counters, `gen_isa_shim_build.sh` |
 | `flow/` | 21 | `gen_build.py`, `gen_run.py`, `gen_regress.py`, `gen_round.py`, `gen_cov_report.py`, `gen_verdict.py`, `gen_dashboard.py`, `gen_mirror.py`, `gen_testlist.yaml`, coverage config (`gen_cm_hier.cfg`), `gen_site.yaml.example` |
 | `fcov_expectations/` | 27 | one `<test>.fcov.yaml` manifest per cocotb test that declares bins (17: the 15 measured tests plus `gen_test_irq_basic` and `gen_test_pmc_ctrl`, unmeasured at HEAD) and per icache-ECC unit test (10) |
 | `excl/` | 20 | the exclusion file and its generators, `gen_precheck/` (URG pre-check logs of every pass) |
 | `mutations/` | 7 | mutation records (`gen_mut_*.md`), one block per mutation next to the checker it proves |
-| `evidence/` | 4738 | see Section 8: `gen_tdd_logs/` (4294 retained run logs with a manifest), the round records, formal evidence, fixtures, verdict excerpts, 84 Critic verdicts and response records |
+| `evidence/` | 4865 | see Section 8: `gen_tdd_logs/` (4294 retained run logs with a manifest), the round records, formal evidence, fixtures, verdict excerpts, 84 Critic verdicts and response records |
 | `reviews/` | 332 | cross-model review artifacts (Section 7) |
 | `tools/` | 23 | record and plan checkers (`gen_record_check.py`, `gen_section_check.py`, `gen_register_cites.py`, `gen_trace_check.py`, `gen_comment_census.py`, `gen_round_form_check.py`, ...), `gen_cross_review.sh` (the review wrapper), `gen_launch_check.sh` (DV_prompt Section 12 launch preconditions) |
 | `handoff/` | 7 | committed copies of the Orchestrator handoff and the six role STATUS files (added with this inventory) |
@@ -69,16 +71,15 @@ originating clone `/localdev/fzhang/ws/ibex-challenge`. The out-of-tree regressi
 ## 4. Tests
 
 `dv/auto_dv/flow/gen_testlist.yaml` is the single testlist (schema: `gen_runtime_api.md`). At HEAD it carries 3 builds
-(`gen_smoke`, `gen_smoke_cocotb`, `gen_tb`) and 105 test entries:
+(`gen_smoke`, `gen_smoke_cocotb`, `gen_tb`) and 116 test entries:
 
 | Tier | Entries | Meaning |
 |---|---|---|
 | smoke | 17 | the measured cocotb tests plus two TB boot/lockstep smokes; run by `--tier smoke` and every higher tier |
 | targeted | 3 | `gen_test_bit_draft`, `gen_test_pmp_mseccfg`, `gen_test_pmp_lock` |
-| check | 85 | build/elaboration checks, `gen_ut_*` unit and lockstep tests, every `*_red` forced-failure companion; `measured: false`, never in a coverage merge |
+| check | 96 | build/elaboration checks, `gen_ut_*` unit and lockstep tests, every `*_red` forced-failure companion, and the 10 `expected_fail: true` entries (verdict XFAIL; an unexpected pass flips to FAIL; eight of them are the P1/P2 bug reproducers of Section 2); `measured: false`, never in a coverage merge |
 
-15 entries are `measured: true` (they alone feed the coverage gate); 63 entries belong to tb-infra, 41 to
-test-writer, 1 to runtime. Every measured test has an fcov-expectation manifest in `dv/auto_dv/fcov_expectations/`,
+15 entries are `measured: true` (they alone feed the coverage gate); ownership: 69 to tb-infra, 46 to test-writer, 1 to runtime. Every measured test has an fcov-expectation manifest in `dv/auto_dv/fcov_expectations/`,
 checked after each run by the flow (`gen_run.py --fcov-check`, `ci/check_fcov_expectations.py`).
 
 Each test's evidence (its red run, green run, mutation proof and forty-seed sweep where required) is a record under
@@ -218,7 +219,7 @@ Critic role (owner directive LOG-095: one cross-model review per feature group, 
   template) and 84 under `dv/auto_dv/evidence/gen_critic_*.md` (rounds, records, responses).
 - Review rubrics the wrapper asserts: `ci/reviews/GUIDE.md` and its five rubric files.
 
-## 8. Evidence tree (`dv/auto_dv/evidence/`, 4738 files)
+## 8. Evidence tree (`dv/auto_dv/evidence/`, 4865 files)
 
 - `gen_tdd_logs/<area>/` (4294 files): ASCII-normalised copies of run logs (red, green, mutation, sweep) for every
   component and test, indexed by `gen_tdd_logs/gen_manifest.md`. Retained logs are never edited; corrections are
@@ -249,6 +250,28 @@ Both need to be carried by hand or dropped at landing. Two untracked files at th
 `agent_team_prompt.txt`, are the seed prompt and the team prompt; they were never committed.
 
 ## 10. State at the stop, in one screen
+
+State at 2026-09-08T03:59Z (HEAD d660ec8), after the 2026-09-07 restart:
+
+- Owner rulings LOG-101 (no cross-model review, no Critic), LOG-102 (the running DV Lead stays on Fable; every other
+  agent spawned runs on Opus) and LOG-103 (evidence bar = retained red run + retained green run + waveform
+  confirmation; no mutation proofs, seed sweeps or fcov manifests for bug tests) are recorded in
+  `dv/auto_dv/docs/gen_intervention_log.md`.
+- `dv/auto_dv/docs/gen_bug_log.md` was rewritten (v2 through v2h) to the owner's six items; the B16 rating stays P2
+  on a corrected premise and B10 moved to P3 (`dv/auto_dv/evidence/gen_b10_b16_rtl_facts.md`); B22 (a trace-interface
+  order gap on debug entry) was opened (`gen_rvfi_order_debug_entry_rtl_facts.md`).
+- Expected-fail bug tests committed for every P1 and P2 entry: B1, B2, B7 (both halves), B16 on cocotb tests, and
+  B20, B11, B17 through the counter model's documentation-direction knobs (record
+  `dv/auto_dv/evidence/gen_tdd_bug_tests.md`, logs under `gen_tdd_logs/test_writer/`). B10 (P3) has no test.
+- TB infrastructure landed for them: the B16 arm-count knob (e7e7a94), the counter model
+  `dv/auto_dv/env/gen_counter_model.sv` with `gen_ut_counters` (c746629, follow-on and NMI-pulse proof run 87fd39f),
+  and the T11 scoreboard fix (87fd39f). TB defect rows T11 and T12 are in `dv/auto_dv/evidence/gen_tb_defects.md`.
+- In progress: tb-infra's bus-agent repair (the phantom grant reproduces locally on seed 165313640, finding in
+  `dv/auto_dv/work/tb-infra/`), test-writer's owed comment-census rows.
+- Open owner decisions: marking the expected-fail-only witness bins out of the coverage gate (options a/b/c in the
+  Orchestrator's report), whether B10 gets a test at P3, and what follows (round 2, the handover backlog, or a pause).
+
+State at the 2026-09-05 stop:
 
 - Round 1 (index round 0) measured and recorded; its record accepted (LOG-098); the functional gate's first condition
   passes under LOG-100 (85.89), the traceability condition is unclaimed.
