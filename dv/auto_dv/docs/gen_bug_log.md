@@ -97,9 +97,9 @@ Each term is expanded once here and then used freely.
   implementation-defined; or only a trace field or a status field is wrong and execution and state are
   right; or the Ibex documentation is what is wrong.
 
-Every B, S and D entry carries a rating with one line of justification. Two ratings are marked "pending
-rtl-arch confirmation" (B10, B16) because the committed RTL facts records do not settle the point the rating
-rests on; rtl-arch was not running when this version was written.
+Every B, S and D entry carries a rating with one line of justification. Two ratings (B10, B16) were marked
+pending rtl-arch confirmation in version 2; rtl-arch's record dv/auto_dv/evidence/gen_b10_b16_rtl_facts.md
+settled both on 2026-09-08 (B16 P2 on a corrected premise, B10 P3) and the entries cite it.
 
 ### 0.3 Effort classes for a quick test (item 5 of the owner request)
 
@@ -162,12 +162,12 @@ a citation target on its own. Anchor text does not move when lines do; a line nu
 | B5 | dcsr.nmip never reports a pending NMI | P3 | candidate | no test yet | M |
 | B7 | dummy instructions are counted in minstret and the wait counters | P2 | reproduced | gen_pmc_minstret_xfail seed 1 (XFAIL) | - |
 | B8 | a dummy instruction inside a Zcmp push / pop corrupts registers or the stack | P1 | reproduced, cause stated | gen_ut_lockstep_zcmp_dummy seed 1 (XFAIL) | - |
-| B10 | ebreak entry records cause 2 when the next instruction matches the trigger | P2 (pending rtl-arch) | candidate | no test yet | M |
+| B10 | ebreak entry records cause 2 when the next instruction matches the trigger | P3 | candidate | no test yet | M |
 | B11 | NumBranchesTaken counts not-taken branches under DIT | P2 | candidate | no test yet | M |
 | B13 | RVFI next-PC keeps bit 0 on jalr to an odd target | P3 | observed (retained logs) | gen_test_isa_cti passes by policy; raw-rule red retained | - |
 | B14 | RVFI drops the ID trap record when a WB error coincides (downgraded) | P3 | downgraded, confirmation pending | no test yet | S |
 | B15 | dcsr.ebreaks is writable although there is no S-mode | P3 | candidate | no test yet | S |
-| B16 | misaligned load with a bad first beat still writes rd | P2 (pending rtl-arch) | candidate, measured by tb-infra | no test yet | S (program and knob) / M (the suppression rule) |
+| B16 | misaligned load with a bad first beat still writes rd | P2 | candidate, measured by tb-infra | no test yet | S (program and knob) / M (the suppression rule) |
 | B17 | counters 8, 11, 12 over-count while a load or store is outstanding | P2 | candidate | no test yet | M |
 | B18 | RVFI read mask and address set on every non-store record | P3 | observed (retained logs) | passes by policy | - |
 | B19 | RVFI trap flag cleared on an illegal ebreak variant | P3 | candidate | no test yet | S |
@@ -572,10 +572,7 @@ test command or the scoping of a quick test; evidence; notes.
   is mid-expansion.
 
 ### B10: an ebreak that enters debug mode records dcsr.cause = 2 (trigger) when the next instruction's address matches tdata2
-- Rating: P2 (pending rtl-arch confirmation). The cause field is wrong while the entry itself and dpc are
-  right; a debugger can tell the two apart from dpc (dpc is the ebreak's address, tdata2 the next address)
-  or avoid arming a trigger on the instruction after an ebreak. Whether a second-order effect exists beyond
-  the wrong field is not stated in the committed facts, so the rating waits for rtl-arch.
+- Rating: P3. Only the dcsr.cause status field is wrong; dpc, mepc, mcause, mtval, mstatus, dcsr.prv, the trigger mechanism and execution are all right, and the false report is exactly discriminable because the ebreak entry is the only debug entry that takes dpc from the ID stage (rtl/ibex_controller.sv:803 with rtl/ibex_cs_registers.sv:899) while the cause comes from a pc_if comparison (rtl/ibex_cs_registers.sv:1872), so dcsr.cause == 2 with dpc != tdata2 never occurs on a genuine trigger entry (Section 2.3); no second-order effect exists (Section 2.4). That is Section 0.2's P3 clause, the rating B5 carries for the parallel debug status field; the earlier P2 rested on avoiding a trigger after an ebreak, a workaround the debugger does not need because it already holds dpc (rtl-arch: dv/auto_dv/evidence/gen_b10_b16_rtl_facts.md at f85c6bb, Section 2.6 for the rating, 2.3 for the discriminator, 2.4 for the second-order sweep).
 - Status: candidate, reproducer pending
 - Feature: ebreak entering debug mode while the following instruction's address matches tdata2: cause
   misreported as 2 (bug candidate) (F-TRG-020)
@@ -768,12 +765,7 @@ test command or the scoping of a quick test; evidence; notes.
 - Notes: functional impact nil: rtl/ibex_controller.sv:481-483 never reads it.
 
 ### B16: a misaligned load with a bus-integrity error on the FIRST beat still writes rd
-- Rating: P2 (pending rtl-arch confirmation). The documented security intent (no register write on bad check
-  bits) is violated for one access class, but the alert and the internal NMI still fire, so the corruption is
-  detected, and aligned accesses avoid the class. The rating rests on the merged word not being usable
-  before the NMI is taken; rtl-arch X-11 states the alert and NMI path but not how many instructions can
-  consume the register first (D21 says up to two ordinary instructions retire before the internal NMI), so
-  rtl-arch's confirmation is asked.
+- Rating: P2. The documented security intent (no register write on bad check bits) is violated for the first-beat class, and the merged word IS consumable: one further instruction can retire on it before the redirect, and a dependent store can carry it to memory (Section 1.3), while the alert fires one cycle before the earliest write and the internal NMI request is never later (Section 1.2), so the event is always reported. The deciding term is the consumption window, bounded at ONE ID entry by stall_mem (rtl/ibex_id_stage.sv:1095-1096) with id_in_ready_o (rtl/ibex_controller.sv:1020): one padding instruction after a misaligned load, or two aligned loads and a merge, is a sufficient workaround, the shape Section 0.2's P2 names. P1 is reachable only by counting misaligned loads as a feature software must give up, which is the owner's clause choice through Q-015; P3 is unavailable because rd is architectural state (rtl-arch: dv/auto_dv/evidence/gen_b10_b16_rtl_facts.md at f85c6bb, Section 1.6 for the rating and its deciding term, 1.3 for the one-entry bound, 1.2 for the cycle order, measured from the waveform in 1.5.1).
 - Status: candidate, reproducer pending (rtl-arch T-053 X-11; security-relevant; owner question Q-015 filed
   2026-09-03 in dv/auto_dv/docs/gen_intervention_log.md, unanswered; default while pending: bug candidate,
   expected-fail for the first-beat class, not excluded from the gate)
@@ -810,8 +802,8 @@ test command or the scoping of a quick test; evidence; notes.
   exists fails too. CORRECTED by tb-infra's knob landing (dv/auto_dv/evidence/gen_tdd_b16_knob.md Section 8): the
   T-183 gate as built is entered only when the core asserts rvfi_ext_rf_wr_suppress, so in B16's case it checks
   nothing; the module's own assertion that a suppressed record exists fires on 8 of 8 seeds and is the
-  seed-independent collected failure, while the isa_rd miss appears only when the flip lands in the merged
-  half-word (16 of the 39 bit positions; 2 of 8 seeds in its sweep, Section 6). The doc-direction rule "an
+  seed-independent collected failure, while the isa_rd miss appears only when the flip lands in the bits the offset
+  merges in (16 of the 39 encoded positions for that program's offset 2; 2 of 8 seeds in its sweep, Section 6). The doc-direction rule "an
   announced corruption of a load's word obliges a suppressed write" is not built: M, tb-infra; until it exists the
   expected-fail test's loud failure is the module assertion.
 - Evidence: MEASURED by tb-infra with the arming-count knob at count 1 (dv/auto_dv/evidence/gen_tdd_b16_knob.md Sections
@@ -821,7 +813,11 @@ test command or the scoping of a quick test; evidence; notes.
   unaligned address 0x800002e2 (its Section 7); the module assertion fires on 8 of 8 seeds while the isa_rd miss appears
   on 2 of 8 (Section 6: the flip lands in the merged half-word on 16 of the 39 encoded bit positions, so on six of the
   eight seeds the merged word is clean and only the missing suppression remains, which is the constant part of the
-  defect; a wrong VALUE in rd needs the injection in the data bits). Waveform
+  defect). A wrong VALUE in rd needs the injection in a bit the offset merges in: the first beat contributes only the
+  slice the misalignment offset selects (rtl/ibex_load_store_unit.sv:91, :235, :272-274: 24 positions at offset 1, 16 at
+  offset 2, 8 at offset 3), and a flip anywhere else, check bit or unmerged data bit alike, raises the integrity error and
+  leaves the merged value clean, so the register value is not a reliable witness for this class; the missing suppression
+  is, on every seed. Waveform
   confirmation (Section 9): beat 1 data_rdata_i 0x0101111111 (bit 28 flipped) against the clean beat 2, bus request
   phase identical to the count-2 control. The expected-fail test itself is test-writer's, not yet landed.
 - Notes: the alert and the internal NMI do fire; only the rd write leaks the merged data. Security-relevant:
@@ -1136,3 +1132,10 @@ documentation there changes the privilege an mret lands in.
   Section 0.5 states the citation-anchor convention (a bare row label such as | D20 | matches twice); the B16 and B10
   ratings wait for rtl-arch's record. The TB defect T11 (the scoreboard's internal-NMI mtval correction inside the
   suppress-flag block) is opened in gen_tb_defects.md from the same landing.
+- v2e (2026-09-08 02:53 UTC): the B16 and B10 ratings settled from rtl-arch's record dv/auto_dv/evidence/gen_b10_b16_rtl_facts.md at
+  f85c6bb: B16 stays P2 on the corrected premise (the merged word is consumable by exactly one further instruction, so
+  one padding instruction is the workaround; the earlier premise that it was unusable before the NMI is retracted, and
+  the D21 two-instruction figure is not inherited, that figure being about aligned loads); B10 moves from P2 to P3 (only
+  the dcsr.cause status field is wrong and dpc discriminates it exactly). B16's Evidence and scoping wording corrected per
+  rtl-arch: the value-changing bit positions are the ones the misalignment offset merges in, so the register value is not a
+  reliable witness for the class and the missing suppression is. Both "pending rtl-arch confirmation" markers dropped.
