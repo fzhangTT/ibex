@@ -235,11 +235,22 @@ that same cycle trigger_match_i = 1 and the controller's debug_cause_d = 2, and 
 the debug ROM entry. So the trigger match, evaluated on the fetch-stage PC, wins over the ebreak that is actually entering
 debug mode.
 
-A second observation from the same runs, reported to tb-infra and rtl-arch and NOT part of B10 (it is present in the
-control too): rvfi_order skips one value at each debug entry an instruction causes. The red's export
-(out_tw21/bug_b10_cause_red1/gen_export.txt) has orders 318, 319, 320, 322 and later 343, 345; the missing 321 and 344 sit
-where the ebreak at gen_b10_seq and the trigger-matched instruction at gen_b10_target would be, and neither emits a
-record. The testbench's rvfi_proto rule (gen_rvfi_pkg.sv:143) and sva_rvfi_order_incr flag it twice per run, which is why
+A second observation from the same runs, reported to tb-infra and rtl-arch and NOT part of B10 (the first of its two
+occurrences is present in the control too): rvfi_order skips one value at each debug entry an instruction causes. The
+red's export (out_tw21/bug_b10_cause_red1/gen_export.txt) has orders 318, 319, 320, 322 and later 343, 345; counted from
+the full logs rather than the excerpts, the red raises two rvfi_order failures and the control one.
+
+RESOLVED, and it corrects a reading of mine. I wrote that the missing 344 sits where the trigger-matched instruction at
+gen_b10_target would be, and that after the ROM's trigger branch the core resumes at that instruction. Both are wrong.
+rtl-arch established from this program (gen_rvfi_order_debug_entry_rtl_facts.md Section 5a, committed at f77ac6e) that a
+trigger entry is taken with the decode stage empty and charges no index, and that BOTH gaps are the ebreak mechanism: my
+ROM dispatches on the recorded cause, and its trigger branch drets with dpc UNCHANGED, which still holds the ebreak's own
+address, so with the trigger armed B10's wrong cause sends the ROM down that branch, the ebreak re-executes, a third
+debug entry follows and spends the second index. In the control the cause is 1, the step-over branch advances dpc past
+the ebreak, there is no third entry and there is one gap. So the second gap is the same defect occurring twice, not a
+second finding, and it should not be counted as one. It also makes this program a measured demonstration of B10's
+consequence rather than a predicted one: a debugger that dispatches on dcsr.cause alone loops on the breakpoint, and the
+discriminator is dpc against tdata2. The testbench's rvfi_proto rule (gen_rvfi_pkg.sv:143) and sva_rvfi_order_incr flag it twice per run, which is why
 both B10 runs' verdicts name rvfi_order as their first collected line. rtl-arch answered the classification question from
 these runs in dv/auto_dv/evidence/gen_rvfi_order_debug_entry_rtl_facts.md: the index advances under a condition that
 catches instructions flushed in decode while emission needs writeback or the trap bit, both of which are absent for a
@@ -438,6 +449,42 @@ Reproduction:
 
     python3 dv/auto_dv/flow/gen_regress.py --repro gen_dit_dummy_xfail 1 --waves --tag b7wait_repro
 
+## 10. B22's control: a debug entry caused by the request alone spends no index (TP-RVFI-028)
+
+B22 (an ebreak that enters debug mode consumes one rvfi_order index and emits no record, P3, RVFI-only) has its red
+already: the two committed B10 runs of Section 5, whose exports carry the gap and whose logs carry the comparator's own
+contiguity failure. What was owed is the control the bug log's step 5 names, a debug entry caused by debug_req_i with no
+instruction involved, which must spend no index. This section is that control. No testlist entry is added: B22 is P3 and
+the owner asked for P1 and P2 tests.
+
+Run: the committed gen_prv_debug_b2_ctrl_directed.S on gen_ut_dbg at seed 1, whose debug ROM only loads a word and
+drets, with dcsr.ebreakm never set and no trigger armed, so both of the module's entries come from the bridge's DBG_REQ.
+Build: an export of d660ec8, sources sha256 prefix 62bec5dd95834e7f (out_tw23; no compiled source changed between that
+commit and this hand's base).
+
+Result: verdict PASS, UVM_ERROR 0, and zero rvfi_order failures, so the comparator's contiguity rule stayed silent. The
+census of the run's own export, retained as gen_bug_b22_dbgreq_order_census.log, reads 478 records with orders 1 to 478,
+gaps none, contiguous true, and both entry boundaries consecutive:
+
+    order  300 pc 8000012a insn     bff5 cycle 1125     order  380 pc 8000012a insn bff5 cycle 1439
+    order  301 pc 1a110800 insn   c0006f cycle 1137     order  381 pc 1a110800 insn c0006f cycle 1451
+
+Waveform. out_tw23/bug_b22_dbgreq_ctrl1_waves/waves.fsdb, read with the siliconpilot queryWaveform reader.
+cs_registers-level sampling is not needed here: rvfi_order changes 479 times over the run and carries 0 followed by
+every value from 1 to 478, checked as a sequence rather than by counting changes, so no index anywhere in the run is
+spent without a record. debug_mode rises at 11335 ns and at 14475 ns, the two request entries, with the order standing
+at 300 and 380 at those instants. Contrast Section 5's red, where an index is spent and no record follows it.
+
+A NOTE ON THE TOOL, because it decides what this section may quote. On this FSDB the fsdb-mcp-server session answered
+inconsistently inside one session: its first range query was right, then point samples at the same times returned values
+belonging to much earlier times (order 25 and 77 where 300 belongs) and later range queries reported no transitions over
+windows that contain some; closing and reopening the session did not help. None of those numbers are quoted here. The
+figures above come from the siliconpilot reader and agree with the testbench's own export record for record, and the two
+load-bearing readings of Sections 1 and 3 were re-derived with that same independent reader and confirmed unchanged
+(B2: debug_mode 1, priv_mode_id M, priv_mode_lsu U, data_req_o 0, rvfi_pc_rdata 1a110814, rvfi_trap 1; B1: debug_mode 0,
+priv_mode_id U, priv_mode_lsu M, data_req_o 1 to 80000298, and mstatus_q decoded with the field order read from
+rtl/ibex_cs_registers.sv giving mpp 3 and mprv 1).
+
 ## Record log
 
 - 2026-09-08T02:13:23Z: sections 1 and 2 written from the runs of the same date on out_tw20.
@@ -450,3 +497,6 @@ Reproduction:
   runs of the same date on build C; handed on base f77ac6ee7c9cfd638086401b8c1e424b7669b15e.
 - 2026-09-08T04:03:05Z: Section 4 corrected after TB Infra landing 66a removed the crash_dump rows this record predicted;
   measured on the build of that landing and retained as gen_bug_b16_after_t11_*; handed on base de4f7d96bdef1d70c1a56ea48127743e1d41eb9f.
+- 2026-09-08T04:21:39Z: Section 10 written for B22's control (the debug-request-only entry, no index spent) and
+  Section 5's second-gap paragraph superseded by rtl-arch's resolution, which corrects two readings of mine;
+  handed on base 886987468cf1c7d1a948f7e34e4aabd1312717fd.

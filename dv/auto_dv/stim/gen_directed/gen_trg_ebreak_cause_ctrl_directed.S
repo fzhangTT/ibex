@@ -75,7 +75,9 @@ gen_rom_step_over:
   csrw 0x7b1, t4
   dret
 gen_rom_trigger:
-  csrw tdata1, zero                 # a trigger entry disarms, so the matched instruction can run
+  csrw tdata1, zero                 # disarm and resume at dpc: correct for a genuine trigger entry, whose dpc is the
+                                    # matched address, and the path B10's wrong cause sends an ebreak entry down, where
+                                    # dpc still holds the ebreak and it re-executes (gen_rvfi_order_debug_entry_rtl_facts.md)
   dret
 gen_rom_arm:
   csrw tselect, zero

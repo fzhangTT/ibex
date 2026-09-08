@@ -1,0 +1,15 @@
+# gen_bug_b22_dbgreq_order_census.log: generated in place, not copied. The order census of the B22 control run,
+# computed from that run's own export (the path is in the manifest row); it is the evidence B22's control line asks for.
+# run: bug_b22_dbgreq_ctrl1 on the build of HEAD d660ec8, sources sha 62bec5dd95834e7f, program gen_prv_debug_b2_ctrl_directed.S, module gen_ut_dbg, seed 1
+records 478
+orders 1..478
+gaps []
+contiguous True
+the two debug-request entry boundaries (order, pc, insn, cycle):
+  order  300 pc 8000012a insn     bff5 cycle 1125
+  order  301 pc 1a110800 insn   c0006f cycle 1137
+  order  380 pc 8000012a insn     bff5 cycle 1439
+  order  381 pc 1a110800 insn   c0006f cycle 1451
+waveform, read with siliconpilot queryWaveform on bug_b22_dbgreq_ctrl1_waves/waves.fsdb:
+  rvfi_order changes 479 times carrying 0 then every value 1..478, checked as a sequence: no skip
+  debug_mode rises at 11335 ns and 14475 ns; the order stands at 300 and 380 at those instants
